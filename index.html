@@ -490,6 +490,14 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
 .ls-btn:active{transform:translateY(0);}
 .ls-btn-arrow{font-size:22px;transition:transform .2s;}
 .ls-btn:hover .ls-btn-arrow{transform:translateX(5px);}
+.ls-btn-bio{
+  margin-top:10px;
+  background:linear-gradient(90deg,#0f2744,#1e3a6a,#2563eb);
+  box-shadow:0 4px 22px rgba(37,99,235,0.45);
+  justify-content:center;
+  gap:8px;
+}
+.ls-btn-bio:hover{box-shadow:0 7px 30px rgba(37,99,235,0.58);}
 .ls-helper{
   text-align:center;margin-top:14px;font-size:12px;
   color:#7090b8;  /* was #2a4068 — now clearly visible */
@@ -1898,11 +1906,143 @@ async function login(){
       var opEl2 = document.getElementById("operatorDisplay");
       if(opEl2) opEl2.innerHTML = "<b>Operator:</b> EMP-" + empId2;
       if(typeof init === "function") init();
+      try{ await maybeOfferBiometricEnrollment(empId2); }catch(e){}
     } else {
       err.style.display="block";
       err.textContent="Incorrect password. Please try again.";
       document.getElementById("passwordInput").value="";
       document.getElementById("passwordInput").focus();
+    }
+  }
+}
+
+/* ── Mobile biometric convenience login (local credential only) ── */
+var BIO_LOGIN_KEY = "scadaBiometricLogin";
+function _bioIsMobile(){
+  return (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
+    (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
+}
+function _bioAvailable(){
+  return !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext);
+}
+function _bufToB64url(buf){
+  var bytes = new Uint8Array(buf);
+  var s = "";
+  for(var i=0;i<bytes.length;i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function _b64urlToBuf(s){
+  var b64 = String(s||"").replace(/-/g,"+").replace(/_/g,"/");
+  while(b64.length % 4) b64 += "=";
+  var str = atob(b64);
+  var out = new Uint8Array(str.length);
+  for(var i=0;i<str.length;i++) out[i] = str.charCodeAt(i);
+  return out.buffer;
+}
+function _bioRead(){
+  try{
+    var raw = localStorage.getItem(BIO_LOGIN_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function _bioWrite(obj){
+  try{ localStorage.setItem(BIO_LOGIN_KEY, JSON.stringify(obj||{})); }catch(e){}
+}
+function updateBiometricLoginUI(){
+  var btn = document.getElementById("ls-biometric-btn");
+  if(!btn) return;
+  if(!_bioIsMobile() || !_bioAvailable()){
+    btn.style.display = "none";
+    return;
+  }
+  var rec = _bioRead();
+  btn.style.display = "flex";
+  btn.disabled = !(rec && rec.credId && rec.empId);
+  btn.style.opacity = btn.disabled ? "0.6" : "1";
+  btn.title = btn.disabled ? "Sign in once with password to enable fingerprint login" : "Use fingerprint to sign in";
+}
+async function enrollBiometricForEmp(empId){
+  if(!_bioAvailable()) return false;
+  var challenge = crypto.getRandomValues(new Uint8Array(32));
+  var userId = crypto.getRandomValues(new Uint8Array(16));
+  var credential = await navigator.credentials.create({
+    publicKey: {
+      challenge: challenge,
+      rp: { name: "IOCL SCADA Local" },
+      user: {
+        id: userId,
+        name: "EMP-" + String(empId || "").trim(),
+        displayName: "IOCL EMP-" + String(empId || "").trim()
+      },
+      pubKeyCredParams: [{type:"public-key",alg:-7},{type:"public-key",alg:-257}],
+      authenticatorSelection: { userVerification: "required", residentKey: "preferred" },
+      timeout: 60000,
+      attestation: "none"
+    }
+  });
+  if(!credential || !credential.rawId) return false;
+  _bioWrite({
+    credId: _bufToB64url(credential.rawId),
+    empId: String(empId || "").trim(),
+    createdAt: new Date().toISOString()
+  });
+  updateBiometricLoginUI();
+  return true;
+}
+async function maybeOfferBiometricEnrollment(empId){
+  if(!_bioIsMobile() || !_bioAvailable()) return;
+  var current = _bioRead();
+  if(current && current.credId && current.empId === String(empId || "").trim()) return;
+  if(!confirm("Enable fingerprint login on this mobile device for EMP-" + empId + "?")) return;
+  try{
+    var ok = await enrollBiometricForEmp(empId);
+    if(ok) showToast("✅ Fingerprint login enabled on this device");
+  }catch(e){
+    showToast("⚠ Fingerprint setup was cancelled or failed");
+  }
+}
+async function loginWithBiometric(){
+  var err = document.getElementById("ls-error");
+  var rec = _bioRead();
+  if(!rec || !rec.credId || !rec.empId){
+    if(err){
+      err.style.display = "block";
+      err.textContent = "Fingerprint login is not set. Sign in once with password first.";
+    }
+    return;
+  }
+  if(!_bioAvailable()){
+    if(err){
+      err.style.display = "block";
+      err.textContent = "Fingerprint login is not available on this browser/device.";
+    }
+    return;
+  }
+  try{
+    var assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ type: "public-key", id: _b64urlToBuf(rec.credId) }],
+        userVerification: "required",
+        timeout: 60000
+      }
+    });
+    if(!assertion || !assertion.rawId) throw new Error("Biometric failed");
+    if(_bufToB64url(assertion.rawId) !== rec.credId) throw new Error("Credential mismatch");
+
+    sessionStorage.setItem("scadaLoggedIn","true");
+    sessionStorage.setItem("scadaEmpId", rec.empId);
+    document.getElementById("loginScreen").style.display="none";
+    if(err) err.style.display="none";
+    var opEl = document.getElementById("operatorDisplay");
+    if(opEl) opEl.innerHTML = "<b>Operator:</b> EMP-" + rec.empId;
+    init();
+    var serverOk = await autoImportFromServer(true);
+    if(!serverOk) showToast("⚠ Could not auto-load from Supabase server");
+  }catch(e){
+    if(err){
+      err.style.display = "block";
+      err.textContent = "Fingerprint authentication failed or cancelled.";
     }
   }
 }
@@ -2462,6 +2602,9 @@ function requestHeatMapRender(delayMs){
       <button class="ls-btn" onclick="login()">
         <span>Sign In to Portal</span>
         <span class="ls-btn-arrow">&#8594;</span>
+      </button>
+      <button class="ls-btn ls-btn-bio" id="ls-biometric-btn" style="display:none;" onclick="loginWithBiometric()">
+        <span>👆 Use Fingerprint Login</span>
       </button>
 
       <div class="ls-helper">
@@ -4161,6 +4304,7 @@ const chartInstances = {};
 
 document.addEventListener("DOMContentLoaded",function(){
   clearLegacyPasswordOverrides();
+  updateBiometricLoginUI();
   var m=document.getElementById("forgotModal");
   if(m) m.addEventListener("click",function(e){ if(e.target===this) hideForgotModal(); });
 });
@@ -6407,6 +6551,7 @@ async function loginWithFolderSupport(){
 
     /* Always init the UI first so the app is usable */
     init();
+    try{ await maybeOfferBiometricEnrollment(empId); }catch(e){}
     
     /* Primary: central server sync for all PCs */
     var serverOk = await autoImportFromServer(true);
