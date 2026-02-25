@@ -725,9 +725,54 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
     padding:8px 10px;
     font-size:10px;
   }
+  /* Clean mobile sign-in mode (no overlap) */
+  #loginScreen{
+    background:linear-gradient(180deg,#02164F 0%, #03123f 100%);
+  }
+  .ls-topbar{
+    justify-content:flex-end;
+  }
+  .ls-topbar span:first-child{
+    display:none;
+  }
+  .ls-header{
+    justify-content:center;
+    text-align:center;
+  }
+  .ls-logo-group{
+    width:100%;
+    justify-content:center;
+  }
+  .ls-brand-full,.ls-brand-govt{
+    display:none;
+  }
+  .ls-body{
+    display:block !important;
+    padding:10px 12px 14px;
+  }
+  .ls-hero,
+  .ls-info-strip,
+  .ls-credit-row{
+    display:none !important;
+  }
+  .ls-card-wrap{
+    max-width:430px;
+    margin:0 auto;
+    border:1px solid rgba(243,112,34,0.3);
+    border-radius:12px;
+    border-top:1px solid rgba(243,112,34,0.3);
+    box-shadow:0 10px 40px rgba(0,0,0,0.45);
+  }
+  .ls-card-title,
+  .ls-card-sub{
+    text-align:center;
+  }
+  .ls-accent-bar{
+    margin-left:auto;
+    margin-right:auto;
+  }
   .ls-footer{
-    padding:6px 10px;
-    font-size:9px;
+    display:none;
   }
 }
 
@@ -1972,6 +2017,52 @@ body.light-theme .hm-row-data-badge-N{background:rgba(217,119,6,0.2);color:#9240
 body.light-theme .hm-row-data-badge-B{background:rgba(20,184,166,0.15);color:#0f766e;}
 body.light-theme .hm-row-data-badge-C{background:rgba(100,116,139,0.1);color:#475569;}
 
+
+/* === Mobile Login Final Override === */
+@media (max-width:900px){
+  #loginScreen{height:100dvh !important;overflow-y:auto !important;overflow-x:hidden !important;padding-bottom: max(8px, env(safe-area-inset-bottom,0px)) !important;background:linear-gradient(180deg,#02164F 0%,#03123f 100%) !important;}
+  .ls-topbar{padding:6px 10px !important;justify-content:flex-end !important;gap:6px !important;}
+  .ls-topbar span:first-child{display:none !important;}
+  #ls-clock{font-size:10px !important;padding:2px 8px !important;}
+  .ls-header{padding:8px 10px !important;justify-content:center !important;text-align:center !important;gap:8px !important;}
+  .ls-logo-group{width:100% !important;justify-content:center !important;gap:8px !important;}
+  .ls-iocl-svg{width:46px !important;height:46px !important;}
+  .ls-brand-name{font-size:22px !important;}
+
+  .ls-portal-right,
+  .ls-brand-full,
+  .ls-brand-govt,
+  .ls-tagline,
+  .ls-desc,
+  .ls-badges,
+  .ls-info-strip,
+  .ls-credit-row,
+  .ls-footer,
+  .ls-security,
+  .ls-helpdesk{display:none !important;}
+
+  .ls-body{display:flex !important;flex-direction:column !important;min-height:0 !important;overflow:visible !important;padding:0 10px 14px !important;}
+
+  .ls-hero{display:flex !important;align-items:flex-start !important;min-height:148px !important;padding:10px 10px 6px !important;position:relative !important;border-bottom:1px solid rgba(243,112,34,0.28) !important;}
+  .ls-hero-content{max-width:64% !important;padding-right:0 !important;}
+  .ls-system-title{font-size:30px !important;line-height:1.03 !important;margin:0 !important;}
+  .ls-reformer-img-wrap{position:absolute !important;right:-8px !important;top:2px !important;width:54% !important;max-width:215px !important;bottom:auto !important;}
+
+  .ls-card-wrap{width:100% !important;min-width:0 !important;max-width:430px !important;margin:-46px auto 10px !important;position:relative !important;z-index:5 !important;padding:14px 12px calc(14px + env(safe-area-inset-bottom,0px)) !important;border:1px solid rgba(243,112,34,0.32) !important;border-left:1px solid rgba(243,112,34,0.32) !important;border-top:1px solid rgba(243,112,34,0.32) !important;border-radius:12px !important;box-shadow:0 12px 36px rgba(0,0,0,0.48) !important;justify-content:flex-start !important;}
+  .ls-card-title{font-size:20px !important;text-align:center !important;margin-bottom:4px !important;}
+  .ls-card-sub{font-size:12px !important;text-align:center !important;margin-bottom:10px !important;}
+  .ls-accent-bar{margin:0 auto 12px !important;}
+
+  .ls-field{margin-bottom:10px !important;}
+  .ls-label{font-size:10px !important;margin-bottom:5px !important;}
+  .ls-input-box{border-radius:8px !important;}
+  .ls-input{font-size:16px !important;padding:11px 8px 11px 0 !important;}
+  .ls-error{margin-top:6px !important;font-size:11px !important;padding:7px 10px !important;}
+
+  .ls-btn{min-height:45px !important;font-size:15px !important;padding:11px 12px !important;margin-top:8px !important;}
+  .ls-btn-bio{margin-top:8px !important;}
+  .ls-helper{margin-top:8px !important;}
+}
 </style>
 <script>
 function getEmpPwKey(empId){
