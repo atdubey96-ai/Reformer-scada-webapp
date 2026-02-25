@@ -1364,6 +1364,18 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     padding:8px 10px;
   }
   .btab-label{font-size:10px;}
+  .wall{overflow:visible;}
+  .wall-table-scroll{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:2px;
+  }
+  .wall-table-scroll table{min-width:760px;}
+  .td-temp-scroll{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  #td-saved-table{min-width:980px !important;}
 }
 @media (max-width:600px){
   .app-system-title{font-size:13px;}
@@ -4520,7 +4532,11 @@ function render(){
       });
       tbl.appendChild(tr);
     });
-    wall.appendChild(tbl);wallsDiv.appendChild(wall);
+    const tblWrap=document.createElement("div");
+    tblWrap.className="wall-table-scroll";
+    tblWrap.appendChild(tbl);
+    wall.appendChild(tblWrap);
+    wallsDiv.appendChild(wall);
   });
 }
 
@@ -5992,6 +6008,7 @@ function init(){
   generateAnalysis();
   buildCleaningTable();
   initTipTable();
+  applyMobileHorizontalScrollFixes();
   /* Render heatmap on load since it is the first visible tab */
   setTimeout(renderHeatMap, 0);
 }
@@ -6037,6 +6054,22 @@ function switchTab(tab){
   document.getElementById('btab-'+tab).classList.add('btab-active');
   if(tab === 'alarms') refreshAlarmPanel();
   if(tab === 'heatmap' && typeof requestHeatMapRender === 'function') requestHeatMapRender(40);
+  if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
+}
+
+function applyMobileHorizontalScrollFixes(){
+  var isMobile =
+    (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
+    (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
+  if(!isMobile) return;
+
+  /* TST peep-hole grids: make the parent block horizontally scrollable on mobile */
+  var peepRows = document.querySelectorAll('#tab-tempdata [style*="grid-template-columns:80px repeat(15,1fr)"]');
+  peepRows.forEach(function(row){
+    row.style.minWidth = "980px";
+    var parent = row.parentElement;
+    if(parent) parent.classList.add("td-temp-scroll");
+  });
 }
 
 /* ==================================================
