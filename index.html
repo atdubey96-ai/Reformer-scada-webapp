@@ -697,23 +697,7 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
 .hd-btn-danger:hover{background:rgba(220,38,38,0.28);color:#fff;}
 #excelFile{display:none;}
 
-.install-fab{
-  position:fixed;
-  right:16px;
-  bottom:16px;
-  z-index:100000;
-  border:1px solid #3b82f6;
-  background:linear-gradient(90deg,#1d4ed8,#2563eb);
-  color:#fff;
-  border-radius:999px;
-  padding:10px 16px;
-  font-size:13px;
-  font-weight:700;
-  font-family:'Rajdhani',sans-serif;
-  box-shadow:0 10px 24px rgba(29,78,216,0.45);
-  cursor:pointer;
-}
-.install-fab:hover{filter:brightness(1.06);}
+
 
 .app-header-meta{
   background:rgba(0,0,0,0.3);
@@ -2364,7 +2348,7 @@ function requestHeatMapRender(delayMs){
 
       <div class="ls-helpdesk">
         <span>🛟 IT Helpdesk</span>
-        <span><b>8476056756</b>&nbsp;|&nbsp;<b><a href="mailto:dubeya1@indianoil.in" style="color:#fff;font-weight:700;text-decoration:none;">dubeya1@indianoil.in</a></b></span>
+        <span><b>8476056756</b>&nbsp;|&nbsp;<b><a href="/cdn-cgi/l/email-protection#97f3e2f5f2eef6a6d7fef9f3fef6f9f8fefbb9fef9" style="color:#fff;font-weight:700;text-decoration:none;"><span class="__cf_email__" data-cfemail="22465740475b4313624b4c464b434c4d4b4e0c4b4c">[email&#160;protected]</span></a></b></span>
       </div>
     </div>
 
@@ -2376,7 +2360,10 @@ function requestHeatMapRender(delayMs){
     <span>CIN: L23201MH1959GOI011388</span>
     <span>Regd. Office: IndianOil Bhavan, G-9 Ali Yavar Jung Marg, Bandra (E), Mumbai – 400 051</span>
   </div>
-  <div style="background:#010c2e;border-top:1px solid rgba(243,112,34,0.15);padding:5px 32px;text-align:center;font-size:10.5px;color:#5a80a8;letter-spacing:0.3px;">Dashboard designed &amp; developed by <b style="color:#F37022;">Ashutosh Dubey</b></div>
+  <div style="background:#010c2e;border-top:1px solid rgba(243,112,34,0.15);padding:7px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <span style="font-size:10.5px;color:#5a80a8;letter-spacing:0.3px;">Dashboard designed &amp; developed by <b style="color:#F37022;">Ashutosh Dubey</b></span>
+    <button id="installAppFab" title="Install this dashboard app" style="display:inline-flex;align-items:center;gap:6px;background:rgba(243,112,34,0.12);border:1px solid rgba(243,112,34,0.35);color:#F37022;border-radius:999px;padding:5px 16px;font-size:11px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;box-shadow:0 0 12px rgba(243,112,34,0.15);letter-spacing:0.5px;transition:background .2s,box-shadow .2s;" onmouseover="this.style.background='rgba(243,112,34,0.22)';this.style.boxShadow='0 0 18px rgba(243,112,34,0.3)'" onmouseout="this.style.background='rgba(243,112,34,0.12)';this.style.boxShadow='0 0 12px rgba(243,112,34,0.15)'">⬇️ Install App</button>
+  </div>
 
 
 <!-- Forgot Password Modal -->
@@ -2392,7 +2379,7 @@ function requestHeatMapRender(delayMs){
     </div>
     <div class="fm-card">
       <div class="fm-label">✉️ Helpdesk Email</div>
-      <div class="fm-value"><a href="mailto:dubeya1@indianoil.in" style="color:#F37022;text-decoration:none;">dubeya1@indianoil.in</a></div>
+      <div class="fm-value"><a href="/cdn-cgi/l/email-protection#bbdfced9dec2da8afbd2d5dfd2dad5d4d2d795d2d5" style="color:#F37022;text-decoration:none;"><span class="__cf_email__" data-cfemail="c8acbdaaadb1a9f988a1a6aca1a9a6a7a1a4e6a1a6">[email&#160;protected]</span></a></div>
     </div>
     <div class="fm-note">Support available during office hours (Mon–Sat, 8 AM – 6 PM).<br>Please quote your Employee ID when contacting support.</div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
@@ -2519,7 +2506,7 @@ function requestHeatMapRender(delayMs){
   </div>
   <button onclick="acknowledgeAlarm()">Acknowledge</button>
 </div>
-<button class="install-fab" id="installAppFab" title="Install this dashboard app">⬇️ Install App</button>
+
 
 <!-- ====================================================
      TAB CONTENT PANELS
@@ -3055,7 +3042,7 @@ function requestHeatMapRender(delayMs){
 
       </div><!-- end dual cuboid row -->
 
-      <script>
+      <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
       /* ──────────────────────────────────────────────────────────────
          CUBOID DRAG + WALL TEXTURE ENGINE
          Renders each wall as a scaled-down canvas snapshot and applies
@@ -6469,21 +6456,4 @@ function tempToColorInline(val, minT, maxT){
         alert("Install prompt not available yet. Use browser menu: Install app.");
         return;
       }
-      deferredInstallPrompt.prompt();
-      try {
-        await deferredInstallPrompt.userChoice;
-      } catch (err) {
-        console.log("Install prompt closed:", err);
-      }
-      deferredInstallPrompt = null;
-    });
-  });
-
-  window.addEventListener("appinstalled", function(){
-    deferredInstallPrompt = null;
-    showInstallButtons(false);
-  });
-})();
-</script>
-</body>
-</html>
+      
