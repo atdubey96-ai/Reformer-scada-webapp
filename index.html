@@ -1364,18 +1364,17 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     padding:8px 10px;
   }
   .btab-label{font-size:10px;}
-  .wall{overflow:visible;}
-  .wall-table-scroll{
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    padding-bottom:2px;
-  }
-  .wall-table-scroll table{min-width:760px;}
   .td-temp-scroll{
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
   }
   #td-saved-table{min-width:980px !important;}
+  .hm-mobile-scroll{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:2px;
+  }
+  .hm-mobile-scroll .hm-wall-card{min-width:860px;}
 }
 @media (max-width:600px){
   .app-system-title{font-size:13px;}
@@ -2317,18 +2316,18 @@ function renderHeatMap(){
   var cdSideDiv = document.getElementById("hm-side-cd");
   if(cdSideDiv) cdSideDiv.innerHTML = "";
 
-  if(activeWall === "A" && wallPanelA) wallPanelA.innerHTML = buildWallHTML("A", abBot, abTop, hmData["A"]);
-  else if(activeWall === "B" && wallPanelB) wallPanelB.innerHTML = buildWallHTML("B", abBot, abTop, hmData["B"]);
-  else if(activeWall === "C" && wallPanelC) wallPanelC.innerHTML = buildWallHTML("C", cdBot, cdTop, hmData["C"]);
-  else if(activeWall === "D" && wallPanelD) wallPanelD.innerHTML = buildWallHTML("D", cdBot, cdTop, hmData["D"]);
+  if(activeWall === "A" && wallPanelA) wallPanelA.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("A", abBot, abTop, hmData["A"]) + '</div>';
+  else if(activeWall === "B" && wallPanelB) wallPanelB.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("B", abBot, abTop, hmData["B"]) + '</div>';
+  else if(activeWall === "C" && wallPanelC) wallPanelC.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("C", cdBot, cdTop, hmData["C"]) + '</div>';
+  else if(activeWall === "D" && wallPanelD) wallPanelD.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("D", cdBot, cdTop, hmData["D"]) + '</div>';
   else if(activeWall === "ALL"){
     if(abSideDiv){
-      abSideDiv.innerHTML = buildWallHTML("A", abBot, abTop, hmData["A"])
-        + buildWallHTML("B", abBot, abTop, hmData["B"]);
+      abSideDiv.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("A", abBot, abTop, hmData["A"]) + '</div>'
+        + '<div class="hm-mobile-scroll">' + buildWallHTML("B", abBot, abTop, hmData["B"]) + '</div>';
     }
     if(cdSideDiv){
-      cdSideDiv.innerHTML = buildWallHTML("C", cdBot, cdTop, hmData["C"])
-        + buildWallHTML("D", cdBot, cdTop, hmData["D"]);
+      cdSideDiv.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("C", cdBot, cdTop, hmData["C"]) + '</div>'
+        + '<div class="hm-mobile-scroll">' + buildWallHTML("D", cdBot, cdTop, hmData["D"]) + '</div>';
     }
   }
 }
@@ -4532,11 +4531,7 @@ function render(){
       });
       tbl.appendChild(tr);
     });
-    const tblWrap=document.createElement("div");
-    tblWrap.className="wall-table-scroll";
-    tblWrap.appendChild(tbl);
-    wall.appendChild(tblWrap);
-    wallsDiv.appendChild(wall);
+    wall.appendChild(tbl);wallsDiv.appendChild(wall);
   });
 }
 
