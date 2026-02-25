@@ -95,6 +95,8 @@ body{
   font-family:'Rajdhani',Segoe UI,Arial,sans-serif;
   background:#0f172a;color:#e2e8f0;
   transition:background .3s,color .3s;
+  min-height:100svh;
+  overflow-x:hidden;
 }
 
 /* ====================================================
@@ -1277,6 +1279,7 @@ body.light-theme .cw-selector-label{color:#2a4a6a;}
   border-top:2px solid #F37022;
   box-shadow:0 -4px 24px rgba(0,0,0,0.5);
   z-index:1000;
+  padding-bottom:env(safe-area-inset-bottom, 0px);
 }
 .btab{
   flex:1;
@@ -1295,10 +1298,88 @@ body.light-theme .cw-selector-label{color:#2a4a6a;}
   background:rgba(243,112,34,0.06) !important;
 }
 .btab-icon{ font-size:20px; line-height:1; }
-.btab-label{ font-size:12px; font-weight:700; letter-spacing:0.4px; }
+.btab-label{
+  font-size:12px;font-weight:700;letter-spacing:0.4px;
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 
 /* Add bottom padding to body so content isn't hidden under tab bar */
-body{ padding-bottom:68px; }
+body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
+
+/* PWA/mobile layout + performance tuning */
+@media (max-width:900px){
+  .app-topbar{
+    padding:6px 12px;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:4px;
+  }
+  .app-topbar-left,.app-topbar-right{
+    width:100%;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .app-banner-wrap{
+    padding:6px 10px;
+    gap:8px;
+  }
+  .app-banner-logo{height:42px;}
+  .app-banner-center-img{height:44px;max-width:100%;}
+  .app-header-main{
+    padding:10px 12px;
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+  }
+  .app-header-right{
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .theme-toggle-wrap{
+    width:100%;
+    justify-content:flex-start;
+  }
+  .hd-btn{
+    flex:1 1 calc(50% - 6px);
+    justify-content:center;
+    min-height:36px;
+    padding:8px 10px;
+  }
+  .app-header-meta{padding:8px 12px;}
+  .app-meta-left{gap:8px;}
+  .app-meta-item{font-size:10px;}
+  .alarm-banner{
+    bottom:calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+  .bottom-tab-bar{
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    justify-content:flex-start;
+  }
+  .btab{
+    flex:0 0 auto;
+    min-width:94px;
+    min-height:66px;
+    padding:8px 10px;
+  }
+  .btab-label{font-size:10px;}
+}
+@media (max-width:600px){
+  .app-system-title{font-size:13px;}
+  .app-system-sub{font-size:9px;line-height:1.25;}
+  .hd-btn{flex:1 1 100%;}
+}
+@media (hover:none), (pointer:coarse){
+  td{
+    will-change:auto;
+    contain:layout;
+  }
+  td.B:hover,td.N:hover,td.O:hover,td.C:hover{
+    transform:none;
+    box-shadow:inherit;
+  }
+}
 
 
 /* ====================================================
@@ -2740,7 +2821,19 @@ function requestHeatMapRender(delayMs){
         }
         .cb-divider{flex:0 0 1px;}
         @media (max-width:900px){
-          .cb-scene{height:520px;}
+          .cb-scene{height:500px;}
+          .cb-dual-row{
+            flex-direction:column;
+            gap:14px;
+            padding:10px 8px;
+          }
+          .cb-wrap{width:100%;}
+          .cb-divider{
+            width:100%;
+            height:1px;
+            margin:2px 0;
+            background:linear-gradient(to right,transparent,rgba(243,112,34,0.45),rgba(126,200,240,0.45),transparent);
+          }
         }
 
         /* ════════════════════════════════════════════════════════
@@ -3087,6 +3180,15 @@ function requestHeatMapRender(delayMs){
          it as a background-image on the corresponding cuboid face.
       ────────────────────────────────────────────────────────────── */
       (function(){
+        var _isMobileLite =
+          (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
+          (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
+        var _mobileCuboidEnabled = localStorage.getItem("hm-mobile-cuboid") === "1";
+        if(_isMobileLite && !_mobileCuboidEnabled){
+          var cbRowLite = document.querySelector("#tab-heatmap .cb-dual-row");
+          if(cbRowLite) cbRowLite.style.display = "none";
+          return; /* Keep lightweight mode on mobile unless user enables 3D option */
+        }
 
         /* ── 1. Drag interaction — smooth momentum, hard clamp, no bounce ──
            DRAG    : direct 1:1 follow
@@ -3489,6 +3591,7 @@ function requestHeatMapRender(delayMs){
         <button class="hm-wall-btn" id="hm-wbtn-C" onclick="switchHeatMapWall('C')">🔥 Wall C</button>
         <button class="hm-wall-btn" id="hm-wbtn-D" onclick="switchHeatMapWall('D')">🔥 Wall D</button>
         <button class="hm-wall-btn" id="hm-wbtn-ALL" onclick="switchHeatMapWall('ALL')">📋 Every Wall</button>
+        <button class="hm-wall-btn" id="hm-cuboid-toggle-btn" style="display:none;" onclick="toggleMobileCuboid()"></button>
       </div>
       <div id="hm-wall-hint" style="display:block;text-align:center;font-size:11px;color:#94a3b8;letter-spacing:0.6px;margin:-4px 0 10px 0;">
         Select a wall button to load burner tables
@@ -3527,6 +3630,37 @@ function requestHeatMapRender(delayMs){
         if(hintEl) hintEl.style.display = _activeHeatMapWall ? "none" : "block";
         if(typeof requestHeatMapRender === "function") requestHeatMapRender(80);
       }
+      function toggleMobileCuboid(){
+        var enabled = localStorage.getItem("hm-mobile-cuboid") === "1";
+        localStorage.setItem("hm-mobile-cuboid", enabled ? "0" : "1");
+        location.reload();
+      }
+      function initMobileCuboidToggle(){
+        var isMobileLite =
+          (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
+          (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
+        var btn = document.getElementById("hm-cuboid-toggle-btn");
+        if(!btn) return;
+        if(!isMobileLite){
+          btn.style.display = "none";
+          return;
+        }
+        var enabled = localStorage.getItem("hm-mobile-cuboid") === "1";
+        btn.style.display = "inline-flex";
+        btn.textContent = enabled ? "🧊 3D Cuboid: ON" : "🧊 3D Cuboid: OFF";
+        btn.classList.toggle("hm-wall-btn-active", enabled);
+      }
+      (function initHeatMapDefaultWall(){
+        var isMobileLite =
+          (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
+          (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
+        var mobileCuboidEnabled = localStorage.getItem("hm-mobile-cuboid") === "1";
+        if(isMobileLite && !mobileCuboidEnabled){
+          _activeHeatMapWall = "ALL";
+          if(typeof requestHeatMapRender === "function") requestHeatMapRender(40);
+        }
+        initMobileCuboidToggle();
+      })();
       </script>
 
     </div>
