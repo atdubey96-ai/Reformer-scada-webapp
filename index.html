@@ -189,7 +189,6 @@ body.light-theme .alarm-group-header{color:#4a6a8a;}
 
 /* Analytics panel */
 body.light-theme .analytics-panel{background:#f0f4fa;color:#1e293b;}
-body.light-theme .chart-card{background:#fff;border:1px solid #b8cde8;color:#1e293b;}
 
 /* ── Temp Data tab ── */
 body.light-theme .td-field-group{}
@@ -697,7 +696,44 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
 .hd-btn-danger:hover{background:rgba(220,38,38,0.28);color:#fff;}
 #excelFile{display:none;}
 
-
+.ls-credit-row{
+  background:#010c2e;
+  border-top:1px solid rgba(243,112,34,0.15);
+  padding:6px 32px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.ls-credit-text{
+  font-size:10.5px;
+  color:#5a80a8;
+  letter-spacing:0.3px;
+}
+.install-fab{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid rgba(243,112,34,0.5);
+  background:linear-gradient(90deg,rgba(243,112,34,0.22),rgba(96,176,240,0.16));
+  color:#ffe3cf;
+  border-radius:999px;
+  padding:6px 14px;
+  font-size:12px;
+  font-weight:700;
+  font-family:'Rajdhani',sans-serif;
+  letter-spacing:0.35px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.06);
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.install-fab:hover{
+  background:linear-gradient(90deg,rgba(243,112,34,0.36),rgba(96,176,240,0.22));
+  color:#fff2e8;
+  border-color:rgba(243,112,34,0.75);
+  transform:translateY(-1px);
+}
 
 .app-header-meta{
   background:rgba(0,0,0,0.3);
@@ -907,7 +943,10 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .analysis-block h3{color:#38bdf8;font-size:14px;margin-bottom:8px;}
 .analysis-block p{color:#94a3b8;font-size:13px;margin:3px 0;}
 .analysis-block p b{color:#e2e8f0;}
-.chart-wrap{position:relative;height:190px;margin-top:12px;}
+.chart-wrap{position:relative;height:220px;margin-top:12px;}
+@media (min-width:1700px){
+  #analysisContainer{grid-template-columns:repeat(5,minmax(250px,1fr));}
+}
 
 /* Analysis block — counts pills */
 .ab-counts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
@@ -2348,7 +2387,7 @@ function requestHeatMapRender(delayMs){
 
       <div class="ls-helpdesk">
         <span>🛟 IT Helpdesk</span>
-        <span><b>8476056756</b>&nbsp;|&nbsp;<b><a href="/cdn-cgi/l/email-protection#97f3e2f5f2eef6a6d7fef9f3fef6f9f8fefbb9fef9" style="color:#fff;font-weight:700;text-decoration:none;"><span class="__cf_email__" data-cfemail="22465740475b4313624b4c464b434c4d4b4e0c4b4c">[email&#160;protected]</span></a></b></span>
+        <span><b>8476056756</b>&nbsp;|&nbsp;<b><a href="mailto:dubeya1@indianoil.in" style="color:#fff;font-weight:700;text-decoration:none;">dubeya1@indianoil.in</a></b></span>
       </div>
     </div>
 
@@ -2360,9 +2399,9 @@ function requestHeatMapRender(delayMs){
     <span>CIN: L23201MH1959GOI011388</span>
     <span>Regd. Office: IndianOil Bhavan, G-9 Ali Yavar Jung Marg, Bandra (E), Mumbai – 400 051</span>
   </div>
-  <div style="background:#010c2e;border-top:1px solid rgba(243,112,34,0.15);padding:7px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-    <span style="font-size:10.5px;color:#5a80a8;letter-spacing:0.3px;">Dashboard designed &amp; developed by <b style="color:#F37022;">Ashutosh Dubey</b></span>
-    <button id="installAppFab" title="Install this dashboard app" style="display:inline-flex;align-items:center;gap:6px;background:rgba(243,112,34,0.12);border:1px solid rgba(243,112,34,0.35);color:#F37022;border-radius:999px;padding:5px 16px;font-size:11px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;box-shadow:0 0 12px rgba(243,112,34,0.15);letter-spacing:0.5px;transition:background .2s,box-shadow .2s;" onmouseover="this.style.background='rgba(243,112,34,0.22)';this.style.boxShadow='0 0 18px rgba(243,112,34,0.3)'" onmouseout="this.style.background='rgba(243,112,34,0.12)';this.style.boxShadow='0 0 12px rgba(243,112,34,0.15)'">⬇️ Install App</button>
+  <div class="ls-credit-row">
+    <div class="ls-credit-text">Dashboard designed &amp; developed by <b style="color:#F37022;">Ashutosh Dubey</b></div>
+    <button class="install-fab" id="installAppFab" title="Install this dashboard app">⬇️ Install App</button>
   </div>
 
 
@@ -2379,7 +2418,7 @@ function requestHeatMapRender(delayMs){
     </div>
     <div class="fm-card">
       <div class="fm-label">✉️ Helpdesk Email</div>
-      <div class="fm-value"><a href="/cdn-cgi/l/email-protection#bbdfced9dec2da8afbd2d5dfd2dad5d4d2d795d2d5" style="color:#F37022;text-decoration:none;"><span class="__cf_email__" data-cfemail="c8acbdaaadb1a9f988a1a6aca1a9a6a7a1a4e6a1a6">[email&#160;protected]</span></a></div>
+      <div class="fm-value"><a href="mailto:dubeya1@indianoil.in" style="color:#F37022;text-decoration:none;">dubeya1@indianoil.in</a></div>
     </div>
     <div class="fm-note">Support available during office hours (Mon–Sat, 8 AM – 6 PM).<br>Please quote your Employee ID when contacting support.</div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
@@ -2506,7 +2545,6 @@ function requestHeatMapRender(delayMs){
   </div>
   <button onclick="acknowledgeAlarm()">Acknowledge</button>
 </div>
-
 
 <!-- ====================================================
      TAB CONTENT PANELS
@@ -3042,7 +3080,7 @@ function requestHeatMapRender(delayMs){
 
       </div><!-- end dual cuboid row -->
 
-      <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+      <script>
       /* ──────────────────────────────────────────────────────────────
          CUBOID DRAG + WALL TEXTURE ENGINE
          Renders each wall as a scaled-down canvas snapshot and applies
@@ -3674,8 +3712,21 @@ function requestHeatMapRender(delayMs){
             <input type="datetime-local" id="td-datetime"
               style="background:transparent;border:none;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;outline:none;cursor:pointer;">
           </div>
+          <!-- Optional PDF Attachment -->
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:6px 10px;">
+            <input type="file" id="td-pdf-file" accept="application/pdf,.pdf" style="display:none;" onchange="handleTempPdfSelect(event)">
+            <button type="button" onclick="document.getElementById('td-pdf-file').click()"
+              style="background:rgba(96,200,255,0.12);border:1px solid rgba(96,200,255,0.35);color:#7ec8f0;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
+              📎 Attach PDF
+            </button>
+            <span id="td-pdf-name" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">No PDF</span>
+            <button type="button" onclick="clearTempPdfAttachment()" id="td-pdf-clear"
+              style="display:none;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;padding:5px 8px;border-radius:5px;font-size:11px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
+              ✕
+            </button>
+          </div>
           <!-- Save / Clear -->
-          <button onclick="saveTempData()"
+          <button id="td-save-btn" onclick="saveTempData()"
             style="background:linear-gradient(90deg,#d95008,#F37022);border:none;color:#fff;padding:9px 20px;border-radius:7px;font-size:14px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.5px;box-shadow:0 3px 14px rgba(243,112,34,0.4);">
             💾 Save Entry
           </button>
@@ -4172,15 +4223,28 @@ var silencedAlarmReasonKey="";
 ================================================== */
 let audioCtx=null,alarmTimer=null;
 function playBeep(){
-  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  const osc=audioCtx.createOscillator();
-  const g=audioCtx.createGain();
-  osc.connect(g);g.connect(audioCtx.destination);
-  osc.type="square";osc.frequency.value=880;
-  g.gain.value=0.1;osc.start();
-  osc.stop(audioCtx.currentTime+0.15);
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  var now = audioCtx.currentTime;
+
+  // Soft professional two-note chime (gentle attack/decay, sine timbre).
+  function playTone(freq, startAt, dur, peak){
+    var osc = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, startAt);
+    g.gain.setValueAtTime(0.0001, startAt);
+    g.gain.linearRampToValueAtTime(peak, startAt + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + dur + 0.02);
+  }
+
+  playTone(740, now, 0.16, 0.055);
+  playTone(620, now + 0.12, 0.20, 0.048);
 }
-function startAlarm(){if(!alarmTimer)alarmTimer=setInterval(playBeep,600);}
+function startAlarm(){ if(!alarmTimer) alarmTimer = setInterval(playBeep, 1200); }
 function stopAlarm(){clearInterval(alarmTimer);alarmTimer=null;}
 
 function syncMasterAlarmBanner(){
@@ -4379,6 +4443,11 @@ function generateAnalysis(){
   container.innerHTML="";
   Object.values(chartInstances).forEach(c=>c.destroy());
   Object.keys(chartInstances).forEach(k=>delete chartInstances[k]);
+  var wallLabels = [];
+  var cntBoth = [];
+  var cntNG = [];
+  var cntOG = [];
+  var cntCold = [];
 
   Object.entries(data).forEach(([wallName,rows])=>{
     let N=0,O=0,B=0,C=0;
@@ -4392,6 +4461,11 @@ function generateAnalysis(){
     if(imb>10&&imb<=20) sev="major";
     if(imb>20) sev="critical";
     wallSeverity[wallName]=sev;
+    wallLabels.push("Wall " + wallName);
+    cntBoth.push(B);
+    cntNG.push(N);
+    cntOG.push(O);
+    cntCold.push(C);
 
     const displayName = "Wall "+wallName;
     const {direction,dirColor,desc,action}=getImbalanceInfo(N,O,imb,sev,displayName);
@@ -4441,10 +4515,57 @@ function generateAnalysis(){
           backgroundColor:["#2563eb","#fde047","#fb923c","#64748b"],
           borderColor:"#0f172a",borderWidth:2}]
       },
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{labels:{color:"#e2e8f0",font:{size:12}}}}}
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        layout:{padding:{top:4,right:6,bottom:2,left:6}},
+        plugins:{
+          legend:{
+            position:"bottom",
+            labels:{color:"#e2e8f0",font:{size:12},boxWidth:12,padding:12}
+          }
+        }
+      }
     });
   });
+
+  var summaryBlock = document.createElement("div");
+  summaryBlock.className = "analysis-block";
+  summaryBlock.innerHTML = `
+    <h3>Wall-Wise Burner Mix Summary</h3>
+    <div class="chart-wrap"><canvas id="analysisWallSummaryChart"></canvas></div>`;
+  container.appendChild(summaryBlock);
+  const summaryCanvas=document.getElementById("analysisWallSummaryChart");
+  if(summaryCanvas){
+    chartInstances["_wallSummary"] = new Chart(summaryCanvas, {
+      type:"bar",
+      data:{
+        labels: wallLabels,
+        datasets:[
+          {label:"NG", data:cntNG, backgroundColor:"#16a34a"},
+          {label:"Off Gas", data:cntOG, backgroundColor:"#f97316"},
+          {label:"Both", data:cntBoth, backgroundColor:"#2563eb"},
+          {label:"None", data:cntCold, backgroundColor:"#64748b"}
+        ]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        layout:{padding:{top:4,right:6,bottom:2,left:6}},
+        interaction:{mode:"index", intersect:false},
+        scales:{
+          x:{ticks:{color:"#cbd5e1",font:{size:11}},grid:{display:false}},
+          y:{beginAtZero:true,ticks:{color:"#94a3b8",font:{size:11}},grid:{color:"rgba(148,163,184,0.16)"}}
+        },
+        plugins:{
+          legend:{
+            position:"bottom",
+            labels:{color:"#e2e8f0",font:{size:12},boxWidth:12,padding:12}
+          }
+        }
+      }
+    });
+  }
 
   /* Unified bottom banner + sound for imbalance and high-frequency cleaning alarms */
   syncMasterAlarmBanner();
@@ -4518,7 +4639,8 @@ async function exportToExcel(){
   var tdHeaders = [
     "Date/Time","Shift",
     "AB Side COT (°C)","CD Side COT (°C)","Flue Gas (°C)","Excess O2 (%Vol)",
-    "Pre-ref Max (°C)","Pre-ref Min (°C)"
+    "Pre-ref Max (°C)","Pre-ref Min (°C)",
+    "PDF Attached","PDF Name","PDF URL"
   ];
   var phRowKeys   = ["ab-bot","cd-bot","ab-top","cd-top"];
   var phRowLabels = {"ab-bot":"AB Bot","cd-bot":"CD Bot","ab-top":"AB Top","cd-top":"CD Top"};
@@ -4529,7 +4651,10 @@ async function exportToExcel(){
   if(Array.isArray(tempDataEntries) && tempDataEntries.length){
     tempDataEntries.forEach(function(e){
       var row=[e.dt||"", e.shift||"", e.abCot||"", e.cdCot||"", e.flueGas||"",
-               e.excessO2||"", e.preRefMax||"", e.preRefMin||""];
+               e.excessO2||"", e.preRefMax||"", e.preRefMin||"",
+               (e.pdfAttachment && (e.pdfAttachment.publicUrl || e.pdfAttachment.dataUrl || e.pdfAttachment.storagePath)) ? "Yes" : "No",
+               (e.pdfAttachment && e.pdfAttachment.name) ? e.pdfAttachment.name : "",
+               (e.pdfAttachment && e.pdfAttachment.publicUrl) ? e.pdfAttachment.publicUrl : ""];
       phRowKeys.forEach(function(rk){
         var vals=(e.peepHoles&&e.peepHoles[rk])?e.peepHoles[rk]:[];
         for(var ph=0;ph<15;ph++) row.push(vals[ph]!==undefined?vals[ph]:"");
@@ -4632,6 +4757,10 @@ function _doImport(file, onDone, silent){
           var tdWS   = wb.Sheets[tdSheetName];
           var tdData = XLSX.utils.sheet_to_json(tdWS, {header:1, raw:false, defval:""});
           if(tdData.length > 1){
+            var tdHeader = tdData[0] || [];
+            var hasPdfCols = String(tdHeader[8]||"").toLowerCase().indexOf("pdf") >= 0
+                          || String(tdHeader[9]||"").toLowerCase().indexOf("pdf") >= 0;
+            var hasPdfUrlCol = String(tdHeader[10]||"").toLowerCase().indexOf("pdf url") >= 0;
             var phRowKeys2   = ["ab-bot","cd-bot","ab-top","cd-top"];
             var phRowLabels2 = {"ab-bot":"AB Bot","cd-bot":"CD Bot","ab-top":"AB Top","cd-top":"CD Top"};
             tempDataEntries = [];
@@ -4646,9 +4775,22 @@ function _doImport(file, onDone, silent){
                 excessO2:   row[5]||"",
                 preRefMax:  row[6]||"",
                 preRefMin:  row[7]||"",
-                peepHoles:  {}
+                peepHoles:  {},
+                pdfAttachment: null
               };
-              var colOffset = 8;
+              if(hasPdfCols){
+                var pdfAttachedMark = row[8] || "";
+                var pdfName = row[9] || "";
+                var pdfUrl = hasPdfUrlCol ? (row[10] || "") : "";
+                if(String(pdfAttachedMark).toLowerCase() === "yes" || pdfName || pdfUrl){
+                  entry.pdfAttachment = {
+                    name: pdfName || "Attachment.pdf",
+                    publicUrl: pdfUrl || "",
+                    uploadedAt: ""
+                  };
+                }
+              }
+              var colOffset = hasPdfCols ? (hasPdfUrlCol ? 11 : 10) : 8;
               phRowKeys2.forEach(function(rk){
                 entry.peepHoles[rk] = [];
                 for(var ph=0;ph<15;ph++){
@@ -6117,6 +6259,146 @@ async function loginWithFolderSupport(){
    TEMP DATA TAB — JavaScript
 ================================================== */
 var tempDataEntries = [];
+var tdPendingPdfAttachment = null;
+var tdPendingPdfFile = null;
+var tdPendingPdfLoading = false;
+var tdSavingWithPdf = false;
+
+function setTempSaveBusy(busy){
+  tdSavingWithPdf = !!busy;
+  var btn = document.getElementById("td-save-btn");
+  if(!btn) return;
+  btn.disabled = tdSavingWithPdf;
+  btn.style.opacity = tdSavingWithPdf ? "0.65" : "1";
+  btn.style.cursor = tdSavingWithPdf ? "not-allowed" : "pointer";
+  btn.textContent = tdSavingWithPdf ? "⏳ Uploading..." : "💾 Save Entry";
+}
+
+function updateTempPdfUI(){
+  var nameEl = document.getElementById("td-pdf-name");
+  var clearEl = document.getElementById("td-pdf-clear");
+  if(!nameEl || !clearEl) return;
+  if(tdPendingPdfLoading){
+    nameEl.textContent = "Reading PDF...";
+    nameEl.style.color = "#7ec8f0";
+    clearEl.style.display = "none";
+    return;
+  }
+  if(tdPendingPdfAttachment){
+    nameEl.textContent = tdPendingPdfAttachment.name || "PDF attached";
+    nameEl.style.color = "#60c8ff";
+    clearEl.style.display = "inline-block";
+  }else{
+    nameEl.textContent = "No PDF";
+    nameEl.style.color = "#94a3b8";
+    clearEl.style.display = "none";
+  }
+}
+
+function clearTempPdfAttachment(silent){
+  tdPendingPdfAttachment = null;
+  tdPendingPdfFile = null;
+  tdPendingPdfLoading = false;
+  var fileEl = document.getElementById("td-pdf-file");
+  if(fileEl) fileEl.value = "";
+  updateTempPdfUI();
+  if(!silent) showToast("🧹 PDF attachment removed");
+}
+
+function handleTempPdfSelect(event){
+  var file = event && event.target ? event.target.files[0] : null;
+  if(!file) return;
+  if(!/\.pdf$/i.test(file.name) && file.type !== "application/pdf"){
+    alert("Please select a PDF file only.");
+    clearTempPdfAttachment(true);
+    return;
+  }
+  var maxBytes = 4 * 1024 * 1024; // 4 MB
+  if(file.size > maxBytes){
+    alert("PDF is too large. Please keep it under 4 MB.");
+    clearTempPdfAttachment(true);
+    return;
+  }
+  tdPendingPdfFile = file;
+  tdPendingPdfAttachment = {
+    name: file.name,
+    size: file.size,
+    type: "application/pdf",
+    uploadedAt: new Date().toISOString()
+  };
+  tdPendingPdfLoading = false;
+  updateTempPdfUI();
+  showToast("📎 PDF selected");
+}
+
+function makePdfStoragePath(fileName, dt, shift){
+  var empId = sessionStorage.getItem("scadaEmpId") || "unknown";
+  var safeEmp = String(empId).replace(/[^a-zA-Z0-9_-]/g, "");
+  var safeShift = String(shift || "unknown").replace(/[^a-zA-Z0-9_-]/g, "");
+  var dtStamp = String(dt || "").replace(/[^0-9]/g, "");
+  var rand = Math.random().toString(36).slice(2,8);
+  var safeName = String(fileName || "attachment.pdf").replace(/[^a-zA-Z0-9._-]/g, "_");
+  return "temp-data-pdf/" + safeEmp + "/" + dtStamp + "_" + safeShift + "_" + rand + "_" + safeName;
+}
+
+async function uploadTempEntryPdf(file, dt, shift){
+  var bucket = "temp-data-pdf";
+  if(!supaClient){
+    alert("Supabase is not connected. PDF upload is not available.");
+    return null;
+  }
+  try{
+    var path = makePdfStoragePath(file.name, dt, shift);
+    var up = await supaClient.storage.from(bucket).upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: "application/pdf"
+    });
+    if(up.error){
+      alert("PDF upload failed: " + up.error.message);
+      return null;
+    }
+    var pub = supaClient.storage.from(bucket).getPublicUrl(path);
+    var publicUrl = pub && pub.data ? pub.data.publicUrl : "";
+    return {
+      name: file.name,
+      size: file.size,
+      type: "application/pdf",
+      uploadedAt: new Date().toISOString(),
+      storageBucket: bucket,
+      storagePath: path,
+      publicUrl: publicUrl || ""
+    };
+  }catch(err){
+    alert("PDF upload failed: " + (err && err.message ? err.message : err));
+    return null;
+  }
+}
+
+async function openTempEntryPdf(idx){
+  var ent = tempDataEntries[idx];
+  if(!ent || !ent.pdfAttachment){
+    alert("No PDF attached for this entry.");
+    return;
+  }
+  var url = ent.pdfAttachment.publicUrl || ent.pdfAttachment.dataUrl || "";
+  if(!url && ent.pdfAttachment.storageBucket && ent.pdfAttachment.storagePath && supaClient){
+    try{
+      var signed = await supaClient.storage
+        .from(ent.pdfAttachment.storageBucket)
+        .createSignedUrl(ent.pdfAttachment.storagePath, 60 * 60);
+      if(!signed.error && signed.data && signed.data.signedUrl){
+        url = signed.data.signedUrl;
+      }
+    }catch(e){}
+  }
+  if(!url){
+    alert("PDF link is unavailable.");
+    return;
+  }
+  var w = window.open(url, "_blank");
+  if(!w) alert("Popup blocked. Please allow popups to view PDF.");
+}
 
 /* Initialize datetime field with current time */
 (function initTempDataTab(){
@@ -6133,15 +6415,26 @@ var tempDataEntries = [];
       if(saved) tempDataEntries = JSON.parse(saved);
       renderTempDataTable();
     } catch(e){}
+    updateTempPdfUI();
   });
 })();
 
-function saveTempData(){
+async function saveTempData(){
   var dt    = document.getElementById("td-datetime").value;
   var shift = document.getElementById("td-shift").value;
 
   if(!dt){ alert("Please select a date and time."); return; }
   if(!shift){ alert("Please select a shift (Morning / Evening / Night)."); return; }
+  if(tdSavingWithPdf){ return; }
+  if(tdPendingPdfLoading){ alert("PDF is still loading. Please wait a moment."); return; }
+
+  var uploadedPdf = null;
+  if(tdPendingPdfFile){
+    setTempSaveBusy(true);
+    uploadedPdf = await uploadTempEntryPdf(tdPendingPdfFile, dt, shift);
+    setTempSaveBusy(false);
+    if(!uploadedPdf) return;
+  }
 
   var entry = {
     dt: dt,
@@ -6152,7 +6445,8 @@ function saveTempData(){
     excessO2: document.getElementById("td-excess-o2").value,
     preRefMax: document.getElementById("td-prereformer-max").value,
     preRefMin: document.getElementById("td-prereformer-min").value,
-    peepHoles: {}
+    peepHoles: {},
+    pdfAttachment: uploadedPdf
   };
 
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
@@ -6166,14 +6460,50 @@ function saveTempData(){
   tempDataEntries.unshift(entry);
   try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); } catch(e){}
   renderTempDataTable();
+  clearTempPdfAttachment(true);
   showToast("✅ Temperature entry saved successfully!");
 }
 
-function deleteTempEntry(idx){
-  if(!confirm("Delete this entry?")) return;
+async function deleteTempEntryPdfFromStorage(pdfAttachment){
+  if(!pdfAttachment || !pdfAttachment.storageBucket || !pdfAttachment.storagePath) return {ok:true, skipped:true};
+  if(!supaClient) return {ok:false, reason:"Supabase client unavailable"};
+  try{
+    var res = await supaClient.storage
+      .from(pdfAttachment.storageBucket)
+      .remove([pdfAttachment.storagePath]);
+    if(res && res.error){
+      return {ok:false, reason:res.error.message || "Unknown storage error"};
+    }
+    return {ok:true};
+  }catch(err){
+    return {ok:false, reason:(err && err.message) ? err.message : String(err)};
+  }
+}
+
+async function deleteTempEntry(idx){
+  var ent = tempDataEntries[idx];
+  if(!ent) return;
+
+  var hasPdf = !!(ent.pdfAttachment && (ent.pdfAttachment.storagePath || ent.pdfAttachment.publicUrl || ent.pdfAttachment.dataUrl));
+  var msg = hasPdf
+    ? "Delete this entry and its attached PDF?"
+    : "Delete this entry?";
+  if(!confirm(msg)) return;
+
+  var pdfDeleteResult = {ok:true, skipped:true};
+  if(hasPdf){
+    pdfDeleteResult = await deleteTempEntryPdfFromStorage(ent.pdfAttachment);
+  }
+
   tempDataEntries.splice(idx,1);
   try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); } catch(e){}
   renderTempDataTable();
+
+  if(hasPdf && !pdfDeleteResult.ok){
+    showToast("⚠ Entry deleted, but PDF removal failed in cloud");
+  }else{
+    showToast("🗑 Entry deleted");
+  }
 }
 
 function clearTempData(){
@@ -6191,6 +6521,7 @@ function clearTempData(){
     var now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
     dtInput.value=now.toISOString().slice(0,16);
   }
+  clearTempPdfAttachment(true);
 }
 
 function phMinMax(entry, rk){
@@ -6228,7 +6559,14 @@ function renderTempDataTable(){
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-bot") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"ab-top") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-top") + '</td>'
-      + '<td style="text-align:center;"><button onclick="deleteTempEntry(' + i + ')" style="background:rgba(192,57,43,0.2);color:#f87171;border:1px solid rgba(192,57,43,0.4);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Delete entry">🗑 Del</button></td>'
+      + '<td style="text-align:center;">'
+        + '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">'
+          + (ent.pdfAttachment && (ent.pdfAttachment.publicUrl || ent.pdfAttachment.dataUrl || ent.pdfAttachment.storagePath)
+              ? '<button onclick="openTempEntryPdf(' + i + ')" style="background:rgba(96,200,255,0.12);color:#7ec8f0;border:1px solid rgba(96,200,255,0.38);border-radius:4px;font-size:11px;padding:4px 9px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="View attached PDF">📄 PDF</button>'
+              : '')
+          + '<button onclick="deleteTempEntry(' + i + ')" style="background:rgba(192,57,43,0.2);color:#f87171;border:1px solid rgba(192,57,43,0.4);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Delete entry">🗑 Del</button>'
+        + '</div>'
+      + '</td>'
       + '</tr>';
   }
   tbody.innerHTML = rows || '<tr><td colspan="13" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
@@ -6456,4 +6794,21 @@ function tempToColorInline(val, minT, maxT){
         alert("Install prompt not available yet. Use browser menu: Install app.");
         return;
       }
-      
+      deferredInstallPrompt.prompt();
+      try {
+        await deferredInstallPrompt.userChoice;
+      } catch (err) {
+        console.log("Install prompt closed:", err);
+      }
+      deferredInstallPrompt = null;
+    });
+  });
+
+  window.addEventListener("appinstalled", function(){
+    deferredInstallPrompt = null;
+    showInstallButtons(false);
+  });
+})();
+</script>
+</body>
+</html>
