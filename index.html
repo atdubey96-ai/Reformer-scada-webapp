@@ -795,7 +795,26 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
   letter-spacing:0.4px;border-bottom:1px solid rgba(255,255,255,0.08);
 }
 .app-topbar-left{display:flex;gap:18px;align-items:center;}
-.app-topbar-right{display:flex;gap:14px;align-items:center;}
+.app-topbar-right{display:flex;flex-direction:row;gap:10px;align-items:center;justify-content:flex-end;}
+.app-top-status{display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:flex-end;line-height:1.2;}
+.app-top-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;max-width:none;width:auto;}
+.quick-menu-wrap{position:relative;display:inline-flex;}
+.quick-menu-btn{
+  width:42px;height:42px;border-radius:50%;
+  border:1px solid rgba(243,112,34,0.65);
+  background:linear-gradient(135deg,#0b2c62,#0f5cb8);
+  color:#fff;font-size:18px;line-height:1;cursor:pointer;
+  box-shadow:0 6px 16px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.1);
+}
+.quick-menu-panel{
+  position:absolute;top:50px;right:0;z-index:10020;
+  width:240px;display:none;flex-direction:column;gap:8px;
+  background:rgba(3,18,52,0.96);border:1px solid rgba(126,200,240,0.35);
+  border-radius:10px;padding:10px;box-shadow:0 12px 30px rgba(0,0,0,0.45);
+}
+.quick-menu-panel.open{display:flex;}
+.quick-menu-panel .hd-btn{width:100%;justify-content:flex-start;padding:8px 10px;font-size:12px;min-height:34px;}
+.quick-menu-panel .theme-toggle-wrap{width:100%;justify-content:space-between;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:6px 10px;box-sizing:border-box;}
 .app-topbar span{display:flex;align-items:center;gap:5px;}
 .app-topbar b{color:#c8dff5;font-weight:600;}
 
@@ -1502,6 +1521,29 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     gap:8px;
     flex-wrap:wrap;
   }
+  .app-topbar-right{
+    align-items:center;
+    justify-content:flex-end;
+  }
+  .app-top-status{
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    flex-wrap:nowrap;
+  }
+  .app-top-actions{
+    justify-content:flex-end;
+    max-width:none;
+    width:auto;
+  }
+  .quick-menu-wrap{margin-left:auto;}
+  .quick-menu-btn{width:40px;height:40px;}
+  .quick-menu-panel{
+    position:fixed;
+    top:56px;
+    right:10px;
+    width:min(88vw,260px);
+  }
   .app-banner-wrap{
     padding:6px 10px;
     gap:8px;
@@ -1513,14 +1555,6 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     flex-direction:column;
     align-items:stretch;
     gap:10px;
-  }
-  .app-header-right{
-    gap:6px;
-    flex-wrap:wrap;
-  }
-  .theme-toggle-wrap{
-    width:100%;
-    justify-content:flex-start;
   }
   #notifyToggleBtn,
   #notifyTestBtn{
@@ -2850,7 +2884,6 @@ function requestHeatMapRender(delayMs){
         <span><b>8476056756</b>&nbsp;|&nbsp;<b><a href="mailto:dubeya1@indianoil.in" style="color:#fff;font-weight:700;text-decoration:none;">dubeya1@indianoil.in</a></b></span>
       </div>
     </div>
-
   </div><!-- /ls-body -->
 
   <!-- Footer -->
@@ -2930,9 +2963,32 @@ function requestHeatMapRender(delayMs){
     <span><b>CIN:</b> L23201MH1959GOI011388</span>
   </div>
   <div class="app-topbar-right">
-    <span><b>Env:</b> Production</span>
-    <span><b>Ver:</b> 4.2.1</span>
-    <span><b>Session Timeout:</b> 30 min</span>
+    <div class="app-top-status">
+      <span><b>Env:</b> Production</span>
+      <span><b>Session Timeout:</b> 30 min</span>
+    </div>
+    <div class="app-top-actions">
+      <div class="quick-menu-wrap" id="quickMenuWrap">
+        <button class="quick-menu-btn" id="quickMenuBtn" type="button" onclick="toggleQuickMenu()" title="Quick menu">🔥</button>
+        <div class="quick-menu-panel" id="quickMenuPanel" aria-hidden="true">
+          <div class="theme-toggle-wrap" title="Toggle dark/light theme">
+            <span>☀️</span>
+            <label class="theme-toggle">
+              <input type="checkbox" id="themeToggleChk" onchange="toggleTheme(this.checked)">
+              <span class="theme-slider"></span>
+            </label>
+            <span>🌙</span>
+          </div>
+          <button class="hd-btn hd-btn-secondary" id="notifyToggleBtn" onclick="toggleNotifications()" title="Enable browser notifications for saves and alarms">🔕 Notifications Off</button>
+          <button class="hd-btn hd-btn-secondary" id="notifyTestBtn" onclick="sendTestNotification()" title="Send a test notification">🧪 Test Alert</button>
+          <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="importFromExcel(event)">
+          <input type="file" id="autoImportInput" accept=".xlsx,.xls" style="display:none" onchange="handleAutoImport(event)">
+          <button class="hd-btn hd-btn-secondary" id="installAppBtn" style="display:inline-flex;" title="Install this dashboard app">⬇️ Install App</button>
+          <button class="hd-btn hd-btn-secondary" onclick="showChangePasswordModal();closeQuickMenu();">🔑 Change Password</button>
+          <button class="hd-btn hd-btn-danger" onclick="logout()">⏏ Logout</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2957,26 +3013,11 @@ function requestHeatMapRender(delayMs){
         <div class="app-system-sub">REFORMER WALL OPERATIONS &nbsp;·&nbsp; REAL-TIME ANALYTICS &nbsp;·&nbsp; AUTHORIZED PERSONNEL ONLY</div>
       </div>
     </div>
-
     <div class="app-header-right">
-      <div class="theme-toggle-wrap" title="Toggle dark/light theme">
-        <span>☀️</span>
-        <label class="theme-toggle">
-          <input type="checkbox" id="themeToggleChk" onchange="toggleTheme(this.checked)">
-          <span class="theme-slider"></span>
-        </label>
-        <span>🌙</span>
-      </div>
-      <button class="hd-btn hd-btn-secondary" id="notifyToggleBtn" onclick="toggleNotifications()" title="Enable browser notifications for saves and alarms">🔕 Notifications Off</button>
-      <button class="hd-btn hd-btn-secondary" id="notifyTestBtn" onclick="sendTestNotification()" title="Send a test notification">🧪 Test Alert</button>
-      <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="importFromExcel(event)">
-      <input type="file" id="autoImportInput" accept=".xlsx,.xls" style="display:none" onchange="handleAutoImport(event)">
       <button class="hd-btn hd-btn-secondary" onclick="smartRefresh()">🔄 Refresh Data</button>
       <button class="hd-btn hd-btn-primary" onclick="exportToExcel()">💾 Save New Data</button>
-      <button class="hd-btn hd-btn-secondary" id="installAppBtn" style="display:inline-flex;" title="Install this dashboard app">⬇️ Install App</button>
-      <button class="hd-btn hd-btn-secondary" onclick="showChangePasswordModal()">🔑 Change Password</button>
-      <button class="hd-btn hd-btn-danger" onclick="logout()">⏏ Logout</button>
     </div>
+
   </div>
 
   <!-- Meta strip -->
@@ -4564,6 +4605,15 @@ document.addEventListener("DOMContentLoaded",function(){
   updateNotificationToggleUI();
   var m=document.getElementById("forgotModal");
   if(m) m.addEventListener("click",function(e){ if(e.target===this) hideForgotModal(); });
+
+  document.addEventListener("click", function(e){
+    var wrap = document.getElementById("quickMenuWrap");
+    if(!wrap) return;
+    if(!wrap.contains(e.target)) closeQuickMenu();
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape") closeQuickMenu();
+  });
 });
 
 
@@ -4742,6 +4792,20 @@ function sendTestNotification(){
   notifyIfAllowed("SCADA Test Alert", "Notification channel is working on this device.", "scada_test_alert_" + Date.now(), 0);
 }
 
+
+function toggleQuickMenu(){
+  var panel = document.getElementById("quickMenuPanel");
+  if(!panel) return;
+  panel.classList.toggle("open");
+  panel.setAttribute("aria-hidden", panel.classList.contains("open") ? "false" : "true");
+}
+
+function closeQuickMenu(){
+  var panel = document.getElementById("quickMenuPanel");
+  if(!panel) return;
+  panel.classList.remove("open");
+  panel.setAttribute("aria-hidden", "true");
+}
 
 function logout(){
   sessionStorage.removeItem("scadaLoggedIn");
