@@ -3096,6 +3096,21 @@ function requestHeatMapRender(delayMs){
           </div>
           <button class="hd-btn hd-btn-secondary" id="notifyToggleBtn" onclick="toggleNotifications()" title="Enable browser notifications for saves and alarms">🔕 Notifications Off</button>
           <button class="hd-btn hd-btn-secondary" id="notifyTestBtn" onclick="sendTestNotification()" title="Send a test notification">🧪 Test Alert</button>
+          <div style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:8px 10px;">
+            <div style="font-size:11px;font-weight:700;color:#cbd5e1;letter-spacing:0.4px;">🚨 Alarm Sound</div>
+            <select id="alarmToneSelect" onchange="setAlarmTonePreset(this.value)" style="width:100%;background:#0f2744;border:1px solid #334155;border-radius:6px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;padding:7px 8px;outline:none;cursor:pointer;">
+              <option value="classic">1. Classic Chime</option>
+              <option value="urgent">2. Urgent Pulse</option>
+              <option value="siren">3. Mini Siren</option>
+              <option value="industrial">4. Industrial Beep</option>
+              <option value="soft">5. Soft Alert</option>
+              <option value="ping">6. Sharp Ping</option>
+              <option value="double">7. Double Knock</option>
+              <option value="horn">8. Horn Burst</option>
+              <option value="evac">9. Evac Sweep</option>
+              <option value="triple">10. Triple Pulse</option>
+            </select>
+          </div>
           <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="importFromExcel(event)">
           <input type="file" id="autoImportInput" accept=".xlsx,.xls" style="display:none" onchange="handleAutoImport(event)">
           <button class="hd-btn hd-btn-secondary" id="installAppBtn" style="display:inline-flex;" title="Install this dashboard app">⬇️ Install App</button>
@@ -4722,6 +4737,7 @@ document.addEventListener("DOMContentLoaded",function(){
   updateBiometricLoginUI();
   loadNotificationPrefs();
   updateNotificationToggleUI();
+  updateAlarmToneUI();
   var m=document.getElementById("forgotModal");
   if(m) m.addEventListener("click",function(e){ if(e.target===this) hideForgotModal(); });
 
@@ -4769,21 +4785,39 @@ function showToast(msg){
 
 var notificationsEnabled = false;
 var notificationLastFire = {};
+var alarmTonePreset = "classic";
 
 function loadNotificationPrefs(){
   try{
     notificationsEnabled = localStorage.getItem("scada-notifications-enabled") === "1";
     notificationLastFire = JSON.parse(localStorage.getItem("scada-notification-lastfire") || "{}");
     if(!notificationLastFire || typeof notificationLastFire !== "object") notificationLastFire = {};
+    var savedTone = localStorage.getItem("scada-alarm-tone");
+    if(savedTone) alarmTonePreset = savedTone;
   }catch(e){
     notificationsEnabled = false;
     notificationLastFire = {};
+    alarmTonePreset = "classic";
   }
 }
 
 function saveNotificationPrefs(){
   try{ localStorage.setItem("scada-notifications-enabled", notificationsEnabled ? "1" : "0"); }catch(e){}
   try{ localStorage.setItem("scada-notification-lastfire", JSON.stringify(notificationLastFire)); }catch(e){}
+  try{ localStorage.setItem("scada-alarm-tone", alarmTonePreset || "classic"); }catch(e){}
+}
+
+function setAlarmTonePreset(tone){
+  var valid = { classic:1, urgent:1, siren:1, industrial:1, soft:1, ping:1, double:1, horn:1, evac:1, triple:1 };
+  alarmTonePreset = valid[tone] ? tone : "classic";
+  saveNotificationPrefs();
+  updateAlarmToneUI();
+  showToast("🎵 Alarm sound set to " + alarmTonePreset);
+}
+
+function updateAlarmToneUI(){
+  var sel = document.getElementById("alarmToneSelect");
+  if(sel) sel.value = alarmTonePreset || "classic";
 }
 
 function updateNotificationToggleUI(){
@@ -5223,9 +5257,11 @@ var silencedAlarmReasonKey="";
 let audioCtx=null,alarmTimer=null;
 function playBeep(){
   if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === "suspended"){
+    try{ audioCtx.resume(); }catch(e){}
+  }
   var now = audioCtx.currentTime;
 
-  // Soft professional two-note chime (gentle attack/decay, sine timbre).
   function playTone(freq, startAt, dur, peak){
     var osc = audioCtx.createOscillator();
     var g = audioCtx.createGain();
@@ -5240,11 +5276,59 @@ function playBeep(){
     osc.stop(startAt + dur + 0.02);
   }
 
-  playTone(740, now, 0.16, 0.055);
-  playTone(620, now + 0.12, 0.20, 0.048);
+  function playToneType(freq, startAt, dur, peak, type){
+    var osc = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, startAt);
+    g.gain.setValueAtTime(0.0001, startAt);
+    g.gain.linearRampToValueAtTime(peak, startAt + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + dur + 0.02);
+  }
+
+  var p = alarmTonePreset || "classic";
+  if(p === "urgent"){
+    playToneType(920, now, 0.09, 0.07, "square");
+    playToneType(720, now + 0.11, 0.10, 0.07, "square");
+    playToneType(920, now + 0.24, 0.09, 0.07, "square");
+  }else if(p === "siren"){
+    playToneType(620, now, 0.18, 0.06, "sawtooth");
+    playToneType(780, now + 0.18, 0.18, 0.06, "sawtooth");
+    playToneType(620, now + 0.36, 0.18, 0.06, "sawtooth");
+  }else if(p === "industrial"){
+    playToneType(520, now, 0.14, 0.065, "triangle");
+    playToneType(520, now + 0.20, 0.14, 0.065, "triangle");
+  }else if(p === "soft"){
+    playTone(680, now, 0.18, 0.045);
+    playTone(560, now + 0.16, 0.20, 0.04);
+  }else if(p === "ping"){
+    playToneType(980, now, 0.08, 0.072, "triangle");
+    playToneType(760, now + 0.10, 0.10, 0.055, "triangle");
+  }else if(p === "double"){
+    playToneType(650, now, 0.11, 0.068, "square");
+    playToneType(650, now + 0.18, 0.11, 0.068, "square");
+  }else if(p === "horn"){
+    playToneType(430, now, 0.18, 0.07, "sawtooth");
+    playToneType(520, now + 0.06, 0.16, 0.05, "square");
+  }else if(p === "evac"){
+    playToneType(520, now, 0.12, 0.06, "sawtooth");
+    playToneType(640, now + 0.12, 0.12, 0.06, "sawtooth");
+    playToneType(760, now + 0.24, 0.12, 0.06, "sawtooth");
+  }else if(p === "triple"){
+    playToneType(860, now, 0.07, 0.07, "square");
+    playToneType(860, now + 0.11, 0.07, 0.07, "square");
+    playToneType(860, now + 0.22, 0.09, 0.075, "square");
+  }else{
+    playTone(740, now, 0.16, 0.055);
+    playTone(620, now + 0.12, 0.20, 0.048);
+  }
 }
 function startAlarm(){ if(!alarmTimer) alarmTimer = setInterval(playBeep, 1200); }
-function stopAlarm(){clearInterval(alarmTimer);alarmTimer=null;}
+function stopAlarm(){ clearInterval(alarmTimer); alarmTimer=null; }
 
 function syncMasterAlarmBanner(){
   var hasImbalance = Object.keys(wallSeverity || {}).some(function(w){ return wallSeverity[w] && wallSeverity[w] !== "normal"; });
