@@ -4792,6 +4792,54 @@ function sendTestNotification(){
   notifyIfAllowed("SCADA Test Alert", "Notification channel is working on this device.", "scada_test_alert_" + Date.now(), 0);
 }
 
+var realtimeNotifyChannel = null;
+var realtimeNotifyClientId = "dev_" + Math.random().toString(36).slice(2) + "_" + Date.now().toString(36);
+
+function subscribeCrossDeviceNotifications(){
+  if(!supaClient || realtimeNotifyChannel) return;
+  try{
+    realtimeNotifyChannel = supaClient.channel("scada-live-notifications");
+    realtimeNotifyChannel
+      .on("broadcast", { event: "data_saved" }, function(msg){
+        try{
+          var p = (msg && msg.payload) ? msg.payload : {};
+          if(!p || p.senderId === realtimeNotifyClientId) return;
+          var title = p.title || "SCADA Update";
+          var body = p.body || "New data was saved from another device.";
+          var tag = "shared_" + (p.eventType || "save") + "_" + (p.eventId || Date.now());
+          notifyIfAllowed(title, body, tag, 0);
+        }catch(e){}
+      })
+      .subscribe();
+  }catch(e){
+    realtimeNotifyChannel = null;
+  }
+}
+
+function broadcastSharedNotification(eventType, title, body){
+  if(!supaClient) return;
+  try{
+    if(!realtimeNotifyChannel) subscribeCrossDeviceNotifications();
+    if(!realtimeNotifyChannel) return;
+    realtimeNotifyChannel.send({
+      type: "broadcast",
+      event: "data_saved",
+      payload: {
+        eventId: Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8),
+        eventType: eventType || "save",
+        title: title || "SCADA Update",
+        body: body || "New data was saved.",
+        senderId: realtimeNotifyClientId,
+        senderEmpId: sessionStorage.getItem("scadaEmpId") || ""
+      }
+    });
+  }catch(e){}
+}
+
+function notifyAndBroadcast(eventType, title, body, tag, cooldownMs){
+  notifyIfAllowed(title, body, tag, cooldownMs);
+  broadcastSharedNotification(eventType, title, body);
+}
 
 function toggleQuickMenu(){
   var panel = document.getElementById("quickMenuPanel");
@@ -5344,12 +5392,12 @@ async function exportToExcel(){
   /* Commit pending burner changes */
   const hadBurnerPending = Object.keys(burnerPending).length > 0;
   commitBurnerPending();
-  if(hadBurnerPending){ render(); showToast("✅ Burner data saved successfully"); notifyIfAllowed("Burner Data Saved", "New burner data has been saved.", "burner_data_saved", 3000); }
+  if(hadBurnerPending){ render(); showToast("✅ Burner data saved successfully"); notifyAndBroadcast("burner_data_saved", "Burner Data Saved", "New burner data has been saved.", "burner_data_saved", 3000); }
 
   /* Commit pending cleaning changes */
   const hadCleaningPending = Object.keys(cleaningPending).length > 0;
   commitCleaningPending();
-  if(hadCleaningPending){ buildCleaningTable(); showToast("✅ Cleaning dates saved successfully"); notifyIfAllowed("Burner Cleaning Saved", "New burner cleaning data has been saved.", "burner_cleaning_saved", 3000); }
+  if(hadCleaningPending){ buildCleaningTable(); showToast("✅ Cleaning dates saved successfully"); notifyAndBroadcast("burner_cleaning_saved", "Burner Cleaning Saved", "New burner cleaning data has been saved.", "burner_cleaning_saved", 3000); }
 
   const wb = XLSX.utils.book_new();
 
@@ -5657,7 +5705,7 @@ function saveTipData(){
   saveTipDataStore(tipRows);
   clearTipUnsaved();
   showToast("✅ Burner tip data saved successfully!");
-  notifyIfAllowed("Burner Tip Data Saved", "Burner tip inspection data has been saved.", "burner_tip_data_saved", 3000);
+  notifyAndBroadcast("burner_tip_data_saved", "Burner Tip Data Saved", "Burner tip inspection data has been saved.", "burner_tip_data_saved", 3000);
 }
 
 function collectTipFromDOM(){
@@ -6639,6 +6687,7 @@ function init(){
   initTipTable();
   applyMobileHorizontalScrollFixes();
   updateNotificationToggleUI();
+  subscribeCrossDeviceNotifications();
   /* Render heatmap on load since it is the first visible tab */
   setTimeout(renderHeatMap, 0);
 }
@@ -7658,7 +7707,7 @@ async function saveTempData(){
   renderTempDataTable();
   clearTempData();
   showToast(wasEdit ? "✅ Temperature entry updated." : "✅ Temperature entry saved successfully!");
-  notifyIfAllowed(wasEdit ? "TST Data Updated" : "TST Data Saved", wasEdit ? "A TST entry was updated successfully." : "A new TST entry was saved successfully.", "tst_data_saved", 5000);
+  notifyAndBroadcast("tst_data_saved", wasEdit ? "TST Data Updated" : "TST Data Saved", wasEdit ? "A TST entry was updated successfully." : "A new TST entry was saved successfully.", "tst_data_saved", 5000);
 }
 
 async function deleteTempEntryPdfFromStorage(pdfAttachment){
