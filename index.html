@@ -5280,12 +5280,12 @@ async function exportToExcel(){
   /* Commit pending burner changes */
   const hadBurnerPending = Object.keys(burnerPending).length > 0;
   commitBurnerPending();
-  if(hadBurnerPending){ render(); showToast("✅ Burner data saved successfully"); }
+  if(hadBurnerPending){ render(); showToast("✅ Burner data saved successfully"); notifyIfAllowed("Burner Data Saved", "New burner data has been saved.", "burner_data_saved", 3000); }
 
   /* Commit pending cleaning changes */
   const hadCleaningPending = Object.keys(cleaningPending).length > 0;
   commitCleaningPending();
-  if(hadCleaningPending){ buildCleaningTable(); showToast("✅ Cleaning dates saved successfully"); }
+  if(hadCleaningPending){ buildCleaningTable(); showToast("✅ Cleaning dates saved successfully"); notifyIfAllowed("Burner Cleaning Saved", "New burner cleaning data has been saved.", "burner_cleaning_saved", 3000); }
 
   const wb = XLSX.utils.book_new();
 
@@ -5593,6 +5593,7 @@ function saveTipData(){
   saveTipDataStore(tipRows);
   clearTipUnsaved();
   showToast("✅ Burner tip data saved successfully!");
+  notifyIfAllowed("Burner Tip Data Saved", "Burner tip inspection data has been saved.", "burner_tip_data_saved", 3000);
 }
 
 function collectTipFromDOM(){
@@ -7593,7 +7594,7 @@ async function saveTempData(){
   renderTempDataTable();
   clearTempData();
   showToast(wasEdit ? "✅ Temperature entry updated." : "✅ Temperature entry saved successfully!");
-  notifyIfAllowed("Temperature Entry Saved", wasEdit ? "An entry was updated successfully." : "A new temperature entry was saved successfully.", "temp_entry_saved", 5000);
+  notifyIfAllowed(wasEdit ? "TST Data Updated" : "TST Data Saved", wasEdit ? "A TST entry was updated successfully." : "A new TST entry was saved successfully.", "tst_data_saved", 5000);
 }
 
 async function deleteTempEntryPdfFromStorage(pdfAttachment){
