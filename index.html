@@ -2001,7 +2001,7 @@ body.light-theme .hm-wall-btn-active{background:rgba(243,112,34,0.12)!important;
 .hm-peep-dot{position:absolute;top:50%;width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.85);transform:translate(-50%,-50%);z-index:4;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;}
 .hm-peep-dot:hover{transform:translate(-50%,-50%) scale(1.6);box-shadow:0 0 8px rgba(255,255,255,0.5);}
 /* ── Burner data row summary badges ── */
-.hm-row-data-strip{display:flex;align-items:center;gap:3px;margin-left:6px;flex-shrink:0;}
+.hm-row-data-strip{display:flex;align-items:center;gap:3px;margin-left:6px;flex-shrink:0;width:118px;min-width:118px;justify-content:flex-end;}
 .hm-row-data-badge{font-size:8px;font-weight:800;padding:2px 5px;border-radius:3px;letter-spacing:0.3px;line-height:1;white-space:nowrap;border:1px solid transparent;}
 .hm-row-data-badge-O{background:rgba(22,163,74,0.2);color:#4ade80;border-color:rgba(22,163,74,0.4);}
 .hm-row-data-badge-N{background:rgba(217,119,6,0.2);color:#fbbf24;border-color:rgba(217,119,6,0.4);}
@@ -3117,7 +3117,7 @@ function requestHeatMapRender(delayMs){
           overflow:visible;      /* 3D children must not be clipped by the scene */
         }
         .cb-scene:active{cursor:grabbing;}
-        .cb-scene.cb-float{animation:cb-float 3.8s ease-in-out infinite;}
+        .cb-scene.cb-float{animation:none !important;}
         @keyframes cb-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
 
         /* Rotating group — centred in scene */
@@ -3258,12 +3258,13 @@ function requestHeatMapRender(delayMs){
         .cb-face .hm-row-wrap { padding: 8px 0 !important; gap: 4px !important; }
 
         /* Peep-hole bars */
-        .cb-face .hm-peep-gradient-wrap     { padding: 8px 0 !important; margin: 0 !important; }
-        .cb-face .hm-peep-gradient-bar-wrap { height: 30px !important; }
+        .cb-face .hm-peep-gradient-wrap     { padding: 8px 0 !important; margin: 0 !important; gap: 4px !important; }
+        .cb-face .hm-peep-gradient-bar-wrap { height: 30px !important; flex: 1 1 auto !important; min-width: 0 !important; }
         .cb-face .hm-peep-marker            { height: 34px !important; top: -2px !important; }
         .cb-face .hm-peep-dot               { width: 11px !important; height: 11px !important; }
         .cb-face .hm-peep-temp-label        { font-size: 9px !important; top: -18px !important; }
         .cb-face .hm-peep-label             { min-width: 36px !important; font-size: 10px !important; color: #ffffff !important; font-weight: 900 !important; text-shadow: 0 1px 4px rgba(0,0,0,1) !important; }
+        .cb-face .hm-peep-range             { display: none !important; }
 
         /* Wall card fills face edge-to-edge */
         .cb-face .hm-wall-card { margin-bottom: 0 !important; border-radius: 0 !important; }
