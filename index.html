@@ -7406,14 +7406,21 @@ function getTdPeepFieldIds(){
   return ids;
 }
 
-function fillTdPeepFieldsFromList(values){
+function fillTdPeepFieldsFromList(values, onlyNonEmpty){
   var ids = getTdPeepFieldIds();
   var n = Math.min(ids.length, values.length);
+  var written = 0;
   for(var i=0; i<n; i++){
     var el = document.getElementById(ids[i]);
-    if(el) el.value = values[i];
+    if(!el) continue;
+    var raw = values[i];
+    if(raw === null || raw === undefined) continue;
+    var val = String(raw).trim();
+    if(onlyNonEmpty && val === "") continue;
+    el.value = val;
+    if(val !== "") written++;
   }
-  return n;
+  return written;
 }
 
 function normalizeOcrText(raw){
@@ -7444,6 +7451,146 @@ function findFirstAliasIndex(text, aliases){
     if(p >= 0 && (best < 0 || p < best)) best = p;
   }
   return best;
+}
+
+function normalizeWordToken(t){
+  return String(t || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .replace(/O/g, "0");
+}
+
+function detectTstColumnKey(token){
+  var tk = normalizeWordToken(token);
+  if(!tk) return "";
+  if(/AB.*B0?T/.test(tk) || /A8.*B0?T/.test(tk) || tk === "ABB0T" || tk === "ABBOT") return "ab-bot";
+  if(/CD.*B0?T/.test(tk) || /C0.*B0?T/.test(tk) || /CDB0T/.test(tk) || /CDBOT/.test(tk)) return "cd-bot";
+  if(/AB.*T0?P/.test(tk) || /A8.*T0?P/.test(tk) || tk === "ABT0P" || tk === "ABTOP") return "ab-top";
+  if(/CD.*T0?P/.test(tk) || /C0.*T0?P/.test(tk) || /CDT0P/.test(tk) || /CDTOP/.test(tk)) return "cd-top";
+  return "";
+}
+
+function parseSpatialTstFromOcrData(ocrData){
+  try{
+    if(!ocrData || !Array.isArray(ocrData.words) || !ocrData.words.length){
+      return { filled: 0, values: [] };
+    }
+
+    var words = ocrData.words.map(function(w){
+      var b = (w && w.bbox) ? w.bbox : {};
+      var x0 = Number(b.x0 || 0), x1 = Number(b.x1 || 0), y0 = Number(b.y0 || 0), y1 = Number(b.y1 || 0);
+      var xc = (x0 + x1) / 2, yc = (y0 + y1) / 2;
+      var txt = String((w && w.text) || "").trim();
+      return { text: txt, token: normalizeWordToken(txt), x0: x0, x1: x1, y0: y0, y1: y1, xc: xc, yc: yc };
+    }).filter(function(w){ return !!w.text; });
+
+    if(!words.length) return { filled: 0, values: [] };
+
+    var ys = words.map(function(w){ return w.yc; }).sort(function(a,b){ return a-b; });
+    var yMin = ys[0], yMax = ys[ys.length-1];
+    var headerYMax = yMin + Math.max(40, (yMax - yMin) * 0.20);
+
+    var colCandidates = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
+    words.forEach(function(w){
+      if(w.yc > headerYMax) return;
+      var key = detectTstColumnKey(w.token);
+      if(key) colCandidates[key].push(w.xc);
+    });
+
+    var colCenters = {};
+    ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(k){
+      var arr = colCandidates[k];
+      if(arr && arr.length){
+        var sum = 0;
+        for(var i=0;i<arr.length;i++) sum += arr[i];
+        colCenters[k] = sum / arr.length;
+      }
+    });
+
+    if(Object.keys(colCenters).length < 2) return { filled: 0, values: [] };
+
+    var minColX = Math.min.apply(null, Object.keys(colCenters).map(function(k){ return colCenters[k]; }));
+    var rowLabelCandidates = words.filter(function(w){
+      if(!/^\d{1,2}$/.test(w.token)) return false;
+      var n = Number(w.token);
+      if(!(n >= 1 && n <= 15)) return false;
+      return w.xc < (minColX - 20);
+    });
+
+    if(rowLabelCandidates.length < 8){
+      rowLabelCandidates = words.filter(function(w){
+        if(!/^\d{1,2}$/.test(w.token)) return false;
+        var n = Number(w.token);
+        if(!(n >= 1 && n <= 15)) return false;
+        return w.xc < minColX;
+      });
+    }
+
+    var rowY = {};
+    rowLabelCandidates.forEach(function(w){
+      var r = Number(w.token);
+      if(!rowY[r] || w.xc < rowY[r].x){ rowY[r] = { y: w.yc, x: w.xc }; }
+    });
+
+    var rowNums = Object.keys(rowY).map(Number).sort(function(a,b){ return a-b; });
+    if(!rowNums.length) return { filled: 0, values: [] };
+
+    var rowGap = 50;
+    if(rowNums.length >= 2){
+      var diffs = [];
+      for(var di=1; di<rowNums.length; di++) diffs.push(Math.abs(rowY[rowNums[di]].y - rowY[rowNums[di-1]].y));
+      diffs.sort(function(a,b){ return a-b; });
+      rowGap = diffs[Math.floor(diffs.length/2)] || rowGap;
+    }
+    var rowTol = Math.max(18, rowGap * 0.55);
+
+    var colKeys = Object.keys(colCenters);
+    var cVals = colKeys.map(function(k){ return colCenters[k]; });
+    var colSpread = Math.max.apply(null, cVals) - Math.min.apply(null, cVals);
+    var colTol = Math.max(30, colSpread / 5);
+
+    var grid = {};
+    rowNums.forEach(function(r){ grid[r] = { "ab-bot":"", "cd-bot":"", "ab-top":"", "cd-top":"" }; });
+
+    words.forEach(function(w){
+      if(!/^d{3,4}.test(w.token)) return;
+      var val = Number(w.token);
+      if(!(val >= 100 && val <= 1800)) return;
+
+      var bestRow = null;
+      var bestDy = 1e9;
+      rowNums.forEach(function(r){
+        var dy = Math.abs(w.yc - rowY[r].y);
+        if(dy < bestDy){ bestDy = dy; bestRow = r; }
+      });
+      if(bestRow === null || bestDy > rowTol) return;
+
+      var bestKey = "";
+      var bestDx = 1e9;
+      colKeys.forEach(function(k){
+        var dx = Math.abs(w.xc - colCenters[k]);
+        if(dx < bestDx){ bestDx = dx; bestKey = k; }
+      });
+      if(!bestKey || bestDx > colTol) return;
+
+      if(!grid[bestRow][bestKey]) grid[bestRow][bestKey] = String(val);
+    });
+
+    var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
+    var filled = 0;
+    for(var r=1; r<=15; r++){
+      var g = grid[r] || { "ab-bot":"", "cd-bot":"", "ab-top":"", "cd-top":"" };
+      ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(k){
+        var v = g[k] || "";
+        out[k].push(v);
+        if(v) filled++;
+      });
+    }
+
+    return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
+  }catch(e){
+    return { filled: 0, values: [] };
+  }
 }
 
 function parseRowWiseTstTable(text){
@@ -7505,10 +7652,16 @@ function parseRowWiseTstTable(text){
   return { rowsFound: found, values: abBot.concat(cdBot, abTop, cdTop) };
 }
 
-function parseTstSheetOcr(ocrText){
+function parseTstSheetOcr(ocrText, ocrData){
   var txt = normalizeOcrText(ocrText);
 
-  /* 1) Primary path for your fixed sheet: one row per peep number with 4 columns */
+  /* 0) Spatial parse for handwritten tables (uses OCR word coordinates) */
+  var spatial = parseSpatialTstFromOcrData(ocrData);
+  if(spatial.filled >= 3){
+    return { values: spatial.values, mode: "spatial" };
+  }
+
+  /* 1) Primary path for fixed printed sheet: one row per peep number with 4 columns */
   var rowWise = parseRowWiseTstTable(txt);
   if(rowWise.rowsFound >= 12){
     return { values: rowWise.values, mode: "row-wise" };
@@ -7572,7 +7725,10 @@ async function runOcrOnImageBlob(blob){
       }
     }
   });
-  return (res && res.data && res.data.text) ? res.data.text : "";
+  return {
+    text: (res && res.data && res.data.text) ? res.data.text : "",
+    data: (res && res.data) ? res.data : null
+  };
 }
 
 async function runOcrOnPdfFile(file){
@@ -7613,7 +7769,8 @@ async function runOcrOnPdfFile(file){
     canvas.height = Math.ceil(viewport.height);
     await page.render({ canvasContext: ctx, viewport: viewport }).promise;
     var blob = await new Promise(function(resolve){ canvas.toBlob(resolve, "image/png"); });
-    out += "\n" + await runOcrOnImageBlob(blob);
+    var ocrRes = await runOcrOnImageBlob(blob);
+    out += "\n" + (ocrRes.text || "");
   }
   return out;
 }
@@ -7641,26 +7798,29 @@ async function handleTstScanSelect(event){
     tdPendingPdfLoading = false;
     updateTempPdfUI();
 
-    var isPdf = /\.pdf$/i.test(file.name || "") || file.type === "application/pdf";
+    var isPdf = /.pdfi.test(file.name || "") || file.type === "application/pdf";
     var text = "";
+    var ocrData = null;
     if(isPdf){
       text = await runOcrOnPdfFile(file);
     }else{
       setTstOcrStatus("Reading image...", "#7ec8f0");
-      text = await runOcrOnImageBlob(file);
+      var imgOcr = await runOcrOnImageBlob(file);
+      text = imgOcr && imgOcr.text ? imgOcr.text : "";
+      ocrData = imgOcr && imgOcr.data ? imgOcr.data : null;
     }
 
-    var parsed = parseTstSheetOcr(text);
-    var filled = fillTdPeepFieldsFromList(parsed.values || []);
+    var parsed = parseTstSheetOcr(text, ocrData);
+    var filled = fillTdPeepFieldsFromList(parsed.values || [], true);
 
-    if(filled < 40){
+    if(filled < 3){
       setTstOcrStatus("Could not detect enough values", "#fca5a5");
-      alert("OCR could not detect enough TST temperatures. Please use a clearer scan/photo of the fixed sheet.");
+      alert("OCR could not detect enough TST temperatures. Please capture from top, keep full table in frame, and use bright light.");
       return;
     }
 
-    setTstOcrStatus("Filled " + filled + " values (" + parsed.mode + ")", "#34d399");
-    showToast("✅ OCR filled " + filled + " TST values. Source file is attached; press Save Entry.");
+    setTstOcrStatus("Filled " + filled + " cells (" + parsed.mode + ")", "#34d399");
+    showToast("✅ OCR filled " + filled + " TST cells. Source file is attached; press Save Entry.");
   }catch(err){
     setTstOcrStatus("OCR failed", "#fca5a5");
     alert("TST OCR failed: " + (err && err.message ? err.message : err));
