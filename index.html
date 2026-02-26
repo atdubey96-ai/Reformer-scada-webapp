@@ -4895,6 +4895,57 @@ function notifyAndBroadcast(eventType, title, body, tag, cooldownMs){
   broadcastSharedNotification(eventType, title, body);
 }
 
+var serverSaveWatcherTimer = null;
+var serverSaveWatcherLastAt = "";
+var serverSaveWatcherBootstrapped = false;
+
+function stopServerSaveWatcher(){
+  if(serverSaveWatcherTimer){
+    clearInterval(serverSaveWatcherTimer);
+    serverSaveWatcherTimer = null;
+  }
+}
+
+function startServerSaveWatcher(){
+  if(!supaClient || serverSaveWatcherTimer) return;
+  var tick = async function(){
+    try{
+      var q = await supaClient
+        .from(SUPABASE_TABLE)
+        .select("created_at,uploaded_by")
+        .order("created_at", {ascending:false})
+        .limit(1);
+      if(q.error || !q.data || !q.data.length) return;
+      var row = q.data[0] || {};
+      var createdAt = String(row.created_at || "");
+      if(!createdAt) return;
+
+      if(!serverSaveWatcherBootstrapped){
+        serverSaveWatcherBootstrapped = true;
+        serverSaveWatcherLastAt = createdAt;
+        return;
+      }
+
+      if(createdAt !== serverSaveWatcherLastAt){
+        serverSaveWatcherLastAt = createdAt;
+        var myEmp = (getLoggedInEmpId() || "").trim();
+        var sender = String(row.uploaded_by || "").trim();
+        if(sender && myEmp && sender === myEmp) return;
+        var byTxt = sender ? (" by EMP-" + sender) : "";
+        notifyIfAllowed(
+          "Central Data Saved",
+          "New burner data was saved" + byTxt + ".",
+          "server_save_" + createdAt,
+          0
+        );
+      }
+    }catch(e){}
+  };
+
+  tick();
+  serverSaveWatcherTimer = setInterval(tick, 10000);
+}
+
 function toggleQuickMenu(){
   var panel = document.getElementById("quickMenuPanel");
   if(!panel) return;
@@ -4910,6 +4961,7 @@ function closeQuickMenu(){
 }
 
 function logout(){
+  stopServerSaveWatcher();
   clearLoginState();
   location.reload();
 }
@@ -6741,6 +6793,7 @@ function init(){
   applyMobileHorizontalScrollFixes();
   updateNotificationToggleUI();
   subscribeCrossDeviceNotifications();
+  startServerSaveWatcher();
   /* Render heatmap on load since it is the first visible tab */
   setTimeout(renderHeatMap, 0);
 }
