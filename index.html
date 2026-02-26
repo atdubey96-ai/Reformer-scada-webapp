@@ -4749,6 +4749,18 @@ document.addEventListener("DOMContentLoaded",function(){
   document.addEventListener("keydown", function(e){
     if(e.key === "Escape") closeQuickMenu();
   });
+  window.addEventListener("focus", function(){
+    if(isUserLoggedIn()){
+      subscribeCrossDeviceNotifications();
+      startRealtimeNotifyEnsureLoop();
+    }
+  });
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible" && isUserLoggedIn()){
+      subscribeCrossDeviceNotifications();
+      startRealtimeNotifyEnsureLoop();
+    }
+  });
 });
 
 
@@ -4949,10 +4961,26 @@ var realtimeNotifyChannel = null;
 var realtimeNotifyClientId = "dev_" + Math.random().toString(36).slice(2) + "_" + Date.now().toString(36);
 var realtimeNotifySubscribed = false;
 var realtimeNotifyRetryTimer = null;
+var realtimeEnsureTimer = null;
+
+function cleanupRealtimeNotifyChannel(){
+  try{
+    if(supaClient && realtimeNotifyChannel){
+      if(typeof supaClient.removeChannel === "function"){
+        supaClient.removeChannel(realtimeNotifyChannel);
+      }
+    }
+  }catch(e){}
+  realtimeNotifyChannel = null;
+  realtimeNotifySubscribed = false;
+}
 
 function subscribeCrossDeviceNotifications(){
   if(!supaClient) return;
-  if(realtimeNotifyChannel) return;
+  if(realtimeNotifyChannel && realtimeNotifySubscribed) return;
+  if(realtimeNotifyChannel && !realtimeNotifySubscribed){
+    cleanupRealtimeNotifyChannel();
+  }
   try{
     realtimeNotifyChannel = supaClient.channel("scada-live-notifications", {
       config: { broadcast: { self: false, ack: true } }
@@ -4971,8 +4999,7 @@ function subscribeCrossDeviceNotifications(){
       .subscribe(function(status){
         realtimeNotifySubscribed = (status === "SUBSCRIBED");
         if((status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") && !realtimeNotifyRetryTimer){
-          realtimeNotifyChannel = null;
-          realtimeNotifySubscribed = false;
+          cleanupRealtimeNotifyChannel();
           realtimeNotifyRetryTimer = setTimeout(function(){
             realtimeNotifyRetryTimer = null;
             subscribeCrossDeviceNotifications();
@@ -4980,8 +5007,24 @@ function subscribeCrossDeviceNotifications(){
         }
       });
   }catch(e){
-    realtimeNotifyChannel = null;
-    realtimeNotifySubscribed = false;
+    cleanupRealtimeNotifyChannel();
+  }
+}
+
+function startRealtimeNotifyEnsureLoop(){
+  if(realtimeEnsureTimer) return;
+  realtimeEnsureTimer = setInterval(function(){
+    if(!isUserLoggedIn()) return;
+    if(!supaClient) return;
+    if(realtimeNotifySubscribed) return;
+    subscribeCrossDeviceNotifications();
+  }, 8000);
+}
+
+function stopRealtimeNotifyEnsureLoop(){
+  if(realtimeEnsureTimer){
+    clearInterval(realtimeEnsureTimer);
+    realtimeEnsureTimer = null;
   }
 }
 
@@ -5087,6 +5130,8 @@ function closeQuickMenu(){
 
 function logout(){
   stopServerSaveWatcher();
+  stopRealtimeNotifyEnsureLoop();
+  cleanupRealtimeNotifyChannel();
   clearLoginState();
   location.reload();
 }
@@ -6968,6 +7013,7 @@ function init(){
   applyMobileHorizontalScrollFixes();
   updateNotificationToggleUI();
   subscribeCrossDeviceNotifications();
+  startRealtimeNotifyEnsureLoop();
   startServerSaveWatcher();
   /* Render heatmap on load since it is the first visible tab */
   setTimeout(renderHeatMap, 0);
