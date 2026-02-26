@@ -84,6 +84,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  if(window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions){
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  }
+});
+</script>
 
 <style>
 
@@ -4216,6 +4225,15 @@ function requestHeatMapRender(delayMs){
               ✕
             </button>
           </div>
+          <!-- TST OCR Scan Upload -->
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.32);border-radius:7px;padding:6px 10px;">
+            <input type="file" id="td-ocr-file" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="handleTstScanSelect(event)">
+            <button type="button" id="td-ocr-btn" onclick="document.getElementById('td-ocr-file').click()"
+              style="background:rgba(16,185,129,0.16);border:1px solid rgba(16,185,129,0.45);color:#34d399;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
+              📷 Upload TST Sheet
+            </button>
+            <span id="td-ocr-status" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">OCR idle</span>
+          </div>
           <!-- Save / Clear -->
           <button id="td-save-btn" onclick="saveTempData()"
             style="background:linear-gradient(90deg,#d95008,#F37022);border:none;color:#fff;padding:9px 20px;border-radius:7px;font-size:14px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.5px;box-shadow:0 3px 14px rgba(243,112,34,0.4);">
@@ -6773,6 +6791,18 @@ var tdPendingPdfAttachment = null;
 var tdPendingPdfFile = null;
 var tdPendingPdfLoading = false;
 var tdSavingWithPdf = false;
+var tdEditingIndex = -1;
+
+function updateTempSaveButtonLabel(){
+  var btn = document.getElementById("td-save-btn");
+  if(!btn) return;
+  btn.textContent = tdEditingIndex >= 0 ? "💾 Update Entry" : "💾 Save Entry";
+}
+
+function setTempEditMode(idx){
+  tdEditingIndex = (typeof idx === "number" && idx >= 0) ? idx : -1;
+  updateTempSaveButtonLabel();
+}
 
 function setTempSaveBusy(busy){
   tdSavingWithPdf = !!busy;
@@ -6781,7 +6811,11 @@ function setTempSaveBusy(busy){
   btn.disabled = tdSavingWithPdf;
   btn.style.opacity = tdSavingWithPdf ? "0.65" : "1";
   btn.style.cursor = tdSavingWithPdf ? "not-allowed" : "pointer";
-  btn.textContent = tdSavingWithPdf ? "⏳ Uploading..." : "💾 Save Entry";
+  if(tdSavingWithPdf){
+    btn.textContent = "⏳ Uploading...";
+  }else{
+    updateTempSaveButtonLabel();
+  }
 }
 
 function updateTempPdfUI(){
@@ -6812,6 +6846,7 @@ function clearTempPdfAttachment(silent){
   var fileEl = document.getElementById("td-pdf-file");
   if(fileEl) fileEl.value = "";
   updateTempPdfUI();
+    setTstOcrStatus("OCR idle", "#94a3b8");
   if(!silent) showToast("🧹 PDF attachment removed");
 }
 
@@ -6838,6 +6873,7 @@ function handleTempPdfSelect(event){
   };
   tdPendingPdfLoading = false;
   updateTempPdfUI();
+    setTstOcrStatus("OCR idle", "#94a3b8");
   showToast("📎 PDF selected");
 }
 
@@ -6910,6 +6946,287 @@ async function openTempEntryPdf(idx){
   if(!w) alert("Popup blocked. Please allow popups to view PDF.");
 }
 
+var tdOcrBusy = false;
+
+function setTstOcrStatus(msg, color){
+  var st = document.getElementById("td-ocr-status");
+  if(!st) return;
+  st.textContent = msg || "OCR idle";
+  st.style.color = color || "#94a3b8";
+}
+
+function setTstOcrBusy(busy){
+  tdOcrBusy = !!busy;
+  var btn = document.getElementById("td-ocr-btn");
+  if(btn){
+    btn.disabled = tdOcrBusy;
+    btn.style.opacity = tdOcrBusy ? "0.7" : "1";
+    btn.style.cursor = tdOcrBusy ? "not-allowed" : "pointer";
+    btn.textContent = tdOcrBusy ? "⏳ Reading..." : "📷 Upload TST Sheet";
+  }
+}
+
+function getTdPeepFieldIds(){
+  var ids = [];
+  ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
+    for(var ph=1; ph<=15; ph++) ids.push("td-ph-" + rowKey + "-" + ph);
+  });
+  return ids;
+}
+
+function fillTdPeepFieldsFromList(values){
+  var ids = getTdPeepFieldIds();
+  var n = Math.min(ids.length, values.length);
+  for(var i=0; i<n; i++){
+    var el = document.getElementById(ids[i]);
+    if(el) el.value = values[i];
+  }
+  return n;
+}
+
+function normalizeOcrText(raw){
+  return String(raw || "")
+    .toUpperCase()
+    .replace(/\r/g, "\n")
+    .replace(/\t/g, " ")
+    .replace(/[|]/g, " ")
+    .replace(/[–—]/g, "-");
+}
+
+function parseTempNumbers(text){
+  var out = [];
+  var m = String(text || "").match(/-?\d+(?:[.,]\d+)?/g) || [];
+  for(var i=0; i<m.length; i++){
+    var token = m[i].replace(",", ".");
+    var v = Number(token);
+    if(!isFinite(v)) continue;
+    if(v >= 100 && v <= 1800) out.push(String(v));
+  }
+  return out;
+}
+
+function findFirstAliasIndex(text, aliases){
+  var best = -1;
+  for(var i=0; i<aliases.length; i++){
+    var p = text.indexOf(aliases[i]);
+    if(p >= 0 && (best < 0 || p < best)) best = p;
+  }
+  return best;
+}
+
+function parseRowWiseTstTable(text){
+  var txt = normalizeOcrText(text);
+  var rows = {};
+
+  function isTemp(v){ return isFinite(v) && v >= 100 && v <= 1800; }
+
+  /* A) Line-based parse (works when OCR preserves table rows) */
+  var lines = txt.split("\n");
+  for(var i=0; i<lines.length; i++){
+    var ln = lines[i];
+    var nums = ln.match(/\d+(?:[.,]\d+)?/g) || [];
+    if(nums.length < 5) continue;
+
+    var rowNo = Number(String(nums[0]).replace(",", "."));
+    if(!(rowNo >= 1 && rowNo <= 15)) continue;
+
+    var vals = [];
+    for(var j=1; j<nums.length && vals.length<4; j++){
+      var v = Number(String(nums[j]).replace(",", "."));
+      if(isTemp(v)) vals.push(String(v));
+    }
+    if(vals.length === 4 && !rows[rowNo]) rows[rowNo] = vals;
+  }
+
+  /* B) Token-stream parse (works when OCR collapses all rows into one line) */
+  var toks = (txt.match(/\d+(?:[.,]\d+)?/g) || []).map(function(t){
+    return Number(String(t).replace(",", "."));
+  });
+  for(var k=0; k+4<toks.length; k++){
+    var r = toks[k];
+    if(!(r >= 1 && r <= 15)) continue;
+    if(rows[r]) continue;
+    var v1=toks[k+1], v2=toks[k+2], v3=toks[k+3], v4=toks[k+4];
+    if(isTemp(v1) && isTemp(v2) && isTemp(v3) && isTemp(v4)){
+      rows[r] = [String(v1), String(v2), String(v3), String(v4)];
+    }
+  }
+
+  var abBot = [], cdBot = [], abTop = [], cdTop = [];
+  var found = 0;
+  for(var r=1; r<=15; r++){
+    var rv = rows[r];
+    if(rv && rv.length === 4){
+      found++;
+      abBot.push(rv[0]);
+      cdBot.push(rv[1]);
+      abTop.push(rv[2]);
+      cdTop.push(rv[3]);
+    }else{
+      abBot.push("");
+      cdBot.push("");
+      abTop.push("");
+      cdTop.push("");
+    }
+  }
+
+  return { rowsFound: found, values: abBot.concat(cdBot, abTop, cdTop) };
+}
+
+function parseTstSheetOcr(ocrText){
+  var txt = normalizeOcrText(ocrText);
+
+  /* 1) Primary path for your fixed sheet: one row per peep number with 4 columns */
+  var rowWise = parseRowWiseTstTable(txt);
+  if(rowWise.rowsFound >= 12){
+    return { values: rowWise.values, mode: "row-wise" };
+  }
+
+  /* 2) Column/section-based fallback */
+  var sections = [
+    { key:"ab-bot", aliases:["AB BOT","AB BOT.","AB BOTTOM","A8 BOT","AB B0T"] },
+    { key:"cd-bot", aliases:["CD BOT","CD BOT.","CD BOTTOM","CO BOT","CD B0T"] },
+    { key:"ab-top", aliases:["AB TOP","A8 TOP"] },
+    { key:"cd-top", aliases:["CD TOP","CO TOP"] }
+  ];
+
+  var found = [];
+  sections.forEach(function(s){
+    var idx = findFirstAliasIndex(txt, s.aliases);
+    if(idx >= 0) found.push({key:s.key, idx:idx});
+  });
+  found.sort(function(a,b){ return a.idx - b.idx; });
+
+  var map = {"ab-bot":[],"cd-bot":[],"ab-top":[],"cd-top":[]};
+  for(var i=0; i<found.length; i++){
+    var cur = found[i];
+    var end = (i+1 < found.length) ? found[i+1].idx : txt.length;
+    var seg = txt.slice(cur.idx, end);
+    map[cur.key] = parseTempNumbers(seg).slice(0, 15);
+  }
+
+  var ordered = ["ab-bot","cd-bot","ab-top","cd-top"];
+  var allComplete = ordered.every(function(k){ return map[k].length >= 15; });
+  if(allComplete){
+    var combined = [];
+    ordered.forEach(function(k){ combined = combined.concat(map[k].slice(0,15)); });
+    return { values: combined, mode: "sectioned" };
+  }
+
+  var partial = [];
+  ordered.forEach(function(k){ partial = partial.concat(map[k]); });
+  if(partial.length >= 60) return { values: partial.slice(0,60), mode: "partial" };
+
+  /* 3) Last fallback: first 60 valid temperature numbers from full text */
+  var global = parseTempNumbers(txt);
+  if(global.length >= 60) return { values: global.slice(0,60), mode: "global" };
+
+  return { values: partial, mode: "insufficient" };
+}
+
+async function ensurePdfJsReady(){
+
+  if(window.pdfjsLib) return true;
+  return false;
+}
+
+async function runOcrOnImageBlob(blob){
+  if(!window.Tesseract) throw new Error("OCR library not loaded.");
+  var res = await Tesseract.recognize(blob, "eng", {
+    logger: function(m){
+      if(m && m.status === "recognizing text"){
+        var p = Math.round((m.progress || 0) * 100);
+        setTstOcrStatus("Reading text... " + p + "%", "#7ec8f0");
+      }
+    }
+  });
+  return (res && res.data && res.data.text) ? res.data.text : "";
+}
+
+async function runOcrOnPdfFile(file){
+  var ok = await ensurePdfJsReady();
+  if(!ok) throw new Error("PDF reader library not loaded.");
+  if(window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions){
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  }
+
+  var buf = await file.arrayBuffer();
+  var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  var maxPages = Math.min(pdf.numPages, 2);
+
+  /* Fast path for digital PDFs: use embedded text before OCR */
+  var fastText = "";
+  try{
+    for(var p=1; p<=maxPages; p++){
+      var tPage = await pdf.getPage(p);
+      var tContent = await tPage.getTextContent();
+      var line = (tContent.items || []).map(function(it){ return it.str || ""; }).join(" ");
+      fastText += "\n" + line;
+    }
+    var quick = parseTstSheetOcr(fastText);
+    if((quick.values || []).filter(function(v){ return v !== ""; }).length >= 40){
+      return fastText;
+    }
+  }catch(e){}
+
+  /* OCR fallback for scanned/image PDFs */
+  var out = "";
+  for(var pageNo = 1; pageNo <= maxPages; pageNo++){
+    setTstOcrStatus("Reading PDF page " + pageNo + " / " + maxPages, "#7ec8f0");
+    var page = await pdf.getPage(pageNo);
+    var viewport = page.getViewport({ scale: 2 });
+    var canvas = document.createElement("canvas");
+    var ctx = canvas.getContext("2d", { alpha:false });
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+    var blob = await new Promise(function(resolve){ canvas.toBlob(resolve, "image/png"); });
+    out += "\n" + await runOcrOnImageBlob(blob);
+  }
+  return out;
+}
+
+async function handleTstScanSelect(event){
+  var fileInput = document.getElementById("td-ocr-file");
+  var file = event && event.target && event.target.files ? event.target.files[0] : null;
+  if(!file || tdOcrBusy){
+    if(fileInput) fileInput.value = "";
+    return;
+  }
+
+  try{
+    setTstOcrBusy(true);
+    setTstOcrStatus("Preparing OCR...", "#7ec8f0");
+
+    var isPdf = /\.pdf$/i.test(file.name || "") || file.type === "application/pdf";
+    var text = "";
+    if(isPdf){
+      text = await runOcrOnPdfFile(file);
+    }else{
+      setTstOcrStatus("Reading image...", "#7ec8f0");
+      text = await runOcrOnImageBlob(file);
+    }
+
+    var parsed = parseTstSheetOcr(text);
+    var filled = fillTdPeepFieldsFromList(parsed.values || []);
+
+    if(filled < 40){
+      setTstOcrStatus("Could not detect enough values", "#fca5a5");
+      alert("OCR could not detect enough TST temperatures. Please use a clearer scan/photo of the fixed sheet.");
+      return;
+    }
+
+    setTstOcrStatus("Filled " + filled + " values (" + parsed.mode + ")", "#34d399");
+    showToast("✅ OCR filled " + filled + " TST values. Please verify and press Save Entry.");
+  }catch(err){
+    setTstOcrStatus("OCR failed", "#fca5a5");
+    alert("TST OCR failed: " + (err && err.message ? err.message : err));
+  }finally{
+    if(fileInput) fileInput.value = "";
+    setTstOcrBusy(false);
+  }
+}
+
 /* Initialize datetime field with current time */
 (function initTempDataTab(){
   document.addEventListener("DOMContentLoaded", function(){
@@ -6926,8 +7243,44 @@ async function openTempEntryPdf(idx){
       renderTempDataTable();
     } catch(e){}
     updateTempPdfUI();
+    setTstOcrStatus("OCR idle", "#94a3b8");
   });
 })();
+
+function editTempEntry(idx){
+  var ent = tempDataEntries[idx];
+  if(!ent) return;
+
+  document.getElementById("td-datetime").value = ent.dt || "";
+  document.getElementById("td-shift").value = ent.shift || "";
+  document.getElementById("td-ab-cot").value = ent.abCot || "";
+  document.getElementById("td-cd-cot").value = ent.cdCot || "";
+  document.getElementById("td-flue-gas").value = ent.flueGas || "";
+  document.getElementById("td-excess-o2").value = ent.excessO2 || "";
+  document.getElementById("td-prereformer-max").value = ent.preRefMax || "";
+  document.getElementById("td-prereformer-min").value = ent.preRefMin || "";
+
+  ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
+    var vals = (ent.peepHoles && ent.peepHoles[rowKey]) ? ent.peepHoles[rowKey] : [];
+    for(var ph=1; ph<=15; ph++){
+      var inp = document.getElementById("td-ph-" + rowKey + "-" + ph);
+      if(inp) inp.value = (vals[ph-1] != null ? vals[ph-1] : "");
+    }
+  });
+
+  tdPendingPdfFile = null;
+  tdPendingPdfLoading = false;
+  tdPendingPdfAttachment = ent.pdfAttachment ? {
+    name: ent.pdfAttachment.name || "PDF attached",
+    storagePath: ent.pdfAttachment.storagePath || "",
+    publicUrl: ent.pdfAttachment.publicUrl || ""
+  } : null;
+  updateTempPdfUI();
+
+  setTempEditMode(idx);
+  showToast("✏️ Entry loaded for editing. Update values and click Update Entry.");
+  try{ document.getElementById("tab-tempdata").scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){}
+}
 
 async function saveTempData(){
   var dt    = document.getElementById("td-datetime").value;
@@ -6938,6 +7291,7 @@ async function saveTempData(){
   if(tdSavingWithPdf){ return; }
   if(tdPendingPdfLoading){ alert("PDF is still loading. Please wait a moment."); return; }
 
+  var existingEntry = (tdEditingIndex >= 0) ? tempDataEntries[tdEditingIndex] : null;
   var uploadedPdf = null;
   if(tdPendingPdfFile){
     setTempSaveBusy(true);
@@ -6956,7 +7310,7 @@ async function saveTempData(){
     preRefMax: document.getElementById("td-prereformer-max").value,
     preRefMin: document.getElementById("td-prereformer-min").value,
     peepHoles: {},
-    pdfAttachment: uploadedPdf
+    pdfAttachment: uploadedPdf || (existingEntry ? (existingEntry.pdfAttachment || null) : null)
   };
 
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
@@ -6967,11 +7321,17 @@ async function saveTempData(){
     }
   });
 
-  tempDataEntries.unshift(entry);
+  var wasEdit = tdEditingIndex >= 0;
+  if(wasEdit){
+    tempDataEntries[tdEditingIndex] = entry;
+  }else{
+    tempDataEntries.unshift(entry);
+  }
+
   try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); } catch(e){}
   renderTempDataTable();
-  clearTempPdfAttachment(true);
-  showToast("✅ Temperature entry saved successfully!");
+  clearTempData();
+  showToast(wasEdit ? "✅ Temperature entry updated." : "✅ Temperature entry saved successfully!");
 }
 
 async function deleteTempEntryPdfFromStorage(pdfAttachment){
@@ -7006,6 +7366,12 @@ async function deleteTempEntry(idx){
   }
 
   tempDataEntries.splice(idx,1);
+  if(tdEditingIndex === idx){
+    clearTempData();
+  }else if(tdEditingIndex > idx){
+    tdEditingIndex = tdEditingIndex - 1;
+    updateTempSaveButtonLabel();
+  }
   try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); } catch(e){}
   renderTempDataTable();
 
@@ -7017,6 +7383,7 @@ async function deleteTempEntry(idx){
 }
 
 function clearTempData(){
+  setTempEditMode(-1);
   var fields = ["td-ab-cot","td-cd-cot","td-flue-gas","td-excess-o2","td-prereformer-max","td-prereformer-min"];
   fields.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=""; });
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
@@ -7071,6 +7438,7 @@ function renderTempDataTable(){
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-top") + '</td>'
       + '<td style="text-align:center;">'
         + '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">'
+          + '<button onclick="editTempEntry(' + i + ')" style="background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.45);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Edit entry">✏️ Edit</button>'
           + (ent.pdfAttachment && (ent.pdfAttachment.publicUrl || ent.pdfAttachment.dataUrl || ent.pdfAttachment.storagePath)
               ? '<button onclick="openTempEntryPdf(' + i + ')" style="background:rgba(96,200,255,0.12);color:#7ec8f0;border:1px solid rgba(96,200,255,0.38);border-radius:4px;font-size:11px;padding:4px 9px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="View attached PDF">📄 PDF</button>'
               : '')
