@@ -975,13 +975,13 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
   background:linear-gradient(135deg,#7f1d1d 0%,#dc2626 45%,#ef4444 100%);
   color:#fff;
   text-align:left;
-  padding:10px 14px;
+  padding:4px 8px;
   font-weight:700;
   font-size:13px;
   display:none;
   align-items:stretch;
   justify-content:space-between;
-  gap:12px;
+  gap:6px;
   position:fixed;
   bottom:72px;
   left:10px;
@@ -999,36 +999,73 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
   0%,100%{transform:translateY(0);filter:saturate(1);}
   50%{transform:translateY(-1px);filter:saturate(1.15);}
 }
-.alarm-banner button{
+.alarm-banner > button{
   background:rgba(255,255,255,0.95);
   color:#9f1239;
   border:1px solid rgba(255,255,255,0.5);
-  padding:6px 12px;
+  padding:4px 10px;
   border-radius:999px;
   cursor:pointer;
   font-weight:800;
   align-self:center;
   white-space:nowrap;
+  font-size:11px;
 }
 .alarm-sections{
   display:flex;
   align-items:stretch;
-  gap:10px;
+  gap:6px;
   flex:1;
   min-width:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+  white-space:nowrap;
+  padding-bottom:2px;
 }
-.alarm-section{
-  flex:1;
-  min-width:0;
+.alarm-chip{
+  border:none;
+  cursor:pointer;
+  color:#fff;
+  background:rgba(0,0,0,0.2);
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.22);
+  min-width:180px;
+  max-width:210px;
   padding:4px 8px;
-  border-radius:10px;
-  background:rgba(0,0,0,0.14);
-  border:1px solid rgba(255,255,255,0.14);
+  display:inline-flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:1px;
+  text-align:left;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.12);
 }
-.alarm-divider{
-  width:1px;
-  background:rgba(255,255,255,0.45);
-  flex-shrink:0;
+.alarm-chip:hover{filter:brightness(1.05);}
+.alarm-chip-critical{background:linear-gradient(135deg,rgba(127,29,29,0.92),rgba(220,38,38,0.92));}
+.alarm-chip-major{background:linear-gradient(135deg,rgba(124,45,18,0.9),rgba(234,88,12,0.9));}
+.alarm-chip-warning{background:linear-gradient(135deg,rgba(133,77,14,0.9),rgba(202,138,4,0.9));}
+.alarm-chip-freq{background:linear-gradient(135deg,rgba(30,64,175,0.9),rgba(37,99,235,0.9));}
+.alarm-chip-title{
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  width:100%;
+}
+.alarm-chip-desc{
+  font-size:9px;
+  opacity:0.95;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  width:100%;
+}
+.alarm-card-jump{
+  outline:2px solid #f59e0b;
+  box-shadow:0 0 0 4px rgba(245,158,11,0.18);
+  transition:box-shadow 0.35s, outline-color 0.35s;
 }
 .alarm-head{
   font-size:13px;
@@ -1053,8 +1090,8 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
     bottom:66px;
     border-radius:12px 12px 0 0;
   }
-  .alarm-sections{flex-direction:column;gap:8px;}
-  .alarm-divider{width:auto;height:1px;}
+  .alarm-sections{gap:6px;}
+  .alarm-chip{min-width:165px;max-width:190px;}
   .alarm-banner button{align-self:flex-end;}
 }
 
@@ -3215,17 +3252,7 @@ function requestHeatMapRender(delayMs){
 </div>
 
 <div id="masterAlarm" class="alarm-banner">
-  <div class="alarm-sections">
-    <div class="alarm-section" id="alarmImbSection" style="display:none;">
-      <div class="alarm-head" id="alarmImbTitle">🚨 BURNER IMBALANCE</div>
-      <div class="alarm-desc" id="alarmImbDetail"></div>
-    </div>
-    <div class="alarm-divider" id="alarmDivider" style="display:none;"></div>
-    <div class="alarm-section" id="alarmFreqSection" style="display:none;">
-      <div class="alarm-head" id="alarmFreqTitle">⚠ HIGH FREQUENCY CLEANING</div>
-      <div class="alarm-desc" id="alarmFreqDetail"></div>
-    </div>
-  </div>
+  <div class="alarm-sections" id="alarmChipTrack"></div>
   <button onclick="acknowledgeAlarm()">Acknowledge</button>
 </div>
 
@@ -5424,64 +5451,42 @@ function playBeep(){
 }
 function startAlarm(){ if(!alarmTimer) alarmTimer = setInterval(playBeep, 1200); }
 function stopAlarm(){ clearInterval(alarmTimer); alarmTimer=null; }
+function getAlarmStableKey(a){
+  return [a && a.type || "", a && a.wall || "", a && a.sev || "", a && a.desc || "", a && a.action || ""].join("|");
+}
 
 function syncMasterAlarmBanner(){
-  var hasImbalance = Object.keys(wallSeverity || {}).some(function(w){ return wallSeverity[w] && wallSeverity[w] !== "normal"; });
-  var freqList = getFreqAlarms();
-  var hasFreq = freqList.length > 0;
-  var hasAny = hasImbalance || hasFreq;
+  rebuildWallAlarms();
+  rebuildFreqAlarms();
+  var activeAlarms = (alarmLog || []).filter(function(a){ return !a.acked; });
+  var hasAny = activeAlarms.length > 0;
   var banner = document.getElementById("masterAlarm");
+  var track = document.getElementById("alarmChipTrack");
   currentAlarmReasonKey = "";
-
-  var imbSection = document.getElementById("alarmImbSection");
-  var freqSection = document.getElementById("alarmFreqSection");
-  var divider = document.getElementById("alarmDivider");
-  var imbTitle = document.getElementById("alarmImbTitle");
-  var imbDetail = document.getElementById("alarmImbDetail");
-  var freqDetail = document.getElementById("alarmFreqDetail");
-
-  if(imbSection) imbSection.style.display = hasImbalance ? "block" : "none";
-  if(freqSection) freqSection.style.display = hasFreq ? "block" : "none";
-  if(divider) divider.style.display = (hasImbalance && hasFreq) ? "block" : "none";
-
-  if(hasImbalance && imbDetail){
-    var worstWall = null;
-    var sevRank = {normal:0, warning:1, major:2, critical:3};
-    var imbalanceReasons = [];
-    Object.keys(wallSeverity || {}).forEach(function(w){
-      var sev = wallSeverity[w] || "normal";
-      if(sev === "normal") return;
-      imbalanceReasons.push("W"+w+":"+sev);
-      if(!worstWall || sevRank[sev] > sevRank[worstWall.sev]){
-        worstWall = {name:w, sev:sev};
-      }
-    });
-    if(worstWall){
-      var rows = data[worstWall.name] || [];
-      var badRows = [];
-      rows.forEach(function(row, ri){
-        var rn=0, ro=0;
-        row.forEach(function(c){ if(c==="N") rn++; else if(c==="O") ro++; });
-        if(Math.abs(rn-ro) > 3) badRows.push("R"+(ri+1));
+  if(track){
+    track.innerHTML = "";
+    activeAlarms.forEach(function(a){
+      var sev = (a.type === "freq") ? "freq" : (a.sev || "warning");
+      var icon = (a.type === "freq") ? "⚠" : ({critical:"🔴", major:"🟠", warning:"🟡", normal:"🟢"}[sev] || "🔵");
+      var wall = a.wall ? String(a.wall).replace(/^Wall\s+/i, "W") : "General";
+      var sevTxt = (a.type === "freq") ? "FREQ" : String(sev || "").toUpperCase();
+      var brief = String(a.desc || "").replace(/\s+/g, " ").trim();
+      if(brief.length > 28) brief = brief.slice(0, 28).trimEnd() + "...";
+      var chip = document.createElement("button");
+      chip.className = "alarm-chip alarm-chip-" + sev;
+      chip.type = "button";
+      chip.innerHTML =
+        "<span class='alarm-chip-title'>" + icon + " " + wall + " • " + sevTxt + "</span>" +
+        "<span class='alarm-chip-desc'>" + (brief || "Tap for full alarm details") + "</span>";
+      var alarmKey = getAlarmStableKey(a);
+      chip.dataset.alarmKey = alarmKey;
+      chip.addEventListener("click", function(){
+        openAlarmFromBanner(alarmKey);
       });
-      if(imbTitle) imbTitle.textContent = "🚨 BURNER IMBALANCE";
-      imbDetail.textContent = "Wall " + worstWall.name + " is at " + worstWall.sev.toUpperCase() + " severity"
-        + (badRows.length ? " in " + badRows.join(", ") : "")
-        + ". Check fuel mix and rebalance NG/Off-gas burners immediately.";
-      currentAlarmReasonKey = "IMB|" + imbalanceReasons.sort().join(",");
-    }
+      track.appendChild(chip);
+    });
   }
-
-  if(hasFreq && freqDetail){
-    var top = freqList.slice().sort(function(a,b){ return b.count - a.count; })[0];
-    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    var mLabel = months[parseInt(top.monthStr.slice(5),10)-1] + " " + top.monthStr.slice(0,4);
-    freqDetail.textContent = "Wall " + top.wall + ", Row " + top.row + ", Burner " + top.burner
-      + " cleaned " + top.count + " times in " + mLabel
-      + ". Inspect tip blockage/nozzle condition and verify fuel pressure.";
-    var freqReasons = freqList.map(function(a){ return "W"+a.wall+"R"+a.row+"B"+a.burner+":"+a.monthStr+":"+a.count; }).sort();
-    currentAlarmReasonKey = (hasImbalance ? currentAlarmReasonKey + "||" : "") + "FREQ|" + freqReasons.join(",");
-  }
+  currentAlarmReasonKey = activeAlarms.map(getAlarmStableKey).join("||");
 
   if(hasAny){
     if(currentAlarmReasonKey !== silencedAlarmReasonKey){
@@ -5504,7 +5509,21 @@ function syncMasterAlarmBanner(){
     masterAlarmActive = false;
     banner.classList.remove("alarm-active");
     banner.classList.remove("alarm-visible");
+    if(track) track.innerHTML = "";
   }
+}
+
+function openAlarmFromBanner(alarmKey){
+  switchTab("alarms");
+  if(!alarmKey) return;
+  setTimeout(function(){
+    var cards = Array.prototype.slice.call(document.querySelectorAll(".alarm-card"));
+    var target = cards.find(function(c){ return c.dataset.alarmKey === alarmKey; }) || null;
+    if(!target) return;
+    target.scrollIntoView({behavior:"smooth", block:"center"});
+    target.classList.add("alarm-card-jump");
+    setTimeout(function(){ target.classList.remove("alarm-card-jump"); }, 1200);
+  }, 80);
 }
 
 /* ==================================================
@@ -7229,6 +7248,8 @@ function refreshAlarmPanel(){
     var card = document.createElement("div");
     var sevClass = a.type==="freq" ? "alarm-card-freq" : "alarm-card-"+a.sev;
     card.className = "alarm-card " + sevClass + (a.acked?" alarm-card-acked":"");
+    card.id = "alarm-card-" + a.id;
+    card.dataset.alarmKey = getAlarmStableKey(a);
 
     var ts = a.ts;
     var timeStr = ("0"+ts.getHours()).slice(-2)+":"+("0"+ts.getMinutes()).slice(-2)+":"+("0"+ts.getSeconds()).slice(-2);
