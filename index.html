@@ -4257,6 +4257,12 @@ function requestHeatMapRender(delayMs){
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">
 
+          <!-- HGU Load -->
+          <div class="td-field-group">
+            <label class="td-label">HGU Load <span class="td-unit">(%)</span></label>
+            <input type="number" id="td-hgu-load" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
           <!-- AB Side COT -->
           <div class="td-field-group">
             <label class="td-label">AB Side Reformer COT <span class="td-unit">(°C)</span></label>
@@ -4291,6 +4297,12 @@ function requestHeatMapRender(delayMs){
           <div class="td-field-group">
             <label class="td-label">Pre-reformer Bed Min <span class="td-unit">(°C)</span></label>
             <input type="number" id="td-prereformer-min" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
+          <!-- Methane Slip -->
+          <div class="td-field-group">
+            <label class="td-label">Methane Slip <span class="td-unit">(%Vol)</span></label>
+            <input type="number" id="td-methane-slip" class="td-input" placeholder="Enter value" step="0.01">
           </div>
 
         </div>
@@ -4426,12 +4438,14 @@ function requestHeatMapRender(delayMs){
               <tr style="background:rgba(255,255,255,0.06);color:#7ec8f0;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">
                 <th style="padding:9px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.1);">Date/Time</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Shift</th>
+                <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">HGU Load (%)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">AB COT (°C)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">CD COT (°C)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Flue Gas (°C)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">O₂ (%Vol)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Pre-ref Max (°C)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Pre-ref Min (°C)</th>
+                <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Methane Slip (%Vol)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">AB Bot PH 1-15</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">CD Bot PH 1-15</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">AB Top PH 1-15</th>
@@ -4440,7 +4454,7 @@ function requestHeatMapRender(delayMs){
               </tr>
             </thead>
             <tbody id="td-saved-tbody">
-              <tr><td colspan="13" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>
+              <tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>
             </tbody>
           </table>
         </div>
@@ -5151,9 +5165,9 @@ async function exportToExcel(){
 
   /* Sheet: Temp Data */
   var tdHeaders = [
-    "Date/Time","Shift",
+    "Date/Time","Shift","HGU Load (%)",
     "AB Side COT (°C)","CD Side COT (°C)","Flue Gas (°C)","Excess O2 (%Vol)",
-    "Pre-ref Max (°C)","Pre-ref Min (°C)",
+    "Pre-ref Max (°C)","Pre-ref Min (°C)","Methane Slip (%Vol)",
     "PDF Attached","PDF Name","PDF URL"
   ];
   var phRowKeys   = ["ab-bot","cd-bot","ab-top","cd-top"];
@@ -5164,8 +5178,8 @@ async function exportToExcel(){
   var tdRows = [tdHeaders];
   if(Array.isArray(tempDataEntries) && tempDataEntries.length){
     tempDataEntries.forEach(function(e){
-      var row=[e.dt||"", e.shift||"", e.abCot||"", e.cdCot||"", e.flueGas||"",
-               e.excessO2||"", e.preRefMax||"", e.preRefMin||"",
+      var row=[e.dt||"", e.shift||"", e.hguLoad||"", e.abCot||"", e.cdCot||"", e.flueGas||"",
+               e.excessO2||"", e.preRefMax||"", e.preRefMin||"", e.methaneSlip||"",
                (e.pdfAttachment && (e.pdfAttachment.publicUrl || e.pdfAttachment.dataUrl || e.pdfAttachment.storagePath)) ? "Yes" : "No",
                (e.pdfAttachment && e.pdfAttachment.name) ? e.pdfAttachment.name : "",
                (e.pdfAttachment && e.pdfAttachment.publicUrl) ? e.pdfAttachment.publicUrl : ""];
@@ -5272,30 +5286,53 @@ function _doImport(file, onDone, silent){
           var tdData = XLSX.utils.sheet_to_json(tdWS, {header:1, raw:false, defval:""});
           if(tdData.length > 1){
             var tdHeader = tdData[0] || [];
-            var hasPdfCols = String(tdHeader[8]||"").toLowerCase().indexOf("pdf") >= 0
-                          || String(tdHeader[9]||"").toLowerCase().indexOf("pdf") >= 0;
-            var hasPdfUrlCol = String(tdHeader[10]||"").toLowerCase().indexOf("pdf url") >= 0;
-            var phRowKeys2   = ["ab-bot","cd-bot","ab-top","cd-top"];
-            var phRowLabels2 = {"ab-bot":"AB Bot","cd-bot":"CD Bot","ab-top":"AB Top","cd-top":"CD Top"};
+            var low = tdHeader.map(function(h){ return String(h||"").toLowerCase(); });
+            function colIdx(matchers, fallback){
+              for(var i=0;i<low.length;i++){
+                for(var j=0;j<matchers.length;j++) if(low[i].indexOf(matchers[j])>=0) return i;
+              }
+              return fallback;
+            }
+
+            var idxDate       = colIdx(["date/time","date"], 0);
+            var idxShift      = colIdx(["shift"], 1);
+            var idxHguLoad    = colIdx(["hgu load"], -1);
+            var idxAbCot      = colIdx(["ab side cot","ab cot"], idxHguLoad>=0 ? 3 : 2);
+            var idxCdCot      = colIdx(["cd side cot","cd cot"], idxHguLoad>=0 ? 4 : 3);
+            var idxFlue       = colIdx(["flue gas"], idxHguLoad>=0 ? 5 : 4);
+            var idxExcessO2   = colIdx(["excess o2","o2"], idxHguLoad>=0 ? 6 : 5);
+            var idxPreMax     = colIdx(["pre-ref max","prereformer max"], idxHguLoad>=0 ? 7 : 6);
+            var idxPreMin     = colIdx(["pre-ref min","prereformer min"], idxHguLoad>=0 ? 8 : 7);
+            var idxMethane    = colIdx(["methane slip"], -1);
+            var idxPdfAttached= colIdx(["pdf attached"], idxMethane>=0 ? 10 : 8);
+            var idxPdfName    = colIdx(["pdf name"], idxMethane>=0 ? 11 : 9);
+            var idxPdfUrl     = colIdx(["pdf url"], -1);
+
+            var hasPdfCols    = idxPdfAttached >= 0 || idxPdfName >= 0 || idxPdfUrl >= 0;
+            var phRowKeys2    = ["ab-bot","cd-bot","ab-top","cd-top"];
+            var colOffsetStart = (idxPdfUrl >= 0 ? idxPdfUrl + 1 : (idxPdfName >= 0 ? idxPdfName + 1 : (idxPdfAttached >= 0 ? idxPdfAttached + 1 : (idxMethane>=0 ? 10 : 8))));
+
             tempDataEntries = [];
             tdData.slice(1).forEach(function(row){
-              if(!row[0] && !row[1]) return; /* skip completely empty rows */
+              if(!row[idxDate] && !row[idxShift]) return; /* skip completely empty rows */
               var entry = {
-                dt:         row[0]||"",
-                shift:      row[1]||"",
-                abCot:      row[2]||"",
-                cdCot:      row[3]||"",
-                flueGas:    row[4]||"",
-                excessO2:   row[5]||"",
-                preRefMax:  row[6]||"",
-                preRefMin:  row[7]||"",
+                dt:         row[idxDate]||"",
+                shift:      row[idxShift]||"",
+                hguLoad:    idxHguLoad>=0 ? (row[idxHguLoad]||"") : "",
+                abCot:      row[idxAbCot]||"",
+                cdCot:      row[idxCdCot]||"",
+                flueGas:    row[idxFlue]||"",
+                excessO2:   row[idxExcessO2]||"",
+                preRefMax:  row[idxPreMax]||"",
+                preRefMin:  row[idxPreMin]||"",
+                methaneSlip: idxMethane>=0 ? (row[idxMethane]||"") : "",
                 peepHoles:  {},
                 pdfAttachment: null
               };
               if(hasPdfCols){
-                var pdfAttachedMark = row[8] || "";
-                var pdfName = row[9] || "";
-                var pdfUrl = hasPdfUrlCol ? (row[10] || "") : "";
+                var pdfAttachedMark = idxPdfAttached>=0 ? (row[idxPdfAttached]||"") : "";
+                var pdfName = idxPdfName>=0 ? (row[idxPdfName]||"") : "";
+                var pdfUrl = idxPdfUrl>=0 ? (row[idxPdfUrl]||"") : "";
                 if(String(pdfAttachedMark).toLowerCase() === "yes" || pdfName || pdfUrl){
                   entry.pdfAttachment = {
                     name: pdfName || "Attachment.pdf",
@@ -5304,7 +5341,7 @@ function _doImport(file, onDone, silent){
                   };
                 }
               }
-              var colOffset = hasPdfCols ? (hasPdfUrlCol ? 11 : 10) : 8;
+              var colOffset = colOffsetStart;
               phRowKeys2.forEach(function(rk){
                 entry.peepHoles[rk] = [];
                 for(var ph=0;ph<15;ph++){
@@ -7302,12 +7339,14 @@ function editTempEntry(idx){
 
   document.getElementById("td-datetime").value = ent.dt || "";
   document.getElementById("td-shift").value = ent.shift || "";
+  document.getElementById("td-hgu-load").value = ent.hguLoad || "";
   document.getElementById("td-ab-cot").value = ent.abCot || "";
   document.getElementById("td-cd-cot").value = ent.cdCot || "";
   document.getElementById("td-flue-gas").value = ent.flueGas || "";
   document.getElementById("td-excess-o2").value = ent.excessO2 || "";
   document.getElementById("td-prereformer-max").value = ent.preRefMax || "";
   document.getElementById("td-prereformer-min").value = ent.preRefMin || "";
+  document.getElementById("td-methane-slip").value = ent.methaneSlip || "";
 
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
     var vals = (ent.peepHoles && ent.peepHoles[rowKey]) ? ent.peepHoles[rowKey] : [];
@@ -7352,12 +7391,14 @@ async function saveTempData(){
   var entry = {
     dt: dt,
     shift: shift,
+    hguLoad: document.getElementById("td-hgu-load").value,
     abCot:  document.getElementById("td-ab-cot").value,
     cdCot:  document.getElementById("td-cd-cot").value,
     flueGas: document.getElementById("td-flue-gas").value,
     excessO2: document.getElementById("td-excess-o2").value,
     preRefMax: document.getElementById("td-prereformer-max").value,
     preRefMin: document.getElementById("td-prereformer-min").value,
+    methaneSlip: document.getElementById("td-methane-slip").value,
     peepHoles: {},
     pdfAttachment: uploadedPdf || (existingEntry ? (existingEntry.pdfAttachment || null) : null)
   };
@@ -7433,7 +7474,7 @@ async function deleteTempEntry(idx){
 
 function clearTempData(){
   setTempEditMode(-1);
-  var fields = ["td-ab-cot","td-cd-cot","td-flue-gas","td-excess-o2","td-prereformer-max","td-prereformer-min"];
+  var fields = ["td-hgu-load","td-ab-cot","td-cd-cot","td-flue-gas","td-excess-o2","td-prereformer-max","td-prereformer-min","td-methane-slip"];
   fields.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=""; });
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
     for(var ph=1;ph<=15;ph++){
@@ -7463,7 +7504,7 @@ function renderTempDataTable(){
   var tbody = document.getElementById("td-saved-tbody");
   if(!tbody) return;
   if(!tempDataEntries.length){
-    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
     return;
   }
   var display = tempDataEntries.slice(0, 15);
@@ -7475,12 +7516,14 @@ function renderTempDataTable(){
     rows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">'
       + '<td style="font-size:11px;white-space:nowrap;">' + ent.dt + '</td>'
       + '<td style="text-align:center;"><span style="color:'+sc+';font-weight:700;font-size:11px;background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:10px;border:1px solid '+sc+'44;">' + ent.shift + '</span></td>'
+      + '<td style="text-align:center;">' + (ent.hguLoad||"—") + '</td>'
       + '<td style="text-align:center;">' + (ent.abCot  || "—") + '</td>'
       + '<td style="text-align:center;">' + (ent.cdCot  || "—") + '</td>'
       + '<td style="text-align:center;">' + (ent.flueGas|| "—") + '</td>'
       + '<td style="text-align:center;">' + (ent.excessO2||"—") + '</td>'
       + '<td style="text-align:center;">' + (ent.preRefMax||"—") + '</td>'
       + '<td style="text-align:center;">' + (ent.preRefMin||"—") + '</td>'
+      + '<td style="text-align:center;">' + (ent.methaneSlip||"—") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"ab-bot") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-bot") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"ab-top") + '</td>'
@@ -7496,7 +7539,7 @@ function renderTempDataTable(){
       + '</td>'
       + '</tr>';
   }
-  tbody.innerHTML = rows || '<tr><td colspan="13" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
+  tbody.innerHTML = rows || '<tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
 }
 
 
