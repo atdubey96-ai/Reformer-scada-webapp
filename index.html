@@ -4385,6 +4385,10 @@ function requestHeatMapRender(delayMs){
               style="background:rgba(16,185,129,0.16);border:1px solid rgba(16,185,129,0.45);color:#34d399;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
               📷 Upload TST Sheet
             </button>
+            <button type="button" id="td-ocr-paste-btn" onclick="openTstTextImportPrompt()"
+              style="background:rgba(20,184,166,0.14);border:1px solid rgba(20,184,166,0.42);color:#5eead4;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
+              📋 Paste OCR Text
+            </button>
             <span id="td-ocr-status" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">OCR idle</span>
           </div>
           <button type="button" onclick="downloadTstTemplate()"
@@ -7462,12 +7466,98 @@ function setTstOcrStatus(msg, color){
 function setTstOcrBusy(busy){
   tdOcrBusy = !!busy;
   var btn = document.getElementById("td-ocr-btn");
+  var pasteBtn = document.getElementById("td-ocr-paste-btn");
   if(btn){
     btn.disabled = tdOcrBusy;
     btn.style.opacity = tdOcrBusy ? "0.7" : "1";
     btn.style.cursor = tdOcrBusy ? "not-allowed" : "pointer";
     btn.textContent = tdOcrBusy ? "⏳ Reading..." : "📷 Upload TST Sheet";
   }
+  if(pasteBtn){
+    pasteBtn.disabled = tdOcrBusy;
+    pasteBtn.style.opacity = tdOcrBusy ? "0.7" : "1";
+    pasteBtn.style.cursor = tdOcrBusy ? "not-allowed" : "pointer";
+  }
+}
+
+function parseExternalTstTextToValues(raw){
+  var lines = String(raw || "").split(/\r?\n/);
+  var grid = {};
+  for(var rr=1; rr<=15; rr++) grid[rr] = { "ab-bot":"", "cd-bot":"", "ab-top":"", "cd-top":"" };
+
+  function put(r, key, token){
+    if(!(r >= 1 && r <= 15) || !key) return;
+    var v = parseLikelyTempFromToken(token);
+    if(!isFinite(v)) return;
+    grid[r][key] = String(v);
+  }
+
+  var explicitRe = /(\d{1,2})\s*(AB\s*BOT|CD\s*BOT|AB\s*TOP|CD\s*TOP|ABBOT|CDBOT|ABTOP|CDTOP)\s*([A-Z0-9]{2,6})/ig;
+  var em;
+  while((em = explicitRe.exec(String(raw || ""))) !== null){
+    var r1 = Number(em[1]);
+    var lk = normalizeWordToken(em[2]);
+    var key = "";
+    if(lk.indexOf("ABBOT") >= 0 || lk.indexOf("ABB0T") >= 0) key = "ab-bot";
+    else if(lk.indexOf("CDBOT") >= 0 || lk.indexOf("CDB0T") >= 0) key = "cd-bot";
+    else if(lk.indexOf("ABTOP") >= 0 || lk.indexOf("ABT0P") >= 0) key = "ab-top";
+    else if(lk.indexOf("CDTOP") >= 0 || lk.indexOf("CDT0P") >= 0) key = "cd-top";
+    put(r1, key, em[3]);
+  }
+
+  for(var i=0; i<lines.length; i++){
+    var ln = lines[i].trim();
+    if(!ln) continue;
+    var rowStart = ln.match(/^(\d{1,2})\b(.*)$/);
+    if(!rowStart) continue;
+    var row = Number(rowStart[1]);
+    if(!(row >= 1 && row <= 15)) continue;
+    var rest = rowStart[2] || "";
+    var toks = rest.match(/[A-Z0-9]{2,6}/ig) || [];
+    var vals = [];
+    for(var t=0; t<toks.length; t++){
+      var tv = parseLikelyTempFromToken(toks[t]);
+      if(isFinite(tv)) vals.push(String(tv));
+    }
+    if(vals.length >= 4){
+      grid[row]["ab-bot"] = vals[0];
+      grid[row]["cd-bot"] = vals[1];
+      grid[row]["ab-top"] = vals[2];
+      grid[row]["cd-top"] = vals[3];
+    }else if(vals.length > 0){
+      if(!grid[row]["ab-bot"] && vals[0]) grid[row]["ab-bot"] = vals[0];
+      if(!grid[row]["cd-bot"] && vals[1]) grid[row]["cd-bot"] = vals[1];
+      if(!grid[row]["ab-top"] && vals[2]) grid[row]["ab-top"] = vals[2];
+      if(!grid[row]["cd-top"] && vals[3]) grid[row]["cd-top"] = vals[3];
+    }
+  }
+
+  var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
+  var filled = 0;
+  for(var r=1; r<=15; r++){
+    ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(k){
+      var v = grid[r][k] || "";
+      out[k].push(v);
+      if(v) filled++;
+    });
+  }
+  return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
+}
+
+function openTstTextImportPrompt(){
+  if(tdOcrBusy) return;
+  var sample = "Paste OCR text here. Examples:\n1 AB BOT 961\n2 AB BOT 962 CD BOT 969\n3 AB TOP 970\n5 CD TOP 920";
+  var raw = prompt(sample, "");
+  if(raw === null) return;
+  var parsed = parseExternalTstTextToValues(raw);
+  var filled = fillTdPeepFieldsFromList(parsed.values || [], true);
+  if(filled < 1){
+    setTstOcrStatus("No values found in pasted text", "#fca5a5");
+    alert("Could not map any TST value from pasted text. Use format like: 2 AB BOT 962 CD BOT 969");
+    return;
+  }
+  setTstOcrStatus("Filled " + filled + " cells (pasted text)", "#34d399");
+  showToast("✅ Filled " + filled + " TST cells from pasted OCR text.");
 }
 
 function getTdPeepFieldIds(){
@@ -7535,8 +7625,11 @@ function normalizeWordToken(t){
 function parseLikelyTempFromToken(token){
   var tk = String(token || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   if(!tk) return NaN;
+  var digitCount = (tk.match(/\d/g) || []).length;
+  if(digitCount < 2) return NaN;
   tk = tk
     .replace(/[OQ]/g, "0")
+    .replace(/D/g, "0")
     .replace(/[IL]/g, "1")
     .replace(/Z/g, "2")
     .replace(/S/g, "5")
@@ -7843,18 +7936,319 @@ async function ensurePdfJsReady(){
 
 async function runOcrOnImageBlob(blob){
   if(!window.Tesseract) throw new Error("OCR library not loaded.");
-  var res = await Tesseract.recognize(blob, "eng", {
+  var ocrCfg = {
     logger: function(m){
       if(m && m.status === "recognizing text"){
         var p = Math.round((m.progress || 0) * 100);
         setTstOcrStatus("Reading text... " + p + "%", "#7ec8f0");
       }
-    }
-  });
-  return {
-    text: (res && res.data && res.data.text) ? res.data.text : "",
-    data: (res && res.data) ? res.data : null
+    },
+    tessedit_pageseg_mode: "6",
+    preserve_interword_spaces: "1"
   };
+
+  function ocrScore(payload){
+    var data = payload && payload.data ? payload.data : null;
+    var text = payload && payload.text ? payload.text : "";
+    var spatialFilled = 0;
+    try{ spatialFilled = parseSpatialTstFromOcrData(data).filled || 0; }catch(e){}
+    var nums = parseTempNumbers(text).length;
+    return (spatialFilled * 10) + nums;
+  }
+
+  async function preprocessForTstOcr(srcBlob){
+    var url = URL.createObjectURL(srcBlob);
+    try{
+      var img = await new Promise(function(resolve, reject){
+        var im = new Image();
+        im.onload = function(){ resolve(im); };
+        im.onerror = reject;
+        im.src = url;
+      });
+
+      var scale = 2;
+      var cw = Math.max(1, Math.round(img.naturalWidth * scale));
+      var ch = Math.max(1, Math.round(img.naturalHeight * scale));
+      var canvas = document.createElement("canvas");
+      canvas.width = cw;
+      canvas.height = ch;
+      var ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if(!ctx) throw new Error("Canvas unavailable");
+
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0, cw, ch);
+      var id = ctx.getImageData(0, 0, cw, ch);
+      var d = id.data;
+      var sum = 0;
+      for(var i=0; i<d.length; i+=4){
+        var g = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
+        sum += g;
+      }
+      var avg = sum / (d.length/4);
+      var thr = Math.max(95, Math.min(210, avg - 12));
+      for(var j=0; j<d.length; j+=4){
+        var gg = Math.round(0.299*d[j] + 0.587*d[j+1] + 0.114*d[j+2]);
+        var bw = gg < thr ? 0 : 255;
+        d[j] = bw; d[j+1] = bw; d[j+2] = bw; d[j+3] = 255;
+      }
+      ctx.putImageData(id, 0, 0);
+
+      var outBlob = await new Promise(function(resolve){
+        canvas.toBlob(function(b){ resolve(b || srcBlob); }, "image/png");
+      });
+      return outBlob || srcBlob;
+    }finally{
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  var rawRes = await Tesseract.recognize(blob, "eng", ocrCfg);
+  var best = {
+    text: (rawRes && rawRes.data && rawRes.data.text) ? rawRes.data.text : "",
+    data: (rawRes && rawRes.data) ? rawRes.data : null
+  };
+
+  if(ocrScore(best) < 15){
+    try{
+      setTstOcrStatus("Enhancing image for OCR...", "#7ec8f0");
+      var processedBlob = await preprocessForTstOcr(blob);
+      var pass2 = await Tesseract.recognize(processedBlob, "eng", ocrCfg);
+      var alt = {
+        text: (pass2 && pass2.data && pass2.data.text) ? pass2.data.text : "",
+        data: (pass2 && pass2.data) ? pass2.data : null
+      };
+      if(ocrScore(alt) > ocrScore(best)) best = alt;
+    }catch(e){}
+  }
+
+  return best;
+}
+
+function getTstCloudOcrApiKey(){
+  try{
+    var saved = localStorage.getItem("scadaOcrSpaceApiKey");
+    if(saved && String(saved).trim()) return String(saved).trim();
+  }catch(e){}
+  return "helloworld";
+}
+
+async function runCloudOcrFile(file){
+  if(typeof fetch !== "function" || !file) return null;
+  var apiKey = getTstCloudOcrApiKey();
+  if(!apiKey) return null;
+
+  var fd = new FormData();
+  fd.append("apikey", apiKey);
+  fd.append("language", "eng");
+  fd.append("isOverlayRequired", "true");
+  fd.append("OCREngine", "2");
+  fd.append("scale", "true");
+  fd.append("detectOrientation", "true");
+  fd.append("file", file, file.name || "tst-sheet");
+
+  var resp = await fetch("https://api.ocr.space/parse/image", {
+    method: "POST",
+    body: fd
+  });
+  if(!resp.ok) return null;
+
+  var js = await resp.json();
+  if(!js) return null;
+  if(js.IsErroredOnProcessing && (!js.ParsedResults || !js.ParsedResults.length)) return null;
+
+  var parsedResults = Array.isArray(js.ParsedResults) ? js.ParsedResults : [];
+  var fullText = "";
+  var words = [];
+
+  for(var i=0; i<parsedResults.length; i++){
+    var pr = parsedResults[i] || {};
+    fullText += "\n" + String(pr.ParsedText || "");
+    var overlay = pr.TextOverlay || {};
+    var lines = Array.isArray(overlay.Lines) ? overlay.Lines : [];
+    for(var li=0; li<lines.length; li++){
+      var line = lines[li] || {};
+      var wds = Array.isArray(line.Words) ? line.Words : [];
+      for(var wi=0; wi<wds.length; wi++){
+        var w = wds[wi] || {};
+        var x0 = Number(w.Left || 0);
+        var y0 = Number(w.Top || 0);
+        var ww = Number(w.Width || 0);
+        var hh = Number(w.Height || 0);
+        words.push({
+          text: String(w.WordText || "").trim(),
+          bbox: { x0: x0, y0: y0, x1: x0 + ww, y1: y0 + hh }
+        });
+      }
+    }
+  }
+
+  return {
+    text: fullText.trim(),
+    data: { words: words },
+    provider: "cloud"
+  };
+}
+
+function detectLineCentersFromProjection(arr, threshold, minGap){
+  var peaks = [];
+  var i = 0;
+  while(i < arr.length){
+    if(arr[i] < threshold){ i++; continue; }
+    var j = i;
+    var bestIdx = i;
+    var bestVal = arr[i];
+    while(j < arr.length && arr[j] >= threshold){
+      if(arr[j] > bestVal){ bestVal = arr[j]; bestIdx = j; }
+      j++;
+    }
+    peaks.push(bestIdx);
+    i = j + 1;
+  }
+  if(!peaks.length) return [];
+  peaks.sort(function(a,b){ return a-b; });
+  var out = [peaks[0]];
+  for(var k=1; k<peaks.length; k++){
+    if(Math.abs(peaks[k] - out[out.length-1]) >= minGap){
+      out.push(peaks[k]);
+    }else{
+      out[out.length-1] = Math.round((out[out.length-1] + peaks[k]) / 2);
+    }
+  }
+  return out;
+}
+
+async function runGridTstOcrFromImage(blob){
+  if(!window.Tesseract) throw new Error("OCR library not loaded.");
+
+  var url = URL.createObjectURL(blob);
+  try{
+    var img = await new Promise(function(resolve, reject){
+      var im = new Image();
+      im.onload = function(){ resolve(im); };
+      im.onerror = reject;
+      im.src = url;
+    });
+
+    var scale = 2;
+    var w = Math.max(1, Math.round(img.naturalWidth * scale));
+    var h = Math.max(1, Math.round(img.naturalHeight * scale));
+    var canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    var ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if(!ctx) return { filled: 0, values: [] };
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, 0, 0, w, h);
+
+    var id = ctx.getImageData(0, 0, w, h);
+    var d = id.data;
+    var rowDark = new Array(h);
+    var colDark = new Array(w);
+    for(var yy=0; yy<h; yy++) rowDark[yy] = 0;
+    for(var xx=0; xx<w; xx++) colDark[xx] = 0;
+
+    for(var p=0; p<d.length; p+=4){
+      var idx = p/4;
+      var x = idx % w;
+      var y = Math.floor(idx / w);
+      var g = Math.round(0.299*d[p] + 0.587*d[p+1] + 0.114*d[p+2]);
+      var dark = g < 120 ? 1 : 0;
+      if(dark){
+        rowDark[y]++;
+        colDark[x]++;
+      }
+    }
+
+    var rowThresh = Math.max(20, Math.floor(w * 0.20));
+    var colThresh = Math.max(20, Math.floor(h * 0.12));
+    var hLines = detectLineCentersFromProjection(rowDark, rowThresh, Math.max(6, Math.floor(h/180)));
+    var vLines = detectLineCentersFromProjection(colDark, colThresh, Math.max(6, Math.floor(w/160)));
+
+    if(hLines.length >= 2){
+      hLines = [hLines[0], hLines[hLines.length-1]];
+    }
+    if(vLines.length >= 2){
+      vLines = [vLines[0], vLines[vLines.length-1]];
+    }
+    if(hLines.length < 2 || vLines.length < 2) return { filled: 0, values: [] };
+
+    var top = hLines[0], bottom = hLines[1], left = vLines[0], right = vLines[1];
+    if(bottom - top < 200 || right - left < 120) return { filled: 0, values: [] };
+
+    var rowEdges = [];
+    for(var r=0; r<=16; r++){
+      rowEdges.push(Math.round(top + ((bottom - top) * r / 16)));
+    }
+    var colEdges = [];
+    for(var c=0; c<=5; c++){
+      colEdges.push(Math.round(left + ((right - left) * c / 5)));
+    }
+
+    var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
+    var colKeys = ["ab-bot","cd-bot","ab-top","cd-top"];
+    var filled = 0;
+
+    for(var row=1; row<=15; row++){
+      for(var ci=0; ci<4; ci++){
+        var x0 = colEdges[ci+1], x1 = colEdges[ci+2];
+        var y0 = rowEdges[row], y1 = rowEdges[row+1];
+        var padX = Math.max(2, Math.round((x1 - x0) * 0.12));
+        var padY = Math.max(2, Math.round((y1 - y0) * 0.18));
+        var sx = Math.max(0, x0 + padX);
+        var sy = Math.max(0, y0 + padY);
+        var sw = Math.max(1, Math.min(w - sx, (x1 - x0) - padX*2));
+        var sh = Math.max(1, Math.min(h - sy, (y1 - y0) - padY*2));
+
+        var cellCanvas = document.createElement("canvas");
+        cellCanvas.width = sw;
+        cellCanvas.height = sh;
+        var cctx = cellCanvas.getContext("2d", { willReadFrequently: true });
+        cctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+        var cid = cctx.getImageData(0, 0, sw, sh);
+        var cd = cid.data;
+        var sum = 0;
+        for(var ii=0; ii<cd.length; ii+=4){
+          sum += Math.round(0.299*cd[ii] + 0.587*cd[ii+1] + 0.114*cd[ii+2]);
+        }
+        var avg = sum / (cd.length/4);
+        var thr = Math.max(85, Math.min(205, avg - 15));
+        for(var jj=0; jj<cd.length; jj+=4){
+          var gg = Math.round(0.299*cd[jj] + 0.587*cd[jj+1] + 0.114*cd[jj+2]);
+          var bw = gg < thr ? 0 : 255;
+          cd[jj] = bw; cd[jj+1] = bw; cd[jj+2] = bw; cd[jj+3] = 255;
+        }
+        cctx.putImageData(cid, 0, 0);
+
+        var cellBlob = await new Promise(function(resolve){
+          cellCanvas.toBlob(function(b){ resolve(b); }, "image/png");
+        });
+        if(!cellBlob){
+          out[colKeys[ci]].push("");
+          continue;
+        }
+
+        var rr = await Tesseract.recognize(cellBlob, "eng", {
+          tessedit_pageseg_mode: "8",
+          tessedit_char_whitelist: "0123456789ODILSZGQ",
+          preserve_interword_spaces: "1"
+        });
+        var txt = (rr && rr.data && rr.data.text) ? rr.data.text : "";
+        var val = parseLikelyTempFromToken(txt);
+        if(isFinite(val)){
+          out[colKeys[ci]].push(String(val));
+          filled++;
+        }else{
+          out[colKeys[ci]].push("");
+        }
+      }
+      setTstOcrStatus("Grid OCR row " + row + "/15...", "#7ec8f0");
+    }
+
+    return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
+  }finally{
+    URL.revokeObjectURL(url);
+  }
 }
 
 async function runOcrOnPdfFile(file){
@@ -7927,21 +8321,55 @@ async function handleTstScanSelect(event){
     var isPdf = /\.pdf$/i.test(file.name || "") || file.type === "application/pdf";
     var text = "";
     var ocrData = null;
-    if(isPdf){
-      text = await runOcrOnPdfFile(file);
-    }else{
-      setTstOcrStatus("Reading image...", "#7ec8f0");
-      var imgOcr = await runOcrOnImageBlob(file);
-      text = imgOcr && imgOcr.text ? imgOcr.text : "";
-      ocrData = imgOcr && imgOcr.data ? imgOcr.data : null;
+    var parsed = { values: [], mode: "none" };
+    var filled = 0;
+
+    try{
+      setTstOcrStatus("Cloud OCR...", "#7ec8f0");
+      var cloudRes = await runCloudOcrFile(file);
+      if(cloudRes && (cloudRes.text || (cloudRes.data && cloudRes.data.words && cloudRes.data.words.length))){
+        var pCloud = parseTstSheetOcr(cloudRes.text || "", cloudRes.data || null);
+        var fCloud = fillTdPeepFieldsFromList(pCloud.values || [], true);
+        if(fCloud > filled){
+          filled = fCloud;
+          parsed = { values: pCloud.values || [], mode: "cloud-" + (pCloud.mode || "ocr") };
+        }
+      }
+    }catch(e){}
+
+    if(filled < 1){
+      if(isPdf){
+        text = await runOcrOnPdfFile(file);
+      }else{
+        setTstOcrStatus("Reading image...", "#7ec8f0");
+        var imgOcr = await runOcrOnImageBlob(file);
+        text = imgOcr && imgOcr.text ? imgOcr.text : "";
+        ocrData = imgOcr && imgOcr.data ? imgOcr.data : null;
+      }
+
+      var pLocal = parseTstSheetOcr(text, ocrData);
+      var fLocal = fillTdPeepFieldsFromList(pLocal.values || [], true);
+      if(fLocal > filled){
+        filled = fLocal;
+        parsed = pLocal;
+      }
     }
 
-    var parsed = parseTstSheetOcr(text, ocrData);
-    var filled = fillTdPeepFieldsFromList(parsed.values || [], true);
+    if(!isPdf && filled < 1){
+      try{
+        setTstOcrStatus("Grid OCR fallback...", "#7ec8f0");
+        var g = await runGridTstOcrFromImage(file);
+        var fg = fillTdPeepFieldsFromList(g.values || [], true);
+        if(fg > filled){
+          filled = fg;
+          parsed = { values: g.values || [], mode: "grid" };
+        }
+      }catch(e){}
+    }
 
     if(filled < 1){
       setTstOcrStatus("Could not detect any values", "#fca5a5");
-      alert("OCR could not detect any TST value. Please capture from top, keep full table in frame, and use bright light.");
+      alert("OCR could not detect any TST value. Try a clearer top-angle photo, or upload PDF/scan with stronger contrast.");
       return;
     }
 
