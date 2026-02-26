@@ -2250,7 +2250,7 @@ async function loginWithBiometric(){
     if(opEl) opEl.innerHTML = "<b>Operator:</b> EMP-" + rec.empId;
     init();
     var serverOk = await autoImportFromServer(true);
-    if(!serverOk) showToast("⚠ Could not auto-load from Supabase server");
+    if(!serverOk) showToast("⚠ Could not auto-load from central server");
   }catch(e){
     if(err){
       err.style.display = "block";
@@ -4212,8 +4212,8 @@ function requestHeatMapRender(delayMs){
             <input type="datetime-local" id="td-datetime"
               style="background:transparent;border:none;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;outline:none;cursor:pointer;">
           </div>
-          <!-- Optional PDF Attachment -->
-          <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:6px 10px;">
+          <!-- Optional PDF Attachment (legacy hidden; upload TST sheet is primary) -->
+          <div style="display:none;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:6px 10px;">
             <input type="file" id="td-pdf-file" accept="application/pdf,.pdf" style="display:none;" onchange="handleTempPdfSelect(event)">
             <button type="button" onclick="document.getElementById('td-pdf-file').click()"
               style="background:rgba(96,200,255,0.12);border:1px solid rgba(96,200,255,0.35);color:#7ec8f0;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
@@ -4234,6 +4234,10 @@ function requestHeatMapRender(delayMs){
             </button>
             <span id="td-ocr-status" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">OCR idle</span>
           </div>
+          <button type="button" onclick="downloadTstTemplate()"
+            style="background:rgba(129,140,248,0.14);border:1px solid rgba(129,140,248,0.42);color:#a5b4fc;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
+            ⬇️ Download TST Format
+          </button>
           <!-- Save / Clear -->
           <button id="td-save-btn" onclick="saveTempData()"
             style="background:linear-gradient(90deg,#d95008,#F37022);border:none;color:#fff;padding:9px 20px;border-radius:7px;font-size:14px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.5px;box-shadow:0 3px 14px rgba(243,112,34,0.4);">
@@ -5183,7 +5187,7 @@ async function exportToExcel(){
     showToast("✅ Saved to central SCADA server");
     return;
   }
-  showToast("❌ Save failed: Supabase server is unreachable");
+  showToast("❌ Save failed: central server is unreachable");
 }
 
 /* ==================================================
@@ -5203,7 +5207,7 @@ function importFromExcel(event){
 /* ── Smart Refresh: server sync only ── */
 async function smartRefresh(){
   var okServer = await autoImportFromServer(true);
-  if(!okServer) showToast("⚠ Could not refresh from Supabase server");
+  if(!okServer) showToast("⚠ Could not refresh from central server");
 }
 
 function _doImport(file, onDone, silent){
@@ -6722,7 +6726,7 @@ async function autoImportFromServer(showMsg){
     return new Promise(function(res){
       _doImport(file, function(){
         buildCleaningTable();
-        if(showMsg) showToast("✅ Auto-loaded from Supabase cloud");
+        if(showMsg) showToast("✅ Auto-loaded from central server");
         res(true);
       }, true);
     });
@@ -6776,7 +6780,7 @@ async function loginWithFolderSupport(){
     
     /* Primary: central server sync for all PCs */
     var serverOk = await autoImportFromServer(true);
-    if(!serverOk) showToast("⚠ Could not auto-load from Supabase server");
+    if(!serverOk) showToast("⚠ Could not auto-load from central server");
   } else {
     err.style.display = "block";
     err.textContent   = "Incorrect password. Please try again.";
@@ -6868,7 +6872,7 @@ function handleTempPdfSelect(event){
   tdPendingPdfAttachment = {
     name: file.name,
     size: file.size,
-    type: "application/pdf",
+    type: (file.type || "application/octet-stream"),
     uploadedAt: new Date().toISOString()
   };
   tdPendingPdfLoading = false;
@@ -6890,7 +6894,7 @@ function makePdfStoragePath(fileName, dt, shift){
 async function uploadTempEntryPdf(file, dt, shift){
   var bucket = "temp-data-pdf";
   if(!supaClient){
-    alert("Supabase is not connected. PDF upload is not available.");
+    alert("Supabase is not connected. Attachment upload is not available.");
     return null;
   }
   try{
@@ -6898,10 +6902,10 @@ async function uploadTempEntryPdf(file, dt, shift){
     var up = await supaClient.storage.from(bucket).upload(path, file, {
       cacheControl: "3600",
       upsert: false,
-      contentType: "application/pdf"
+      contentType: (file.type || "application/octet-stream")
     });
     if(up.error){
-      alert("PDF upload failed: " + up.error.message);
+      alert("Attachment upload failed: " + up.error.message);
       return null;
     }
     var pub = supaClient.storage.from(bucket).getPublicUrl(path);
@@ -6909,14 +6913,14 @@ async function uploadTempEntryPdf(file, dt, shift){
     return {
       name: file.name,
       size: file.size,
-      type: "application/pdf",
+      type: (file.type || "application/octet-stream"),
       uploadedAt: new Date().toISOString(),
       storageBucket: bucket,
       storagePath: path,
       publicUrl: publicUrl || ""
     };
   }catch(err){
-    alert("PDF upload failed: " + (err && err.message ? err.message : err));
+    alert("Attachment upload failed: " + (err && err.message ? err.message : err));
     return null;
   }
 }
@@ -6924,7 +6928,7 @@ async function uploadTempEntryPdf(file, dt, shift){
 async function openTempEntryPdf(idx){
   var ent = tempDataEntries[idx];
   if(!ent || !ent.pdfAttachment){
-    alert("No PDF attached for this entry.");
+    alert("No attachment found for this entry.");
     return;
   }
   var url = ent.pdfAttachment.publicUrl || ent.pdfAttachment.dataUrl || "";
@@ -6939,11 +6943,11 @@ async function openTempEntryPdf(idx){
     }catch(e){}
   }
   if(!url){
-    alert("PDF link is unavailable.");
+    alert("Attachment link is unavailable.");
     return;
   }
   var w = window.open(url, "_blank");
-  if(!w) alert("Popup blocked. Please allow popups to view PDF.");
+  if(!w) alert("Popup blocked. Please allow popups to view attachment.");
 }
 
 var tdOcrBusy = false;
@@ -7198,6 +7202,17 @@ async function handleTstScanSelect(event){
     setTstOcrBusy(true);
     setTstOcrStatus("Preparing OCR...", "#7ec8f0");
 
+    /* Save uploaded TST source file with this entry (same purpose as old Attach PDF) */
+    tdPendingPdfFile = file;
+    tdPendingPdfAttachment = {
+      name: file.name || "tst-sheet",
+      size: file.size || 0,
+      type: file.type || "application/octet-stream",
+      uploadedAt: new Date().toISOString()
+    };
+    tdPendingPdfLoading = false;
+    updateTempPdfUI();
+
     var isPdf = /\.pdf$/i.test(file.name || "") || file.type === "application/pdf";
     var text = "";
     if(isPdf){
@@ -7217,13 +7232,47 @@ async function handleTstScanSelect(event){
     }
 
     setTstOcrStatus("Filled " + filled + " values (" + parsed.mode + ")", "#34d399");
-    showToast("✅ OCR filled " + filled + " TST values. Please verify and press Save Entry.");
+    showToast("✅ OCR filled " + filled + " TST values. Source file is attached; press Save Entry.");
   }catch(err){
     setTstOcrStatus("OCR failed", "#fca5a5");
     alert("TST OCR failed: " + (err && err.message ? err.message : err));
   }finally{
     if(fileInput) fileInput.value = "";
     setTstOcrBusy(false);
+  }
+}
+
+var TST_FORMAT_XLSX_B64 = "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";
+
+function downloadTstTemplate(){
+  try{
+    if(typeof TST_FORMAT_XLSX_B64 === "string" && TST_FORMAT_XLSX_B64.length > 100){
+      var binary = atob(TST_FORMAT_XLSX_B64);
+      var bytes = new Uint8Array(binary.length);
+      for(var i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+      var blob = new Blob([bytes], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "TST sheet.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast("⬇️ TST format downloaded");
+      return;
+    }
+
+    var rows = [["Peep hole number","AB Bot","CD bot","AB Top","CD Top"]];
+    for(var r=1; r<=15; r++) rows.push([r,"","","",""]);
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:18},{wch:12},{wch:12},{wch:12},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, "TST Format");
+    XLSX.writeFile(wb, "TST_sheet_format.xlsx");
+    showToast("⬇️ TST format downloaded");
+  }catch(e){
+    alert("Could not download TST format: " + (e && e.message ? e.message : e));
   }
 }
 
@@ -7271,7 +7320,7 @@ function editTempEntry(idx){
   tdPendingPdfFile = null;
   tdPendingPdfLoading = false;
   tdPendingPdfAttachment = ent.pdfAttachment ? {
-    name: ent.pdfAttachment.name || "PDF attached",
+    name: ent.pdfAttachment.name || "Attachment",
     storagePath: ent.pdfAttachment.storagePath || "",
     publicUrl: ent.pdfAttachment.publicUrl || ""
   } : null;
@@ -7440,7 +7489,7 @@ function renderTempDataTable(){
         + '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">'
           + '<button onclick="editTempEntry(' + i + ')" style="background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.45);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Edit entry">✏️ Edit</button>'
           + (ent.pdfAttachment && (ent.pdfAttachment.publicUrl || ent.pdfAttachment.dataUrl || ent.pdfAttachment.storagePath)
-              ? '<button onclick="openTempEntryPdf(' + i + ')" style="background:rgba(96,200,255,0.12);color:#7ec8f0;border:1px solid rgba(96,200,255,0.38);border-radius:4px;font-size:11px;padding:4px 9px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="View attached PDF">📄 PDF</button>'
+              ? '<button onclick="openTempEntryPdf(' + i + ')" style="background:rgba(96,200,255,0.12);color:#7ec8f0;border:1px solid rgba(96,200,255,0.38);border-radius:4px;font-size:11px;padding:4px 9px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="View attached file">📎 File</button>'
               : '')
           + '<button onclick="deleteTempEntry(' + i + ')" style="background:rgba(192,57,43,0.2);color:#f87171;border:1px solid rgba(192,57,43,0.4);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Delete entry">🗑 Del</button>'
         + '</div>'
