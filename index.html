@@ -1582,25 +1582,35 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
   .app-meta-left{gap:8px;}
   .app-meta-item{font-size:10px;}
   .alarm-banner{
-    bottom:calc(120px + env(safe-area-inset-bottom, 0px));
+    bottom:calc(68px + env(safe-area-inset-bottom, 0px));
   }
   .bottom-tab-bar{
     display:flex;
-    flex-wrap:wrap;
+    flex-wrap:nowrap;
     overflow-x:hidden;
     justify-content:space-between;
+    align-items:flex-end;
   }
   .btab{
-    flex:0 0 33.3333%;
+    flex:1 1 20%;
     min-width:0;
-    min-height:58px;
-    padding:8px 6px;
+    min-height:66px;
+    padding:8px 4px;
   }
-  .bottom-tab-bar .btab:nth-last-child(-n+2){
-    flex-basis:50%;
+  .bottom-tab-bar .btab:nth-child(3) .btab-icon{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:2px;
+    background:rgba(148,163,184,0.18);
+    border:1px solid rgba(148,163,184,0.32);
+    font-size:20px;
   }
   .btab-label{font-size:10px;}
-  body{ padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px)); }
+  body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
   .td-temp-scroll{
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
