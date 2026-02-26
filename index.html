@@ -1522,7 +1522,8 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     width:100%;
     justify-content:flex-start;
   }
-  #notifyToggleBtn{
+  #notifyToggleBtn,
+  #notifyTestBtn{
     flex:1 1 100%;
   }
   .hd-btn{
@@ -2967,6 +2968,7 @@ function requestHeatMapRender(delayMs){
         <span>🌙</span>
       </div>
       <button class="hd-btn hd-btn-secondary" id="notifyToggleBtn" onclick="toggleNotifications()" title="Enable browser notifications for saves and alarms">🔕 Notifications Off</button>
+      <button class="hd-btn hd-btn-secondary" id="notifyTestBtn" onclick="sendTestNotification()" title="Send a test notification">🧪 Test Alert</button>
       <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="importFromExcel(event)">
       <input type="file" id="autoImportInput" accept=".xlsx,.xls" style="display:none" onchange="handleAutoImport(event)">
       <button class="hd-btn hd-btn-secondary" onclick="smartRefresh()">🔄 Refresh Data</button>
@@ -4682,6 +4684,34 @@ async function toggleNotifications(){
   }
 }
 
+var notificationWarnAt = 0;
+
+async function showBrowserNotification(title, body, key){
+  try{
+    if("serviceWorker" in navigator){
+      var reg = await navigator.serviceWorker.getRegistration();
+      if(reg && typeof reg.showNotification === "function"){
+        await reg.showNotification(title, {
+          body: body,
+          tag: key,
+          renotify: true,
+          silent: false,
+          data: { url: location.href }
+        });
+        return true;
+      }
+    }
+  }catch(e){}
+
+  try{
+    var n = new Notification(title, { body: body, tag: key, renotify: true, silent: false });
+    setTimeout(function(){ try{ n.close(); }catch(e){} }, 7000);
+    return true;
+  }catch(e){}
+
+  return false;
+}
+
 function notifyIfAllowed(title, body, tag, cooldownMs){
   if(!notificationsEnabled) return;
   if(!("Notification" in window)) return;
@@ -4696,10 +4726,20 @@ function notifyIfAllowed(title, body, tag, cooldownMs){
   notificationLastFire[key] = now;
   saveNotificationPrefs();
 
-  try{
-    var n = new Notification(title, { body: body, tag: key, renotify: false, silent: false });
-    setTimeout(function(){ try{ n.close(); }catch(e){} }, 7000);
-  }catch(e){}
+  showBrowserNotification(title, body, key).then(function(ok){
+    if(ok) return;
+    if((Date.now() - notificationWarnAt) < 10000) return;
+    notificationWarnAt = Date.now();
+    showToast("⚠ Notification could not be shown. Check browser/site notification settings.");
+  });
+}
+
+function sendTestNotification(){
+  if(!notificationsEnabled){
+    showToast("⚠ Enable notifications first.");
+    return;
+  }
+  notifyIfAllowed("SCADA Test Alert", "Notification channel is working on this device.", "scada_test_alert_" + Date.now(), 0);
 }
 
 
