@@ -2135,6 +2135,36 @@ function clearLegacyPasswordOverrides(){
     toRemove.forEach(function(k){ localStorage.removeItem(k); });
   }catch(e){}
 }
+
+/* Persistent auth: keep user logged in until explicit logout */
+function isUserLoggedIn(){
+  try{
+    if(localStorage.getItem("scadaLoggedIn") === "true") return true;
+    if(sessionStorage.getItem("scadaLoggedIn") === "true") return true; /* backward compatibility */
+  }catch(e){}
+  return false;
+}
+function getLoggedInEmpId(){
+  try{
+    return localStorage.getItem("scadaEmpId") || sessionStorage.getItem("scadaEmpId") || "";
+  }catch(e){
+    return "";
+  }
+}
+function persistLogin(empId){
+  try{
+    localStorage.setItem("scadaLoggedIn", "true");
+    localStorage.setItem("scadaEmpId", String(empId || ""));
+    sessionStorage.setItem("scadaLoggedIn", "true");
+    sessionStorage.setItem("scadaEmpId", String(empId || ""));
+  }catch(e){}
+}
+function clearLoginState(){
+  try{ localStorage.removeItem("scadaLoggedIn"); }catch(e){}
+  try{ localStorage.removeItem("scadaEmpId"); }catch(e){}
+  try{ sessionStorage.removeItem("scadaLoggedIn"); }catch(e){}
+  try{ sessionStorage.removeItem("scadaEmpId"); }catch(e){}
+}
 function showForgotModal(){
   document.getElementById("forgotModal").classList.add("open");
 }
@@ -2158,8 +2188,7 @@ async function login(){
     var _h = async function(s){const b=new TextEncoder().encode(s);const d=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");};
     var _valid = (typeof getEffectivePasswordHash === "function") ? await getEffectivePasswordHash() : SCADA_PASSWORD;
     if((await _h(pw)) === _valid){
-      sessionStorage.setItem("scadaLoggedIn","true");
-      sessionStorage.setItem("scadaEmpId", empId2);
+      persistLogin(empId2);
       document.getElementById("loginScreen").style.display="none";
       err.style.display="none";
       var opEl2 = document.getElementById("operatorDisplay");
@@ -2289,8 +2318,7 @@ async function loginWithBiometric(){
     if(!assertion || !assertion.rawId) throw new Error("Biometric failed");
     if(_bufToB64url(assertion.rawId) !== rec.credId) throw new Error("Credential mismatch");
 
-    sessionStorage.setItem("scadaLoggedIn","true");
-    sessionStorage.setItem("scadaEmpId", rec.empId);
+    persistLogin(rec.empId);
     document.getElementById("loginScreen").style.display="none";
     if(err) err.style.display="none";
     var opEl = document.getElementById("operatorDisplay");
@@ -4845,7 +4873,7 @@ function broadcastSharedNotification(eventType, title, body){
         title: title || "SCADA Update",
         body: body || "New data was saved.",
         senderId: realtimeNotifyClientId,
-        senderEmpId: sessionStorage.getItem("scadaEmpId") || ""
+        senderEmpId: getLoggedInEmpId() || ""
       }
     };
 
@@ -4882,8 +4910,7 @@ function closeQuickMenu(){
 }
 
 function logout(){
-  sessionStorage.removeItem("scadaLoggedIn");
-  sessionStorage.removeItem("scadaEmpId");
+  clearLoginState();
   location.reload();
 }
 
@@ -4962,10 +4989,10 @@ document.addEventListener("DOMContentLoaded",function(){
   if(m) m.addEventListener("click",function(e){ if(e.target===this) hideChangePasswordModal(); });
 });
 
-if(sessionStorage.getItem("scadaLoggedIn")==="true"){
+if(isUserLoggedIn()){
   document.getElementById("loginScreen").style.display="none";
   /* Restore operator display from session */
-  var _empRestore = sessionStorage.getItem("scadaEmpId");
+  var _empRestore = getLoggedInEmpId();
   if(_empRestore){
     var _opEl = document.getElementById("operatorDisplay");
     if(_opEl) _opEl.innerHTML = "<b>Operator:</b> EMP-" + _empRestore;
@@ -6719,7 +6746,7 @@ function init(){
 }
 
 /* auto-init if session already active */
-if(sessionStorage.getItem("scadaLoggedIn")==="true"){
+if(isUserLoggedIn()){
   init();
 }
 
@@ -7041,7 +7068,7 @@ async function getEffectivePasswordHash(){
 
 /* Auto import once when already logged in */
 (async function restoreServerSyncOnLoad(){
-  if(sessionStorage.getItem("scadaLoggedIn")==="true"){
+  if(isUserLoggedIn()){
     await autoImportFromServer(false);
   }
 })();
@@ -7089,7 +7116,7 @@ async function autoExportToServer(wb, filename){
   if(!SERVER_SYNC_ENABLED || !supaClient) return false;
   try{
     var base64 = XLSX.write(wb, {bookType:"xlsx", type:"base64"});
-    var empId = sessionStorage.getItem("scadaEmpId") || "";
+    var empId = getLoggedInEmpId() || "";
     var ins = await supaClient.from(SUPABASE_TABLE).insert({
       file_name: filename || "Burner_SCADA_Report.xlsx",
       data_base64: base64,
@@ -7115,8 +7142,7 @@ async function loginWithFolderSupport(){
   var pwHash = await _sha256(String(pw || ""));
   var pwTrimHash = await _sha256(String(pw || "").trim());
   if(pwHash === validHash || pwTrimHash === validHash || pwHash === SCADA_PASSWORD || pwTrimHash === SCADA_PASSWORD){
-    sessionStorage.setItem("scadaLoggedIn","true");
-    sessionStorage.setItem("scadaEmpId", empId);
+    persistLogin(empId);
     document.getElementById("loginScreen").style.display="none";
     err.style.display="none";
     /* Update operator display */
@@ -7231,7 +7257,7 @@ function handleTempPdfSelect(event){
 }
 
 function makePdfStoragePath(fileName, dt, shift){
-  var empId = sessionStorage.getItem("scadaEmpId") || "unknown";
+  var empId = getLoggedInEmpId() || "unknown";
   var safeEmp = String(empId).replace(/[^a-zA-Z0-9_-]/g, "");
   var safeShift = String(shift || "unknown").replace(/[^a-zA-Z0-9_-]/g, "");
   var dtStamp = String(dt || "").replace(/[^0-9]/g, "");
