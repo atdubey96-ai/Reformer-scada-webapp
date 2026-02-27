@@ -2285,9 +2285,6 @@ body.light-theme .hm-row-data-badge-C{background:rgba(100,116,139,0.1);color:#47
 }
 </style>
 <script>
-function getEmpPwKey(empId){
-  return "scadaPwHash::" + String(empId || "").trim().toUpperCase();
-}
 function clearLegacyPasswordOverrides(){
   try{
     localStorage.removeItem("scadaPwHash");
@@ -2559,35 +2556,6 @@ async function loginWithBiometric(){
 /* ==================================================
    REFORMER HEAT MAP
 ================================================== */
-function getLatestTempEntry(){
-  try{
-    var saved = localStorage.getItem("tempDataEntries");
-    if(saved){
-      var arr = JSON.parse(saved);
-      if(arr && arr.length) return arr[0];
-    }
-  }catch(e){}
-  return null;
-}
-
-function getTempEntryByShift(shift){
-  /* Returns latest entry matching the selected shift, or latest if "All" */
-  try{
-    var saved = localStorage.getItem("tempDataEntries");
-    if(saved){
-      var arr = JSON.parse(saved);
-      if(arr && arr.length){
-        if(!shift || shift === "All") return arr[0];
-        for(var i=0;i<arr.length;i++){
-          if(arr[i].shift === shift) return arr[i];
-        }
-        return arr[0]; // fallback to latest if shift not found
-      }
-    }
-  }catch(e){}
-  return null;
-}
-
 function getAllTempEntries(){
   try{
     var saved = localStorage.getItem("tempDataEntries");
@@ -2613,17 +2581,6 @@ function tempToColor(val, minT, maxT){
   }
   return "rgb("+r+","+g+","+b+")";
 }
-
-function burnerStateColor(state){
-  switch((state||"C").toUpperCase()){
-    case "O": return {bg:"#16a34a", glow:"rgba(22,163,74,0.9)"};
-    case "N": return {bg:"#d97706", glow:"rgba(217,119,6,0.9)"};
-    case "B": return {bg:"#2563eb", glow:"rgba(37,99,235,0.9)"};
-    default:  return {bg:"#1e293b", glow:"rgba(100,116,139,0.3)"};
-  }
-}
-
-function burnerFlameSVG(state){ return ""; }
 
 /* Burner Icon SVG — dynamic flame with CSS glow + flicker */
 function burnerIconHTML(state, tip, burnerNum){
@@ -6119,11 +6076,6 @@ async function exportToExcel(){
 /* ==================================================
    IMPORT
 ================================================== */
-/* Core import logic — accepts a File object directly */
-function importFileObject(file, onDone){
-  _doImport(file, onDone);
-}
-
 function importFromExcel(event){
   const file=event.target.files[0];if(!file)return;
   lastImportedFileName = file.name;
@@ -7920,27 +7872,6 @@ var centralReachability = { ok:true, checkedAt:0, lockMs:20000 };
 function setCentralReachability(ok){
   centralReachability.ok = !!ok;
   centralReachability.checkedAt = Date.now();
-}
-async function checkCentralReachability(force){
-  if(typeof navigator !== "undefined" && navigator.onLine === false){
-    setCentralReachability(false);
-    return false;
-  }
-  if(!force) return true;
-  var healthUrl = SUPABASE_URL + "/auth/v1/health";
-  try{
-    var res = await fetchWithTimeout(healthUrl, {
-      method:"GET",
-      cache:"no-store",
-      headers:{ "Cache-Control":"no-cache" }
-    }, 2800);
-    var ok = !!(res && res.ok);
-    setCentralReachability(ok);
-    return ok;
-  }catch(e){
-    setCentralReachability(false);
-    return false;
-  }
 }
 function getRelayBaseUrl(){
   refreshSyncRelayConfig();
