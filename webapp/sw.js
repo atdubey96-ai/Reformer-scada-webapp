@@ -1,4 +1,4 @@
-const CACHE_NAME = "scada-burner-v1";
+const CACHE_NAME = "scada-burner-v2";
 const CORE_ASSETS = [
   "./",
   "./index.html",
