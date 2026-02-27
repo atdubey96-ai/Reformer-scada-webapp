@@ -6106,7 +6106,11 @@ async function exportToExcel(){
   }
   if(saveStatus === "queued"){
     var qTag = (typeof shortServerSyncErrorTag === "function") ? shortServerSyncErrorTag() : "";
-    showToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : ""));
+    var relayHint = "";
+    if(qTag === "DNS/NET" && (typeof getRelayBaseUrl === "function") && !getRelayBaseUrl()){
+      relayHint = " | Configure relay";
+    }
+    showToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : "") + relayHint);
     return;
   }
   showToast("❌ Save failed: central server is unreachable");
@@ -7729,6 +7733,64 @@ function getSupabaseAnonKey(){
   return "sb_publishable_L99JfiV_68w79GJ10klTCg_R1H60L_D";
 }
 var SUPABASE_ANON_KEY = getSupabaseAnonKey();
+function trimTrailingSlash(v){
+  return String(v || "").trim().replace(/\/+$/, "");
+}
+function getQueryParam(name){
+  try{
+    if(!location || !location.search) return "";
+    var sp = new URLSearchParams(location.search);
+    return String(sp.get(name) || "").trim();
+  }catch(e){
+    return "";
+  }
+}
+function getSyncRelayUrl(){
+  try{
+    var qp = getQueryParam("relay");
+    if(qp && /^https?:\/\//i.test(qp)){
+      localStorage.setItem("scadaSyncRelayUrl", trimTrailingSlash(qp));
+    }
+  }catch(e){}
+  try{
+    if(window.SCADA_SYNC_RELAY_URL && String(window.SCADA_SYNC_RELAY_URL).trim()){
+      return trimTrailingSlash(window.SCADA_SYNC_RELAY_URL);
+    }
+  }catch(e){}
+  try{
+    var stored = localStorage.getItem("scadaSyncRelayUrl");
+    if(stored && String(stored).trim()){
+      return trimTrailingSlash(stored);
+    }
+  }catch(e){}
+  return "";
+}
+function getSyncRelayToken(){
+  try{
+    var qk = getQueryParam("relay_key");
+    if(qk){
+      localStorage.setItem("scadaSyncRelayToken", qk);
+    }
+  }catch(e){}
+  try{
+    if(window.SCADA_SYNC_RELAY_TOKEN && String(window.SCADA_SYNC_RELAY_TOKEN).trim()){
+      return String(window.SCADA_SYNC_RELAY_TOKEN).trim();
+    }
+  }catch(e){}
+  try{
+    var stored = localStorage.getItem("scadaSyncRelayToken");
+    if(stored && String(stored).trim()){
+      return String(stored).trim();
+    }
+  }catch(e){}
+  return "";
+}
+var SYNC_RELAY_URL = getSyncRelayUrl();
+var SYNC_RELAY_TOKEN = getSyncRelayToken();
+function refreshSyncRelayConfig(){
+  SYNC_RELAY_URL = getSyncRelayUrl();
+  SYNC_RELAY_TOKEN = getSyncRelayToken();
+}
 var supaClient = null;
 var centralPasswordHashCache = SCADA_PASSWORD;
 var centralOtpHashCache = null;
@@ -7855,6 +7917,97 @@ async function checkCentralReachability(force){
     return false;
   }
 }
+function getRelayBaseUrl(){
+  refreshSyncRelayConfig();
+  return trimTrailingSlash(SYNC_RELAY_URL || "");
+}
+function makeRelayHeaders(method){
+  var h = {
+    Accept:"application/json",
+    "Cache-Control":"no-cache"
+  };
+  if(method !== "GET" && method !== "HEAD") h["Content-Type"] = "application/json";
+  if(SYNC_RELAY_TOKEN) h["x-scada-relay-key"] = SYNC_RELAY_TOKEN;
+  return h;
+}
+async function relayRequest(path, method, payload, timeoutMs){
+  var base = getRelayBaseUrl();
+  if(!base || typeof fetch !== "function") return null;
+  var p = String(path || "");
+  if(p && p.charAt(0) !== "/") p = "/" + p;
+  var url = base + p;
+  return await fetchWithTimeout(url,{
+    method: method || "GET",
+    cache: "no-store",
+    headers: makeRelayHeaders(method || "GET"),
+    body: (payload != null && method !== "GET" && method !== "HEAD") ? JSON.stringify(payload) : undefined
+  }, timeoutMs || SERVER_SYNC_TIMEOUT_MS);
+}
+function normalizeAuthPayload(obj){
+  if(!obj || typeof obj !== "object") return null;
+  var d = (obj.data && typeof obj.data === "object") ? obj.data : obj;
+  var p = d.password_hash || d.passwordHash || "";
+  var o = d.otp_hash || d.otpHash || "";
+  if(!p && !o) return null;
+  return { password_hash: p || "", otp_hash: o || "" };
+}
+function normalizeReportPayload(obj){
+  if(!obj) return null;
+  var d = obj;
+  if(Array.isArray(d)) d = d.length ? d[0] : null;
+  if(d && typeof d === "object" && d.data && typeof d.data === "object") d = d.data;
+  if(!d || typeof d !== "object") return null;
+  var base64 = d.data_base64 || d.dataBase64 || d.base64 || "";
+  if(!base64) return null;
+  return {
+    file_name: d.file_name || d.fileName || "Burner_SCADA_Report.xlsx",
+    data_base64: base64,
+    created_at: d.created_at || d.createdAt || null,
+    uploaded_by: d.uploaded_by || d.uploadedBy || null
+  };
+}
+async function fetchCentralAuthConfigViaRelay(){
+  var paths = ["/scada/auth", "/api/scada/auth", "/auth"];
+  for(var i=0; i<paths.length; i++){
+    try{
+      var res = await relayRequest(paths[i], "GET", null, CENTRAL_AUTH_TIMEOUT_MS);
+      if(!res) return null;
+      if(!res.ok) continue;
+      var data = normalizeAuthPayload(await res.json());
+      if(data) return data;
+    }catch(e){}
+  }
+  return null;
+}
+async function fetchLatestServerReportViaRelay(){
+  var paths = ["/scada/report/latest", "/api/scada/report/latest", "/report/latest"];
+  for(var i=0; i<paths.length; i++){
+    try{
+      var res = await relayRequest(paths[i], "GET", null, SERVER_SYNC_TIMEOUT_MS);
+      if(!res) return null;
+      if(!res.ok) continue;
+      var row = normalizeReportPayload(await res.json());
+      if(row) return row;
+    }catch(e){}
+  }
+  return null;
+}
+async function insertServerReportViaRelay(payload){
+  var paths = ["/scada/report", "/api/scada/report", "/report"];
+  for(var i=0; i<paths.length; i++){
+    for(var m=0; m<2; m++){
+      var method = m === 0 ? "POST" : "PUT";
+      try{
+        var res = await relayRequest(paths[i], method, payload, SERVER_SYNC_TIMEOUT_MS);
+        if(!res) return false;
+        if(res.ok || res.status === 201 || res.status === 202 || res.status === 204){
+          return true;
+        }
+      }catch(e){}
+    }
+  }
+  return false;
+}
 function ensureSupaClient(){
   if(supaClient) return true;
   try{
@@ -7922,6 +8075,9 @@ async function fetchCentralAuthConfig(forceRefresh){
 
         if(!data){
           try{ data = await fetchCentralAuthConfigViaRest(); }catch(_e2){ data = null; }
+        }
+        if(!data){
+          try{ data = await fetchCentralAuthConfigViaRelay(); }catch(_e3){ data = null; }
         }
 
         if(!data) throw new Error("central-auth-empty");
@@ -8041,7 +8197,11 @@ function setLastServerSyncError(msg){
 }
 function shortServerSyncErrorTag(){
   if(!lastServerSyncError) return "";
-  var m = String(lastServerSyncError).match(/\b(401|403|404|409|413|429|500|502|503|504)\b/);
+  var msg = String(lastServerSyncError);
+  if(/relay-write-failed/i.test(msg)) return "RELAY FAIL";
+  if(/failed to fetch|networkerror|name_not_resolved|dns|could not resolve|net::err_/i.test(msg)) return "DNS/NET";
+  if(/timeout|aborted|timed out|abort/i.test(msg)) return "TIMEOUT";
+  var m = msg.match(/\b(401|403|404|409|413|429|500|502|503|504)\b/);
   return m ? ("HTTP " + m[1]) : "";
 }
 async function readResponseErrorText(res){
@@ -8140,6 +8300,18 @@ async function fetchLatestServerReportRow(){
       }
     }
   }
+  if(!row){
+    try{
+      var relayRow = await fetchLatestServerReportViaRelay();
+      if(relayRow){
+        row = relayRow;
+        setCentralReachability(true);
+        setLastServerSyncError("");
+      }
+    }catch(_eRelay){
+      setLastServerSyncError(String((_eRelay && _eRelay.message) || _eRelay || "relay-read-error"));
+    }
+  }
   return row;
 }
 
@@ -8227,6 +8399,19 @@ async function insertServerReportRow(payload){
     }
   }catch(_e4){
     setLastServerSyncError(String((_e4 && _e4.message) || _e4 || "rest-patch-error"));
+  }
+  try{
+    var relayOk = await insertServerReportViaRelay(writePayload);
+    if(relayOk){
+      setCentralReachability(true);
+      setLastServerSyncError("");
+      return true;
+    }
+    if(getRelayBaseUrl()){
+      setLastServerSyncError("relay-write-failed");
+    }
+  }catch(_e5){
+    setLastServerSyncError(String((_e5 && _e5.message) || _e5 || "relay-write-error"));
   }
   return false;
 }
