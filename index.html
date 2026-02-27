@@ -4679,6 +4679,11 @@ function requestHeatMapRender(delayMs){
               style="background:rgba(20,184,166,0.14);border:1px solid rgba(20,184,166,0.42);color:#5eead4;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
               📋 Paste OCR Text
             </button>
+            <button type="button" id="td-ocr-google-key-btn" onclick="configureTstGoogleVisionKey()"
+              style="background:rgba(59,130,246,0.14);border:1px solid rgba(59,130,246,0.42);color:#93c5fd;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;"
+              title="Set Google Vision API key for robust OCR">
+              🧠 Google Vision Key
+            </button>
             <span id="td-ocr-status" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">OCR idle (free local)</span>
           </div>
           <button type="button" onclick="downloadTstTemplate()"
@@ -8750,21 +8755,93 @@ var tdOcrBusy = false;
 /* Lowest-cost mode: keep OCR local by default (no paid cloud request). */
 var TST_OCR_PIPELINE = {
   localOnly: true,
-  cloudOptInKey: "scadaEnablePaidCloudOcr"
+  cloudOptInKey: "scadaEnablePaidCloudOcr",
+  googleKeyStorageKey: "scadaGoogleVisionApiKey",
+  ocrSpaceKeyStorageKey: "scadaOcrSpaceApiKey",
+  preferredProviderKey: "scadaTstCloudProvider"
 };
+
+function getTstGoogleVisionApiKey(){
+  try{
+    var saved = localStorage.getItem(TST_OCR_PIPELINE.googleKeyStorageKey);
+    if(saved && String(saved).trim()) return String(saved).trim();
+  }catch(e){}
+  return "";
+}
+
+function getTstCloudProvider(){
+  var provider = "";
+  try{
+    provider = String(localStorage.getItem(TST_OCR_PIPELINE.preferredProviderKey) || "").trim().toLowerCase();
+  }catch(e){}
+  if(provider !== "google" && provider !== "ocrspace"){
+    provider = getTstGoogleVisionApiKey() ? "google" : "ocrspace";
+  }
+  if(provider === "google" && !getTstGoogleVisionApiKey()){
+    provider = "ocrspace";
+  }
+  return provider;
+}
+
+function getTstCloudProviderLabel(provider){
+  if(provider === "google") return "Google Vision";
+  if(provider === "ocrspace") return "OCR.space";
+  return "Cloud OCR";
+}
 
 function isPaidCloudOcrEnabled(){
   try{
-    return localStorage.getItem(TST_OCR_PIPELINE.cloudOptInKey) === "1";
+    if(localStorage.getItem(TST_OCR_PIPELINE.cloudOptInKey) === "1") return true;
+    if(getTstGoogleVisionApiKey()) return true;
+    var ocrKey = localStorage.getItem(TST_OCR_PIPELINE.ocrSpaceKeyStorageKey);
+    if(ocrKey && String(ocrKey).trim()) return true;
   }catch(e){
-    return false;
+    return !!getTstGoogleVisionApiKey();
+  }
+  return false;
+}
+
+function configureTstGoogleVisionKey(){
+  if(tdOcrBusy) return;
+  var current = getTstGoogleVisionApiKey();
+  var next = prompt(
+    "Paste Google Vision API key.\n\nPress OK with empty value to remove saved key from this browser.",
+    current || ""
+  );
+  if(next === null) return;
+  next = String(next || "").trim();
+
+  try{
+    if(next){
+      localStorage.setItem(TST_OCR_PIPELINE.googleKeyStorageKey, next);
+      localStorage.setItem(TST_OCR_PIPELINE.cloudOptInKey, "1");
+      localStorage.setItem(TST_OCR_PIPELINE.preferredProviderKey, "google");
+      setTstOcrStatus("Google Vision key saved", "#34d399");
+      showToast("✅ Google Vision OCR key saved.");
+    }else{
+      localStorage.removeItem(TST_OCR_PIPELINE.googleKeyStorageKey);
+      if(getTstCloudProvider() === "google"){
+        localStorage.setItem(TST_OCR_PIPELINE.preferredProviderKey, "ocrspace");
+      }
+      setTstOcrStatus("", "#94a3b8");
+      showToast("🧹 Google Vision OCR key removed.");
+    }
+  }catch(err){
+    alert("Could not store Google Vision key: " + (err && err.message ? err.message : err));
   }
 }
 
 function setTstOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-status");
   if(!st) return;
-  st.textContent = msg || (isPaidCloudOcrEnabled() ? "OCR idle (cloud enabled)" : "OCR idle (free local)");
+  if(msg){
+    st.textContent = msg;
+  }else if(isPaidCloudOcrEnabled()){
+    var provider = getTstCloudProvider();
+    st.textContent = "OCR idle (" + getTstCloudProviderLabel(provider) + " + local fallback)";
+  }else{
+    st.textContent = "OCR idle (free local)";
+  }
   st.style.color = color || "#94a3b8";
 }
 
@@ -8772,6 +8849,7 @@ function setTstOcrBusy(busy){
   tdOcrBusy = !!busy;
   var btn = document.getElementById("td-ocr-btn");
   var pasteBtn = document.getElementById("td-ocr-paste-btn");
+  var keyBtn = document.getElementById("td-ocr-google-key-btn");
   if(btn){
     btn.disabled = tdOcrBusy;
     btn.style.opacity = tdOcrBusy ? "0.7" : "1";
@@ -8782,6 +8860,11 @@ function setTstOcrBusy(busy){
     pasteBtn.disabled = tdOcrBusy;
     pasteBtn.style.opacity = tdOcrBusy ? "0.7" : "1";
     pasteBtn.style.cursor = tdOcrBusy ? "not-allowed" : "pointer";
+  }
+  if(keyBtn){
+    keyBtn.disabled = tdOcrBusy;
+    keyBtn.style.opacity = tdOcrBusy ? "0.7" : "1";
+    keyBtn.style.cursor = tdOcrBusy ? "not-allowed" : "pointer";
   }
 }
 
@@ -9742,10 +9825,140 @@ async function runOcrOnImageBlob(blob){
 
 function getTstCloudOcrApiKey(){
   try{
-    var saved = localStorage.getItem("scadaOcrSpaceApiKey");
+    var saved = localStorage.getItem(TST_OCR_PIPELINE.ocrSpaceKeyStorageKey);
     if(saved && String(saved).trim()) return String(saved).trim();
   }catch(e){}
   return "helloworld";
+}
+
+async function blobToBase64Content(blob){
+  if(!blob) return "";
+  return await new Promise(function(resolve, reject){
+    try{
+      var fr = new FileReader();
+      fr.onload = function(){
+        var out = String(fr.result || "");
+        var idx = out.indexOf(",");
+        resolve(idx >= 0 ? out.slice(idx + 1) : out);
+      };
+      fr.onerror = function(){ reject(fr.error || new Error("Failed to read file")); };
+      fr.readAsDataURL(blob);
+    }catch(err){
+      reject(err);
+    }
+  });
+}
+
+function googleVisionVerticesToBbox(vertices){
+  var verts = Array.isArray(vertices) ? vertices : [];
+  var xs = [];
+  var ys = [];
+  for(var i=0; i<verts.length; i++){
+    var v = verts[i] || {};
+    var x = Number(v.x), y = Number(v.y);
+    if(isFinite(x)) xs.push(x);
+    if(isFinite(y)) ys.push(y);
+  }
+  if(!xs.length || !ys.length) return null;
+  return {
+    x0: Math.min.apply(null, xs),
+    y0: Math.min.apply(null, ys),
+    x1: Math.max.apply(null, xs),
+    y1: Math.max.apply(null, ys)
+  };
+}
+
+function buildGoogleVisionOcrPayload(resp){
+  var r = resp || {};
+  var words = [];
+  var text = "";
+
+  if(r.fullTextAnnotation && r.fullTextAnnotation.text){
+    text = String(r.fullTextAnnotation.text || "");
+  }
+
+  var pages = r.fullTextAnnotation && Array.isArray(r.fullTextAnnotation.pages) ? r.fullTextAnnotation.pages : [];
+  for(var pi=0; pi<pages.length; pi++){
+    var blocks = Array.isArray(pages[pi] && pages[pi].blocks) ? pages[pi].blocks : [];
+    for(var bi=0; bi<blocks.length; bi++){
+      var paras = Array.isArray(blocks[bi] && blocks[bi].paragraphs) ? blocks[bi].paragraphs : [];
+      for(var pj=0; pj<paras.length; pj++){
+        var ws = Array.isArray(paras[pj] && paras[pj].words) ? paras[pj].words : [];
+        for(var wi=0; wi<ws.length; wi++){
+          var w = ws[wi] || {};
+          var syms = Array.isArray(w.symbols) ? w.symbols : [];
+          var wordText = "";
+          for(var si=0; si<syms.length; si++){
+            wordText += String((syms[si] && syms[si].text) || "");
+          }
+          wordText = wordText.trim();
+          if(!wordText) continue;
+          var bb = googleVisionVerticesToBbox(w.boundingBox && w.boundingBox.vertices);
+          words.push({
+            text: wordText,
+            bbox: bb || { x0: 0, y0: 0, x1: 0, y1: 0 }
+          });
+        }
+      }
+    }
+  }
+
+  if((!text || !text.trim()) && Array.isArray(r.textAnnotations) && r.textAnnotations.length){
+    text = String((r.textAnnotations[0] && r.textAnnotations[0].description) || "");
+  }
+
+  if(!words.length && Array.isArray(r.textAnnotations)){
+    for(var ti=1; ti<r.textAnnotations.length; ti++){
+      var ta = r.textAnnotations[ti] || {};
+      var tt = String(ta.description || "").trim();
+      if(!tt) continue;
+      var tbb = googleVisionVerticesToBbox(ta.boundingPoly && ta.boundingPoly.vertices);
+      words.push({
+        text: tt,
+        bbox: tbb || { x0: 0, y0: 0, x1: 0, y1: 0 }
+      });
+    }
+  }
+
+  return {
+    text: String(text || "").trim(),
+    data: { words: words },
+    provider: "google-vision"
+  };
+}
+
+async function runGoogleVisionOcrFile(file){
+  if(typeof fetch !== "function" || !file) return null;
+  var apiKey = getTstGoogleVisionApiKey();
+  if(!apiKey) return null;
+
+  var isPdf = /\.pdf$/i.test(file.name || "") || file.type === "application/pdf";
+  if(isPdf) return null; /* Keep PDF flow in existing local/pdf parser path. */
+
+  var content = await blobToBase64Content(file);
+  if(!content) return null;
+
+  var req = {
+    requests: [{
+      image: { content: content },
+      features: [{ type: "DOCUMENT_TEXT_DETECTION", maxResults: 1 }],
+      imageContext: { languageHints: ["en"] }
+    }]
+  };
+
+  var resp = await fetch("https://vision.googleapis.com/v1/images:annotate?key=" + encodeURIComponent(apiKey), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req)
+  });
+  if(!resp.ok) return null;
+
+  var js = await resp.json();
+  var arr = js && Array.isArray(js.responses) ? js.responses : [];
+  if(!arr.length) return null;
+  var out = arr[0] || {};
+  if(out.error) return null;
+  return buildGoogleVisionOcrPayload(out);
 }
 
 async function runCloudOcrFile(file){
@@ -9801,7 +10014,7 @@ async function runCloudOcrFile(file){
   return {
     text: fullText.trim(),
     data: { words: words },
-    provider: "cloud"
+    provider: "ocrspace"
   };
 }
 
@@ -10307,15 +10520,39 @@ async function handleTstScanSelect(event){
 
     if(isPaidCloudOcrEnabled()){
       try{
-        setTstOcrStatus("Cloud OCR...", "#7ec8f0");
-        var cloudRes = await runCloudOcrFile(file);
-        if(cloudRes && (cloudRes.text || (cloudRes.data && cloudRes.data.words && cloudRes.data.words.length))){
+        var provider = getTstCloudProvider();
+        var attempts = provider === "google"
+          ? [
+              { name: "google", label: "Google Vision", fn: runGoogleVisionOcrFile },
+              { name: "ocrspace", label: "OCR.space", fn: runCloudOcrFile }
+            ]
+          : [
+              { name: "ocrspace", label: "OCR.space", fn: runCloudOcrFile },
+              { name: "google", label: "Google Vision", fn: runGoogleVisionOcrFile }
+            ];
+
+        for(var ai=0; ai<attempts.length; ai++){
+          var at = attempts[ai];
+          if(at.name === "google"){
+            if(isPdf) continue;
+            if(!getTstGoogleVisionApiKey()) continue;
+          }
+
+          setTstOcrStatus(at.label + " OCR...", "#7ec8f0");
+          var cloudRes = await at.fn(file);
+          if(!cloudRes) continue;
+          if(!(cloudRes.text || (cloudRes.data && cloudRes.data.words && cloudRes.data.words.length))) continue;
+
           var pCloud = parseTstSheetOcr(cloudRes.text || "", cloudRes.data || null);
           var fCloud = fillTdPeepFieldsFromList(pCloud.values || [], true);
           if(fCloud > filled){
             filled = fCloud;
-            parsed = { values: pCloud.values || [], mode: "cloud-" + (pCloud.mode || "ocr") };
+            parsed = {
+              values: pCloud.values || [],
+              mode: at.name + "-" + (pCloud.mode || "ocr")
+            };
           }
+          if(filled >= 45) break;
         }
       }catch(e){}
     }
