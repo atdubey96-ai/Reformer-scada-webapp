@@ -2372,15 +2372,21 @@ async function login(){
   /* Safe fallback: same hash logic as main login flow */
   var _h = async function(s){const b=new TextEncoder().encode(String(s||""));const d=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");};
   var _valid = (typeof getEffectivePasswordHash === "function") ? await getEffectivePasswordHash() : SCADA_PASSWORD;
+  var _localDev = (typeof getLocalDevicePasswordHash === "function") ? getLocalDevicePasswordHash() : "";
+
   var _cands = getPasswordCandidates(pw);
   var _ok = false;
+  var _matched = "";
   for(var _i=0; _i<_cands.length; _i++){
     var _hash = await _h(_cands[_i]);
-    if(_hash === _valid || _hash === SCADA_PASSWORD){ _ok = true; break; }
+    if(_hash === _valid || _hash === SCADA_PASSWORD || (_localDev && _hash === _localDev)){ _ok = true; _matched = _hash; break; }
+
   }
 
   if(_ok){
     persistLogin(empId2);
+    if(_matched && typeof saveLocalDevicePasswordHash === "function") saveLocalDevicePasswordHash(_matched);
+
     document.getElementById("loginScreen").style.display="none";
     err.style.display="none";
     var opEl2 = document.getElementById("operatorDisplay");
@@ -6093,8 +6099,13 @@ async function exportToExcel(){
   const fname = lastImportedFileName || "Burner_SCADA_Report.xlsx";
 
   /* Primary: central server save (works on any PC) */
-  if(await autoExportToServer(wb, fname)){
+  var saveStatus = await autoExportToServer(wb, fname);
+  if(saveStatus === true){
     showToast("✅ Saved to central SCADA server");
+    return;
+  }
+  if(saveStatus === "queued"){
+    showToast("📶 Weak network: save queued, will auto-sync");
     return;
   }
   showToast("❌ Save failed: central server is unreachable");
@@ -6116,6 +6127,7 @@ function importFromExcel(event){
 
 /* ── Smart Refresh: server sync only ── */
 async function smartRefresh(){
+  await flushQueuedServerExport(false);
   var okServer = await autoImportFromServer(true);
   if(!okServer) showToast("⚠ Could not refresh from central server");
 }
@@ -7720,9 +7732,9 @@ var supaClient = null;
 var centralPasswordHashCache = SCADA_PASSWORD;
 var centralOtpHashCache = null;
 var CENTRAL_AUTH_CACHE_KEY = "scadaCentralAuthCacheV1";
-var CENTRAL_AUTH_TIMEOUT_MS = 4500;
-var CENTRAL_AUTH_RETRY_COUNT = 2;
-var CENTRAL_AUTH_RETRY_DELAY_MS = 450;
+var CENTRAL_AUTH_TIMEOUT_MS = 3200;
+var CENTRAL_AUTH_RETRY_COUNT = 3;
+var CENTRAL_AUTH_RETRY_DELAY_MS = 550;
 var centralAuthFetchInFlight = null;
 var centralAuthLastFetchAt = 0;
 var centralAuthMinRefreshMs = 12000;
@@ -7767,6 +7779,21 @@ function saveCentralAuthCacheToStorage(){
     }));
   }catch(e){}
 }
+var LOCAL_PASSWORD_HASH_KEY = "scadaLocalPasswordHashV1";
+function getLocalDevicePasswordHash(){
+  try{
+    var v = localStorage.getItem(LOCAL_PASSWORD_HASH_KEY);
+    return isSha256Hex(v) ? String(v).toLowerCase() : "";
+  }catch(e){
+    return "";
+  }
+}
+function saveLocalDevicePasswordHash(hash){
+  try{
+    if(isSha256Hex(hash)) localStorage.setItem(LOCAL_PASSWORD_HASH_KEY, String(hash).toLowerCase());
+  }catch(e){}
+}
+
 async function withTimeout(promise, ms){
   var timer = null;
   try{
@@ -7780,39 +7807,143 @@ async function withTimeout(promise, ms){
     if(timer) clearTimeout(timer);
   }
 }
+async function fetchWithTimeout(url, options, ms){
+  var opts = options ? Object.assign({}, options) : {};
+  var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
+  if(controller) opts.signal = controller.signal;
+  var timer = null;
+  try{
+    timer = setTimeout(function(){
+      if(controller){
+        try{ controller.abort(); }catch(_e){}
+      }
+    }, ms);
+    return await fetch(url, opts);
+  } finally {
+    if(timer) clearTimeout(timer);
+  }
+}
+function getRetryDelayMs(baseMs, attempt){
+  var mult = Math.pow(1.6, attempt || 0);
+  var jitter = Math.floor(Math.random() * 220);
+  return Math.round((baseMs || 700) * mult + jitter);
+}
+var centralReachability = { ok:true, checkedAt:0, lockMs:20000 };
+function setCentralReachability(ok){
+  centralReachability.ok = !!ok;
+  centralReachability.checkedAt = Date.now();
+}
+async function checkCentralReachability(force){
+  var now = Date.now();
+  if(!force && !centralReachability.ok && (now - centralReachability.checkedAt) < centralReachability.lockMs){
+    return false;
+  }
+  if(typeof navigator !== "undefined" && navigator.onLine === false){
+    setCentralReachability(false);
+    return false;
+  }
+  var healthUrl = SUPABASE_URL + "/auth/v1/health";
+  try{
+    var res = await fetchWithTimeout(healthUrl, {
+      method:"GET",
+      cache:"no-store",
+      headers:{ "Cache-Control":"no-cache" }
+    }, 2800);
+    var ok = !!(res && res.ok);
+    setCentralReachability(ok);
+    return ok;
+  }catch(e){
+    setCentralReachability(false);
+    return false;
+  }
+}
+function ensureSupaClient(){
+  if(supaClient) return true;
+  try{
+    if(window.supabase && SUPABASE_ANON_KEY){
+      supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      return !!supaClient;
+    }
+  }catch(e){}
+  return false;
+}
+async function fetchCentralAuthConfigViaRest(){
+  if(!SUPABASE_URL || !SUPABASE_ANON_KEY || typeof fetch !== "function") return null;
+  var url = SUPABASE_URL + "/rest/v1/" + encodeURIComponent(AUTH_TABLE)
+    + "?id=eq." + encodeURIComponent(String(AUTH_ROW_ID))
+    + "&select=password_hash,otp_hash";
+  var res = await fetchWithTimeout(url,{
+    method:"GET",
+    cache:"no-store",
+    headers:{
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: "Bearer " + SUPABASE_ANON_KEY,
+      Accept:"application/json",
+      "Cache-Control":"no-cache"
+    }
+  }, CENTRAL_AUTH_TIMEOUT_MS);
+  if(!res || !res.ok) return null;
+  var arr = await res.json();
+  if(!Array.isArray(arr) || !arr.length) return null;
+  return arr[0];
+}
+
 loadCentralAuthCacheFromStorage();
 setTimeout(function(){ fetchCentralAuthConfig(true).catch(function(){}); }, 0);
 
 
 async function fetchCentralAuthConfig(forceRefresh){
-  if(!supaClient) return false;
+  ensureSupaClient();
   var now = Date.now();
   if(!forceRefresh && (now - centralAuthLastFetchAt) < centralAuthMinRefreshMs){
     return true;
+  }
+  if(typeof navigator !== "undefined" && navigator.onLine === false){
+    return false;
+  }
+  if(!forceRefresh){
+    var canReach = await checkCentralReachability(false);
+    if(!canReach && isSha256Hex(centralPasswordHashCache)){
+      return false;
+    }
   }
   if(centralAuthFetchInFlight) return centralAuthFetchInFlight;
 
   centralAuthFetchInFlight = (async function(){
     for(var attempt=0; attempt<CENTRAL_AUTH_RETRY_COUNT; attempt++){
       try{
-        var q = await withTimeout(
-          supaClient
-            .from(AUTH_TABLE)
-            .select("password_hash,otp_hash")
-            .eq("id", AUTH_ROW_ID)
-            .single(),
-          CENTRAL_AUTH_TIMEOUT_MS
-        );
-        if(!q || q.error || !q.data) throw new Error("central-auth-empty");
+        var data = null;
 
-        if(isSha256Hex(q.data.password_hash)) centralPasswordHashCache = String(q.data.password_hash).toLowerCase();
-        if(isSha256Hex(q.data.otp_hash)) centralOtpHashCache = String(q.data.otp_hash).toLowerCase();
+        if(ensureSupaClient()){
+          try{
+            var q = await withTimeout(
+              supaClient
+                .from(AUTH_TABLE)
+                .select("password_hash,otp_hash")
+                .eq("id", AUTH_ROW_ID)
+                .single(),
+              CENTRAL_AUTH_TIMEOUT_MS
+            );
+            if(q && !q.error && q.data) data = q.data;
+          }catch(_e1){}
+        }
+
+        if(!data){
+          try{ data = await fetchCentralAuthConfigViaRest(); }catch(_e2){ data = null; }
+        }
+
+        if(!data) throw new Error("central-auth-empty");
+
+        if(isSha256Hex(data.password_hash)) centralPasswordHashCache = String(data.password_hash).toLowerCase();
+        if(isSha256Hex(data.otp_hash)) centralOtpHashCache = String(data.otp_hash).toLowerCase();
         saveCentralAuthCacheToStorage();
         centralAuthLastFetchAt = Date.now();
+        setCentralReachability(true);
         return true;
       }catch(e){
+        setCentralReachability(false);
         if(attempt < CENTRAL_AUTH_RETRY_COUNT - 1){
-          await delayMs(CENTRAL_AUTH_RETRY_DELAY_MS);
+          await delayMs(getRetryDelayMs(CENTRAL_AUTH_RETRY_DELAY_MS, attempt));
         }
       }
     }
@@ -7826,7 +7957,17 @@ async function fetchCentralAuthConfig(forceRefresh){
   }
 }
 
+
 async function getEffectivePasswordHash(){
+  if(isSha256Hex(centralPasswordHashCache)){
+    fetchCentralAuthConfig(false).catch(function(){});
+    return centralPasswordHashCache;
+  }
+  var localHash = getLocalDevicePasswordHash();
+  if(isSha256Hex(localHash)){
+    fetchCentralAuthConfig(false).catch(function(){});
+    return localHash;
+  }
   var ok = await fetchCentralAuthConfig(false);
   if(!ok && typeof navigator !== "undefined" && navigator.onLine){
     fetchCentralAuthConfig(true).catch(function(){});
@@ -7838,6 +7979,7 @@ async function getEffectivePasswordHash(){
 /* Auto import once when already logged in */
 (async function restoreServerSyncOnLoad(){
   if(isUserLoggedIn()){
+    flushQueuedServerExport(false).catch(function(){});
     await autoImportFromServer(false);
   }
 })();
@@ -7852,52 +7994,298 @@ function base64ToFile(base64, filename){
   });
 }
 
-/* ── Auto-import from server (works on any PC without folder picker) ── */
-async function autoImportFromServer(showMsg){
-  if(!SERVER_SYNC_ENABLED || !supaClient) return false;
+var SERVER_SYNC_TIMEOUT_MS = 22000;
+var SERVER_SYNC_RETRY_COUNT = 4;
+var SERVER_SYNC_RETRY_DELAY_MS = 1100;
+var serverImportInFlight = null;
+var serverExportInFlight = null;
+var SERVER_SYNC_QUEUE_KEY = "scadaQueuedServerExportV1";
+var SERVER_SYNC_LAST_SNAPSHOT_KEY = "scadaLastServerSnapshotV1";
+
+function loadQueuedServerExport(){
   try{
-    var q = await supaClient
-      .from(SUPABASE_TABLE)
-      .select("file_name,data_base64,created_at")
-      .order("created_at", {ascending:false})
-      .limit(1);
-    if(q.error || !q.data || !q.data.length) return false;
-    var row = q.data[0];
-    if(!row.data_base64) return false;
-    var fileName = row.file_name || "Burner_SCADA_Report.xlsx";
-    var file = base64ToFile(row.data_base64, fileName);
+    var raw = localStorage.getItem(SERVER_SYNC_QUEUE_KEY);
+    if(!raw) return null;
+    var obj = JSON.parse(raw);
+    if(!obj || typeof obj !== "object") return null;
+    if(!obj.data_base64) return null;
+    return obj;
+  }catch(e){
+    return null;
+  }
+}
+function saveQueuedServerExport(payload){
+  try{ localStorage.setItem(SERVER_SYNC_QUEUE_KEY, JSON.stringify(payload)); }catch(e){}
+}
+function clearQueuedServerExport(){
+  try{ localStorage.removeItem(SERVER_SYNC_QUEUE_KEY); }catch(e){}
+}
+function loadLastServerSnapshot(){
+  try{
+    var raw = localStorage.getItem(SERVER_SYNC_LAST_SNAPSHOT_KEY);
+    if(!raw) return null;
+    var obj = JSON.parse(raw);
+    if(!obj || typeof obj !== "object") return null;
+    if(!obj.data_base64) return null;
+    return obj;
+  }catch(e){
+    return null;
+  }
+}
+function saveLastServerSnapshot(payload){
+  try{
+    if(!payload || !payload.data_base64) return;
+    localStorage.setItem(SERVER_SYNC_LAST_SNAPSHOT_KEY, JSON.stringify({
+      file_name: payload.file_name || "Burner_SCADA_Report.xlsx",
+      data_base64: payload.data_base64,
+      uploaded_by: payload.uploaded_by || null,
+      saved_at: new Date().toISOString()
+    }));
+  }catch(e){}
+}
+
+async function fetchLatestServerReportRow(){
+  var row = null;
+  if(ensureSupaClient()){
+    try{
+      var q = await withTimeout(
+        supaClient
+          .from(SUPABASE_TABLE)
+          .select("file_name,data_base64,created_at")
+          .order("created_at", {ascending:false})
+          .limit(1),
+        SERVER_SYNC_TIMEOUT_MS
+      );
+      if(q && !q.error){
+        setCentralReachability(true);
+        if(q.data && q.data.length) row = q.data[0];
+      }
+    }catch(_e1){}
+  }
+  if(!row){
+    try{
+      var url = SUPABASE_URL + "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE)
+        + "?select=file_name,data_base64,created_at&order=created_at.desc&limit=1";
+      var res = await fetchWithTimeout(url,{
+        method:"GET",
+        cache:"no-store",
+        headers:{
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: "Bearer " + SUPABASE_ANON_KEY,
+          Accept:"application/json",
+          "Cache-Control":"no-cache"
+        }
+      }, SERVER_SYNC_TIMEOUT_MS);
+      if(res && res.ok){
+        setCentralReachability(true);
+        var arr = await res.json();
+        if(Array.isArray(arr) && arr.length) row = arr[0];
+      }
+    }catch(_e2){}
+  }
+  return row;
+}
+
+async function insertServerReportRow(payload){
+  if(ensureSupaClient()){
+    try{
+      var ins = await withTimeout(
+        supaClient.from(SUPABASE_TABLE).insert(payload),
+        SERVER_SYNC_TIMEOUT_MS
+      );
+      if(ins && !ins.error){
+        setCentralReachability(true);
+        return true;
+      }
+    }catch(_e1){}
+  }
+  try{
+    var url = SUPABASE_URL + "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE);
+    var res = await fetchWithTimeout(url,{
+      method:"POST",
+      cache:"no-store",
+      headers:{
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type":"application/json",
+        Prefer:"return=minimal"
+      },
+      body: JSON.stringify(payload)
+    }, SERVER_SYNC_TIMEOUT_MS);
+    var ok = !!(res && (res.ok || res.status === 201 || res.status === 204));
+    if(ok) setCentralReachability(true);
+    return ok;
+  }catch(_e2){
+    return false;
+  }
+}
+
+async function importServerReportPayload(payload){
+  if(!payload || !payload.data_base64) return false;
+  try{
+    var fileName = payload.file_name || "Burner_SCADA_Report.xlsx";
+    var file = base64ToFile(payload.data_base64, fileName);
     lastImportedFileName = fileName;
-    return new Promise(function(res){
+    var imported = await new Promise(function(resolve){
+      var done = false;
+      var t = setTimeout(function(){
+        if(done) return;
+        done = true;
+        resolve(false);
+      }, SERVER_SYNC_TIMEOUT_MS + 12000);
       _doImport(file, function(){
+        if(done) return;
+        done = true;
+        clearTimeout(t);
         buildCleaningTable();
-        if(showMsg) showToast("✅ Auto-loaded from central server");
-        res(true);
+        resolve(true);
       }, true);
     });
-  } catch(err){
-    console.warn("autoImportFromServer error:", err);
+    return imported;
+  }catch(err){
+    console.warn("importServerReportPayload failed:", err);
     return false;
+  }
+}
+
+async function flushQueuedServerExport(showMsg){
+  if(!SERVER_SYNC_ENABLED) return false;
+  var queued = loadQueuedServerExport();
+  if(!queued || !queued.data_base64) return false;
+  var canReach = await checkCentralReachability(false);
+  if(!canReach) return false;
+  for(var a=0; a<SERVER_SYNC_RETRY_COUNT; a++){
+    var ok = await insertServerReportRow({
+      file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
+      data_base64: queued.data_base64,
+      uploaded_by: queued.uploaded_by || null
+    });
+    if(ok){
+      clearQueuedServerExport();
+      saveLastServerSnapshot({
+        file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
+        data_base64: queued.data_base64,
+        uploaded_by: queued.uploaded_by || null
+      });
+      if(showMsg) showToast("✅ Pending save synced to central server");
+      return true;
+    }
+    setCentralReachability(false);
+    if(a < SERVER_SYNC_RETRY_COUNT - 1) await delayMs(getRetryDelayMs(SERVER_SYNC_RETRY_DELAY_MS, a));
+  }
+  return false;
+}
+
+/* ── Auto-import from server (works on any PC without folder picker) ── */
+async function autoImportFromServer(showMsg){
+  if(!SERVER_SYNC_ENABLED) return false;
+  if(serverImportInFlight) return serverImportInFlight;
+  serverImportInFlight = (async function(){
+    var canReach = await checkCentralReachability(false);
+    if(!canReach){
+      var localFallbackEarly = loadLastServerSnapshot();
+      var loadedEarly = await importServerReportPayload(localFallbackEarly);
+      if(loadedEarly){
+        if(showMsg) showToast("📴 Network weak: loaded last local synced copy");
+        return true;
+      }
+      return false;
+    }
+    for(var attempt=0; attempt<SERVER_SYNC_RETRY_COUNT; attempt++){
+      try{
+        var row = await fetchLatestServerReportRow();
+        var imported = await importServerReportPayload(row);
+        if(imported){
+          saveLastServerSnapshot({
+            file_name: row.file_name || "Burner_SCADA_Report.xlsx",
+            data_base64: row.data_base64,
+            uploaded_by: row.uploaded_by || null
+          });
+          setCentralReachability(true);
+          if(showMsg) showToast("✅ Auto-loaded from central server");
+          return true;
+        }
+      }catch(err){
+        setCentralReachability(false);
+        console.warn("autoImportFromServer attempt error:", err);
+      }
+      if(attempt < SERVER_SYNC_RETRY_COUNT - 1) await delayMs(getRetryDelayMs(SERVER_SYNC_RETRY_DELAY_MS, attempt));
+    }
+    var localFallback = loadLastServerSnapshot();
+    var loadedLocal = await importServerReportPayload(localFallback);
+    if(loadedLocal){
+      if(showMsg) showToast("📴 Server unreachable: loaded last synced local copy");
+      return true;
+    }
+    return false;
+  })();
+  try{
+    return await serverImportInFlight;
+  }finally{
+    serverImportInFlight = null;
   }
 }
 
 /* ── Auto-export to server (central save shared across PCs) ── */
 async function autoExportToServer(wb, filename){
-  if(!SERVER_SYNC_ENABLED || !supaClient) return false;
-  try{
-    var base64 = XLSX.write(wb, {bookType:"xlsx", type:"base64"});
-    var empId = getLoggedInEmpId() || "";
-    var ins = await supaClient.from(SUPABASE_TABLE).insert({
+  if(!SERVER_SYNC_ENABLED) return false;
+  if(serverExportInFlight) return serverExportInFlight;
+  serverExportInFlight = (async function(){
+    var base64 = "";
+    try{
+      base64 = XLSX.write(wb, {bookType:"xlsx", type:"base64"});
+    }catch(err){
+      console.warn("XLSX write failed:", err);
+      return false;
+    }
+
+    var payload = {
       file_name: filename || "Burner_SCADA_Report.xlsx",
       data_base64: base64,
-      uploaded_by: empId || null
-    });
-    if(ins.error) return false;
-    return true;
-  } catch(err){
-    console.warn("autoExportToServer error:", err);
-    return false;
+      uploaded_by: (getLoggedInEmpId() || "") || null
+    };
+    saveLastServerSnapshot(payload);
+    var canReach = await checkCentralReachability(false);
+    if(!canReach){
+      saveQueuedServerExport(payload);
+      return "queued";
+    }
+
+    for(var attempt=0; attempt<SERVER_SYNC_RETRY_COUNT; attempt++){
+      var ok = await insertServerReportRow(payload);
+      if(ok){
+        setCentralReachability(true);
+        clearQueuedServerExport();
+        return true;
+      }
+      setCentralReachability(false);
+      if(attempt < SERVER_SYNC_RETRY_COUNT - 1) await delayMs(getRetryDelayMs(SERVER_SYNC_RETRY_DELAY_MS, attempt));
+    }
+
+    saveQueuedServerExport(payload);
+    return "queued";
+  })();
+  try{
+    return await serverExportInFlight;
+  }finally{
+    serverExportInFlight = null;
   }
 }
+
+window.addEventListener("online", function(){
+  flushQueuedServerExport(true).catch(function(){});
+});
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "visible") flushQueuedServerExport(false).catch(function(){});
+});
+setInterval(function(){
+  if(!SERVER_SYNC_ENABLED) return;
+  if(serverExportInFlight) return;
+  if(typeof navigator !== "undefined" && navigator.onLine === false) return;
+  if(!loadQueuedServerExport()) return;
+  flushQueuedServerExport(false).catch(function(){});
+}, 45000);
+
 
 /* ── Full login with server auto-import support ── */
 async function loginWithFolderSupport(){
@@ -7908,14 +8296,20 @@ async function loginWithFolderSupport(){
   /* SHA-256 verify — plaintext never compared directly */
   async function _sha256(s){const b=new TextEncoder().encode(s);const d=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");}
   var validHash = await getEffectivePasswordHash();
+  var _localDev2 = (typeof getLocalDevicePasswordHash === "function") ? getLocalDevicePasswordHash() : "";
+
   var _cands2 = getPasswordCandidates(pw);
   var _ok2 = false;
+  var _matched2 = "";
   for(var _j=0; _j<_cands2.length; _j++){
     var _h2 = await _sha256(_cands2[_j]);
-    if(_h2 === validHash || _h2 === SCADA_PASSWORD){ _ok2 = true; break; }
+    if(_h2 === validHash || _h2 === SCADA_PASSWORD || (_localDev2 && _h2 === _localDev2)){ _ok2 = true; _matched2 = _h2; break; }
+
   }
   if(_ok2){
     persistLogin(empId);
+    if(_matched2 && typeof saveLocalDevicePasswordHash === "function") saveLocalDevicePasswordHash(_matched2);
+
     document.getElementById("loginScreen").style.display="none";
     err.style.display="none";
     /* Update operator display */
@@ -7927,6 +8321,7 @@ async function loginWithFolderSupport(){
     try{ await maybeOfferBiometricEnrollment(empId); }catch(e){}
     
     /* Primary: central server sync for all PCs */
+    flushQueuedServerExport(false).catch(function(){});
     var serverOk = await autoImportFromServer(true);
     if(!serverOk) showToast("⚠ Could not auto-load from central server");
   } else {
