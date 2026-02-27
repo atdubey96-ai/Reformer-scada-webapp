@@ -4680,7 +4680,7 @@ function requestHeatMapRender(delayMs){
               📋 Paste OCR Text
             </button>
             <button type="button" id="td-ocr-google-key-btn" onclick="configureTstGoogleVisionKey()"
-              style="background:rgba(59,130,246,0.14);border:1px solid rgba(59,130,246,0.42);color:#93c5fd;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;"
+              style="display:none;background:rgba(59,130,246,0.14);border:1px solid rgba(59,130,246,0.42);color:#93c5fd;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;"
               title="Set Google Vision API key for robust OCR">
               🧠 Google Vision Key
             </button>
@@ -8760,7 +8760,9 @@ var TST_OCR_PIPELINE = {
   ocrSpaceKeyStorageKey: "scadaOcrSpaceApiKey",
   preferredProviderKey: "scadaTstCloudProvider",
   /* Optional org-wide fixed key: set once here to auto-enable on all devices. */
-  sharedGoogleVisionApiKey: "AIzaSyDady3jR-aDlg1NFZY_iv8EEfyKcT8Cjr4"
+  sharedGoogleVisionApiKey: "AIzaSyDady3jR-aDlg1NFZY_iv8EEfyKcT8Cjr4",
+  googleMonthlyLimit: 300,
+  googleUsageStorageKey: "scadaGoogleVisionUsageV1"
 };
 
 function getSharedGoogleVisionApiKey(){
@@ -8776,6 +8778,59 @@ function getTstGoogleVisionApiKey(){
     if(saved && String(saved).trim()) return String(saved).trim();
   }catch(e){}
   return "";
+}
+
+function getGoogleVisionMonthToken(d){
+  var dt = d || new Date();
+  return String(dt.getFullYear()) + "-" + String(dt.getMonth() + 1).padStart(2, "0");
+}
+
+function getGoogleVisionMonthlyLimit(){
+  var n = Number(TST_OCR_PIPELINE.googleMonthlyLimit);
+  if(!isFinite(n) || n < 1) return 300;
+  return Math.floor(n);
+}
+
+function getGoogleVisionUsageRecord(){
+  var monthNow = getGoogleVisionMonthToken(new Date());
+  try{
+    var raw = localStorage.getItem(TST_OCR_PIPELINE.googleUsageStorageKey);
+    if(!raw) return { month: monthNow, count: 0 };
+    var js = JSON.parse(raw);
+    var month = String((js && js.month) || "");
+    var count = Number((js && js.count) || 0);
+    if(!/^\d{4}-\d{2}$/.test(month)) month = monthNow;
+    if(!isFinite(count) || count < 0) count = 0;
+    if(month !== monthNow) return { month: monthNow, count: 0 };
+    return { month: month, count: Math.floor(count) };
+  }catch(e){
+    return { month: monthNow, count: 0 };
+  }
+}
+
+function saveGoogleVisionUsageRecord(rec){
+  try{
+    localStorage.setItem(TST_OCR_PIPELINE.googleUsageStorageKey, JSON.stringify(rec || {}));
+  }catch(e){}
+}
+
+function getGoogleVisionUsageSummary(){
+  var rec = getGoogleVisionUsageRecord();
+  var limit = getGoogleVisionMonthlyLimit();
+  var used = Math.max(0, Math.floor(Number(rec.count || 0)));
+  var remaining = Math.max(0, limit - used);
+  return { month: rec.month, used: used, limit: limit, remaining: remaining };
+}
+
+function canUseGoogleVisionThisMonth(){
+  return getGoogleVisionUsageSummary().remaining > 0;
+}
+
+function markGoogleVisionUse(){
+  var rec = getGoogleVisionUsageRecord();
+  rec.count = Math.max(0, Math.floor(Number(rec.count || 0))) + 1;
+  saveGoogleVisionUsageRecord(rec);
+  return getGoogleVisionUsageSummary();
 }
 
 function getTstCloudProvider(){
@@ -8812,6 +8867,10 @@ function isPaidCloudOcrEnabled(){
 
 function configureTstGoogleVisionKey(){
   if(tdOcrBusy) return;
+  if(getSharedGoogleVisionApiKey()){
+    alert("Google Vision key is centrally fixed for this site.");
+    return;
+  }
   var current = getTstGoogleVisionApiKey();
   var next = prompt(
     "Paste Google Vision API key.\n\nPress OK with empty value to remove saved key from this browser.",
@@ -9940,6 +9999,7 @@ async function runGoogleVisionOcrFile(file){
   if(typeof fetch !== "function" || !file) return null;
   var apiKey = getTstGoogleVisionApiKey();
   if(!apiKey) return null;
+  if(!canUseGoogleVisionThisMonth()) return null;
 
   var isPdf = /\.pdf$/i.test(file.name || "") || file.type === "application/pdf";
   if(isPdf) return null; /* Keep PDF flow in existing local/pdf parser path. */
@@ -9954,6 +10014,9 @@ async function runGoogleVisionOcrFile(file){
       imageContext: { languageHints: ["en"] }
     }]
   };
+
+  /* Count each outbound Vision request against the monthly cap. */
+  markGoogleVisionUse();
 
   var resp = await fetch("https://vision.googleapis.com/v1/images:annotate?key=" + encodeURIComponent(apiKey), {
     method: "POST",
@@ -10545,6 +10608,14 @@ async function handleTstScanSelect(event){
           if(at.name === "google"){
             if(isPdf) continue;
             if(!getTstGoogleVisionApiKey()) continue;
+            if(!canUseGoogleVisionThisMonth()){
+              var usage = getGoogleVisionUsageSummary();
+              setTstOcrStatus(
+                "Google Vision monthly cap reached (" + usage.used + "/" + usage.limit + ")",
+                "#f59e0b"
+              );
+              continue;
+            }
           }
 
           setTstOcrStatus(at.label + " OCR...", "#7ec8f0");
