@@ -7834,14 +7834,11 @@ function setCentralReachability(ok){
   centralReachability.checkedAt = Date.now();
 }
 async function checkCentralReachability(force){
-  var now = Date.now();
-  if(!force && !centralReachability.ok && (now - centralReachability.checkedAt) < centralReachability.lockMs){
-    return false;
-  }
   if(typeof navigator !== "undefined" && navigator.onLine === false){
     setCentralReachability(false);
     return false;
   }
+  if(!force) return true;
   var healthUrl = SUPABASE_URL + "/auth/v1/health";
   try{
     var res = await fetchWithTimeout(healthUrl, {
@@ -7900,12 +7897,6 @@ async function fetchCentralAuthConfig(forceRefresh){
   }
   if(typeof navigator !== "undefined" && navigator.onLine === false){
     return false;
-  }
-  if(!forceRefresh){
-    var canReach = await checkCentralReachability(false);
-    if(!canReach && isSha256Hex(centralPasswordHashCache)){
-      return false;
-    }
   }
   if(centralAuthFetchInFlight) return centralAuthFetchInFlight;
 
@@ -8152,8 +8143,6 @@ async function flushQueuedServerExport(showMsg){
   if(!SERVER_SYNC_ENABLED) return false;
   var queued = loadQueuedServerExport();
   if(!queued || !queued.data_base64) return false;
-  var canReach = await checkCentralReachability(false);
-  if(!canReach) return false;
   for(var a=0; a<SERVER_SYNC_RETRY_COUNT; a++){
     var ok = await insertServerReportRow({
       file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
@@ -8161,6 +8150,7 @@ async function flushQueuedServerExport(showMsg){
       uploaded_by: queued.uploaded_by || null
     });
     if(ok){
+      setCentralReachability(true);
       clearQueuedServerExport();
       saveLastServerSnapshot({
         file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
@@ -8181,16 +8171,6 @@ async function autoImportFromServer(showMsg){
   if(!SERVER_SYNC_ENABLED) return false;
   if(serverImportInFlight) return serverImportInFlight;
   serverImportInFlight = (async function(){
-    var canReach = await checkCentralReachability(false);
-    if(!canReach){
-      var localFallbackEarly = loadLastServerSnapshot();
-      var loadedEarly = await importServerReportPayload(localFallbackEarly);
-      if(loadedEarly){
-        if(showMsg) showToast("📴 Network weak: loaded last local synced copy");
-        return true;
-      }
-      return false;
-    }
     for(var attempt=0; attempt<SERVER_SYNC_RETRY_COUNT; attempt++){
       try{
         var row = await fetchLatestServerReportRow();
@@ -8245,11 +8225,6 @@ async function autoExportToServer(wb, filename){
       uploaded_by: (getLoggedInEmpId() || "") || null
     };
     saveLastServerSnapshot(payload);
-    var canReach = await checkCentralReachability(false);
-    if(!canReach){
-      saveQueuedServerExport(payload);
-      return "queued";
-    }
 
     for(var attempt=0; attempt<SERVER_SYNC_RETRY_COUNT; attempt++){
       var ok = await insertServerReportRow(payload);
@@ -8263,6 +8238,7 @@ async function autoExportToServer(wb, filename){
     }
 
     saveQueuedServerExport(payload);
+    setTimeout(function(){ flushQueuedServerExport(false).catch(function(){}); }, 5000);
     return "queued";
   })();
   try{
@@ -8275,6 +8251,12 @@ async function autoExportToServer(wb, filename){
 window.addEventListener("online", function(){
   flushQueuedServerExport(true).catch(function(){});
 });
+window.addEventListener("focus", function(){
+  flushQueuedServerExport(false).catch(function(){});
+});
+window.addEventListener("pageshow", function(){
+  flushQueuedServerExport(false).catch(function(){});
+});
 document.addEventListener("visibilitychange", function(){
   if(document.visibilityState === "visible") flushQueuedServerExport(false).catch(function(){});
 });
@@ -8284,7 +8266,7 @@ setInterval(function(){
   if(typeof navigator !== "undefined" && navigator.onLine === false) return;
   if(!loadQueuedServerExport()) return;
   flushQueuedServerExport(false).catch(function(){});
-}, 45000);
+}, 15000);
 
 
 /* ── Full login with server auto-import support ── */
