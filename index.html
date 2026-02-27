@@ -6105,7 +6105,8 @@ async function exportToExcel(){
     return;
   }
   if(saveStatus === "queued"){
-    showToast("📶 Weak network: save queued, will auto-sync");
+    var qTag = (typeof shortServerSyncErrorTag === "function") ? shortServerSyncErrorTag() : "";
+    showToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : ""));
     return;
   }
   showToast("❌ Save failed: central server is unreachable");
@@ -7992,6 +7993,7 @@ var serverImportInFlight = null;
 var serverExportInFlight = null;
 var SERVER_SYNC_QUEUE_KEY = "scadaQueuedServerExportV1";
 var SERVER_SYNC_LAST_SNAPSHOT_KEY = "scadaLastServerSnapshotV1";
+var lastServerSyncError = "";
 
 function loadQueuedServerExport(){
   try{
@@ -8034,8 +8036,63 @@ function saveLastServerSnapshot(payload){
     }));
   }catch(e){}
 }
+function setLastServerSyncError(msg){
+  lastServerSyncError = String(msg || "");
+}
+function shortServerSyncErrorTag(){
+  if(!lastServerSyncError) return "";
+  var m = String(lastServerSyncError).match(/\b(401|403|404|409|413|429|500|502|503|504)\b/);
+  return m ? ("HTTP " + m[1]) : "";
+}
+async function readResponseErrorText(res){
+  try{
+    var txt = await res.text();
+    if(!txt) return "HTTP " + (res && res.status ? res.status : 0);
+    return String(txt).replace(/\s+/g, " ").slice(0, 200);
+  }catch(e){
+    return "HTTP " + (res && res.status ? res.status : 0);
+  }
+}
+async function supabaseRestRequest(path, method, body, preferHeader){
+  var baseUrl = SUPABASE_URL + path;
+  var urlWithKey = baseUrl + (baseUrl.indexOf("?") >= 0 ? "&" : "?") + "apikey=" + encodeURIComponent(SUPABASE_ANON_KEY);
+  var modes = [
+    { url: baseUrl, headers:{ apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY } },
+    { url: baseUrl, headers:{ apikey: SUPABASE_ANON_KEY } },
+    { url: baseUrl, headers:{ Authorization: "Bearer " + SUPABASE_ANON_KEY } },
+    { url: urlWithKey, headers:{} }
+  ];
+  var lastErr = null;
+  for(var i=0; i<modes.length; i++){
+    var headers = Object.assign({
+      Accept: "application/json",
+      "Cache-Control": "no-cache"
+    }, modes[i].headers || {});
+    if(method !== "GET" && method !== "HEAD"){
+      headers["Content-Type"] = "application/json";
+    }
+    if(preferHeader) headers["Prefer"] = preferHeader;
+    try{
+      var res = await fetchWithTimeout(modes[i].url, {
+        method: method,
+        cache: "no-store",
+        headers: headers,
+        body: (body != null && method !== "GET" && method !== "HEAD") ? JSON.stringify(body) : undefined
+      }, SERVER_SYNC_TIMEOUT_MS);
+      if(res && (res.status === 401 || res.status === 403) && i < modes.length - 1){
+        continue;
+      }
+      return res;
+    }catch(e){
+      lastErr = e;
+    }
+  }
+  if(lastErr) throw lastErr;
+  return null;
+}
 
 async function fetchLatestServerReportRow(){
+  setLastServerSyncError("");
   var row = null;
   if(ensureSupaClient()){
     try{
@@ -8050,65 +8107,128 @@ async function fetchLatestServerReportRow(){
       if(q && !q.error){
         setCentralReachability(true);
         if(q.data && q.data.length) row = q.data[0];
+      }else if(q && q.error){
+        setLastServerSyncError(String(q.error.message || q.error.code || "sdk-read-failed"));
       }
-    }catch(_e1){}
+    }catch(_e1){
+      setLastServerSyncError(String((_e1 && _e1.message) || _e1 || "sdk-read-error"));
+    }
   }
   if(!row){
-    try{
-      var url = SUPABASE_URL + "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE)
-        + "?select=file_name,data_base64,created_at&order=created_at.desc&limit=1";
-      var res = await fetchWithTimeout(url,{
-        method:"GET",
-        cache:"no-store",
-        headers:{
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: "Bearer " + SUPABASE_ANON_KEY,
-          Accept:"application/json",
-          "Cache-Control":"no-cache"
+    var readPaths = [
+      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at&order=created_at.desc&limit=1",
+      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at&order=id.desc&limit=1",
+      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at&limit=1"
+    ];
+    for(var r=0; r<readPaths.length; r++){
+      try{
+        var res = await supabaseRestRequest(readPaths[r], "GET", null, null);
+        if(res && res.ok){
+          setCentralReachability(true);
+          var arr = await res.json();
+          if(Array.isArray(arr) && arr.length){
+            row = arr[0];
+            setLastServerSyncError("");
+            break;
+          }
+        }else if(res){
+          var errTxt = await readResponseErrorText(res);
+          setLastServerSyncError("read " + res.status + ": " + errTxt);
         }
-      }, SERVER_SYNC_TIMEOUT_MS);
-      if(res && res.ok){
-        setCentralReachability(true);
-        var arr = await res.json();
-        if(Array.isArray(arr) && arr.length) row = arr[0];
+      }catch(_e2){
+        setLastServerSyncError(String((_e2 && _e2.message) || _e2 || "rest-read-error"));
       }
-    }catch(_e2){}
+    }
   }
   return row;
 }
 
 async function insertServerReportRow(payload){
+  setLastServerSyncError("");
+  var fileName = (payload && payload.file_name) ? String(payload.file_name) : "Burner_SCADA_Report.xlsx";
+  var writePayload = {
+    file_name: fileName,
+    data_base64: (payload && payload.data_base64) ? String(payload.data_base64) : "",
+    uploaded_by: (payload && payload.uploaded_by) ? payload.uploaded_by : null
+  };
+  if(!writePayload.data_base64){
+    setLastServerSyncError("empty-data");
+    return false;
+  }
+
   if(ensureSupaClient()){
     try{
       var ins = await withTimeout(
-        supaClient.from(SUPABASE_TABLE).insert(payload),
+        supaClient.from(SUPABASE_TABLE).insert(writePayload),
         SERVER_SYNC_TIMEOUT_MS
       );
       if(ins && !ins.error){
         setCentralReachability(true);
+        setLastServerSyncError("");
         return true;
+      }else if(ins && ins.error){
+        setLastServerSyncError(String(ins.error.message || ins.error.code || "sdk-insert-failed"));
       }
-    }catch(_e1){}
+    }catch(_e1){
+      setLastServerSyncError(String((_e1 && _e1.message) || _e1 || "sdk-insert-error"));
+    }
   }
+
   try{
-    var url = SUPABASE_URL + "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE);
-    var res = await fetchWithTimeout(url,{
-      method:"POST",
-      cache:"no-store",
-      headers:{
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: "Bearer " + SUPABASE_ANON_KEY,
-        "Content-Type":"application/json",
-        Prefer:"return=minimal"
-      },
-      body: JSON.stringify(payload)
-    }, SERVER_SYNC_TIMEOUT_MS);
+    var insertPath = "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE);
+    var res = await supabaseRestRequest(insertPath, "POST", writePayload, "return=minimal");
     var ok = !!(res && (res.ok || res.status === 201 || res.status === 204));
-    if(ok) setCentralReachability(true);
-    return ok;
+    if(ok){
+      setCentralReachability(true);
+      setLastServerSyncError("");
+      return true;
+    }
+    if(res){
+      var errTxt = await readResponseErrorText(res);
+      setLastServerSyncError("insert " + res.status + ": " + errTxt);
+    }
   }catch(_e2){
-    return false;
+    setLastServerSyncError(String((_e2 && _e2.message) || _e2 || "rest-insert-error"));
   }
+
+  try{
+    var upsertPath = "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?on_conflict=" + encodeURIComponent("file_name");
+    var up = await supabaseRestRequest(upsertPath, "POST", writePayload, "resolution=merge-duplicates,return=minimal");
+    var upOk = !!(up && (up.ok || up.status === 201 || up.status === 204));
+    if(upOk){
+      setCentralReachability(true);
+      setLastServerSyncError("");
+      return true;
+    }
+    if(up){
+      var upTxt = await readResponseErrorText(up);
+      setLastServerSyncError("upsert " + up.status + ": " + upTxt);
+    }
+  }catch(_e3){
+    setLastServerSyncError(String((_e3 && _e3.message) || _e3 || "rest-upsert-error"));
+  }
+
+  try{
+    var patchPath = "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE)
+      + "?file_name=eq." + encodeURIComponent(fileName);
+    var patch = await supabaseRestRequest(patchPath, "PATCH", {
+      data_base64: writePayload.data_base64,
+      uploaded_by: writePayload.uploaded_by
+    }, "return=minimal");
+    var patchOk = !!(patch && (patch.ok || patch.status === 204));
+    if(patchOk){
+      setCentralReachability(true);
+      setLastServerSyncError("");
+      return true;
+    }
+    if(patch){
+      var patchTxt = await readResponseErrorText(patch);
+      setLastServerSyncError("patch " + patch.status + ": " + patchTxt);
+    }
+  }catch(_e4){
+    setLastServerSyncError(String((_e4 && _e4.message) || _e4 || "rest-patch-error"));
+  }
+  return false;
 }
 
 async function importServerReportPayload(payload){
