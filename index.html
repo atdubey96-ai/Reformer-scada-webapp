@@ -19,22 +19,9 @@
       e.preventDefault(); e.stopPropagation(); return false;
     }
   });
-  // DevTools open detector — blurs content if opened
-  var _devOpen = false;
-  var _thresh  = 160;
-  setInterval(function(){
-    var open = (window.outerWidth - window.innerWidth > _thresh) ||
-               (window.outerHeight - window.innerHeight > _thresh);
-    if(open && !_devOpen){
-      _devOpen = true;
-      document.body.style.filter = 'blur(12px)';
-      document.body.style.pointerEvents = 'none';
-    } else if(!open && _devOpen){
-      _devOpen = false;
-      document.body.style.filter = '';
-      document.body.style.pointerEvents = '';
-    }
-  }, 800);
+  // NOTE:
+  // DevTools/viewport blur guard removed because it causes false positives
+  // on normal window and mobile viewport changes, making the app look blurred.
 })();
 </script>
 
@@ -1516,6 +1503,35 @@ body.light-theme .cw-btn{background:#e2eaf6;border-color:#b8cde8;color:#4a6a8a;}
 body.light-theme .cw-btn:hover{background:#d0dff2;color:#1e293b;}
 body.light-theme .cw-btn-active{background:linear-gradient(90deg,#d95008,#F37022);color:#fff;border-color:#F37022;}
 body.light-theme .cw-selector-label{color:#2a4a6a;}
+.cw-nudge{
+  margin-left:auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:7px 12px;
+  border-radius:8px;
+  border:1px solid rgba(74,222,128,0.38);
+  background:rgba(16,185,129,0.1);
+  color:#86efac;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.2px;
+  line-height:1.25;
+  white-space:nowrap;
+}
+body.light-theme .cw-nudge{
+  border-color:rgba(5,150,105,0.35);
+  background:rgba(16,185,129,0.14);
+  color:#065f46;
+}
+@media(max-width:1100px){
+  .cw-nudge{
+    margin-left:0;
+    width:100%;
+    justify-content:flex-start;
+    white-space:normal;
+  }
+}
 .cleaning-wall-section{
   overflow-x:auto;
 }
@@ -2043,6 +2059,14 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   75% {transform:scaleY(0.97) scaleX(1.02);opacity:0.9;}
   100%{transform:scaleY(1)   scaleX(1);   opacity:0.92;}
 }
+/* Softer/cheaper flicker used where we want reduced motion */
+@keyframes hmFlameFlickerSoft{
+  0%  {transform:scaleY(1)    scaleX(1);    opacity:0.9;}
+  25% {transform:scaleY(1.02) scaleX(0.99); opacity:0.96;}
+  50% {transform:scaleY(0.98) scaleX(1.01); opacity:0.86;}
+  75% {transform:scaleY(1.01) scaleX(0.995);opacity:0.92;}
+  100%{transform:scaleY(1)    scaleX(1);    opacity:0.9;}
+}
 /* Glow via CSS classes — NO inline filter, no per-element layer promotion */
 .hm-burner-wrap{
   display:flex;flex-direction:column;align-items:center;
@@ -2133,6 +2157,28 @@ body.light-theme .hm-wall-btn-active{background:rgba(243,112,34,0.12)!important;
 #hm-wall-panel-C .hm-burner-wrap svg,
 #hm-wall-panel-D .hm-burner-wrap svg{
   width:26px;height:36px;
+}
+/* Bottom wall tables: keep burner icons static (no flame animation) */
+#hm-wall-panel-A .hm-burner-wrap:hover,
+#hm-wall-panel-B .hm-burner-wrap:hover,
+#hm-wall-panel-C .hm-burner-wrap:hover,
+#hm-wall-panel-D .hm-burner-wrap:hover,
+#hm-wall-panel-ALL .hm-burner-wrap:hover{
+  transform:none;
+}
+#hm-wall-panel-A .hm-burner-wrap.hm-flame svg,
+#hm-wall-panel-B .hm-burner-wrap.hm-flame svg,
+#hm-wall-panel-C .hm-burner-wrap.hm-flame svg,
+#hm-wall-panel-D .hm-burner-wrap.hm-flame svg,
+#hm-wall-panel-ALL .hm-burner-wrap.hm-flame svg{
+  animation:none !important;
+}
+#hm-wall-panel-A .hm-burner-wrap.hm-flame::after,
+#hm-wall-panel-B .hm-burner-wrap.hm-flame::after,
+#hm-wall-panel-C .hm-burner-wrap.hm-flame::after,
+#hm-wall-panel-D .hm-burner-wrap.hm-flame::after,
+#hm-wall-panel-ALL .hm-burner-wrap.hm-flame::after{
+  opacity:0.32;
 }
 /* Peep-hole gradient bar stretches naturally via flex:1, but ensure full width */
 #hm-wall-panel-A .hm-peep-gradient-bar-wrap,
@@ -2742,6 +2788,80 @@ function buildPeepLine(vals, range, label){
   return html;
 }
 
+/* Keep the latest parsed heatmap data so wall-button clicks can switch instantly
+   without re-running the full render pipeline. */
+window._hmRenderSnapshot = null;
+
+function clearHeatMapPanelContent(){
+  var panelIds = ["A","B","C","D"];
+  for(var i=0; i<panelIds.length; i++){
+    var p = document.getElementById("hm-wall-panel-" + panelIds[i]);
+    if(p) p.innerHTML = "";
+  }
+  var ab = document.getElementById("hm-side-ab");
+  var cd = document.getElementById("hm-side-cd");
+  if(ab) ab.innerHTML = "";
+  if(cd) cd.innerHTML = "";
+}
+
+function buildHeatMapPanelForWall(wall){
+  var s = window._hmRenderSnapshot;
+  if(!s || !wall) return;
+
+  var hmData = s.hmData || {};
+  var abBot = s.abBot || Array(15).fill("");
+  var abTop = s.abTop || Array(15).fill("");
+  var cdBot = s.cdBot || Array(15).fill("");
+  var cdTop = s.cdTop || Array(15).fill("");
+
+  if(wall === "A"){
+    var wallPanelA = document.getElementById("hm-wall-panel-A");
+    if(wallPanelA) wallPanelA.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("A", abBot, abTop, hmData["A"]) + '</div>';
+    return;
+  }
+  if(wall === "B"){
+    var wallPanelB = document.getElementById("hm-wall-panel-B");
+    if(wallPanelB) wallPanelB.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("B", abBot, abTop, hmData["B"]) + '</div>';
+    return;
+  }
+  if(wall === "C"){
+    var wallPanelC = document.getElementById("hm-wall-panel-C");
+    if(wallPanelC) wallPanelC.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("C", cdBot, cdTop, hmData["C"]) + '</div>';
+    return;
+  }
+  if(wall === "D"){
+    var wallPanelD = document.getElementById("hm-wall-panel-D");
+    if(wallPanelD) wallPanelD.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("D", cdBot, cdTop, hmData["D"]) + '</div>';
+    return;
+  }
+  if(wall === "ALL"){
+    var abSideDiv = document.getElementById("hm-side-ab");
+    var cdSideDiv = document.getElementById("hm-side-cd");
+    if(abSideDiv){
+      abSideDiv.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("A", abBot, abTop, hmData["A"]) + '</div>'
+        + '<div class="hm-mobile-scroll">' + buildWallHTML("B", abBot, abTop, hmData["B"]) + '</div>';
+    }
+    if(cdSideDiv){
+      cdSideDiv.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("C", cdBot, cdTop, hmData["C"]) + '</div>'
+        + '<div class="hm-mobile-scroll">' + buildWallHTML("D", cdBot, cdTop, hmData["D"]) + '</div>';
+    }
+  }
+}
+
+function ensureHeatMapWallBuilt(wall){
+  if(!wall) return;
+  if(wall === "ALL"){
+    var ab = document.getElementById("hm-side-ab");
+    var cd = document.getElementById("hm-side-cd");
+    var hasAll = !!(ab && cd && ab.innerHTML && cd.innerHTML && ab.innerHTML.trim() && cd.innerHTML.trim());
+    if(!hasAll) buildHeatMapPanelForWall("ALL");
+    return;
+  }
+  var panel = document.getElementById("hm-wall-panel-" + wall);
+  var hasContent = !!(panel && panel.innerHTML && panel.innerHTML.trim());
+  if(!hasContent) buildHeatMapPanelForWall(wall);
+}
+
 function renderHeatMap(){
   /* ── Self-contained burner data loading ── */
   /* Read burner data DIRECTLY from localStorage, bypassing loadData() entirely */
@@ -2898,40 +3018,25 @@ function renderHeatMap(){
     hintEl.style.display = activeWall ? "none" : "block";
   }
 
-  /* Individual wall panels */
-  var wallPanelA = document.getElementById("hm-wall-panel-A");
-  var wallPanelB = document.getElementById("hm-wall-panel-B");
-  var wallPanelC = document.getElementById("hm-wall-panel-C");
-  var wallPanelD = document.getElementById("hm-wall-panel-D");
-  if(wallPanelA) wallPanelA.innerHTML = "";
-  if(wallPanelB) wallPanelB.innerHTML = "";
-  if(wallPanelC) wallPanelC.innerHTML = "";
-  if(wallPanelD) wallPanelD.innerHTML = "";
+  window._hmRenderSnapshot = {
+    hmData: hmData,
+    abBot: abBot,
+    abTop: abTop,
+    cdBot: cdBot,
+    cdTop: cdTop,
+    selectedShift: selectedShift,
+    dateVal: dateVal,
+    entryDt: entry ? entry.dt : ""
+  };
 
-  /* "Every Wall" combined view (AB side + CD side) */
-  var abSideDiv = document.getElementById("hm-side-ab");
-  if(abSideDiv) abSideDiv.innerHTML = "";
-  var cdSideDiv = document.getElementById("hm-side-cd");
-  if(cdSideDiv) cdSideDiv.innerHTML = "";
-
-  if(activeWall === "A" && wallPanelA) wallPanelA.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("A", abBot, abTop, hmData["A"]) + '</div>';
-  else if(activeWall === "B" && wallPanelB) wallPanelB.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("B", abBot, abTop, hmData["B"]) + '</div>';
-  else if(activeWall === "C" && wallPanelC) wallPanelC.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("C", cdBot, cdTop, hmData["C"]) + '</div>';
-  else if(activeWall === "D" && wallPanelD) wallPanelD.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("D", cdBot, cdTop, hmData["D"]) + '</div>';
-  else if(activeWall === "ALL"){
-    if(abSideDiv){
-      abSideDiv.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("A", abBot, abTop, hmData["A"]) + '</div>'
-        + '<div class="hm-mobile-scroll">' + buildWallHTML("B", abBot, abTop, hmData["B"]) + '</div>';
-    }
-    if(cdSideDiv){
-      cdSideDiv.innerHTML = '<div class="hm-mobile-scroll">' + buildWallHTML("C", cdBot, cdTop, hmData["C"]) + '</div>'
-        + '<div class="hm-mobile-scroll">' + buildWallHTML("D", cdBot, cdTop, hmData["D"]) + '</div>';
-    }
-  }
+  clearHeatMapPanelContent();
+  if(activeWall) ensureHeatMapWallBuilt(activeWall);
 }
 
 /* Coalesce burst updates from dropdown/tab/button events */
 var _heatMapRenderTimer = null;
+/* True = next heatmap render should skip expensive cuboid texture rebuild */
+window._hmSkipCuboidRefresh = false;
 function requestHeatMapRender(delayMs){
   var wait = (typeof delayMs === "number" && delayMs >= 0) ? delayMs : 120;
   if(_heatMapRenderTimer) clearTimeout(_heatMapRenderTimer);
@@ -3299,44 +3404,21 @@ function requestHeatMapRender(delayMs){
       <!-- Legend strip -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;align-items:center;background:#0f1f38;border:1px solid #1e3a5e;border-radius:8px;padding:8px 14px;">
         <span style="font-size:10px;color:#f0c060;font-weight:700;letter-spacing:1px;">BURNER STATE</span>
-        <div style="display:flex;align-items:center;gap:5px;">
-          <svg width="18" height="28" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 3px #22c55e88);">
-            <defs><radialGradient id="lgO" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="#86efac"/><stop offset="100%" stop-color="#16a34a" stop-opacity="0.7"/></radialGradient></defs>
-            <path d="M10 2 C6 6 4 10 5 14 C6 17 10 18 10 18 C10 18 14 17 15 14 C16 10 14 6 10 2Z" fill="url(#lgO)"/>
-            <ellipse cx="10" cy="13" rx="3" ry="4" fill="#dcfce7" opacity="0.9"/>
-            <rect x="8" y="17" width="4" height="8" rx="1.5" fill="#16a34a" opacity="0.7"/>
-            <rect x="4" y="24" width="12" height="3" rx="1.5" fill="#1e293b"/>
-          </svg>
+        <div style="display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;background:rgba(22,163,74,0.14);border:1px solid rgba(22,163,74,0.45);">
+          <span style="font-size:15px;line-height:1;filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
           <span style="font-size:10px;color:#4ade80;font-weight:700;">OFF GAS (O)</span>
         </div>
-        <div style="display:flex;align-items:center;gap:5px;">
-          <svg width="18" height="28" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 3px #fbbf2488);">
-            <defs><radialGradient id="lgN" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="100%" stop-color="#d97706" stop-opacity="0.7"/></radialGradient></defs>
-            <path d="M10 2 C6 6 4 10 5 14 C6 17 10 18 10 18 C10 18 14 17 15 14 C16 10 14 6 10 2Z" fill="url(#lgN)"/>
-            <ellipse cx="10" cy="13" rx="3" ry="4" fill="#fef9c3" opacity="0.9"/>
-            <rect x="8" y="17" width="4" height="8" rx="1.5" fill="#d97706" opacity="0.7"/>
-            <rect x="4" y="24" width="12" height="3" rx="1.5" fill="#1e293b"/>
-          </svg>
+        <div style="display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;background:rgba(217,119,6,0.14);border:1px solid rgba(217,119,6,0.45);">
+          <span style="font-size:15px;line-height:1;filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
           <span style="font-size:10px;color:#fbbf24;font-weight:700;">NG ONLY (N)</span>
         </div>
-        <div style="display:flex;align-items:center;gap:5px;">
-          <svg width="18" height="28" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 3px #2563eb88);">
-            <defs><radialGradient id="lgB" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0.7"/></radialGradient></defs>
-            <path d="M10 2 C6 6 4 10 5 14 C6 17 10 18 10 18 C10 18 14 17 15 14 C16 10 14 6 10 2Z" fill="url(#lgB)"/>
-            <ellipse cx="10" cy="13" rx="3" ry="4" fill="#93c5fd" opacity="0.9"/>
-            <rect x="8" y="17" width="4" height="8" rx="1.5" fill="#2563eb" opacity="0.7"/>
-            <rect x="4" y="24" width="12" height="3" rx="1.5" fill="#1e293b"/>
-          </svg>
-          <span style="font-size:10px;color:#3b82f6;font-weight:700;">BOTH (B)</span>
+        <div style="display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;background:rgba(37,99,235,0.14);border:1px solid rgba(37,99,235,0.45);">
+          <span style="font-size:15px;line-height:1;filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
+          <span style="font-size:10px;color:#60a5fa;font-weight:700;">BOTH (B)</span>
         </div>
-        <div style="display:flex;align-items:center;gap:5px;">
-          <svg width="18" height="28" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
-            <rect x="7" y="16" width="6" height="10" rx="2" fill="#2d3f55"/>
-            <rect x="5" y="25" width="10" height="3" rx="1.5" fill="#1e293b"/>
-            <rect x="3" y="13" width="14" height="4" rx="2" fill="#3a5068"/>
-            <rect x="6" y="12" width="8" height="2" rx="1" fill="#2d3f55"/>
-          </svg>
-          <span style="font-size:10px;color:#64748b;font-weight:700;">CAPPED (C)</span>
+        <div style="display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;background:rgba(71,85,105,0.2);border:1px solid rgba(100,116,139,0.45);">
+          <span style="font-size:13px;line-height:1;color:#94a3b8;">◼</span>
+          <span style="font-size:10px;color:#94a3b8;font-weight:700;">CAPPED (C)</span>
         </div>
         <span style="font-size:10px;color:#f0c060;font-weight:700;letter-spacing:1px;margin-left:12px;">PEEP HOLES</span>
         <div style="display:flex;align-items:center;gap:5px;">
@@ -3378,6 +3460,7 @@ function requestHeatMapRender(delayMs){
           perspective:4500px; perspective-origin:50% 50%;
           position:relative; cursor:grab;
           overflow:visible;      /* 3D children must not be clipped by the scene */
+          contain:layout paint style;
         }
         .cb-scene:active{cursor:grabbing;}
         .cb-scene.cb-float{animation:none !important;}
@@ -3472,8 +3555,26 @@ function requestHeatMapRender(delayMs){
            full 500px face height and widen the inter-burner gaps.
            ════════════════════════════════════════════════════════ */
 
-        /* Tighter horizontal body padding so all 15 burners fit */
-        .cb-face .hm-body { padding: 6px 6px !important; }
+        /* Fill face height: stretch burner rows vertically without changing horizontal spacing */
+        .cb-face .hm-wall-card{
+          margin-bottom: 0 !important;
+          border-radius: 0 !important;
+          height: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+        .cb-face .hm-wall-header{
+          flex: 0 0 auto !important;
+        }
+        .cb-face .hm-body {
+          padding: 8px 6px !important;
+          flex: 1 1 auto !important;
+          min-height: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: space-between !important;
+          gap: 0 !important;
+        }
 
         /* Wider gap between adjacent burner icons — fills horizontal space */
         .cb-face .hm-burners-line { gap: 22px !important; }
@@ -3487,9 +3588,71 @@ function requestHeatMapRender(delayMs){
           letter-spacing: 0.2px !important;
         }
 
-        /* Burner wrap & SVG: wider slot, taller flame icon */
+        /* Burner wrap & icon sizing */
         .cb-face .hm-burner-wrap        { width: 36px !important; }
         .cb-face .hm-burner-wrap svg    { width: 28px !important; height: 44px !important; }
+
+        @keyframes cbFlameLite{
+          0%,100%{transform:scaleY(1) scaleX(1);opacity:0.9;}
+          20%{transform:scaleY(1.08) scaleX(0.94);opacity:1;}
+          45%{transform:scaleY(0.94) scaleX(1.05);opacity:0.86;}
+          70%{transform:scaleY(1.05) scaleX(0.97);opacity:0.96;}
+        }
+        @keyframes cbFlameGlowPulse{
+          0%,100%{opacity:0.22;transform:translateX(-50%) scale(0.94);}
+          50%{opacity:0.36;transform:translateX(-50%) scale(1.08);}
+        }
+
+        /* Cuboid-only flame icon style: use true flame icon like sample */
+        .cb-face .hm-burner-wrap.hm-flame svg{ display:none !important; }
+        .cb-face .hm-burner-wrap.hm-flame::before{
+          content:"🔥";
+          display:block;
+          font-size:29px;
+          line-height:1;
+          transform-origin:50% 100%;
+          animation:cbFlameLite 2.2s ease-in-out infinite;
+          opacity:0.96;
+          will-change:auto;
+          filter:none;
+          text-shadow:0 1px 3px rgba(0,0,0,0.78), 0 0 8px rgba(243,112,34,0.28);
+        }
+        .cb-face .hm-burner-wrap.hm-flame-O::before{filter:hue-rotate(95deg) saturate(1.55) brightness(1.05);text-shadow:0 1px 3px rgba(0,0,0,0.78), 0 0 8px rgba(22,163,74,0.26);} 
+        .cb-face .hm-burner-wrap.hm-flame-N::before{filter:hue-rotate(-8deg) saturate(1.15) brightness(1.03);text-shadow:0 1px 3px rgba(0,0,0,0.78), 0 0 8px rgba(217,119,6,0.28);} 
+        .cb-face .hm-burner-wrap.hm-flame-B::before{filter:hue-rotate(175deg) saturate(1.6) brightness(1.03);text-shadow:0 1px 3px rgba(0,0,0,0.78), 0 0 8px rgba(37,99,235,0.26);} 
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+1).hm-flame::before{ animation-delay:0.10s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+2).hm-flame::before{ animation-delay:0.70s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+3).hm-flame::before{ animation-delay:1.30s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+4).hm-flame::before{ animation-delay:2.00s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+5).hm-flame::before{ animation-delay:2.60s; }
+
+        /* Cuboid faces: keep subtle motion, but lighter than main wall tables */
+        .cb-face .hm-burner-wrap:hover,
+        .cb-peephole-content .hm-burner-wrap:hover{transform:none !important;}
+        .cb-face .hm-burner-wrap.hm-flame::after{
+          display:block !important;
+          opacity:0.22 !important;
+          animation:none !important;
+        }
+        .cb-peephole-content .hm-burner-wrap.hm-flame svg{
+          animation:none !important;
+          opacity:0.82;
+        }
+        .cb-peephole-content .hm-burner-wrap.hm-flame::after{
+          display:block !important;
+          opacity:0.2 !important;
+        }
+
+        /* Cuboid flame icons animate lightly; pause during heavy interactions */
+        #tab-heatmap.hm-interacting .cb-face .hm-burner-wrap.hm-flame::before,
+        #tab-heatmap.hm-interacting .cb-peephole-content .hm-burner-wrap.hm-flame svg{
+          animation-play-state:paused !important;
+          opacity:0.82 !important;
+        }
+        #tab-heatmap.hm-interacting .cb-face .hm-burner-wrap.hm-flame::after,
+        #tab-heatmap.hm-interacting .cb-peephole-content .hm-burner-wrap.hm-flame::after{
+          opacity:0.14 !important;
+        }
 
         /* Row label — bold pill, maximum contrast */
         .cb-face .hm-row-label {
@@ -3517,20 +3680,17 @@ function requestHeatMapRender(delayMs){
         /* Hide row summary badges on face — they push burner 15 off-edge */
         .cb-face .hm-row-data-strip { display: none !important; }
 
-        /* Row padding — keeps all rows + peep bars visible in 500px face */
-        .cb-face .hm-row-wrap { padding: 8px 0 !important; gap: 4px !important; }
+        /* Row padding — more vertical fill in cuboid face */
+        .cb-face .hm-row-wrap { padding: 10px 0 !important; gap: 4px !important; }
 
         /* Peep-hole bars */
-        .cb-face .hm-peep-gradient-wrap     { padding: 8px 0 !important; margin: 0 !important; gap: 4px !important; }
+        .cb-face .hm-peep-gradient-wrap     { padding: 10px 0 !important; margin: 0 !important; gap: 4px !important; }
         .cb-face .hm-peep-gradient-bar-wrap { height: 30px !important; flex: 1 1 auto !important; min-width: 0 !important; }
         .cb-face .hm-peep-marker            { height: 34px !important; top: -2px !important; }
         .cb-face .hm-peep-dot               { width: 11px !important; height: 11px !important; }
         .cb-face .hm-peep-temp-label        { font-size: 9px !important; top: -18px !important; }
         .cb-face .hm-peep-label             { min-width: 36px !important; font-size: 10px !important; color: #ffffff !important; font-weight: 900 !important; text-shadow: 0 1px 4px rgba(0,0,0,1) !important; }
         .cb-face .hm-peep-range             { display: none !important; }
-
-        /* Wall card fills face edge-to-edge */
-        .cb-face .hm-wall-card { margin-bottom: 0 !important; border-radius: 0 !important; }
 
         /* ── VISIBILITY BOOST: darker background + brighter text on face ── */
         .cb-face .hm-wall-card  { background: #040d1a !important; }
@@ -3647,7 +3807,7 @@ function requestHeatMapRender(delayMs){
           <div class="cb-subtitle">Outer face = <span style="color:#F37022;font-weight:700;">Wall A</span> &nbsp;·&nbsp; Inner face = <span style="color:#fb923c;font-weight:700;">Wall B</span></div>
 
           <div class="cb-scene cb-float" id="ab-scene">
-            <div class="cb-group" id="ab-cube" style="transform:rotateX(-8deg) rotateY(-90deg);">
+            <div class="cb-group" id="ab-cube" style="transform:rotateX(-8deg) rotateY(-85deg);">
 
               <!-- FRONT = Wall A -->
               <div class="cb-face cb-fb" id="face-ab-front" style="transform:translateZ(80px);border:2px solid rgba(243,112,34,0.75);background:#0a1628;">
@@ -3728,7 +3888,7 @@ function requestHeatMapRender(delayMs){
           <div class="cb-subtitle">Outer face = <span style="color:#7ec8f0;font-weight:700;">Wall D</span> &nbsp;·&nbsp; Inner face = <span style="color:#60c8ff;font-weight:700;">Wall C</span></div>
 
           <div class="cb-scene cb-float" id="cd-scene">
-            <div class="cb-group" id="cd-cube" style="transform:rotateX(-8deg) rotateY(90deg);">
+            <div class="cb-group" id="cd-cube" style="transform:rotateX(-8deg) rotateY(-85deg);">
 
               <!-- FRONT = Wall D -->
               <div class="cb-face cb-fb" id="face-cd-front" style="transform:translateZ(80px);border:2px solid rgba(243,112,34,0.75);background:#0a1628;">
@@ -3814,11 +3974,13 @@ function requestHeatMapRender(delayMs){
           (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
           (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
         var _mobileCuboidEnabled = localStorage.getItem("hm-mobile-cuboid") === "1";
+        var _disableCuboidMotion = false;
         if(_isMobileLite && !_mobileCuboidEnabled){
           var cbRowLite = document.querySelector("#tab-heatmap .cb-dual-row");
           if(cbRowLite) cbRowLite.style.display = "none";
           return; /* Keep lightweight mode on mobile unless user enables 3D option */
         }
+
 
         /* ── 1. Drag interaction — smooth momentum, hard clamp, no bounce ──
            DRAG    : direct 1:1 follow
@@ -3847,6 +4009,13 @@ function requestHeatMapRender(delayMs){
             var scale = parseFloat(scene.getAttribute('data-cb-scale') || '1');
             if(!isFinite(scale) || scale <= 0) scale = 1;
             cube.style.transform = 'scale('+scale.toFixed(4)+') rotateX('+rX+'deg) rotateY('+rY+'deg)';
+          }
+
+          if(_disableCuboidMotion){
+            scene.style.cursor = "default";
+            scene.style.touchAction = "auto";
+            applyTransform();
+            return { scene:scene, applyTransform:applyTransform };
           }
 
           function stopRAF(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } }
@@ -3913,7 +4082,7 @@ function requestHeatMapRender(delayMs){
         }
 
         var _abDragCtrl = makeDraggable('ab-scene','ab-cube', -90, -8, -180,   0);
-        var _cdDragCtrl = makeDraggable('cd-scene','cd-cube',  90, -8,    0, 180);
+        var _cdDragCtrl = makeDraggable('cd-scene','cd-cube', -90, -8, -180,   0);
 
         function updateCuboidResponsiveScale(){
           var ctrls = [_abDragCtrl, _cdDragCtrl];
@@ -3950,6 +4119,7 @@ function requestHeatMapRender(delayMs){
         var FACE_W = 720, FACE_H = 500;
         var NATURAL_W = 900;
         var FACE_SCALE = FACE_W / NATURAL_W;   /* 0.8000 */
+        var NATURAL_H = Math.round(FACE_H / FACE_SCALE); /* 625 */
 
         function renderWallFace(wallName, peepBotVals, peepTopVals, wallData, faceEl, loadingEl, accentColor){
           /* Build the same wall-card HTML used by the flat bottom tables */
@@ -3972,6 +4142,7 @@ function requestHeatMapRender(delayMs){
             '<div style="'
             +   'position:absolute;top:0;left:0;'
             +   'width:'+NATURAL_W+'px;'
+            +   'height:'+NATURAL_H+'px;'
             +   'transform-origin:top left;'
             +   'transform:scale('+FACE_SCALE.toFixed(6)+');'
             +   'pointer-events:none;'
@@ -3984,10 +4155,15 @@ function requestHeatMapRender(delayMs){
         var _origRenderHeatMap = window.renderHeatMap;
         window.renderHeatMap = function(){
           if(_origRenderHeatMap) _origRenderHeatMap.apply(this,arguments);
+          if(window._hmSkipCuboidRefresh){
+            window._hmSkipCuboidRefresh = false;
+            return;
+          }
           scheduleCuboidTextures();
         };
 
         var _textureScheduled = false;
+        var _lastCuboidTextureSig = "";
         function isHeatMapVisibleNow(){
           var hmTab = document.getElementById('tab-heatmap');
           return !!(hmTab && hmTab.classList.contains('tab-active') && document.visibilityState === 'visible');
@@ -4045,6 +4221,17 @@ function requestHeatMapRender(delayMs){
           function getPH(e,k){ return (e&&e.peepHoles&&e.peepHoles[k]) ? e.peepHoles[k] : Array(15).fill(""); }
           var abBot=getPH(entry,"ab-bot"), abTop=getPH(entry,"ab-top");
           var cdBot=getPH(entry,"cd-bot"), cdTop=getPH(entry,"cd-top");
+
+          var nextSig = JSON.stringify({
+            shift:shift || "All",
+            dateVal:_dateVal || "latest",
+            entryTs:entry ? (entry.dt || entry.ts || "") : "",
+            hmData:hmData,
+            abBot:abBot, abTop:abTop,
+            cdBot:cdBot, cdTop:cdTop
+          });
+          if(nextSig === _lastCuboidTextureSig) return;
+          _lastCuboidTextureSig = nextSig;
 
           /* Render all four faces */
           renderWallFace("A", abBot, abTop, hmData["A"],
@@ -4258,12 +4445,40 @@ function requestHeatMapRender(delayMs){
         }
         var hintEl = document.getElementById("hm-wall-hint");
         if(hintEl) hintEl.style.display = _activeHeatMapWall ? "none" : "block";
-        if(typeof requestHeatMapRender === "function") requestHeatMapRender(80);
+        if(_activeHeatMapWall){
+          if(window._hmRenderSnapshot && typeof ensureHeatMapWallBuilt === "function"){
+            ensureHeatMapWallBuilt(_activeHeatMapWall);
+          } else if(typeof requestHeatMapRender === "function"){
+            window._hmSkipCuboidRefresh = true;
+            requestHeatMapRender(20);
+          }
+        }
       }
       function toggleMobileCuboid(){
         var enabled = localStorage.getItem("hm-mobile-cuboid") === "1";
         localStorage.setItem("hm-mobile-cuboid", enabled ? "0" : "1");
         location.reload();
+      }
+      function initHeatMapInteractionPerf(){
+        var hmTab = document.getElementById("tab-heatmap");
+        if(!hmTab) return;
+        var activeZones = 0;
+        function update(){ hmTab.classList.toggle("hm-interacting", activeZones > 0); }
+        function bindZone(el){
+          if(!el || el._hmPerfBound) return;
+          el._hmPerfBound = true;
+          el.addEventListener("mouseenter", function(){ activeZones += 1; update(); });
+          el.addEventListener("mouseleave", function(){ activeZones = Math.max(0, activeZones - 1); update(); });
+          el.addEventListener("focusin", function(){ activeZones += 1; update(); });
+          el.addEventListener("focusout", function(){ activeZones = Math.max(0, activeZones - 1); update(); });
+        }
+        bindZone(document.getElementById("hm-wall-btn-bar"));
+        bindZone(document.querySelector(".bottom-tab-bar"));
+      }
+      if(document.readyState === "loading"){
+        document.addEventListener("DOMContentLoaded", initHeatMapInteractionPerf);
+      } else {
+        initHeatMapInteractionPerf();
       }
       function initMobileCuboidToggle(){
         var isMobileLite =
@@ -4370,6 +4585,7 @@ function requestHeatMapRender(delayMs){
         <button class="cw-btn" id="cw-btn-C" onclick="switchCleaningWall('C')">🔥 Wall C</button>
         <button class="cw-btn" id="cw-btn-D" onclick="switchCleaningWall('D')">🔥 Wall D</button>
         <button class="cw-btn" id="cw-btn-ALL" onclick="switchCleaningWall('ALL')">📋 Every Wall</button>
+        <div class="cw-nudge" title="Post-cleaning reminder">📝 After cleaning, update inline Burner Data if condition changed.</div>
       </div>
 
       <div id="cleaningTablesWrap" class="cleaning-walls-grid">
@@ -4382,7 +4598,7 @@ function requestHeatMapRender(delayMs){
             ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
           </span>
           <button class="hd-btn hd-btn-primary" onclick="exportToExcel()" style="padding:8px 18px;font-size:13px;border-radius:6px;">💾 Save New Data</button>
-          <button class="hd-btn hd-btn-secondary" onclick="openBurnerHistoryModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="View last 5 cleaning dates for any burner">📜 Last 5 Dates</button>
+          <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ Histroical Data</button>
           <div style="position:relative;display:inline-block;" id="cleaningClearWrap">
             <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 Delete Data ▾</button>
             <div id="cleaningClearMenu" style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.7);z-index:500;overflow:hidden;padding:6px 0;">
@@ -4500,7 +4716,7 @@ function requestHeatMapRender(delayMs){
               style="background:rgba(20,184,166,0.14);border:1px solid rgba(20,184,166,0.42);color:#5eead4;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
               📋 Paste OCR Text
             </button>
-            <span id="td-ocr-status" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">OCR idle</span>
+            <span id="td-ocr-status" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">OCR idle (free local)</span>
           </div>
           <button type="button" onclick="downloadTstTemplate()"
             style="background:rgba(129,140,248,0.14);border:1px solid rgba(129,140,248,0.42);color:#a5b4fc;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
@@ -5782,6 +5998,12 @@ function generateAnalysis(){
 /* Track the last imported file name so Save writes back same filename */
 let lastImportedFileName = "Burner_SCADA_Report.xlsx";
 
+function showPostCleaningBurnerDataNudge(){
+  var body = "After burner cleaning, if burner condition changed, update inline Burner Data in Burner Data & Analysis tab.";
+  showToast("📝 Nudge: After cleaning, update inline Burner Data if condition changed.");
+  notifyAndBroadcast("post_cleaning_burner_nudge", "Post-Cleaning Nudge", body, "post_cleaning_burner_nudge", 4000);
+}
+
 async function exportToExcel(){
   /* Commit pending burner changes */
   const hadBurnerPending = Object.keys(burnerPending).length > 0;
@@ -5791,7 +6013,12 @@ async function exportToExcel(){
   /* Commit pending cleaning changes */
   const hadCleaningPending = Object.keys(cleaningPending).length > 0;
   commitCleaningPending();
-  if(hadCleaningPending){ buildCleaningTable(); showToast("✅ Cleaning dates saved successfully"); notifyAndBroadcast("burner_cleaning_saved", "Burner Cleaning Saved", "New burner cleaning data has been saved.", "burner_cleaning_saved", 3000); }
+  if(hadCleaningPending){
+    buildCleaningTable();
+    showToast("✅ Cleaning dates saved successfully");
+    notifyAndBroadcast("burner_cleaning_saved", "Burner Cleaning Saved", "New burner cleaning data has been saved.", "burner_cleaning_saved", 3000);
+    setTimeout(showPostCleaningBurnerDataNudge, 900);
+  }
 
   const wb = XLSX.utils.book_new();
 
@@ -6260,14 +6487,8 @@ function formatYMDToDisplay(d){
   if(p.length !== 3) return d;
   return p[2] + "/" + p[1] + "/" + p[0].slice(2);
 }
-function openBurnerHistoryModal(){
-  var modal = document.getElementById("burnerHistoryModal");
-  if(!modal) return;
-
-  var wallSel = document.getElementById("bh-wall");
-  var rowSel  = document.getElementById("bh-row");
-  var burSel  = document.getElementById("bh-burner");
-
+function populateBurnerSelectorOptions(wallSel, rowSel, burSel){
+  if(!wallSel || !rowSel || !burSel) return;
   if(!wallSel.options.length){
     wallSel.innerHTML = WALL_NAMES.map(function(w){ return '<option value="'+w+'">Wall '+w+'</option>'; }).join("");
   }
@@ -6277,16 +6498,137 @@ function openBurnerHistoryModal(){
   if(!burSel.options.length){
     burSel.innerHTML = Array.from({length:BURNERS}, function(_,i){ var b=i+1; return '<option value="'+b+'">Burner '+b+'</option>'; }).join("");
   }
-
+}
+function setDefaultBurnerSelectorValues(wallSel, rowSel, burSel){
+  if(!wallSel || !rowSel || !burSel) return;
   wallSel.value = (typeof cleaningWallFilter !== "undefined" && cleaningWallFilter !== "ALL") ? cleaningWallFilter : "A";
   rowSel.value = "1";
   burSel.value = "1";
+}
+function getBurnerSelection(wallId, rowId, burnerId){
+  var wallEl = document.getElementById(wallId);
+  var rowEl = document.getElementById(rowId);
+  var burnerEl = document.getElementById(burnerId);
+  var wall = wallEl ? wallEl.value : "A";
+  var row = rowEl ? parseInt(rowEl.value, 10) : 1;
+  var burner = burnerEl ? parseInt(burnerEl.value, 10) : 1;
+  return { wall: wall, row: row, burner: burner, key: "R" + row + "B" + burner };
+}
+function getBurnerDatesForSelection(wall, key){
+  var dates = getBurnerHistory(wall, key).slice();
+  var log = loadCleaningLog();
+  if(log[wall] && log[wall][key]) dates.push(log[wall][key]);
+  return Array.from(new Set(dates)).filter(Boolean).sort();
+}
+function openBurnerHistoryModal(){
+  var modal = document.getElementById("burnerHistoryModal");
+  if(!modal) return;
+
+  var wallSel = document.getElementById("bh-wall");
+  var rowSel  = document.getElementById("bh-row");
+  var burSel  = document.getElementById("bh-burner");
+
+  populateBurnerSelectorOptions(wallSel, rowSel, burSel);
+  setDefaultBurnerSelectorValues(wallSel, rowSel, burSel);
   renderBurnerHistoryPreview();
   modal.style.display = "flex";
 }
 function closeBurnerHistoryModal(){
   var modal = document.getElementById("burnerHistoryModal");
   if(modal) modal.style.display = "none";
+}
+
+var burnerDateEditState = { dates: [] };
+
+function openBurnerDateEditModal(){
+  var modal = document.getElementById("burnerDateEditModal");
+  if(!modal) return;
+
+  var wallSel = document.getElementById("be-wall");
+  var rowSel  = document.getElementById("be-row");
+  var burSel  = document.getElementById("be-burner");
+
+  populateBurnerSelectorOptions(wallSel, rowSel, burSel);
+  setDefaultBurnerSelectorValues(wallSel, rowSel, burSel);
+  renderBurnerDateEditor();
+  modal.style.display = "flex";
+}
+function closeBurnerDateEditModal(){
+  var modal = document.getElementById("burnerDateEditModal");
+  if(modal) modal.style.display = "none";
+}
+function renderBurnerDateEditor(){
+  var sel = getBurnerSelection("be-wall", "be-row", "be-burner");
+  burnerDateEditState.dates = getBurnerDatesForSelection(sel.wall, sel.key);
+
+  var title = document.getElementById("be-selected");
+  if(title) title.textContent = "Wall " + sel.wall + " · Row " + sel.row + " · Burner " + sel.burner;
+
+  renderBurnerDateEditorRows();
+}
+function renderBurnerDateEditorRows(){
+  var body = document.getElementById("be-list");
+  if(!body) return;
+
+  if(!burnerDateEditState.dates.length){
+    body.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:12px 8px;">No cleaning dates yet. Click <b>Add Date</b> to create one.</div>';
+    return;
+  }
+
+  body.innerHTML = burnerDateEditState.dates.map(function(d, i){
+    return '<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px;">'
+      + '<input type="date" value="' + d + '" onchange="setBurnerEditDate(' + i + ', this.value)" style="width:100%;background:#0a1628;border:1px solid #334155;border-radius:6px;color:#e2e8f0;padding:7px 10px;font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;">'
+      + '<button onclick="removeBurnerEditDate(' + i + ')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#fecaca;padding:7px 11px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✕</button>'
+      + '</div>';
+  }).join("");
+}
+function setBurnerEditDate(index, value){
+  burnerDateEditState.dates[index] = value;
+}
+function addBurnerEditDate(){
+  burnerDateEditState.dates.push("");
+  renderBurnerDateEditorRows();
+}
+function removeBurnerEditDate(index){
+  burnerDateEditState.dates.splice(index, 1);
+  renderBurnerDateEditorRows();
+}
+function saveBurnerEditedDates(){
+  var sel = getBurnerSelection("be-wall", "be-row", "be-burner");
+  var cleaned = burnerDateEditState.dates.filter(function(d){ return !!d; });
+  var uniqueSorted = Array.from(new Set(cleaned)).sort();
+
+  var log = loadCleaningLog();
+  var hist = loadCleaningHistory();
+  if(!log[sel.wall]) log[sel.wall] = {};
+  if(!hist[sel.wall]) hist[sel.wall] = {};
+
+  if(uniqueSorted.length){
+    hist[sel.wall][sel.key] = uniqueSorted;
+    log[sel.wall][sel.key] = uniqueSorted[uniqueSorted.length - 1];
+  } else {
+    delete hist[sel.wall][sel.key];
+    delete log[sel.wall][sel.key];
+  }
+
+  saveCleaningLog(log);
+  saveCleaningHistory(hist);
+
+  if(typeof cleaningPending !== "undefined" && cleaningPending[sel.wall] && cleaningPending[sel.wall][sel.key] !== undefined){
+    delete cleaningPending[sel.wall][sel.key];
+    if(!Object.keys(cleaningPending[sel.wall]).length) delete cleaningPending[sel.wall];
+    if(!Object.keys(cleaningPending).length){
+      var unsaved = document.getElementById("cleaningUnsavedBadge");
+      if(unsaved) unsaved.style.display = "none";
+    }
+  }
+
+  burnerDateEditState.dates = uniqueSorted.slice();
+  renderBurnerDateEditorRows();
+  buildCleaningTable();
+
+  showToast("✅ Cleaning dates updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
+  setTimeout(showPostCleaningBurnerDataNudge, 900);
 }
 function renderBurnerHistoryPreview(){
   var wall = document.getElementById("bh-wall").value;
@@ -7576,7 +7918,7 @@ function clearTempPdfAttachment(silent){
   var fileEl = document.getElementById("td-pdf-file");
   if(fileEl) fileEl.value = "";
   updateTempPdfUI();
-    setTstOcrStatus("OCR idle", "#94a3b8");
+    setTstOcrStatus("", "#94a3b8");
   if(!silent) showToast("🧹 PDF attachment removed");
 }
 
@@ -7603,7 +7945,7 @@ function handleTempPdfSelect(event){
   };
   tdPendingPdfLoading = false;
   updateTempPdfUI();
-    setTstOcrStatus("OCR idle", "#94a3b8");
+    setTstOcrStatus("", "#94a3b8");
   showToast("📎 PDF selected");
 }
 
@@ -7678,10 +8020,24 @@ async function openTempEntryPdf(idx){
 
 var tdOcrBusy = false;
 
+/* Lowest-cost mode: keep OCR local by default (no paid cloud request). */
+var TST_OCR_PIPELINE = {
+  localOnly: true,
+  cloudOptInKey: "scadaEnablePaidCloudOcr"
+};
+
+function isPaidCloudOcrEnabled(){
+  try{
+    return localStorage.getItem(TST_OCR_PIPELINE.cloudOptInKey) === "1";
+  }catch(e){
+    return false;
+  }
+}
+
 function setTstOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-status");
   if(!st) return;
-  st.textContent = msg || "OCR idle";
+  st.textContent = msg || (isPaidCloudOcrEnabled() ? "OCR idle (cloud enabled)" : "OCR idle (free local)");
   st.style.color = color || "#94a3b8";
 }
 
@@ -7845,33 +8201,153 @@ function normalizeWordToken(t){
 }
 
 function parseLikelyTempFromToken(token){
-  var tk = String(token || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if(!tk) return NaN;
-  var digitCount = (tk.match(/\d/g) || []).length;
+  var raw = String(token || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if(!raw) return NaN;
+  var digitCount = (raw.match(/\d/g) || []).length;
   if(digitCount < 2) return NaN;
-  tk = tk
-    .replace(/[OQ]/g, "0")
-    .replace(/D/g, "0")
-    .replace(/[IL]/g, "1")
-    .replace(/Z/g, "2")
-    .replace(/S/g, "5")
-    .replace(/G/g, "6");
-  if(!/^\d{3,4}$/.test(tk)) return NaN;
-  var n = Number(tk);
-  return (isFinite(n) && n >= 100 && n <= 1800) ? n : NaN;
+
+  function inRange(n){
+    return isFinite(n) && n >= 100 && n <= 1800;
+  }
+
+  function mapToken(str, mode){
+    var out = "";
+    for(var i=0; i<str.length; i++){
+      var ch = str[i];
+      if(ch >= "0" && ch <= "9"){ out += ch; continue; }
+      if(ch === "I" || ch === "L"){ out += "1"; continue; }
+      if(ch === "Z"){ out += "2"; continue; }
+      if(ch === "S"){ out += "5"; continue; }
+      if(ch === "B"){ out += "8"; continue; }
+      if(ch === "A"){ out += "4"; continue; }
+
+      if(mode === "alt9"){
+        if(ch === "Q" || ch === "O") out += "9";
+        else if(ch === "D") out += "0";
+        else if(ch === "G") out += "9";
+        else out += "";
+      }else if(mode === "mix"){
+        if(ch === "Q") out += "9";
+        else if(ch === "O" || ch === "D") out += "0";
+        else if(ch === "G") out += "6";
+        else out += "";
+      }else{
+        if(ch === "Q" || ch === "O" || ch === "D") out += "0";
+        else if(ch === "G") out += "6";
+        else out += "";
+      }
+    }
+    return out.replace(/\D/g, "");
+  }
+
+  function addCandidate(cands, val, score){
+    if(!inRange(val)) return;
+    var key = String(val);
+    if(!isFinite(cands[key]) || score > cands[key]) cands[key] = score;
+  }
+
+  function collectFromDigits(digits, cands, baseScore){
+    if(!digits) return;
+    if(/^\d{3,4}$/.test(digits)){
+      var direct = Number(digits);
+      addCandidate(cands, direct, baseScore + (direct >= 800 && direct <= 1200 ? 2.2 : 0.6));
+    }
+
+    if(digits.length >= 4){
+      var suffix3 = Number(digits.slice(-3));
+      addCandidate(cands, suffix3, baseScore + 1.1 + (suffix3 >= 800 && suffix3 <= 1200 ? 2 : 0));
+    }
+
+    for(var len=4; len>=3; len--){
+      if(digits.length < len) continue;
+      for(var i=0; i+len<=digits.length; i++){
+        var seg = digits.slice(i, i+len);
+        var v = Number(seg);
+        if(!inRange(v)) continue;
+        var score = baseScore;
+        if(v >= 700 && v <= 1400) score += 2.0;
+        if(v >= 800 && v <= 1200) score += 1.6;
+        if(i + len === digits.length) score += 0.7;
+        if(len === 4) score += 0.2;
+        addCandidate(cands, v, score);
+
+        /* Low-value misread rescue: 429 -> 929, 569 -> 969, etc. */
+        if(v >= 300 && v < 700){
+          var vShift = v + 500;
+          if(inRange(vShift)){
+            addCandidate(cands, vShift, score - 0.35 + (vShift >= 800 && vShift <= 1200 ? 1.0 : 0));
+          }
+          if(seg.length === 3){
+            var first = Number(seg[0]);
+            if(first <= 6){
+              var vLead9 = Number("9" + seg.slice(1));
+              if(inRange(vLead9)){
+                addCandidate(cands, vLead9, score - 0.25 + (vLead9 >= 800 && vLead9 <= 1200 ? 1.0 : 0));
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  var candidates = {};
+  var modes = [
+    { name: "default", w: 0.0 },
+    { name: "mix",     w: -0.05 },
+    { name: "alt9",    w: -0.15 }
+  ];
+  for(var m=0; m<modes.length; m++){
+    var digits = mapToken(raw, modes[m].name);
+    if(!digits) continue;
+    collectFromDigits(digits, candidates, modes[m].w);
+  }
+
+  var best = NaN;
+  var bestScore = -1e9;
+  Object.keys(candidates).forEach(function(k){
+    var v = Number(k), s = candidates[k];
+    if(!isFinite(v)) return;
+    if(s > bestScore){
+      best = v;
+      bestScore = s;
+    }
+  });
+
+  return inRange(best) ? best : NaN;
 }
 
 function parseLikelyRowNumber(token){
-  var tk = String(token || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if(!tk) return NaN;
-  tk = tk
-    .replace(/[OQ]/g, "0")
-    .replace(/[IL]/g, "1")
-    .replace(/Z/g, "2")
-    .replace(/S/g, "5");
-  if(!/^\d{1,2}$/.test(tk)) return NaN;
-  var n = Number(tk);
-  return (isFinite(n) && n >= 1 && n <= 15) ? n : NaN;
+  var raw = String(token || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if(!raw) return NaN;
+
+  function normRow(str, mode){
+    return str
+      .replace(mode === "q9" ? /Q/g : /Q/g, mode === "q9" ? "9" : "0")
+      .replace(mode === "o9" ? /O/g : /O/g, mode === "o9" ? "9" : "0")
+      .replace(/D/g, "0")
+      .replace(/[IL]/g, "1")
+      .replace(/Z/g, "2")
+      .replace(/S/g, "5")
+      .replace(/[^0-9]/g, "");
+  }
+
+  var modes = ["default","q9","o9"];
+  var best = NaN;
+  var bestScore = -1;
+  for(var i=0; i<modes.length; i++){
+    var tk = normRow(raw, modes[i]);
+    if(!/^\d{1,2}$/.test(tk)) continue;
+    var n = Number(tk);
+    if(!(isFinite(n) && n >= 1 && n <= 15)) continue;
+    var score = (modes[i] === "default") ? 2 : 1.6;
+    if(n >= 1 && n <= 9) score += 0.2;
+    if(score > bestScore){
+      best = n;
+      bestScore = score;
+    }
+  }
+  return isFinite(best) ? best : NaN;
 }
 
 function detectTstColumnKey(token){
@@ -7882,6 +8358,287 @@ function detectTstColumnKey(token){
   if(/AB.*T0?P/.test(tk) || /A8.*T0?P/.test(tk) || tk === "ABT0P" || tk === "ABTOP") return "ab-top";
   if(/CD.*T0?P/.test(tk) || /C0.*T0?P/.test(tk) || /CDT0P/.test(tk) || /CDTOP/.test(tk)) return "cd-top";
   return "";
+}
+
+function medianNumber(arr){
+  var nums = (arr || []).filter(function(n){ return isFinite(n); }).slice().sort(function(a,b){ return a-b; });
+  if(!nums.length) return NaN;
+  var m = Math.floor(nums.length / 2);
+  return (nums.length % 2) ? nums[m] : (nums[m-1] + nums[m]) / 2;
+}
+
+function buildTstSpatialGeometry(ocrData){
+  if(!ocrData || !Array.isArray(ocrData.words) || !ocrData.words.length) return null;
+
+  var words = ocrData.words.map(function(w){
+    var b = (w && w.bbox) ? w.bbox : {};
+    var x0 = Number(b.x0 || 0), x1 = Number(b.x1 || 0), y0 = Number(b.y0 || 0), y1 = Number(b.y1 || 0);
+    var txt = String((w && w.text) || "").trim();
+    if(!txt) return null;
+    return {
+      text: txt,
+      token: normalizeWordToken(txt),
+      x0: x0, x1: x1, y0: y0, y1: y1,
+      xc: (x0 + x1) / 2,
+      yc: (y0 + y1) / 2
+    };
+  }).filter(Boolean);
+  if(!words.length) return null;
+
+  var xVals = words.map(function(w){ return w.xc; });
+  var yVals = words.map(function(w){ return w.yc; });
+  var xMin = Math.min.apply(null, xVals);
+  var xMax = Math.max.apply(null, xVals);
+  var yMin = Math.min.apply(null, yVals);
+  var yMax = Math.max.apply(null, yVals);
+
+  var headerYMax = yMin + Math.max(45, (yMax - yMin) * 0.24);
+  var headerWords = words
+    .filter(function(w){ return w.yc <= headerYMax; })
+    .slice()
+    .sort(function(a,b){
+      var dy = a.yc - b.yc;
+      if(Math.abs(dy) > 18) return dy;
+      return a.xc - b.xc;
+    });
+
+  var colCandidates = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
+  for(var i=0; i<headerWords.length; i++){
+    var w0 = headerWords[i];
+    var seq = [w0];
+    for(var n=1; n<=3; n++){
+      var wn = headerWords[i+n];
+      if(!wn) break;
+      if(Math.abs(wn.yc - w0.yc) > 26) break;
+      if((wn.x0 - seq[seq.length-1].x1) > 95) break;
+      seq.push(wn);
+    }
+
+    var combos = [];
+    combos.push({ text: seq[0].text, xc: seq[0].xc });
+    if(seq.length >= 2){
+      combos.push({ text: seq[0].text + " " + seq[1].text, xc: (seq[0].xc + seq[1].xc) / 2 });
+      combos.push({ text: seq[0].token + seq[1].token, xc: (seq[0].xc + seq[1].xc) / 2 });
+    }
+    if(seq.length >= 3){
+      combos.push({ text: seq[0].text + " " + seq[1].text + " " + seq[2].text, xc: (seq[0].xc + seq[1].xc + seq[2].xc) / 3 });
+      combos.push({ text: seq[0].token + seq[1].token + seq[2].token, xc: (seq[0].xc + seq[1].xc + seq[2].xc) / 3 });
+    }
+
+    for(var ci=0; ci<combos.length; ci++){
+      var key = detectTstColumnKey(combos[ci].text);
+      if(key) colCandidates[key].push(combos[ci].xc);
+    }
+  }
+
+  var colCenters = {};
+  var colKeysOrdered = ["ab-bot","cd-bot","ab-top","cd-top"];
+  colKeysOrdered.forEach(function(k){
+    var arr = colCandidates[k] || [];
+    if(arr.length){
+      var s = 0;
+      for(var i=0; i<arr.length; i++) s += arr[i];
+      colCenters[k] = s / arr.length;
+    }
+  });
+
+  var valueXs = words.filter(function(w){
+    return isFinite(parseLikelyTempFromToken(w.token));
+  }).map(function(w){ return w.xc; }).sort(function(a,b){ return a-b; });
+  var merged = [];
+  var mergeTol = Math.max(18, (xMax - xMin) * 0.035);
+  for(var vi=0; vi<valueXs.length; vi++){
+    var x = valueXs[vi];
+    if(!merged.length || Math.abs(x - merged[merged.length-1]) > mergeTol){
+      merged.push(x);
+    }else{
+      merged[merged.length-1] = (merged[merged.length-1] + x) / 2;
+    }
+  }
+
+  var clusterDiffs = [];
+  for(var cd=1; cd<merged.length; cd++) clusterDiffs.push(Math.abs(merged[cd] - merged[cd-1]));
+  var clusterSpacing = medianNumber(clusterDiffs);
+  if(!isFinite(clusterSpacing) || clusterSpacing < 20){
+    clusterSpacing = Math.max(35, (xMax - xMin) / 6);
+  }
+
+  var knownCount = Object.keys(colCenters).length;
+  if(knownCount < 4 && merged.length){
+    var missing = colKeysOrdered.filter(function(k){ return !isFinite(colCenters[k]); });
+    if(knownCount >= 2){
+      var avgKnownDiff = [];
+      for(var ki=1; ki<colKeysOrdered.length; ki++){
+        var l = colKeysOrdered[ki-1], r = colKeysOrdered[ki];
+        if(isFinite(colCenters[l]) && isFinite(colCenters[r])) avgKnownDiff.push(colCenters[r] - colCenters[l]);
+      }
+      var spacing = medianNumber(avgKnownDiff);
+      if(!isFinite(spacing) || spacing < 20) spacing = clusterSpacing;
+
+      for(var mi=0; mi<missing.length; mi++){
+        var mk = missing[mi];
+        var idx = colKeysOrdered.indexOf(mk);
+        var li = idx-1, ri = idx+1;
+        while(li >= 0 && !isFinite(colCenters[colKeysOrdered[li]])) li--;
+        while(ri < colKeysOrdered.length && !isFinite(colCenters[colKeysOrdered[ri]])) ri++;
+        if(li >= 0 && ri < colKeysOrdered.length){
+          var lx = colCenters[colKeysOrdered[li]];
+          var rx = colCenters[colKeysOrdered[ri]];
+          colCenters[mk] = lx + (rx - lx) * ((idx - li) / (ri - li));
+        }else if(li >= 0){
+          colCenters[mk] = colCenters[colKeysOrdered[li]] + spacing * (idx - li);
+        }else if(ri < colKeysOrdered.length){
+          colCenters[mk] = colCenters[colKeysOrdered[ri]] - spacing * (ri - idx);
+        }
+      }
+    }else{
+      for(var m=0; m<Math.min(merged.length, colKeysOrdered.length); m++){
+        colCenters[colKeysOrdered[m]] = merged[m];
+      }
+      for(var ex=1; ex<colKeysOrdered.length; ex++){
+        var prev = colKeysOrdered[ex-1], cur = colKeysOrdered[ex];
+        if(!isFinite(colCenters[cur]) && isFinite(colCenters[prev])){
+          colCenters[cur] = colCenters[prev] + clusterSpacing;
+        }
+      }
+    }
+  }
+
+  if(!isFinite(colCenters["ab-bot"]) || !isFinite(colCenters["cd-bot"]) || !isFinite(colCenters["ab-top"]) || !isFinite(colCenters["cd-top"])){
+    return null;
+  }
+
+  var minColX = Math.min(colCenters["ab-bot"], colCenters["cd-bot"], colCenters["ab-top"], colCenters["cd-top"]);
+  var rowWords = words.filter(function(w){
+    var r = parseLikelyRowNumber(w.token);
+    if(!isFinite(r)) return false;
+    return w.xc < (minColX - 8);
+  });
+  if(rowWords.length < 7){
+    rowWords = words.filter(function(w){ return isFinite(parseLikelyRowNumber(w.token)); });
+  }
+  if(!rowWords.length) return null;
+
+  var rowMap = {};
+  rowWords.forEach(function(w){
+    var r = parseLikelyRowNumber(w.token);
+    if(!isFinite(r)) return;
+    if(!rowMap[r] || w.xc < rowMap[r].x){
+      rowMap[r] = { y: w.yc, x: w.xc };
+    }
+  });
+
+  var knownRows = Object.keys(rowMap).map(Number).sort(function(a,b){ return a-b; });
+  if(!knownRows.length) return null;
+
+  var a = NaN, b = NaN;
+  if(knownRows.length >= 2){
+    var nR = knownRows.length;
+    var sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for(var k=0; k<nR; k++){
+      var rr = knownRows[k], yy = rowMap[rr].y;
+      sx += rr; sy += yy; sxx += rr*rr; sxy += rr*yy;
+    }
+    var den = nR*sxx - sx*sx;
+    if(den !== 0){
+      a = (nR*sxy - sx*sy) / den;
+      b = (sy - a*sx) / nR;
+    }
+    if(!isFinite(a) || Math.abs(a) < 8 || Math.abs(a) > 220){
+      var r1 = knownRows[0], r2 = knownRows[knownRows.length-1];
+      a = (rowMap[r2].y - rowMap[r1].y) / Math.max(1, (r2 - r1));
+      b = rowMap[r1].y - a * r1;
+    }
+  }else{
+    var r0 = knownRows[0];
+    var rg = Math.max(28, (yMax - yMin) / 16);
+    a = rg;
+    b = rowMap[r0].y - a * r0;
+  }
+
+  if(!isFinite(a) || Math.abs(a) < 8){
+    a = Math.max(32, (yMax - yMin) / 16);
+    b = yMin;
+  }
+  var rowGap = Math.abs(a);
+  var rowCenters = {};
+  for(var r=1; r<=15; r++){
+    var y = rowMap[r] ? rowMap[r].y : (a * r + b);
+    rowCenters[r] = Math.max(yMin + 4, Math.min(yMax - 4, y));
+  }
+
+  var colSorted = [colCenters["ab-bot"], colCenters["cd-bot"], colCenters["ab-top"], colCenters["cd-top"]].sort(function(a,b){ return a-b; });
+  var colDiffs = [];
+  for(var c=1; c<colSorted.length; c++) colDiffs.push(Math.abs(colSorted[c] - colSorted[c-1]));
+  var colSpacing = medianNumber(colDiffs);
+  if(!isFinite(colSpacing) || colSpacing < 22) colSpacing = clusterSpacing;
+
+  return {
+    words: words,
+    rowCenters: rowCenters,
+    colCenters: colCenters,
+    rowGap: rowGap,
+    colSpacing: colSpacing
+  };
+}
+
+function parseSpatialTstFromOcrDataAdvanced(ocrData){
+  try{
+    var geo = buildTstSpatialGeometry(ocrData);
+    if(!geo) return { filled: 0, values: [] };
+
+    var colKeys = ["ab-bot","cd-bot","ab-top","cd-top"];
+    var grid = {};
+    var scoreMap = {};
+    for(var r=1; r<=15; r++){
+      grid[r] = { "ab-bot":"", "cd-bot":"", "ab-top":"", "cd-top":"" };
+    }
+
+    var rowTol = Math.max(18, geo.rowGap * 0.58);
+    var colTol = Math.max(24, geo.colSpacing * 0.60);
+
+    geo.words.forEach(function(w){
+      var val = parseLikelyTempFromToken(w.token);
+      if(!isFinite(val)) return;
+
+      var bestRow = 1;
+      var bestDy = 1e9;
+      for(var r=1; r<=15; r++){
+        var dy = Math.abs(w.yc - geo.rowCenters[r]);
+        if(dy < bestDy){ bestDy = dy; bestRow = r; }
+      }
+      if(bestDy > rowTol) return;
+
+      var bestKey = "";
+      var bestDx = 1e9;
+      for(var i=0; i<colKeys.length; i++){
+        var k = colKeys[i];
+        var dx = Math.abs(w.xc - geo.colCenters[k]);
+        if(dx < bestDx){ bestDx = dx; bestKey = k; }
+      }
+      if(!bestKey || bestDx > colTol) return;
+
+      var id = bestRow + "_" + bestKey;
+      var s = (bestDy / rowTol) + (bestDx / colTol);
+      if(!grid[bestRow][bestKey] || !isFinite(scoreMap[id]) || s < scoreMap[id]){
+        grid[bestRow][bestKey] = String(val);
+        scoreMap[id] = s;
+      }
+    });
+
+    var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
+    var filled = 0;
+    for(var rr=1; rr<=15; rr++){
+      colKeys.forEach(function(k){
+        var v = grid[rr][k] || "";
+        out[k].push(v);
+        if(v) filled++;
+      });
+    }
+    return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
+  }catch(e){
+    return { filled: 0, values: [] };
+  }
 }
 
 function parseSpatialTstFromOcrData(ocrData){
@@ -8096,9 +8853,15 @@ function parseRowWiseTstTable(text){
 function parseTstSheetOcr(ocrText, ocrData){
   var txt = normalizeOcrText(ocrText);
 
-  /* 0) Spatial parse for handwritten tables (uses OCR word coordinates) */
+  /* 0) Enhanced spatial parse for handwritten tables (uses OCR word coordinates) */
+  var spatialAdv = parseSpatialTstFromOcrDataAdvanced(ocrData);
+  if(spatialAdv.filled >= 2){
+    return { values: spatialAdv.values, mode: "spatial-adv" };
+  }
+
+  /* 0b) Legacy spatial parse */
   var spatial = parseSpatialTstFromOcrData(ocrData);
-  if(spatial.filled >= 1){
+  if(spatial.filled >= 2){
     return { values: spatial.values, mode: "spatial" };
   }
 
@@ -8173,7 +8936,11 @@ async function runOcrOnImageBlob(blob){
     var data = payload && payload.data ? payload.data : null;
     var text = payload && payload.text ? payload.text : "";
     var spatialFilled = 0;
-    try{ spatialFilled = parseSpatialTstFromOcrData(data).filled || 0; }catch(e){}
+    try{
+      var s1 = parseSpatialTstFromOcrDataAdvanced(data).filled || 0;
+      var s2 = parseSpatialTstFromOcrData(data).filled || 0;
+      spatialFilled = Math.max(s1, s2);
+    }catch(e){}
     var nums = parseTempNumbers(text).length;
     return (spatialFilled * 10) + nums;
   }
@@ -8473,6 +9240,271 @@ async function runGridTstOcrFromImage(blob){
   }
 }
 
+async function runGuidedTstCellOcrFromImage(blob, seedOcrData){
+  if(!window.Tesseract) throw new Error("OCR library not loaded.");
+  var geo = buildTstSpatialGeometry(seedOcrData || null);
+
+  var url = URL.createObjectURL(blob);
+  try{
+    var img = await new Promise(function(resolve, reject){
+      var im = new Image();
+      im.onload = function(){ resolve(im); };
+      im.onerror = reject;
+      im.src = url;
+    });
+
+    var W = img.naturalWidth || img.width;
+    var H = img.naturalHeight || img.height;
+    if(!W || !H) return { filled: 0, values: [] };
+
+    var canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    var ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if(!ctx) return { filled: 0, values: [] };
+    ctx.drawImage(img, 0, 0, W, H);
+
+    if(!geo){
+      try{
+        var id0 = ctx.getImageData(0, 0, W, H);
+        var d0 = id0.data;
+        var rowDark = new Array(H);
+        var colDark = new Array(W);
+        for(var ry=0; ry<H; ry++) rowDark[ry] = 0;
+        for(var cx=0; cx<W; cx++) colDark[cx] = 0;
+
+        for(var p=0; p<d0.length; p+=4){
+          var idx = p/4;
+          var x = idx % W;
+          var y = Math.floor(idx / W);
+          var g = Math.round(0.299*d0[p] + 0.587*d0[p+1] + 0.114*d0[p+2]);
+          var dark = g < 130 ? 1 : 0;
+          if(dark){
+            rowDark[y]++;
+            colDark[x]++;
+          }
+        }
+
+        var rowThresh = Math.max(20, Math.floor(W * 0.22));
+        var colThresh = Math.max(20, Math.floor(H * 0.10));
+        var hLines = detectLineCentersFromProjection(rowDark, rowThresh, Math.max(6, Math.floor(H/180)));
+        var vLines = detectLineCentersFromProjection(colDark, colThresh, Math.max(6, Math.floor(W/160)));
+
+        if(hLines.length >= 2 && vLines.length >= 2){
+          var top = hLines[0], bottom = hLines[hLines.length-1];
+          var left = vLines[0], right = vLines[vLines.length-1];
+          if((bottom - top) >= 180 && (right - left) >= 120){
+            var rowCenters = {};
+            for(var rr=1; rr<=15; rr++){
+              var y0 = top + ((bottom - top) * rr / 16);
+              var y1 = top + ((bottom - top) * (rr+1) / 16);
+              rowCenters[rr] = (y0 + y1) / 2;
+            }
+
+            function colMid(cStart){
+              var x0 = left + ((right - left) * cStart / 5);
+              var x1 = left + ((right - left) * (cStart+1) / 5);
+              return (x0 + x1) / 2;
+            }
+
+            geo = {
+              rowCenters: rowCenters,
+              colCenters: {
+                "ab-bot": colMid(1),
+                "cd-bot": colMid(2),
+                "ab-top": colMid(3),
+                "cd-top": colMid(4)
+              },
+              rowGap: Math.max(20, (bottom - top) / 16),
+              colSpacing: Math.max(24, (right - left) / 5)
+            };
+          }
+        }
+      }catch(e){}
+    }
+
+    if(!geo) return { filled: 0, values: [] };
+
+    var colKeys = ["ab-bot","cd-bot","ab-top","cd-top"];
+    var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
+    var filled = 0;
+    var rowGap = Math.max(24, geo.rowGap || (H / 16));
+    var colSpacing = Math.max(28, geo.colSpacing || (W / 6));
+    var total = 60;
+    var step = 0;
+
+    function makeUpscaledCanvas(srcCanvas, factor){
+      try{
+        var f = Math.max(1, Number(factor) || 1);
+        var up = document.createElement("canvas");
+        up.width = Math.max(1, Math.round(srcCanvas.width * f));
+        up.height = Math.max(1, Math.round(srcCanvas.height * f));
+        var uctx = up.getContext("2d", { willReadFrequently: true });
+        if(!uctx) return null;
+        uctx.imageSmoothingEnabled = false;
+        uctx.drawImage(srcCanvas, 0, 0, up.width, up.height);
+        return up;
+      }catch(e){
+        return null;
+      }
+    }
+
+    async function recognizeGuidedCellTemp(cellCanvas){
+      var variants = [cellCanvas];
+      var up2 = makeUpscaledCanvas(cellCanvas, 2);
+      if(up2) variants.push(up2);
+
+      var picks = [];
+      for(var vi=0; vi<variants.length; vi++){
+        var vCanvas = variants[vi];
+        for(var mi=0; mi<2; mi++){
+          var psm = mi===0 ? "8" : "7";
+          var rr = await Tesseract.recognize(vCanvas, "eng", {
+            tessedit_pageseg_mode: psm,
+            tessedit_char_whitelist: "0123456789ODILSZGQ",
+            preserve_interword_spaces: "1"
+          });
+          var txt = (rr && rr.data && rr.data.text) ? rr.data.text : "";
+          var conf = Number(rr && rr.data && rr.data.confidence);
+          if(!isFinite(conf)) conf = 0;
+          var val = parseLikelyTempFromToken(txt);
+          if(!isFinite(val)) continue;
+
+          var score = 0;
+          score += Math.max(-10, Math.min(99, conf)) / 40;
+          if(val >= 700 && val <= 1400) score += 2.1;
+          if(val >= 800 && val <= 1200) score += 1.1;
+          if(val < 650) score -= 1.2;
+          if(val < 500) score -= 0.8;
+          if(psm === "8") score += 0.1;
+          if(vi > 0) score += 0.2;
+          if(String(txt || "").replace(/[^A-Z0-9]/ig, "").length >= 3) score += 0.15;
+
+          picks.push({ val: val, score: score });
+        }
+      }
+
+      if(!picks.length) return NaN;
+      picks.sort(function(a,b){ return b.score - a.score; });
+      var best = picks[0];
+
+      if(best.val < 700){
+        for(var pi=0; pi<picks.length; pi++){
+          var p = picks[pi];
+          if(p.val >= 700 && p.score >= (best.score - 0.85)){
+            best = p;
+            break;
+          }
+        }
+      }
+
+      return isFinite(best.val) ? best.val : NaN;
+    }
+
+    for(var r=1; r<=15; r++){
+      for(var ci=0; ci<4; ci++){
+        step++;
+        if(step % 6 === 0) setTstOcrStatus("Deep OCR cells " + step + "/" + total + "...", "#7ec8f0");
+
+        var key = colKeys[ci];
+        var cx = geo.colCenters[key];
+        var cy = geo.rowCenters[r];
+        if(!isFinite(cx) || !isFinite(cy)){
+          out[key].push("");
+          continue;
+        }
+
+        var halfW = Math.max(14, Math.round(colSpacing * 0.32));
+        var halfH = Math.max(10, Math.round(rowGap * 0.28));
+        var x0 = Math.max(0, Math.round(cx - halfW));
+        var x1 = Math.min(W, Math.round(cx + halfW));
+        var y0 = Math.max(0, Math.round(cy - halfH));
+        var y1 = Math.min(H, Math.round(cy + halfH));
+        if(x1 - x0 < 8 || y1 - y0 < 8){
+          out[key].push("");
+          continue;
+        }
+
+        var mx = Math.max(1, Math.round((x1 - x0) * 0.12));
+        var my = Math.max(1, Math.round((y1 - y0) * 0.16));
+        var sx = Math.min(W-1, Math.max(0, x0 + mx));
+        var sy = Math.min(H-1, Math.max(0, y0 + my));
+        var sw = Math.max(1, Math.min(W - sx, (x1 - x0) - mx*2));
+        var sh = Math.max(1, Math.min(H - sy, (y1 - y0) - my*2));
+        if(sw < 8 || sh < 8){
+          out[key].push("");
+          continue;
+        }
+
+        var cell = document.createElement("canvas");
+        cell.width = sw;
+        cell.height = sh;
+        var cctx = cell.getContext("2d", { willReadFrequently: true });
+        if(!cctx){
+          out[key].push("");
+          continue;
+        }
+        cctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+        var id = cctx.getImageData(0, 0, sw, sh);
+        var d = id.data;
+        var sum = 0;
+        for(var i=0; i<d.length; i+=4){
+          var g = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
+          sum += g;
+        }
+        var avg = sum / (d.length/4);
+        var thr = Math.max(80, Math.min(210, avg - 12));
+        var dark = 0;
+        for(var j=0; j<d.length; j+=4){
+          var gg = Math.round(0.299*d[j] + 0.587*d[j+1] + 0.114*d[j+2]);
+          var bw = gg < thr ? 0 : 255;
+          if(bw === 0) dark++;
+          d[j] = bw; d[j+1] = bw; d[j+2] = bw; d[j+3] = 255;
+        }
+        var darkRatio = dark / Math.max(1, d.length/4);
+        if(darkRatio < 0.015){
+          out[key].push("");
+          continue;
+        }
+        cctx.putImageData(id, 0, 0);
+
+        var val = await recognizeGuidedCellTemp(cell);
+
+        if(isFinite(val)){
+          out[key].push(String(val));
+          filled++;
+        }else{
+          out[key].push("");
+        }
+      }
+    }
+
+    /* Drop obvious low outliers if we already detected high-temperature values. */
+    var anyHigh = false;
+    colKeys.forEach(function(k){
+      for(var i=0; i<out[k].length; i++){
+        var v = Number(out[k][i] || "");
+        if(isFinite(v) && v >= 700){ anyHigh = true; return; }
+      }
+    });
+    if(anyHigh){
+      filled = 0;
+      colKeys.forEach(function(k){
+        for(var i=0; i<out[k].length; i++){
+          var v = Number(out[k][i] || "");
+          if(isFinite(v) && v < 700) out[k][i] = "";
+          if(out[k][i]) filled++;
+        }
+      });
+    }
+
+    return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
+  }finally{
+    URL.revokeObjectURL(url);
+  }
+}
+
 async function runOcrOnPdfFile(file){
   var ok = await ensurePdfJsReady();
   if(!ok) throw new Error("PDF reader library not loaded.");
@@ -8546,20 +9578,23 @@ async function handleTstScanSelect(event){
     var parsed = { values: [], mode: "none" };
     var filled = 0;
 
-    try{
-      setTstOcrStatus("Cloud OCR...", "#7ec8f0");
-      var cloudRes = await runCloudOcrFile(file);
-      if(cloudRes && (cloudRes.text || (cloudRes.data && cloudRes.data.words && cloudRes.data.words.length))){
-        var pCloud = parseTstSheetOcr(cloudRes.text || "", cloudRes.data || null);
-        var fCloud = fillTdPeepFieldsFromList(pCloud.values || [], true);
-        if(fCloud > filled){
-          filled = fCloud;
-          parsed = { values: pCloud.values || [], mode: "cloud-" + (pCloud.mode || "ocr") };
+    if(isPaidCloudOcrEnabled()){
+      try{
+        setTstOcrStatus("Cloud OCR...", "#7ec8f0");
+        var cloudRes = await runCloudOcrFile(file);
+        if(cloudRes && (cloudRes.text || (cloudRes.data && cloudRes.data.words && cloudRes.data.words.length))){
+          var pCloud = parseTstSheetOcr(cloudRes.text || "", cloudRes.data || null);
+          var fCloud = fillTdPeepFieldsFromList(pCloud.values || [], true);
+          if(fCloud > filled){
+            filled = fCloud;
+            parsed = { values: pCloud.values || [], mode: "cloud-" + (pCloud.mode || "ocr") };
+          }
         }
-      }
-    }catch(e){}
+      }catch(e){}
+    }
 
     if(filled < 1){
+      setTstOcrStatus("Local OCR (free)...", "#7ec8f0");
       if(isPdf){
         text = await runOcrOnPdfFile(file);
       }else{
@@ -8575,6 +9610,19 @@ async function handleTstScanSelect(event){
         filled = fLocal;
         parsed = pLocal;
       }
+    }
+
+    /* Deep handwritten fallback for sparse/partial sheets (like manual grid photos). */
+    if(!isPdf && filled < 8){
+      try{
+        setTstOcrStatus("Deep guided OCR...", "#7ec8f0");
+        var g2 = await runGuidedTstCellOcrFromImage(file, ocrData);
+        var fg2 = fillTdPeepFieldsFromList(g2.values || [], true);
+        if(fg2 > filled){
+          filled = fg2;
+          parsed = { values: g2.values || [], mode: "guided-cell" };
+        }
+      }catch(e){}
     }
 
     if(!isPdf && filled < 1){
@@ -8656,7 +9704,7 @@ function downloadTstTemplate(){
       renderTempDataTable();
     } catch(e){}
     updateTempPdfUI();
-    setTstOcrStatus("OCR idle", "#94a3b8");
+    setTstOcrStatus("", "#94a3b8");
   });
 })();
 
@@ -9015,6 +10063,44 @@ function tempToColorInline(val, minT, maxT){
     </div>
     <div style="padding:0 16px 16px;display:flex;justify-content:flex-end;">
       <button onclick="closeBurnerHistoryModal()" class="sdm-btn-cancel">Close</button>
+    </div>
+  </div>
+</div>
+<div id="burnerDateEditModal" onclick="if(event.target===this)closeBurnerDateEditModal()" style="display:none;position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.78);align-items:center;justify-content:center;padding:14px;">
+  <div style="width:min(620px,96vw);background:#0a1628;border:1px solid #1e3a5e;border-radius:12px;box-shadow:0 12px 44px rgba(0,0,0,0.65);overflow:hidden;">
+    <div style="background:linear-gradient(90deg,#0f2744,#1a3560);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #F37022;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#F37022;letter-spacing:1px;">✏️ Edit Burner Cleaning Dates</div>
+        <div style="font-size:11px;color:#7ec8f0;">Select a burner number and edit all saved cleaning dates</div>
+      </div>
+      <button onclick="closeBurnerDateEditModal()" style="background:transparent;border:0;color:#cbd5e1;font-size:20px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+        <div>
+          <label style="display:block;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;margin-bottom:4px;">Wall</label>
+          <select id="be-wall" onchange="renderBurnerDateEditor()" style="width:100%;background:#0f1f38;border:1px solid #334155;border-radius:6px;color:#e2e8f0;padding:8px 10px;font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;"></select>
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;margin-bottom:4px;">Row</label>
+          <select id="be-row" onchange="renderBurnerDateEditor()" style="width:100%;background:#0f1f38;border:1px solid #334155;border-radius:6px;color:#e2e8f0;padding:8px 10px;font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;"></select>
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;margin-bottom:4px;">Burner</label>
+          <select id="be-burner" onchange="renderBurnerDateEditor()" style="width:100%;background:#0f1f38;border:1px solid #334155;border-radius:6px;color:#e2e8f0;padding:8px 10px;font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;"></select>
+        </div>
+      </div>
+      <div style="margin-top:12px;background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;padding:12px;">
+        <div id="be-selected" style="font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:8px;">Wall A · Row 1 · Burner 1</div>
+        <div id="be-list"></div>
+        <div style="margin-top:10px;display:flex;justify-content:flex-start;">
+          <button onclick="addBurnerEditDate()" style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.35);color:#4ade80;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">＋ Add Date</button>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 16px 16px;display:flex;justify-content:flex-end;gap:8px;">
+      <button onclick="closeBurnerDateEditModal()" class="sdm-btn-cancel">Close</button>
+      <button onclick="saveBurnerEditedDates()" class="hd-btn hd-btn-primary" style="padding:8px 14px;font-size:13px;border-radius:6px;">💾 Save Dates</button>
     </div>
   </div>
 </div>
