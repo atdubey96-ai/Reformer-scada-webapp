@@ -8758,10 +8758,19 @@ var TST_OCR_PIPELINE = {
   cloudOptInKey: "scadaEnablePaidCloudOcr",
   googleKeyStorageKey: "scadaGoogleVisionApiKey",
   ocrSpaceKeyStorageKey: "scadaOcrSpaceApiKey",
-  preferredProviderKey: "scadaTstCloudProvider"
+  preferredProviderKey: "scadaTstCloudProvider",
+  /* Optional org-wide fixed key: set once here to auto-enable on all devices. */
+  sharedGoogleVisionApiKey: "AIzaSyDady3jR-aDlg1NFZY_iv8EEfyKcT8Cjr4"
 };
 
+function getSharedGoogleVisionApiKey(){
+  var key = String(TST_OCR_PIPELINE.sharedGoogleVisionApiKey || "").trim();
+  return key;
+}
+
 function getTstGoogleVisionApiKey(){
+  var shared = getSharedGoogleVisionApiKey();
+  if(shared) return shared;
   try{
     var saved = localStorage.getItem(TST_OCR_PIPELINE.googleKeyStorageKey);
     if(saved && String(saved).trim()) return String(saved).trim();
