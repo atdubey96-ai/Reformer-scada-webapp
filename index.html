@@ -7719,6 +7719,14 @@ var SUPABASE_ANON_KEY = getSupabaseAnonKey();
 var supaClient = null;
 var centralPasswordHashCache = SCADA_PASSWORD;
 var centralOtpHashCache = null;
+var CENTRAL_AUTH_CACHE_KEY = "scadaCentralAuthCacheV1";
+var CENTRAL_AUTH_TIMEOUT_MS = 4500;
+var CENTRAL_AUTH_RETRY_COUNT = 2;
+var CENTRAL_AUTH_RETRY_DELAY_MS = 450;
+var centralAuthFetchInFlight = null;
+var centralAuthLastFetchAt = 0;
+var centralAuthMinRefreshMs = 12000;
+
 try{
   if(window.supabase && SUPABASE_ANON_KEY){
     supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -7727,33 +7735,105 @@ try{
   console.warn("Supabase init failed:", e);
 }
 
-async function sha256Hex(s){
-  const b = new TextEncoder().encode(String(s||""));
-  const d = await crypto.subtle.digest("SHA-256", b);
-  return Array.from(new Uint8Array(d)).map(function(x){ return x.toString(16).padStart(2,"0"); }).join("");
-}
 
-async function fetchCentralAuthConfig(){
-  if(!supaClient) return false;
+function delayMs(ms){
+  return new Promise(function(resolve){ setTimeout(resolve, ms); });
+}
+function isSha256Hex(v){
+  return typeof v === "string" && (new RegExp("^[a-f0-9]{64}$","i")).test(v);
+}
+function loadCentralAuthCacheFromStorage(){
   try{
-    var q = await supaClient
-      .from(AUTH_TABLE)
-      .select("password_hash,otp_hash")
-      .eq("id", AUTH_ROW_ID)
-      .single();
-    if(q.error || !q.data) return false;
-    if(q.data.password_hash) centralPasswordHashCache = q.data.password_hash;
-    if(q.data.otp_hash) centralOtpHashCache = q.data.otp_hash;
+    var raw = localStorage.getItem(CENTRAL_AUTH_CACHE_KEY);
+    if(!raw) return false;
+    var parsed = JSON.parse(raw);
+    if(parsed && isSha256Hex(parsed.password_hash)){
+      centralPasswordHashCache = String(parsed.password_hash).toLowerCase();
+    }
+    if(parsed && isSha256Hex(parsed.otp_hash)){
+      centralOtpHashCache = String(parsed.otp_hash).toLowerCase();
+    }
     return true;
   }catch(e){
     return false;
   }
 }
+function saveCentralAuthCacheToStorage(){
+  try{
+    localStorage.setItem(CENTRAL_AUTH_CACHE_KEY, JSON.stringify({
+      password_hash: centralPasswordHashCache || null,
+      otp_hash: centralOtpHashCache || null,
+      updated_at: new Date().toISOString()
+    }));
+  }catch(e){}
+}
+async function withTimeout(promise, ms){
+  var timer = null;
+  try{
+    return await Promise.race([
+      promise,
+      new Promise(function(_, reject){
+        timer = setTimeout(function(){ reject(new Error("central-auth-timeout")); }, ms);
+      })
+    ]);
+  } finally {
+    if(timer) clearTimeout(timer);
+  }
+}
+loadCentralAuthCacheFromStorage();
+setTimeout(function(){ fetchCentralAuthConfig(true).catch(function(){}); }, 0);
+
+
+async function fetchCentralAuthConfig(forceRefresh){
+  if(!supaClient) return false;
+  var now = Date.now();
+  if(!forceRefresh && (now - centralAuthLastFetchAt) < centralAuthMinRefreshMs){
+    return true;
+  }
+  if(centralAuthFetchInFlight) return centralAuthFetchInFlight;
+
+  centralAuthFetchInFlight = (async function(){
+    for(var attempt=0; attempt<CENTRAL_AUTH_RETRY_COUNT; attempt++){
+      try{
+        var q = await withTimeout(
+          supaClient
+            .from(AUTH_TABLE)
+            .select("password_hash,otp_hash")
+            .eq("id", AUTH_ROW_ID)
+            .single(),
+          CENTRAL_AUTH_TIMEOUT_MS
+        );
+        if(!q || q.error || !q.data) throw new Error("central-auth-empty");
+
+        if(isSha256Hex(q.data.password_hash)) centralPasswordHashCache = String(q.data.password_hash).toLowerCase();
+        if(isSha256Hex(q.data.otp_hash)) centralOtpHashCache = String(q.data.otp_hash).toLowerCase();
+        saveCentralAuthCacheToStorage();
+        centralAuthLastFetchAt = Date.now();
+        return true;
+      }catch(e){
+        if(attempt < CENTRAL_AUTH_RETRY_COUNT - 1){
+          await delayMs(CENTRAL_AUTH_RETRY_DELAY_MS);
+        }
+      }
+    }
+    return false;
+  })();
+
+  try{
+    return await centralAuthFetchInFlight;
+  }finally{
+    centralAuthFetchInFlight = null;
+  }
+}
 
 async function getEffectivePasswordHash(){
-  await fetchCentralAuthConfig();
+  var ok = await fetchCentralAuthConfig(false);
+  if(!ok && typeof navigator !== "undefined" && navigator.onLine){
+    fetchCentralAuthConfig(true).catch(function(){});
+  }
   return centralPasswordHashCache || SCADA_PASSWORD;
 }
+
 
 /* Auto import once when already logged in */
 (async function restoreServerSyncOnLoad(){
