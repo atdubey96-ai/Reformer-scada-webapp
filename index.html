@@ -3342,7 +3342,7 @@ function requestHeatMapRender(delayMs){
       </div>
     </div>
     <div class="app-header-right">
-      <button class="hd-btn hd-btn-secondary" onclick="smartRefresh()">🔄 Refresh Data</button>
+      <button id="refreshDataBtn" class="hd-btn hd-btn-secondary" onclick="smartRefresh()">🔄 Refresh Data</button>
       <button class="hd-btn hd-btn-primary" onclick="exportToExcel()">💾 Save New Data</button>
     </div>
 
@@ -6131,10 +6131,35 @@ function importFromExcel(event){
 }
 
 /* ── Smart Refresh: server sync only ── */
+var smartRefreshInFlight = false;
+function setRefreshButtonBusy(busy){
+  var btn = document.getElementById("refreshDataBtn");
+  if(!btn) return;
+  btn.disabled = !!busy;
+  btn.style.opacity = busy ? "0.75" : "1";
+  btn.style.pointerEvents = busy ? "none" : "auto";
+  btn.textContent = busy ? "⏳ Refreshing..." : "🔄 Refresh Data";
+}
 async function smartRefresh(){
-  await flushQueuedServerExport(false);
-  var okServer = await autoImportFromServer(true);
-  if(!okServer) showToast("⚠ Could not refresh from central server");
+  if(smartRefreshInFlight){
+    showToast("⏳ Refresh already in progress");
+    return false;
+  }
+  smartRefreshInFlight = true;
+  setRefreshButtonBusy(true);
+  showToast("🔄 Refreshing...");
+  flushQueuedServerExport(false).catch(function(){});
+  try{
+    var okServer = await withTimeout(autoImportFromServer(true), 22000);
+    if(!okServer) showToast("⚠ Could not refresh from central server");
+    return !!okServer;
+  }catch(e){
+    showToast("⚠ Refresh timed out. Try again.");
+    return false;
+  }finally{
+    setRefreshButtonBusy(false);
+    smartRefreshInFlight = false;
+  }
 }
 
 function _doImport(file, onDone, silent){
@@ -8147,6 +8172,7 @@ var SERVER_SYNC_RETRY_COUNT = 4;
 var SERVER_SYNC_RETRY_DELAY_MS = 1100;
 var serverImportInFlight = null;
 var serverExportInFlight = null;
+var serverQueueFlushInFlight = null;
 var SERVER_SYNC_QUEUE_KEY = "scadaQueuedServerExportV1";
 var SERVER_SYNC_LAST_SNAPSHOT_KEY = "scadaLastServerSnapshotV1";
 var lastServerSyncError = "";
@@ -8446,29 +8472,37 @@ async function importServerReportPayload(payload){
 
 async function flushQueuedServerExport(showMsg){
   if(!SERVER_SYNC_ENABLED) return false;
-  var queued = loadQueuedServerExport();
-  if(!queued || !queued.data_base64) return false;
-  for(var a=0; a<SERVER_SYNC_RETRY_COUNT; a++){
-    var ok = await insertServerReportRow({
-      file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
-      data_base64: queued.data_base64,
-      uploaded_by: queued.uploaded_by || null
-    });
-    if(ok){
-      setCentralReachability(true);
-      clearQueuedServerExport();
-      saveLastServerSnapshot({
+  if(serverQueueFlushInFlight) return serverQueueFlushInFlight;
+  serverQueueFlushInFlight = (async function(){
+    var queued = loadQueuedServerExport();
+    if(!queued || !queued.data_base64) return false;
+    for(var a=0; a<SERVER_SYNC_RETRY_COUNT; a++){
+      var ok = await insertServerReportRow({
         file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
         data_base64: queued.data_base64,
         uploaded_by: queued.uploaded_by || null
       });
-      if(showMsg) showToast("✅ Pending save synced to central server");
-      return true;
+      if(ok){
+        setCentralReachability(true);
+        clearQueuedServerExport();
+        saveLastServerSnapshot({
+          file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
+          data_base64: queued.data_base64,
+          uploaded_by: queued.uploaded_by || null
+        });
+        if(showMsg) showToast("✅ Pending save synced to central server");
+        return true;
+      }
+      setCentralReachability(false);
+      if(a < SERVER_SYNC_RETRY_COUNT - 1) await delayMs(getRetryDelayMs(SERVER_SYNC_RETRY_DELAY_MS, a));
     }
-    setCentralReachability(false);
-    if(a < SERVER_SYNC_RETRY_COUNT - 1) await delayMs(getRetryDelayMs(SERVER_SYNC_RETRY_DELAY_MS, a));
+    return false;
+  })();
+  try{
+    return await serverQueueFlushInFlight;
+  }finally{
+    serverQueueFlushInFlight = null;
   }
-  return false;
 }
 
 /* ── Auto-import from server (works on any PC without folder picker) ── */
@@ -8567,11 +8601,11 @@ document.addEventListener("visibilitychange", function(){
 });
 setInterval(function(){
   if(!SERVER_SYNC_ENABLED) return;
-  if(serverExportInFlight) return;
+  if(serverExportInFlight || serverQueueFlushInFlight) return;
   if(typeof navigator !== "undefined" && navigator.onLine === false) return;
   if(!loadQueuedServerExport()) return;
   flushQueuedServerExport(false).catch(function(){});
-}, 15000);
+}, 30000);
 
 
 /* ── Full login with server auto-import support ── */
