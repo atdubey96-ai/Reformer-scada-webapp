@@ -71,15 +71,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-<script>
-window.addEventListener('DOMContentLoaded', function(){
-  if(window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions){
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
-  }
-});
-</script>
 
 <style>
 
@@ -4655,41 +4647,16 @@ function requestHeatMapRender(delayMs){
             <input type="datetime-local" id="td-datetime"
               style="background:transparent;border:none;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;outline:none;cursor:pointer;">
           </div>
-          <!-- Optional PDF Attachment (legacy hidden; upload TST sheet is primary) -->
-          <div style="display:none;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:6px 10px;">
-            <input type="file" id="td-pdf-file" accept="application/pdf,.pdf" style="display:none;" onchange="handleTempPdfSelect(event)">
-            <button type="button" onclick="document.getElementById('td-pdf-file').click()"
-              style="background:rgba(96,200,255,0.12);border:1px solid rgba(96,200,255,0.35);color:#7ec8f0;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
-              📎 Attach PDF
-            </button>
-            <span id="td-pdf-name" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">No PDF</span>
-            <button type="button" onclick="clearTempPdfAttachment()" id="td-pdf-clear"
-              style="display:none;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;padding:5px 8px;border-radius:5px;font-size:11px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
-              ✕
-            </button>
-          </div>
-          <!-- TST OCR Scan Upload -->
-          <div style="display:flex;align-items:center;gap:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.32);border-radius:7px;padding:6px 10px;">
-            <input type="file" id="td-ocr-file" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="handleTstScanSelect(event)">
-            <button type="button" id="td-ocr-btn" onclick="document.getElementById('td-ocr-file').click()"
-              style="background:rgba(16,185,129,0.16);border:1px solid rgba(16,185,129,0.45);color:#34d399;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
-              📷 Upload TST Sheet
-            </button>
-            <button type="button" id="td-ocr-paste-btn" onclick="openTstTextImportPrompt()"
-              style="background:rgba(20,184,166,0.14);border:1px solid rgba(20,184,166,0.42);color:#5eead4;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
-              📋 Paste OCR Text
-            </button>
-            <button type="button" id="td-ocr-google-key-btn" onclick="configureTstGoogleVisionKey()"
-              style="display:none;background:rgba(59,130,246,0.14);border:1px solid rgba(59,130,246,0.42);color:#93c5fd;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;"
-              title="Set Google Vision API key for robust OCR">
-              🧠 Google Vision Key
-            </button>
-            <span id="td-ocr-status" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">OCR idle (free local)</span>
-          </div>
           <button type="button" onclick="downloadTstTemplate()"
             style="background:rgba(129,140,248,0.14);border:1px solid rgba(129,140,248,0.42);color:#a5b4fc;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
             ⬇️ Download TST Format
           </button>
+          <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
+          <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()"
+            style="background:rgba(56,189,248,0.14);border:1px solid rgba(56,189,248,0.45);color:#7dd3fc;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
+            📄 OCR PDF to TST
+          </button>
+          <span id="td-ocr-pdf-status" style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">PDF OCR idle</span>
           <!-- Save / Clear -->
           <button id="td-save-btn" onclick="saveTempData()"
             style="background:linear-gradient(90deg,#d95008,#F37022);border:none;color:#fff;padding:9px 20px;border-radius:7px;font-size:14px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.5px;box-shadow:0 3px 14px rgba(243,112,34,0.4);">
@@ -6031,8 +5998,7 @@ async function exportToExcel(){
   var tdHeaders = [
     "Date/Time","Shift","HGU Load (%)",
     "AB Side COT (°C)","CD Side COT (°C)","Flue Gas (°C)","Excess O2 (%Vol)",
-    "Pre-ref Max (°C)","Pre-ref Min (°C)","Methane Slip (%Vol)",
-    "PDF Attached","PDF Name","PDF URL"
+    "Pre-ref Max (°C)","Pre-ref Min (°C)","Methane Slip (%Vol)"
   ];
   var phRowKeys   = ["ab-bot","cd-bot","ab-top","cd-top"];
   var phRowLabels = {"ab-bot":"AB Bot","cd-bot":"CD Bot","ab-top":"AB Top","cd-top":"CD Top"};
@@ -6043,10 +6009,7 @@ async function exportToExcel(){
   if(Array.isArray(tempDataEntries) && tempDataEntries.length){
     tempDataEntries.forEach(function(e){
       var row=[e.dt||"", e.shift||"", e.hguLoad||"", e.abCot||"", e.cdCot||"", e.flueGas||"",
-               e.excessO2||"", e.preRefMax||"", e.preRefMin||"", e.methaneSlip||"",
-               (e.pdfAttachment && (e.pdfAttachment.publicUrl || e.pdfAttachment.dataUrl || e.pdfAttachment.storagePath)) ? "Yes" : "No",
-               (e.pdfAttachment && e.pdfAttachment.name) ? e.pdfAttachment.name : "",
-               (e.pdfAttachment && e.pdfAttachment.publicUrl) ? e.pdfAttachment.publicUrl : ""];
+               e.excessO2||"", e.preRefMax||"", e.preRefMin||"", e.methaneSlip||""];
       phRowKeys.forEach(function(rk){
         var vals=(e.peepHoles&&e.peepHoles[rk])?e.peepHoles[rk]:[];
         for(var ph=0;ph<15;ph++) row.push(vals[ph]!==undefined?vals[ph]:"");
@@ -6199,13 +6162,8 @@ function _doImport(file, onDone, silent){
             var idxPreMax     = colIdx(["pre-ref max","prereformer max"], idxHguLoad>=0 ? 7 : 6);
             var idxPreMin     = colIdx(["pre-ref min","prereformer min"], idxHguLoad>=0 ? 8 : 7);
             var idxMethane    = colIdx(["methane slip"], -1);
-            var idxPdfAttached= colIdx(["pdf attached"], idxMethane>=0 ? 10 : 8);
-            var idxPdfName    = colIdx(["pdf name"], idxMethane>=0 ? 11 : 9);
-            var idxPdfUrl     = colIdx(["pdf url"], -1);
-
-            var hasPdfCols    = idxPdfAttached >= 0 || idxPdfName >= 0 || idxPdfUrl >= 0;
             var phRowKeys2    = ["ab-bot","cd-bot","ab-top","cd-top"];
-            var colOffsetStart = (idxPdfUrl >= 0 ? idxPdfUrl + 1 : (idxPdfName >= 0 ? idxPdfName + 1 : (idxPdfAttached >= 0 ? idxPdfAttached + 1 : (idxMethane>=0 ? 10 : 8))));
+            var colOffsetStart = idxMethane>=0 ? idxMethane + 1 : (idxHguLoad>=0 ? 10 : 8);
 
             tempDataEntries = [];
             tdData.slice(1).forEach(function(row){
@@ -6221,21 +6179,8 @@ function _doImport(file, onDone, silent){
                 preRefMax:  row[idxPreMax]||"",
                 preRefMin:  row[idxPreMin]||"",
                 methaneSlip: idxMethane>=0 ? (row[idxMethane]||"") : "",
-                peepHoles:  {},
-                pdfAttachment: null
+                peepHoles:  {}
               };
-              if(hasPdfCols){
-                var pdfAttachedMark = idxPdfAttached>=0 ? (row[idxPdfAttached]||"") : "";
-                var pdfName = idxPdfName>=0 ? (row[idxPdfName]||"") : "";
-                var pdfUrl = idxPdfUrl>=0 ? (row[idxPdfUrl]||"") : "";
-                if(String(pdfAttachedMark).toLowerCase() === "yes" || pdfName || pdfUrl){
-                  entry.pdfAttachment = {
-                    name: pdfName || "Attachment.pdf",
-                    publicUrl: pdfUrl || "",
-                    uploadedAt: ""
-                  };
-                }
-              }
               var colOffset = colOffsetStart;
               phRowKeys2.forEach(function(rk){
                 entry.peepHoles[rk] = [];
@@ -8591,10 +8536,6 @@ async function loginWithFolderSupport(){
    TEMP DATA TAB — JavaScript
 ================================================== */
 var tempDataEntries = [];
-var tdPendingPdfAttachment = null;
-var tdPendingPdfFile = null;
-var tdPendingPdfLoading = false;
-var tdSavingWithPdf = false;
 var tdEditingIndex = -1;
 
 function updateTempSaveButtonLabel(){
@@ -8608,2097 +8549,8 @@ function setTempEditMode(idx){
   updateTempSaveButtonLabel();
 }
 
-function setTempSaveBusy(busy){
-  tdSavingWithPdf = !!busy;
-  var btn = document.getElementById("td-save-btn");
-  if(!btn) return;
-  btn.disabled = tdSavingWithPdf;
-  btn.style.opacity = tdSavingWithPdf ? "0.65" : "1";
-  btn.style.cursor = tdSavingWithPdf ? "not-allowed" : "pointer";
-  if(tdSavingWithPdf){
-    btn.textContent = "⏳ Uploading...";
-  }else{
-    updateTempSaveButtonLabel();
-  }
-}
-
-function updateTempPdfUI(){
-  var nameEl = document.getElementById("td-pdf-name");
-  var clearEl = document.getElementById("td-pdf-clear");
-  if(!nameEl || !clearEl) return;
-  if(tdPendingPdfLoading){
-    nameEl.textContent = "Reading PDF...";
-    nameEl.style.color = "#7ec8f0";
-    clearEl.style.display = "none";
-    return;
-  }
-  if(tdPendingPdfAttachment){
-    nameEl.textContent = tdPendingPdfAttachment.name || "PDF attached";
-    nameEl.style.color = "#60c8ff";
-    clearEl.style.display = "inline-block";
-  }else{
-    nameEl.textContent = "No PDF";
-    nameEl.style.color = "#94a3b8";
-    clearEl.style.display = "none";
-  }
-}
-
-function clearTempPdfAttachment(silent){
-  tdPendingPdfAttachment = null;
-  tdPendingPdfFile = null;
-  tdPendingPdfLoading = false;
-  var fileEl = document.getElementById("td-pdf-file");
-  if(fileEl) fileEl.value = "";
-  updateTempPdfUI();
-    setTstOcrStatus("", "#94a3b8");
-  if(!silent) showToast("🧹 PDF attachment removed");
-}
-
-function handleTempPdfSelect(event){
-  var file = event && event.target ? event.target.files[0] : null;
-  if(!file) return;
-  if(!/\.pdf$/i.test(file.name) && file.type !== "application/pdf"){
-    alert("Please select a PDF file only.");
-    clearTempPdfAttachment(true);
-    return;
-  }
-  var maxBytes = 4 * 1024 * 1024; // 4 MB
-  if(file.size > maxBytes){
-    alert("PDF is too large. Please keep it under 4 MB.");
-    clearTempPdfAttachment(true);
-    return;
-  }
-  tdPendingPdfFile = file;
-  tdPendingPdfAttachment = {
-    name: file.name,
-    size: file.size,
-    type: (file.type || "application/octet-stream"),
-    uploadedAt: new Date().toISOString()
-  };
-  tdPendingPdfLoading = false;
-  updateTempPdfUI();
-    setTstOcrStatus("", "#94a3b8");
-  showToast("📎 PDF selected");
-}
-
-function makePdfStoragePath(fileName, dt, shift){
-  var empId = getLoggedInEmpId() || "unknown";
-  var safeEmp = String(empId).replace(/[^a-zA-Z0-9_-]/g, "");
-  var safeShift = String(shift || "unknown").replace(/[^a-zA-Z0-9_-]/g, "");
-  var dtStamp = String(dt || "").replace(/[^0-9]/g, "");
-  var rand = Math.random().toString(36).slice(2,8);
-  var safeName = String(fileName || "attachment.pdf").replace(/[^a-zA-Z0-9._-]/g, "_");
-  return "temp-data-pdf/" + safeEmp + "/" + dtStamp + "_" + safeShift + "_" + rand + "_" + safeName;
-}
-
-async function uploadTempEntryPdf(file, dt, shift){
-  var bucket = "temp-data-pdf";
-  if(!supaClient){
-    alert("Supabase is not connected. Attachment upload is not available.");
-    return null;
-  }
-  try{
-    var path = makePdfStoragePath(file.name, dt, shift);
-    var up = await supaClient.storage.from(bucket).upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: (file.type || "application/octet-stream")
-    });
-    if(up.error){
-      alert("Attachment upload failed: " + up.error.message);
-      return null;
-    }
-    var pub = supaClient.storage.from(bucket).getPublicUrl(path);
-    var publicUrl = pub && pub.data ? pub.data.publicUrl : "";
-    return {
-      name: file.name,
-      size: file.size,
-      type: (file.type || "application/octet-stream"),
-      uploadedAt: new Date().toISOString(),
-      storageBucket: bucket,
-      storagePath: path,
-      publicUrl: publicUrl || ""
-    };
-  }catch(err){
-    alert("Attachment upload failed: " + (err && err.message ? err.message : err));
-    return null;
-  }
-}
-
-async function openTempEntryPdf(idx){
-  var ent = tempDataEntries[idx];
-  if(!ent || !ent.pdfAttachment){
-    alert("No attachment found for this entry.");
-    return;
-  }
-  var url = ent.pdfAttachment.publicUrl || ent.pdfAttachment.dataUrl || "";
-  if(!url && ent.pdfAttachment.storageBucket && ent.pdfAttachment.storagePath && supaClient){
-    try{
-      var signed = await supaClient.storage
-        .from(ent.pdfAttachment.storageBucket)
-        .createSignedUrl(ent.pdfAttachment.storagePath, 60 * 60);
-      if(!signed.error && signed.data && signed.data.signedUrl){
-        url = signed.data.signedUrl;
-      }
-    }catch(e){}
-  }
-  if(!url){
-    alert("Attachment link is unavailable.");
-    return;
-  }
-  var w = window.open(url, "_blank");
-  if(!w) alert("Popup blocked. Please allow popups to view attachment.");
-}
-
-var tdOcrBusy = false;
-
-/* Lowest-cost mode: keep OCR local by default (no paid cloud request). */
-var TST_OCR_PIPELINE = {
-  localOnly: true,
-  cloudOptInKey: "scadaEnablePaidCloudOcr",
-  googleKeyStorageKey: "scadaGoogleVisionApiKey",
-  ocrSpaceKeyStorageKey: "scadaOcrSpaceApiKey",
-  preferredProviderKey: "scadaTstCloudProvider",
-  /* Optional org-wide fixed key: set once here to auto-enable on all devices. */
-  sharedGoogleVisionApiKey: "AIzaSyDady3jR-aDlg1NFZY_iv8EEfyKcT8Cjr4",
-  googleMonthlyLimit: 300,
-  googleUsageStorageKey: "scadaGoogleVisionUsageV1"
-};
-
-function getSharedGoogleVisionApiKey(){
-  var key = String(TST_OCR_PIPELINE.sharedGoogleVisionApiKey || "").trim();
-  return key;
-}
-
-function getTstGoogleVisionApiKey(){
-  var shared = getSharedGoogleVisionApiKey();
-  if(shared) return shared;
-  try{
-    var saved = localStorage.getItem(TST_OCR_PIPELINE.googleKeyStorageKey);
-    if(saved && String(saved).trim()) return String(saved).trim();
-  }catch(e){}
-  return "";
-}
-
-function getGoogleVisionMonthToken(d){
-  var dt = d || new Date();
-  return String(dt.getFullYear()) + "-" + String(dt.getMonth() + 1).padStart(2, "0");
-}
-
-function getGoogleVisionMonthlyLimit(){
-  var n = Number(TST_OCR_PIPELINE.googleMonthlyLimit);
-  if(!isFinite(n) || n < 1) return 300;
-  return Math.floor(n);
-}
-
-function getGoogleVisionUsageRecord(){
-  var monthNow = getGoogleVisionMonthToken(new Date());
-  try{
-    var raw = localStorage.getItem(TST_OCR_PIPELINE.googleUsageStorageKey);
-    if(!raw) return { month: monthNow, count: 0 };
-    var js = JSON.parse(raw);
-    var month = String((js && js.month) || "");
-    var count = Number((js && js.count) || 0);
-    if(!/^\d{4}-\d{2}$/.test(month)) month = monthNow;
-    if(!isFinite(count) || count < 0) count = 0;
-    if(month !== monthNow) return { month: monthNow, count: 0 };
-    return { month: month, count: Math.floor(count) };
-  }catch(e){
-    return { month: monthNow, count: 0 };
-  }
-}
-
-function saveGoogleVisionUsageRecord(rec){
-  try{
-    localStorage.setItem(TST_OCR_PIPELINE.googleUsageStorageKey, JSON.stringify(rec || {}));
-  }catch(e){}
-}
-
-function getGoogleVisionUsageSummary(){
-  var rec = getGoogleVisionUsageRecord();
-  var limit = getGoogleVisionMonthlyLimit();
-  var used = Math.max(0, Math.floor(Number(rec.count || 0)));
-  var remaining = Math.max(0, limit - used);
-  return { month: rec.month, used: used, limit: limit, remaining: remaining };
-}
-
-function canUseGoogleVisionThisMonth(){
-  return getGoogleVisionUsageSummary().remaining > 0;
-}
-
-function markGoogleVisionUse(){
-  var rec = getGoogleVisionUsageRecord();
-  rec.count = Math.max(0, Math.floor(Number(rec.count || 0))) + 1;
-  saveGoogleVisionUsageRecord(rec);
-  return getGoogleVisionUsageSummary();
-}
-
-function getTstCloudProvider(){
-  var provider = "";
-  try{
-    provider = String(localStorage.getItem(TST_OCR_PIPELINE.preferredProviderKey) || "").trim().toLowerCase();
-  }catch(e){}
-  if(provider !== "google" && provider !== "ocrspace"){
-    provider = getTstGoogleVisionApiKey() ? "google" : "ocrspace";
-  }
-  if(provider === "google" && !getTstGoogleVisionApiKey()){
-    provider = "ocrspace";
-  }
-  return provider;
-}
-
-function getTstCloudProviderLabel(provider){
-  if(provider === "google") return "Google Vision";
-  if(provider === "ocrspace") return "OCR.space";
-  return "Cloud OCR";
-}
-
-function isPaidCloudOcrEnabled(){
-  try{
-    if(localStorage.getItem(TST_OCR_PIPELINE.cloudOptInKey) === "1") return true;
-    if(getTstGoogleVisionApiKey()) return true;
-    var ocrKey = localStorage.getItem(TST_OCR_PIPELINE.ocrSpaceKeyStorageKey);
-    if(ocrKey && String(ocrKey).trim()) return true;
-  }catch(e){
-    return !!getTstGoogleVisionApiKey();
-  }
-  return false;
-}
-
-function configureTstGoogleVisionKey(){
-  if(tdOcrBusy) return;
-  if(getSharedGoogleVisionApiKey()){
-    alert("Google Vision key is centrally fixed for this site.");
-    return;
-  }
-  var current = getTstGoogleVisionApiKey();
-  var next = prompt(
-    "Paste Google Vision API key.\n\nPress OK with empty value to remove saved key from this browser.",
-    current || ""
-  );
-  if(next === null) return;
-  next = String(next || "").trim();
-
-  try{
-    if(next){
-      localStorage.setItem(TST_OCR_PIPELINE.googleKeyStorageKey, next);
-      localStorage.setItem(TST_OCR_PIPELINE.cloudOptInKey, "1");
-      localStorage.setItem(TST_OCR_PIPELINE.preferredProviderKey, "google");
-      setTstOcrStatus("Google Vision key saved", "#34d399");
-      showToast("✅ Google Vision OCR key saved.");
-    }else{
-      localStorage.removeItem(TST_OCR_PIPELINE.googleKeyStorageKey);
-      if(getTstCloudProvider() === "google"){
-        localStorage.setItem(TST_OCR_PIPELINE.preferredProviderKey, "ocrspace");
-      }
-      setTstOcrStatus("", "#94a3b8");
-      showToast("🧹 Google Vision OCR key removed.");
-    }
-  }catch(err){
-    alert("Could not store Google Vision key: " + (err && err.message ? err.message : err));
-  }
-}
-
-function setTstOcrStatus(msg, color){
-  var st = document.getElementById("td-ocr-status");
-  if(!st) return;
-  if(msg){
-    st.textContent = msg;
-  }else if(isPaidCloudOcrEnabled()){
-    var provider = getTstCloudProvider();
-    st.textContent = "OCR idle (" + getTstCloudProviderLabel(provider) + " + local fallback)";
-  }else{
-    st.textContent = "OCR idle (free local)";
-  }
-  st.style.color = color || "#94a3b8";
-}
-
-function setTstOcrBusy(busy){
-  tdOcrBusy = !!busy;
-  var btn = document.getElementById("td-ocr-btn");
-  var pasteBtn = document.getElementById("td-ocr-paste-btn");
-  var keyBtn = document.getElementById("td-ocr-google-key-btn");
-  if(btn){
-    btn.disabled = tdOcrBusy;
-    btn.style.opacity = tdOcrBusy ? "0.7" : "1";
-    btn.style.cursor = tdOcrBusy ? "not-allowed" : "pointer";
-    btn.textContent = tdOcrBusy ? "⏳ Reading..." : "📷 Upload TST Sheet";
-  }
-  if(pasteBtn){
-    pasteBtn.disabled = tdOcrBusy;
-    pasteBtn.style.opacity = tdOcrBusy ? "0.7" : "1";
-    pasteBtn.style.cursor = tdOcrBusy ? "not-allowed" : "pointer";
-  }
-  if(keyBtn){
-    keyBtn.disabled = tdOcrBusy;
-    keyBtn.style.opacity = tdOcrBusy ? "0.7" : "1";
-    keyBtn.style.cursor = tdOcrBusy ? "not-allowed" : "pointer";
-  }
-}
-
-function parseExternalTstTextToValues(raw){
-  var lines = String(raw || "").split(/\r?\n/);
-  var grid = {};
-  for(var rr=1; rr<=15; rr++) grid[rr] = { "ab-bot":"", "cd-bot":"", "ab-top":"", "cd-top":"" };
-
-  function put(r, key, token){
-    if(!(r >= 1 && r <= 15) || !key) return;
-    var v = parseLikelyTempFromToken(token);
-    if(!isFinite(v)) return;
-    grid[r][key] = String(v);
-  }
-
-  var explicitRe = /(\d{1,2})\s*(AB\s*BOT|CD\s*BOT|AB\s*TOP|CD\s*TOP|ABBOT|CDBOT|ABTOP|CDTOP)\s*([A-Z0-9]{2,6})/ig;
-  var em;
-  while((em = explicitRe.exec(String(raw || ""))) !== null){
-    var r1 = Number(em[1]);
-    var lk = normalizeWordToken(em[2]);
-    var key = "";
-    if(lk.indexOf("ABBOT") >= 0 || lk.indexOf("ABB0T") >= 0) key = "ab-bot";
-    else if(lk.indexOf("CDBOT") >= 0 || lk.indexOf("CDB0T") >= 0) key = "cd-bot";
-    else if(lk.indexOf("ABTOP") >= 0 || lk.indexOf("ABT0P") >= 0) key = "ab-top";
-    else if(lk.indexOf("CDTOP") >= 0 || lk.indexOf("CDT0P") >= 0) key = "cd-top";
-    put(r1, key, em[3]);
-  }
-
-  for(var i=0; i<lines.length; i++){
-    var ln = lines[i].trim();
-    if(!ln) continue;
-    var rowStart = ln.match(/^(\d{1,2})\b(.*)$/);
-    if(!rowStart) continue;
-    var row = Number(rowStart[1]);
-    if(!(row >= 1 && row <= 15)) continue;
-    var rest = rowStart[2] || "";
-    var toks = rest.match(/[A-Z0-9]{2,6}/ig) || [];
-    var vals = [];
-    for(var t=0; t<toks.length; t++){
-      var tv = parseLikelyTempFromToken(toks[t]);
-      if(isFinite(tv)) vals.push(String(tv));
-    }
-    if(vals.length >= 4){
-      grid[row]["ab-bot"] = vals[0];
-      grid[row]["cd-bot"] = vals[1];
-      grid[row]["ab-top"] = vals[2];
-      grid[row]["cd-top"] = vals[3];
-    }else if(vals.length > 0){
-      if(!grid[row]["ab-bot"] && vals[0]) grid[row]["ab-bot"] = vals[0];
-      if(!grid[row]["cd-bot"] && vals[1]) grid[row]["cd-bot"] = vals[1];
-      if(!grid[row]["ab-top"] && vals[2]) grid[row]["ab-top"] = vals[2];
-      if(!grid[row]["cd-top"] && vals[3]) grid[row]["cd-top"] = vals[3];
-    }
-  }
-
-  var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
-  var filled = 0;
-  for(var r=1; r<=15; r++){
-    ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(k){
-      var v = grid[r][k] || "";
-      out[k].push(v);
-      if(v) filled++;
-    });
-  }
-  return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
-}
-
-function openTstTextImportPrompt(){
-  if(tdOcrBusy) return;
-  var sample = "Paste OCR text here. Examples:\n1 AB BOT 961\n2 AB BOT 962 CD BOT 969\n3 AB TOP 970\n5 CD TOP 920";
-  var raw = prompt(sample, "");
-  if(raw === null) return;
-  var parsed = parseExternalTstTextToValues(raw);
-  var filled = fillTdPeepFieldsFromList(parsed.values || [], true);
-  if(filled < 1){
-    setTstOcrStatus("No values found in pasted text", "#fca5a5");
-    alert("Could not map any TST value from pasted text. Use format like: 2 AB BOT 962 CD BOT 969");
-    return;
-  }
-  setTstOcrStatus("Filled " + filled + " cells (pasted text)", "#34d399");
-  showToast("✅ Filled " + filled + " TST cells from pasted OCR text.");
-}
-
-function getTdPeepFieldIds(){
-  var ids = [];
-  ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
-    for(var ph=1; ph<=15; ph++) ids.push("td-ph-" + rowKey + "-" + ph);
-  });
-  return ids;
-}
-
-function fillTdPeepFieldsFromList(values, onlyNonEmpty){
-  var ids = getTdPeepFieldIds();
-  var n = Math.min(ids.length, values.length);
-  var written = 0;
-  for(var i=0; i<n; i++){
-    var el = document.getElementById(ids[i]);
-    if(!el) continue;
-    var raw = values[i];
-    if(raw === null || raw === undefined) continue;
-    var val = String(raw).trim();
-    if(onlyNonEmpty && val === "") continue;
-    el.value = val;
-    if(val !== "") written++;
-  }
-  return written;
-}
-
-function normalizeOcrText(raw){
-  return String(raw || "")
-    .toUpperCase()
-    .replace(/\r/g, "\n")
-    .replace(/\t/g, " ")
-    .replace(/[|]/g, " ")
-    .replace(/[–—]/g, "-");
-}
-
-function parseTempNumbers(text){
-  var out = [];
-  var m = String(text || "").match(/-?\d+(?:[.,]\d+)?/g) || [];
-  for(var i=0; i<m.length; i++){
-    var token = m[i].replace(",", ".");
-    var v = Number(token);
-    if(!isFinite(v)) continue;
-    if(v >= 100 && v <= 1800) out.push(String(v));
-  }
-  return out;
-}
-
-function findFirstAliasIndex(text, aliases){
-  var best = -1;
-  for(var i=0; i<aliases.length; i++){
-    var p = text.indexOf(aliases[i]);
-    if(p >= 0 && (best < 0 || p < best)) best = p;
-  }
-  return best;
-}
-
-function normalizeWordToken(t){
-  return String(t || "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .replace(/O/g, "0");
-}
-
-function parseLikelyTempFromToken(token){
-  var raw = String(token || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if(!raw) return NaN;
-  var digitCount = (raw.match(/\d/g) || []).length;
-  if(digitCount < 2) return NaN;
-
-  function inRange(n){
-    return isFinite(n) && n >= 100 && n <= 1800;
-  }
-
-  function mapToken(str, mode){
-    var out = "";
-    for(var i=0; i<str.length; i++){
-      var ch = str[i];
-      if(ch >= "0" && ch <= "9"){ out += ch; continue; }
-      if(ch === "I" || ch === "L"){ out += "1"; continue; }
-      if(ch === "Z"){ out += "2"; continue; }
-      if(ch === "S"){ out += "5"; continue; }
-      if(ch === "B"){ out += "8"; continue; }
-      if(ch === "A"){ out += "4"; continue; }
-
-      if(mode === "alt9"){
-        if(ch === "Q" || ch === "O") out += "9";
-        else if(ch === "D") out += "0";
-        else if(ch === "G") out += "9";
-        else out += "";
-      }else if(mode === "mix"){
-        if(ch === "Q") out += "9";
-        else if(ch === "O" || ch === "D") out += "0";
-        else if(ch === "G") out += "6";
-        else out += "";
-      }else{
-        if(ch === "Q" || ch === "O" || ch === "D") out += "0";
-        else if(ch === "G") out += "6";
-        else out += "";
-      }
-    }
-    return out.replace(/\D/g, "");
-  }
-
-  function addCandidate(cands, val, score){
-    if(!inRange(val)) return;
-    var key = String(val);
-    if(!isFinite(cands[key]) || score > cands[key]) cands[key] = score;
-  }
-
-  function collectFromDigits(digits, cands, baseScore){
-    if(!digits) return;
-    if(/^\d{3,4}$/.test(digits)){
-      var direct = Number(digits);
-      addCandidate(cands, direct, baseScore + (direct >= 800 && direct <= 1200 ? 2.2 : 0.6));
-    }
-
-    if(digits.length >= 4){
-      var suffix3 = Number(digits.slice(-3));
-      addCandidate(cands, suffix3, baseScore + 1.1 + (suffix3 >= 800 && suffix3 <= 1200 ? 2 : 0));
-    }
-
-    for(var len=4; len>=3; len--){
-      if(digits.length < len) continue;
-      for(var i=0; i+len<=digits.length; i++){
-        var seg = digits.slice(i, i+len);
-        var v = Number(seg);
-        if(!inRange(v)) continue;
-        var score = baseScore;
-        if(v >= 700 && v <= 1400) score += 2.0;
-        if(v >= 800 && v <= 1200) score += 1.6;
-        if(i + len === digits.length) score += 0.7;
-        if(len === 4) score += 0.2;
-        addCandidate(cands, v, score);
-
-        /* Low-value misread rescue: 429 -> 929, 569 -> 969, etc. */
-        if(v >= 300 && v < 700){
-          var vShift = v + 500;
-          if(inRange(vShift)){
-            addCandidate(cands, vShift, score - 0.35 + (vShift >= 800 && vShift <= 1200 ? 1.0 : 0));
-          }
-          if(seg.length === 3){
-            var first = Number(seg[0]);
-            if(first <= 6){
-              var vLead9 = Number("9" + seg.slice(1));
-              if(inRange(vLead9)){
-                addCandidate(cands, vLead9, score - 0.25 + (vLead9 >= 800 && vLead9 <= 1200 ? 1.0 : 0));
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  var candidates = {};
-  var modes = [
-    { name: "default", w: 0.0 },
-    { name: "mix",     w: -0.05 },
-    { name: "alt9",    w: -0.15 }
-  ];
-  for(var m=0; m<modes.length; m++){
-    var digits = mapToken(raw, modes[m].name);
-    if(!digits) continue;
-    collectFromDigits(digits, candidates, modes[m].w);
-  }
-
-  var best = NaN;
-  var bestScore = -1e9;
-  Object.keys(candidates).forEach(function(k){
-    var v = Number(k), s = candidates[k];
-    if(!isFinite(v)) return;
-    if(s > bestScore){
-      best = v;
-      bestScore = s;
-    }
-  });
-
-  return inRange(best) ? best : NaN;
-}
-
-function parseLikelyRowNumber(token){
-  var raw = String(token || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if(!raw) return NaN;
-
-  function normRow(str, mode){
-    return str
-      .replace(mode === "q9" ? /Q/g : /Q/g, mode === "q9" ? "9" : "0")
-      .replace(mode === "o9" ? /O/g : /O/g, mode === "o9" ? "9" : "0")
-      .replace(/D/g, "0")
-      .replace(/[IL]/g, "1")
-      .replace(/Z/g, "2")
-      .replace(/S/g, "5")
-      .replace(/[^0-9]/g, "");
-  }
-
-  var modes = ["default","q9","o9"];
-  var best = NaN;
-  var bestScore = -1;
-  for(var i=0; i<modes.length; i++){
-    var tk = normRow(raw, modes[i]);
-    if(!/^\d{1,2}$/.test(tk)) continue;
-    var n = Number(tk);
-    if(!(isFinite(n) && n >= 1 && n <= 15)) continue;
-    var score = (modes[i] === "default") ? 2 : 1.6;
-    if(n >= 1 && n <= 9) score += 0.2;
-    if(score > bestScore){
-      best = n;
-      bestScore = score;
-    }
-  }
-  return isFinite(best) ? best : NaN;
-}
-
-function detectTstColumnKey(token){
-  var tk = normalizeWordToken(token);
-  if(!tk) return "";
-  if(/AB.*B0?T/.test(tk) || /A8.*B0?T/.test(tk) || tk === "ABB0T" || tk === "ABBOT") return "ab-bot";
-  if(/CD.*B0?T/.test(tk) || /C0.*B0?T/.test(tk) || /CDB0T/.test(tk) || /CDBOT/.test(tk)) return "cd-bot";
-  if(/AB.*T0?P/.test(tk) || /A8.*T0?P/.test(tk) || tk === "ABT0P" || tk === "ABTOP") return "ab-top";
-  if(/CD.*T0?P/.test(tk) || /C0.*T0?P/.test(tk) || /CDT0P/.test(tk) || /CDTOP/.test(tk)) return "cd-top";
-  return "";
-}
-
-function medianNumber(arr){
-  var nums = (arr || []).filter(function(n){ return isFinite(n); }).slice().sort(function(a,b){ return a-b; });
-  if(!nums.length) return NaN;
-  var m = Math.floor(nums.length / 2);
-  return (nums.length % 2) ? nums[m] : (nums[m-1] + nums[m]) / 2;
-}
-
-function buildTstSpatialGeometry(ocrData){
-  if(!ocrData || !Array.isArray(ocrData.words) || !ocrData.words.length) return null;
-
-  var words = ocrData.words.map(function(w){
-    var b = (w && w.bbox) ? w.bbox : {};
-    var x0 = Number(b.x0 || 0), x1 = Number(b.x1 || 0), y0 = Number(b.y0 || 0), y1 = Number(b.y1 || 0);
-    var txt = String((w && w.text) || "").trim();
-    if(!txt) return null;
-    return {
-      text: txt,
-      token: normalizeWordToken(txt),
-      x0: x0, x1: x1, y0: y0, y1: y1,
-      xc: (x0 + x1) / 2,
-      yc: (y0 + y1) / 2
-    };
-  }).filter(Boolean);
-  if(!words.length) return null;
-
-  var xVals = words.map(function(w){ return w.xc; });
-  var yVals = words.map(function(w){ return w.yc; });
-  var xMin = Math.min.apply(null, xVals);
-  var xMax = Math.max.apply(null, xVals);
-  var yMin = Math.min.apply(null, yVals);
-  var yMax = Math.max.apply(null, yVals);
-
-  var headerYMax = yMin + Math.max(45, (yMax - yMin) * 0.24);
-  var headerWords = words
-    .filter(function(w){ return w.yc <= headerYMax; })
-    .slice()
-    .sort(function(a,b){
-      var dy = a.yc - b.yc;
-      if(Math.abs(dy) > 18) return dy;
-      return a.xc - b.xc;
-    });
-
-  var colCandidates = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
-  for(var i=0; i<headerWords.length; i++){
-    var w0 = headerWords[i];
-    var seq = [w0];
-    for(var n=1; n<=3; n++){
-      var wn = headerWords[i+n];
-      if(!wn) break;
-      if(Math.abs(wn.yc - w0.yc) > 26) break;
-      if((wn.x0 - seq[seq.length-1].x1) > 95) break;
-      seq.push(wn);
-    }
-
-    var combos = [];
-    combos.push({ text: seq[0].text, xc: seq[0].xc });
-    if(seq.length >= 2){
-      combos.push({ text: seq[0].text + " " + seq[1].text, xc: (seq[0].xc + seq[1].xc) / 2 });
-      combos.push({ text: seq[0].token + seq[1].token, xc: (seq[0].xc + seq[1].xc) / 2 });
-    }
-    if(seq.length >= 3){
-      combos.push({ text: seq[0].text + " " + seq[1].text + " " + seq[2].text, xc: (seq[0].xc + seq[1].xc + seq[2].xc) / 3 });
-      combos.push({ text: seq[0].token + seq[1].token + seq[2].token, xc: (seq[0].xc + seq[1].xc + seq[2].xc) / 3 });
-    }
-
-    for(var ci=0; ci<combos.length; ci++){
-      var key = detectTstColumnKey(combos[ci].text);
-      if(key) colCandidates[key].push(combos[ci].xc);
-    }
-  }
-
-  var colCenters = {};
-  var colKeysOrdered = ["ab-bot","cd-bot","ab-top","cd-top"];
-  colKeysOrdered.forEach(function(k){
-    var arr = colCandidates[k] || [];
-    if(arr.length){
-      var s = 0;
-      for(var i=0; i<arr.length; i++) s += arr[i];
-      colCenters[k] = s / arr.length;
-    }
-  });
-
-  var valueXs = words.filter(function(w){
-    return isFinite(parseLikelyTempFromToken(w.token));
-  }).map(function(w){ return w.xc; }).sort(function(a,b){ return a-b; });
-  var merged = [];
-  var mergeTol = Math.max(18, (xMax - xMin) * 0.035);
-  for(var vi=0; vi<valueXs.length; vi++){
-    var x = valueXs[vi];
-    if(!merged.length || Math.abs(x - merged[merged.length-1]) > mergeTol){
-      merged.push(x);
-    }else{
-      merged[merged.length-1] = (merged[merged.length-1] + x) / 2;
-    }
-  }
-
-  var clusterDiffs = [];
-  for(var cd=1; cd<merged.length; cd++) clusterDiffs.push(Math.abs(merged[cd] - merged[cd-1]));
-  var clusterSpacing = medianNumber(clusterDiffs);
-  if(!isFinite(clusterSpacing) || clusterSpacing < 20){
-    clusterSpacing = Math.max(35, (xMax - xMin) / 6);
-  }
-
-  var knownCount = Object.keys(colCenters).length;
-  if(knownCount < 4 && merged.length){
-    var missing = colKeysOrdered.filter(function(k){ return !isFinite(colCenters[k]); });
-    if(knownCount >= 2){
-      var avgKnownDiff = [];
-      for(var ki=1; ki<colKeysOrdered.length; ki++){
-        var l = colKeysOrdered[ki-1], r = colKeysOrdered[ki];
-        if(isFinite(colCenters[l]) && isFinite(colCenters[r])) avgKnownDiff.push(colCenters[r] - colCenters[l]);
-      }
-      var spacing = medianNumber(avgKnownDiff);
-      if(!isFinite(spacing) || spacing < 20) spacing = clusterSpacing;
-
-      for(var mi=0; mi<missing.length; mi++){
-        var mk = missing[mi];
-        var idx = colKeysOrdered.indexOf(mk);
-        var li = idx-1, ri = idx+1;
-        while(li >= 0 && !isFinite(colCenters[colKeysOrdered[li]])) li--;
-        while(ri < colKeysOrdered.length && !isFinite(colCenters[colKeysOrdered[ri]])) ri++;
-        if(li >= 0 && ri < colKeysOrdered.length){
-          var lx = colCenters[colKeysOrdered[li]];
-          var rx = colCenters[colKeysOrdered[ri]];
-          colCenters[mk] = lx + (rx - lx) * ((idx - li) / (ri - li));
-        }else if(li >= 0){
-          colCenters[mk] = colCenters[colKeysOrdered[li]] + spacing * (idx - li);
-        }else if(ri < colKeysOrdered.length){
-          colCenters[mk] = colCenters[colKeysOrdered[ri]] - spacing * (ri - idx);
-        }
-      }
-    }else{
-      for(var m=0; m<Math.min(merged.length, colKeysOrdered.length); m++){
-        colCenters[colKeysOrdered[m]] = merged[m];
-      }
-      for(var ex=1; ex<colKeysOrdered.length; ex++){
-        var prev = colKeysOrdered[ex-1], cur = colKeysOrdered[ex];
-        if(!isFinite(colCenters[cur]) && isFinite(colCenters[prev])){
-          colCenters[cur] = colCenters[prev] + clusterSpacing;
-        }
-      }
-    }
-  }
-
-  if(!isFinite(colCenters["ab-bot"]) || !isFinite(colCenters["cd-bot"]) || !isFinite(colCenters["ab-top"]) || !isFinite(colCenters["cd-top"])){
-    return null;
-  }
-
-  var minColX = Math.min(colCenters["ab-bot"], colCenters["cd-bot"], colCenters["ab-top"], colCenters["cd-top"]);
-  var rowWords = words.filter(function(w){
-    var r = parseLikelyRowNumber(w.token);
-    if(!isFinite(r)) return false;
-    return w.xc < (minColX - 8);
-  });
-  if(rowWords.length < 7){
-    rowWords = words.filter(function(w){ return isFinite(parseLikelyRowNumber(w.token)); });
-  }
-  if(!rowWords.length) return null;
-
-  var rowMap = {};
-  rowWords.forEach(function(w){
-    var r = parseLikelyRowNumber(w.token);
-    if(!isFinite(r)) return;
-    if(!rowMap[r] || w.xc < rowMap[r].x){
-      rowMap[r] = { y: w.yc, x: w.xc };
-    }
-  });
-
-  var knownRows = Object.keys(rowMap).map(Number).sort(function(a,b){ return a-b; });
-  if(!knownRows.length) return null;
-
-  var a = NaN, b = NaN;
-  if(knownRows.length >= 2){
-    var nR = knownRows.length;
-    var sx = 0, sy = 0, sxx = 0, sxy = 0;
-    for(var k=0; k<nR; k++){
-      var rr = knownRows[k], yy = rowMap[rr].y;
-      sx += rr; sy += yy; sxx += rr*rr; sxy += rr*yy;
-    }
-    var den = nR*sxx - sx*sx;
-    if(den !== 0){
-      a = (nR*sxy - sx*sy) / den;
-      b = (sy - a*sx) / nR;
-    }
-    if(!isFinite(a) || Math.abs(a) < 8 || Math.abs(a) > 220){
-      var r1 = knownRows[0], r2 = knownRows[knownRows.length-1];
-      a = (rowMap[r2].y - rowMap[r1].y) / Math.max(1, (r2 - r1));
-      b = rowMap[r1].y - a * r1;
-    }
-  }else{
-    var r0 = knownRows[0];
-    var rg = Math.max(28, (yMax - yMin) / 16);
-    a = rg;
-    b = rowMap[r0].y - a * r0;
-  }
-
-  if(!isFinite(a) || Math.abs(a) < 8){
-    a = Math.max(32, (yMax - yMin) / 16);
-    b = yMin;
-  }
-  var rowGap = Math.abs(a);
-  var rowCenters = {};
-  for(var r=1; r<=15; r++){
-    var y = rowMap[r] ? rowMap[r].y : (a * r + b);
-    rowCenters[r] = Math.max(yMin + 4, Math.min(yMax - 4, y));
-  }
-
-  var colSorted = [colCenters["ab-bot"], colCenters["cd-bot"], colCenters["ab-top"], colCenters["cd-top"]].sort(function(a,b){ return a-b; });
-  var colDiffs = [];
-  for(var c=1; c<colSorted.length; c++) colDiffs.push(Math.abs(colSorted[c] - colSorted[c-1]));
-  var colSpacing = medianNumber(colDiffs);
-  if(!isFinite(colSpacing) || colSpacing < 22) colSpacing = clusterSpacing;
-
-  return {
-    words: words,
-    rowCenters: rowCenters,
-    colCenters: colCenters,
-    rowGap: rowGap,
-    colSpacing: colSpacing
-  };
-}
-
-function parseSpatialTstFromOcrDataAdvanced(ocrData){
-  try{
-    var geo = buildTstSpatialGeometry(ocrData);
-    if(!geo) return { filled: 0, values: [] };
-
-    var colKeys = ["ab-bot","cd-bot","ab-top","cd-top"];
-    var grid = {};
-    var scoreMap = {};
-    for(var r=1; r<=15; r++){
-      grid[r] = { "ab-bot":"", "cd-bot":"", "ab-top":"", "cd-top":"" };
-    }
-
-    var rowTol = Math.max(18, geo.rowGap * 0.58);
-    var colTol = Math.max(24, geo.colSpacing * 0.60);
-
-    geo.words.forEach(function(w){
-      var val = parseLikelyTempFromToken(w.token);
-      if(!isFinite(val)) return;
-
-      var bestRow = 1;
-      var bestDy = 1e9;
-      for(var r=1; r<=15; r++){
-        var dy = Math.abs(w.yc - geo.rowCenters[r]);
-        if(dy < bestDy){ bestDy = dy; bestRow = r; }
-      }
-      if(bestDy > rowTol) return;
-
-      var bestKey = "";
-      var bestDx = 1e9;
-      for(var i=0; i<colKeys.length; i++){
-        var k = colKeys[i];
-        var dx = Math.abs(w.xc - geo.colCenters[k]);
-        if(dx < bestDx){ bestDx = dx; bestKey = k; }
-      }
-      if(!bestKey || bestDx > colTol) return;
-
-      var id = bestRow + "_" + bestKey;
-      var s = (bestDy / rowTol) + (bestDx / colTol);
-      if(!grid[bestRow][bestKey] || !isFinite(scoreMap[id]) || s < scoreMap[id]){
-        grid[bestRow][bestKey] = String(val);
-        scoreMap[id] = s;
-      }
-    });
-
-    var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
-    var filled = 0;
-    for(var rr=1; rr<=15; rr++){
-      colKeys.forEach(function(k){
-        var v = grid[rr][k] || "";
-        out[k].push(v);
-        if(v) filled++;
-      });
-    }
-    return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
-  }catch(e){
-    return { filled: 0, values: [] };
-  }
-}
-
-function parseSpatialTstFromOcrData(ocrData){
-  try{
-    if(!ocrData || !Array.isArray(ocrData.words) || !ocrData.words.length){
-      return { filled: 0, values: [] };
-    }
-
-    var words = ocrData.words.map(function(w){
-      var b = (w && w.bbox) ? w.bbox : {};
-      var x0 = Number(b.x0 || 0), x1 = Number(b.x1 || 0), y0 = Number(b.y0 || 0), y1 = Number(b.y1 || 0);
-      var xc = (x0 + x1) / 2, yc = (y0 + y1) / 2;
-      var txt = String((w && w.text) || "").trim();
-      return { text: txt, token: normalizeWordToken(txt), x0: x0, x1: x1, y0: y0, y1: y1, xc: xc, yc: yc };
-    }).filter(function(w){ return !!w.text; });
-
-    if(!words.length) return { filled: 0, values: [] };
-
-    var ys = words.map(function(w){ return w.yc; }).sort(function(a,b){ return a-b; });
-    var yMin = ys[0], yMax = ys[ys.length-1];
-    var headerYMax = yMin + Math.max(40, (yMax - yMin) * 0.20);
-
-    var colCandidates = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
-    words.forEach(function(w){
-      if(w.yc > headerYMax) return;
-      var key = detectTstColumnKey(w.token);
-      if(key) colCandidates[key].push(w.xc);
-    });
-
-    var colCenters = {};
-    ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(k){
-      var arr = colCandidates[k];
-      if(arr && arr.length){
-        var sum = 0;
-        for(var i=0;i<arr.length;i++) sum += arr[i];
-        colCenters[k] = sum / arr.length;
-      }
-    });
-
-    if(Object.keys(colCenters).length < 2){
-      var valueXs = words.filter(function(w){
-        var vv = parseLikelyTempFromToken(w.token);
-        return isFinite(vv);
-      }).map(function(w){ return w.xc; }).sort(function(a,b){ return a-b; });
-
-      var merged = [];
-      var mergeTol = 28;
-      for(var vi=0; vi<valueXs.length; vi++){
-        var x = valueXs[vi];
-        if(!merged.length || Math.abs(x - merged[merged.length-1]) > mergeTol){
-          merged.push(x);
-        }else{
-          merged[merged.length-1] = (merged[merged.length-1] + x) / 2;
-        }
-      }
-
-      if(merged.length >= 2){
-        var seq = ["ab-bot","cd-bot","ab-top","cd-top"];
-        for(var mi=0; mi<Math.min(4, merged.length); mi++) colCenters[seq[mi]] = merged[mi];
-      }
-    }
-
-    if(Object.keys(colCenters).length < 1) return { filled: 0, values: [] };
-
-    var minColX = Math.min.apply(null, Object.keys(colCenters).map(function(k){ return colCenters[k]; }));
-    var rowLabelCandidates = words.filter(function(w){
-      var n = parseLikelyRowNumber(w.token);
-      if(!isFinite(n)) return false;
-      return w.xc < (minColX - 20);
-    });
-
-    if(rowLabelCandidates.length < 8){
-      rowLabelCandidates = words.filter(function(w){
-        var n = parseLikelyRowNumber(w.token);
-        if(!isFinite(n)) return false;
-        return w.xc < (minColX + 30);
-      });
-    }
-
-    if(rowLabelCandidates.length < 3){
-      rowLabelCandidates = words.filter(function(w){
-        return isFinite(parseLikelyRowNumber(w.token));
-      });
-    }
-
-    var rowY = {};
-    rowLabelCandidates.forEach(function(w){
-      var r = parseLikelyRowNumber(w.token);
-      if(!isFinite(r)) return;
-      if(!rowY[r] || w.xc < rowY[r].x){ rowY[r] = { y: w.yc, x: w.xc }; }
-    });
-
-    var rowNums = Object.keys(rowY).map(Number).sort(function(a,b){ return a-b; });
-    if(!rowNums.length) return { filled: 0, values: [] };
-
-    var rowGap = 50;
-    if(rowNums.length >= 2){
-      var diffs = [];
-      for(var di=1; di<rowNums.length; di++) diffs.push(Math.abs(rowY[rowNums[di]].y - rowY[rowNums[di-1]].y));
-      diffs.sort(function(a,b){ return a-b; });
-      rowGap = diffs[Math.floor(diffs.length/2)] || rowGap;
-    }
-    var rowTol = Math.max(18, rowGap * 0.55);
-
-    var colKeys = Object.keys(colCenters);
-    var cVals = colKeys.map(function(k){ return colCenters[k]; });
-    var colSpread = Math.max.apply(null, cVals) - Math.min.apply(null, cVals);
-    var colTol = Math.max(30, colSpread / 5);
-
-    var grid = {};
-    rowNums.forEach(function(r){ grid[r] = { "ab-bot":"", "cd-bot":"", "ab-top":"", "cd-top":"" }; });
-
-    words.forEach(function(w){
-      var val = parseLikelyTempFromToken(w.token);
-      if(!isFinite(val)) return;
-
-      var bestRow = null;
-      var bestDy = 1e9;
-      rowNums.forEach(function(r){
-        var dy = Math.abs(w.yc - rowY[r].y);
-        if(dy < bestDy){ bestDy = dy; bestRow = r; }
-      });
-      if(bestRow === null || bestDy > rowTol) return;
-
-      var bestKey = "";
-      var bestDx = 1e9;
-      colKeys.forEach(function(k){
-        var dx = Math.abs(w.xc - colCenters[k]);
-        if(dx < bestDx){ bestDx = dx; bestKey = k; }
-      });
-      if(!bestKey || bestDx > colTol) return;
-
-      if(!grid[bestRow][bestKey]) grid[bestRow][bestKey] = String(val);
-    });
-
-    var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
-    var filled = 0;
-    for(var r=1; r<=15; r++){
-      var g = grid[r] || { "ab-bot":"", "cd-bot":"", "ab-top":"", "cd-top":"" };
-      ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(k){
-        var v = g[k] || "";
-        out[k].push(v);
-        if(v) filled++;
-      });
-    }
-
-    return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
-  }catch(e){
-    return { filled: 0, values: [] };
-  }
-}
-
-function parseRowWiseTstTable(text){
-  var txt = normalizeOcrText(text);
-  var rows = {};
-
-  function isTemp(v){ return isFinite(v) && v >= 100 && v <= 1800; }
-
-  /* A) Line-based parse (works when OCR preserves table rows) */
-  var lines = txt.split("\n");
-  for(var i=0; i<lines.length; i++){
-    var ln = lines[i];
-    var nums = ln.match(/\d+(?:[.,]\d+)?/g) || [];
-    if(nums.length < 5) continue;
-
-    var rowNo = Number(String(nums[0]).replace(",", "."));
-    if(!(rowNo >= 1 && rowNo <= 15)) continue;
-
-    var vals = [];
-    for(var j=1; j<nums.length && vals.length<4; j++){
-      var v = Number(String(nums[j]).replace(",", "."));
-      if(isTemp(v)) vals.push(String(v));
-    }
-    if(vals.length === 4 && !rows[rowNo]) rows[rowNo] = vals;
-  }
-
-  /* B) Token-stream parse (works when OCR collapses all rows into one line) */
-  var toks = (txt.match(/\d+(?:[.,]\d+)?/g) || []).map(function(t){
-    return Number(String(t).replace(",", "."));
-  });
-  for(var k=0; k+4<toks.length; k++){
-    var r = toks[k];
-    if(!(r >= 1 && r <= 15)) continue;
-    if(rows[r]) continue;
-    var v1=toks[k+1], v2=toks[k+2], v3=toks[k+3], v4=toks[k+4];
-    if(isTemp(v1) && isTemp(v2) && isTemp(v3) && isTemp(v4)){
-      rows[r] = [String(v1), String(v2), String(v3), String(v4)];
-    }
-  }
-
-  var abBot = [], cdBot = [], abTop = [], cdTop = [];
-  var found = 0;
-  for(var r=1; r<=15; r++){
-    var rv = rows[r];
-    if(rv && rv.length === 4){
-      found++;
-      abBot.push(rv[0]);
-      cdBot.push(rv[1]);
-      abTop.push(rv[2]);
-      cdTop.push(rv[3]);
-    }else{
-      abBot.push("");
-      cdBot.push("");
-      abTop.push("");
-      cdTop.push("");
-    }
-  }
-
-  return { rowsFound: found, values: abBot.concat(cdBot, abTop, cdTop) };
-}
-
-function parseTstSheetOcr(ocrText, ocrData){
-  var txt = normalizeOcrText(ocrText);
-
-  /* 0) Enhanced spatial parse for handwritten tables (uses OCR word coordinates) */
-  var spatialAdv = parseSpatialTstFromOcrDataAdvanced(ocrData);
-  if(spatialAdv.filled >= 2){
-    return { values: spatialAdv.values, mode: "spatial-adv" };
-  }
-
-  /* 0b) Legacy spatial parse */
-  var spatial = parseSpatialTstFromOcrData(ocrData);
-  if(spatial.filled >= 2){
-    return { values: spatial.values, mode: "spatial" };
-  }
-
-  /* 1) Primary path for fixed printed sheet: one row per peep number with 4 columns */
-  var rowWise = parseRowWiseTstTable(txt);
-  if(rowWise.rowsFound >= 12){
-    return { values: rowWise.values, mode: "row-wise" };
-  }
-
-  /* 2) Column/section-based fallback */
-  var sections = [
-    { key:"ab-bot", aliases:["AB BOT","AB BOT.","AB BOTTOM","A8 BOT","AB B0T"] },
-    { key:"cd-bot", aliases:["CD BOT","CD BOT.","CD BOTTOM","CO BOT","CD B0T"] },
-    { key:"ab-top", aliases:["AB TOP","A8 TOP"] },
-    { key:"cd-top", aliases:["CD TOP","CO TOP"] }
-  ];
-
-  var found = [];
-  sections.forEach(function(s){
-    var idx = findFirstAliasIndex(txt, s.aliases);
-    if(idx >= 0) found.push({key:s.key, idx:idx});
-  });
-  found.sort(function(a,b){ return a.idx - b.idx; });
-
-  var map = {"ab-bot":[],"cd-bot":[],"ab-top":[],"cd-top":[]};
-  for(var i=0; i<found.length; i++){
-    var cur = found[i];
-    var end = (i+1 < found.length) ? found[i+1].idx : txt.length;
-    var seg = txt.slice(cur.idx, end);
-    map[cur.key] = parseTempNumbers(seg).slice(0, 15);
-  }
-
-  var ordered = ["ab-bot","cd-bot","ab-top","cd-top"];
-  var allComplete = ordered.every(function(k){ return map[k].length >= 15; });
-  if(allComplete){
-    var combined = [];
-    ordered.forEach(function(k){ combined = combined.concat(map[k].slice(0,15)); });
-    return { values: combined, mode: "sectioned" };
-  }
-
-  var partial = [];
-  ordered.forEach(function(k){ partial = partial.concat(map[k]); });
-  if(partial.length >= 60) return { values: partial.slice(0,60), mode: "partial" };
-
-  /* 3) Last fallback: first 60 valid temperature numbers from full text */
-  var global = parseTempNumbers(txt);
-  if(global.length >= 60) return { values: global.slice(0,60), mode: "global" };
-
-  return { values: partial, mode: "insufficient" };
-}
-
-async function ensurePdfJsReady(){
-
-  if(window.pdfjsLib) return true;
-  return false;
-}
-
-async function runOcrOnImageBlob(blob){
-  if(!window.Tesseract) throw new Error("OCR library not loaded.");
-  var ocrCfg = {
-    logger: function(m){
-      if(m && m.status === "recognizing text"){
-        var p = Math.round((m.progress || 0) * 100);
-        setTstOcrStatus("Reading text... " + p + "%", "#7ec8f0");
-      }
-    },
-    tessedit_pageseg_mode: "6",
-    preserve_interword_spaces: "1"
-  };
-
-  function ocrScore(payload){
-    var data = payload && payload.data ? payload.data : null;
-    var text = payload && payload.text ? payload.text : "";
-    var spatialFilled = 0;
-    try{
-      var s1 = parseSpatialTstFromOcrDataAdvanced(data).filled || 0;
-      var s2 = parseSpatialTstFromOcrData(data).filled || 0;
-      spatialFilled = Math.max(s1, s2);
-    }catch(e){}
-    var nums = parseTempNumbers(text).length;
-    return (spatialFilled * 10) + nums;
-  }
-
-  async function preprocessForTstOcr(srcBlob){
-    var url = URL.createObjectURL(srcBlob);
-    try{
-      var img = await new Promise(function(resolve, reject){
-        var im = new Image();
-        im.onload = function(){ resolve(im); };
-        im.onerror = reject;
-        im.src = url;
-      });
-
-      var scale = 2;
-      var cw = Math.max(1, Math.round(img.naturalWidth * scale));
-      var ch = Math.max(1, Math.round(img.naturalHeight * scale));
-      var canvas = document.createElement("canvas");
-      canvas.width = cw;
-      canvas.height = ch;
-      var ctx = canvas.getContext("2d", { willReadFrequently: true });
-      if(!ctx) throw new Error("Canvas unavailable");
-
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(img, 0, 0, cw, ch);
-      var id = ctx.getImageData(0, 0, cw, ch);
-      var d = id.data;
-      var sum = 0;
-      for(var i=0; i<d.length; i+=4){
-        var g = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
-        sum += g;
-      }
-      var avg = sum / (d.length/4);
-      var thr = Math.max(95, Math.min(210, avg - 12));
-      for(var j=0; j<d.length; j+=4){
-        var gg = Math.round(0.299*d[j] + 0.587*d[j+1] + 0.114*d[j+2]);
-        var bw = gg < thr ? 0 : 255;
-        d[j] = bw; d[j+1] = bw; d[j+2] = bw; d[j+3] = 255;
-      }
-      ctx.putImageData(id, 0, 0);
-
-      var outBlob = await new Promise(function(resolve){
-        canvas.toBlob(function(b){ resolve(b || srcBlob); }, "image/png");
-      });
-      return outBlob || srcBlob;
-    }finally{
-      URL.revokeObjectURL(url);
-    }
-  }
-
-  var rawRes = await Tesseract.recognize(blob, "eng", ocrCfg);
-  var best = {
-    text: (rawRes && rawRes.data && rawRes.data.text) ? rawRes.data.text : "",
-    data: (rawRes && rawRes.data) ? rawRes.data : null
-  };
-
-  if(ocrScore(best) < 15){
-    try{
-      setTstOcrStatus("Enhancing image for OCR...", "#7ec8f0");
-      var processedBlob = await preprocessForTstOcr(blob);
-      var pass2 = await Tesseract.recognize(processedBlob, "eng", ocrCfg);
-      var alt = {
-        text: (pass2 && pass2.data && pass2.data.text) ? pass2.data.text : "",
-        data: (pass2 && pass2.data) ? pass2.data : null
-      };
-      if(ocrScore(alt) > ocrScore(best)) best = alt;
-    }catch(e){}
-  }
-
-  return best;
-}
-
-function getTstCloudOcrApiKey(){
-  try{
-    var saved = localStorage.getItem(TST_OCR_PIPELINE.ocrSpaceKeyStorageKey);
-    if(saved && String(saved).trim()) return String(saved).trim();
-  }catch(e){}
-  return "helloworld";
-}
-
-async function blobToBase64Content(blob){
-  if(!blob) return "";
-  return await new Promise(function(resolve, reject){
-    try{
-      var fr = new FileReader();
-      fr.onload = function(){
-        var out = String(fr.result || "");
-        var idx = out.indexOf(",");
-        resolve(idx >= 0 ? out.slice(idx + 1) : out);
-      };
-      fr.onerror = function(){ reject(fr.error || new Error("Failed to read file")); };
-      fr.readAsDataURL(blob);
-    }catch(err){
-      reject(err);
-    }
-  });
-}
-
-function googleVisionVerticesToBbox(vertices){
-  var verts = Array.isArray(vertices) ? vertices : [];
-  var xs = [];
-  var ys = [];
-  for(var i=0; i<verts.length; i++){
-    var v = verts[i] || {};
-    var x = Number(v.x), y = Number(v.y);
-    if(isFinite(x)) xs.push(x);
-    if(isFinite(y)) ys.push(y);
-  }
-  if(!xs.length || !ys.length) return null;
-  return {
-    x0: Math.min.apply(null, xs),
-    y0: Math.min.apply(null, ys),
-    x1: Math.max.apply(null, xs),
-    y1: Math.max.apply(null, ys)
-  };
-}
-
-function buildGoogleVisionOcrPayload(resp){
-  var r = resp || {};
-  var words = [];
-  var text = "";
-
-  if(r.fullTextAnnotation && r.fullTextAnnotation.text){
-    text = String(r.fullTextAnnotation.text || "");
-  }
-
-  var pages = r.fullTextAnnotation && Array.isArray(r.fullTextAnnotation.pages) ? r.fullTextAnnotation.pages : [];
-  for(var pi=0; pi<pages.length; pi++){
-    var blocks = Array.isArray(pages[pi] && pages[pi].blocks) ? pages[pi].blocks : [];
-    for(var bi=0; bi<blocks.length; bi++){
-      var paras = Array.isArray(blocks[bi] && blocks[bi].paragraphs) ? blocks[bi].paragraphs : [];
-      for(var pj=0; pj<paras.length; pj++){
-        var ws = Array.isArray(paras[pj] && paras[pj].words) ? paras[pj].words : [];
-        for(var wi=0; wi<ws.length; wi++){
-          var w = ws[wi] || {};
-          var syms = Array.isArray(w.symbols) ? w.symbols : [];
-          var wordText = "";
-          for(var si=0; si<syms.length; si++){
-            wordText += String((syms[si] && syms[si].text) || "");
-          }
-          wordText = wordText.trim();
-          if(!wordText) continue;
-          var bb = googleVisionVerticesToBbox(w.boundingBox && w.boundingBox.vertices);
-          words.push({
-            text: wordText,
-            bbox: bb || { x0: 0, y0: 0, x1: 0, y1: 0 }
-          });
-        }
-      }
-    }
-  }
-
-  if((!text || !text.trim()) && Array.isArray(r.textAnnotations) && r.textAnnotations.length){
-    text = String((r.textAnnotations[0] && r.textAnnotations[0].description) || "");
-  }
-
-  if(!words.length && Array.isArray(r.textAnnotations)){
-    for(var ti=1; ti<r.textAnnotations.length; ti++){
-      var ta = r.textAnnotations[ti] || {};
-      var tt = String(ta.description || "").trim();
-      if(!tt) continue;
-      var tbb = googleVisionVerticesToBbox(ta.boundingPoly && ta.boundingPoly.vertices);
-      words.push({
-        text: tt,
-        bbox: tbb || { x0: 0, y0: 0, x1: 0, y1: 0 }
-      });
-    }
-  }
-
-  return {
-    text: String(text || "").trim(),
-    data: { words: words },
-    provider: "google-vision"
-  };
-}
-
-async function runGoogleVisionOcrFile(file){
-  if(typeof fetch !== "function" || !file) return null;
-  var apiKey = getTstGoogleVisionApiKey();
-  if(!apiKey) return null;
-  if(!canUseGoogleVisionThisMonth()) return null;
-
-  var isPdf = /\.pdf$/i.test(file.name || "") || file.type === "application/pdf";
-  if(isPdf) return null; /* Keep PDF flow in existing local/pdf parser path. */
-
-  var content = await blobToBase64Content(file);
-  if(!content) return null;
-
-  var req = {
-    requests: [{
-      image: { content: content },
-      features: [{ type: "DOCUMENT_TEXT_DETECTION", maxResults: 1 }],
-      imageContext: { languageHints: ["en"] }
-    }]
-  };
-
-  /* Count each outbound Vision request against the monthly cap. */
-  markGoogleVisionUse();
-
-  var resp = await fetch("https://vision.googleapis.com/v1/images:annotate?key=" + encodeURIComponent(apiKey), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(req)
-  });
-  if(!resp.ok) return null;
-
-  var js = await resp.json();
-  var arr = js && Array.isArray(js.responses) ? js.responses : [];
-  if(!arr.length) return null;
-  var out = arr[0] || {};
-  if(out.error) return null;
-  return buildGoogleVisionOcrPayload(out);
-}
-
-async function runCloudOcrFile(file){
-  if(typeof fetch !== "function" || !file) return null;
-  var apiKey = getTstCloudOcrApiKey();
-  if(!apiKey) return null;
-
-  var fd = new FormData();
-  fd.append("apikey", apiKey);
-  fd.append("language", "eng");
-  fd.append("isOverlayRequired", "true");
-  fd.append("OCREngine", "2");
-  fd.append("scale", "true");
-  fd.append("detectOrientation", "true");
-  fd.append("file", file, file.name || "tst-sheet");
-
-  var resp = await fetch("https://api.ocr.space/parse/image", {
-    method: "POST",
-    body: fd
-  });
-  if(!resp.ok) return null;
-
-  var js = await resp.json();
-  if(!js) return null;
-  if(js.IsErroredOnProcessing && (!js.ParsedResults || !js.ParsedResults.length)) return null;
-
-  var parsedResults = Array.isArray(js.ParsedResults) ? js.ParsedResults : [];
-  var fullText = "";
-  var words = [];
-
-  for(var i=0; i<parsedResults.length; i++){
-    var pr = parsedResults[i] || {};
-    fullText += "\n" + String(pr.ParsedText || "");
-    var overlay = pr.TextOverlay || {};
-    var lines = Array.isArray(overlay.Lines) ? overlay.Lines : [];
-    for(var li=0; li<lines.length; li++){
-      var line = lines[li] || {};
-      var wds = Array.isArray(line.Words) ? line.Words : [];
-      for(var wi=0; wi<wds.length; wi++){
-        var w = wds[wi] || {};
-        var x0 = Number(w.Left || 0);
-        var y0 = Number(w.Top || 0);
-        var ww = Number(w.Width || 0);
-        var hh = Number(w.Height || 0);
-        words.push({
-          text: String(w.WordText || "").trim(),
-          bbox: { x0: x0, y0: y0, x1: x0 + ww, y1: y0 + hh }
-        });
-      }
-    }
-  }
-
-  return {
-    text: fullText.trim(),
-    data: { words: words },
-    provider: "ocrspace"
-  };
-}
-
-function detectLineCentersFromProjection(arr, threshold, minGap){
-  var peaks = [];
-  var i = 0;
-  while(i < arr.length){
-    if(arr[i] < threshold){ i++; continue; }
-    var j = i;
-    var bestIdx = i;
-    var bestVal = arr[i];
-    while(j < arr.length && arr[j] >= threshold){
-      if(arr[j] > bestVal){ bestVal = arr[j]; bestIdx = j; }
-      j++;
-    }
-    peaks.push(bestIdx);
-    i = j + 1;
-  }
-  if(!peaks.length) return [];
-  peaks.sort(function(a,b){ return a-b; });
-  var out = [peaks[0]];
-  for(var k=1; k<peaks.length; k++){
-    if(Math.abs(peaks[k] - out[out.length-1]) >= minGap){
-      out.push(peaks[k]);
-    }else{
-      out[out.length-1] = Math.round((out[out.length-1] + peaks[k]) / 2);
-    }
-  }
-  return out;
-}
-
-async function runGridTstOcrFromImage(blob){
-  if(!window.Tesseract) throw new Error("OCR library not loaded.");
-
-  var url = URL.createObjectURL(blob);
-  try{
-    var img = await new Promise(function(resolve, reject){
-      var im = new Image();
-      im.onload = function(){ resolve(im); };
-      im.onerror = reject;
-      im.src = url;
-    });
-
-    var scale = 2;
-    var w = Math.max(1, Math.round(img.naturalWidth * scale));
-    var h = Math.max(1, Math.round(img.naturalHeight * scale));
-    var canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    var ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if(!ctx) return { filled: 0, values: [] };
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(img, 0, 0, w, h);
-
-    var id = ctx.getImageData(0, 0, w, h);
-    var d = id.data;
-    var rowDark = new Array(h);
-    var colDark = new Array(w);
-    for(var yy=0; yy<h; yy++) rowDark[yy] = 0;
-    for(var xx=0; xx<w; xx++) colDark[xx] = 0;
-
-    for(var p=0; p<d.length; p+=4){
-      var idx = p/4;
-      var x = idx % w;
-      var y = Math.floor(idx / w);
-      var g = Math.round(0.299*d[p] + 0.587*d[p+1] + 0.114*d[p+2]);
-      var dark = g < 120 ? 1 : 0;
-      if(dark){
-        rowDark[y]++;
-        colDark[x]++;
-      }
-    }
-
-    var rowThresh = Math.max(20, Math.floor(w * 0.20));
-    var colThresh = Math.max(20, Math.floor(h * 0.12));
-    var hLines = detectLineCentersFromProjection(rowDark, rowThresh, Math.max(6, Math.floor(h/180)));
-    var vLines = detectLineCentersFromProjection(colDark, colThresh, Math.max(6, Math.floor(w/160)));
-
-    if(hLines.length >= 2){
-      hLines = [hLines[0], hLines[hLines.length-1]];
-    }
-    if(vLines.length >= 2){
-      vLines = [vLines[0], vLines[vLines.length-1]];
-    }
-    if(hLines.length < 2 || vLines.length < 2) return { filled: 0, values: [] };
-
-    var top = hLines[0], bottom = hLines[1], left = vLines[0], right = vLines[1];
-    if(bottom - top < 200 || right - left < 120) return { filled: 0, values: [] };
-
-    var rowEdges = [];
-    for(var r=0; r<=16; r++){
-      rowEdges.push(Math.round(top + ((bottom - top) * r / 16)));
-    }
-    var colEdges = [];
-    for(var c=0; c<=5; c++){
-      colEdges.push(Math.round(left + ((right - left) * c / 5)));
-    }
-
-    var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
-    var colKeys = ["ab-bot","cd-bot","ab-top","cd-top"];
-    var filled = 0;
-
-    for(var row=1; row<=15; row++){
-      for(var ci=0; ci<4; ci++){
-        var x0 = colEdges[ci+1], x1 = colEdges[ci+2];
-        var y0 = rowEdges[row], y1 = rowEdges[row+1];
-        var padX = Math.max(2, Math.round((x1 - x0) * 0.12));
-        var padY = Math.max(2, Math.round((y1 - y0) * 0.18));
-        var sx = Math.max(0, x0 + padX);
-        var sy = Math.max(0, y0 + padY);
-        var sw = Math.max(1, Math.min(w - sx, (x1 - x0) - padX*2));
-        var sh = Math.max(1, Math.min(h - sy, (y1 - y0) - padY*2));
-
-        var cellCanvas = document.createElement("canvas");
-        cellCanvas.width = sw;
-        cellCanvas.height = sh;
-        var cctx = cellCanvas.getContext("2d", { willReadFrequently: true });
-        cctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
-
-        var cid = cctx.getImageData(0, 0, sw, sh);
-        var cd = cid.data;
-        var sum = 0;
-        for(var ii=0; ii<cd.length; ii+=4){
-          sum += Math.round(0.299*cd[ii] + 0.587*cd[ii+1] + 0.114*cd[ii+2]);
-        }
-        var avg = sum / (cd.length/4);
-        var thr = Math.max(85, Math.min(205, avg - 15));
-        for(var jj=0; jj<cd.length; jj+=4){
-          var gg = Math.round(0.299*cd[jj] + 0.587*cd[jj+1] + 0.114*cd[jj+2]);
-          var bw = gg < thr ? 0 : 255;
-          cd[jj] = bw; cd[jj+1] = bw; cd[jj+2] = bw; cd[jj+3] = 255;
-        }
-        cctx.putImageData(cid, 0, 0);
-
-        var cellBlob = await new Promise(function(resolve){
-          cellCanvas.toBlob(function(b){ resolve(b); }, "image/png");
-        });
-        if(!cellBlob){
-          out[colKeys[ci]].push("");
-          continue;
-        }
-
-        var rr = await Tesseract.recognize(cellBlob, "eng", {
-          tessedit_pageseg_mode: "8",
-          tessedit_char_whitelist: "0123456789ODILSZGQ",
-          preserve_interword_spaces: "1"
-        });
-        var txt = (rr && rr.data && rr.data.text) ? rr.data.text : "";
-        var val = parseLikelyTempFromToken(txt);
-        if(isFinite(val)){
-          out[colKeys[ci]].push(String(val));
-          filled++;
-        }else{
-          out[colKeys[ci]].push("");
-        }
-      }
-      setTstOcrStatus("Grid OCR row " + row + "/15...", "#7ec8f0");
-    }
-
-    return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
-  }finally{
-    URL.revokeObjectURL(url);
-  }
-}
-
-async function runGuidedTstCellOcrFromImage(blob, seedOcrData){
-  if(!window.Tesseract) throw new Error("OCR library not loaded.");
-  var geo = buildTstSpatialGeometry(seedOcrData || null);
-
-  var url = URL.createObjectURL(blob);
-  try{
-    var img = await new Promise(function(resolve, reject){
-      var im = new Image();
-      im.onload = function(){ resolve(im); };
-      im.onerror = reject;
-      im.src = url;
-    });
-
-    var W = img.naturalWidth || img.width;
-    var H = img.naturalHeight || img.height;
-    if(!W || !H) return { filled: 0, values: [] };
-
-    var canvas = document.createElement("canvas");
-    canvas.width = W;
-    canvas.height = H;
-    var ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if(!ctx) return { filled: 0, values: [] };
-    ctx.drawImage(img, 0, 0, W, H);
-
-    if(!geo){
-      try{
-        var id0 = ctx.getImageData(0, 0, W, H);
-        var d0 = id0.data;
-        var rowDark = new Array(H);
-        var colDark = new Array(W);
-        for(var ry=0; ry<H; ry++) rowDark[ry] = 0;
-        for(var cx=0; cx<W; cx++) colDark[cx] = 0;
-
-        for(var p=0; p<d0.length; p+=4){
-          var idx = p/4;
-          var x = idx % W;
-          var y = Math.floor(idx / W);
-          var g = Math.round(0.299*d0[p] + 0.587*d0[p+1] + 0.114*d0[p+2]);
-          var dark = g < 130 ? 1 : 0;
-          if(dark){
-            rowDark[y]++;
-            colDark[x]++;
-          }
-        }
-
-        var rowThresh = Math.max(20, Math.floor(W * 0.22));
-        var colThresh = Math.max(20, Math.floor(H * 0.10));
-        var hLines = detectLineCentersFromProjection(rowDark, rowThresh, Math.max(6, Math.floor(H/180)));
-        var vLines = detectLineCentersFromProjection(colDark, colThresh, Math.max(6, Math.floor(W/160)));
-
-        if(hLines.length >= 2 && vLines.length >= 2){
-          var top = hLines[0], bottom = hLines[hLines.length-1];
-          var left = vLines[0], right = vLines[vLines.length-1];
-          if((bottom - top) >= 180 && (right - left) >= 120){
-            var rowCenters = {};
-            for(var rr=1; rr<=15; rr++){
-              var y0 = top + ((bottom - top) * rr / 16);
-              var y1 = top + ((bottom - top) * (rr+1) / 16);
-              rowCenters[rr] = (y0 + y1) / 2;
-            }
-
-            function colMid(cStart){
-              var x0 = left + ((right - left) * cStart / 5);
-              var x1 = left + ((right - left) * (cStart+1) / 5);
-              return (x0 + x1) / 2;
-            }
-
-            geo = {
-              rowCenters: rowCenters,
-              colCenters: {
-                "ab-bot": colMid(1),
-                "cd-bot": colMid(2),
-                "ab-top": colMid(3),
-                "cd-top": colMid(4)
-              },
-              rowGap: Math.max(20, (bottom - top) / 16),
-              colSpacing: Math.max(24, (right - left) / 5)
-            };
-          }
-        }
-      }catch(e){}
-    }
-
-    if(!geo) return { filled: 0, values: [] };
-
-    var colKeys = ["ab-bot","cd-bot","ab-top","cd-top"];
-    var out = { "ab-bot":[], "cd-bot":[], "ab-top":[], "cd-top":[] };
-    var filled = 0;
-    var rowGap = Math.max(24, geo.rowGap || (H / 16));
-    var colSpacing = Math.max(28, geo.colSpacing || (W / 6));
-    var total = 60;
-    var step = 0;
-
-    function makeUpscaledCanvas(srcCanvas, factor){
-      try{
-        var f = Math.max(1, Number(factor) || 1);
-        var up = document.createElement("canvas");
-        up.width = Math.max(1, Math.round(srcCanvas.width * f));
-        up.height = Math.max(1, Math.round(srcCanvas.height * f));
-        var uctx = up.getContext("2d", { willReadFrequently: true });
-        if(!uctx) return null;
-        uctx.imageSmoothingEnabled = false;
-        uctx.drawImage(srcCanvas, 0, 0, up.width, up.height);
-        return up;
-      }catch(e){
-        return null;
-      }
-    }
-
-    async function recognizeGuidedCellTemp(cellCanvas){
-      var variants = [cellCanvas];
-      var up2 = makeUpscaledCanvas(cellCanvas, 2);
-      if(up2) variants.push(up2);
-
-      var picks = [];
-      for(var vi=0; vi<variants.length; vi++){
-        var vCanvas = variants[vi];
-        for(var mi=0; mi<2; mi++){
-          var psm = mi===0 ? "8" : "7";
-          var rr = await Tesseract.recognize(vCanvas, "eng", {
-            tessedit_pageseg_mode: psm,
-            tessedit_char_whitelist: "0123456789ODILSZGQ",
-            preserve_interword_spaces: "1"
-          });
-          var txt = (rr && rr.data && rr.data.text) ? rr.data.text : "";
-          var conf = Number(rr && rr.data && rr.data.confidence);
-          if(!isFinite(conf)) conf = 0;
-          var val = parseLikelyTempFromToken(txt);
-          if(!isFinite(val)) continue;
-
-          var score = 0;
-          score += Math.max(-10, Math.min(99, conf)) / 40;
-          if(val >= 700 && val <= 1400) score += 2.1;
-          if(val >= 800 && val <= 1200) score += 1.1;
-          if(val < 650) score -= 1.2;
-          if(val < 500) score -= 0.8;
-          if(psm === "8") score += 0.1;
-          if(vi > 0) score += 0.2;
-          if(String(txt || "").replace(/[^A-Z0-9]/ig, "").length >= 3) score += 0.15;
-
-          picks.push({ val: val, score: score });
-        }
-      }
-
-      if(!picks.length) return NaN;
-      picks.sort(function(a,b){ return b.score - a.score; });
-      var best = picks[0];
-
-      if(best.val < 700){
-        for(var pi=0; pi<picks.length; pi++){
-          var p = picks[pi];
-          if(p.val >= 700 && p.score >= (best.score - 0.85)){
-            best = p;
-            break;
-          }
-        }
-      }
-
-      return isFinite(best.val) ? best.val : NaN;
-    }
-
-    for(var r=1; r<=15; r++){
-      for(var ci=0; ci<4; ci++){
-        step++;
-        if(step % 6 === 0) setTstOcrStatus("Deep OCR cells " + step + "/" + total + "...", "#7ec8f0");
-
-        var key = colKeys[ci];
-        var cx = geo.colCenters[key];
-        var cy = geo.rowCenters[r];
-        if(!isFinite(cx) || !isFinite(cy)){
-          out[key].push("");
-          continue;
-        }
-
-        var halfW = Math.max(14, Math.round(colSpacing * 0.32));
-        var halfH = Math.max(10, Math.round(rowGap * 0.28));
-        var x0 = Math.max(0, Math.round(cx - halfW));
-        var x1 = Math.min(W, Math.round(cx + halfW));
-        var y0 = Math.max(0, Math.round(cy - halfH));
-        var y1 = Math.min(H, Math.round(cy + halfH));
-        if(x1 - x0 < 8 || y1 - y0 < 8){
-          out[key].push("");
-          continue;
-        }
-
-        var mx = Math.max(1, Math.round((x1 - x0) * 0.12));
-        var my = Math.max(1, Math.round((y1 - y0) * 0.16));
-        var sx = Math.min(W-1, Math.max(0, x0 + mx));
-        var sy = Math.min(H-1, Math.max(0, y0 + my));
-        var sw = Math.max(1, Math.min(W - sx, (x1 - x0) - mx*2));
-        var sh = Math.max(1, Math.min(H - sy, (y1 - y0) - my*2));
-        if(sw < 8 || sh < 8){
-          out[key].push("");
-          continue;
-        }
-
-        var cell = document.createElement("canvas");
-        cell.width = sw;
-        cell.height = sh;
-        var cctx = cell.getContext("2d", { willReadFrequently: true });
-        if(!cctx){
-          out[key].push("");
-          continue;
-        }
-        cctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
-
-        var id = cctx.getImageData(0, 0, sw, sh);
-        var d = id.data;
-        var sum = 0;
-        for(var i=0; i<d.length; i+=4){
-          var g = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
-          sum += g;
-        }
-        var avg = sum / (d.length/4);
-        var thr = Math.max(80, Math.min(210, avg - 12));
-        var dark = 0;
-        for(var j=0; j<d.length; j+=4){
-          var gg = Math.round(0.299*d[j] + 0.587*d[j+1] + 0.114*d[j+2]);
-          var bw = gg < thr ? 0 : 255;
-          if(bw === 0) dark++;
-          d[j] = bw; d[j+1] = bw; d[j+2] = bw; d[j+3] = 255;
-        }
-        var darkRatio = dark / Math.max(1, d.length/4);
-        if(darkRatio < 0.015){
-          out[key].push("");
-          continue;
-        }
-        cctx.putImageData(id, 0, 0);
-
-        var val = await recognizeGuidedCellTemp(cell);
-
-        if(isFinite(val)){
-          out[key].push(String(val));
-          filled++;
-        }else{
-          out[key].push("");
-        }
-      }
-    }
-
-    /* Drop obvious low outliers if we already detected high-temperature values. */
-    var anyHigh = false;
-    colKeys.forEach(function(k){
-      for(var i=0; i<out[k].length; i++){
-        var v = Number(out[k][i] || "");
-        if(isFinite(v) && v >= 700){ anyHigh = true; return; }
-      }
-    });
-    if(anyHigh){
-      filled = 0;
-      colKeys.forEach(function(k){
-        for(var i=0; i<out[k].length; i++){
-          var v = Number(out[k][i] || "");
-          if(isFinite(v) && v < 700) out[k][i] = "";
-          if(out[k][i]) filled++;
-        }
-      });
-    }
-
-    return { filled: filled, values: out["ab-bot"].concat(out["cd-bot"], out["ab-top"], out["cd-top"]) };
-  }finally{
-    URL.revokeObjectURL(url);
-  }
-}
-
-async function runOcrOnPdfFile(file){
-  var ok = await ensurePdfJsReady();
-  if(!ok) throw new Error("PDF reader library not loaded.");
-  if(window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions){
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
-  }
-
-  var buf = await file.arrayBuffer();
-  var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
-  var maxPages = Math.min(pdf.numPages, 2);
-
-  /* Fast path for digital PDFs: use embedded text before OCR */
-  var fastText = "";
-  try{
-    for(var p=1; p<=maxPages; p++){
-      var tPage = await pdf.getPage(p);
-      var tContent = await tPage.getTextContent();
-      var line = (tContent.items || []).map(function(it){ return it.str || ""; }).join(" ");
-      fastText += "\n" + line;
-    }
-    var quick = parseTstSheetOcr(fastText);
-    if((quick.values || []).filter(function(v){ return v !== ""; }).length >= 40){
-      return fastText;
-    }
-  }catch(e){}
-
-  /* OCR fallback for scanned/image PDFs */
-  var out = "";
-  for(var pageNo = 1; pageNo <= maxPages; pageNo++){
-    setTstOcrStatus("Reading PDF page " + pageNo + " / " + maxPages, "#7ec8f0");
-    var page = await pdf.getPage(pageNo);
-    var viewport = page.getViewport({ scale: 2 });
-    var canvas = document.createElement("canvas");
-    var ctx = canvas.getContext("2d", { alpha:false });
-    canvas.width = Math.ceil(viewport.width);
-    canvas.height = Math.ceil(viewport.height);
-    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-    var blob = await new Promise(function(resolve){ canvas.toBlob(resolve, "image/png"); });
-    var ocrRes = await runOcrOnImageBlob(blob);
-    out += "\n" + (ocrRes.text || "");
-  }
-  return out;
-}
-
-async function handleTstScanSelect(event){
-  var fileInput = document.getElementById("td-ocr-file");
-  var file = event && event.target && event.target.files ? event.target.files[0] : null;
-  if(!file || tdOcrBusy){
-    if(fileInput) fileInput.value = "";
-    return;
-  }
-
-  try{
-    setTstOcrBusy(true);
-    setTstOcrStatus("Preparing OCR...", "#7ec8f0");
-
-    /* Save uploaded TST source file with this entry (same purpose as old Attach PDF) */
-    tdPendingPdfFile = file;
-    tdPendingPdfAttachment = {
-      name: file.name || "tst-sheet",
-      size: file.size || 0,
-      type: file.type || "application/octet-stream",
-      uploadedAt: new Date().toISOString()
-    };
-    tdPendingPdfLoading = false;
-    updateTempPdfUI();
-
-    var isPdf = /\.pdf$/i.test(file.name || "") || file.type === "application/pdf";
-    var text = "";
-    var ocrData = null;
-    var parsed = { values: [], mode: "none" };
-    var filled = 0;
-
-    if(isPaidCloudOcrEnabled()){
-      try{
-        var provider = getTstCloudProvider();
-        var attempts = provider === "google"
-          ? [
-              { name: "google", label: "Google Vision", fn: runGoogleVisionOcrFile },
-              { name: "ocrspace", label: "OCR.space", fn: runCloudOcrFile }
-            ]
-          : [
-              { name: "ocrspace", label: "OCR.space", fn: runCloudOcrFile },
-              { name: "google", label: "Google Vision", fn: runGoogleVisionOcrFile }
-            ];
-
-        for(var ai=0; ai<attempts.length; ai++){
-          var at = attempts[ai];
-          if(at.name === "google"){
-            if(isPdf) continue;
-            if(!getTstGoogleVisionApiKey()) continue;
-            if(!canUseGoogleVisionThisMonth()){
-              var usage = getGoogleVisionUsageSummary();
-              setTstOcrStatus(
-                "Google Vision monthly cap reached (" + usage.used + "/" + usage.limit + ")",
-                "#f59e0b"
-              );
-              continue;
-            }
-          }
-
-          setTstOcrStatus(at.label + " OCR...", "#7ec8f0");
-          var cloudRes = await at.fn(file);
-          if(!cloudRes) continue;
-          if(!(cloudRes.text || (cloudRes.data && cloudRes.data.words && cloudRes.data.words.length))) continue;
-
-          var pCloud = parseTstSheetOcr(cloudRes.text || "", cloudRes.data || null);
-          var fCloud = fillTdPeepFieldsFromList(pCloud.values || [], true);
-          if(fCloud > filled){
-            filled = fCloud;
-            parsed = {
-              values: pCloud.values || [],
-              mode: at.name + "-" + (pCloud.mode || "ocr")
-            };
-          }
-          if(filled >= 45) break;
-        }
-      }catch(e){}
-    }
-
-    if(filled < 1){
-      setTstOcrStatus("Local OCR (free)...", "#7ec8f0");
-      if(isPdf){
-        text = await runOcrOnPdfFile(file);
-      }else{
-        setTstOcrStatus("Reading image...", "#7ec8f0");
-        var imgOcr = await runOcrOnImageBlob(file);
-        text = imgOcr && imgOcr.text ? imgOcr.text : "";
-        ocrData = imgOcr && imgOcr.data ? imgOcr.data : null;
-      }
-
-      var pLocal = parseTstSheetOcr(text, ocrData);
-      var fLocal = fillTdPeepFieldsFromList(pLocal.values || [], true);
-      if(fLocal > filled){
-        filled = fLocal;
-        parsed = pLocal;
-      }
-    }
-
-    /* Deep handwritten fallback for sparse/partial sheets (like manual grid photos). */
-    if(!isPdf && filled < 8){
-      try{
-        setTstOcrStatus("Deep guided OCR...", "#7ec8f0");
-        var g2 = await runGuidedTstCellOcrFromImage(file, ocrData);
-        var fg2 = fillTdPeepFieldsFromList(g2.values || [], true);
-        if(fg2 > filled){
-          filled = fg2;
-          parsed = { values: g2.values || [], mode: "guided-cell" };
-        }
-      }catch(e){}
-    }
-
-    if(!isPdf && filled < 1){
-      try{
-        setTstOcrStatus("Grid OCR fallback...", "#7ec8f0");
-        var g = await runGridTstOcrFromImage(file);
-        var fg = fillTdPeepFieldsFromList(g.values || [], true);
-        if(fg > filled){
-          filled = fg;
-          parsed = { values: g.values || [], mode: "grid" };
-        }
-      }catch(e){}
-    }
-
-    if(filled < 1){
-      setTstOcrStatus("Could not detect any values", "#fca5a5");
-      alert("OCR could not detect any TST value. Try a clearer top-angle photo, or upload PDF/scan with stronger contrast.");
-      return;
-    }
-
-    setTstOcrStatus("Filled " + filled + " cells (" + parsed.mode + ")", "#34d399");
-    showToast("✅ OCR filled " + filled + " TST cells. Source file is attached; press Save Entry.");
-  }catch(err){
-    setTstOcrStatus("OCR failed", "#fca5a5");
-    alert("TST OCR failed: " + (err && err.message ? err.message : err));
-  }finally{
-    if(fileInput) fileInput.value = "";
-    setTstOcrBusy(false);
-  }
-}
-
-var TST_FORMAT_XLSX_B64 = "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";
+var TST_FORMAT_XLSX_B64 =
+ "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";
 
 function downloadTstTemplate(){
   try{
@@ -10732,6 +8584,558 @@ function downloadTstTemplate(){
   }
 }
 
+var tdPdfOcrBusy = false;
+var TD_PDF_OCR_MAX_MB = 12;
+var TD_PDF_OCR_MIN_FILL_TARGET = 40;
+
+function setTstPdfOcrStatus(msg, color){
+  var st = document.getElementById("td-ocr-pdf-status");
+  if(!st) return;
+  st.textContent = msg || "PDF OCR idle";
+  st.style.color = color || "#94a3b8";
+}
+
+function setTstPdfOcrBusy(busy){
+  tdPdfOcrBusy = !!busy;
+  var btn = document.getElementById("td-ocr-pdf-btn");
+  if(!btn) return;
+  btn.disabled = tdPdfOcrBusy;
+  btn.style.opacity = tdPdfOcrBusy ? "0.72" : "1";
+  btn.style.cursor = tdPdfOcrBusy ? "not-allowed" : "pointer";
+  btn.textContent = tdPdfOcrBusy ? "⏳ Reading PDF..." : "📄 OCR PDF to TST";
+}
+
+function openTstPdfOcrPicker(){
+  if(tdPdfOcrBusy) return;
+  var input = document.getElementById("td-ocr-pdf-file");
+  if(input) input.click();
+}
+
+function normalizeTstOcrText(raw){
+  return String(raw || "")
+    .toUpperCase()
+    .replace(/\r/g, "\n")
+    .replace(/\t/g, " ")
+    .replace(/[|]/g, " ")
+    .replace(/[–—]/g, "-");
+}
+
+function parseTstLikelyTempFromToken(token){
+  var tk = String(token || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if(!tk) return NaN;
+  var digitCount = (tk.match(/\d/g) || []).length;
+  if(digitCount < 2) return NaN;
+  tk = tk
+    .replace(/[OQ]/g, "0")
+    .replace(/D/g, "0")
+    .replace(/[IL]/g, "1")
+    .replace(/Z/g, "2")
+    .replace(/S/g, "5")
+    .replace(/G/g, "6");
+  if(!/^\d{3,4}$/.test(tk)) return NaN;
+  var n = Number(tk);
+  return (isFinite(n) && n >= 100 && n <= 1800) ? n : NaN;
+}
+
+function parseTstLikelyRowNumber(token){
+  var tk = String(token || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if(!tk) return NaN;
+  tk = tk
+    .replace(/[OQ]/g, "0")
+    .replace(/[IL]/g, "1")
+    .replace(/Z/g, "2")
+    .replace(/S/g, "5");
+  if(!/^\d{1,2}$/.test(tk)) return NaN;
+  var n = Number(tk);
+  return (isFinite(n) && n >= 1 && n <= 15) ? n : NaN;
+}
+
+function parseTstTempNumbers(text){
+  var out = [];
+  var m = String(text || "").match(/-?\d+(?:[.,]\d+)?/g) || [];
+  for(var i=0; i<m.length; i++){
+    var token = m[i].replace(",", ".");
+    var v = Number(token);
+    if(!isFinite(v)) continue;
+    if(v >= 100 && v <= 1800) out.push(String(v));
+  }
+  return out;
+}
+
+function findFirstTstAliasIndex(text, aliases){
+  var best = -1;
+  for(var i=0; i<aliases.length; i++){
+    var p = text.indexOf(aliases[i]);
+    if(p >= 0 && (best < 0 || p < best)) best = p;
+  }
+  return best;
+}
+
+function parseTstRowWiseTable(text){
+  var txt = normalizeTstOcrText(text);
+  var rows = {};
+
+  function isTemp(v){ return isFinite(v) && v >= 100 && v <= 1800; }
+
+  var lines = txt.split("\n");
+  for(var i=0; i<lines.length; i++){
+    var ln = lines[i];
+    var nums = ln.match(/\d+(?:[.,]\d+)?/g) || [];
+    if(nums.length < 5) continue;
+
+    var rowNo = Number(String(nums[0]).replace(",", "."));
+    if(!(rowNo >= 1 && rowNo <= 15)) continue;
+
+    var vals = [];
+    for(var j=1; j<nums.length && vals.length<4; j++){
+      var v = Number(String(nums[j]).replace(",", "."));
+      if(isTemp(v)) vals.push(String(v));
+    }
+    if(vals.length === 4 && !rows[rowNo]) rows[rowNo] = vals;
+  }
+
+  var toks = (txt.match(/\d+(?:[.,]\d+)?/g) || []).map(function(t){
+    return Number(String(t).replace(",", "."));
+  });
+  for(var k=0; k+4<toks.length; k++){
+    var r = toks[k];
+    if(!(r >= 1 && r <= 15)) continue;
+    if(rows[r]) continue;
+    var v1=toks[k+1], v2=toks[k+2], v3=toks[k+3], v4=toks[k+4];
+    if(isTemp(v1) && isTemp(v2) && isTemp(v3) && isTemp(v4)){
+      rows[r] = [String(v1), String(v2), String(v3), String(v4)];
+    }
+  }
+
+  var abBot = [], cdBot = [], abTop = [], cdTop = [];
+  var rowsFound = 0;
+  for(var row=1; row<=15; row++){
+    var rv = rows[row];
+    if(rv && rv.length === 4){
+      rowsFound++;
+      abBot.push(rv[0]);
+      cdBot.push(rv[1]);
+      abTop.push(rv[2]);
+      cdTop.push(rv[3]);
+    }else{
+      abBot.push("");
+      cdBot.push("");
+      abTop.push("");
+      cdTop.push("");
+    }
+  }
+
+  return { rowsFound: rowsFound, values: abBot.concat(cdBot, abTop, cdTop) };
+}
+
+function parseTstSheetText(ocrText){
+  var txt = normalizeTstOcrText(ocrText);
+  var rowWise = parseTstRowWiseTable(txt);
+  if(rowWise.rowsFound >= 10){
+    return { values: rowWise.values, mode: "row-wise" };
+  }
+
+  var sections = [
+    { key:"ab-bot", aliases:["AB BOT","AB BOT.","AB BOTTOM","A8 BOT","AB B0T"] },
+    { key:"cd-bot", aliases:["CD BOT","CD BOT.","CD BOTTOM","CO BOT","CD B0T"] },
+    { key:"ab-top", aliases:["AB TOP","A8 TOP","AB T0P"] },
+    { key:"cd-top", aliases:["CD TOP","CO TOP","CD T0P"] }
+  ];
+
+  var found = [];
+  sections.forEach(function(s){
+    var idx = findFirstTstAliasIndex(txt, s.aliases);
+    if(idx >= 0) found.push({ key:s.key, idx:idx });
+  });
+  found.sort(function(a,b){ return a.idx - b.idx; });
+
+  var map = {"ab-bot":[],"cd-bot":[],"ab-top":[],"cd-top":[]};
+  for(var i=0; i<found.length; i++){
+    var cur = found[i];
+    var end = (i+1 < found.length) ? found[i+1].idx : txt.length;
+    var seg = txt.slice(cur.idx, end);
+    map[cur.key] = parseTstTempNumbers(seg).slice(0, 15);
+  }
+
+  var keys = ["ab-bot","cd-bot","ab-top","cd-top"];
+  var allComplete = keys.every(function(k){ return map[k].length >= 15; });
+  if(allComplete){
+    var combined = [];
+    keys.forEach(function(k){ combined = combined.concat(map[k].slice(0,15)); });
+    return { values: combined, mode: "sectioned" };
+  }
+
+  var global = parseTstTempNumbers(txt);
+  if(global.length >= 60) return { values: global.slice(0,60), mode: "global" };
+  return { values: rowWise.values || [], mode: "insufficient" };
+}
+
+function getTdPeepFieldIds(){
+  var ids = [];
+  ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
+    for(var ph=1; ph<=15; ph++) ids.push("td-ph-" + rowKey + "-" + ph);
+  });
+  return ids;
+}
+
+function sanitizeTstValue(raw){
+  if(raw === null || raw === undefined) return "";
+  var token = String(raw).trim();
+  if(!token) return "";
+  var temp = parseTstLikelyTempFromToken(token);
+  if(isFinite(temp)) return String(temp);
+  var n = Number(token);
+  if(isFinite(n) && n >= 100 && n <= 1800) return String(Math.round(n));
+  return "";
+}
+
+function fillTdPeepFieldsFromList(values, onlyNonEmpty){
+  var ids = getTdPeepFieldIds();
+  var n = Math.min(ids.length, Array.isArray(values) ? values.length : 0);
+  var written = 0;
+  for(var i=0; i<n; i++){
+    var el = document.getElementById(ids[i]);
+    if(!el) continue;
+    var val = sanitizeTstValue(values[i]);
+    if(onlyNonEmpty && val === "") continue;
+    el.value = val;
+    if(val !== "") written++;
+  }
+  return written;
+}
+
+function countFilledTstValues(values){
+  if(!Array.isArray(values)) return 0;
+  var count = 0;
+  for(var i=0; i<values.length; i++){
+    if(sanitizeTstValue(values[i])) count++;
+  }
+  return count;
+}
+
+function normalizeTstArray(values, len){
+  var out = [];
+  var max = Math.min(Array.isArray(values) ? values.length : 0, len || 60);
+  for(var i=0; i<max; i++) out.push(sanitizeTstValue(values[i]));
+  while(out.length < (len || 60)) out.push("");
+  return out.slice(0, len || 60);
+}
+
+function extractTstValuesFromShape(payload){
+  if(!payload) return [];
+
+  if(Array.isArray(payload)){
+    if(payload.length >= 60 && !Array.isArray(payload[0])){
+      return normalizeTstArray(payload, 60);
+    }
+    if(payload.length >= 15 && Array.isArray(payload[0]) && payload[0].length >= 4){
+      var abBot = [], cdBot = [], abTop = [], cdTop = [];
+      for(var r=0; r<15; r++){
+        var row = payload[r] || [];
+        abBot.push(sanitizeTstValue(row[0]));
+        cdBot.push(sanitizeTstValue(row[1]));
+        abTop.push(sanitizeTstValue(row[2]));
+        cdTop.push(sanitizeTstValue(row[3]));
+      }
+      return abBot.concat(cdBot, abTop, cdTop);
+    }
+    return [];
+  }
+
+  if(typeof payload !== "object") return [];
+
+  function pickArray(obj, keys){
+    for(var i=0; i<keys.length; i++){
+      var v = obj[keys[i]];
+      if(Array.isArray(v)) return v;
+    }
+    return null;
+  }
+
+  function fromColumnMap(obj){
+    var abBot = pickArray(obj, ["ab-bot","ab_bot","abBot","AB_BOT","abbot"]);
+    var cdBot = pickArray(obj, ["cd-bot","cd_bot","cdBot","CD_BOT","cdbot"]);
+    var abTop = pickArray(obj, ["ab-top","ab_top","abTop","AB_TOP","abtop"]);
+    var cdTop = pickArray(obj, ["cd-top","cd_top","cdTop","CD_TOP","cdtop"]);
+    if(abBot && cdBot && abTop && cdTop){
+      return normalizeTstArray(abBot, 15).concat(
+        normalizeTstArray(cdBot, 15),
+        normalizeTstArray(abTop, 15),
+        normalizeTstArray(cdTop, 15)
+      );
+    }
+    return [];
+  }
+
+  var direct = fromColumnMap(payload);
+  if(direct.length) return direct;
+
+  if(Array.isArray(payload.values) && payload.values.length >= 60){
+    return normalizeTstArray(payload.values, 60);
+  }
+  if(Array.isArray(payload.table_filled) && payload.table_filled.length >= 60){
+    return normalizeTstArray(payload.table_filled, 60);
+  }
+
+  if(payload.details && typeof payload.details === "object"){
+    var nested = extractTstValuesFromShape(payload.details);
+    if(nested.length) return nested;
+  }
+  if(payload.data && typeof payload.data === "object"){
+    var nestedData = extractTstValuesFromShape(payload.data);
+    if(nestedData.length) return nestedData;
+  }
+  return [];
+}
+
+function extractTstTextFromPayload(payload){
+  if(!payload || typeof payload !== "object") return "";
+  var parts = [];
+  function pushText(v){
+    if(typeof v === "string"){
+      var t = v.trim();
+      if(t) parts.push(t);
+    }
+  }
+
+  pushText(payload.text);
+  pushText(payload.ocr_text);
+  pushText(payload.raw_text);
+  pushText(payload.parsed_text);
+
+  if(Array.isArray(payload.ParsedResults)){
+    payload.ParsedResults.forEach(function(pr){
+      if(pr && typeof pr === "object") pushText(pr.ParsedText);
+    });
+  }
+
+  if(payload.details && typeof payload.details === "object"){
+    pushText(payload.details.text);
+    pushText(payload.details.ocr_text);
+    pushText(payload.details.raw_text);
+    pushText(payload.details.parsed_text);
+    if(Array.isArray(payload.details.ParsedResults)){
+      payload.details.ParsedResults.forEach(function(pr){
+        if(pr && typeof pr === "object") pushText(pr.ParsedText);
+      });
+    }
+  }
+
+  if(payload.data && typeof payload.data === "object"){
+    pushText(payload.data.text);
+    pushText(payload.data.ocr_text);
+    pushText(payload.data.raw_text);
+    pushText(payload.data.parsed_text);
+  }
+
+  return parts.join("\n").trim();
+}
+
+function toBase64FromDataUrl(dataUrl){
+  var str = String(dataUrl || "");
+  var idx = str.indexOf(",");
+  if(idx < 0) return "";
+  return str.slice(idx + 1).trim();
+}
+
+function dedupeStrings(items){
+  var seen = {};
+  var out = [];
+  for(var i=0; i<items.length; i++){
+    var v = String(items[i] || "").trim();
+    if(!v || seen[v]) continue;
+    seen[v] = true;
+    out.push(v);
+  }
+  return out;
+}
+
+function getTstOcrRelayBaseCandidates(){
+  var bases = [];
+  try{
+    if(typeof getRelayBaseUrl === "function"){
+      var relayBase = getRelayBaseUrl();
+      if(relayBase) bases.push(relayBase);
+    }
+  }catch(e){}
+  bases.push("https://scada-relay.iocscadasync.workers.dev");
+  return dedupeStrings(bases);
+}
+
+function getTstOcrRelayPathCandidates(){
+  return ["/scada/tst/ocr", "/scada/openai/ocr", "/scada/vision/ocr", "/scada/ocr"];
+}
+
+async function fetchJsonWithTimeout(url, options, timeoutMs){
+  var ms = timeoutMs || 15000;
+  if(typeof fetchWithTimeout === "function"){
+    return await fetchWithTimeout(url, options, ms);
+  }
+  if(typeof fetch !== "function") throw new Error("fetch_unavailable");
+  return await fetch(url, options);
+}
+
+async function runRelayTstOcrOnDataUrl(dataUrl, fileName){
+  var imageBase64 = toBase64FromDataUrl(dataUrl);
+  if(!imageBase64) return null;
+
+  var mime = /^data:([^;]+)/i.test(String(dataUrl || "")) ? RegExp.$1 : "image/jpeg";
+  var bases = getTstOcrRelayBaseCandidates();
+  var paths = getTstOcrRelayPathCandidates();
+  var best = null;
+  var bestCount = 0;
+
+  for(var bi=0; bi<bases.length; bi++){
+    var base = bases[bi];
+    for(var pi=0; pi<paths.length; pi++){
+      var url = base + paths[pi];
+      try{
+        var headers = (typeof makeRelayHeaders === "function")
+          ? makeRelayHeaders("POST")
+          : { "Content-Type":"application/json", "Accept":"application/json" };
+        if(!headers["Content-Type"]) headers["Content-Type"] = "application/json";
+        if(!headers["Accept"]) headers["Accept"] = "application/json";
+
+        var res = await fetchJsonWithTimeout(url, {
+          method: "POST",
+          cache: "no-store",
+          headers: headers,
+          body: JSON.stringify({
+            image_base64: imageBase64,
+            mime_type: mime,
+            file_name: fileName || "tst.pdf"
+          })
+        }, 16000);
+
+        if(!res || !res.ok) continue;
+        var body = await res.json().catch(function(){ return null; });
+        if(!body || typeof body !== "object") continue;
+
+        var directValues = extractTstValuesFromShape(body);
+        var directCount = countFilledTstValues(directValues);
+
+        var textPayload = extractTstTextFromPayload(body);
+        var parsed = parseTstSheetText(textPayload);
+        var parsedValues = parsed.values || [];
+        var parsedCount = countFilledTstValues(parsedValues);
+
+        var currentValues = directCount >= parsedCount ? directValues : parsedValues;
+        var currentCount = Math.max(directCount, parsedCount);
+        var currentMode = directCount >= parsedCount
+          ? ("relay-values@" + paths[pi])
+          : ("relay-text-" + (parsed.mode || "ocr") + "@" + paths[pi]);
+
+        if(currentCount > bestCount){
+          best = { values: normalizeTstArray(currentValues, 60), mode: currentMode };
+          bestCount = currentCount;
+        }
+        if(bestCount >= TD_PDF_OCR_MIN_FILL_TARGET) return best;
+      }catch(e){}
+    }
+  }
+  return best;
+}
+
+async function ensurePdfJsReady(){
+  if(!window.pdfjsLib) return false;
+  if(window.pdfjsLib.GlobalWorkerOptions){
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  }
+  return true;
+}
+
+async function readPdfTextAndImages(file, maxPages){
+  var ready = await ensurePdfJsReady();
+  if(!ready) throw new Error("PDF reader is not available.");
+
+  var buf = await file.arrayBuffer();
+  var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  var pages = Math.min(Math.max(1, Number(maxPages || 2)), Math.max(1, pdf.numPages || 1));
+
+  var text = "";
+  var images = [];
+
+  for(var p=1; p<=pages; p++){
+    setTstPdfOcrStatus("Reading PDF page " + p + "/" + pages + "...", "#7ec8f0");
+    var page = await pdf.getPage(p);
+
+    try{
+      var tContent = await page.getTextContent();
+      var line = (tContent.items || []).map(function(it){ return String(it.str || ""); }).join(" ");
+      text += "\n" + line;
+    }catch(e){}
+
+    var viewport = page.getViewport({ scale: 2 });
+    var canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    var ctx = canvas.getContext("2d", { alpha:false });
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+    images.push(canvas.toDataURL("image/jpeg", 0.92));
+  }
+  return { text: text.trim(), images: images, pages: pages };
+}
+
+async function handleTstPdfOcrSelect(event){
+  var fileInput = document.getElementById("td-ocr-pdf-file");
+  var file = event && event.target && event.target.files ? event.target.files[0] : null;
+  if(!file || tdPdfOcrBusy){
+    if(fileInput) fileInput.value = "";
+    return;
+  }
+
+  try{
+    var isPdf = (file.type === "application/pdf") || /\.pdf$/i.test(file.name || "");
+    if(!isPdf){
+      alert("Please upload PDF file only.");
+      return;
+    }
+    if((file.size || 0) > TD_PDF_OCR_MAX_MB * 1024 * 1024){
+      alert("PDF is too large. Please keep it under " + TD_PDF_OCR_MAX_MB + " MB.");
+      return;
+    }
+
+    setTstPdfOcrBusy(true);
+    setTstPdfOcrStatus("Starting PDF OCR...", "#7ec8f0");
+
+    var extracted = await readPdfTextAndImages(file, 2);
+
+    var textParsed = parseTstSheetText(extracted.text || "");
+    var bestValues = normalizeTstArray(textParsed.values || [], 60);
+    var bestCount = countFilledTstValues(bestValues);
+    var bestMode = "pdf-text-" + (textParsed.mode || "parse");
+
+    if(bestCount < TD_PDF_OCR_MIN_FILL_TARGET && Array.isArray(extracted.images)){
+      for(var i=0; i<extracted.images.length; i++){
+        setTstPdfOcrStatus("OCR fallback page " + (i+1) + "/" + extracted.images.length + "...", "#7ec8f0");
+        var relayRes = await runRelayTstOcrOnDataUrl(extracted.images[i], file.name || ("tst-page-" + (i+1) + ".jpg"));
+        if(relayRes && countFilledTstValues(relayRes.values) > bestCount){
+          bestValues = normalizeTstArray(relayRes.values || [], 60);
+          bestCount = countFilledTstValues(bestValues);
+          bestMode = relayRes.mode || "relay-ocr";
+        }
+        if(bestCount >= TD_PDF_OCR_MIN_FILL_TARGET) break;
+      }
+    }
+
+    var written = fillTdPeepFieldsFromList(bestValues, true);
+    if(written < 1){
+      setTstPdfOcrStatus("No TST values detected", "#fca5a5");
+      alert("Could not detect TST values from this PDF. Try a clearer scan or a proper TST sheet PDF.");
+      return;
+    }
+
+    setTstPdfOcrStatus("Filled " + written + " cells (" + bestMode + ")", "#34d399");
+    showToast("✅ OCR filled " + written + " TST cells from PDF.");
+  }catch(err){
+    setTstPdfOcrStatus("PDF OCR failed", "#fca5a5");
+    alert("PDF OCR failed: " + (err && err.message ? err.message : err));
+  }finally{
+    if(fileInput) fileInput.value = "";
+    setTstPdfOcrBusy(false);
+  }
+}
+
 /* Initialize datetime field with current time */
 (function initTempDataTab(){
   document.addEventListener("DOMContentLoaded", function(){
@@ -10747,8 +9151,7 @@ function downloadTstTemplate(){
       if(saved) tempDataEntries = JSON.parse(saved);
       renderTempDataTable();
     } catch(e){}
-    updateTempPdfUI();
-    setTstOcrStatus("", "#94a3b8");
+    setTstPdfOcrStatus("PDF OCR idle", "#94a3b8");
   });
 })();
 
@@ -10775,37 +9178,17 @@ function editTempEntry(idx){
     }
   });
 
-  tdPendingPdfFile = null;
-  tdPendingPdfLoading = false;
-  tdPendingPdfAttachment = ent.pdfAttachment ? {
-    name: ent.pdfAttachment.name || "Attachment",
-    storagePath: ent.pdfAttachment.storagePath || "",
-    publicUrl: ent.pdfAttachment.publicUrl || ""
-  } : null;
-  updateTempPdfUI();
-
   setTempEditMode(idx);
   showToast("✏️ Entry loaded for editing. Update values and click Update Entry.");
   try{ document.getElementById("tab-tempdata").scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){}
 }
 
-async function saveTempData(){
+function saveTempData(){
   var dt    = document.getElementById("td-datetime").value;
   var shift = document.getElementById("td-shift").value;
 
   if(!dt){ alert("Please select a date and time."); return; }
   if(!shift){ alert("Please select a shift (Morning / Evening / Night)."); return; }
-  if(tdSavingWithPdf){ return; }
-  if(tdPendingPdfLoading){ alert("PDF is still loading. Please wait a moment."); return; }
-
-  var existingEntry = (tdEditingIndex >= 0) ? tempDataEntries[tdEditingIndex] : null;
-  var uploadedPdf = null;
-  if(tdPendingPdfFile){
-    setTempSaveBusy(true);
-    uploadedPdf = await uploadTempEntryPdf(tdPendingPdfFile, dt, shift);
-    setTempSaveBusy(false);
-    if(!uploadedPdf) return;
-  }
 
   var entry = {
     dt: dt,
@@ -10818,8 +9201,7 @@ async function saveTempData(){
     preRefMax: document.getElementById("td-prereformer-max").value,
     preRefMin: document.getElementById("td-prereformer-min").value,
     methaneSlip: document.getElementById("td-methane-slip").value,
-    peepHoles: {},
-    pdfAttachment: uploadedPdf || (existingEntry ? (existingEntry.pdfAttachment || null) : null)
+    peepHoles: {}
   };
 
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
@@ -10844,36 +9226,10 @@ async function saveTempData(){
   notifyAndBroadcast("tst_data_saved", wasEdit ? "TST Data Updated" : "TST Data Saved", wasEdit ? "A TST entry was updated successfully." : "A new TST entry was saved successfully.", "tst_data_saved", 5000);
 }
 
-async function deleteTempEntryPdfFromStorage(pdfAttachment){
-  if(!pdfAttachment || !pdfAttachment.storageBucket || !pdfAttachment.storagePath) return {ok:true, skipped:true};
-  if(!supaClient) return {ok:false, reason:"Supabase client unavailable"};
-  try{
-    var res = await supaClient.storage
-      .from(pdfAttachment.storageBucket)
-      .remove([pdfAttachment.storagePath]);
-    if(res && res.error){
-      return {ok:false, reason:res.error.message || "Unknown storage error"};
-    }
-    return {ok:true};
-  }catch(err){
-    return {ok:false, reason:(err && err.message) ? err.message : String(err)};
-  }
-}
-
-async function deleteTempEntry(idx){
+function deleteTempEntry(idx){
   var ent = tempDataEntries[idx];
   if(!ent) return;
-
-  var hasPdf = !!(ent.pdfAttachment && (ent.pdfAttachment.storagePath || ent.pdfAttachment.publicUrl || ent.pdfAttachment.dataUrl));
-  var msg = hasPdf
-    ? "Delete this entry and its attached PDF?"
-    : "Delete this entry?";
-  if(!confirm(msg)) return;
-
-  var pdfDeleteResult = {ok:true, skipped:true};
-  if(hasPdf){
-    pdfDeleteResult = await deleteTempEntryPdfFromStorage(ent.pdfAttachment);
-  }
+  if(!confirm("Delete this entry?")) return;
 
   tempDataEntries.splice(idx,1);
   if(tdEditingIndex === idx){
@@ -10884,12 +9240,7 @@ async function deleteTempEntry(idx){
   }
   try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); } catch(e){}
   renderTempDataTable();
-
-  if(hasPdf && !pdfDeleteResult.ok){
-    showToast("⚠ Entry deleted, but PDF removal failed in cloud");
-  }else{
-    showToast("🗑 Entry deleted");
-  }
+  showToast("🗑 Entry deleted");
 }
 
 function clearTempData(){
@@ -10908,7 +9259,6 @@ function clearTempData(){
     var now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
     dtInput.value=now.toISOString().slice(0,16);
   }
-  clearTempPdfAttachment(true);
 }
 
 function phMinMax(entry, rk){
@@ -10951,9 +9301,6 @@ function renderTempDataTable(){
       + '<td style="text-align:center;">'
         + '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">'
           + '<button onclick="editTempEntry(' + i + ')" style="background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.45);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Edit entry">✏️ Edit</button>'
-          + (ent.pdfAttachment && (ent.pdfAttachment.publicUrl || ent.pdfAttachment.dataUrl || ent.pdfAttachment.storagePath)
-              ? '<button onclick="openTempEntryPdf(' + i + ')" style="background:rgba(96,200,255,0.12);color:#7ec8f0;border:1px solid rgba(96,200,255,0.38);border-radius:4px;font-size:11px;padding:4px 9px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="View attached file">📎 File</button>'
-              : '')
           + '<button onclick="deleteTempEntry(' + i + ')" style="background:rgba(192,57,43,0.2);color:#f87171;border:1px solid rgba(192,57,43,0.4);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Delete entry">🗑 Del</button>'
         + '</div>'
       + '</td>'
@@ -11054,7 +9401,6 @@ function tempToColorInline(val, minT, maxT){
   return "rgb("+r+","+g+","+b+")";
 }
 
-/* Fix renderTempDataTable to show ALL entries, not just 3 */
 </script>
 
 <!-- ====================================================
@@ -11203,9 +9549,7 @@ function tempToColorInline(val, minT, maxT){
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
-      navigator.serviceWorker.register("./sw.js").catch(function(err){
-        console.log("Service worker registration failed:", err);
-      });
+      navigator.serviceWorker.register("./sw.js").catch(function(){});
     });
   }
 
@@ -11225,9 +9569,7 @@ function tempToColorInline(val, minT, maxT){
       deferredInstallPrompt.prompt();
       try {
         await deferredInstallPrompt.userChoice;
-      } catch (err) {
-        console.log("Install prompt closed:", err);
-      }
+      } catch (err) {}
       deferredInstallPrompt = null;
     });
   });
