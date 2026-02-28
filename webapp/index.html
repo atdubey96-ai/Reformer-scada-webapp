@@ -4777,6 +4777,11 @@ function requestHeatMapRender(delayMs){
             🎙️ Voice Fill TST
           </button>
           <span id="td-voice-fill-status" style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">Voice idle</span>
+          <button type="button" id="td-ramp-fill-btn" onclick="fillTstRampPreset930()"
+            style="background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.45);color:#fbbf24;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
+            📈 Ramp Fill 930
+          </button>
+          <span id="td-ramp-fill-status" style="max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">Ramp preset idle</span>
           <!-- Save / Clear -->
           <button id="td-save-btn" onclick="saveTempData()"
             style="background:linear-gradient(90deg,#d95008,#F37022);border:none;color:#fff;padding:9px 20px;border-radius:7px;font-size:14px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.5px;box-shadow:0 3px 14px rgba(243,112,34,0.4);">
@@ -8818,6 +8823,7 @@ var tdVoiceFillWritten = 0;
 var tdVoiceFillUseFocusedOrder = false;
 var TD_VOICE_FILL_MIN_TEMP = 100;
 var TD_VOICE_FILL_MAX_TEMP = 1800;
+var TD_RAMP_PRESET_BASE = 930;
 
 function setTstPdfOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-pdf-status");
@@ -8855,6 +8861,52 @@ function setTstVoiceFillButtonState(isListening){
   btn.style.background = listening ? "rgba(239,68,68,0.16)" : "rgba(16,185,129,0.14)";
   btn.style.borderColor = listening ? "rgba(248,113,113,0.55)" : "rgba(16,185,129,0.45)";
   btn.style.color = listening ? "#fecaca" : "#6ee7b7";
+}
+
+function setTstRampFillStatus(msg, color){
+  var st = document.getElementById("td-ramp-fill-status");
+  if(!st) return;
+  st.textContent = msg || "Ramp preset idle";
+  st.style.color = color || "#94a3b8";
+}
+
+function countFilledTstInputCells(){
+  var ids = getTdPeepFieldIds();
+  var cnt = 0;
+  for(var i=0; i<ids.length; i++){
+    var el = document.getElementById(ids[i]);
+    if(!el) continue;
+    if(String(el.value || "").trim() !== "") cnt++;
+  }
+  return cnt;
+}
+
+function fillTstRampPreset930(){
+  if(tdPdfOcrBusy){
+    alert("PDF OCR is in progress. Please wait until it completes.");
+    return;
+  }
+  if(tdVoiceFillListening){
+    try{ stopTstVoiceInput(); }catch(e){}
+  }
+
+  var existing = countFilledTstInputCells();
+  if(existing > 0){
+    var ok = confirm("This will overwrite current TST values and set all 60 cells to 930. Continue?");
+    if(!ok){
+      setTstRampFillStatus("Ramp fill cancelled", "#fbbf24");
+      return;
+    }
+  }
+
+  var presetVal = sanitizeTstValue(TD_RAMP_PRESET_BASE);
+  if(!presetVal) presetVal = "930";
+  var values = [];
+  for(var i=0; i<60; i++) values.push(presetVal);
+
+  var written = fillTdPeepFieldsFromList(values, false);
+  setTstRampFillStatus("Preset applied: " + written + "/60 @ " + presetVal, "#34d399");
+  showToast("📈 TST ramp preset applied (" + written + " cells @ " + presetVal + ").");
 }
 
 function getTstVoiceRecognitionCtor(){
@@ -9607,6 +9659,7 @@ async function handleTstPdfOcrSelect(event){
     }else{
       setTstVoiceFillStatus("Voice not supported in this browser", "#fca5a5");
     }
+    setTstRampFillStatus("Ramp preset idle", "#94a3b8");
   });
 })();
 
