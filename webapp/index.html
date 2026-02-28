@@ -1116,11 +1116,77 @@ td.C{background:#1e293b;}
    WALL LAYOUT
 ==================================================== */
 .wall-container{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px;}
-@media(max-width:900px){.wall-container{grid-template-columns:1fr;}}
+@media(max-width:900px){
+  .wall-container{grid-template-columns:1fr;padding:12px;}
+  #analysisContainer{grid-template-columns:1fr;}
+  .analytics{margin:12px;padding:14px;}
+}
 .wall{background:#1e293b;padding:14px;border-radius:8px;border:1px solid #334155;overflow:hidden;}
 .wall-alarm{
   padding:6px 10px;margin-bottom:8px;
   font-weight:700;text-align:center;border-radius:4px;font-size:13px;
+}
+.burner-mobile-wall-switch{
+  display:none;
+  margin:12px 20px 0;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid rgba(126,200,240,0.28);
+  background:rgba(15,31,56,0.62);
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.burner-mobile-wall-label{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.7px;
+  color:#7ec8f0;
+  margin-right:2px;
+  text-transform:uppercase;
+}
+.burner-mobile-wall-btn{
+  border:1px solid #334155;
+  background:rgba(255,255,255,0.03);
+  color:#cbd5e1;
+  border-radius:6px;
+  padding:7px 10px;
+  font-size:12px;
+  font-weight:700;
+  font-family:'Rajdhani',sans-serif;
+  cursor:pointer;
+  letter-spacing:0.3px;
+}
+.burner-mobile-wall-btn:hover{
+  border-color:#F37022;
+  color:#F37022;
+  background:rgba(243,112,34,0.08);
+}
+.burner-mobile-wall-btn.burner-mobile-wall-btn-active{
+  border-color:#F37022;
+  color:#F37022;
+  background:rgba(243,112,34,0.16);
+  box-shadow:0 0 0 1px rgba(243,112,34,0.18) inset;
+}
+body.light-theme .burner-mobile-wall-switch{
+  border-color:#b8cde8;
+  background:rgba(255,255,255,0.75);
+}
+body.light-theme .burner-mobile-wall-label{color:#2a4a6a;}
+body.light-theme .burner-mobile-wall-btn{
+  border-color:#b8cde8;
+  color:#1e3a5a;
+  background:rgba(255,255,255,0.7);
+}
+body.light-theme .burner-mobile-wall-btn:hover{
+  border-color:#F37022;
+  color:#F37022;
+  background:rgba(243,112,34,0.08);
+}
+body.light-theme .burner-mobile-wall-btn.burner-mobile-wall-btn-active{
+  border-color:#F37022;
+  color:#F37022;
+  background:rgba(243,112,34,0.14);
 }
 
 /* ====================================================
@@ -4519,6 +4585,13 @@ function requestHeatMapRender(delayMs){
         ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
       </span>
     </div>
+    <div id="burner-mobile-wall-switch" class="burner-mobile-wall-switch" aria-label="Burner wall switch">
+      <span class="burner-mobile-wall-label">Wall View</span>
+      <button type="button" class="burner-mobile-wall-btn" data-wall="A" onclick="setBurnerMobileWall('A')">Wall A</button>
+      <button type="button" class="burner-mobile-wall-btn" data-wall="B" onclick="setBurnerMobileWall('B')">Wall B</button>
+      <button type="button" class="burner-mobile-wall-btn" data-wall="C" onclick="setBurnerMobileWall('C')">Wall C</button>
+      <button type="button" class="burner-mobile-wall-btn" data-wall="D" onclick="setBurnerMobileWall('D')">Wall D</button>
+    </div>
     <div class="wall-container" id="walls"></div>
     <div class="analytics">
       <h2>📊 Burner Distribution Analytics</h2>
@@ -5570,6 +5643,97 @@ var wallSeverity={};
 var masterAlarmActive=false;
 var currentAlarmReasonKey="";
 var silencedAlarmReasonKey="";
+var burnerMobileResizeTimer = null;
+var burnerMobileActiveWall = (function(){
+  var fallback = WALL_NAMES[0] || "A";
+  try{
+    var saved = String(localStorage.getItem("burner-mobile-wall") || "").toUpperCase().trim();
+    if(saved && WALL_NAMES.indexOf(saved) >= 0) return saved;
+  }catch(e){}
+  return fallback;
+})();
+
+function isBurnerSingleWallMode(){
+  return (
+    (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
+    (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches)
+  );
+}
+
+function normalizeBurnerWallKey(wall){
+  var key = String(wall || "").toUpperCase().trim();
+  return WALL_NAMES.indexOf(key) >= 0 ? key : "";
+}
+
+function syncBurnerMobileSwitcherVisibility(){
+  var wrap = document.getElementById("burner-mobile-wall-switch");
+  if(!wrap) return;
+  wrap.style.display = isBurnerSingleWallMode() ? "flex" : "none";
+}
+
+function updateBurnerMobileWallButtons(){
+  var wrap = document.getElementById("burner-mobile-wall-switch");
+  if(!wrap) return;
+  var btns = wrap.querySelectorAll(".burner-mobile-wall-btn");
+  btns.forEach(function(btn){
+    var wall = normalizeBurnerWallKey(btn.getAttribute("data-wall"));
+    btn.classList.toggle("burner-mobile-wall-btn-active", !!wall && wall === burnerMobileActiveWall);
+  });
+}
+
+function persistBurnerMobileWallKey(){
+  try{ localStorage.setItem("burner-mobile-wall", burnerMobileActiveWall); }catch(e){}
+}
+
+function ensureBurnerMobileWallFallback(){
+  var cards = document.querySelectorAll("#walls .wall[data-wall]");
+  if(!cards.length) return;
+  var found = false;
+  cards.forEach(function(card){
+    if(card.getAttribute("data-wall") === burnerMobileActiveWall) found = true;
+  });
+  if(found) return;
+  var first = normalizeBurnerWallKey(cards[0].getAttribute("data-wall"));
+  if(first) burnerMobileActiveWall = first;
+}
+
+function applyBurnerMobileWallFilter(){
+  syncBurnerMobileSwitcherVisibility();
+
+  var walls = document.querySelectorAll("#walls .wall");
+  var blocks = document.querySelectorAll("#analysisContainer .analysis-block");
+  var singleMode = isBurnerSingleWallMode();
+
+  ensureBurnerMobileWallFallback();
+
+  walls.forEach(function(card){
+    if(!singleMode){
+      card.style.display = "";
+      return;
+    }
+    var wall = normalizeBurnerWallKey(card.getAttribute("data-wall"));
+    card.style.display = (!!wall && wall === burnerMobileActiveWall) ? "block" : "none";
+  });
+
+  blocks.forEach(function(block){
+    if(!singleMode){
+      block.style.display = "";
+      return;
+    }
+    var wall = normalizeBurnerWallKey(block.getAttribute("data-wall-analysis"));
+    block.style.display = (!!wall && wall === burnerMobileActiveWall) ? "block" : "none";
+  });
+
+  updateBurnerMobileWallButtons();
+}
+
+function setBurnerMobileWall(wall){
+  var next = normalizeBurnerWallKey(wall);
+  if(!next) return;
+  burnerMobileActiveWall = next;
+  persistBurnerMobileWallKey();
+  applyBurnerMobileWallFilter();
+}
 
 /* ==================================================
    ALARM SOUND (Web Audio)
@@ -5733,6 +5897,7 @@ function render(){
   Object.entries(data).forEach(([wallName,rows])=>{
     const wall=document.createElement("div");
     wall.className="wall";
+    wall.setAttribute("data-wall", wallName);
     const sev=wallSeverity[wallName]||"normal";
     const bar=document.createElement("div");
     bar.className="wall-alarm severity-"+sev;
@@ -5783,6 +5948,7 @@ function render(){
     });
     wall.appendChild(tbl);wallsDiv.appendChild(wall);
   });
+  applyBurnerMobileWallFilter();
 }
 
 /* ==================================================
@@ -5868,6 +6034,7 @@ function generateAnalysis(){
 
     const block=document.createElement("div");
     block.className="analysis-block";
+    block.setAttribute("data-wall-analysis", wallName);
     block.innerHTML=`
       <h3>${displayName}</h3>
       <div class="ab-counts">
@@ -5926,6 +6093,7 @@ function generateAnalysis(){
 
   var summaryBlock = document.createElement("div");
   summaryBlock.className = "analysis-block";
+  summaryBlock.setAttribute("data-wall-analysis", "SUMMARY");
   summaryBlock.innerHTML = `
     <h3>Wall-Wise Burner Mix Summary</h3>
     <div class="chart-wrap"><canvas id="analysisWallSummaryChart"></canvas></div>`;
@@ -7464,8 +7632,17 @@ function switchTab(tab){
   document.getElementById('btab-'+tab).classList.add('btab-active');
   if(tab === 'alarms') refreshAlarmPanel();
   if(tab === 'heatmap' && typeof requestHeatMapRender === 'function') requestHeatMapRender(40);
+  if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
 }
+
+window.addEventListener("resize", function(){
+  clearTimeout(burnerMobileResizeTimer);
+  burnerMobileResizeTimer = setTimeout(applyBurnerMobileWallFilter, 120);
+});
+window.addEventListener("orientationchange", function(){
+  setTimeout(applyBurnerMobileWallFilter, 120);
+});
 
 function applyMobileHorizontalScrollFixes(){
   var isMobile =
