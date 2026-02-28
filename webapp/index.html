@@ -4709,13 +4709,6 @@ function requestHeatMapRender(delayMs){
             📄 OCR PDF to TST
           </button>
           <span id="td-ocr-pdf-status" style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">PDF OCR idle</span>
-          <input type="file" id="td-chatgpt-pdf-file" accept="application/pdf,.pdf" style="display:none;" onchange="handleTstChatgptPdfSelect(event)">
-          <button type="button" id="td-chatgpt-pdf-btn" onclick="openTstChatgptPdfPicker()"
-            style="background:rgba(20,184,166,0.14);border:1px solid rgba(20,184,166,0.45);color:#5eead4;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;"
-            title="Open ChatGPT and then upload selected PDF there">
-            🤖 Open PDF in ChatGPT
-          </button>
-          <span id="td-chatgpt-pdf-status" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">ChatGPT upload idle</span>
           <!-- Save / Clear -->
           <button id="td-save-btn" onclick="saveTempData()"
             style="background:linear-gradient(90deg,#d95008,#F37022);border:none;color:#fff;padding:9px 20px;border-radius:7px;font-size:14px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.5px;box-shadow:0 3px 14px rgba(243,112,34,0.4);">
@@ -8673,8 +8666,6 @@ function downloadTstTemplate(){
 var tdPdfOcrBusy = false;
 var TD_PDF_OCR_MAX_MB = 12;
 var TD_PDF_OCR_MIN_FILL_TARGET = 40;
-var tdChatgptPdfBusy = false;
-var TD_CHATGPT_WEB_URL = "https://chatgpt.com/";
 
 function setTstPdfOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-pdf-status");
@@ -8697,118 +8688,6 @@ function openTstPdfOcrPicker(){
   if(tdPdfOcrBusy) return;
   var input = document.getElementById("td-ocr-pdf-file");
   if(input) input.click();
-}
-
-function setTstChatgptPdfStatus(msg, color){
-  var st = document.getElementById("td-chatgpt-pdf-status");
-  if(!st) return;
-  st.textContent = msg || "ChatGPT upload idle";
-  st.style.color = color || "#94a3b8";
-}
-
-function setTstChatgptPdfBusy(busy){
-  tdChatgptPdfBusy = !!busy;
-  var btn = document.getElementById("td-chatgpt-pdf-btn");
-  if(!btn) return;
-  btn.disabled = tdChatgptPdfBusy;
-  btn.style.opacity = tdChatgptPdfBusy ? "0.72" : "1";
-  btn.style.cursor = tdChatgptPdfBusy ? "not-allowed" : "pointer";
-  btn.textContent = tdChatgptPdfBusy ? "⏳ Opening ChatGPT..." : "🤖 Open PDF in ChatGPT";
-}
-
-function openTstChatgptPdfPicker(){
-  if(tdChatgptPdfBusy) return;
-  var input = document.getElementById("td-chatgpt-pdf-file");
-  if(input) input.click();
-}
-
-function isPdfFileLike(file){
-  if(!file) return false;
-  var nm = String(file.name || "");
-  return /\.pdf$/i.test(nm) || String(file.type || "").toLowerCase() === "application/pdf";
-}
-
-function buildTstChatgptPrompt(fileName){
-  return [
-    "Read the attached TST PDF and extract peep-hole values.",
-    "Return only JSON in this exact shape:",
-    "{\"ab-bot\":[15 values],\"cd-bot\":[15 values],\"ab-top\":[15 values],\"cd-top\":[15 values]}",
-    "Rules: use numbers only, keep missing values as empty string \"\".",
-    "Source file: " + String(fileName || "tst.pdf")
-  ].join("\n");
-}
-
-async function copyTextToClipboardSafe(text){
-  var t = String(text || "");
-  if(!t) return false;
-  try{
-    if(navigator.clipboard && typeof navigator.clipboard.writeText === "function"){
-      await navigator.clipboard.writeText(t);
-      return true;
-    }
-  }catch(_e1){}
-  try{
-    var ta = document.createElement("textarea");
-    ta.value = t;
-    ta.setAttribute("readonly", "readonly");
-    ta.style.position = "fixed";
-    ta.style.top = "-9999px";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    var ok = false;
-    try{ ok = document.execCommand("copy"); }catch(_e2){}
-    ta.remove();
-    return !!ok;
-  }catch(_e3){
-    return false;
-  }
-}
-
-async function handleTstChatgptPdfSelect(event){
-  var fileInput = document.getElementById("td-chatgpt-pdf-file");
-  var file = (event && event.target && event.target.files && event.target.files[0]) ? event.target.files[0] : null;
-  if(!file) return;
-  if(!isPdfFileLike(file)){
-    setTstChatgptPdfStatus("Only PDF allowed", "#f59e0b");
-    alert("Please select a PDF file only.");
-    if(fileInput) fileInput.value = "";
-    return;
-  }
-
-  setTstChatgptPdfBusy(true);
-  try{
-    setTstChatgptPdfStatus("Preparing ChatGPT...", "#7dd3fc");
-    var prompt = buildTstChatgptPrompt(file.name || "tst.pdf");
-    var copied = await copyTextToClipboardSafe(prompt);
-    var w = null;
-    try{ w = window.open(TD_CHATGPT_WEB_URL, "_blank", "noopener"); }catch(_eOpen){}
-
-    if(!w){
-      setTstChatgptPdfStatus("Popup blocked", "#f59e0b");
-      if(copied){
-        showToast("⚠ Popup blocked. Open chatgpt.com, paste prompt, then upload " + file.name + ".");
-      }else{
-        showToast("⚠ Popup blocked. Open chatgpt.com and upload " + file.name + ".");
-      }
-      return;
-    }
-
-    try{ w.focus(); }catch(_eFocus){}
-    setTstChatgptPdfStatus("ChatGPT opened", "#34d399");
-    if(copied){
-      showToast("✅ ChatGPT opened. Paste prompt and upload " + file.name + " there.");
-    }else{
-      showToast("✅ ChatGPT opened. Upload " + file.name + " in ChatGPT.");
-    }
-  }catch(err){
-    setTstChatgptPdfStatus("Failed to open", "#fca5a5");
-    alert("Could not open ChatGPT flow: " + (err && err.message ? err.message : err));
-  }finally{
-    if(fileInput) fileInput.value = "";
-    setTstChatgptPdfBusy(false);
-  }
 }
 
 function normalizeTstOcrText(raw){
@@ -9352,7 +9231,6 @@ async function handleTstPdfOcrSelect(event){
       renderTempDataTable();
     } catch(e){}
     setTstPdfOcrStatus("PDF OCR idle", "#94a3b8");
-    setTstChatgptPdfStatus("ChatGPT upload idle", "#94a3b8");
   });
 })();
 
