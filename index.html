@@ -185,11 +185,6 @@ body.light-theme .td-field-group{}
 body.light-theme .td-input{background:#fff;border-color:#b8cde8;color:#1e293b;}
 body.light-theme .td-ph-input{background:#fff;border-color:#b8cde8;color:#1e293b;}
 body.light-theme .td-row-label{color:#1e293b;}
-body.light-theme .td-ph-table-wrap{background:#f8fbff;border-color:#c7d8ec;}
-body.light-theme .td-ph-table thead th{background:#e5eef9;color:#1e3a5a;border-bottom-color:#c7d8ec;}
-body.light-theme .td-ph-table tbody td{border-bottom-color:#d7e5f5;}
-body.light-theme .td-ph-no{background:#eef4fc;color:#1e293b;}
-body.light-theme .td-ph-table tbody tr:nth-child(even){background:rgba(148,163,184,0.08);}
 body.light-theme #td-saved-table th{color:#2a4a6a;}
 body.light-theme #td-saved-table td{color:#1e293b;border-color:#dde8f4;}
 
@@ -1623,33 +1618,66 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
 /* PWA/mobile layout + performance tuning */
 @media (max-width:900px){
   .app-topbar{
-    padding:6px 12px;
+    padding:8px 12px;
     flex-direction:column;
-    align-items:flex-start;
-    gap:4px;
+    align-items:stretch;
+    gap:6px;
   }
-  .app-topbar-left,.app-topbar-right{
+  .app-topbar-left{
     width:100%;
-    gap:8px;
-    flex-wrap:wrap;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .app-topbar-left span{
+    width:100%;
+    line-height:1.2;
+  }
+  .app-topbar-left span:first-child{
+    white-space:normal;
+    font-size:9.5px;
+  }
+  .app-topbar-left span:last-child{
+    font-size:9px;
+    opacity:0.9;
   }
   .app-topbar-right{
+    width:100%;
+    display:flex;
     align-items:center;
-    justify-content:flex-end;
-  }
-  .app-top-status{
-    align-items:center;
-    justify-content:flex-end;
-    gap:10px;
+    justify-content:space-between;
+    gap:8px;
     flex-wrap:nowrap;
   }
+  .app-top-status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    line-height:1.15;
+  }
+  .app-top-status span{
+    font-size:9.5px;
+  }
   .app-top-actions{
-    justify-content:flex-end;
-    max-width:none;
+    flex:0 0 auto;
     width:auto;
   }
-  .quick-menu-wrap{margin-left:auto;}
-  .quick-menu-btn{width:40px;height:40px;}
+  .quick-menu-wrap{margin-left:0;}
+  .quick-menu-btn{
+    width:38px;
+    height:38px;
+    min-width:38px;
+    min-height:38px;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    aspect-ratio:1/1;
+    font-size:17px;
+    flex-shrink:0;
+  }
   .quick-menu-panel{
     position:fixed;
     top:56px;
@@ -1729,6 +1757,15 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
   .hm-mobile-scroll .hm-wall-card{min-width:860px;}
 }
 @media (max-width:600px){
+  .app-top-status{gap:6px;}
+  .app-top-status span{font-size:9px;}
+  .quick-menu-btn{
+    width:36px;
+    height:36px;
+    min-width:36px;
+    min-height:36px;
+    font-size:16px;
+  }
   .app-system-title{font-size:13px;}
   .app-system-sub{font-size:9px;line-height:1.25;}
   .hd-btn{flex:1 1 100%;}
@@ -2034,53 +2071,6 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   font-size:11px;font-weight:700;letter-spacing:0.5px;
   text-align:center;border-radius:5px;
   border:1px solid;padding:6px 3px;
-}
-.td-ph-table-wrap{
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:10px;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
-  background:rgba(2,6,23,0.38);
-}
-.td-ph-table{
-  width:100%;
-  min-width:640px;
-  border-collapse:separate;
-  border-spacing:0;
-}
-.td-ph-table thead th{
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:0.6px;
-  text-transform:uppercase;
-  color:#7ec8f0;
-  background:rgba(15,39,68,0.92);
-  border-bottom:1px solid rgba(126,200,240,0.25);
-  padding:10px 8px;
-  text-align:center;
-  position:sticky;
-  top:0;
-  z-index:1;
-}
-.td-ph-table thead th:first-child{min-width:82px;}
-.td-ph-table thead th.td-ph-head-ab{color:#fb923c;}
-.td-ph-table thead th.td-ph-head-cd{color:#7dd3fc;}
-.td-ph-table tbody td{
-  padding:8px;
-  border-bottom:1px solid rgba(255,255,255,0.06);
-}
-.td-ph-table tbody tr:nth-child(even){background:rgba(255,255,255,0.02);}
-.td-ph-table tbody tr:last-child td{border-bottom:none;}
-.td-ph-no{
-  text-align:center;
-  font-size:12px;
-  font-weight:700;
-  color:#cbd5e1;
-  background:rgba(15,23,42,0.5);
-}
-.td-ph-table .td-ph-input{
-  font-size:12px;
-  padding:7px 6px;
 }
 #td-saved-table tbody tr:nth-child(even){background:rgba(255,255,255,0.025);}
 #td-saved-table tbody tr:hover{background:rgba(255,255,255,0.05);}
@@ -4785,125 +4775,104 @@ function requestHeatMapRender(delayMs){
           👁️ Peep Hole Temperatures — Peep Hole No. 1 – 15
         </div>
 
-        <div class="td-ph-table-wrap">
-          <table class="td-ph-table" aria-label="Peep hole temperature entry table">
-            <thead>
-              <tr>
-                <th>PH No.</th>
-                <th class="td-ph-head-ab">AB Bot.</th>
-                <th class="td-ph-head-cd">CD Bot.</th>
-                <th class="td-ph-head-ab">AB Top</th>
-                <th class="td-ph-head-cd">CD Top</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="td-ph-no">PH 1</td>
-                <td><input type="number" id="td-ph-ab-bot-1" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 1"></td>
-                <td><input type="number" id="td-ph-cd-bot-1" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 1"></td>
-                <td><input type="number" id="td-ph-ab-top-1" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 1"></td>
-                <td><input type="number" id="td-ph-cd-top-1" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 1"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 2</td>
-                <td><input type="number" id="td-ph-ab-bot-2" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 2"></td>
-                <td><input type="number" id="td-ph-cd-bot-2" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 2"></td>
-                <td><input type="number" id="td-ph-ab-top-2" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 2"></td>
-                <td><input type="number" id="td-ph-cd-top-2" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 2"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 3</td>
-                <td><input type="number" id="td-ph-ab-bot-3" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 3"></td>
-                <td><input type="number" id="td-ph-cd-bot-3" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 3"></td>
-                <td><input type="number" id="td-ph-ab-top-3" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 3"></td>
-                <td><input type="number" id="td-ph-cd-top-3" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 3"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 4</td>
-                <td><input type="number" id="td-ph-ab-bot-4" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 4"></td>
-                <td><input type="number" id="td-ph-cd-bot-4" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 4"></td>
-                <td><input type="number" id="td-ph-ab-top-4" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 4"></td>
-                <td><input type="number" id="td-ph-cd-top-4" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 4"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 5</td>
-                <td><input type="number" id="td-ph-ab-bot-5" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 5"></td>
-                <td><input type="number" id="td-ph-cd-bot-5" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 5"></td>
-                <td><input type="number" id="td-ph-ab-top-5" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 5"></td>
-                <td><input type="number" id="td-ph-cd-top-5" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 5"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 6</td>
-                <td><input type="number" id="td-ph-ab-bot-6" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 6"></td>
-                <td><input type="number" id="td-ph-cd-bot-6" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 6"></td>
-                <td><input type="number" id="td-ph-ab-top-6" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 6"></td>
-                <td><input type="number" id="td-ph-cd-top-6" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 6"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 7</td>
-                <td><input type="number" id="td-ph-ab-bot-7" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 7"></td>
-                <td><input type="number" id="td-ph-cd-bot-7" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 7"></td>
-                <td><input type="number" id="td-ph-ab-top-7" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 7"></td>
-                <td><input type="number" id="td-ph-cd-top-7" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 7"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 8</td>
-                <td><input type="number" id="td-ph-ab-bot-8" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 8"></td>
-                <td><input type="number" id="td-ph-cd-bot-8" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 8"></td>
-                <td><input type="number" id="td-ph-ab-top-8" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 8"></td>
-                <td><input type="number" id="td-ph-cd-top-8" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 8"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 9</td>
-                <td><input type="number" id="td-ph-ab-bot-9" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 9"></td>
-                <td><input type="number" id="td-ph-cd-bot-9" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 9"></td>
-                <td><input type="number" id="td-ph-ab-top-9" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 9"></td>
-                <td><input type="number" id="td-ph-cd-top-9" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 9"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 10</td>
-                <td><input type="number" id="td-ph-ab-bot-10" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 10"></td>
-                <td><input type="number" id="td-ph-cd-bot-10" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 10"></td>
-                <td><input type="number" id="td-ph-ab-top-10" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 10"></td>
-                <td><input type="number" id="td-ph-cd-top-10" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 10"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 11</td>
-                <td><input type="number" id="td-ph-ab-bot-11" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 11"></td>
-                <td><input type="number" id="td-ph-cd-bot-11" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 11"></td>
-                <td><input type="number" id="td-ph-ab-top-11" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 11"></td>
-                <td><input type="number" id="td-ph-cd-top-11" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 11"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 12</td>
-                <td><input type="number" id="td-ph-ab-bot-12" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 12"></td>
-                <td><input type="number" id="td-ph-cd-bot-12" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 12"></td>
-                <td><input type="number" id="td-ph-ab-top-12" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 12"></td>
-                <td><input type="number" id="td-ph-cd-top-12" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 12"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 13</td>
-                <td><input type="number" id="td-ph-ab-bot-13" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 13"></td>
-                <td><input type="number" id="td-ph-cd-bot-13" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 13"></td>
-                <td><input type="number" id="td-ph-ab-top-13" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 13"></td>
-                <td><input type="number" id="td-ph-cd-top-13" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 13"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 14</td>
-                <td><input type="number" id="td-ph-ab-bot-14" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 14"></td>
-                <td><input type="number" id="td-ph-cd-bot-14" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 14"></td>
-                <td><input type="number" id="td-ph-ab-top-14" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 14"></td>
-                <td><input type="number" id="td-ph-cd-top-14" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 14"></td>
-              </tr>
-              <tr>
-                <td class="td-ph-no">PH 15</td>
-                <td><input type="number" id="td-ph-ab-bot-15" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Bottom PH 15"></td>
-                <td><input type="number" id="td-ph-cd-bot-15" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Bottom PH 15"></td>
-                <td><input type="number" id="td-ph-ab-top-15" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="AB Top PH 15"></td>
-                <td><input type="number" id="td-ph-cd-top-15" class="td-ph-input" placeholder="°C" step="1" inputmode="decimal" aria-label="CD Top PH 15"></td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Number header row -->
+        <div style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;margin-bottom:6px;align-items:center;">
+          <div style="font-size:10px;color:#64748b;text-align:center;font-weight:700;letter-spacing:0.5px;">PH No.</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">1</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">2</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">3</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">4</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">5</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">6</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">7</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">8</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">9</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">10</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">11</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">12</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">13</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">14</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">15</div>
+        </div>
+
+        <!-- AB Bottom -->
+        <div style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;align-items:center;margin-bottom:8px;">
+          <div class="td-row-label" style="background:rgba(243,112,34,0.15);border-color:rgba(243,112,34,0.35);color:#F37022;">AB Bot.</div>
+          <input type="number" id="td-ph-ab-bot-1"  class="td-ph-input" placeholder="1"  step="1">
+          <input type="number" id="td-ph-ab-bot-2"  class="td-ph-input" placeholder="2"  step="1">
+          <input type="number" id="td-ph-ab-bot-3"  class="td-ph-input" placeholder="3"  step="1">
+          <input type="number" id="td-ph-ab-bot-4"  class="td-ph-input" placeholder="4"  step="1">
+          <input type="number" id="td-ph-ab-bot-5"  class="td-ph-input" placeholder="5"  step="1">
+          <input type="number" id="td-ph-ab-bot-6"  class="td-ph-input" placeholder="6"  step="1">
+          <input type="number" id="td-ph-ab-bot-7"  class="td-ph-input" placeholder="7"  step="1">
+          <input type="number" id="td-ph-ab-bot-8"  class="td-ph-input" placeholder="8"  step="1">
+          <input type="number" id="td-ph-ab-bot-9"  class="td-ph-input" placeholder="9"  step="1">
+          <input type="number" id="td-ph-ab-bot-10" class="td-ph-input" placeholder="10" step="1">
+          <input type="number" id="td-ph-ab-bot-11" class="td-ph-input" placeholder="11" step="1">
+          <input type="number" id="td-ph-ab-bot-12" class="td-ph-input" placeholder="12" step="1">
+          <input type="number" id="td-ph-ab-bot-13" class="td-ph-input" placeholder="13" step="1">
+          <input type="number" id="td-ph-ab-bot-14" class="td-ph-input" placeholder="14" step="1">
+          <input type="number" id="td-ph-ab-bot-15" class="td-ph-input" placeholder="15" step="1">
+        </div>
+
+        <!-- CD Bottom -->
+        <div style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;align-items:center;margin-bottom:8px;">
+          <div class="td-row-label" style="background:rgba(96,200,255,0.1);border-color:rgba(96,200,255,0.3);color:#7ec8f0;">CD Bot.</div>
+          <input type="number" id="td-ph-cd-bot-1"  class="td-ph-input" placeholder="1"  step="1">
+          <input type="number" id="td-ph-cd-bot-2"  class="td-ph-input" placeholder="2"  step="1">
+          <input type="number" id="td-ph-cd-bot-3"  class="td-ph-input" placeholder="3"  step="1">
+          <input type="number" id="td-ph-cd-bot-4"  class="td-ph-input" placeholder="4"  step="1">
+          <input type="number" id="td-ph-cd-bot-5"  class="td-ph-input" placeholder="5"  step="1">
+          <input type="number" id="td-ph-cd-bot-6"  class="td-ph-input" placeholder="6"  step="1">
+          <input type="number" id="td-ph-cd-bot-7"  class="td-ph-input" placeholder="7"  step="1">
+          <input type="number" id="td-ph-cd-bot-8"  class="td-ph-input" placeholder="8"  step="1">
+          <input type="number" id="td-ph-cd-bot-9"  class="td-ph-input" placeholder="9"  step="1">
+          <input type="number" id="td-ph-cd-bot-10" class="td-ph-input" placeholder="10" step="1">
+          <input type="number" id="td-ph-cd-bot-11" class="td-ph-input" placeholder="11" step="1">
+          <input type="number" id="td-ph-cd-bot-12" class="td-ph-input" placeholder="12" step="1">
+          <input type="number" id="td-ph-cd-bot-13" class="td-ph-input" placeholder="13" step="1">
+          <input type="number" id="td-ph-cd-bot-14" class="td-ph-input" placeholder="14" step="1">
+          <input type="number" id="td-ph-cd-bot-15" class="td-ph-input" placeholder="15" step="1">
+        </div>
+
+        <!-- AB Top -->
+        <div style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;align-items:center;margin-bottom:8px;">
+          <div class="td-row-label" style="background:rgba(243,112,34,0.15);border-color:rgba(243,112,34,0.35);color:#F37022;">AB Top</div>
+          <input type="number" id="td-ph-ab-top-1"  class="td-ph-input" placeholder="1"  step="1">
+          <input type="number" id="td-ph-ab-top-2"  class="td-ph-input" placeholder="2"  step="1">
+          <input type="number" id="td-ph-ab-top-3"  class="td-ph-input" placeholder="3"  step="1">
+          <input type="number" id="td-ph-ab-top-4"  class="td-ph-input" placeholder="4"  step="1">
+          <input type="number" id="td-ph-ab-top-5"  class="td-ph-input" placeholder="5"  step="1">
+          <input type="number" id="td-ph-ab-top-6"  class="td-ph-input" placeholder="6"  step="1">
+          <input type="number" id="td-ph-ab-top-7"  class="td-ph-input" placeholder="7"  step="1">
+          <input type="number" id="td-ph-ab-top-8"  class="td-ph-input" placeholder="8"  step="1">
+          <input type="number" id="td-ph-ab-top-9"  class="td-ph-input" placeholder="9"  step="1">
+          <input type="number" id="td-ph-ab-top-10" class="td-ph-input" placeholder="10" step="1">
+          <input type="number" id="td-ph-ab-top-11" class="td-ph-input" placeholder="11" step="1">
+          <input type="number" id="td-ph-ab-top-12" class="td-ph-input" placeholder="12" step="1">
+          <input type="number" id="td-ph-ab-top-13" class="td-ph-input" placeholder="13" step="1">
+          <input type="number" id="td-ph-ab-top-14" class="td-ph-input" placeholder="14" step="1">
+          <input type="number" id="td-ph-ab-top-15" class="td-ph-input" placeholder="15" step="1">
+        </div>
+
+        <!-- CD Top -->
+        <div style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;align-items:center;">
+          <div class="td-row-label" style="background:rgba(96,200,255,0.1);border-color:rgba(96,200,255,0.3);color:#7ec8f0;">CD Top</div>
+          <input type="number" id="td-ph-cd-top-1"  class="td-ph-input" placeholder="1"  step="1">
+          <input type="number" id="td-ph-cd-top-2"  class="td-ph-input" placeholder="2"  step="1">
+          <input type="number" id="td-ph-cd-top-3"  class="td-ph-input" placeholder="3"  step="1">
+          <input type="number" id="td-ph-cd-top-4"  class="td-ph-input" placeholder="4"  step="1">
+          <input type="number" id="td-ph-cd-top-5"  class="td-ph-input" placeholder="5"  step="1">
+          <input type="number" id="td-ph-cd-top-6"  class="td-ph-input" placeholder="6"  step="1">
+          <input type="number" id="td-ph-cd-top-7"  class="td-ph-input" placeholder="7"  step="1">
+          <input type="number" id="td-ph-cd-top-8"  class="td-ph-input" placeholder="8"  step="1">
+          <input type="number" id="td-ph-cd-top-9"  class="td-ph-input" placeholder="9"  step="1">
+          <input type="number" id="td-ph-cd-top-10" class="td-ph-input" placeholder="10" step="1">
+          <input type="number" id="td-ph-cd-top-11" class="td-ph-input" placeholder="11" step="1">
+          <input type="number" id="td-ph-cd-top-12" class="td-ph-input" placeholder="12" step="1">
+          <input type="number" id="td-ph-cd-top-13" class="td-ph-input" placeholder="13" step="1">
+          <input type="number" id="td-ph-cd-top-14" class="td-ph-input" placeholder="14" step="1">
+          <input type="number" id="td-ph-cd-top-15" class="td-ph-input" placeholder="15" step="1">
         </div>
       </div>
 
@@ -7505,12 +7474,6 @@ function applyMobileHorizontalScrollFixes(){
     row.style.minWidth = "980px";
     var parent = row.parentElement;
     if(parent) parent.classList.add("td-temp-scroll");
-  });
-
-  /* Current vertical-layout table wrapper */
-  var peepTableWraps = document.querySelectorAll("#tab-tempdata .td-ph-table-wrap");
-  peepTableWraps.forEach(function(wrap){
-    wrap.classList.add("td-temp-scroll");
   });
 }
 
