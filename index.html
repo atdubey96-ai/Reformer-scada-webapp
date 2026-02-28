@@ -4585,6 +4585,15 @@ function requestHeatMapRender(delayMs){
         ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
       </span>
     </div>
+    <div id="burner-voice-tools" style="padding:10px 20px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button id="burner-voice-btn" type="button" onclick="startBurnerVoiceUpdate()"
+        style="background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.45);color:#6ee7b7;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
+        🎙️ Voice Update Burner
+      </button>
+      <span id="burner-voice-status" style="font-size:11px;color:#94a3b8;max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        Voice idle · Say: "Wall A Row 1 Burner 1 NG"
+      </span>
+    </div>
     <div id="burner-mobile-wall-switch" class="burner-mobile-wall-switch" aria-label="Burner wall switch">
       <span class="burner-mobile-wall-label">Wall View</span>
       <button type="button" class="burner-mobile-wall-btn" data-wall="A" onclick="setBurnerMobileWall('A')">Wall A</button>
@@ -4698,6 +4707,8 @@ function requestHeatMapRender(delayMs){
           </div>
           <div style="display:flex;gap:10px;align-items:center;">
             <span id="tipUnsavedBadge" style="display:none;font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);padding:4px 12px;border-radius:4px;">⚠ Unsaved Changes</span>
+            <button id="tip-voice-btn" type="button" onclick="startTipVoiceEdit()" style="background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.45);color:#6ee7b7;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;font-family:Rajdhani,sans-serif;cursor:pointer;letter-spacing:0.4px;">🎙️ Voice Tip Edit</button>
+            <span id="tip-voice-status" style="max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">Voice idle</span>
             <button onclick="addTipRow()" style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.35);color:#4ade80;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;font-family:Rajdhani,sans-serif;cursor:pointer;letter-spacing:0.5px;">＋ Add Row</button>
           </div>
         </div>
@@ -5079,6 +5090,12 @@ const ROWS           = 6;
 const BURNERS        = 15;
 const TEXT_MAP       = {B:"#000",N:"#000",O:"#000",C:"#fff"};
 const chartInstances = {};
+var burnerVoiceListening = false;
+var burnerVoiceRecognition = null;
+var burnerDateVoiceListening = false;
+var burnerDateVoiceRecognition = null;
+var tipVoiceListening = false;
+var tipVoiceRecognition = null;
 
 /* ==================================================
    LOGIN / LOGOUT
@@ -5114,6 +5131,12 @@ document.addEventListener("DOMContentLoaded",function(){
       startRealtimeNotifyEnsureLoop();
     }
   });
+  setBurnerVoiceButtonState(false);
+  setBurnerVoiceStatus('Voice idle · Say: "Wall A Row 1 Burner 1 NG"', "#94a3b8");
+  setTipVoiceButtonState(false);
+  setTipVoiceStatus("Voice idle", "#94a3b8");
+  setBurnerDateVoiceButtonState(false);
+  setBurnerDateVoiceStatus("Voice idle", "#94a3b8");
 });
 
 
@@ -5738,6 +5761,470 @@ function setBurnerMobileWall(wall){
   burnerMobileActiveWall = next;
   persistBurnerMobileWallKey();
   applyBurnerMobileWallFilter();
+}
+
+function getSpeechRecognitionCtor(){
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function normalizeVoiceTranscript(text){
+  return String(text || "")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function toYmdLocal(dateObj){
+  if(!(dateObj instanceof Date) || !isFinite(dateObj.getTime())) return "";
+  var y = dateObj.getFullYear();
+  var m = String(dateObj.getMonth() + 1).padStart(2, "0");
+  var d = String(dateObj.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + d;
+}
+
+function parseSpokenDateToYMD(text){
+  var raw = String(text || "").trim();
+  if(!raw) return "";
+  var t = raw.toLowerCase();
+
+  var now = new Date();
+  if(/\btoday\b/.test(t)) return toYmdLocal(now);
+  if(/\byesterday\b/.test(t)){
+    var y = new Date(now);
+    y.setDate(y.getDate() - 1);
+    return toYmdLocal(y);
+  }
+
+  var iso = raw.match(/\b(20\d{2})[-\/](\d{1,2})[-\/](\d{1,2})\b/);
+  if(iso){
+    var y1 = Number(iso[1]), m1 = Number(iso[2]), d1 = Number(iso[3]);
+    if(m1 >= 1 && m1 <= 12 && d1 >= 1 && d1 <= 31){
+      return y1 + "-" + String(m1).padStart(2, "0") + "-" + String(d1).padStart(2, "0");
+    }
+  }
+
+  var dmy = raw.match(/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})\b/);
+  if(dmy){
+    var dd = Number(dmy[1]), mm = Number(dmy[2]), yy = Number(dmy[3]);
+    if(yy < 100) yy = 2000 + yy;
+    if(mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31){
+      return yy + "-" + String(mm).padStart(2, "0") + "-" + String(dd).padStart(2, "0");
+    }
+  }
+
+  var cleaned = t.replace(/\b(\d+)(st|nd|rd|th)\b/g, "$1");
+  var parsed = new Date(cleaned);
+  if(isFinite(parsed.getTime())) return toYmdLocal(parsed);
+  return "";
+}
+
+function parseVoiceWallRowBurner(text, defaults){
+  var t = normalizeVoiceTranscript(text).toUpperCase();
+  var out = {
+    wall: normalizeBurnerWallKey(defaults && defaults.wall),
+    row: Number((defaults && defaults.row) || 0),
+    burner: Number((defaults && defaults.burner) || 0)
+  };
+
+  var mWall = t.match(/\bWALL\s*([ABCD])\b/);
+  if(!mWall) mWall = t.match(/\b([ABCD])\s*WALL\b/);
+  if(mWall) out.wall = normalizeBurnerWallKey(mWall[1]);
+
+  var mRow = t.match(/\bROW\s*([1-9][0-9]?)\b/);
+  if(!mRow) mRow = t.match(/\bR\s*([1-9][0-9]?)\b/);
+  if(!mRow) mRow = t.match(/\bR([1-9][0-9]?)\b/);
+  if(mRow) out.row = Number(mRow[1]);
+
+  var mBurner = t.match(/\bBURNER\s*([1-9][0-9]?)\b/);
+  if(!mBurner) mBurner = t.match(/\bB\s*([1-9][0-9]?)\b/);
+  if(!mBurner) mBurner = t.match(/\bB([1-9][0-9]?)\b/);
+  if(mBurner) out.burner = Number(mBurner[1]);
+
+  return out;
+}
+
+function parseBurnerStateFromVoice(text){
+  var t = normalizeVoiceTranscript(text).toUpperCase();
+  if(!t) return "";
+
+  var mState = t.match(/\bSTATE\s*([BNOC])\b/);
+  if(mState) return mState[1];
+
+  if(/\bBOTH\b/.test(t)) return "B";
+  if(/\bOFF\s*GAS\b/.test(t) || /\bOG\b/.test(t) || /\bOFFGAS\b/.test(t)) return "O";
+  if(/\bNATURAL\s*GAS\b/.test(t) || /\bNG\b/.test(t)) return "N";
+  if(/\bCOLD\b/.test(t) || /\bNONE\b/.test(t) || /\bNO\s*FIRE\b/.test(t)) return "C";
+
+  var mAfterBurner = t.match(/\bBURNER\s*[0-9]{1,2}\s*([BNOC])\b/);
+  if(mAfterBurner) return mAfterBurner[1];
+
+  var mTail = t.match(/\b([BNOC])\b$/);
+  if(mTail) return mTail[1];
+  return "";
+}
+
+function setBurnerVoiceStatus(msg, color){
+  var st = document.getElementById("burner-voice-status");
+  if(!st) return;
+  st.textContent = msg || "Voice idle";
+  st.style.color = color || "#94a3b8";
+}
+
+function setBurnerVoiceButtonState(listening){
+  var btn = document.getElementById("burner-voice-btn");
+  if(!btn) return;
+  var supported = !!getSpeechRecognitionCtor();
+  var isOn = !!listening;
+  btn.disabled = !supported || isOn;
+  btn.style.opacity = (!supported || isOn) ? "0.7" : "1";
+  btn.style.cursor = (!supported || isOn) ? "not-allowed" : "pointer";
+  btn.textContent = isOn ? "⏳ Listening..." : "🎙️ Voice Update Burner";
+}
+
+function startBurnerVoiceUpdate(){
+  var Ctor = getSpeechRecognitionCtor();
+  if(!Ctor){
+    setBurnerVoiceButtonState(false);
+    setBurnerVoiceStatus("Voice not supported in this browser", "#fca5a5");
+    alert("Voice input is not supported in this browser. Please use Chrome or Edge.");
+    return;
+  }
+  if(burnerVoiceListening) return;
+
+  if(!burnerVoiceRecognition) burnerVoiceRecognition = new Ctor();
+  var rec = burnerVoiceRecognition;
+  rec.lang = "en-IN";
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  rec.onresult = function(event){
+    var txt = "";
+    try{ txt = String(event.results[0][0].transcript || ""); }catch(e){}
+    var parsed = parseVoiceWallRowBurner(txt, {});
+    var state = parseBurnerStateFromVoice(txt);
+    if(!parsed.wall || parsed.row < 1 || parsed.row > ROWS || parsed.burner < 1 || parsed.burner > BURNERS || !state){
+      setBurnerVoiceStatus('Could not parse. Say: "Wall A Row 1 Burner 1 NG"', "#fbbf24");
+      return;
+    }
+
+    var ri = parsed.row - 1;
+    var ci = parsed.burner - 1;
+    if(!data[parsed.wall] || !data[parsed.wall][ri] || typeof data[parsed.wall][ri][ci] === "undefined"){
+      setBurnerVoiceStatus("Selected burner is out of range", "#fca5a5");
+      return;
+    }
+
+    var prev = data[parsed.wall][ri][ci];
+    if(!burnerPending[parsed.wall]) burnerPending[parsed.wall] = {};
+    burnerPending[parsed.wall][ri + "_" + ci] = { nv: state, prev: prev };
+    data[parsed.wall][ri][ci] = state;
+    markBurnerUnsaved();
+    generateAnalysis();
+    if(isBurnerSingleWallMode()) setBurnerMobileWall(parsed.wall);
+
+    setBurnerVoiceStatus("Updated Wall " + parsed.wall + " R" + parsed.row + " B" + parsed.burner + " to " + state, "#34d399");
+    showToast("🎙️ Burner updated: Wall " + parsed.wall + " R" + parsed.row + " B" + parsed.burner + " = " + state);
+  };
+
+  rec.onerror = function(event){
+    var code = event && event.error ? String(event.error) : "unknown";
+    if(code === "not-allowed" || code === "service-not-allowed"){
+      setBurnerVoiceStatus("Microphone permission blocked", "#fca5a5");
+    }else if(code === "no-speech"){
+      setBurnerVoiceStatus("No speech detected", "#fbbf24");
+    }else{
+      setBurnerVoiceStatus("Voice error: " + code, "#fca5a5");
+    }
+  };
+
+  rec.onend = function(){
+    burnerVoiceListening = false;
+    setBurnerVoiceButtonState(false);
+  };
+
+  try{
+    rec.start();
+    burnerVoiceListening = true;
+    setBurnerVoiceButtonState(true);
+    setBurnerVoiceStatus('Listening... Say: "Wall A Row 1 Burner 1 NG"', "#7dd3fc");
+  }catch(e){
+    burnerVoiceListening = false;
+    setBurnerVoiceButtonState(false);
+    setBurnerVoiceStatus("Could not start microphone", "#fca5a5");
+  }
+}
+
+function setBurnerDateVoiceStatus(msg, color){
+  var st = document.getElementById("be-voice-status");
+  if(!st) return;
+  st.textContent = msg || "Voice idle";
+  st.style.color = color || "#94a3b8";
+}
+
+function setBurnerDateVoiceButtonState(listening){
+  var btn = document.getElementById("be-voice-btn");
+  if(!btn) return;
+  var supported = !!getSpeechRecognitionCtor();
+  var isOn = !!listening;
+  btn.disabled = !supported || isOn;
+  btn.style.opacity = (!supported || isOn) ? "0.7" : "1";
+  btn.style.cursor = (!supported || isOn) ? "not-allowed" : "pointer";
+  btn.textContent = isOn ? "⏳ Listening..." : "🎙️ Voice Date Edit";
+}
+
+function applyBurnerDateVoiceCommand(text){
+  var wallSel = document.getElementById("be-wall");
+  var rowSel = document.getElementById("be-row");
+  var burSel = document.getElementById("be-burner");
+  if(!wallSel || !rowSel || !burSel){
+    setBurnerDateVoiceStatus("Open edit dates modal first", "#fbbf24");
+    return;
+  }
+
+  var sel = parseVoiceWallRowBurner(text, {
+    wall: wallSel.value,
+    row: parseInt(rowSel.value, 10) || 1,
+    burner: parseInt(burSel.value, 10) || 1
+  });
+  if(!sel.wall || sel.row < 1 || sel.row > ROWS || sel.burner < 1 || sel.burner > BURNERS){
+    setBurnerDateVoiceStatus("Could not parse burner selection", "#fbbf24");
+    return;
+  }
+
+  wallSel.value = sel.wall;
+  rowSel.value = String(sel.row);
+  burSel.value = String(sel.burner);
+  renderBurnerDateEditor();
+
+  var t = normalizeVoiceTranscript(text).toLowerCase();
+  var dateVal = parseSpokenDateToYMD(text);
+  var action = "add";
+  if(/\bclear\b/.test(t) && /\bdate/.test(t)) action = "clear";
+  else if(/\b(remove|delete)\b/.test(t) && /\b(last|latest)\b/.test(t)) action = "remove-last";
+  else if(/\bsave\b/.test(t)) action = "save";
+  else if(/\b(set|replace)\b/.test(t)) action = "set";
+
+  if(action === "save"){
+    saveBurnerEditedDates();
+    setBurnerDateVoiceStatus("Dates saved for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner, "#34d399");
+    return;
+  }
+
+  if(action === "clear"){
+    burnerDateEditState.dates = [];
+  }else if(action === "remove-last"){
+    burnerDateEditState.dates = burnerDateEditState.dates || [];
+    burnerDateEditState.dates.pop();
+  }else{
+    if(!dateVal){
+      setBurnerDateVoiceStatus('Say date like "2026-02-28" or "today"', "#fbbf24");
+      return;
+    }
+    if(action === "set"){
+      burnerDateEditState.dates = [dateVal];
+    }else{
+      burnerDateEditState.dates = burnerDateEditState.dates || [];
+      burnerDateEditState.dates.push(dateVal);
+    }
+  }
+
+  burnerDateEditState.dates = Array.from(new Set((burnerDateEditState.dates || []).filter(Boolean))).sort();
+  renderBurnerDateEditorRows();
+  setBurnerDateVoiceStatus("Edited dates for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner + " (tap Save Dates)", "#34d399");
+}
+
+function startBurnerDateVoiceEdit(){
+  var Ctor = getSpeechRecognitionCtor();
+  if(!Ctor){
+    setBurnerDateVoiceButtonState(false);
+    setBurnerDateVoiceStatus("Voice not supported in this browser", "#fca5a5");
+    alert("Voice input is not supported in this browser. Please use Chrome or Edge.");
+    return;
+  }
+  if(burnerDateVoiceListening) return;
+
+  if(!burnerDateVoiceRecognition) burnerDateVoiceRecognition = new Ctor();
+  var rec = burnerDateVoiceRecognition;
+  rec.lang = "en-IN";
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  rec.onresult = function(event){
+    var txt = "";
+    try{ txt = String(event.results[0][0].transcript || ""); }catch(e){}
+    applyBurnerDateVoiceCommand(txt);
+  };
+
+  rec.onerror = function(event){
+    var code = event && event.error ? String(event.error) : "unknown";
+    if(code === "not-allowed" || code === "service-not-allowed"){
+      setBurnerDateVoiceStatus("Microphone permission blocked", "#fca5a5");
+    }else if(code === "no-speech"){
+      setBurnerDateVoiceStatus("No speech detected", "#fbbf24");
+    }else{
+      setBurnerDateVoiceStatus("Voice error: " + code, "#fca5a5");
+    }
+  };
+
+  rec.onend = function(){
+    burnerDateVoiceListening = false;
+    setBurnerDateVoiceButtonState(false);
+  };
+
+  try{
+    rec.start();
+    burnerDateVoiceListening = true;
+    setBurnerDateVoiceButtonState(true);
+    setBurnerDateVoiceStatus('Listening... e.g. "Wall B Row 2 Burner 7 add date today"', "#7dd3fc");
+  }catch(e){
+    burnerDateVoiceListening = false;
+    setBurnerDateVoiceButtonState(false);
+    setBurnerDateVoiceStatus("Could not start microphone", "#fca5a5");
+  }
+}
+
+function setTipVoiceStatus(msg, color){
+  var st = document.getElementById("tip-voice-status");
+  if(!st) return;
+  st.textContent = msg || "Voice idle";
+  st.style.color = color || "#94a3b8";
+}
+
+function setTipVoiceButtonState(listening){
+  var btn = document.getElementById("tip-voice-btn");
+  if(!btn) return;
+  var supported = !!getSpeechRecognitionCtor();
+  var isOn = !!listening;
+  btn.disabled = !supported || isOn;
+  btn.style.opacity = (!supported || isOn) ? "0.7" : "1";
+  btn.style.cursor = (!supported || isOn) ? "not-allowed" : "pointer";
+  btn.textContent = isOn ? "⏳ Listening..." : "🎙️ Voice Tip Edit";
+}
+
+function extractDateAfterKeyword(text, pattern){
+  var re = new RegExp(pattern + "\\s+([a-zA-Z0-9\\-\\/ ]{2,32})", "i");
+  var m = String(text || "").match(re);
+  if(!m) return "";
+  return parseSpokenDateToYMD(m[1]);
+}
+
+function applyTipVoiceCommand(text){
+  collectTipFromDOM();
+  var sel = parseVoiceWallRowBurner(text, {});
+  if(!sel.wall || sel.row < 1 || sel.row > ROWS || sel.burner < 1 || sel.burner > BURNERS){
+    setTipVoiceStatus('Say selection like "Wall A Row 1 Burner 1 ..."', "#fbbf24");
+    return;
+  }
+
+  var t = normalizeVoiceTranscript(text);
+  var up = t.toUpperCase();
+
+  var damaged = null;
+  if(/\b(NO DAMAGE|DAMAGED NO|DAMAGE NO|NOT DAMAGED)\b/i.test(t)) damaged = "No";
+  else if(/\b(DAMAGE YES|DAMAGED YES|TIP DAMAGE|DAMAGED)\b/i.test(t)) damaged = "Yes";
+
+  var replaced = null;
+  if(/\b(NOT REPLACED|REPLACED NO)\b/i.test(t)) replaced = "No";
+  else if(/\b(REPLACED YES|REPLACED)\b/i.test(t)) replaced = "Yes";
+
+  var damageDate = extractDateAfterKeyword(t, "(damage\\s*date|damaged\\s*date)");
+  var replaceDate = extractDateAfterKeyword(t, "(replacement\\s*date|replace\\s*date|replaced\\s*date)");
+  var clearDamageDate = /\b(clear|remove|delete)\s+damage\s+date\b/i.test(t);
+  var clearReplaceDate = /\b(clear|remove|delete)\s+(replacement|replace|replaced)\s+date\b/i.test(t);
+  var remarksMatch = t.match(/\bremarks?\b[:\s-]*(.+)$/i);
+  var remarks = remarksMatch ? remarksMatch[1].trim() : null;
+
+  var idx = -1;
+  for(var i=0; i<tipRows.length; i++){
+    var r = tipRows[i] || {};
+    if(String(r.wall || "") === sel.wall && Number(r.row) === sel.row && Number(r.burner) === sel.burner){
+      idx = i;
+      break;
+    }
+  }
+  if(idx < 0){
+    tipRows.push(newTipRow());
+    idx = tipRows.length - 1;
+  }
+
+  var rowObj = tipRows[idx];
+  rowObj.wall = sel.wall;
+  rowObj.row = String(sel.row);
+  rowObj.burner = String(sel.burner);
+  if(damaged !== null) rowObj.damaged = damaged;
+  if(replaced !== null) rowObj.replaced = replaced;
+  if(damageDate) rowObj.damageDate = damageDate;
+  if(replaceDate) rowObj.replaceDate = replaceDate;
+  if(clearDamageDate) rowObj.damageDate = "";
+  if(clearReplaceDate) rowObj.replaceDate = "";
+  if(remarks !== null) rowObj.remarks = remarks;
+
+  if(rowObj.damaged === "No"){
+    rowObj.damageDate = "";
+    rowObj.replaced = "No";
+    rowObj.replaceDate = "";
+  }
+  if(rowObj.replaced === "No"){
+    rowObj.replaceDate = "";
+  }
+
+  renderTipTable();
+  markTipUnsaved();
+  setTipVoiceStatus("Updated Tip: Wall " + sel.wall + " R" + sel.row + " B" + sel.burner, "#34d399");
+  showToast("🎙️ Tip row updated: Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
+}
+
+function startTipVoiceEdit(){
+  var Ctor = getSpeechRecognitionCtor();
+  if(!Ctor){
+    setTipVoiceButtonState(false);
+    setTipVoiceStatus("Voice not supported in this browser", "#fca5a5");
+    alert("Voice input is not supported in this browser. Please use Chrome or Edge.");
+    return;
+  }
+  if(tipVoiceListening) return;
+
+  if(!tipVoiceRecognition) tipVoiceRecognition = new Ctor();
+  var rec = tipVoiceRecognition;
+  rec.lang = "en-IN";
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  rec.onresult = function(event){
+    var txt = "";
+    try{ txt = String(event.results[0][0].transcript || ""); }catch(e){}
+    applyTipVoiceCommand(txt);
+  };
+
+  rec.onerror = function(event){
+    var code = event && event.error ? String(event.error) : "unknown";
+    if(code === "not-allowed" || code === "service-not-allowed"){
+      setTipVoiceStatus("Microphone permission blocked", "#fca5a5");
+    }else if(code === "no-speech"){
+      setTipVoiceStatus("No speech detected", "#fbbf24");
+    }else{
+      setTipVoiceStatus("Voice error: " + code, "#fca5a5");
+    }
+  };
+
+  rec.onend = function(){
+    tipVoiceListening = false;
+    setTipVoiceButtonState(false);
+  };
+
+  try{
+    rec.start();
+    tipVoiceListening = true;
+    setTipVoiceButtonState(true);
+    setTipVoiceStatus('Listening... e.g. "Wall A Row 2 Burner 7 damaged yes"', "#7dd3fc");
+  }catch(e){
+    tipVoiceListening = false;
+    setTipVoiceButtonState(false);
+    setTipVoiceStatus("Could not start microphone", "#fca5a5");
+  }
 }
 
 /* ==================================================
@@ -6716,6 +7203,8 @@ function openBurnerDateEditModal(){
   setDefaultBurnerSelectorValues(wallSel, rowSel, burSel);
   renderBurnerDateEditor();
   modal.style.display = "flex";
+  setBurnerDateVoiceButtonState(false);
+  setBurnerDateVoiceStatus('Voice idle · Say: "add date today"', "#94a3b8");
 }
 function closeBurnerDateEditModal(){
   var modal = document.getElementById("burnerDateEditModal");
@@ -8824,6 +9313,7 @@ var tdVoiceFillUseFocusedOrder = false;
 var TD_VOICE_FILL_MIN_TEMP = 100;
 var TD_VOICE_FILL_MAX_TEMP = 1800;
 var TD_RAMP_PRESET_BASE = 930;
+var TD_RAMP_INPUT_STEP = 2;
 
 function setTstPdfOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-pdf-status");
@@ -8853,7 +9343,7 @@ function setTstVoiceFillButtonState(isListening){
   var btn = document.getElementById("td-voice-fill-btn");
   if(!btn) return;
   var listening = !!isListening;
-  var supported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  var supported = !!getSpeechRecognitionCtor();
   btn.disabled = !supported;
   btn.style.opacity = supported ? "1" : "0.55";
   btn.style.cursor = supported ? "pointer" : "not-allowed";
@@ -8861,6 +9351,15 @@ function setTstVoiceFillButtonState(isListening){
   btn.style.background = listening ? "rgba(239,68,68,0.16)" : "rgba(16,185,129,0.14)";
   btn.style.borderColor = listening ? "rgba(248,113,113,0.55)" : "rgba(16,185,129,0.45)";
   btn.style.color = listening ? "#fecaca" : "#6ee7b7";
+}
+
+function applyTstRampInputStep(stepVal){
+  var step = Number(stepVal);
+  if(!isFinite(step) || step <= 0) step = 2;
+  var inputs = document.querySelectorAll("#tab-tempdata .td-ph-input");
+  inputs.forEach(function(inp){
+    inp.setAttribute("step", String(step));
+  });
 }
 
 function setTstRampFillStatus(msg, color){
@@ -8910,7 +9409,7 @@ function fillTstRampPreset930(){
 }
 
 function getTstVoiceRecognitionCtor(){
-  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  return getSpeechRecognitionCtor();
 }
 
 function getTdActivePeepIndex(){
@@ -9659,6 +10158,7 @@ async function handleTstPdfOcrSelect(event){
     }else{
       setTstVoiceFillStatus("Voice not supported in this browser", "#fca5a5");
     }
+    applyTstRampInputStep(TD_RAMP_INPUT_STEP);
     setTstRampFillStatus("Ramp preset idle", "#94a3b8");
   });
 })();
@@ -9991,8 +10491,10 @@ function tempToColorInline(val, minT, maxT){
       <div style="margin-top:12px;background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;padding:12px;">
         <div id="be-selected" style="font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:8px;">Wall A · Row 1 · Burner 1</div>
         <div id="be-list"></div>
-        <div style="margin-top:10px;display:flex;justify-content:flex-start;">
+        <div style="margin-top:10px;display:flex;justify-content:flex-start;gap:8px;align-items:center;flex-wrap:wrap;">
           <button onclick="addBurnerEditDate()" style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.35);color:#4ade80;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">＋ Add Date</button>
+          <button id="be-voice-btn" type="button" onclick="startBurnerDateVoiceEdit()" style="background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.45);color:#6ee7b7;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">🎙️ Voice Date Edit</button>
+          <span id="be-voice-status" style="max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">Voice idle</span>
         </div>
       </div>
     </div>
