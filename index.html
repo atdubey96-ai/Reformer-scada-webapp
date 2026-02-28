@@ -4699,6 +4699,11 @@ function requestHeatMapRender(delayMs){
             📄 OCR PDF to TST
           </button>
           <span id="td-ocr-pdf-status" style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">PDF OCR idle</span>
+          <button type="button" id="td-voice-fill-btn" onclick="toggleTstVoiceInput()"
+            style="background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.45);color:#6ee7b7;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
+            🎙️ Voice Fill TST
+          </button>
+          <span id="td-voice-fill-status" style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">Voice idle</span>
           <!-- Save / Clear -->
           <button id="td-save-btn" onclick="saveTempData()"
             style="background:linear-gradient(90deg,#d95008,#F37022);border:none;color:#fff;padding:9px 20px;border-radius:7px;font-size:14px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.5px;box-shadow:0 3px 14px rgba(243,112,34,0.4);">
@@ -8629,6 +8634,13 @@ function downloadTstTemplate(){
 var tdPdfOcrBusy = false;
 var TD_PDF_OCR_MAX_MB = 12;
 var TD_PDF_OCR_MIN_FILL_TARGET = 40;
+var tdVoiceFillListening = false;
+var tdVoiceFillRecognition = null;
+var tdVoiceFillCellIndex = 0;
+var tdVoiceFillWritten = 0;
+var tdVoiceFillUseFocusedOrder = false;
+var TD_VOICE_FILL_MIN_TEMP = 100;
+var TD_VOICE_FILL_MAX_TEMP = 1800;
 
 function setTstPdfOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-pdf-status");
@@ -8645,6 +8657,224 @@ function setTstPdfOcrBusy(busy){
   btn.style.opacity = tdPdfOcrBusy ? "0.72" : "1";
   btn.style.cursor = tdPdfOcrBusy ? "not-allowed" : "pointer";
   btn.textContent = tdPdfOcrBusy ? "⏳ Reading PDF..." : "📄 OCR PDF to TST";
+}
+
+function setTstVoiceFillStatus(msg, color){
+  var st = document.getElementById("td-voice-fill-status");
+  if(!st) return;
+  st.textContent = msg || "Voice idle";
+  st.style.color = color || "#94a3b8";
+}
+
+function setTstVoiceFillButtonState(isListening){
+  var btn = document.getElementById("td-voice-fill-btn");
+  if(!btn) return;
+  var listening = !!isListening;
+  var supported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  btn.disabled = !supported;
+  btn.style.opacity = supported ? "1" : "0.55";
+  btn.style.cursor = supported ? "pointer" : "not-allowed";
+  btn.textContent = listening ? "⏹ Stop Voice Fill" : "🎙️ Voice Fill TST";
+  btn.style.background = listening ? "rgba(239,68,68,0.16)" : "rgba(16,185,129,0.14)";
+  btn.style.borderColor = listening ? "rgba(248,113,113,0.55)" : "rgba(16,185,129,0.45)";
+  btn.style.color = listening ? "#fecaca" : "#6ee7b7";
+}
+
+function getTstVoiceRecognitionCtor(){
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function getTdActivePeepIndex(){
+  var ids = getTdPeepFieldIds();
+  var active = document.activeElement;
+  if(!active || !active.id) return -1;
+  return ids.indexOf(active.id);
+}
+
+function getFirstEmptyTdPeepIndex(){
+  var ids = getTdPeepFieldIds();
+  for(var i=0; i<ids.length; i++){
+    var el = document.getElementById(ids[i]);
+    if(!el) continue;
+    if(String(el.value || "").trim() === "") return i;
+  }
+  return 0;
+}
+
+function normalizeTstVoiceTranscript(text){
+  return String(text || "")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractTstVoiceNumbers(text){
+  var raw = normalizeTstVoiceTranscript(text);
+  if(!raw) return [];
+
+  var out = [];
+  var hits = raw.match(/-?\d+(?:[.,]\d+)?/g) || [];
+  for(var i=0; i<hits.length; i++){
+    var token = String(hits[i]).replace(",", ".");
+    var n = Number(token);
+    if(!isFinite(n)) continue;
+    var rounded = Math.round(n);
+    if(rounded >= TD_VOICE_FILL_MIN_TEMP && rounded <= TD_VOICE_FILL_MAX_TEMP){
+      out.push(String(rounded));
+    }
+  }
+  return out;
+}
+
+function fillTdPeepFieldsFromVoiceNumbers(values){
+  if(!Array.isArray(values) || values.length < 1) return 0;
+
+  var ids = getTdPeepFieldIds();
+  var writes = 0;
+  for(var i=0; i<values.length; i++){
+    while(tdVoiceFillCellIndex < ids.length){
+      var current = document.getElementById(ids[tdVoiceFillCellIndex]);
+      if(!current){
+        tdVoiceFillCellIndex++;
+        continue;
+      }
+      if(!tdVoiceFillUseFocusedOrder && String(current.value || "").trim() !== ""){
+        tdVoiceFillCellIndex++;
+        continue;
+      }
+
+      var v = sanitizeTstValue(values[i]);
+      if(!v){
+        break;
+      }
+      current.value = v;
+      try{
+        current.dispatchEvent(new Event("input", {bubbles:true}));
+      }catch(e){}
+      tdVoiceFillCellIndex++;
+      writes++;
+      break;
+    }
+    if(tdVoiceFillCellIndex >= ids.length) break;
+  }
+  return writes;
+}
+
+function ensureTstVoiceRecognition(){
+  if(tdVoiceFillRecognition) return tdVoiceFillRecognition;
+  var Ctor = getTstVoiceRecognitionCtor();
+  if(!Ctor) return null;
+
+  var rec = new Ctor();
+  rec.lang = "en-IN";
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.maxAlternatives = 1;
+
+  rec.onresult = function(event){
+    if(!event || !event.results) return;
+    var interimChunk = "";
+    var finalChunk = "";
+    for(var i=event.resultIndex; i<event.results.length; i++){
+      var r = event.results[i];
+      if(!r || !r[0]) continue;
+      var txt = String(r[0].transcript || "").trim();
+      if(!txt) continue;
+      if(r.isFinal) finalChunk += " " + txt;
+      else interimChunk += " " + txt;
+    }
+
+    var consumed = extractTstVoiceNumbers(finalChunk);
+    var written = fillTdPeepFieldsFromVoiceNumbers(consumed);
+    if(written > 0) tdVoiceFillWritten += written;
+
+    var preview = normalizeTstVoiceTranscript(interimChunk);
+    if(preview){
+      setTstVoiceFillStatus("Listening: " + preview.slice(0, 38) + (preview.length > 38 ? "..." : ""), "#7dd3fc");
+    }else if(tdVoiceFillWritten > 0){
+      setTstVoiceFillStatus("Captured " + tdVoiceFillWritten + " values", "#34d399");
+    }else{
+      setTstVoiceFillStatus("Listening...", "#7dd3fc");
+    }
+  };
+
+  rec.onerror = function(event){
+    var code = event && event.error ? String(event.error) : "unknown";
+    if(code === "no-speech"){
+      setTstVoiceFillStatus("No speech detected. Try again.", "#fbbf24");
+    }else if(code === "not-allowed" || code === "service-not-allowed"){
+      setTstVoiceFillStatus("Microphone permission blocked", "#fca5a5");
+    }else{
+      setTstVoiceFillStatus("Voice error: " + code, "#fca5a5");
+    }
+  };
+
+  rec.onend = function(){
+    tdVoiceFillListening = false;
+    setTstVoiceFillButtonState(false);
+    if(tdVoiceFillWritten > 0){
+      setTstVoiceFillStatus("Voice filled " + tdVoiceFillWritten + " cells", "#34d399");
+      showToast("🎙️ Voice filled " + tdVoiceFillWritten + " TST cells.");
+    }else{
+      var current = document.getElementById("td-voice-fill-status");
+      var txt = current ? String(current.textContent || "") : "";
+      if(!txt || txt === "Listening..."){
+        setTstVoiceFillStatus("Voice stopped (no values captured)", "#fbbf24");
+      }
+    }
+  };
+
+  tdVoiceFillRecognition = rec;
+  return tdVoiceFillRecognition;
+}
+
+function startTstVoiceInput(){
+  if(tdVoiceFillListening) return;
+  var rec = ensureTstVoiceRecognition();
+  if(!rec){
+    setTstVoiceFillButtonState(false);
+    setTstVoiceFillStatus("Voice input not supported in this browser", "#fca5a5");
+    alert("Voice input is not supported in this browser. Please use Chrome or Edge.");
+    return;
+  }
+
+  var activeIndex = getTdActivePeepIndex();
+  tdVoiceFillUseFocusedOrder = activeIndex >= 0;
+  tdVoiceFillCellIndex = tdVoiceFillUseFocusedOrder ? activeIndex : getFirstEmptyTdPeepIndex();
+  tdVoiceFillWritten = 0;
+
+  try{
+    rec.start();
+    tdVoiceFillListening = true;
+    setTstVoiceFillButtonState(true);
+    if(tdVoiceFillUseFocusedOrder){
+      setTstVoiceFillStatus("Listening from selected cell...", "#7dd3fc");
+    }else{
+      setTstVoiceFillStatus("Listening from first empty cell...", "#7dd3fc");
+    }
+  }catch(err){
+    tdVoiceFillListening = false;
+    setTstVoiceFillButtonState(false);
+    setTstVoiceFillStatus("Could not start microphone", "#fca5a5");
+  }
+}
+
+function stopTstVoiceInput(){
+  if(!tdVoiceFillListening){
+    setTstVoiceFillButtonState(false);
+    return;
+  }
+  try{
+    if(tdVoiceFillRecognition) tdVoiceFillRecognition.stop();
+  }catch(e){
+    tdVoiceFillListening = false;
+    setTstVoiceFillButtonState(false);
+  }
+}
+
+function toggleTstVoiceInput(){
+  if(tdVoiceFillListening) stopTstVoiceInput();
+  else startTstVoiceInput();
 }
 
 function openTstPdfOcrPicker(){
@@ -9194,6 +9424,12 @@ async function handleTstPdfOcrSelect(event){
       renderTempDataTable();
     } catch(e){}
     setTstPdfOcrStatus("PDF OCR idle", "#94a3b8");
+    setTstVoiceFillButtonState(false);
+    if(getTstVoiceRecognitionCtor()){
+      setTstVoiceFillStatus("Voice idle", "#94a3b8");
+    }else{
+      setTstVoiceFillStatus("Voice not supported in this browser", "#fca5a5");
+    }
   });
 })();
 
