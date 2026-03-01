@@ -2288,6 +2288,13 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 .hm-icon-item-active{
   background:rgba(243,112,34,0.16) !important;border-color:rgba(243,112,34,0.55) !important;color:#F37022 !important;
 }
+.quick-menu-panel .hm-icon-picker{width:100%;}
+.quick-menu-panel .hm-icon-picker-btn{
+  width:100%;min-width:0;background:#0f2744;border:1px solid #334155;border-radius:6px;
+  color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;
+  padding:7px 8px;outline:none;cursor:pointer;min-height:34px;
+}
+.quick-menu-panel .hm-icon-menu{left:0;right:0;min-width:0;}
 body.light-theme .hm-wall-btn{background:rgba(0,0,0,0.04);border-color:#b8cde8;color:#4a6a8a;}
 body.light-theme .hm-wall-btn:hover{background:rgba(243,112,34,0.1);color:#F37022;border-color:#F37022;}
 body.light-theme .hm-wall-btn-active{background:rgba(243,112,34,0.12)!important;border-color:#F37022!important;color:#F37022!important;}
@@ -2297,6 +2304,9 @@ body.light-theme .hm-icon-menu{
 body.light-theme .hm-icon-item{color:#1f2937;}
 body.light-theme .hm-icon-item:hover{
   background:rgba(243,112,34,0.1);border-color:rgba(243,112,34,0.32);color:#0f172a;
+}
+body.light-theme .quick-menu-panel .hm-icon-picker-btn{
+  background:#f8fbff;border-color:#b8cde8;color:#1f2937;
 }
 @media (max-width: 900px){
   .hm-icon-picker{width:100%;}
@@ -3947,6 +3957,24 @@ function clearHeatMapDateFilter(){
               <option value="triple">10. Triple Pulse</option>
             </select>
           </div>
+          <div style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:8px 10px;">
+            <div style="font-size:11px;font-weight:700;color:#cbd5e1;letter-spacing:0.4px;">🔥 Heat Map Burner Icon</div>
+            <div class="hm-icon-picker" id="hm-icon-picker">
+              <button type="button" class="hm-icon-picker-btn" id="hm-icon-picker-btn" onclick="toggleHeatMapIconMenu(event)" aria-haspopup="true" aria-expanded="false">
+                <span class="hm-icon-picker-text">Style</span>
+                <span class="hm-icon-picker-preview" id="hm-icon-picker-preview">🔥</span>
+                <span id="hm-icon-picker-label">Classic Flame</span>
+                <span class="hm-icon-picker-caret">▾</span>
+              </button>
+              <div class="hm-icon-menu" id="hm-icon-menu" role="menu" aria-label="Select burner icon style">
+                <button type="button" class="hm-icon-item" data-icon-set="flame" onclick="setHeatMapBurnerIconSet('flame', event)">🔥 Classic Flame</button>
+                <button type="button" class="hm-icon-item" data-icon-set="twin" onclick="setHeatMapBurnerIconSet('twin', event)">♨️ Twin Flame</button>
+                <button type="button" class="hm-icon-item" data-icon-set="jet" onclick="setHeatMapBurnerIconSet('jet', event)">⚡ Jet Cone</button>
+                <button type="button" class="hm-icon-item" data-icon-set="ring" onclick="setHeatMapBurnerIconSet('ring', event)">⭕ Halo Core</button>
+                <button type="button" class="hm-icon-item" data-icon-set="spark" onclick="setHeatMapBurnerIconSet('spark', event)">✨ Spark Tip</button>
+              </div>
+            </div>
+          </div>
           <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="importFromExcel(event)">
           <input type="file" id="autoImportInput" accept=".xlsx,.xls" style="display:none" onchange="handleAutoImport(event)">
           <button class="hd-btn hd-btn-secondary" id="installAppBtn" style="display:inline-flex;" title="Install this dashboard app">⬇️ Install App</button>
@@ -5239,21 +5267,6 @@ function clearHeatMapDateFilter(){
         <button class="hm-wall-btn" id="hm-wbtn-D" onclick="switchHeatMapWall('D')">🔥 Wall D</button>
         <button class="hm-wall-btn" id="hm-wbtn-ALL" onclick="switchHeatMapWall('ALL')">📋 Every Wall</button>
         <button class="hm-wall-btn" id="hm-cuboid-toggle-btn" style="display:none;" onclick="toggleMobileCuboid()"></button>
-        <div class="hm-icon-picker" id="hm-icon-picker">
-          <button type="button" class="hm-wall-btn hm-icon-picker-btn" id="hm-icon-picker-btn" onclick="toggleHeatMapIconMenu(event)" aria-haspopup="true" aria-expanded="false">
-            <span class="hm-icon-picker-text">Burner Icon</span>
-            <span class="hm-icon-picker-preview" id="hm-icon-picker-preview">🔥</span>
-            <span id="hm-icon-picker-label">Classic Flame</span>
-            <span class="hm-icon-picker-caret">▾</span>
-          </button>
-          <div class="hm-icon-menu" id="hm-icon-menu" role="menu" aria-label="Select burner icon style">
-            <button type="button" class="hm-icon-item" data-icon-set="flame" onclick="setHeatMapBurnerIconSet('flame', event)">🔥 Classic Flame</button>
-            <button type="button" class="hm-icon-item" data-icon-set="twin" onclick="setHeatMapBurnerIconSet('twin', event)">♨️ Twin Flame</button>
-            <button type="button" class="hm-icon-item" data-icon-set="jet" onclick="setHeatMapBurnerIconSet('jet', event)">⚡ Jet Cone</button>
-            <button type="button" class="hm-icon-item" data-icon-set="ring" onclick="setHeatMapBurnerIconSet('ring', event)">⭕ Halo Core</button>
-            <button type="button" class="hm-icon-item" data-icon-set="spark" onclick="setHeatMapBurnerIconSet('spark', event)">✨ Spark Tip</button>
-          </div>
-        </div>
       </div>
       <div id="hm-wall-hint" style="display:block;text-align:center;font-size:11px;color:#94a3b8;letter-spacing:0.6px;margin:-4px 0 10px 0;">
         Select a wall button to load burner tables
@@ -6397,6 +6410,9 @@ function toggleQuickMenu(){
   if(!panel) return;
   panel.classList.toggle("open");
   panel.setAttribute("aria-hidden", panel.classList.contains("open") ? "false" : "true");
+  if(!panel.classList.contains("open") && typeof closeHeatMapIconMenu === "function"){
+    closeHeatMapIconMenu();
+  }
 }
 
 function closeQuickMenu(){
@@ -6404,6 +6420,9 @@ function closeQuickMenu(){
   if(!panel) return;
   panel.classList.remove("open");
   panel.setAttribute("aria-hidden", "true");
+  if(typeof closeHeatMapIconMenu === "function"){
+    closeHeatMapIconMenu();
+  }
 }
 
 function logout(){
