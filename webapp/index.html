@@ -3263,19 +3263,18 @@ function hmStateTransition(state, fuel, mode){
   return s === "O" ? "O → B" : "C → N";
 }
 
-function hmPickPriorityBurner(hmData, priorityRows, fuel, mode, log, hist){
+function hmPickPriorityBurnerForPeep(hmData, priorityRows, burnerNo, fuel, mode, log, hist){
   var candidates = [];
   for(var i=0; i<priorityRows.length; i++){
     var p = priorityRows[i];
-    for(var b=1; b<=15; b++){
-      var state = hmBurnerStateFromData(hmData, p.wall, p.row, b);
-      if(!hmMatchesFuelRule(state, fuel, mode)) continue;
-      var cleanDate = hmLatestCleaningDate(log, hist, p.wall, p.row, b);
-      candidates.push({
-        wall:p.wall, row:p.row, burner:b, state:state,
-        order:i, cleanDate:cleanDate
-      });
-    }
+    var b = burnerNo;
+    var state = hmBurnerStateFromData(hmData, p.wall, p.row, b);
+    if(!hmMatchesFuelRule(state, fuel, mode)) continue;
+    var cleanDate = hmLatestCleaningDate(log, hist, p.wall, p.row, b);
+    candidates.push({
+      wall:p.wall, row:p.row, burner:b, state:state,
+      order:i, cleanDate:cleanDate
+    });
   }
   if(!candidates.length) return null;
 
@@ -3294,71 +3293,98 @@ function hmPickPriorityBurner(hmData, priorityRows, fuel, mode, log, hist){
   return best;
 }
 
-function hmBuildAdjustmentForZone(zoneLabel, stats, hmData, priorityRows, log, hist){
+function hmBuildAdjustmentForZone(zoneLabel, vals, hmData, priorityRows, log, hist){
+  var stats = hmZoneStats(vals);
+  var orderText = priorityRows.map(function(p){ return p.wall + "-R" + p.row; }).join(" → ");
   if(!stats.hasData){
     return {
       className:"hm-adjust-item hm-adjust-item-empty",
       zone:zoneLabel,
       meta:"No peep-hole TST data available for this filter.",
       rule:"Save TST data to generate burner adjustment suggestions.",
-      suggestion:""
+      suggestions:[]
     };
   }
 
-  var isHigh = stats.avg > 970;
-  var isLow = stats.avg < 910;
-  if(!isHigh && !isLow){
+  var suggestions = [];
+  var highCount = 0;
+  var lowCount = 0;
+  var stableCount = 0;
+
+  for(var ph=1; ph<=15; ph++){
+    var temp = Number(Array.isArray(vals) ? vals[ph-1] : "");
+    if(!isFinite(temp)) continue;
+
+    if(temp > 970) highCount++;
+    else if(temp < 910) lowCount++;
+    else stableCount++;
+
+    if(temp >= 910 && temp <= 970) continue;
+
+    var isHigh = temp > 970;
+    var mode = isHigh ? "cut" : "take";
+    var actionWord = mode === "cut" ? "Cut" : "Take";
+    var primaryFuel = "offgas";
+    var fallbackFuel = "ng";
+    var primary = hmPickPriorityBurnerForPeep(hmData, priorityRows, ph, primaryFuel, mode, log, hist);
+    var chosen = primary;
+    var usedFuel = primaryFuel;
+    var fallbackUsed = false;
+    if(!chosen){
+      chosen = hmPickPriorityBurnerForPeep(hmData, priorityRows, ph, fallbackFuel, mode, log, hist);
+      usedFuel = fallbackFuel;
+      fallbackUsed = true;
+    }
+
+    if(chosen){
+      var fuelLabel = usedFuel === "offgas" ? "Off-gas" : "NG";
+      var transition = hmStateTransition(chosen.state, usedFuel, mode);
+      var line = actionWord + " " + fuelLabel + " at Wall " + chosen.wall + " R" + chosen.row + " B" + chosen.burner
+        + " (" + transition + ").";
+      if(fallbackUsed) line += " Off-gas unavailable, NG fallback used.";
+      suggestions.push({
+        ph:ph,
+        temp:temp,
+        text:line,
+        cleanedPriority:!!chosen.cleanedPriority
+      });
+    }else{
+      suggestions.push({
+        ph:ph,
+        temp:temp,
+        text:"No eligible burner found in priority sequence for B" + ph + ".",
+        cleanedPriority:false
+      });
+    }
+  }
+
+  var meta = "Avg " + stats.avg + "°C (Min " + stats.min + "°C · Max " + stats.max + "°C)";
+  meta += " · PH>970: " + highCount + " · PH<910: " + lowCount + " · In range: " + stableCount;
+
+  var rule = "Priority order: " + orderText + " (same burner number as peep hole). ";
+  rule += "If PH TST > 970°C: cut Off-gas first, then NG fallback. ";
+  rule += "If PH TST < 910°C: take Off-gas first, then NG fallback.";
+
+  if(!suggestions.length){
     return {
       className:"hm-adjust-item hm-adjust-item-normal",
       zone:zoneLabel,
-      meta:"Avg " + stats.avg + "°C (Min " + stats.min + "°C · Max " + stats.max + "°C)",
+      meta:meta,
       rule:"TST is within 910°C–970°C target band.",
-      suggestion:"No burner adjustment needed now."
+      suggestions:[]
     };
   }
 
-  var mode = isHigh ? "cut" : "take";
-  var primaryFuel = "offgas";
-  var fallbackFuel = "ng";
-
-  var primary = hmPickPriorityBurner(hmData, priorityRows, primaryFuel, mode, log, hist);
-  var candidate = primary;
-  var usedFuel = primaryFuel;
-  var fallbackUsed = false;
-  if(!candidate){
-    candidate = hmPickPriorityBurner(hmData, priorityRows, fallbackFuel, mode, log, hist);
-    usedFuel = fallbackFuel;
-    fallbackUsed = true;
-  }
-
-  var baseRule = isHigh
-    ? "If TST > 970°C: cut Off-gas first; if unavailable, cut NG."
-    : "If TST < 910°C: take Off-gas first; if unavailable, take NG.";
-  var suggestion = "";
-
-  if(candidate){
-    var fuelLabel = usedFuel === "offgas" ? "Off-gas" : "NG";
-    var actionWord = mode === "cut" ? "Cut" : "Take";
-    var trans = hmStateTransition(candidate.state, usedFuel, mode);
-    suggestion =
-      actionWord + " " + fuelLabel + " at Wall " + candidate.wall + " R" + candidate.row + " B" + candidate.burner
-      + " (" + trans + ").";
-    if(fallbackUsed){
-      suggestion += " Off-gas candidate not found in priority rows, so NG fallback applied.";
-    }
-    if(candidate.cleanedPriority){
-      suggestion += ' <span class="hm-adjust-badge">🧹 Cleaned Priority</span>';
-    }
-  }else{
-    suggestion = "No eligible burner found in the defined priority rows.";
-  }
+  var cls = "hm-adjust-item hm-adjust-item-normal";
+  if(highCount > 0 && lowCount === 0) cls = "hm-adjust-item hm-adjust-item-high";
+  if(lowCount > 0 && highCount === 0) cls = "hm-adjust-item hm-adjust-item-low";
 
   return {
-    className: isHigh ? "hm-adjust-item hm-adjust-item-high" : "hm-adjust-item hm-adjust-item-low",
+    className: cls,
     zone:zoneLabel,
-    meta:"Avg " + stats.avg + "°C (Min " + stats.min + "°C · Max " + stats.max + "°C)",
-    rule:baseRule,
-    suggestion:suggestion
+    meta:meta,
+    rule:rule,
+    suggestions:suggestions
   };
 }
 
@@ -3403,13 +3429,24 @@ function updateHeatMapAdjustmentLogic(snapshot){
   var html = "";
   for(var i=0; i<zones.length; i++){
     var z = zones[i];
-    var stats = hmZoneStats(z.vals);
-    var row = hmBuildAdjustmentForZone(z.label, stats, hmData, z.priority, log, hist);
+    var row = hmBuildAdjustmentForZone(z.label, z.vals, hmData, z.priority, log, hist);
+    var listHtml = "";
+    if(Array.isArray(row.suggestions) && row.suggestions.length){
+      for(var j=0; j<row.suggestions.length; j++){
+        var s = row.suggestions[j];
+        listHtml += '<div class="hm-adjust-suggest"><b>PH' + s.ph + ' (' + s.temp + '°C)</b>: '
+          + s.text
+          + (s.cleanedPriority ? ' <span class="hm-adjust-badge">🧹 Cleaned Priority</span>' : '')
+          + '</div>';
+      }
+    }else{
+      listHtml = '<div class="hm-adjust-suggest">No per-peep-hole adjustment needed.</div>';
+    }
     html += '<div class="' + row.className + '">'
       + '<div class="hm-adjust-zone">' + row.zone + '</div>'
       + '<div class="hm-adjust-meta">' + row.meta + '</div>'
       + '<div class="hm-adjust-rule">' + row.rule + '</div>'
-      + '<div class="hm-adjust-suggest">' + row.suggestion + '</div>'
+      + listHtml
       + '</div>';
   }
   list.innerHTML = html || '<div class="hm-adjust-empty">No adjustment data available.</div>';
