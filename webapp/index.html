@@ -5155,12 +5155,12 @@ function requestHeatMapRender(delayMs){
             style="background:rgba(129,140,248,0.14);border:1px solid rgba(129,140,248,0.42);color:#a5b4fc;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
             ⬇️ Download TST Format
           </button>
-          <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
+          <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
           <div class="td-fill-menu-wrap">
             <span style="font-size:10px;font-weight:800;color:#7ec8f0;letter-spacing:0.6px;text-transform:uppercase;">Fill TST</span>
             <select id="td-fill-mode" class="td-fill-select" onchange="onTstFillModeChanged()">
               <option value="ramp">📈 Ramp Fill 930 (Default)</option>
-              <option value="ocr">📄 OCR PDF to TST</option>
+              <option value="ocr">📄 OCR File (PDF/Photo) to TST</option>
               <option value="voice">🎙️ Voice Fill TST</option>
             </select>
             <button type="button" id="td-fill-run-btn" class="td-fill-run-btn" onclick="runSelectedTstFillAction()">📈 Ramp Fill 930</button>
@@ -5168,7 +5168,7 @@ function requestHeatMapRender(delayMs){
           <div style="display:flex;align-items:center;gap:6px;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">
             <span id="td-ramp-fill-status" style="max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Ramp preset idle</span>
             <span style="color:#64748b;">•</span>
-            <span id="td-ocr-pdf-status" style="max-width:125px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">PDF OCR idle</span>
+            <span id="td-ocr-pdf-status" style="max-width:125px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">OCR idle</span>
             <span style="color:#64748b;">•</span>
             <span id="td-voice-fill-status" style="max-width:125px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Voice idle</span>
           </div>
@@ -9232,7 +9232,7 @@ function updateTstFillRunButtonState(){
   btn.style.cursor = "pointer";
 
   if(mode === "ocr"){
-    btn.textContent = tdPdfOcrBusy ? "⏳ Reading PDF..." : "📄 OCR PDF to TST";
+    btn.textContent = tdPdfOcrBusy ? "⏳ Reading file..." : "📄 OCR File to TST";
     btn.style.background = "rgba(56,189,248,0.14)";
     btn.style.borderColor = "rgba(56,189,248,0.45)";
     btn.style.color = "#7dd3fc";
@@ -9286,7 +9286,7 @@ function runSelectedTstFillAction(){
 function setTstPdfOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-pdf-status");
   if(!st) return;
-  st.textContent = msg || "PDF OCR idle";
+  st.textContent = msg || "OCR idle";
   st.style.color = color || "#94a3b8";
 }
 
@@ -9297,7 +9297,7 @@ function setTstPdfOcrBusy(busy){
     btn.disabled = tdPdfOcrBusy;
     btn.style.opacity = tdPdfOcrBusy ? "0.72" : "1";
     btn.style.cursor = tdPdfOcrBusy ? "not-allowed" : "pointer";
-    btn.textContent = tdPdfOcrBusy ? "⏳ Reading PDF..." : "📄 OCR PDF to TST";
+    btn.textContent = tdPdfOcrBusy ? "⏳ Reading file..." : "📄 OCR File to TST";
   }
   updateTstFillRunButtonState();
 }
@@ -9345,7 +9345,7 @@ function countFilledTstInputCells(){
 
 function fillTstRampPreset930(){
   if(tdPdfOcrBusy){
-    alert("PDF OCR is in progress. Please wait until it completes.");
+    alert("OCR is in progress. Please wait until it completes.");
     return;
   }
   if(tdVoiceFillListening){
@@ -9572,6 +9572,79 @@ function openTstPdfOcrPicker(){
   if(tdPdfOcrBusy) return;
   var input = document.getElementById("td-ocr-pdf-file");
   if(input) input.click();
+}
+
+function getTstOcrFileKind(file){
+  var mime = String(file && file.type || "").toLowerCase();
+  var name = String(file && file.name || "");
+  if(mime === "application/pdf" || /\.pdf$/i.test(name)) return "pdf";
+  if(mime.indexOf("image/") === 0 || /\.(jpg|jpeg|png|webp|bmp|gif|tif|tiff|heic|heif)$/i.test(name)) return "image";
+  return "";
+}
+
+function readFileAsDataUrl(file){
+  return new Promise(function(resolve, reject){
+    try{
+      var fr = new FileReader();
+      fr.onload = function(){ resolve(String(fr.result || "")); };
+      fr.onerror = function(){ reject(new Error("Could not read selected image file.")); };
+      fr.readAsDataURL(file);
+    }catch(err){
+      reject(err);
+    }
+  });
+}
+
+function loadImageFromDataUrl(dataUrl){
+  return new Promise(function(resolve, reject){
+    try{
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = function(){ reject(new Error("Could not decode selected image.")); };
+      img.src = dataUrl;
+    }catch(err){
+      reject(err);
+    }
+  });
+}
+
+async function buildTstOcrImageCandidates(file){
+  var baseDataUrl = await readFileAsDataUrl(file);
+  if(!baseDataUrl) throw new Error("Could not read selected image.");
+
+  var variants = [{ dataUrl: baseDataUrl, label: "orig" }];
+  try{
+    var img = await loadImageFromDataUrl(baseDataUrl);
+    var srcW = img.naturalWidth || img.width || 0;
+    var srcH = img.naturalHeight || img.height || 0;
+    if(srcW > 0 && srcH > 0){
+      var maxDim = 2200;
+      var scale = Math.min(1, maxDim / Math.max(srcW, srcH));
+      var w = Math.max(1, Math.round(srcW * scale));
+      var h = Math.max(1, Math.round(srcH * scale));
+
+      var canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext("2d", { alpha:false });
+      if(ctx){
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        variants.push({ dataUrl: canvas.toDataURL("image/jpeg", 0.94), label: "jpeg" });
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, w, h);
+        ctx.filter = "grayscale(0.15) contrast(1.32) brightness(1.08)";
+        ctx.drawImage(img, 0, 0, w, h);
+        ctx.filter = "none";
+        variants.push({ dataUrl: canvas.toDataURL("image/jpeg", 0.92), label: "contrast" });
+      }
+    }
+  }catch(e){}
+
+  return variants;
 }
 
 function normalizeTstOcrText(raw){
@@ -10039,6 +10112,50 @@ async function readPdfTextAndImages(file, maxPages){
   return { text: text.trim(), images: images, pages: pages };
 }
 
+async function runTstOcrForPdfFile(file){
+  var extracted = await readPdfTextAndImages(file, 2);
+
+  var textParsed = parseTstSheetText(extracted.text || "");
+  var bestValues = normalizeTstArray(textParsed.values || [], 60);
+  var bestCount = countFilledTstValues(bestValues);
+  var bestMode = "pdf-text-" + (textParsed.mode || "parse");
+
+  if(bestCount < TD_PDF_OCR_MIN_FILL_TARGET && Array.isArray(extracted.images)){
+    for(var i=0; i<extracted.images.length; i++){
+      setTstPdfOcrStatus("OCR fallback page " + (i+1) + "/" + extracted.images.length + "...", "#7ec8f0");
+      var relayRes = await runRelayTstOcrOnDataUrl(extracted.images[i], file.name || ("tst-page-" + (i+1) + ".jpg"));
+      if(relayRes && countFilledTstValues(relayRes.values) > bestCount){
+        bestValues = normalizeTstArray(relayRes.values || [], 60);
+        bestCount = countFilledTstValues(bestValues);
+        bestMode = relayRes.mode || "relay-ocr";
+      }
+      if(bestCount >= TD_PDF_OCR_MIN_FILL_TARGET) break;
+    }
+  }
+
+  return { values: bestValues, count: bestCount, mode: bestMode, kind: "pdf" };
+}
+
+async function runTstOcrForImageFile(file){
+  var variants = await buildTstOcrImageCandidates(file);
+  var bestValues = normalizeTstArray([], 60);
+  var bestCount = 0;
+  var bestMode = "image-ocr";
+
+  for(var i=0; i<variants.length; i++){
+    setTstPdfOcrStatus("OCR photo " + (i+1) + "/" + variants.length + "...", "#7ec8f0");
+    var relayRes = await runRelayTstOcrOnDataUrl(variants[i].dataUrl, file.name || ("tst-photo-" + (i+1) + ".jpg"));
+    if(relayRes && countFilledTstValues(relayRes.values) > bestCount){
+      bestValues = normalizeTstArray(relayRes.values || [], 60);
+      bestCount = countFilledTstValues(bestValues);
+      bestMode = (relayRes.mode || "relay-ocr") + "+" + variants[i].label;
+    }
+    if(bestCount >= TD_PDF_OCR_MIN_FILL_TARGET) break;
+  }
+
+  return { values: bestValues, count: bestCount, mode: bestMode, kind: "image" };
+}
+
 async function handleTstPdfOcrSelect(event){
   var fileInput = document.getElementById("td-ocr-pdf-file");
   var file = event && event.target && event.target.files ? event.target.files[0] : null;
@@ -10048,51 +10165,38 @@ async function handleTstPdfOcrSelect(event){
   }
 
   try{
-    var isPdf = (file.type === "application/pdf") || /\.pdf$/i.test(file.name || "");
-    if(!isPdf){
-      alert("Please upload PDF file only.");
+    var fileKind = getTstOcrFileKind(file);
+    if(!fileKind){
+      alert("Please upload a PDF or image file (JPG, PNG, WEBP, HEIC).");
       return;
     }
     if((file.size || 0) > TD_PDF_OCR_MAX_MB * 1024 * 1024){
-      alert("PDF is too large. Please keep it under " + TD_PDF_OCR_MAX_MB + " MB.");
+      alert("File is too large. Please keep it under " + TD_PDF_OCR_MAX_MB + " MB.");
       return;
     }
 
     setTstPdfOcrBusy(true);
-    setTstPdfOcrStatus("Starting PDF OCR...", "#7ec8f0");
+    setTstPdfOcrStatus(fileKind === "pdf" ? "Starting PDF OCR..." : "Starting photo OCR...", "#7ec8f0");
 
-    var extracted = await readPdfTextAndImages(file, 2);
+    var result = (fileKind === "pdf")
+      ? await runTstOcrForPdfFile(file)
+      : await runTstOcrForImageFile(file);
 
-    var textParsed = parseTstSheetText(extracted.text || "");
-    var bestValues = normalizeTstArray(textParsed.values || [], 60);
-    var bestCount = countFilledTstValues(bestValues);
-    var bestMode = "pdf-text-" + (textParsed.mode || "parse");
-
-    if(bestCount < TD_PDF_OCR_MIN_FILL_TARGET && Array.isArray(extracted.images)){
-      for(var i=0; i<extracted.images.length; i++){
-        setTstPdfOcrStatus("OCR fallback page " + (i+1) + "/" + extracted.images.length + "...", "#7ec8f0");
-        var relayRes = await runRelayTstOcrOnDataUrl(extracted.images[i], file.name || ("tst-page-" + (i+1) + ".jpg"));
-        if(relayRes && countFilledTstValues(relayRes.values) > bestCount){
-          bestValues = normalizeTstArray(relayRes.values || [], 60);
-          bestCount = countFilledTstValues(bestValues);
-          bestMode = relayRes.mode || "relay-ocr";
-        }
-        if(bestCount >= TD_PDF_OCR_MIN_FILL_TARGET) break;
-      }
-    }
+    var bestValues = normalizeTstArray(result.values || [], 60);
+    var bestMode = result.mode || "ocr";
 
     var written = fillTdPeepFieldsFromList(bestValues, true);
     if(written < 1){
       setTstPdfOcrStatus("No TST values detected", "#fca5a5");
-      alert("Could not detect TST values from this PDF. Try a clearer scan or a proper TST sheet PDF.");
+      alert("Could not detect TST values from this file. Try a clearer PDF/photo or proper TST sheet.");
       return;
     }
 
     setTstPdfOcrStatus("Filled " + written + " cells (" + bestMode + ")", "#34d399");
-    showToast("✅ OCR filled " + written + " TST cells from PDF.");
+    showToast("✅ OCR filled " + written + " TST cells from " + (fileKind === "pdf" ? "PDF" : "photo") + ".");
   }catch(err){
-    setTstPdfOcrStatus("PDF OCR failed", "#fca5a5");
-    alert("PDF OCR failed: " + (err && err.message ? err.message : err));
+    setTstPdfOcrStatus("OCR failed", "#fca5a5");
+    alert("OCR failed: " + (err && err.message ? err.message : err));
   }finally{
     if(fileInput) fileInput.value = "";
     setTstPdfOcrBusy(false);
@@ -10114,7 +10218,7 @@ async function handleTstPdfOcrSelect(event){
       if(saved) tempDataEntries = JSON.parse(saved);
       renderTempDataTable();
     } catch(e){}
-    setTstPdfOcrStatus("PDF OCR idle", "#94a3b8");
+    setTstPdfOcrStatus("OCR idle", "#94a3b8");
     setTstVoiceFillButtonState(false);
     if(getTstVoiceRecognitionCtor()){
       setTstVoiceFillStatus("Voice idle", "#94a3b8");
