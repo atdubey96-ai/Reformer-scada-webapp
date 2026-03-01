@@ -10595,10 +10595,13 @@ function sanitizeTstValue(raw){
 
 function fillTdPeepFieldsFromList(values, onlyNonEmpty){
   var ids = getTdPeepFieldIds();
-  var n = Math.min(ids.length, Array.isArray(values) ? values.length : 0);
+  var start = Number(arguments[2]);
+  if(!isFinite(start)) start = 0;
+  start = Math.max(0, Math.min(ids.length - 1, Math.floor(start)));
+  var n = Math.min(ids.length - start, Array.isArray(values) ? values.length : 0);
   var written = 0;
   for(var i=0; i<n; i++){
-    var el = document.getElementById(ids[i]);
+    var el = document.getElementById(ids[start + i]);
     if(!el) continue;
     var val = sanitizeTstValue(values[i]);
     if(onlyNonEmpty && val === "") continue;
@@ -10606,6 +10609,65 @@ function fillTdPeepFieldsFromList(values, onlyNonEmpty){
     if(val !== "") written++;
   }
   return written;
+}
+
+function getTdPeepFieldStartIndexById(inputId){
+  var ids = getTdPeepFieldIds();
+  for(var i=0; i<ids.length; i++){
+    if(ids[i] === inputId) return i;
+  }
+  return 0;
+}
+
+function onTdPeepInputPaste(event){
+  var target = event && event.target;
+  if(!target || !target.id || target.id.indexOf("td-ph-") !== 0) return;
+
+  var clip = event.clipboardData || window.clipboardData;
+  if(!clip || typeof clip.getData !== "function") return;
+
+  var text = String(clip.getData("text") || "");
+  if(!text.trim()) return;
+
+  var parsed = parseTstTempNumbers(text);
+  if(parsed.length < 2) return;
+
+  event.preventDefault();
+
+  var ids = getTdPeepFieldIds();
+  var start = getTdPeepFieldStartIndexById(target.id);
+  var capacity = Math.max(0, ids.length - start);
+  var toFill = parsed.slice(0, capacity);
+  var written = fillTdPeepFieldsFromList(toFill, true, start);
+  if(written < 1) return;
+
+  var lastId = ids[Math.min(ids.length - 1, start + toFill.length - 1)];
+  var lastEl = lastId ? document.getElementById(lastId) : null;
+  if(lastEl){
+    try{
+      lastEl.focus();
+      lastEl.select();
+    }catch(e){}
+  }
+
+  var ignored = Math.max(0, parsed.length - toFill.length);
+  if(ignored > 0){
+    showToast("📥 Pasted " + written + " TST values (" + ignored + " ignored)");
+  }else{
+    showToast("📥 Pasted " + written + " TST values");
+  }
+}
+
+function bindTdPeepPasteSupport(){
+  var inputs = document.querySelectorAll("#tab-tempdata .td-ph-input");
+  if(!inputs || !inputs.length) return;
+  for(var i=0; i<inputs.length; i++){
+    var input = inputs[i];
+    if(!input) continue;
+    if(input.dataset && input.dataset.pasteBound === "1") continue;
+    input.addEventListener("paste", onTdPeepInputPaste);
+    if(input.dataset) input.dataset.pasteBound = "1";
+  }
 }
 
 function countFilledTstValues(values){
@@ -10974,6 +11036,7 @@ async function handleTstPdfOcrSelect(event){
 /* Initialize datetime field with current time */
 (function initTempDataTab(){
   document.addEventListener("DOMContentLoaded", function(){
+    bindTdPeepPasteSupport();
     var dtInput = document.getElementById("td-datetime");
     if(dtInput){
       var now = new Date();
