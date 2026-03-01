@@ -4291,15 +4291,9 @@ function clearHeatMapDateFilter(){
         .cb-face .hm-burner-wrap svg    { width: 28px !important; height: 44px !important; }
 
         @keyframes cbFlameLite{
-          0%,100%{transform:translateY(0) scaleY(1) scaleX(1);opacity:0.92;}
-          18%{transform:translateY(-1px) scaleY(1.14) scaleX(0.91);opacity:1;}
-          40%{transform:translateY(0) scaleY(0.9) scaleX(1.08);opacity:0.85;}
-          62%{transform:translateY(-1px) scaleY(1.18) scaleX(0.88);opacity:1;}
-          82%{transform:translateY(0) scaleY(0.95) scaleX(1.03);opacity:0.9;}
-        }
-        @keyframes cbFlameGlowPulse{
-          0%,100%{opacity:0.3;transform:translateX(-50%) scale(0.9);}
-          50%{opacity:0.52;transform:translateX(-50%) scale(1.14);}
+          0%,100%{transform:scaleY(1) scaleX(1);opacity:0.9;}
+          35%{transform:scaleY(1.08) scaleX(0.94);opacity:0.98;}
+          70%{transform:scaleY(0.94) scaleX(1.05);opacity:0.84;}
         }
 
         /* Cuboid-only flame style: keep SVG flames and avoid expensive emoji/filter paints */
@@ -4310,18 +4304,9 @@ function clearHeatMapDateFilter(){
         .cb-face .hm-burner-wrap.hm-flame svg{
           display:block !important;
           transform-origin:50% 100%;
-          animation:cbFlameLite 1.55s ease-in-out infinite !important;
-          will-change:transform,opacity;
+          animation:cbFlameLite 2.25s ease-in-out infinite !important;
+          will-change:auto;
           filter:none !important;
-        }
-        .cb-face .hm-burner-wrap.hm-flame.hm-flame-O svg{
-          filter:drop-shadow(0 0 4px rgba(74,222,128,0.65)) drop-shadow(0 0 10px rgba(34,197,94,0.42)) !important;
-        }
-        .cb-face .hm-burner-wrap.hm-flame.hm-flame-N svg{
-          filter:drop-shadow(0 0 4px rgba(253,224,71,0.65)) drop-shadow(0 0 10px rgba(245,158,11,0.42)) !important;
-        }
-        .cb-face .hm-burner-wrap.hm-flame.hm-flame-B svg{
-          filter:drop-shadow(0 0 4px rgba(125,211,252,0.65)) drop-shadow(0 0 10px rgba(59,130,246,0.42)) !important;
         }
         .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+1).hm-flame svg{ animation-delay:0.10s; }
         .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+2).hm-flame svg{ animation-delay:0.70s; }
@@ -4334,14 +4319,14 @@ function clearHeatMapDateFilter(){
         .cb-peephole-content .hm-burner-wrap:hover{transform:none !important;}
         .cb-face .hm-burner-wrap.hm-flame::after{
           display:block !important;
-          opacity:0.32 !important;
-          animation:cbFlameGlowPulse 2.2s ease-in-out infinite !important;
+          opacity:0.2 !important;
+          animation:none !important;
           box-shadow:none !important;
           filter:none !important;
         }
-        .cb-face .hm-flame-O::after{background:radial-gradient(ellipse,rgba(34,197,94,0.66) 0%,transparent 72%) !important;box-shadow:0 0 10px rgba(22,163,74,0.22) !important;}
-        .cb-face .hm-flame-N::after{background:radial-gradient(ellipse,rgba(251,191,36,0.66) 0%,transparent 72%) !important;box-shadow:0 0 10px rgba(217,119,6,0.22) !important;}
-        .cb-face .hm-flame-B::after{background:radial-gradient(ellipse,rgba(147,197,253,0.66) 0%,transparent 72%) !important;box-shadow:0 0 10px rgba(37,99,235,0.22) !important;}
+        .cb-face .hm-flame-O::after{background:radial-gradient(ellipse,rgba(34,197,94,0.45) 0%,transparent 74%) !important;box-shadow:none !important;}
+        .cb-face .hm-flame-N::after{background:radial-gradient(ellipse,rgba(251,191,36,0.45) 0%,transparent 74%) !important;box-shadow:none !important;}
+        .cb-face .hm-flame-B::after{background:radial-gradient(ellipse,rgba(147,197,253,0.45) 0%,transparent 74%) !important;box-shadow:none !important;}
         .cb-peephole-content .hm-burner-wrap.hm-flame svg{
           animation:none !important;
           opacity:0.82;
@@ -4355,11 +4340,11 @@ function clearHeatMapDateFilter(){
         #tab-heatmap.hm-interacting .cb-face .hm-burner-wrap.hm-flame svg,
         #tab-heatmap.hm-interacting .cb-peephole-content .hm-burner-wrap.hm-flame svg{
           animation-play-state:paused !important;
-          opacity:0.86 !important;
+          opacity:0.82 !important;
         }
         #tab-heatmap.hm-interacting .cb-face .hm-burner-wrap.hm-flame::after,
         #tab-heatmap.hm-interacting .cb-peephole-content .hm-burner-wrap.hm-flame::after{
-          opacity:0.18 !important;
+          opacity:0.12 !important;
         }
 
         /* Row label — bold pill, maximum contrast */
