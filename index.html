@@ -1814,6 +1814,24 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
   }
+  #tab-tempdata .td-manual-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+  #tab-tempdata .td-manual-grid .td-field-group{min-width:0;}
+  #tab-tempdata .td-manual-grid .td-label{font-size:10px;line-height:1.25;}
+  #tab-tempdata .td-manual-grid .td-input{font-size:13px;padding:8px 9px;}
+  #tab-tempdata .td-fill-menu-wrap{
+    width:100%;
+    justify-content:space-between;
+    gap:6px;
+    padding:6px 8px;
+  }
+  #tab-tempdata .td-fill-select{
+    min-width:0;
+    flex:1 1 auto;
+    font-size:12px;
+  }
   #td-saved-table{min-width:980px !important;}
   .hm-mobile-scroll{
     overflow-x:auto;
@@ -1821,6 +1839,7 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     padding-bottom:2px;
   }
   .hm-mobile-scroll .hm-wall-card{min-width:860px;}
+  .hm-adjust-grid{grid-template-columns:1fr;}
 }
 @media (max-width:600px){
   .app-top-status{gap:6px;}
@@ -2133,6 +2152,25 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 }
 .td-ph-input:focus{border-color:#F37022;box-shadow:0 0 0 2px rgba(243,112,34,0.18);}
 .td-ph-input::placeholder{color:#334155;font-size:11px;}
+.td-fill-menu-wrap{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.14);
+  border-radius:8px;padding:6px 10px;
+}
+.td-fill-select{
+  min-width:180px;
+  background:#1e293b;border:1px solid #334155;border-radius:6px;color:#e2e8f0;
+  font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;
+  outline:none;cursor:pointer;padding:5px 8px;
+}
+.td-fill-run-btn{
+  border:1px solid transparent;border-radius:7px;
+  color:#fbbf24;padding:8px 11px;font-size:12px;font-weight:800;
+  font-family:'Rajdhani',sans-serif;cursor:pointer;
+  background:rgba(245,158,11,0.14);border-color:rgba(245,158,11,0.45);
+  transition:opacity .2s,background .2s,border-color .2s,color .2s;
+}
 .td-row-label{
   font-size:11px;font-weight:700;letter-spacing:0.5px;
   text-align:center;border-radius:5px;
@@ -2204,7 +2242,10 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 .hm-burners-line .hm-burner-wrap:nth-child(5n+5) svg{animation-delay:0.55s;}
 /* Burner number header row */
 .hm-burner-nums{flex:1;display:flex;gap:6px;justify-content:center;padding:0 0 2px 0;}
-.hm-bnum{width:28px;text-align:center;font-size:8px;font-weight:700;color:#4a6a8a;letter-spacing:0.3px;flex-shrink:0;}
+.hm-bnum{
+  width:28px;text-align:center;font-size:10px;font-weight:800;color:#c2d7f2;
+  letter-spacing:0.3px;flex-shrink:0;text-shadow:0 1px 2px rgba(2,6,23,0.95);
+}
 
 /* ====================================================
    REFORMER HEAT MAP STYLES
@@ -2294,48 +2335,103 @@ body.light-theme .hm-wall-btn-active{background:rgba(243,112,34,0.12)!important;
 .hm-wall-meta{font-size:10px;color:#7ec8f0;margin-left:auto;font-weight:600;}
 .hm-body{padding:10px 14px;display:flex;flex-direction:column;gap:1px;}
 .hm-row-wrap{display:flex;align-items:center;gap:6px;padding:1px 0;flex-wrap:nowrap;}
-.hm-row-label{font-size:9px;color:#94a3b8;font-weight:700;min-width:38px;text-align:right;letter-spacing:0.5px;}
+.hm-row-label{
+  font-size:10px;color:#c6d5e5;font-weight:800;min-width:44px;text-align:right;
+  letter-spacing:0.5px;text-shadow:0 1px 2px rgba(2,6,23,0.9);
+}
 .hm-burners-line{flex:1;display:flex;gap:6px;justify-content:center;align-items:flex-end;}
 .hm-burner{width:28px;height:28px;display:flex;align-items:flex-end;justify-content:center;cursor:default;position:relative;flex-shrink:0;}
 .hm-peep-wrap{display:flex;align-items:center;gap:8px;padding:5px 0;margin:4px 0;}
-.hm-peep-label{font-size:8px;color:#94a3b8;font-weight:700;min-width:38px;text-align:right;line-height:1.3;}
+.hm-peep-label{
+  font-size:10px;color:#d1e4ff;font-weight:800;min-width:46px;text-align:right;
+  line-height:1.3;text-shadow:0 1px 2px rgba(2,6,23,0.95);
+}
 .hm-peep-cells{flex:1;display:flex;gap:2px;align-items:center;}
 .hm-peep-cell{width:22px;flex:1;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,0.12);cursor:default;transition:opacity 0.15s;min-width:0;}
 .hm-peep-cell:hover{opacity:0.75;}
-.hm-peep-range{font-size:8px;color:#94a3b8;white-space:nowrap;min-width:60px;font-weight:600;}
+.hm-peep-range{
+  font-size:10px;color:#c6d7ee;white-space:nowrap;min-width:74px;
+  font-weight:700;text-shadow:0 1px 2px rgba(2,6,23,0.9);
+}
 /* ── Continuous gradient peep hole bar ── */
 .hm-peep-gradient-wrap{display:flex;align-items:center;gap:8px;padding:6px 0;margin:4px 0;}
 .hm-peep-gradient-bar-wrap{flex:1;position:relative;height:22px;border-radius:6px;overflow:visible;cursor:crosshair;}
 .hm-peep-gradient-bar{width:100%;height:100%;border-radius:6px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 0 10px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08);}
 .hm-peep-marker{position:absolute;top:-6px;width:2px;height:34px;background:rgba(255,255,255,0.85);border-radius:1px;pointer-events:none;z-index:2;box-shadow:0 0 3px rgba(255,255,255,0.4);}
-.hm-peep-temp-label{position:absolute;top:-14px;font-size:7px;font-weight:700;color:#e2e8f0;white-space:nowrap;transform:translateX(-50%);text-shadow:0 1px 3px rgba(0,0,0,0.8);z-index:3;}
-.hm-peep-dot{position:absolute;top:50%;width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.85);transform:translate(-50%,-50%);z-index:4;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;}
+.hm-peep-temp-label{
+  position:absolute;top:-16px;font-size:9px;font-weight:800;color:#f8fafc;white-space:nowrap;
+  transform:translateX(-50%);text-shadow:0 1px 4px rgba(0,0,0,0.95);z-index:3;
+}
+.hm-peep-dot{
+  position:absolute;top:50%;width:9px;height:9px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.88);transform:translate(-50%,-50%);
+  z-index:4;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;
+}
 .hm-peep-dot:hover{transform:translate(-50%,-50%) scale(1.6);box-shadow:0 0 8px rgba(255,255,255,0.5);}
 /* ── Burner data row summary badges ── */
-.hm-row-data-strip{display:flex;align-items:center;gap:3px;margin-left:6px;flex-shrink:0;width:118px;min-width:118px;justify-content:flex-end;}
-.hm-row-data-badge{font-size:8px;font-weight:800;padding:2px 5px;border-radius:3px;letter-spacing:0.3px;line-height:1;white-space:nowrap;border:1px solid transparent;}
+.hm-row-data-strip{display:flex;align-items:center;gap:3px;margin-left:6px;flex-shrink:0;width:132px;min-width:132px;justify-content:flex-end;}
+.hm-row-data-badge{font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;letter-spacing:0.3px;line-height:1;white-space:nowrap;border:1px solid transparent;}
 .hm-row-data-badge-O{background:rgba(22,163,74,0.2);color:#4ade80;border-color:rgba(22,163,74,0.4);}
 .hm-row-data-badge-N{background:rgba(217,119,6,0.2);color:#fbbf24;border-color:rgba(217,119,6,0.4);}
 .hm-row-data-badge-B{background:rgba(37,99,235,0.15);color:#3b82f6;border-color:rgba(37,99,235,0.35);}
 .hm-row-data-badge-C{background:rgba(100,116,139,0.15);color:#64748b;border-color:rgba(100,116,139,0.3);}
 .hm-side-label{font-size:11px;color:#F37022;font-weight:700;letter-spacing:2px;margin-bottom:12px;padding:6px 12px;background:rgba(243,112,34,0.08);border-left:3px solid #F37022;border-radius:0 6px 6px 0;display:inline-block;}
+.hm-adjust-card{
+  margin:12px 0 16px;background:#0f1f38;border:1px solid #1e3a5e;border-radius:12px;
+  padding:12px 14px;box-shadow:0 10px 28px rgba(2,6,23,0.35);
+}
+.hm-adjust-title{
+  font-size:13px;font-weight:800;letter-spacing:0.8px;color:#f0c060;text-transform:uppercase;
+}
+.hm-adjust-sub{
+  margin-top:4px;font-size:11px;color:#9fb6d1;line-height:1.45;
+}
+.hm-adjust-grid{
+  margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+}
+.hm-adjust-item{
+  border:1px solid rgba(126,200,240,0.28);border-radius:10px;padding:8px 10px;
+  background:rgba(10,22,40,0.8);
+}
+.hm-adjust-item-high{border-color:rgba(248,113,113,0.42);background:rgba(127,29,29,0.2);}
+.hm-adjust-item-low{border-color:rgba(52,211,153,0.42);background:rgba(6,78,59,0.2);}
+.hm-adjust-item-normal{border-color:rgba(126,200,240,0.32);}
+.hm-adjust-item-empty{border-color:rgba(100,116,139,0.35);}
+.hm-adjust-zone{font-size:12px;font-weight:800;color:#e2e8f0;letter-spacing:0.5px;}
+.hm-adjust-meta{margin-top:2px;font-size:10px;color:#9fb6d1;}
+.hm-adjust-rule{margin-top:6px;font-size:11px;color:#cbd5e1;line-height:1.4;}
+.hm-adjust-suggest{margin-top:5px;font-size:11px;color:#f8fafc;line-height:1.45;}
+.hm-adjust-badge{
+  display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:999px;
+  font-size:9px;font-weight:800;letter-spacing:0.4px;background:rgba(22,163,74,0.22);
+  border:1px solid rgba(74,222,128,0.4);color:#86efac;margin-left:6px;
+}
+.hm-adjust-empty{
+  grid-column:1 / -1;text-align:center;font-size:11px;color:#94a3b8;
+  padding:10px;border:1px dashed rgba(148,163,184,0.32);border-radius:8px;
+}
 body.light-theme .hm-wall-card{background:#e8f0fa;border-color:#b8cde8;}
 body.light-theme .hm-peep-label{color:#1e3a5a !important;}
 body.light-theme .hm-peep-range{color:#2a4a6a !important;}
 body.light-theme .hm-wall-meta{color:#2a4a6a !important;}
 body.light-theme .hm-wall-header{background:linear-gradient(90deg,#dce6f4,#c8d8ee);}
-body.light-theme .hm-row-label{color:#4a6a8a;}
-body.light-theme .hm-peep-label{color:#4a6a8a;}
-body.light-theme .hm-peep-range{color:#4a6a8a;}
-body.light-theme .hm-bnum{color:#6a8aaa;}
+body.light-theme .hm-row-label{color:#375a7e;text-shadow:none;}
+body.light-theme .hm-peep-label{color:#375a7e !important;text-shadow:none;}
+body.light-theme .hm-peep-range{color:#375a7e !important;text-shadow:none;}
+body.light-theme .hm-bnum{color:#375a7e;text-shadow:none;}
 body.light-theme .hm-peep-gradient-bar{border-color:rgba(0,0,0,0.2);}
-body.light-theme .hm-peep-temp-label{color:#1e293b;text-shadow:0 1px 2px rgba(255,255,255,0.8);}
+body.light-theme .hm-peep-temp-label{color:#1e293b;text-shadow:0 1px 1px rgba(255,255,255,0.85);}
 body.light-theme .hm-peep-dot{border-color:rgba(0,0,0,0.6);}
 body.light-theme .hm-peep-marker{background:rgba(0,0,0,0.6);box-shadow:0 0 3px rgba(0,0,0,0.3);}
 body.light-theme .hm-row-data-badge-O{background:rgba(22,163,74,0.15);color:#15803d;}
 body.light-theme .hm-row-data-badge-N{background:rgba(217,119,6,0.2);color:#92400e;}
 body.light-theme .hm-row-data-badge-B{background:rgba(20,184,166,0.15);color:#0f766e;}
 body.light-theme .hm-row-data-badge-C{background:rgba(100,116,139,0.1);color:#475569;}
+body.light-theme .hm-adjust-card{background:#e8f0fa;border-color:#b8cde8;}
+body.light-theme .hm-adjust-sub{color:#476a90;}
+body.light-theme .hm-adjust-item{background:#f8fbff;border-color:#9dc2e8;}
+body.light-theme .hm-adjust-rule{color:#1f3552;}
+body.light-theme .hm-adjust-suggest{color:#0f172a;}
 
 
 /* === Mobile Login Final Override === */
@@ -3092,8 +3188,231 @@ function renderHeatMap(){
     entryDt: entry ? entry.dt : ""
   };
 
+  updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
   clearHeatMapPanelContent();
   if(activeWall) ensureHeatMapWallBuilt(activeWall);
+}
+
+function hmToNumericTemps(vals){
+  var out = [];
+  if(!Array.isArray(vals)) return out;
+  for(var i=0; i<vals.length; i++){
+    var n = Number(vals[i]);
+    if(isFinite(n)) out.push(n);
+  }
+  return out;
+}
+
+function hmZoneStats(vals){
+  var nums = hmToNumericTemps(vals);
+  if(!nums.length) return {hasData:false, avg:null, min:null, max:null, count:0};
+  var sum = 0, min = nums[0], max = nums[0];
+  for(var i=0; i<nums.length; i++){
+    var v = nums[i];
+    sum += v;
+    if(v < min) min = v;
+    if(v > max) max = v;
+  }
+  return {
+    hasData:true,
+    avg:Math.round((sum / nums.length) * 10) / 10,
+    min:Math.round(min * 10) / 10,
+    max:Math.round(max * 10) / 10,
+    count:nums.length
+  };
+}
+
+function hmBurnerStateFromData(hmData, wall, row, burner){
+  var rows = hmData && hmData[wall];
+  if(!rows || !Array.isArray(rows) || !rows[row-1] || !Array.isArray(rows[row-1])) return "C";
+  var s = String(rows[row-1][burner-1] || "C").toUpperCase();
+  return (s === "B" || s === "N" || s === "O" || s === "C") ? s : "C";
+}
+
+function hmLatestCleaningDate(log, hist, wall, row, burner){
+  var key = "R" + row + "B" + burner;
+  var best = "";
+  try{
+    if(log && log[wall] && log[wall][key]) best = String(log[wall][key]);
+  }catch(e){}
+  try{
+    var arr = (hist && hist[wall] && Array.isArray(hist[wall][key])) ? hist[wall][key] : [];
+    for(var i=0; i<arr.length; i++){
+      var d = String(arr[i] || "");
+      if(d && d > best) best = d;
+    }
+  }catch(e){}
+  return best;
+}
+
+function hmMatchesFuelRule(state, fuel, mode){
+  var s = String(state || "C").toUpperCase();
+  if(fuel === "offgas"){
+    return mode === "cut" ? (s === "O" || s === "B") : !(s === "O" || s === "B");
+  }
+  return mode === "cut" ? (s === "N" || s === "B") : !(s === "N" || s === "B");
+}
+
+function hmStateTransition(state, fuel, mode){
+  var s = String(state || "C").toUpperCase();
+  if(mode === "cut"){
+    if(fuel === "offgas") return s === "B" ? "B → N" : "O → C";
+    return s === "B" ? "B → O" : "N → C";
+  }
+  if(fuel === "offgas") return s === "N" ? "N → B" : "C → O";
+  return s === "O" ? "O → B" : "C → N";
+}
+
+function hmPickPriorityBurner(hmData, priorityRows, fuel, mode, log, hist){
+  var candidates = [];
+  for(var i=0; i<priorityRows.length; i++){
+    var p = priorityRows[i];
+    for(var b=1; b<=15; b++){
+      var state = hmBurnerStateFromData(hmData, p.wall, p.row, b);
+      if(!hmMatchesFuelRule(state, fuel, mode)) continue;
+      var cleanDate = hmLatestCleaningDate(log, hist, p.wall, p.row, b);
+      candidates.push({
+        wall:p.wall, row:p.row, burner:b, state:state,
+        order:i, cleanDate:cleanDate
+      });
+    }
+  }
+  if(!candidates.length) return null;
+
+  var cleaned = candidates.filter(function(c){ return !!c.cleanDate; });
+  var useCleaned = cleaned.length > 0;
+  var pool = useCleaned ? cleaned : candidates;
+  pool.sort(function(a,b){
+    if(useCleaned && a.cleanDate !== b.cleanDate){
+      return a.cleanDate < b.cleanDate ? 1 : -1;
+    }
+    if(a.order !== b.order) return a.order - b.order;
+    return a.burner - b.burner;
+  });
+  var best = pool[0];
+  best.cleanedPriority = useCleaned;
+  return best;
+}
+
+function hmBuildAdjustmentForZone(zoneLabel, stats, hmData, priorityRows, log, hist){
+  if(!stats.hasData){
+    return {
+      className:"hm-adjust-item hm-adjust-item-empty",
+      zone:zoneLabel,
+      meta:"No peep-hole TST data available for this filter.",
+      rule:"Save TST data to generate burner adjustment suggestions.",
+      suggestion:""
+    };
+  }
+
+  var isHigh = stats.avg > 970;
+  var isLow = stats.avg < 910;
+  if(!isHigh && !isLow){
+    return {
+      className:"hm-adjust-item hm-adjust-item-normal",
+      zone:zoneLabel,
+      meta:"Avg " + stats.avg + "°C (Min " + stats.min + "°C · Max " + stats.max + "°C)",
+      rule:"TST is within 910°C–970°C target band.",
+      suggestion:"No burner adjustment needed now."
+    };
+  }
+
+  var mode = isHigh ? "cut" : "take";
+  var primaryFuel = "offgas";
+  var fallbackFuel = "ng";
+
+  var primary = hmPickPriorityBurner(hmData, priorityRows, primaryFuel, mode, log, hist);
+  var candidate = primary;
+  var usedFuel = primaryFuel;
+  var fallbackUsed = false;
+  if(!candidate){
+    candidate = hmPickPriorityBurner(hmData, priorityRows, fallbackFuel, mode, log, hist);
+    usedFuel = fallbackFuel;
+    fallbackUsed = true;
+  }
+
+  var baseRule = isHigh
+    ? "If TST > 970°C: cut Off-gas first; if unavailable, cut NG."
+    : "If TST < 910°C: take Off-gas first; if unavailable, take NG.";
+  var suggestion = "";
+
+  if(candidate){
+    var fuelLabel = usedFuel === "offgas" ? "Off-gas" : "NG";
+    var actionWord = mode === "cut" ? "Cut" : "Take";
+    var trans = hmStateTransition(candidate.state, usedFuel, mode);
+    suggestion =
+      actionWord + " " + fuelLabel + " at Wall " + candidate.wall + " R" + candidate.row + " B" + candidate.burner
+      + " (" + trans + ").";
+    if(fallbackUsed){
+      suggestion += " Off-gas candidate not found in priority rows, so NG fallback applied.";
+    }
+    if(candidate.cleanedPriority){
+      suggestion += ' <span class="hm-adjust-badge">🧹 Cleaned Priority</span>';
+    }
+  }else{
+    suggestion = "No eligible burner found in the defined priority rows.";
+  }
+
+  return {
+    className: isHigh ? "hm-adjust-item hm-adjust-item-high" : "hm-adjust-item hm-adjust-item-low",
+    zone:zoneLabel,
+    meta:"Avg " + stats.avg + "°C (Min " + stats.min + "°C · Max " + stats.max + "°C)",
+    rule:baseRule,
+    suggestion:suggestion
+  };
+}
+
+function updateHeatMapAdjustmentLogic(snapshot){
+  var list = document.getElementById("hm-adjustment-list");
+  if(!list) return;
+
+  var hmData = snapshot && snapshot.hmData ? snapshot.hmData : null;
+  if(!hmData){
+    list.innerHTML = '<div class="hm-adjust-empty">No burner map data available.</div>';
+    return;
+  }
+
+  var log = {};
+  var hist = {};
+  try{ if(typeof loadCleaningLog === "function") log = loadCleaningLog() || {}; }catch(e){}
+  try{ if(typeof loadCleaningHistory === "function") hist = loadCleaningHistory() || {}; }catch(e){}
+
+  var zones = [
+    {
+      label:"AB Bottom",
+      vals:snapshot ? snapshot.abBot : null,
+      priority:[{wall:"A",row:1},{wall:"B",row:1},{wall:"A",row:2},{wall:"B",row:2}]
+    },
+    {
+      label:"AB Top",
+      vals:snapshot ? snapshot.abTop : null,
+      priority:[{wall:"A",row:4},{wall:"B",row:4},{wall:"A",row:3},{wall:"B",row:3}]
+    },
+    {
+      label:"CD Bottom",
+      vals:snapshot ? snapshot.cdBot : null,
+      priority:[{wall:"C",row:1},{wall:"D",row:1},{wall:"C",row:2},{wall:"D",row:2}]
+    },
+    {
+      label:"CD Top",
+      vals:snapshot ? snapshot.cdTop : null,
+      priority:[{wall:"C",row:4},{wall:"D",row:4},{wall:"C",row:3},{wall:"D",row:3}]
+    }
+  ];
+
+  var html = "";
+  for(var i=0; i<zones.length; i++){
+    var z = zones[i];
+    var stats = hmZoneStats(z.vals);
+    var row = hmBuildAdjustmentForZone(z.label, stats, hmData, z.priority, log, hist);
+    html += '<div class="' + row.className + '">'
+      + '<div class="hm-adjust-zone">' + row.zone + '</div>'
+      + '<div class="hm-adjust-meta">' + row.meta + '</div>'
+      + '<div class="hm-adjust-rule">' + row.rule + '</div>'
+      + '<div class="hm-adjust-suggest">' + row.suggestion + '</div>'
+      + '</div>';
+  }
+  list.innerHTML = html || '<div class="hm-adjust-empty">No adjustment data available.</div>';
 }
 
 /* Coalesce burst updates from dropdown/tab/button events */
@@ -3751,8 +4070,8 @@ function requestHeatMapRender(delayMs){
         .cb-face .hm-peep-gradient-bar-wrap { height: 30px !important; flex: 1 1 auto !important; min-width: 0 !important; }
         .cb-face .hm-peep-marker            { height: 34px !important; top: -2px !important; }
         .cb-face .hm-peep-dot               { width: 11px !important; height: 11px !important; }
-        .cb-face .hm-peep-temp-label        { font-size: 9px !important; top: -18px !important; }
-        .cb-face .hm-peep-label             { min-width: 36px !important; font-size: 10px !important; color: #ffffff !important; font-weight: 900 !important; text-shadow: 0 1px 4px rgba(0,0,0,1) !important; }
+        .cb-face .hm-peep-temp-label        { font-size: 10px !important; top: -18px !important; }
+        .cb-face .hm-peep-label             { min-width: 36px !important; font-size: 11px !important; color: #ffffff !important; font-weight: 900 !important; text-shadow: 0 1px 4px rgba(0,0,0,1) !important; }
         .cb-face .hm-peep-range             { display: none !important; }
 
         /* ── VISIBILITY BOOST: darker background + brighter text on face ── */
@@ -3948,19 +4267,19 @@ function requestHeatMapRender(delayMs){
         <!-- ══ CD SIDE CUBOID ══ -->
         <div class="cb-wrap">
           <div class="cb-title" style="color:#7ec8f0;background:rgba(126,200,240,0.1);border:1px solid rgba(126,200,240,0.35);">CD SIDE ▶</div>
-          <div class="cb-subtitle">Outer face = <span style="color:#7ec8f0;font-weight:700;">Wall D</span> &nbsp;·&nbsp; Inner face = <span style="color:#60c8ff;font-weight:700;">Wall C</span></div>
+          <div class="cb-subtitle">Outer face = <span style="color:#7ec8f0;font-weight:700;">Wall C</span> &nbsp;·&nbsp; Inner face = <span style="color:#60c8ff;font-weight:700;">Wall D</span></div>
 
           <div class="cb-scene cb-float" id="cd-scene">
             <div class="cb-group" id="cd-cube" style="transform:rotateX(-8deg) rotateY(-85deg);">
 
-              <!-- FRONT = Wall D -->
+              <!-- FRONT = Wall C -->
               <div class="cb-face cb-fb" id="face-cd-front" style="transform:translateZ(80px);border:2px solid rgba(243,112,34,0.75);background:#0a1628;">
-                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#7ec8f0;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-cd-front-loading">⏳ RENDERING WALL D…</div>
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#7ec8f0;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-cd-front-loading">⏳ RENDERING WALL C…</div>
               </div>
 
-              <!-- BACK = Wall C -->
+              <!-- BACK = Wall D -->
               <div class="cb-face cb-fb" id="face-cd-back" style="transform:rotateY(180deg) translateZ(80px);border:2px solid rgba(251,146,60,0.65);background:#0a1628;">
-                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#60c8ff;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-cd-back-loading">⏳ RENDERING WALL C…</div>
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#60c8ff;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-cd-back-loading">⏳ RENDERING WALL D…</div>
               </div>
 
               <!-- LEFT side cap — peep holes into cuboid interior -->
@@ -4303,10 +4622,10 @@ function requestHeatMapRender(delayMs){
           renderWallFace("B", abBot, abTop, hmData["B"],
             document.getElementById('face-ab-back'),  document.getElementById('face-ab-back-loading'),  '#fb923c');
 
-          renderWallFace("D", cdBot, cdTop, hmData["D"],
+          renderWallFace("C", cdBot, cdTop, hmData["C"],
             document.getElementById('face-cd-front'), document.getElementById('face-cd-front-loading'), '#7ec8f0');
 
-          renderWallFace("C", cdBot, cdTop, hmData["C"],
+          renderWallFace("D", cdBot, cdTop, hmData["D"],
             document.getElementById('face-cd-back'),  document.getElementById('face-cd-back-loading'),  '#60c8ff');
 
           /* ── Fill peep-hole viewports with depth-rotated wall content ── */
@@ -4430,11 +4749,11 @@ function requestHeatMapRender(delayMs){
           fillOne("ph-ab-R-top", htmlA, htmlA, htmlB, PH_TY_TOP);
           fillOne("ph-ab-R-bot", htmlA, htmlA, htmlB, PH_TY_BOT);
 
-          /* CD: near = Wall D (outer), far = Wall C (inner) */
-          fillOne("ph-cd-L-top", htmlD, htmlD, htmlC, PH_TY_TOP);
-          fillOne("ph-cd-L-bot", htmlD, htmlD, htmlC, PH_TY_BOT);
-          fillOne("ph-cd-R-top", htmlD, htmlD, htmlC, PH_TY_TOP);
-          fillOne("ph-cd-R-bot", htmlD, htmlD, htmlC, PH_TY_BOT);
+          /* CD: near = Wall C (outer), far = Wall D (inner) */
+          fillOne("ph-cd-L-top", htmlC, htmlC, htmlD, PH_TY_TOP);
+          fillOne("ph-cd-L-bot", htmlC, htmlC, htmlD, PH_TY_BOT);
+          fillOne("ph-cd-R-top", htmlC, htmlC, htmlD, PH_TY_TOP);
+          fillOne("ph-cd-R-bot", htmlC, htmlC, htmlD, PH_TY_BOT);
         }
         if(document.readyState === 'loading'){
           document.addEventListener('DOMContentLoaded', scheduleCuboidTextures);
@@ -4463,6 +4782,18 @@ function requestHeatMapRender(delayMs){
 
       })();
       </script>
+
+      <div id="hm-adjust-card" class="hm-adjust-card">
+        <div class="hm-adjust-title">🎯 Burner Adjustment Logic (TST + Cleaning Priority)</div>
+        <div class="hm-adjust-sub">
+          Rule used: <b>TST &gt; 970°C</b> → Cut Off-gas first (fallback Cut NG) ·
+          <b>TST &lt; 910°C</b> → Take Off-gas first (fallback Take NG).
+          Cleaned burners are prioritized before non-cleaned burners.
+        </div>
+        <div id="hm-adjustment-list" class="hm-adjust-grid">
+          <div class="hm-adjust-empty">No TST data available for the selected shift/date.</div>
+        </div>
+      </div>
 
       <!-- Wall selector buttons + individual wall containers -->
       <div class="hm-wall-btn-bar" id="hm-wall-btn-bar">
@@ -4767,21 +5098,22 @@ function requestHeatMapRender(delayMs){
             ⬇️ Download TST Format
           </button>
           <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
-          <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()"
-            style="background:rgba(56,189,248,0.14);border:1px solid rgba(56,189,248,0.45);color:#7dd3fc;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
-            📄 OCR PDF to TST
-          </button>
-          <span id="td-ocr-pdf-status" style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">PDF OCR idle</span>
-          <button type="button" id="td-voice-fill-btn" onclick="toggleTstVoiceInput()"
-            style="background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.45);color:#6ee7b7;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
-            🎙️ Voice Fill TST
-          </button>
-          <span id="td-voice-fill-status" style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">Voice idle</span>
-          <button type="button" id="td-ramp-fill-btn" onclick="fillTstRampPreset930()"
-            style="background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.45);color:#fbbf24;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
-            📈 Ramp Fill 930
-          </button>
-          <span id="td-ramp-fill-status" style="max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">Ramp preset idle</span>
+          <div class="td-fill-menu-wrap">
+            <span style="font-size:10px;font-weight:800;color:#7ec8f0;letter-spacing:0.6px;text-transform:uppercase;">Fill TST</span>
+            <select id="td-fill-mode" class="td-fill-select" onchange="onTstFillModeChanged()">
+              <option value="ramp">📈 Ramp Fill 930 (Default)</option>
+              <option value="ocr">📄 OCR PDF to TST</option>
+              <option value="voice">🎙️ Voice Fill TST</option>
+            </select>
+            <button type="button" id="td-fill-run-btn" class="td-fill-run-btn" onclick="runSelectedTstFillAction()">📈 Ramp Fill 930</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#94a3b8;">
+            <span id="td-ramp-fill-status" style="max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Ramp preset idle</span>
+            <span style="color:#64748b;">•</span>
+            <span id="td-ocr-pdf-status" style="max-width:125px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">PDF OCR idle</span>
+            <span style="color:#64748b;">•</span>
+            <span id="td-voice-fill-status" style="max-width:125px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Voice idle</span>
+          </div>
           <!-- Save / Clear -->
           <button id="td-save-btn" onclick="saveTempData()"
             style="background:linear-gradient(90deg,#d95008,#F37022);border:none;color:#fff;padding:9px 20px;border-radius:7px;font-size:14px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.5px;box-shadow:0 3px 14px rgba(243,112,34,0.4);">
@@ -4799,7 +5131,7 @@ function requestHeatMapRender(delayMs){
         <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);">
           ⚙️ Process Temperatures
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">
+        <div class="td-manual-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">
 
           <!-- HGU Load -->
           <div class="td-field-group">
@@ -8825,6 +9157,74 @@ var TD_VOICE_FILL_MIN_TEMP = 100;
 var TD_VOICE_FILL_MAX_TEMP = 1800;
 var TD_RAMP_PRESET_BASE = 930;
 
+function getSelectedTstFillMode(){
+  var sel = document.getElementById("td-fill-mode");
+  return sel ? String(sel.value || "ramp") : "ramp";
+}
+
+function updateTstFillRunButtonState(){
+  var btn = document.getElementById("td-fill-run-btn");
+  if(!btn) return;
+
+  var mode = getSelectedTstFillMode();
+  var voiceSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  btn.disabled = false;
+  btn.style.opacity = "1";
+  btn.style.cursor = "pointer";
+
+  if(mode === "ocr"){
+    btn.textContent = tdPdfOcrBusy ? "⏳ Reading PDF..." : "📄 OCR PDF to TST";
+    btn.style.background = "rgba(56,189,248,0.14)";
+    btn.style.borderColor = "rgba(56,189,248,0.45)";
+    btn.style.color = "#7dd3fc";
+    if(tdPdfOcrBusy){
+      btn.disabled = true;
+      btn.style.opacity = "0.72";
+      btn.style.cursor = "not-allowed";
+    }
+    return;
+  }
+
+  if(mode === "voice"){
+    if(!voiceSupported){
+      btn.textContent = "🎙️ Voice unsupported";
+      btn.style.background = "rgba(100,116,139,0.18)";
+      btn.style.borderColor = "rgba(148,163,184,0.45)";
+      btn.style.color = "#cbd5e1";
+      btn.disabled = true;
+      btn.style.opacity = "0.6";
+      btn.style.cursor = "not-allowed";
+      return;
+    }
+    btn.textContent = tdVoiceFillListening ? "⏹ Stop Voice Fill" : "🎙️ Voice Fill TST";
+    btn.style.background = tdVoiceFillListening ? "rgba(239,68,68,0.16)" : "rgba(16,185,129,0.14)";
+    btn.style.borderColor = tdVoiceFillListening ? "rgba(248,113,113,0.55)" : "rgba(16,185,129,0.45)";
+    btn.style.color = tdVoiceFillListening ? "#fecaca" : "#6ee7b7";
+    return;
+  }
+
+  btn.textContent = "📈 Ramp Fill 930";
+  btn.style.background = "rgba(245,158,11,0.14)";
+  btn.style.borderColor = "rgba(245,158,11,0.45)";
+  btn.style.color = "#fbbf24";
+}
+
+function onTstFillModeChanged(){
+  var mode = getSelectedTstFillMode();
+  if(mode !== "voice" && tdVoiceFillListening){
+    try{ stopTstVoiceInput(); }catch(e){}
+  }
+  updateTstFillRunButtonState();
+}
+
+function runSelectedTstFillAction(){
+  var mode = getSelectedTstFillMode();
+  if(mode === "ocr"){ openTstPdfOcrPicker(); return; }
+  if(mode === "voice"){ toggleTstVoiceInput(); return; }
+  fillTstRampPreset930();
+}
+
 function setTstPdfOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-pdf-status");
   if(!st) return;
@@ -8835,11 +9235,13 @@ function setTstPdfOcrStatus(msg, color){
 function setTstPdfOcrBusy(busy){
   tdPdfOcrBusy = !!busy;
   var btn = document.getElementById("td-ocr-pdf-btn");
-  if(!btn) return;
-  btn.disabled = tdPdfOcrBusy;
-  btn.style.opacity = tdPdfOcrBusy ? "0.72" : "1";
-  btn.style.cursor = tdPdfOcrBusy ? "not-allowed" : "pointer";
-  btn.textContent = tdPdfOcrBusy ? "⏳ Reading PDF..." : "📄 OCR PDF to TST";
+  if(btn){
+    btn.disabled = tdPdfOcrBusy;
+    btn.style.opacity = tdPdfOcrBusy ? "0.72" : "1";
+    btn.style.cursor = tdPdfOcrBusy ? "not-allowed" : "pointer";
+    btn.textContent = tdPdfOcrBusy ? "⏳ Reading PDF..." : "📄 OCR PDF to TST";
+  }
+  updateTstFillRunButtonState();
 }
 
 function setTstVoiceFillStatus(msg, color){
@@ -8851,16 +9253,18 @@ function setTstVoiceFillStatus(msg, color){
 
 function setTstVoiceFillButtonState(isListening){
   var btn = document.getElementById("td-voice-fill-btn");
-  if(!btn) return;
   var listening = !!isListening;
   var supported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-  btn.disabled = !supported;
-  btn.style.opacity = supported ? "1" : "0.55";
-  btn.style.cursor = supported ? "pointer" : "not-allowed";
-  btn.textContent = listening ? "⏹ Stop Voice Fill" : "🎙️ Voice Fill TST";
-  btn.style.background = listening ? "rgba(239,68,68,0.16)" : "rgba(16,185,129,0.14)";
-  btn.style.borderColor = listening ? "rgba(248,113,113,0.55)" : "rgba(16,185,129,0.45)";
-  btn.style.color = listening ? "#fecaca" : "#6ee7b7";
+  if(btn){
+    btn.disabled = !supported;
+    btn.style.opacity = supported ? "1" : "0.55";
+    btn.style.cursor = supported ? "pointer" : "not-allowed";
+    btn.textContent = listening ? "⏹ Stop Voice Fill" : "🎙️ Voice Fill TST";
+    btn.style.background = listening ? "rgba(239,68,68,0.16)" : "rgba(16,185,129,0.14)";
+    btn.style.borderColor = listening ? "rgba(248,113,113,0.55)" : "rgba(16,185,129,0.45)";
+    btn.style.color = listening ? "#fecaca" : "#6ee7b7";
+  }
+  updateTstFillRunButtonState();
 }
 
 function setTstRampFillStatus(msg, color){
@@ -9660,6 +10064,9 @@ async function handleTstPdfOcrSelect(event){
       setTstVoiceFillStatus("Voice not supported in this browser", "#fca5a5");
     }
     setTstRampFillStatus("Ramp preset idle", "#94a3b8");
+    var fillSel = document.getElementById("td-fill-mode");
+    if(fillSel) fillSel.value = "ramp";
+    updateTstFillRunButtonState();
   });
 })();
 
