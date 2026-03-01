@@ -10967,7 +10967,7 @@ function renderTempDataTable(){
     tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
     return;
   }
-  var display = tempDataEntries.slice(0, 15);
+  var display = tempDataEntries.slice();
   var shiftColors = {Morning:"#34d399",Evening:"#fb923c",Night:"#818cf8"};
   var rows = "";
   for(var i = 0; i < display.length; i++){
