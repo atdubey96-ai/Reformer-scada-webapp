@@ -2377,11 +2377,15 @@ body.light-theme .hm-wall-btn-active{background:rgba(243,112,34,0.12)!important;
 .hm-row-data-badge-C{background:rgba(100,116,139,0.15);color:#64748b;border-color:rgba(100,116,139,0.3);}
 .hm-side-label{font-size:11px;color:#F37022;font-weight:700;letter-spacing:2px;margin-bottom:12px;padding:6px 12px;background:rgba(243,112,34,0.08);border-left:3px solid #F37022;border-radius:0 6px 6px 0;display:inline-block;}
 .hm-adjust-card{
-  margin:12px 0 16px;background:#0f1f38;border:1px solid #1e3a5e;border-radius:12px;
-  padding:12px 14px;box-shadow:0 10px 28px rgba(2,6,23,0.35);
+  margin:12px 0 16px;
+  background:linear-gradient(180deg,#102542 0%,#0b1a30 100%);
+  border:1px solid rgba(96,165,250,0.42);
+  border-radius:12px;padding:12px 14px;
+  box-shadow:0 14px 34px rgba(2,6,23,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 .hm-adjust-title{
-  font-size:13px;font-weight:800;letter-spacing:0.8px;color:#f0c060;text-transform:uppercase;
+  font-size:13px;font-weight:800;letter-spacing:0.8px;color:#ffd98b;text-transform:uppercase;
+  text-shadow:0 1px 2px rgba(0,0,0,0.7);
 }
 .hm-adjust-sub{
   margin-top:4px;font-size:11px;color:#9fb6d1;line-height:1.45;
@@ -2391,17 +2395,25 @@ body.light-theme .hm-wall-btn-active{background:rgba(243,112,34,0.12)!important;
   margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
 }
 .hm-adjust-item{
-  border:1px solid rgba(126,200,240,0.28);border-radius:10px;padding:8px 10px;
-  background:rgba(10,22,40,0.8);
+  border:1px solid rgba(126,200,240,0.42);border-radius:10px;padding:8px 10px;
+  background:rgba(7,18,35,0.92);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
 }
 .hm-adjust-item-high{border-color:rgba(248,113,113,0.42);background:rgba(127,29,29,0.2);}
 .hm-adjust-item-low{border-color:rgba(52,211,153,0.42);background:rgba(6,78,59,0.2);}
 .hm-adjust-item-normal{border-color:rgba(126,200,240,0.32);}
 .hm-adjust-item-empty{border-color:rgba(100,116,139,0.35);}
-.hm-adjust-zone{font-size:12px;font-weight:800;color:#e2e8f0;letter-spacing:0.5px;}
-.hm-adjust-meta{margin-top:2px;font-size:10px;color:#9fb6d1;}
+.hm-adjust-zone{font-size:13px;font-weight:800;color:#f8fafc;letter-spacing:0.5px;}
+.hm-adjust-meta{margin-top:3px;font-size:11px;color:#c6d7ee;}
 .hm-adjust-rule{margin-top:6px;font-size:11px;color:#cbd5e1;line-height:1.4;display:none;}
-.hm-adjust-suggest{margin-top:5px;font-size:11px;color:#f8fafc;line-height:1.45;}
+.hm-adjust-suggest{
+  margin-top:6px;font-size:12px;color:#f8fafc;line-height:1.45;
+  background:rgba(2,6,23,0.58);border:1px solid rgba(148,163,184,0.28);
+  border-left:3px solid rgba(125,211,252,0.85);border-radius:8px;padding:6px 8px;
+}
+.hm-adjust-item-high .hm-adjust-suggest{border-left-color:rgba(248,113,113,0.9);}
+.hm-adjust-item-low .hm-adjust-suggest{border-left-color:rgba(74,222,128,0.9);}
+.hm-adjust-suggest b{color:#ffffff;}
 .hm-adjust-badge{
   display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:999px;
   font-size:9px;font-weight:800;letter-spacing:0.4px;background:rgba(22,163,74,0.22);
@@ -2428,11 +2440,19 @@ body.light-theme .hm-row-data-badge-O{background:rgba(22,163,74,0.15);color:#158
 body.light-theme .hm-row-data-badge-N{background:rgba(217,119,6,0.2);color:#92400e;}
 body.light-theme .hm-row-data-badge-B{background:rgba(20,184,166,0.15);color:#0f766e;}
 body.light-theme .hm-row-data-badge-C{background:rgba(100,116,139,0.1);color:#475569;}
-body.light-theme .hm-adjust-card{background:#e8f0fa;border-color:#b8cde8;}
+body.light-theme .hm-adjust-card{
+  background:linear-gradient(180deg,#f4f8ff 0%,#e8f1fb 100%);
+  border-color:#9dc2e8;
+  box-shadow:0 10px 24px rgba(30,58,90,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+}
 body.light-theme .hm-adjust-sub{color:#476a90;}
-body.light-theme .hm-adjust-item{background:#f8fbff;border-color:#9dc2e8;}
+body.light-theme .hm-adjust-item{background:#ffffff;border-color:#9dc2e8;}
 body.light-theme .hm-adjust-rule{color:#1f3552;}
-body.light-theme .hm-adjust-suggest{color:#0f172a;}
+body.light-theme .hm-adjust-zone{color:#0f172a;}
+body.light-theme .hm-adjust-meta{color:#334e72;}
+body.light-theme .hm-adjust-suggest{
+  color:#0f172a;background:#f3f7fd;border-color:#c3d6ec;border-left-color:#3b82f6;
+}
 
 
 /* === Mobile Login Final Override === */
@@ -10502,7 +10522,28 @@ function tempToColorInline(val, minT, maxT){
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
-      navigator.serviceWorker.register("./sw.js").catch(function(){});
+      navigator.serviceWorker.register("./sw.js").then(function(reg){
+        if(reg.waiting){
+          reg.waiting.postMessage({type:"SKIP_WAITING"});
+        }
+        reg.addEventListener("updatefound", function(){
+          var nw = reg.installing;
+          if(!nw) return;
+          nw.addEventListener("statechange", function(){
+            if(nw.state === "installed" && navigator.serviceWorker.controller){
+              nw.postMessage({type:"SKIP_WAITING"});
+            }
+          });
+        });
+        if(typeof reg.update === "function"){
+          reg.update().catch(function(){});
+        }
+      }).catch(function(){});
+    });
+    navigator.serviceWorker.addEventListener("controllerchange", function(){
+      if(window.__scadaSwReloaded) return;
+      window.__scadaSwReloaded = true;
+      window.location.reload();
     });
   }
 
