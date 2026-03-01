@@ -4019,23 +4019,6 @@ function clearHeatMapDateFilter(){
           pointer-events:none;
           z-index:5;
         }
-        .cb-scene::after{
-          content:"";
-          position:absolute;
-          inset:0;
-          border-radius:14px;
-          pointer-events:none;
-          z-index:4;
-          background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,0.06) 45%,transparent 80%);
-          transform:translateX(-60%);
-          animation:cbSceneSweep 7.2s ease-in-out infinite;
-          opacity:0.75;
-        }
-        @keyframes cbSceneSweep{
-          0%{transform:translateX(-65%);}
-          52%{transform:translateX(165%);}
-          100%{transform:translateX(165%);}
-        }
         .cb-scene-ab::before{
           border-color:rgba(243,112,34,0.28);
           box-shadow:inset 0 0 34px rgba(243,112,34,0.1), inset 0 0 20px rgba(2,6,23,0.36);
