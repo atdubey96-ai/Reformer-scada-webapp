@@ -5843,7 +5843,7 @@ function clearHeatMapDateFilter(){
             </select>
             <button type="button" id="td-fill-run-btn" class="td-fill-run-btn" onclick="runSelectedTstFillAction()">📈 Ramp Fill 930</button>
           </div>
-          <div class="td-toolbar-status">
+          <div class="td-toolbar-status" style="display:none;">
             <span id="td-ramp-fill-status" style="max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Ramp preset idle</span>
             <span id="td-ocr-pdf-status" style="display:none;">OCR idle</span>
             <span id="td-voice-fill-status" style="display:none;">Voice idle</span>
@@ -10109,11 +10109,20 @@ function extractTstVoiceNumbers(text){
     var n = Number(token);
     if(!isFinite(n)) continue;
     var rounded = Math.round(n);
-    if(rounded >= TD_VOICE_FILL_MIN_TEMP && rounded <= TD_VOICE_FILL_MAX_TEMP){
-      out.push(String(rounded));
-    }
+    out.push(String(rounded));
   }
   return out;
+}
+
+function sanitizeTstVoiceValue(raw){
+  if(raw === null || raw === undefined) return "";
+  var token = String(raw).trim();
+  if(!token) return "";
+  var temp = parseTstLikelyTempFromToken(token);
+  if(isFinite(temp)) return String(Math.round(temp));
+  var n = Number(String(token).replace(",", "."));
+  if(isFinite(n)) return String(Math.round(n));
+  return "";
 }
 
 function fillTdPeepFieldsFromVoiceNumbers(values){
@@ -10133,7 +10142,7 @@ function fillTdPeepFieldsFromVoiceNumbers(values){
         continue;
       }
 
-      var v = sanitizeTstValue(values[i]);
+      var v = sanitizeTstVoiceValue(values[i]);
       if(!v){
         break;
       }
