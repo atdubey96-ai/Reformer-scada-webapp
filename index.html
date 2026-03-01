@@ -2179,12 +2179,17 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 #td-saved-table tbody tr:nth-child(even){background:rgba(255,255,255,0.025);}
 #td-saved-table tbody tr:hover{background:rgba(255,255,255,0.05);}
 #td-saved-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);color:#cbd5e1;vertical-align:top;}
+#td-saved-table .td-dt-wrap{display:flex;flex-direction:column;gap:2px;line-height:1.15;min-width:132px;}
+#td-saved-table .td-dt-date{font-size:12px;font-weight:700;color:#e2e8f0;letter-spacing:0.2px;white-space:nowrap;}
+#td-saved-table .td-dt-time{font-size:11px;font-weight:700;color:#7ec8f0;white-space:nowrap;}
 #td-saved-table .td-del-btn{
   background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);
   color:#f87171;padding:4px 10px;border-radius:5px;
   font-size:11px;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;
 }
 #td-saved-table .td-del-btn:hover{background:rgba(239,68,68,0.25);}
+body.light-theme #td-saved-table .td-dt-date{color:#1e293b;}
+body.light-theme #td-saved-table .td-dt-time{color:#2563eb;}
 
 
 /* ── Reformer Heat Map — Dynamic Burner Flame Styles ── */
@@ -10960,6 +10965,38 @@ function phMinMax(entry, rk){
   return mn === mx ? mn + "°C" : mn + "°C / " + mx + "°C";
 }
 
+function formatTempEntryDateTime(rawDt){
+  var s = String(rawDt || "").trim();
+  if(!s) return {date:"—", time:""};
+
+  var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+  if(m){
+    var y = Number(m[1]);
+    var mo = Number(m[2]);
+    var d = Number(m[3]);
+    var hh = m[4] || "";
+    var mm = m[5] || "";
+    var moTxt = (mo >= 1 && mo <= 12) ? months[mo - 1] : m[2];
+    return {
+      date: String(d).padStart(2, "0") + " " + moTxt + " " + y,
+      time: (hh && mm) ? (hh + ":" + mm) : ""
+    };
+  }
+
+  var dt = new Date(s);
+  if(isFinite(dt.getTime())){
+    var day = String(dt.getDate()).padStart(2, "0");
+    var monTxt = months[dt.getMonth()];
+    var year = dt.getFullYear();
+    var h = String(dt.getHours()).padStart(2, "0");
+    var min = String(dt.getMinutes()).padStart(2, "0");
+    return {date: day + " " + monTxt + " " + year, time: h + ":" + min};
+  }
+
+  return {date:s, time:""};
+}
+
 function renderTempDataTable(){
   var tbody = document.getElementById("td-saved-tbody");
   if(!tbody) return;
@@ -10973,8 +11010,12 @@ function renderTempDataTable(){
   for(var i = 0; i < display.length; i++){
     var ent = display[i];
     var sc = shiftColors[ent.shift] || "#94a3b8";
+    var dtView = formatTempEntryDateTime(ent.dt);
+    var dtHtml = '<div class="td-dt-wrap"><div class="td-dt-date">' + dtView.date + '</div>'
+      + (dtView.time ? ('<div class="td-dt-time">' + dtView.time + '</div>') : '')
+      + '</div>';
     rows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">'
-      + '<td style="font-size:11px;white-space:nowrap;">' + ent.dt + '</td>'
+      + '<td style="text-align:left;">' + dtHtml + '</td>'
       + '<td style="text-align:center;"><span style="color:'+sc+';font-weight:700;font-size:11px;background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:10px;border:1px solid '+sc+'44;">' + ent.shift + '</span></td>'
       + '<td style="text-align:center;">' + (ent.hguLoad||"—") + '</td>'
       + '<td style="text-align:center;">' + (ent.abCot  || "—") + '</td>'
