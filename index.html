@@ -4037,11 +4037,11 @@ function clearHeatMapDateFilter(){
         #tab-heatmap.hm-cuboid-zoom-active .cb-wrap.hm-cuboid-zoom-target{cursor:zoom-out;}
         #tab-heatmap.hm-cuboid-zoom-active .cb-dual-row{
           position:fixed;
-          inset:16px;
+          inset:0;
           margin:0;
           z-index:9600;
-          padding:16px 14px 12px;
-          border-radius:16px;
+          padding:8px 8px 6px;
+          border-radius:0;
           border-color:rgba(148,163,184,0.35);
           box-shadow:0 20px 60px rgba(0,0,0,0.75);
           overflow:hidden;
@@ -4054,27 +4054,28 @@ function clearHeatMapDateFilter(){
           flex:1 1 auto;
           width:100%;
           min-height:100%;
-          align-items:center;
-          justify-content:center;
+          align-items:stretch;
+          justify-content:flex-start;
         }
         #tab-heatmap.hm-cuboid-zoom-active .cb-scene{
-          height:min(78vh,840px);
-          transform:scale(1.12);
-          transform-origin:center top;
+          width:100%;
+          height:calc(100vh - 66px);
+          max-height:none;
+          transform:none !important;
         }
-        #tab-heatmap.hm-cuboid-zoom-active .cb-hint{font-size:11px;margin-top:8px;}
-        #tab-heatmap.hm-cuboid-zoom-active .cb-title{font-size:15px;}
-        #tab-heatmap.hm-cuboid-zoom-active .cb-subtitle{font-size:10px;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-title{font-size:15px;margin-bottom:2px;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-subtitle{display:none;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-hint{display:none;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-loading{margin-top:4px;}
         #tab-heatmap.hm-cuboid-zoom-active .cb-divider{display:none !important;}
         @media (max-width:900px){
           #tab-heatmap.hm-cuboid-zoom-active .cb-dual-row{
-            inset:8px;
-            padding:10px 6px 8px;
+            inset:0;
+            padding:6px 4px 6px;
             gap:10px;
           }
           #tab-heatmap.hm-cuboid-zoom-active .cb-scene{
-            height:min(70vh,620px);
-            transform:scale(1.04);
+            height:calc(100vh - 54px);
           }
         }
 
@@ -4616,18 +4617,27 @@ function clearHeatMapDateFilter(){
         var _cdDragCtrl = makeDraggable('cd-scene','cd-cube', -85, -8, -180,   0);
 
         function updateCuboidResponsiveScale(){
+          var hmTab = document.getElementById("tab-heatmap");
+          var zoomMode = !!(hmTab && hmTab.classList.contains("hm-cuboid-zoom-active"));
           var ctrls = [_abDragCtrl, _cdDragCtrl];
           for(var i=0; i<ctrls.length; i++){
             var ctrl = ctrls[i];
             if(!ctrl || !ctrl.scene) continue;
             var w = ctrl.scene.clientWidth || 0;
             if(w < 140) continue; /* hidden tab or not laid out yet */
-            var scaleW = (w - 6) / 760;              /* allow growth on wider halves */
+            var wrap = (ctrl.scene.closest && ctrl.scene.closest(".cb-wrap[data-cuboid]")) || null;
+            var isZoomTarget = !!(zoomMode && wrap && wrap.classList.contains("hm-cuboid-zoom-target"));
+            var scalePad = isZoomTarget ? 20 : 6;
+            var hFactor = isZoomTarget ? 1.08 : 1.02;
+            var maxScale = isZoomTarget ? 4.5 : 1.24;
+            var minScale = isZoomTarget ? 0.60 : 0.84;
+
+            var scaleW = (w - scalePad) / 760;
             var sceneH = ctrl.scene.clientHeight || 680;
-            var scaleH = (sceneH * 1.02) / 680;      /* use more vertical room */
-            var scale = Math.min(1.24, scaleW, scaleH);
+            var scaleH = (sceneH * hFactor) / 680;
+            var scale = Math.min(scaleW, scaleH);
             if(!isFinite(scale)) scale = 1;
-            scale = Math.max(0.84, scale);
+            scale = Math.max(minScale, Math.min(maxScale, scale));
             ctrl.scene.setAttribute('data-cb-scale', scale.toFixed(4));
             ctrl.applyTransform();
           }
@@ -4637,6 +4647,7 @@ function clearHeatMapDateFilter(){
           if(_cbResizeTimer) clearTimeout(_cbResizeTimer);
           _cbResizeTimer = setTimeout(updateCuboidResponsiveScale, 120);
         });
+        window.updateCuboidResponsiveScale = updateCuboidResponsiveScale;
         setTimeout(updateCuboidResponsiveScale, 0);
 
         /* ── 2. Wall face renderer — direct HTML injection (no html2canvas) ──
@@ -5043,6 +5054,10 @@ function clearHeatMapDateFilter(){
 
         hmTab.classList.toggle("hm-cuboid-zoom-active", _hmCuboidZoomActive);
         document.body.classList.toggle("hm-cuboid-zoom-lock", _hmCuboidZoomActive);
+        if(typeof window.updateCuboidResponsiveScale === "function"){
+          setTimeout(window.updateCuboidResponsiveScale, 0);
+          setTimeout(window.updateCuboidResponsiveScale, 90);
+        }
         if(_hmCuboidZoomActive && typeof requestHeatMapRender === "function"){
           window._hmSkipCuboidRefresh = true;
           requestHeatMapRender(20);
