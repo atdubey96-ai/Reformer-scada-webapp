@@ -3082,18 +3082,40 @@ function hmCountStatesForWalls(hmData, wallKeys){
   return counts;
 }
 
-function hmAverageTempLabel(valsA, valsB){
+function hmAverageTempInfo(valsA, valsB){
   var nums = hmToNumericTemps((valsA || []).concat(valsB || []));
-  if(!nums.length) return "PH Avg --";
+  if(!nums.length){
+    return { text:"PH Avg --", chipClass:"cb-kpi-temp-none", sceneClass:"cb-scene-none" };
+  }
   var sum = 0;
   for(var i=0; i<nums.length; i++) sum += nums[i];
-  return "PH Avg " + Math.round(sum / nums.length) + "°C";
+  var avg = Math.round(sum / nums.length);
+  if(avg < 910){
+    return { text:"❄ PH Avg " + avg + "°C", chipClass:"cb-kpi-temp-cool", sceneClass:"cb-scene-cool" };
+  }
+  if(avg > 970){
+    return { text:"🔥 PH Avg " + avg + "°C", chipClass:"cb-kpi-temp-hot", sceneClass:"cb-scene-hot" };
+  }
+  return { text:"✅ PH Avg " + avg + "°C", chipClass:"cb-kpi-temp-ok", sceneClass:"cb-scene-ok" };
 }
 
 function updateHeatMapCuboidKpiCards(hmData, abBot, abTop, cdBot, cdTop){
   function setText(id, val){
     var el = document.getElementById(id);
     if(el) el.textContent = String(val);
+  }
+  function setTempVisual(chipId, sceneId, info){
+    var chip = document.getElementById(chipId);
+    var scene = document.getElementById(sceneId);
+    if(chip){
+      chip.textContent = info && info.text ? info.text : "PH Avg --";
+      chip.classList.remove("cb-kpi-temp-cool","cb-kpi-temp-ok","cb-kpi-temp-hot","cb-kpi-temp-none");
+      chip.classList.add(info && info.chipClass ? info.chipClass : "cb-kpi-temp-none");
+    }
+    if(scene){
+      scene.classList.remove("cb-scene-cool","cb-scene-ok","cb-scene-hot","cb-scene-none");
+      if(info && info.sceneClass) scene.classList.add(info.sceneClass);
+    }
   }
   var ab = hmCountStatesForWalls(hmData, ["A","B"]);
   var cd = hmCountStatesForWalls(hmData, ["C","D"]);
@@ -3107,8 +3129,8 @@ function updateHeatMapCuboidKpiCards(hmData, abBot, abTop, cdBot, cdTop){
   setText("cb-cd-b", cd.B);
   setText("cb-cd-c", cd.C);
 
-  setText("cb-ab-temp", hmAverageTempLabel(abBot, abTop));
-  setText("cb-cd-temp", hmAverageTempLabel(cdBot, cdTop));
+  setTempVisual("cb-ab-temp", "ab-scene", hmAverageTempInfo(abBot, abTop));
+  setTempVisual("cb-cd-temp", "cd-scene", hmAverageTempInfo(cdBot, cdTop));
 }
 
 function renderHeatMap(){
@@ -3981,8 +4003,47 @@ function clearHeatMapDateFilter(){
           position:relative; cursor:grab;
           overflow:visible;      /* 3D children must not be clipped by the scene */
           contain:layout paint style;
+          border-radius:14px;
+          background:
+            radial-gradient(120% 85% at 50% 0%,rgba(148,163,184,0.1) 0%,rgba(15,23,42,0) 58%),
+            linear-gradient(180deg,rgba(15,23,42,0.18),rgba(2,6,23,0.02));
         }
         .cb-scene:active{cursor:grabbing;}
+        .cb-scene::before{
+          content:"";
+          position:absolute;
+          inset:0;
+          border-radius:14px;
+          border:1px solid rgba(148,163,184,0.18);
+          box-shadow:inset 0 0 30px rgba(2,6,23,0.28);
+          pointer-events:none;
+          z-index:5;
+        }
+        .cb-scene::after{
+          content:"";
+          position:absolute;
+          inset:0;
+          border-radius:14px;
+          pointer-events:none;
+          z-index:4;
+          background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,0.06) 45%,transparent 80%);
+          transform:translateX(-60%);
+          animation:cbSceneSweep 7.2s ease-in-out infinite;
+          opacity:0.75;
+        }
+        @keyframes cbSceneSweep{
+          0%{transform:translateX(-65%);}
+          52%{transform:translateX(165%);}
+          100%{transform:translateX(165%);}
+        }
+        .cb-scene-ab::before{
+          border-color:rgba(243,112,34,0.28);
+          box-shadow:inset 0 0 34px rgba(243,112,34,0.1), inset 0 0 20px rgba(2,6,23,0.36);
+        }
+        .cb-scene-cd::before{
+          border-color:rgba(96,200,255,0.3);
+          box-shadow:inset 0 0 34px rgba(96,200,255,0.09), inset 0 0 20px rgba(2,6,23,0.36);
+        }
         .cb-scene.cb-float{animation:none !important;}
         @keyframes cb-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
 
@@ -4087,6 +4148,29 @@ function clearHeatMapDateFilter(){
           color:#fbcfe8;
           background:linear-gradient(90deg,rgba(190,24,93,0.2),rgba(30,41,59,0.75));
         }
+        .cb-kpi-temp-cool{
+          border-color:rgba(56,189,248,0.52);
+          color:#bae6fd;
+          background:linear-gradient(90deg,rgba(14,116,144,0.34),rgba(30,41,59,0.75));
+        }
+        .cb-kpi-temp-ok{
+          border-color:rgba(52,211,153,0.55);
+          color:#a7f3d0;
+          background:linear-gradient(90deg,rgba(5,150,105,0.32),rgba(30,41,59,0.75));
+        }
+        .cb-kpi-temp-hot{
+          border-color:rgba(251,146,60,0.58);
+          color:#fed7aa;
+          background:linear-gradient(90deg,rgba(194,65,12,0.34),rgba(30,41,59,0.75));
+        }
+        .cb-kpi-temp-none{
+          border-color:rgba(148,163,184,0.42);
+          color:#cbd5e1;
+          background:linear-gradient(90deg,rgba(51,65,85,0.34),rgba(30,41,59,0.75));
+        }
+        .cb-scene-cool::before{ box-shadow:inset 0 0 38px rgba(56,189,248,0.14), inset 0 0 22px rgba(2,6,23,0.36); }
+        .cb-scene-ok::before{ box-shadow:inset 0 0 38px rgba(52,211,153,0.14), inset 0 0 22px rgba(2,6,23,0.36); }
+        .cb-scene-hot::before{ box-shadow:inset 0 0 42px rgba(251,146,60,0.18), inset 0 0 22px rgba(2,6,23,0.36); }
         .cb-hint{font-size:9px;color:#475569;margin-top:10px;letter-spacing:1px;}
         .cb-loading{font-size:10px;color:#64748b;margin-top:8px;letter-spacing:1px;animation:blink 1.2s ease-in-out infinite;}
         @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.4;}}
@@ -4438,7 +4522,7 @@ function clearHeatMapDateFilter(){
           <div class="cb-title" style="color:#F37022;background:rgba(243,112,34,0.1);border:1px solid rgba(243,112,34,0.35);">◀ AB SIDE</div>
           <div class="cb-subtitle">Outer face = <span style="color:#F37022;font-weight:700;">Wall A</span> &nbsp;·&nbsp; Inner face = <span style="color:#fb923c;font-weight:700;">Wall B</span></div>
 
-          <div class="cb-scene cb-float" id="ab-scene">
+          <div class="cb-scene cb-float cb-scene-ab" id="ab-scene">
             <div class="cb-group" id="ab-cube" style="transform:rotateX(-8deg) rotateY(-85deg);">
 
               <!-- FRONT = Wall A -->
@@ -4526,7 +4610,7 @@ function clearHeatMapDateFilter(){
           <div class="cb-title" style="color:#7ec8f0;background:rgba(126,200,240,0.1);border:1px solid rgba(126,200,240,0.35);">CD SIDE ▶</div>
           <div class="cb-subtitle">Outer face = <span style="color:#7ec8f0;font-weight:700;">Wall C</span> &nbsp;·&nbsp; Inner face = <span style="color:#60c8ff;font-weight:700;">Wall D</span></div>
 
-          <div class="cb-scene cb-float" id="cd-scene">
+          <div class="cb-scene cb-float cb-scene-cd" id="cd-scene">
             <div class="cb-group" id="cd-cube" style="transform:rotateX(-8deg) rotateY(-85deg);">
 
               <!-- FRONT = Wall C -->
