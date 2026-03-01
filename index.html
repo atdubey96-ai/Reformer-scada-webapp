@@ -3097,6 +3097,16 @@ function renderHeatMap(){
   var shiftSel = document.getElementById("hm-shift-select");
   var selectedShift = shiftSel ? shiftSel.value : "All";
 
+  function getHeatMapEntryDateKey(rawDt){
+    var s = String(rawDt || "").trim();
+    if(!s) return "";
+    var m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+    if(m && m[1]) return m[1];
+    var d = new Date(s);
+    if(isFinite(d.getTime())) return d.toISOString().slice(0, 10);
+    return s;
+  }
+
   /* ── Populate date dropdown based on shift ── */
   var allEntries = getAllTempEntries();
   var filteredEntries = allEntries;
@@ -3104,14 +3114,19 @@ function renderHeatMap(){
     filteredEntries = allEntries.filter(function(e){ return e.shift === selectedShift; });
   }
 
+  var uniqueDateEntries = [];
   var dateSel = document.getElementById("hm-date-select");
   var prevDateVal = dateSel ? dateSel.value : "latest";
   if(dateSel){
     var dateHTML = '<option value="latest" style="background:#0f1f38;">📅 Latest</option>';
+    var seenDateKeys = {};
     for(var di=0; di<filteredEntries.length; di++){
       var fe = filteredEntries[di];
-      var shiftEmoji = {Morning:"🌅",Evening:"🌆",Night:"🌙"}[fe.shift] || "📋";
-      dateHTML += '<option value="'+di+'" style="background:#0f1f38;">'+shiftEmoji+' '+fe.dt+' — '+fe.shift+'</option>';
+      var dateKey = getHeatMapEntryDateKey(fe ? fe.dt : "");
+      if(!dateKey || seenDateKeys[dateKey]) continue;
+      seenDateKeys[dateKey] = true;
+      uniqueDateEntries.push({ key: dateKey, entry: fe });
+      dateHTML += '<option value="d:'+dateKey+'" style="background:#0f1f38;">📅 '+dateKey+'</option>';
     }
     dateSel.innerHTML = dateHTML;
     /* Restore previous selection if still valid */
@@ -3127,8 +3142,17 @@ function renderHeatMap(){
   var dateVal = dateSel ? dateSel.value : "latest";
   if(dateVal === "latest"){
     entry = filteredEntries.length ? filteredEntries[0] : null;
+  } else if(/^d:/.test(String(dateVal || ""))){
+    var selectedDateKey = String(dateVal).slice(2);
+    for(var ui=0; ui<uniqueDateEntries.length; ui++){
+      if(uniqueDateEntries[ui].key === selectedDateKey){
+        entry = uniqueDateEntries[ui].entry;
+        break;
+      }
+    }
+    if(!entry) entry = filteredEntries.length ? filteredEntries[0] : null;
   } else {
-    var idx = parseInt(dateVal);
+    var idx = parseInt(dateVal, 10);
     entry = (!isNaN(idx) && filteredEntries[idx]) ? filteredEntries[idx] : (filteredEntries[0] || null);
   }
 
