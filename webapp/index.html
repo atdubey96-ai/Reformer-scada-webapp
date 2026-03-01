@@ -3063,6 +3063,54 @@ function resolveHeatMapEntryByDateValue(filteredEntries, dateVal){
   return null;
 }
 
+function hmCountStatesForWalls(hmData, wallKeys){
+  var counts = {O:0,N:0,B:0,C:0};
+  if(!hmData || typeof hmData !== "object" || !Array.isArray(wallKeys)) return counts;
+  for(var wi=0; wi<wallKeys.length; wi++){
+    var rows = hmData[wallKeys[wi]];
+    if(!rows || !Array.isArray(rows)) continue;
+    for(var ri=0; ri<rows.length; ri++){
+      var row = rows[ri];
+      if(!row || !Array.isArray(row)) continue;
+      for(var ci=0; ci<row.length; ci++){
+        var s = String(row[ci] || "C").toUpperCase();
+        if(s !== "O" && s !== "N" && s !== "B") s = "C";
+        counts[s] += 1;
+      }
+    }
+  }
+  return counts;
+}
+
+function hmAverageTempLabel(valsA, valsB){
+  var nums = hmToNumericTemps((valsA || []).concat(valsB || []));
+  if(!nums.length) return "PH Avg --";
+  var sum = 0;
+  for(var i=0; i<nums.length; i++) sum += nums[i];
+  return "PH Avg " + Math.round(sum / nums.length) + "°C";
+}
+
+function updateHeatMapCuboidKpiCards(hmData, abBot, abTop, cdBot, cdTop){
+  function setText(id, val){
+    var el = document.getElementById(id);
+    if(el) el.textContent = String(val);
+  }
+  var ab = hmCountStatesForWalls(hmData, ["A","B"]);
+  var cd = hmCountStatesForWalls(hmData, ["C","D"]);
+
+  setText("cb-ab-o", ab.O);
+  setText("cb-ab-n", ab.N);
+  setText("cb-ab-b", ab.B);
+  setText("cb-ab-c", ab.C);
+  setText("cb-cd-o", cd.O);
+  setText("cb-cd-n", cd.N);
+  setText("cb-cd-b", cd.B);
+  setText("cb-cd-c", cd.C);
+
+  setText("cb-ab-temp", hmAverageTempLabel(abBot, abTop));
+  setText("cb-cd-temp", hmAverageTempLabel(cdBot, cdTop));
+}
+
 function renderHeatMap(){
   /* ── Self-contained burner data loading ── */
   /* Read burner data DIRECTLY from localStorage, bypassing loadData() entirely */
@@ -3146,6 +3194,7 @@ function renderHeatMap(){
   var abTop = getPH(entry, "ab-top");
   var cdBot = getPH(entry, "cd-bot");
   var cdTop = getPH(entry, "cd-top");
+  updateHeatMapCuboidKpiCards(hmData, abBot, abTop, cdBot, cdTop);
 
   /* ── Prominent shift/data status banner ── */
   var tsBadgeEl = document.getElementById("hm-ts-badge");
@@ -3986,10 +4035,84 @@ function clearHeatMapDateFilter(){
         }
 
         /* Wrap & titles */
-        .cb-wrap{display:flex;flex-direction:column;align-items:center;flex:1 1 0;min-width:0;}
-        .cb-title{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:5px 24px;border-radius:20px;margin-bottom:3px;}
-        .cb-subtitle{font-size:9px;color:#94a3b8;margin-bottom:6px;letter-spacing:0.4px;}
-        .cb-hint{font-size:9px;color:#475569;margin-top:10px;letter-spacing:1px;}
+        .cb-wrap{
+          display:flex;flex-direction:column;align-items:center;flex:1 1 0;min-width:0;
+          position:relative;
+          border:1px solid rgba(126,200,240,0.2);
+          border-radius:14px;
+          background:linear-gradient(160deg,rgba(15,31,56,0.68),rgba(8,18,34,0.7));
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 28px rgba(2,6,23,0.45);
+          padding:8px 8px 10px;
+          overflow:hidden;
+          animation:cbWrapPulse 6.5s ease-in-out infinite;
+        }
+        @keyframes cbWrapPulse{
+          0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 28px rgba(2,6,23,0.45);}
+          50%{box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 34px rgba(2,6,23,0.58);}
+        }
+        .cb-wrap::before{
+          content:"";
+          position:absolute;
+          top:-28%;
+          left:-35%;
+          width:70%;
+          height:155%;
+          pointer-events:none;
+          background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,0.07) 45%,transparent 80%);
+          transform:translateX(-35%);
+          animation:cbWrapSweep 7.6s ease-in-out infinite;
+          opacity:0.78;
+        }
+        @keyframes cbWrapSweep{
+          0%{transform:translateX(-55%);}
+          52%{transform:translateX(188%);}
+          100%{transform:translateX(188%);}
+        }
+        .cb-title{
+          font-size:13px;font-weight:800;letter-spacing:2.6px;text-transform:uppercase;
+          padding:5px 20px;border-radius:999px;margin-bottom:4px;
+          text-shadow:0 0 12px rgba(243,112,34,0.35),0 1px 3px rgba(0,0,0,0.85);
+          backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+        }
+        .cb-subtitle{
+          font-size:10px;color:#b7c9dd;margin-bottom:6px;letter-spacing:0.35px;
+          text-align:center;max-width:95%;line-height:1.2;
+        }
+        .cb-kpi-row{
+          width:100%;
+          display:flex;
+          flex-wrap:wrap;
+          justify-content:center;
+          gap:6px;
+          margin:2px 0 7px;
+          position:relative;
+          z-index:2;
+        }
+        .cb-kpi-chip{
+          display:inline-flex;align-items:center;gap:4px;
+          padding:2px 7px;
+          border-radius:999px;
+          font-size:10px;
+          font-weight:700;
+          letter-spacing:0.25px;
+          border:1px solid rgba(148,163,184,0.35);
+          background:rgba(15,31,56,0.78);
+          color:#e2e8f0;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+          line-height:1.2;
+          white-space:nowrap;
+        }
+        .cb-kpi-chip b{font-size:11px;letter-spacing:0.4px;}
+        .cb-kpi-O{border-color:rgba(34,197,94,0.48);color:#86efac;}
+        .cb-kpi-N{border-color:rgba(251,191,36,0.48);color:#fcd34d;}
+        .cb-kpi-B{border-color:rgba(96,165,250,0.52);color:#93c5fd;}
+        .cb-kpi-C{border-color:rgba(148,163,184,0.42);color:#cbd5e1;}
+        .cb-kpi-temp{
+          border-color:rgba(244,114,182,0.42);
+          color:#fbcfe8;
+          background:linear-gradient(90deg,rgba(190,24,93,0.2),rgba(30,41,59,0.75));
+        }
+        .cb-hint{font-size:9px;color:#64748b;margin-top:9px;letter-spacing:0.9px;}
         .cb-loading{font-size:10px;color:#64748b;margin-top:8px;letter-spacing:1px;animation:blink 1.2s ease-in-out infinite;}
         @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.4;}}
 
@@ -4065,6 +4188,8 @@ function clearHeatMapDateFilter(){
         }
         #tab-heatmap.hm-cuboid-zoom-active .cb-title{font-size:15px;margin-bottom:2px;}
         #tab-heatmap.hm-cuboid-zoom-active .cb-subtitle{display:none;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-kpi-row{margin:3px 0 9px;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-kpi-chip{font-size:11px;padding:3px 9px;}
         #tab-heatmap.hm-cuboid-zoom-active .cb-hint{display:none;}
         #tab-heatmap.hm-cuboid-zoom-active .cb-loading{margin-top:4px;}
         #tab-heatmap.hm-cuboid-zoom-active .cb-divider{display:none !important;}
@@ -4337,6 +4462,13 @@ function clearHeatMapDateFilter(){
         <div class="cb-wrap" data-cuboid="ab" ondblclick="setHeatMapCuboidZoom('ab')" title="Double-click to zoom AB cuboid">
           <div class="cb-title" style="color:#F37022;background:rgba(243,112,34,0.1);border:1px solid rgba(243,112,34,0.35);">◀ AB SIDE</div>
           <div class="cb-subtitle">Outer face = <span style="color:#F37022;font-weight:700;">Wall A</span> &nbsp;·&nbsp; Inner face = <span style="color:#fb923c;font-weight:700;">Wall B</span></div>
+          <div class="cb-kpi-row" id="cb-kpi-ab">
+            <span class="cb-kpi-chip cb-kpi-O">🔥O <b id="cb-ab-o">0</b></span>
+            <span class="cb-kpi-chip cb-kpi-N">🔥N <b id="cb-ab-n">0</b></span>
+            <span class="cb-kpi-chip cb-kpi-B">🔥B <b id="cb-ab-b">0</b></span>
+            <span class="cb-kpi-chip cb-kpi-C">◼ C <b id="cb-ab-c">0</b></span>
+            <span class="cb-kpi-chip cb-kpi-temp" id="cb-ab-temp">PH Avg --</span>
+          </div>
 
           <div class="cb-scene cb-float" id="ab-scene">
             <div class="cb-group" id="ab-cube" style="transform:rotateX(-8deg) rotateY(-85deg);">
@@ -4418,6 +4550,13 @@ function clearHeatMapDateFilter(){
         <div class="cb-wrap" data-cuboid="cd" ondblclick="setHeatMapCuboidZoom('cd')" title="Double-click to zoom CD cuboid">
           <div class="cb-title" style="color:#7ec8f0;background:rgba(126,200,240,0.1);border:1px solid rgba(126,200,240,0.35);">CD SIDE ▶</div>
           <div class="cb-subtitle">Outer face = <span style="color:#7ec8f0;font-weight:700;">Wall C</span> &nbsp;·&nbsp; Inner face = <span style="color:#60c8ff;font-weight:700;">Wall D</span></div>
+          <div class="cb-kpi-row" id="cb-kpi-cd">
+            <span class="cb-kpi-chip cb-kpi-O">🔥O <b id="cb-cd-o">0</b></span>
+            <span class="cb-kpi-chip cb-kpi-N">🔥N <b id="cb-cd-n">0</b></span>
+            <span class="cb-kpi-chip cb-kpi-B">🔥B <b id="cb-cd-b">0</b></span>
+            <span class="cb-kpi-chip cb-kpi-C">◼ C <b id="cb-cd-c">0</b></span>
+            <span class="cb-kpi-chip cb-kpi-temp" id="cb-cd-temp">PH Avg --</span>
+          </div>
 
           <div class="cb-scene cb-float" id="cd-scene">
             <div class="cb-group" id="cd-cube" style="transform:rotateX(-8deg) rotateY(-85deg);">
