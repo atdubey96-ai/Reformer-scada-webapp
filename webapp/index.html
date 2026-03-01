@@ -1851,6 +1851,11 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     padding:7px 9px;
     font-size:11px;
   }
+  #tab-tempdata .td-toolbar-row .td-voice-live-preview{
+    max-width:130px;
+    padding:5px 7px;
+    font-size:10px;
+  }
   #tab-tempdata .td-toolbar-row .td-toolbar-btn{
     padding:7px 9px;
     font-size:11px;
@@ -2197,6 +2202,13 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   font-family:'Rajdhani',sans-serif;cursor:pointer;
   background:rgba(245,158,11,0.14);border-color:rgba(245,158,11,0.45);
   transition:opacity .2s,background .2s,border-color .2s,color .2s;
+}
+.td-voice-live-preview{
+  display:none;align-items:center;max-width:170px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:11px;font-weight:700;color:#7dd3fc;
+  background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.35);
+  border-radius:6px;padding:6px 8px;
 }
 .td-toolbar-row{
   display:flex;align-items:center;gap:6px;flex-wrap:nowrap;
@@ -5842,6 +5854,7 @@ function clearHeatMapDateFilter(){
               <option value="voice">🎙️ Voice Fill TST</option>
             </select>
             <button type="button" id="td-fill-run-btn" class="td-fill-run-btn" onclick="runSelectedTstFillAction()">📈 Ramp Fill 930</button>
+            <span id="td-voice-live-preview" class="td-voice-live-preview"></span>
           </div>
           <div class="td-toolbar-status" style="display:none;">
             <span id="td-ramp-fill-status" style="max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Ramp preset idle</span>
@@ -9910,8 +9923,8 @@ var tdVoiceFillRecognition = null;
 var tdVoiceFillCellIndex = 0;
 var tdVoiceFillWritten = 0;
 var tdVoiceFillUseFocusedOrder = false;
-var TD_VOICE_FILL_MIN_TEMP = 100;
-var TD_VOICE_FILL_MAX_TEMP = 1800;
+var TD_VOICE_FILL_MIN_TEMP = 800;
+var TD_VOICE_FILL_MAX_TEMP = 1200;
 var TD_RAMP_PRESET_BASE = 930;
 
 function getSelectedTstFillMode(){
@@ -9931,6 +9944,7 @@ function updateTstFillRunButtonState(){
   btn.style.cursor = "pointer";
 
   if(mode === "ocr"){
+    setTstVoiceLivePreview("", "#7dd3fc");
     btn.textContent = tdPdfOcrBusy ? "⏳ Reading file..." : "📄 OCR File to TST";
     btn.style.background = "rgba(56,189,248,0.14)";
     btn.style.borderColor = "rgba(56,189,248,0.45)";
@@ -9945,6 +9959,7 @@ function updateTstFillRunButtonState(){
 
   if(mode === "voice"){
     if(!voiceSupported){
+      setTstVoiceLivePreview("Voice unsupported", "#fca5a5");
       btn.textContent = "🎙️ Voice unsupported";
       btn.style.background = "rgba(100,116,139,0.18)";
       btn.style.borderColor = "rgba(148,163,184,0.45)";
@@ -9958,9 +9973,18 @@ function updateTstFillRunButtonState(){
     btn.style.background = tdVoiceFillListening ? "rgba(239,68,68,0.16)" : "rgba(16,185,129,0.14)";
     btn.style.borderColor = tdVoiceFillListening ? "rgba(248,113,113,0.55)" : "rgba(16,185,129,0.45)";
     btn.style.color = tdVoiceFillListening ? "#fecaca" : "#6ee7b7";
+    if(tdVoiceFillListening){
+      var liveEl = document.getElementById("td-voice-live-preview");
+      if(liveEl && !String(liveEl.textContent || "").trim()){
+        setTstVoiceLivePreview("Listening...", "#7dd3fc");
+      }
+    }else{
+      setTstVoiceLivePreview("", "#7dd3fc");
+    }
     return;
   }
 
+  setTstVoiceLivePreview("", "#7dd3fc");
   btn.textContent = "📈 Ramp Fill 930";
   btn.style.background = "rgba(245,158,11,0.14)";
   btn.style.borderColor = "rgba(245,158,11,0.45)";
@@ -10006,6 +10030,20 @@ function setTstVoiceFillStatus(msg, color){
   if(!st) return;
   st.textContent = msg || "Voice idle";
   st.style.color = color || "#94a3b8";
+}
+
+function setTstVoiceLivePreview(msg, color){
+  var el = document.getElementById("td-voice-live-preview");
+  if(!el) return;
+  var txt = String(msg || "").trim();
+  if(!txt){
+    el.textContent = "";
+    el.style.display = "none";
+    return;
+  }
+  el.textContent = txt;
+  el.style.display = "inline-flex";
+  el.style.color = color || "#7dd3fc";
 }
 
 function setTstVoiceFillButtonState(isListening){
@@ -10109,7 +10147,9 @@ function extractTstVoiceNumbers(text){
     var n = Number(token);
     if(!isFinite(n)) continue;
     var rounded = Math.round(n);
-    out.push(String(rounded));
+    if(rounded >= TD_VOICE_FILL_MIN_TEMP && rounded <= TD_VOICE_FILL_MAX_TEMP){
+      out.push(String(rounded));
+    }
   }
   return out;
 }
@@ -10119,9 +10159,15 @@ function sanitizeTstVoiceValue(raw){
   var token = String(raw).trim();
   if(!token) return "";
   var temp = parseTstLikelyTempFromToken(token);
-  if(isFinite(temp)) return String(Math.round(temp));
+  if(isFinite(temp)){
+    var t = Math.round(temp);
+    return (t >= TD_VOICE_FILL_MIN_TEMP && t <= TD_VOICE_FILL_MAX_TEMP) ? String(t) : "";
+  }
   var n = Number(String(token).replace(",", "."));
-  if(isFinite(n)) return String(Math.round(n));
+  if(isFinite(n)){
+    var r = Math.round(n);
+    return (r >= TD_VOICE_FILL_MIN_TEMP && r <= TD_VOICE_FILL_MAX_TEMP) ? String(r) : "";
+  }
   return "";
 }
 
@@ -10187,7 +10233,15 @@ function ensureTstVoiceRecognition(){
     var written = fillTdPeepFieldsFromVoiceNumbers(consumed);
     if(written > 0) tdVoiceFillWritten += written;
 
+    if(consumed.length){
+      setTstVoiceLivePreview("Fill: " + consumed.slice(0, 4).join(", "), "#34d399");
+    }
+
     var preview = normalizeTstVoiceTranscript(interimChunk);
+    var interimNums = extractTstVoiceNumbers(preview);
+    if(interimNums.length){
+      setTstVoiceLivePreview("Heard: " + interimNums.slice(0, 4).join(", "), "#7dd3fc");
+    }
     if(preview){
       setTstVoiceFillStatus("Listening: " + preview.slice(0, 38) + (preview.length > 38 ? "..." : ""), "#7dd3fc");
     }else if(tdVoiceFillWritten > 0){
@@ -10206,6 +10260,7 @@ function ensureTstVoiceRecognition(){
     }else{
       setTstVoiceFillStatus("Voice error: " + code, "#fca5a5");
     }
+    setTstVoiceLivePreview("", "#7dd3fc");
   };
 
   rec.onend = function(){
@@ -10221,6 +10276,7 @@ function ensureTstVoiceRecognition(){
         setTstVoiceFillStatus("Voice stopped (no values captured)", "#fbbf24");
       }
     }
+    setTstVoiceLivePreview("", "#7dd3fc");
   };
 
   tdVoiceFillRecognition = rec;
@@ -10246,6 +10302,7 @@ function startTstVoiceInput(){
     rec.start();
     tdVoiceFillListening = true;
     setTstVoiceFillButtonState(true);
+    setTstVoiceLivePreview("Listening...", "#7dd3fc");
     if(tdVoiceFillUseFocusedOrder){
       setTstVoiceFillStatus("Listening from selected cell...", "#7dd3fc");
     }else{
@@ -10255,12 +10312,14 @@ function startTstVoiceInput(){
     tdVoiceFillListening = false;
     setTstVoiceFillButtonState(false);
     setTstVoiceFillStatus("Could not start microphone", "#fca5a5");
+    setTstVoiceLivePreview("", "#7dd3fc");
   }
 }
 
 function stopTstVoiceInput(){
   if(!tdVoiceFillListening){
     setTstVoiceFillButtonState(false);
+    setTstVoiceLivePreview("", "#7dd3fc");
     return;
   }
   try{
@@ -10268,6 +10327,7 @@ function stopTstVoiceInput(){
   }catch(e){
     tdVoiceFillListening = false;
     setTstVoiceFillButtonState(false);
+    setTstVoiceLivePreview("", "#7dd3fc");
   }
 }
 
