@@ -4668,100 +4668,93 @@ function clearHeatMapDateFilter(){
         .cb-face .hm-wall-title { font-size: 14px !important; font-weight: 800 !important; letter-spacing: 3px !important; }
         .cb-face .hm-wall-meta  { font-size: 10px !important; color: #7ec8f0 !important; font-weight: 700 !important; }
 
-        /* Reformer internal tube visual (4 vertical tubes + 1-4 rail) */
-        .cb-face .cb-tube-overlay{
+        /* Internal reformer tubes (inside cuboid, visible through top cap) */
+        .cb-inner-tube-wrap{
           position:absolute;
-          right:10px;
-          top:54px;
-          bottom:40px;
-          width:88px;
+          left:50%;
+          top:50%;
+          width:0;
+          height:0;
+          transform-style:preserve-3d;
           pointer-events:none;
-          display:flex;
-          align-items:stretch;
-          justify-content:flex-end;
-          gap:8px;
-          z-index:6;
-          --cb-tube-accent-rgb:126,200,240;
+          z-index:1;
         }
-        .cb-face .cb-tube-num-rail{
-          width:18px;
+        .cb-inner-tube{
+          position:absolute;
+          width:8px;
+          height:468px;
+          margin-left:-4px;
+          margin-top:-234px;
+          border-radius:999px;
+          transform:translate3d(var(--tube-x, 0px), 0px, 0px);
+          background:
+            linear-gradient(90deg,rgba(226,232,240,0.12) 0%,rgba(248,250,252,0.45) 50%,rgba(148,163,184,0.14) 100%),
+            linear-gradient(180deg,rgba(15,23,42,0.78) 0%,rgba(15,23,42,0.14) 50%,rgba(15,23,42,0.78) 100%);
+          border:1px solid rgba(var(--cb-tube-rgb,243,112,34),0.34);
+          box-shadow:
+            inset 0 0 8px rgba(2,6,23,0.62),
+            0 0 10px rgba(var(--cb-tube-rgb,243,112,34),0.24);
+          opacity:0.92;
+        }
+        .cb-inner-tube::before{
+          content:"";
+          position:absolute;
+          top:-2px;
+          bottom:-2px;
+          left:50%;
+          width:2px;
+          transform:translateX(-50%);
+          border-radius:999px;
+          background:linear-gradient(180deg,transparent 0%,rgba(var(--cb-tube-rgb,243,112,34),0.75) 18%,rgba(var(--cb-tube-rgb,243,112,34),0.62) 82%,transparent 100%);
+        }
+        .cb-top-cap-inner{
+          position:relative;
+          width:100%;
+          height:100%;
           display:flex;
-          flex-direction:column;
+          align-items:center;
+          justify-content:center;
+          pointer-events:none;
+        }
+        .cb-top-port-line{
+          position:absolute;
+          left:50%;
+          top:50%;
+          transform:translate(-50%,-50%);
+          width:280px;
+          display:flex;
           justify-content:space-between;
           align-items:center;
-          padding:4px 0;
         }
-        .cb-face .cb-tube-num{
+        .cb-top-port{
           width:16px;
           height:16px;
           border-radius:999px;
-          border:1px solid rgba(var(--cb-tube-accent-rgb),0.52);
-          background:linear-gradient(180deg,rgba(var(--cb-tube-accent-rgb),0.24),rgba(2,6,23,0.88));
-          color:#e2e8f0;
-          font-size:10px;
-          font-weight:800;
-          line-height:14px;
-          text-align:center;
-          text-shadow:0 1px 2px rgba(0,0,0,0.8);
-          box-shadow:0 0 10px rgba(var(--cb-tube-accent-rgb),0.24);
-        }
-        .cb-face .cb-tube-bank{
-          flex:1 1 auto;
-          display:flex;
-          justify-content:space-between;
-          align-items:stretch;
-          gap:5px;
-          padding:1px 1px;
-          border-radius:8px;
-          border:1px solid rgba(var(--cb-tube-accent-rgb),0.34);
+          border:1px solid rgba(var(--cb-tube-rgb,243,112,34),0.66);
           background:
-            linear-gradient(180deg,rgba(5,12,24,0.56),rgba(2,6,23,0.24)),
-            repeating-linear-gradient(0deg,rgba(148,163,184,0.08) 0 1px,transparent 1px 8px);
-          box-shadow:inset 0 0 14px rgba(0,0,0,0.45);
-        }
-        .cb-face .cb-tube-col{
-          flex:1 1 0;
-          position:relative;
-          border-radius:999px;
-          overflow:hidden;
-          background:
-            linear-gradient(90deg,rgba(148,163,184,0.2) 0%,rgba(226,232,240,0.56) 50%,rgba(148,163,184,0.24) 100%),
-            linear-gradient(180deg,rgba(15,23,42,0.82) 0%,rgba(15,23,42,0.22) 50%,rgba(15,23,42,0.82) 100%);
+            radial-gradient(circle at 45% 42%,rgba(12,26,45,0.92) 0%,rgba(2,6,23,0.96) 58%,rgba(2,6,23,0.9) 100%);
           box-shadow:
-            inset 0 0 0 1px rgba(148,163,184,0.24),
-            inset 0 0 10px rgba(15,23,42,0.64),
-            0 0 9px rgba(var(--cb-tube-accent-rgb),0.24);
+            0 0 0 2px rgba(var(--cb-tube-rgb,243,112,34),0.2),
+            0 0 10px rgba(var(--cb-tube-rgb,243,112,34),0.3),
+            inset 0 0 6px rgba(0,0,0,0.7);
         }
-        .cb-face .cb-tube-col::before{
-          content:"";
+        .cb-top-cap-label{
           position:absolute;
-          top:-18%;
           left:50%;
+          bottom:8px;
           transform:translateX(-50%);
-          width:2px;
-          height:136%;
-          background:linear-gradient(180deg,transparent 0%,rgba(var(--cb-tube-accent-rgb),0.7) 22%,rgba(var(--cb-tube-accent-rgb),0.56) 78%,transparent 100%);
-          opacity:0.68;
-          filter:blur(0.2px);
-        }
-        .cb-face .cb-tube-col::after{
-          content:"";
-          position:absolute;
-          inset:0;
-          background:repeating-linear-gradient(180deg,transparent 0 11px,rgba(15,23,42,0.16) 11px 13px);
-          mix-blend-mode:screen;
-          opacity:0.52;
+          font-size:10px;
+          font-weight:700;
+          letter-spacing:2.5px;
+          color:#f0c060;
+          text-shadow:0 1px 3px rgba(0,0,0,0.7);
+          white-space:nowrap;
         }
         @media (max-width:900px){
-          .cb-face .cb-tube-overlay{
-            width:74px;
-            right:7px;
-            top:50px;
-            bottom:34px;
-            gap:6px;
-          }
-          .cb-face .cb-tube-num-rail{width:16px;}
-          .cb-face .cb-tube-num{width:14px;height:14px;font-size:9px;line-height:12px;}
+          .cb-inner-tube{width:6px;margin-left:-3px;}
+          .cb-top-port-line{width:208px;}
+          .cb-top-port{width:13px;height:13px;}
+          .cb-top-cap-label{font-size:9px;letter-spacing:2px;}
         }
 
         /* ═══════════════════════════════════════════════════
@@ -4882,6 +4875,14 @@ function clearHeatMapDateFilter(){
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fb923c;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-ab-back-loading">⏳ RENDERING WALL B…</div>
               </div>
 
+              <!-- Internal tubes (visible mainly from top cap) -->
+              <div class="cb-inner-tube-wrap" aria-hidden="true">
+                <div class="cb-inner-tube" style="--tube-x:-120px;--cb-tube-rgb:243,112,34;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-40px;--cb-tube-rgb:243,112,34;"></div>
+                <div class="cb-inner-tube" style="--tube-x:40px;--cb-tube-rgb:243,112,34;"></div>
+                <div class="cb-inner-tube" style="--tube-x:120px;--cb-tube-rgb:243,112,34;"></div>
+              </div>
+
               <!-- LEFT side cap — peep holes into cuboid interior -->
               <div class="cb-face cb-lr" style="transform:rotateY(-90deg) translateZ(360px);border:1.5px solid rgba(243,112,34,0.35);">
                 <div class="cb-peephole-face">
@@ -4927,8 +4928,16 @@ function clearHeatMapDateFilter(){
               </div>
 
               <!-- TOP cap -->
-              <div class="cb-face cb-tb" style="transform:rotateX(90deg) translateZ(250px);background:linear-gradient(135deg,rgba(243,112,34,0.3),rgba(251,146,60,0.15));border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
-                <span style="font-size:10px;font-weight:700;color:#f0c060;letter-spacing:3px;">AB — REFORMER TOP</span>
+              <div class="cb-face cb-tb" style="transform:rotateX(90deg) translateZ(250px);background:linear-gradient(135deg,rgba(243,112,34,0.24),rgba(251,146,60,0.1));border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
+                <div class="cb-top-cap-inner" style="--cb-tube-rgb:243,112,34;">
+                  <div class="cb-top-port-line">
+                    <span class="cb-top-port"></span>
+                    <span class="cb-top-port"></span>
+                    <span class="cb-top-port"></span>
+                    <span class="cb-top-port"></span>
+                  </div>
+                  <span class="cb-top-cap-label">AB — REFORMER TOP</span>
+                </div>
               </div>
 
               <!-- BOTTOM cap -->
@@ -4968,6 +4977,14 @@ function clearHeatMapDateFilter(){
               <!-- BACK = Wall D -->
               <div class="cb-face cb-fb" id="face-cd-back" style="transform:rotateY(180deg) translateZ(80px);border:2px solid rgba(251,146,60,0.65);background:#0a1628;">
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#60c8ff;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-cd-back-loading">⏳ RENDERING WALL D…</div>
+              </div>
+
+              <!-- Internal tubes (visible mainly from top cap) -->
+              <div class="cb-inner-tube-wrap" aria-hidden="true">
+                <div class="cb-inner-tube" style="--tube-x:-120px;--cb-tube-rgb:126,200,240;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-40px;--cb-tube-rgb:126,200,240;"></div>
+                <div class="cb-inner-tube" style="--tube-x:40px;--cb-tube-rgb:126,200,240;"></div>
+                <div class="cb-inner-tube" style="--tube-x:120px;--cb-tube-rgb:126,200,240;"></div>
               </div>
 
               <!-- LEFT side cap — peep holes into cuboid interior -->
@@ -5015,8 +5032,16 @@ function clearHeatMapDateFilter(){
               </div>
 
               <!-- TOP cap -->
-              <div class="cb-face cb-tb" style="transform:rotateX(90deg) translateZ(250px);background:linear-gradient(135deg,rgba(243,112,34,0.3),rgba(251,146,60,0.15));border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
-                <span style="font-size:10px;font-weight:700;color:#f0c060;letter-spacing:3px;">CD — REFORMER TOP</span>
+              <div class="cb-face cb-tb" style="transform:rotateX(90deg) translateZ(250px);background:linear-gradient(135deg,rgba(243,112,34,0.24),rgba(251,146,60,0.1));border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
+                <div class="cb-top-cap-inner" style="--cb-tube-rgb:126,200,240;">
+                  <div class="cb-top-port-line">
+                    <span class="cb-top-port"></span>
+                    <span class="cb-top-port"></span>
+                    <span class="cb-top-port"></span>
+                    <span class="cb-top-port"></span>
+                  </div>
+                  <span class="cb-top-cap-label">CD — REFORMER TOP</span>
+                </div>
               </div>
 
               <!-- BOTTOM cap -->
@@ -5207,64 +5232,10 @@ function clearHeatMapDateFilter(){
         var NATURAL_W = 900;
         var FACE_SCALE = FACE_W / NATURAL_W;   /* 0.8000 */
         var NATURAL_H = Math.round(FACE_H / FACE_SCALE); /* 625 */
-        function hexColorToRgbTriplet(color){
-          var raw = String(color || "").trim();
-          if(!raw) return "126,200,240";
-
-          var mShort = raw.match(/^#([0-9a-fA-F]{3})$/);
-          if(mShort){
-            var s = mShort[1];
-            return [
-              parseInt(s.charAt(0) + s.charAt(0), 16),
-              parseInt(s.charAt(1) + s.charAt(1), 16),
-              parseInt(s.charAt(2) + s.charAt(2), 16)
-            ].join(",");
-          }
-
-          var mLong = raw.match(/^#([0-9a-fA-F]{6})$/);
-          if(mLong){
-            var h = mLong[1];
-            return [
-              parseInt(h.slice(0,2), 16),
-              parseInt(h.slice(2,4), 16),
-              parseInt(h.slice(4,6), 16)
-            ].join(",");
-          }
-
-          var mRgb = raw.match(/^rgba?\(([^)]+)\)/i);
-          if(mRgb){
-            var parts = mRgb[1].split(",").slice(0,3).map(function(v){
-              var n = Number(String(v).trim());
-              if(!isFinite(n)) n = 0;
-              return Math.max(0, Math.min(255, Math.round(n)));
-            });
-            if(parts.length === 3) return parts.join(",");
-          }
-          return "126,200,240";
-        }
-
-        function buildCuboidTubeOverlayHtml(){
-          return ''
-            + '<div class="cb-tube-overlay" aria-hidden="true">'
-            +   '<div class="cb-tube-num-rail">'
-            +     '<span class="cb-tube-num">1</span>'
-            +     '<span class="cb-tube-num">2</span>'
-            +     '<span class="cb-tube-num">3</span>'
-            +     '<span class="cb-tube-num">4</span>'
-            +   '</div>'
-            +   '<div class="cb-tube-bank">'
-            +     '<div class="cb-tube-col"></div>'
-            +     '<div class="cb-tube-col"></div>'
-            +     '<div class="cb-tube-col"></div>'
-            +     '<div class="cb-tube-col"></div>'
-            +   '</div>'
-            + '</div>';
-        }
 
         function renderWallFace(wallName, peepBotVals, peepTopVals, wallData, faceEl, loadingEl, accentColor){
           /* Build the same wall-card HTML used by the flat bottom tables */
           var html = buildWallHTML(wallName, peepBotVals, peepTopVals, wallData);
-          var accentRgb = hexColorToRgbTriplet(accentColor);
 
           /* Remove the loading spinner */
           if(loadingEl && loadingEl.parentNode) loadingEl.parentNode.removeChild(loadingEl);
@@ -5272,7 +5243,6 @@ function clearHeatMapDateFilter(){
           /* Clear any stale background-image from previous renders */
           faceEl.style.backgroundImage = '';
           faceEl.style.backgroundSize  = '';
-          faceEl.style.setProperty("--cb-tube-accent-rgb", accentRgb);
 
           /*
             Inject a 900px-wide div and scale it down to 560px.
@@ -5290,8 +5260,7 @@ function clearHeatMapDateFilter(){
             +   'pointer-events:none;'
             + '">'
             + html
-            + '</div>'
-            + buildCuboidTubeOverlayHtml();
+            + '</div>';
         }
 
         /* ── 3. Hook into renderHeatMap so textures refresh with data ── */
