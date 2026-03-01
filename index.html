@@ -4043,37 +4043,37 @@ function requestHeatMapRender(delayMs){
           50%{opacity:0.36;transform:translateX(-50%) scale(1.08);}
         }
 
-        /* Cuboid-only flame icon style: use true flame icon like sample */
-        .cb-face .hm-burner-wrap.hm-flame svg{ display:none !important; }
+        /* Cuboid-only flame style: keep SVG flames and avoid expensive emoji/filter paints */
         .cb-face .hm-burner-wrap.hm-flame::before{
-          content:"🔥";
-          display:block;
-          font-size:29px;
-          line-height:1;
-          transform-origin:50% 100%;
-          animation:cbFlameLite 2.2s ease-in-out infinite;
-          opacity:0.96;
-          will-change:auto;
-          filter:none;
-          text-shadow:0 1px 3px rgba(0,0,0,0.78), 0 0 8px rgba(243,112,34,0.28);
+          content:none !important;
+          display:none !important;
         }
-        .cb-face .hm-burner-wrap.hm-flame-O::before{filter:hue-rotate(95deg) saturate(1.55) brightness(1.05);text-shadow:0 1px 3px rgba(0,0,0,0.78), 0 0 8px rgba(22,163,74,0.26);} 
-        .cb-face .hm-burner-wrap.hm-flame-N::before{filter:hue-rotate(-8deg) saturate(1.15) brightness(1.03);text-shadow:0 1px 3px rgba(0,0,0,0.78), 0 0 8px rgba(217,119,6,0.28);} 
-        .cb-face .hm-burner-wrap.hm-flame-B::before{filter:hue-rotate(175deg) saturate(1.6) brightness(1.03);text-shadow:0 1px 3px rgba(0,0,0,0.78), 0 0 8px rgba(37,99,235,0.26);} 
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+1).hm-flame::before{ animation-delay:0.10s; }
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+2).hm-flame::before{ animation-delay:0.70s; }
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+3).hm-flame::before{ animation-delay:1.30s; }
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+4).hm-flame::before{ animation-delay:2.00s; }
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+5).hm-flame::before{ animation-delay:2.60s; }
+        .cb-face .hm-burner-wrap.hm-flame svg{
+          display:block !important;
+          transform-origin:50% 100%;
+          animation:cbFlameLite 2.2s ease-in-out infinite !important;
+          will-change:transform,opacity;
+          filter:none !important;
+        }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+1).hm-flame svg{ animation-delay:0.10s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+2).hm-flame svg{ animation-delay:0.70s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+3).hm-flame svg{ animation-delay:1.30s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+4).hm-flame svg{ animation-delay:2.00s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+5).hm-flame svg{ animation-delay:2.60s; }
 
         /* Cuboid faces: keep subtle motion, but lighter than main wall tables */
         .cb-face .hm-burner-wrap:hover,
         .cb-peephole-content .hm-burner-wrap:hover{transform:none !important;}
         .cb-face .hm-burner-wrap.hm-flame::after{
           display:block !important;
-          opacity:0.22 !important;
-          animation:none !important;
+          opacity:0.18 !important;
+          animation:cbFlameGlowPulse 3.6s ease-in-out infinite !important;
+          box-shadow:none !important;
+          filter:none !important;
         }
+        .cb-face .hm-flame-O::after{background:radial-gradient(ellipse,rgba(34,197,94,0.42) 0%,transparent 75%) !important;box-shadow:none !important;}
+        .cb-face .hm-flame-N::after{background:radial-gradient(ellipse,rgba(251,191,36,0.42) 0%,transparent 75%) !important;box-shadow:none !important;}
+        .cb-face .hm-flame-B::after{background:radial-gradient(ellipse,rgba(147,197,253,0.42) 0%,transparent 75%) !important;box-shadow:none !important;}
         .cb-peephole-content .hm-burner-wrap.hm-flame svg{
           animation:none !important;
           opacity:0.82;
@@ -4084,7 +4084,7 @@ function requestHeatMapRender(delayMs){
         }
 
         /* Cuboid flame icons animate lightly; pause during heavy interactions */
-        #tab-heatmap.hm-interacting .cb-face .hm-burner-wrap.hm-flame::before,
+        #tab-heatmap.hm-interacting .cb-face .hm-burner-wrap.hm-flame svg,
         #tab-heatmap.hm-interacting .cb-peephole-content .hm-burner-wrap.hm-flame svg{
           animation-play-state:paused !important;
           opacity:0.82 !important;
