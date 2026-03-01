@@ -4681,10 +4681,10 @@ function clearHeatMapDateFilter(){
         }
         .cb-inner-tube{
           position:absolute;
-          width:14px;
-          height:468px;
-          margin-left:-7px;
-          margin-top:-234px;
+          width:24px;
+          height:500px;
+          margin-left:-12px;
+          margin-top:-250px;
           border-radius:999px;
           transform:translate3d(var(--tube-x, 0px), 0px, 0px);
           background:
@@ -4718,17 +4718,16 @@ function clearHeatMapDateFilter(){
         }
         .cb-top-port-line{
           position:absolute;
-          left:50%;
-          top:50%;
-          transform:translate(-50%,-50%);
-          width:280px;
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
+          inset:0;
         }
         .cb-top-port{
-          width:22px;
-          height:22px;
+          --tube-x:0px;
+          position:absolute;
+          left:50%;
+          top:50%;
+          transform:translate(-50%,-50%) translateX(var(--tube-x));
+          width:34px;
+          height:34px;
           border-radius:999px;
           border:1px solid rgba(var(--cb-tube-rgb,243,112,34),0.66);
           background:
@@ -4751,9 +4750,8 @@ function clearHeatMapDateFilter(){
           white-space:nowrap;
         }
         @media (max-width:900px){
-          .cb-inner-tube{width:10px;margin-left:-5px;}
-          .cb-top-port-line{width:208px;}
-          .cb-top-port{width:17px;height:17px;}
+          .cb-inner-tube{width:16px;margin-left:-8px;}
+          .cb-top-port{width:24px;height:24px;}
           .cb-top-cap-label{font-size:9px;letter-spacing:2px;}
         }
 
@@ -4931,10 +4929,10 @@ function clearHeatMapDateFilter(){
               <div class="cb-face cb-tb" style="transform:rotateX(90deg) translateZ(250px);background:linear-gradient(135deg,rgba(243,112,34,0.24),rgba(251,146,60,0.1));border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
                 <div class="cb-top-cap-inner" style="--cb-tube-rgb:243,112,34;">
                   <div class="cb-top-port-line">
-                    <span class="cb-top-port"></span>
-                    <span class="cb-top-port"></span>
-                    <span class="cb-top-port"></span>
-                    <span class="cb-top-port"></span>
+                    <span class="cb-top-port" style="--tube-x:-120px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-40px;"></span>
+                    <span class="cb-top-port" style="--tube-x:40px;"></span>
+                    <span class="cb-top-port" style="--tube-x:120px;"></span>
                   </div>
                   <span class="cb-top-cap-label">AB — REFORMER TOP</span>
                 </div>
@@ -5035,10 +5033,10 @@ function clearHeatMapDateFilter(){
               <div class="cb-face cb-tb" style="transform:rotateX(90deg) translateZ(250px);background:linear-gradient(135deg,rgba(243,112,34,0.24),rgba(251,146,60,0.1));border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
                 <div class="cb-top-cap-inner" style="--cb-tube-rgb:126,200,240;">
                   <div class="cb-top-port-line">
-                    <span class="cb-top-port"></span>
-                    <span class="cb-top-port"></span>
-                    <span class="cb-top-port"></span>
-                    <span class="cb-top-port"></span>
+                    <span class="cb-top-port" style="--tube-x:-120px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-40px;"></span>
+                    <span class="cb-top-port" style="--tube-x:40px;"></span>
+                    <span class="cb-top-port" style="--tube-x:120px;"></span>
                   </div>
                   <span class="cb-top-cap-label">CD — REFORMER TOP</span>
                 </div>
