@@ -3867,9 +3867,6 @@ function clearHeatMapDateFilter(){
               Latest
             </button>
           </div>
-          <button type="button" id="hm-cuboid-zoom-btn" onclick="setHeatMapCuboidZoom()" style="background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.45);border-radius:7px;color:#fbbf24;padding:8px 12px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.4px;">
-            🔍 Zoom Cuboids
-          </button>
           <span id="hm-ts-badge" style="display:none;"></span>
           <div id="hm-shift-banner" style="display:none;align-items:center;gap:10px;padding:6px 14px;border:1px solid transparent;border-radius:8px;flex-wrap:nowrap;transition:background 0.3s,border-color 0.3s;font-size:12px;"></div>
         </div>
@@ -4022,7 +4019,7 @@ function clearHeatMapDateFilter(){
           }
         }
 
-        /* Cuboid zoom mode (screen-filling view) */
+        /* Cuboid zoom mode (double-click one cuboid for screen-filling view) */
         body.hm-cuboid-zoom-lock{overflow:hidden !important;}
         #hm-cuboid-zoom-backdrop{
           position:fixed;
@@ -4036,56 +4033,49 @@ function clearHeatMapDateFilter(){
         #tab-heatmap.hm-cuboid-zoom-active #hm-cuboid-zoom-backdrop{
           display:block;
         }
-        .cb-zoom-close{
-          display:none;
-          position:absolute;
-          top:10px;
-          right:12px;
-          z-index:9602;
-          background:rgba(15,31,56,0.95);
-          border:1px solid rgba(148,163,184,0.5);
-          color:#e2e8f0;
-          border-radius:9px;
-          padding:8px 12px;
-          font-size:12px;
-          font-weight:700;
-          letter-spacing:0.4px;
-          cursor:pointer;
-        }
-        #tab-heatmap.hm-cuboid-zoom-active .cb-zoom-close{display:inline-flex;align-items:center;gap:6px;}
+        .cb-wrap[data-cuboid]{cursor:zoom-in;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-wrap.hm-cuboid-zoom-target{cursor:zoom-out;}
         #tab-heatmap.hm-cuboid-zoom-active .cb-dual-row{
           position:fixed;
           inset:16px;
           margin:0;
           z-index:9600;
-          padding:26px 18px 16px;
+          padding:16px 14px 12px;
           border-radius:16px;
           border-color:rgba(148,163,184,0.35);
           box-shadow:0 20px 60px rgba(0,0,0,0.75);
-          overflow:auto;
+          overflow:hidden;
           align-items:stretch;
           gap:12px;
         }
-        #tab-heatmap.hm-cuboid-zoom-active .cb-wrap{min-height:100%;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-dual-row .cb-wrap{display:none;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-dual-row .cb-wrap.hm-cuboid-zoom-target{
+          display:flex;
+          flex:1 1 auto;
+          width:100%;
+          min-height:100%;
+          align-items:center;
+          justify-content:center;
+        }
         #tab-heatmap.hm-cuboid-zoom-active .cb-scene{
-          height:min(74vh,760px);
-          transform:scale(1.08);
+          height:min(78vh,840px);
+          transform:scale(1.12);
           transform-origin:center top;
         }
         #tab-heatmap.hm-cuboid-zoom-active .cb-hint{font-size:11px;margin-top:8px;}
         #tab-heatmap.hm-cuboid-zoom-active .cb-title{font-size:15px;}
         #tab-heatmap.hm-cuboid-zoom-active .cb-subtitle{font-size:10px;}
+        #tab-heatmap.hm-cuboid-zoom-active .cb-divider{display:none !important;}
         @media (max-width:900px){
           #tab-heatmap.hm-cuboid-zoom-active .cb-dual-row{
             inset:8px;
-            padding:42px 8px 10px;
+            padding:10px 6px 8px;
             gap:10px;
           }
           #tab-heatmap.hm-cuboid-zoom-active .cb-scene{
-            height:min(42vh,520px);
-            transform:scale(1.03);
+            height:min(70vh,620px);
+            transform:scale(1.04);
           }
-          #tab-heatmap.hm-cuboid-zoom-active .cb-divider{display:none;}
         }
 
         /* ════════════════════════════════════════════════════════
@@ -4341,10 +4331,9 @@ function clearHeatMapDateFilter(){
 
       <div id="hm-cuboid-zoom-backdrop" onclick="setHeatMapCuboidZoom(false)" aria-hidden="true"></div>
       <div class="cb-dual-row">
-        <button type="button" class="cb-zoom-close" onclick="setHeatMapCuboidZoom(false)" aria-label="Exit cuboid zoom">✕ Exit Zoom</button>
 
         <!-- ══ AB SIDE CUBOID ══ -->
-        <div class="cb-wrap">
+        <div class="cb-wrap" data-cuboid="ab" ondblclick="setHeatMapCuboidZoom('ab')" title="Double-click to zoom AB cuboid">
           <div class="cb-title" style="color:#F37022;background:rgba(243,112,34,0.1);border:1px solid rgba(243,112,34,0.35);">◀ AB SIDE</div>
           <div class="cb-subtitle">Outer face = <span style="color:#F37022;font-weight:700;">Wall A</span> &nbsp;·&nbsp; Inner face = <span style="color:#fb923c;font-weight:700;">Wall B</span></div>
 
@@ -4418,14 +4407,14 @@ function clearHeatMapDateFilter(){
             </div>
             <div class="cb-glow" style="background:radial-gradient(ellipse,rgba(243,112,34,0.4) 0%,transparent 70%);"></div>
           </div>
-          <div class="cb-hint">← DRAG LEFT / RIGHT TO ROTATE →</div>
+          <div class="cb-hint">← DRAG LEFT / RIGHT TO ROTATE · DOUBLE-CLICK TO ZOOM →</div>
           <div id="ab-load-status" class="cb-loading" style="display:none;">Generating wall textures…</div>
         </div>
 
         <div class="cb-divider"></div>
 
         <!-- ══ CD SIDE CUBOID ══ -->
-        <div class="cb-wrap">
+        <div class="cb-wrap" data-cuboid="cd" ondblclick="setHeatMapCuboidZoom('cd')" title="Double-click to zoom CD cuboid">
           <div class="cb-title" style="color:#7ec8f0;background:rgba(126,200,240,0.1);border:1px solid rgba(126,200,240,0.35);">CD SIDE ▶</div>
           <div class="cb-subtitle">Outer face = <span style="color:#7ec8f0;font-weight:700;">Wall C</span> &nbsp;·&nbsp; Inner face = <span style="color:#60c8ff;font-weight:700;">Wall D</span></div>
 
@@ -4499,7 +4488,7 @@ function clearHeatMapDateFilter(){
             </div>
             <div class="cb-glow" style="background:radial-gradient(ellipse,rgba(243,112,34,0.4) 0%,transparent 70%);"></div>
           </div>
-          <div class="cb-hint">← DRAG LEFT / RIGHT TO ROTATE →</div>
+          <div class="cb-hint">← DRAG LEFT / RIGHT TO ROTATE · DOUBLE-CLICK TO ZOOM →</div>
           <div id="cd-load-status" class="cb-loading" style="display:none;">Generating wall textures…</div>
         </div>
 
@@ -4985,6 +4974,7 @@ function clearHeatMapDateFilter(){
       <script>
       var _activeHeatMapWall = null;
       var _hmCuboidZoomActive = false;
+      var _hmCuboidZoomTarget = "";
       var _hmCuboidZoomKeyBound = false;
       function switchHeatMapWall(wall){
         _activeHeatMapWall = (_activeHeatMapWall === wall) ? null : wall;
@@ -5008,30 +4998,57 @@ function clearHeatMapDateFilter(){
       }
       function setHeatMapCuboidZoom(forceState){
         var hmTab = document.getElementById("tab-heatmap");
-        var btn = document.getElementById("hm-cuboid-zoom-btn");
-        if(!hmTab){
+        var wraps = hmTab ? hmTab.querySelectorAll(".cb-dual-row .cb-wrap[data-cuboid]") : null;
+        if(!hmTab || !wraps || !wraps.length){
           _hmCuboidZoomActive = false;
-          if(btn) btn.textContent = "🔍 Zoom Cuboids";
+          _hmCuboidZoomTarget = "";
           return;
         }
-        var next = (typeof forceState === "boolean") ? forceState : !_hmCuboidZoomActive;
+
+        var explicitClose = (forceState === false);
+        var targetKey = (typeof forceState === "string") ? String(forceState).toLowerCase() : "";
+        var next = _hmCuboidZoomActive;
+
+        if(explicitClose){
+          next = false;
+        }else if(targetKey){
+          if(_hmCuboidZoomActive && _hmCuboidZoomTarget === targetKey){
+            next = false; /* double-click same cuboid closes zoom */
+          }else{
+            _hmCuboidZoomTarget = targetKey;
+            next = true;  /* open/switch zoom to requested cuboid */
+          }
+        }else{
+          next = !_hmCuboidZoomActive;
+          if(next && !_hmCuboidZoomTarget){
+            _hmCuboidZoomTarget = String(wraps[0].getAttribute("data-cuboid") || "").toLowerCase();
+          }
+        }
+
         _hmCuboidZoomActive = !!next;
+        if(!_hmCuboidZoomActive){
+          _hmCuboidZoomTarget = "";
+        }
+
+        if(_hmCuboidZoomActive && !_hmCuboidZoomTarget){
+          _hmCuboidZoomTarget = String(wraps[0].getAttribute("data-cuboid") || "").toLowerCase();
+        }
+
+        for(var wi=0; wi<wraps.length; wi++){
+          var w = wraps[wi];
+          var key = String(w.getAttribute("data-cuboid") || "").toLowerCase();
+          var isTarget = !!(_hmCuboidZoomActive && _hmCuboidZoomTarget && key === _hmCuboidZoomTarget);
+          w.classList.toggle("hm-cuboid-zoom-target", isTarget);
+        }
+
         hmTab.classList.toggle("hm-cuboid-zoom-active", _hmCuboidZoomActive);
         document.body.classList.toggle("hm-cuboid-zoom-lock", _hmCuboidZoomActive);
-        if(btn){
-          btn.textContent = _hmCuboidZoomActive ? "🗗 Exit Zoom" : "🔍 Zoom Cuboids";
-          btn.style.background = _hmCuboidZoomActive ? "rgba(239,68,68,0.14)" : "rgba(245,158,11,0.14)";
-          btn.style.borderColor = _hmCuboidZoomActive ? "rgba(248,113,113,0.45)" : "rgba(245,158,11,0.45)";
-          btn.style.color = _hmCuboidZoomActive ? "#fecaca" : "#fbbf24";
-        }
         if(_hmCuboidZoomActive && typeof requestHeatMapRender === "function"){
           window._hmSkipCuboidRefresh = true;
           requestHeatMapRender(20);
         }
       }
       function initHeatMapCuboidZoom(){
-        var btn = document.getElementById("hm-cuboid-zoom-btn");
-        if(btn && !btn.textContent) btn.textContent = "🔍 Zoom Cuboids";
         if(!_hmCuboidZoomKeyBound){
           _hmCuboidZoomKeyBound = true;
           document.addEventListener("keydown", function(ev){
