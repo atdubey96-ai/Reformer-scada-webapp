@@ -3042,6 +3042,31 @@ function ensureHeatMapWallBuilt(wall){
   if(!hasContent) buildHeatMapPanelForWall(wall);
 }
 
+function getHeatMapEntryDateKey(rawDt){
+  var s = String(rawDt || "").trim();
+  if(!s) return "";
+  var m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+  if(m && m[1]) return m[1];
+  var d = new Date(s);
+  if(isFinite(d.getTime())) return d.toISOString().slice(0, 10);
+  return s;
+}
+
+function resolveHeatMapEntryByDateValue(filteredEntries, dateVal){
+  var list = Array.isArray(filteredEntries) ? filteredEntries : [];
+  var val = String(dateVal || "latest");
+  if(val === "latest") return list.length ? list[0] : null;
+  if(/^d:/.test(val)){
+    var key = val.slice(2);
+    for(var i=0; i<list.length; i++){
+      if(getHeatMapEntryDateKey(list[i] ? list[i].dt : "") === key) return list[i];
+    }
+    return list.length ? list[0] : null;
+  }
+  var idx = parseInt(val, 10);
+  return (!isNaN(idx) && list[idx]) ? list[idx] : (list[0] || null);
+}
+
 function renderHeatMap(){
   /* ── Self-contained burner data loading ── */
   /* Read burner data DIRECTLY from localStorage, bypassing loadData() entirely */
@@ -3097,16 +3122,6 @@ function renderHeatMap(){
   var shiftSel = document.getElementById("hm-shift-select");
   var selectedShift = shiftSel ? shiftSel.value : "All";
 
-  function getHeatMapEntryDateKey(rawDt){
-    var s = String(rawDt || "").trim();
-    if(!s) return "";
-    var m = s.match(/^(\d{4}-\d{2}-\d{2})/);
-    if(m && m[1]) return m[1];
-    var d = new Date(s);
-    if(isFinite(d.getTime())) return d.toISOString().slice(0, 10);
-    return s;
-  }
-
   /* ── Populate date dropdown based on shift ── */
   var allEntries = getAllTempEntries();
   var filteredEntries = allEntries;
@@ -3114,7 +3129,6 @@ function renderHeatMap(){
     filteredEntries = allEntries.filter(function(e){ return e.shift === selectedShift; });
   }
 
-  var uniqueDateEntries = [];
   var dateSel = document.getElementById("hm-date-select");
   var prevDateVal = dateSel ? dateSel.value : "latest";
   if(dateSel){
@@ -3125,7 +3139,6 @@ function renderHeatMap(){
       var dateKey = getHeatMapEntryDateKey(fe ? fe.dt : "");
       if(!dateKey || seenDateKeys[dateKey]) continue;
       seenDateKeys[dateKey] = true;
-      uniqueDateEntries.push({ key: dateKey, entry: fe });
       dateHTML += '<option value="d:'+dateKey+'" style="background:#0f1f38;">📅 '+dateKey+'</option>';
     }
     dateSel.innerHTML = dateHTML;
@@ -3137,24 +3150,28 @@ function renderHeatMap(){
     dateSel.value = found ? prevDateVal : "latest";
   }
 
-  /* ── Pick entry by date selection ── */
-  var entry = null;
-  var dateVal = dateSel ? dateSel.value : "latest";
-  if(dateVal === "latest"){
-    entry = filteredEntries.length ? filteredEntries[0] : null;
-  } else if(/^d:/.test(String(dateVal || ""))){
-    var selectedDateKey = String(dateVal).slice(2);
-    for(var ui=0; ui<uniqueDateEntries.length; ui++){
-      if(uniqueDateEntries[ui].key === selectedDateKey){
-        entry = uniqueDateEntries[ui].entry;
-        break;
+  var dateBtn = document.getElementById("hm-date-btn");
+  if(dateBtn){
+    var label = "📅 Latest";
+    if(dateSel){
+      var selectedIdx = dateSel.selectedIndex >= 0 ? dateSel.selectedIndex : 0;
+      var selectedOpt = dateSel.options && dateSel.options[selectedIdx] ? dateSel.options[selectedIdx] : null;
+      if(selectedOpt){
+        var txt = String(selectedOpt.textContent || selectedOpt.innerText || "").trim();
+        if(txt) label = txt;
       }
     }
-    if(!entry) entry = filteredEntries.length ? filteredEntries[0] : null;
-  } else {
-    var idx = parseInt(dateVal, 10);
-    entry = (!isNaN(idx) && filteredEntries[idx]) ? filteredEntries[idx] : (filteredEntries[0] || null);
+    dateBtn.textContent = label;
+    var hasMultiple = !!(dateSel && dateSel.options && dateSel.options.length > 1);
+    dateBtn.disabled = !hasMultiple;
+    dateBtn.style.opacity = hasMultiple ? "1" : "0.78";
+    dateBtn.style.cursor = hasMultiple ? "pointer" : "default";
+    dateBtn.title = hasMultiple ? "Click to switch date" : "Only latest date available";
   }
+
+  /* ── Pick entry by date selection ── */
+  var dateVal = dateSel ? dateSel.value : "latest";
+  var entry = resolveHeatMapEntryByDateValue(filteredEntries, dateVal);
 
   function getPH(e, key){
     if(!e || !e.peepHoles || !e.peepHoles[key]) return Array(15).fill("");
@@ -3509,6 +3526,34 @@ function requestHeatMapRender(delayMs){
     if(typeof renderHeatMap === "function") renderHeatMap();
   }, wait);
 }
+
+function onHeatMapShiftChanged(){
+  var ds = document.getElementById("hm-date-select");
+  if(ds) ds.value = "latest";
+  requestHeatMapRender(90);
+}
+
+function cycleHeatMapDateSelection(step){
+  var ds = document.getElementById("hm-date-select");
+  if(!ds) return;
+  var total = ds.options ? ds.options.length : 0;
+  if(total < 2){
+    requestHeatMapRender(20);
+    return;
+  }
+  var dir = (typeof step === "number" && step < 0) ? -1 : 1;
+  var idx = ds.selectedIndex;
+  if(idx < 0){
+    idx = 0;
+    for(var i=0; i<total; i++){
+      if(ds.options[i].value === ds.value){ idx = i; break; }
+    }
+  }
+  idx = (idx + dir + total) % total;
+  ds.selectedIndex = idx;
+  if(ds.options[idx]) ds.value = ds.options[idx].value;
+  requestHeatMapRender(90);
+}
 </script>
 </head>
 <body>
@@ -3847,7 +3892,7 @@ function requestHeatMapRender(delayMs){
         <div style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:6px 12px;">
             <span style="font-size:11px;font-weight:700;color:#7ec8f0;letter-spacing:0.8px;text-transform:uppercase;">Shift:</span>
-            <select id="hm-shift-select" onchange="var ds=document.getElementById('hm-date-select');if(ds)ds.value='latest';requestHeatMapRender(90)" style="background:#0f1f38;border:1px solid #334155;border-radius:5px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;">
+            <select id="hm-shift-select" onchange="onHeatMapShiftChanged()" style="background:#0f1f38;border:1px solid #334155;border-radius:5px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;">
               <option value="All" style="background:#0f1f38;">🔁 All Shifts</option>
               <option value="Morning" style="background:#0f1f38;color:#34d399;">🌅 Morning</option>
               <option value="Evening" style="background:#0f1f38;color:#fb923c;">🌆 Evening</option>
@@ -3856,8 +3901,11 @@ function requestHeatMapRender(delayMs){
           </div>
           <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:6px 12px;">
             <span style="font-size:11px;font-weight:700;color:#7ec8f0;letter-spacing:0.8px;text-transform:uppercase;">Date:</span>
-            <select id="hm-date-select" onchange="requestHeatMapRender(90)" style="background:#0f1f38;border:1px solid #334155;border-radius:5px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;max-width:220px;">
-              <option value="latest" style="background:#0f1f38;">📅 Latest</option>
+            <button type="button" id="hm-date-btn" onclick="cycleHeatMapDateSelection(1)" title="Click to switch date" style="background:#0f1f38;border:1px solid #334155;border-radius:5px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;outline:none;cursor:pointer;padding:3px 10px;max-width:220px;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;">
+              📅 Latest
+            </button>
+            <select id="hm-date-select" onchange="requestHeatMapRender(90)" style="display:none;">
+              <option value="latest">latest</option>
             </select>
           </div>
           <span id="hm-ts-badge" style="display:none;"></span>
@@ -4675,13 +4723,9 @@ function requestHeatMapRender(delayMs){
           }
           var _dateSel = document.getElementById("hm-date-select");
           var _dateVal = _dateSel ? _dateSel.value : "latest";
-          var entry = null;
-          if(_dateVal === "latest"){
-            entry = _filtEnt.length ? _filtEnt[0] : null;
-          } else {
-            var _di = parseInt(_dateVal);
-            entry = (!isNaN(_di) && _filtEnt[_di]) ? _filtEnt[_di] : (_filtEnt[0] || null);
-          }
+          var entry = (typeof resolveHeatMapEntryByDateValue === "function")
+            ? resolveHeatMapEntryByDateValue(_filtEnt, _dateVal)
+            : (_filtEnt.length ? _filtEnt[0] : null);
           function getPH(e,k){ return (e&&e.peepHoles&&e.peepHoles[k]) ? e.peepHoles[k] : Array(15).fill(""); }
           var abBot=getPH(entry,"ab-bot"), abTop=getPH(entry,"ab-top");
           var cdBot=getPH(entry,"cd-bot"), cdTop=getPH(entry,"cd-top");
