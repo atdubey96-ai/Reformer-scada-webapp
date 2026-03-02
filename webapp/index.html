@@ -5161,6 +5161,130 @@ function clearHeatMapDateFilter(){
           color:var(--ui-muted) !important;
         }
       </style>
+      <style id="cross-tab-gradient-polish-2026">
+        body:not(.light-theme){
+          --state-b-from:#60a5fa;
+          --state-b-mid:#2563eb;
+          --state-b-to:#1d4ed8;
+          --state-n-from:#fbbf24;
+          --state-n-mid:#d97706;
+          --state-n-to:#b45309;
+          --state-o-from:#4ade80;
+          --state-o-mid:#16a34a;
+          --state-o-to:#15803d;
+          --state-c-from:#64748b;
+          --state-c-mid:#334155;
+          --state-c-to:#1e293b;
+          --surface-panel-a:linear-gradient(158deg,#1d2530 0%,#1a2230 52%,#161f2b 100%);
+          --surface-panel-b:linear-gradient(158deg,#18222d 0%,#151f2b 54%,#131c26 100%);
+          --surface-border-soft:rgba(100,116,139,0.5);
+          --surface-border-strong:rgba(148,163,184,0.32);
+        }
+
+        body:not(.light-theme) .tab-panel{
+          background:linear-gradient(180deg,#121820 0%,#10161d 100%) !important;
+        }
+
+        body:not(.light-theme) .wall,
+        body:not(.light-theme) .analytics,
+        body:not(.light-theme) .analysis-block,
+        body:not(.light-theme) .cleaning-section,
+        body:not(.light-theme) .cdash-period-card,
+        body:not(.light-theme) .cdash-breakdown-block,
+        body:not(.light-theme) .alarms-section,
+        body:not(.light-theme) .alarm-card,
+        body:not(.light-theme) .hm-wall-card,
+        body:not(.light-theme) .hm-adjust-card,
+        body:not(.light-theme) .td-entry-card,
+        body:not(.light-theme) .td-toolbar-pill,
+        body:not(.light-theme) .td-fill-menu-wrap{
+          background:var(--surface-panel-a) !important;
+          border-color:var(--surface-border-soft) !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 10px 24px rgba(2,8,23,0.28);
+        }
+
+        body:not(.light-theme) #td-saved-table th,
+        body:not(.light-theme) .cleaning-table th{
+          background:var(--surface-panel-b) !important;
+          border-color:var(--surface-border-strong) !important;
+        }
+
+        body:not(.light-theme) .hm-wall-btn,
+        body:not(.light-theme) .cw-btn,
+        body:not(.light-theme) .hd-btn-secondary,
+        body:not(.light-theme) .td-toolbar-btn-soft,
+        body:not(.light-theme) .td-toolbar-btn-muted{
+          background:linear-gradient(145deg,#202a36 0%,#1a2330 60%,#16202b 100%) !important;
+          border-color:rgba(100,116,139,0.52) !important;
+          color:#d6deea !important;
+        }
+        body:not(.light-theme) .hm-wall-btn:hover,
+        body:not(.light-theme) .cw-btn:hover,
+        body:not(.light-theme) .hd-btn-secondary:hover,
+        body:not(.light-theme) .td-toolbar-btn-soft:hover,
+        body:not(.light-theme) .td-toolbar-btn-muted:hover{
+          background:linear-gradient(145deg,#273344 0%,#202b3a 60%,#1a2431 100%) !important;
+          border-color:rgba(148,163,184,0.58) !important;
+          color:#f1f5f9 !important;
+        }
+
+        body:not(.light-theme) .li-B,
+        body:not(.light-theme) .ab-both,
+        body:not(.light-theme) .hm-row-data-badge-B{
+          background:linear-gradient(135deg,var(--state-b-from) 0%,var(--state-b-mid) 62%,var(--state-b-to) 100%) !important;
+          color:#eff6ff !important;
+          border-color:rgba(96,165,250,0.56) !important;
+        }
+        body:not(.light-theme) .li-N,
+        body:not(.light-theme) .ab-ng,
+        body:not(.light-theme) .hm-row-data-badge-N{
+          background:linear-gradient(135deg,var(--state-n-from) 0%,var(--state-n-mid) 62%,var(--state-n-to) 100%) !important;
+          color:#fff7ed !important;
+          border-color:rgba(251,191,36,0.54) !important;
+        }
+        body:not(.light-theme) .li-O,
+        body:not(.light-theme) .ab-og,
+        body:not(.light-theme) .hm-row-data-badge-O{
+          background:linear-gradient(135deg,var(--state-o-from) 0%,var(--state-o-mid) 62%,var(--state-o-to) 100%) !important;
+          color:#ecfdf5 !important;
+          border-color:rgba(74,222,128,0.5) !important;
+        }
+        body:not(.light-theme) .li-C,
+        body:not(.light-theme) .ab-cold,
+        body:not(.light-theme) .hm-row-data-badge-C{
+          background:linear-gradient(135deg,var(--state-c-from) 0%,var(--state-c-mid) 60%,var(--state-c-to) 100%) !important;
+          color:#e2e8f0 !important;
+          border-color:rgba(148,163,184,0.42) !important;
+        }
+
+        body:not(.light-theme) .severity-normal,
+        body:not(.light-theme) .asp-normal{
+          background:linear-gradient(135deg,var(--state-o-from) 0%,var(--state-o-mid) 62%,var(--state-o-to) 100%) !important;
+          color:#ecfdf5 !important;
+          border-color:rgba(74,222,128,0.48) !important;
+        }
+        body:not(.light-theme) .severity-warning,
+        body:not(.light-theme) .asp-warning{
+          background:linear-gradient(135deg,var(--state-n-from) 0%,var(--state-n-mid) 62%,var(--state-n-to) 100%) !important;
+          color:#fff7ed !important;
+          border-color:rgba(251,191,36,0.52) !important;
+        }
+        body:not(.light-theme) .asp-major{
+          background:linear-gradient(135deg,#fb923c 0%,#f97316 62%,#c2410c 100%) !important;
+          color:#fff7ed !important;
+          border-color:rgba(251,146,60,0.52) !important;
+        }
+        body:not(.light-theme) .asp-critical{
+          background:linear-gradient(135deg,#f87171 0%,#dc2626 62%,#b91c1c 100%) !important;
+          color:#fff1f2 !important;
+          border-color:rgba(248,113,113,0.5) !important;
+        }
+        body:not(.light-theme) .asp-freq{
+          background:linear-gradient(135deg,#c4b5fd 0%,#8b5cf6 62%,#6d28d9 100%) !important;
+          color:#f5f3ff !important;
+          border-color:rgba(196,181,253,0.5) !important;
+        }
+      </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
