@@ -2587,7 +2587,7 @@ body.light-theme #td-saved-table .td-dt-time{color:#2563eb;}
 .hm-cuboid-heat-strip{
   display:flex;
   align-items:center;
-  justify-content:center;
+  justify-content:space-between;
   gap:8px;
   flex-wrap:wrap;
   background:#0f1f38;
@@ -2595,6 +2595,18 @@ body.light-theme #td-saved-table .td-dt-time{color:#2563eb;}
   border-radius:8px;
   padding:8px 12px;
   margin:0 0 10px 0;
+}
+.hm-cuboid-heat-strip .hm-legend-strip{
+  background:transparent;
+  border:none;
+  padding:0;
+  flex:1 1 auto;
+}
+.hm-cuboid-heat-group{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
 }
 .hm-cuboid-heat-bar{
   width:min(420px,68vw);
@@ -2672,6 +2684,10 @@ body.light-theme .hm-cuboid-heat-strip{
   background:#f8fbff;
   border-color:#b8cde8;
 }
+body.light-theme .hm-cuboid-heat-strip .hm-legend-strip{
+  background:transparent;
+  border:none;
+}
 body.light-theme .hm-cuboid-heat-bar{
   border-color:#b8cde8;
 }
@@ -2695,6 +2711,14 @@ body.light-theme .hm-cuboid-heat-text{
   .hm-icon-menu{left:0;right:0;min-width:0;}
   .hm-cuboid-heat-strip{
     justify-content:flex-start;
+  }
+  .hm-cuboid-heat-strip .hm-legend-strip{
+    width:100%;
+    flex:1 1 100%;
+  }
+  .hm-cuboid-heat-group{
+    width:100%;
+    flex:1 1 100%;
   }
   .hm-cuboid-heat-bar{
     width:min(360px,86vw);
@@ -4375,25 +4399,6 @@ function clearHeatMapDateFilter(){
   <div class="app-header-main">
     <div class="app-header-left">
       <div id="hm-header-tools" class="hm-header-tools" style="display:none;">
-        <div class="hm-legend-strip">
-          <span class="hm-legend-title">BURNER STATE</span>
-          <div class="hm-legend-pill" style="background:rgba(22,163,74,0.14);border:1px solid rgba(22,163,74,0.45);">
-            <span style="font-size:15px;line-height:1;filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
-            <span class="hm-legend-pill-text" style="color:#4ade80;">OFF GAS (O)</span>
-          </div>
-          <div class="hm-legend-pill" style="background:rgba(217,119,6,0.14);border:1px solid rgba(217,119,6,0.45);">
-            <span style="font-size:15px;line-height:1;filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
-            <span class="hm-legend-pill-text" style="color:#fbbf24;">NG ONLY (N)</span>
-          </div>
-          <div class="hm-legend-pill" style="background:rgba(37,99,235,0.14);border:1px solid rgba(37,99,235,0.45);">
-            <span style="font-size:15px;line-height:1;filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
-            <span class="hm-legend-pill-text" style="color:#60a5fa;">BOTH (B)</span>
-          </div>
-          <div class="hm-legend-pill" style="background:rgba(71,85,105,0.2);border:1px solid rgba(100,116,139,0.45);">
-            <span style="font-size:13px;line-height:1;color:#94a3b8;">◼</span>
-            <span class="hm-legend-pill-text" style="color:#94a3b8;">CAPPED (C)</span>
-          </div>
-        </div>
         <div class="hm-toolbar-right hm-header-filters">
           <div class="hm-filter-chip">
             <span class="hm-filter-label">Shift:</span>
@@ -5828,9 +5833,30 @@ function clearHeatMapDateFilter(){
 
       <div id="hm-cuboid-zoom-backdrop" onclick="setHeatMapCuboidZoom(false)" aria-hidden="true"></div>
       <div class="hm-cuboid-heat-strip">
-        <span class="hm-legend-title">PEEP HOLES</span>
-        <div class="hm-cuboid-heat-bar"></div>
-        <span class="hm-cuboid-heat-text">Cold → Hot gradient</span>
+        <div class="hm-legend-strip">
+          <span class="hm-legend-title">BURNER STATE</span>
+          <div class="hm-legend-pill" style="background:rgba(22,163,74,0.14);border:1px solid rgba(22,163,74,0.45);">
+            <span style="font-size:15px;line-height:1;filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
+            <span class="hm-legend-pill-text" style="color:#4ade80;">OFF GAS (O)</span>
+          </div>
+          <div class="hm-legend-pill" style="background:rgba(217,119,6,0.14);border:1px solid rgba(217,119,6,0.45);">
+            <span style="font-size:15px;line-height:1;filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
+            <span class="hm-legend-pill-text" style="color:#fbbf24;">NG ONLY (N)</span>
+          </div>
+          <div class="hm-legend-pill" style="background:rgba(37,99,235,0.14);border:1px solid rgba(37,99,235,0.45);">
+            <span style="font-size:15px;line-height:1;filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
+            <span class="hm-legend-pill-text" style="color:#60a5fa;">BOTH (B)</span>
+          </div>
+          <div class="hm-legend-pill" style="background:rgba(71,85,105,0.2);border:1px solid rgba(100,116,139,0.45);">
+            <span style="font-size:13px;line-height:1;color:#94a3b8;">◼</span>
+            <span class="hm-legend-pill-text" style="color:#94a3b8;">CAPPED (C)</span>
+          </div>
+        </div>
+        <div class="hm-cuboid-heat-group">
+          <span class="hm-legend-title">PEEP HOLES</span>
+          <div class="hm-cuboid-heat-bar"></div>
+          <span class="hm-cuboid-heat-text">Cold → Hot gradient</span>
+        </div>
       </div>
       <div class="cb-dual-row">
 
