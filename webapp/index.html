@@ -4929,6 +4929,17 @@ function clearHeatMapDateFilter(){
           text-shadow:0 1px 3px rgba(0,0,0,0.7);
           white-space:nowrap;
         }
+        .cb-side-face-panel{
+          width:100%;
+          height:100%;
+          display:block;
+          pointer-events:none;
+        }
+        .cb-side-cutout-svg{
+          width:100%;
+          height:100%;
+          display:block;
+        }
         @media (max-width:900px){
           .cb-inner-tube{width:16px;margin-left:-8px;}
           .cb-top-port{width:24px;height:24px;}
@@ -5764,10 +5775,40 @@ function clearHeatMapDateFilter(){
               </div>
 
               <!-- LEFT side cap -->
-              <div class="cb-face cb-lr" style="transform:rotateY(-90deg) translateZ(360px);border:1.5px solid rgba(243,112,34,0.35);"></div>
+              <div class="cb-face cb-lr" style="transform:rotateY(-90deg) translateZ(360px);border:1.5px solid rgba(243,112,34,0.35);">
+                <div class="cb-side-face-panel" aria-hidden="true">
+                  <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
+                    <defs>
+                      <mask id="cb-mask-ab-l">
+                        <rect x="0" y="0" width="160" height="500" fill="#fff"></rect>
+                        <rect x="46" y="118" width="68" height="68" fill="#000"></rect>
+                        <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
+                      </mask>
+                    </defs>
+                    <rect x="0" y="0" width="160" height="500" fill="rgba(0,0,0,0.92)" mask="url(#cb-mask-ab-l)"></rect>
+                    <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
+                    <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
+                  </svg>
+                </div>
+              </div>
 
               <!-- RIGHT side cap -->
-              <div class="cb-face cb-lr" style="transform:rotateY(90deg) translateZ(360px);border:1.5px solid rgba(251,146,60,0.35);"></div>
+              <div class="cb-face cb-lr" style="transform:rotateY(90deg) translateZ(360px);border:1.5px solid rgba(251,146,60,0.35);">
+                <div class="cb-side-face-panel" aria-hidden="true">
+                  <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
+                    <defs>
+                      <mask id="cb-mask-ab-r">
+                        <rect x="0" y="0" width="160" height="500" fill="#fff"></rect>
+                        <rect x="46" y="118" width="68" height="68" fill="#000"></rect>
+                        <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
+                      </mask>
+                    </defs>
+                    <rect x="0" y="0" width="160" height="500" fill="rgba(0,0,0,0.92)" mask="url(#cb-mask-ab-r)"></rect>
+                    <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
+                    <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
+                  </svg>
+                </div>
+              </div>
 
               <!-- TOP cap -->
               <div class="cb-face cb-tb" style="transform:rotateX(90deg) translateZ(250px);background:transparent;border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
@@ -5838,10 +5879,40 @@ function clearHeatMapDateFilter(){
               </div>
 
               <!-- LEFT side cap -->
-              <div class="cb-face cb-lr" style="transform:rotateY(-90deg) translateZ(360px);border:1.5px solid rgba(243,112,34,0.35);"></div>
+              <div class="cb-face cb-lr" style="transform:rotateY(-90deg) translateZ(360px);border:1.5px solid rgba(243,112,34,0.35);">
+                <div class="cb-side-face-panel" aria-hidden="true">
+                  <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
+                    <defs>
+                      <mask id="cb-mask-cd-l">
+                        <rect x="0" y="0" width="160" height="500" fill="#fff"></rect>
+                        <rect x="46" y="118" width="68" height="68" fill="#000"></rect>
+                        <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
+                      </mask>
+                    </defs>
+                    <rect x="0" y="0" width="160" height="500" fill="rgba(0,0,0,0.92)" mask="url(#cb-mask-cd-l)"></rect>
+                    <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
+                    <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
+                  </svg>
+                </div>
+              </div>
 
               <!-- RIGHT side cap -->
-              <div class="cb-face cb-lr" style="transform:rotateY(90deg) translateZ(360px);border:1.5px solid rgba(251,146,60,0.35);"></div>
+              <div class="cb-face cb-lr" style="transform:rotateY(90deg) translateZ(360px);border:1.5px solid rgba(251,146,60,0.35);">
+                <div class="cb-side-face-panel" aria-hidden="true">
+                  <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
+                    <defs>
+                      <mask id="cb-mask-cd-r">
+                        <rect x="0" y="0" width="160" height="500" fill="#fff"></rect>
+                        <rect x="46" y="118" width="68" height="68" fill="#000"></rect>
+                        <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
+                      </mask>
+                    </defs>
+                    <rect x="0" y="0" width="160" height="500" fill="rgba(0,0,0,0.92)" mask="url(#cb-mask-cd-r)"></rect>
+                    <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
+                    <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
+                  </svg>
+                </div>
+              </div>
 
               <!-- TOP cap -->
               <div class="cb-face cb-tb" style="transform:rotateX(90deg) translateZ(250px);background:transparent;border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
