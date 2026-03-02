@@ -1,16 +1,19 @@
 {
-  "headers": [
+  "redirects": [
     {
       "source": "/",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
+      "destination": "/webapp/",
+      "permanent": false
     },
     {
       "source": "/index.html",
+      "destination": "/webapp/",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/webapp/",
       "headers": [
         {
           "key": "Cache-Control",
@@ -19,7 +22,7 @@
       ]
     },
     {
-      "source": "/sw.js",
+      "source": "/webapp/index.html",
       "headers": [
         {
           "key": "Cache-Control",
@@ -28,7 +31,16 @@
       ]
     },
     {
-      "source": "/manifest.webmanifest",
+      "source": "/webapp/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/webapp/manifest.webmanifest",
       "headers": [
         {
           "key": "Cache-Control",
@@ -37,7 +49,7 @@
       ]
     },
     {
-      "source": "/icon-192.svg",
+      "source": "/webapp/icon-192.svg",
       "headers": [
         {
           "key": "Cache-Control",
@@ -46,7 +58,7 @@
       ]
     },
     {
-      "source": "/icon-512.svg",
+      "source": "/webapp/icon-512.svg",
       "headers": [
         {
           "key": "Cache-Control",
