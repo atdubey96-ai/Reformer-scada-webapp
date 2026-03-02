@@ -5389,34 +5389,50 @@ function clearHeatMapDateFilter(){
         }
         body:not(.light-theme) #tab-heatmap .cb-scene{
           background:
-            radial-gradient(125% 92% at 50% 0%,rgba(203,213,225,0.24) 0%,rgba(2,6,23,0) 56%),
-            linear-gradient(180deg,rgba(10,12,16,0.98),rgba(4,6,9,0.99)) !important;
+            linear-gradient(180deg,#0c1015 0%,#070a0f 100%) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-scene::before{
           border-color:rgba(148,163,184,0.56) !important;
-          box-shadow:inset 0 0 24px rgba(2,6,23,0.68), inset 0 0 12px rgba(148,163,184,0.22) !important;
+          box-shadow:inset 0 0 0 1px rgba(15,23,42,0.78), inset 0 0 14px rgba(0,0,0,0.66) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-scene-ab::before{
           border-color:rgba(251,146,60,0.62) !important;
-          box-shadow:inset 0 0 30px rgba(251,146,60,0.24), inset 0 0 14px rgba(2,6,23,0.64) !important;
+          box-shadow:inset 0 0 22px rgba(251,146,60,0.16), inset 0 0 14px rgba(2,6,23,0.64) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-scene-cd::before{
           border-color:rgba(203,213,225,0.62) !important;
-          box-shadow:inset 0 0 30px rgba(203,213,225,0.2), inset 0 0 14px rgba(2,6,23,0.64) !important;
+          box-shadow:inset 0 0 22px rgba(203,213,225,0.15), inset 0 0 14px rgba(2,6,23,0.64) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-face.cb-fb{
-          background:linear-gradient(150deg,#2b3139 0%,#1f252d 52%,#141920 100%) !important;
+          background:linear-gradient(152deg,#353b44 0%,#272d35 52%,#181d24 100%) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-face.cb-lr{
-          background:linear-gradient(150deg,#252b33 0%,#1a2028 52%,#11161d 100%) !important;
+          background:linear-gradient(152deg,#2d333b 0%,#212730 52%,#141a22 100%) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-face.cb-tb{
-          background:linear-gradient(150deg,#363d46 0%,#292f38 52%,#1a2028 100%) !important;
+          background:linear-gradient(152deg,#424a55 0%,#323943 52%,#1f252e 100%) !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-face{
+          box-shadow:inset 0 0 0 1px rgba(203,213,225,0.22), inset 0 0 18px rgba(0,0,0,0.4) !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-glow{
+          animation:none !important;
+          opacity:0.4 !important;
+          filter:blur(8px) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-face .hm-wall-card{
           background:linear-gradient(180deg,#0f1319 0%,#131922 58%,#0b0f15 100%) !important;
           border-color:rgba(148,163,184,0.42) !important;
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 6px 14px rgba(0,0,0,0.42) !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-face .hm-body{
+          background:rgba(7,10,15,0.82) !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-face .hm-row-wrap{
+          border-bottom:1px solid rgba(148,163,184,0.2) !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-face .hm-row-wrap:last-child{
+          border-bottom:none !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-face .hm-wall-header{
           background:linear-gradient(90deg,#2c333d,#3b4450) !important;
@@ -5429,6 +5445,29 @@ function clearHeatMapDateFilter(){
         body:not(.light-theme) #tab-heatmap .cb-face .hm-wall-meta{
           color:#e2e8f0 !important;
           text-shadow:0 1px 3px rgba(0,0,0,0.88) !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-face .hm-row-label{
+          min-width:42px !important;
+          font-size:12px !important;
+          box-shadow:none !important;
+          text-shadow:0 1px 2px rgba(0,0,0,0.95) !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-face .hm-burner-nums .hm-bnum{
+          font-size:12px !important;
+          text-shadow:0 1px 2px rgba(0,0,0,0.95) !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-face .hm-peep-label{
+          min-width:42px !important;
+          font-size:12px !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-face .hm-peep-temp-label{
+          font-size:11px !important;
+          color:#f8fafc !important;
+          font-weight:800 !important;
+          text-shadow:0 1px 3px rgba(0,0,0,0.95) !important;
+        }
+        body:not(.light-theme) #tab-heatmap .cb-face .hm-burner-wrap.hm-flame::after{
+          opacity:0.08 !important;
         }
         </style>
       <style id="airbnb-light-theme-2026">
