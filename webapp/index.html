@@ -933,8 +933,11 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
   background:linear-gradient(100deg,#011038 55%,#021a5a);
   border-bottom:3px solid #F37022;
   box-shadow:0 2px 20px rgba(0,0,0,0.5);
+  display:flex;
+  flex-direction:column;
 }
 .app-header-main{
+  order:2;
   display:flex;justify-content:space-between;align-items:center;
   gap:12px;
   padding:10px 28px;
@@ -1060,13 +1063,21 @@ body:not(.heatmap-header-active) #hm-header-tools{
 }
 
 .app-header-meta{
+  order:1;
   background:rgba(0,0,0,0.3);
   border-top:1px solid rgba(255,255,255,0.07);
   padding:5px 28px;
-  display:flex;justify-content:flex-start;align-items:center;
-  flex-wrap:wrap;gap:6px;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:8px;
 }
-.app-meta-left{display:flex;gap:20px;flex-wrap:wrap;}
+.app-meta-left{display:flex;gap:20px;flex-wrap:wrap;flex:1 1 auto;min-width:0;}
+.app-meta-right{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex:0 0 auto;
+}
 .app-meta-item{font-size:10.5px;color:#a0bcd8;display:flex;align-items:center;gap:5px;}
 .app-meta-item b{color:#d8eaf8;font-weight:600;}
 .app-meta-item .meta-dot{
@@ -1940,6 +1951,10 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
   }
   .app-header-meta{padding:8px 12px;}
   .app-meta-left{gap:8px;}
+  .app-meta-right{
+    width:100%;
+    justify-content:flex-end;
+  }
   .app-meta-item{font-size:10px;}
   .alarm-banner{
     bottom:calc(68px + env(safe-area-inset-bottom, 0px));
@@ -4424,6 +4439,21 @@ function clearHeatMapDateFilter(){
     <div class="app-header-right">
       <button id="refreshDataBtn" class="hd-btn hd-btn-secondary" onclick="smartRefresh()">🔄 Refresh Data</button>
       <button class="hd-btn hd-btn-primary" onclick="exportToExcel()">💾 Save New Data</button>
+    </div>
+
+  </div>
+
+  <!-- Meta strip -->
+  <div class="app-header-meta">
+    <div class="app-meta-left">
+      <div class="app-meta-item"><span class="meta-dot"></span> <b>Status:</b> Live</div>
+      <div class="app-meta-item"><b>Document:</b> SCADA-BCM-RPT-001</div>
+      <div class="app-meta-item"><b>Walls:</b> A · B · C · D</div>
+      <div class="app-meta-item"><b>Configuration:</b> 4 Walls × 6 Rows × 15 Burners = 360 Burners</div>
+      <div class="app-meta-item" id="operatorDisplay"><b>Operator:</b> <span id="operatorEmpId">—</span></div>
+      <div class="app-meta-item"><b>Last Sync:</b> <span id="lastSync">—</span></div>
+    </div>
+    <div class="app-meta-right" id="appMetaRight">
       <div class="quick-menu-wrap" id="quickMenuWrap">
         <button class="quick-menu-btn" id="quickMenuBtn" type="button" onclick="toggleQuickMenu()" title="Quick menu">🔥</button>
         <div class="quick-menu-panel" id="quickMenuPanel" aria-hidden="true">
@@ -4480,19 +4510,6 @@ function clearHeatMapDateFilter(){
           <button class="hd-btn hd-btn-danger" onclick="logout()">⏏ Logout</button>
         </div>
       </div>
-    </div>
-
-  </div>
-
-  <!-- Meta strip -->
-  <div class="app-header-meta">
-    <div class="app-meta-left">
-      <div class="app-meta-item"><span class="meta-dot"></span> <b>Status:</b> Live</div>
-      <div class="app-meta-item"><b>Document:</b> SCADA-BCM-RPT-001</div>
-      <div class="app-meta-item"><b>Walls:</b> A · B · C · D</div>
-      <div class="app-meta-item"><b>Configuration:</b> 4 Walls × 6 Rows × 15 Burners = 360 Burners</div>
-      <div class="app-meta-item" id="operatorDisplay"><b>Operator:</b> <span id="operatorEmpId">—</span></div>
-      <div class="app-meta-item"><b>Last Sync:</b> <span id="lastSync">—</span></div>
     </div>
   </div>
 </div>
