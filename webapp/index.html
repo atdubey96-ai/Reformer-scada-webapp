@@ -3905,7 +3905,6 @@ function renderHeatMap(){
   updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
   clearHeatMapPanelContent();
   if(activeWall) ensureHeatMapWallBuilt(activeWall);
-  queueHeatMapFontBoost();
 }
 
 function hmToNumericTemps(vals){
@@ -4181,32 +4180,6 @@ function toggleHeatMapAdjustmentCard(forceOpen){
 var _heatMapRenderTimer = null;
 /* True = next heatmap render should skip expensive cuboid texture rebuild */
 window._hmSkipCuboidRefresh = false;
-var HEATMAP_FONT_BOOST_FACTOR = 1.35;
-
-function boostHeatMapFontsInContainer(container){
-  if(!container || container.nodeType !== 1) return;
-  var selector = "h1,h2,h3,h4,h5,h6,p,span,label,button,select,option,input,textarea,th,td,small,strong,b,a,li,div";
-  var nodes = container.querySelectorAll(selector);
-  for(var i = nodes.length - 1; i >= 0; i--){
-    var el = nodes[i];
-    if(!el || el.getAttribute("data-hm-font-boosted") === "1") continue;
-    var cs = window.getComputedStyle(el);
-    if(!cs) continue;
-    var base = parseFloat(cs.fontSize);
-    if(!isFinite(base) || base <= 0) continue;
-    el.style.fontSize = (base * HEATMAP_FONT_BOOST_FACTOR).toFixed(2) + "px";
-    el.setAttribute("data-hm-font-boosted", "1");
-  }
-}
-
-function queueHeatMapFontBoost(){
-  var tab = document.getElementById("tab-heatmap");
-  if(!tab) return;
-  boostHeatMapFontsInContainer(tab);
-  boostHeatMapFontsInContainer(document.getElementById("hm-header-tools"));
-  boostHeatMapFontsInContainer(document.getElementById("hm-shift-banner"));
-}
-
 function requestHeatMapRender(delayMs){
   var wait = (typeof delayMs === "number" && delayMs >= 0) ? delayMs : 120;
   if(_heatMapRenderTimer) clearTimeout(_heatMapRenderTimer);
@@ -6570,7 +6543,6 @@ function clearHeatMapDateFilter(){
             requestHeatMapRender(20);
           }
         }
-        if(typeof queueHeatMapFontBoost === "function") queueHeatMapFontBoost();
       }
       function setHeatMapCuboidZoom(forceState){
         var hmTab = document.getElementById("tab-heatmap");
