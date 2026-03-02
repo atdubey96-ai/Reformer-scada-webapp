@@ -5587,6 +5587,75 @@ function clearHeatMapDateFilter(){
         body.light-theme .asp-warning{background:linear-gradient(135deg,#fef9c3,#fde68a)!important;color:#854d0e!important;border-color:#facc15!important;}
         body.light-theme .asp-freq{background:linear-gradient(135deg,#f3e8ff,#e9d5ff)!important;color:#6b21a8!important;border-color:#c4b5fd!important;}
         body.light-theme .asp-normal{background:linear-gradient(135deg,#dcfce7,#bbf7d0)!important;color:#166534!important;border-color:#86efac!important;}
+
+        /* Heat map cuboid zone should also switch fully to light surfaces */
+        body.light-theme #tab-heatmap > div[style*="background:#0b1525"]{
+          background:linear-gradient(180deg,#f9fafb 0%,#f3f4f6 100%) !important;
+        }
+        body.light-theme #tab-heatmap .cb-dual-row{
+          background:linear-gradient(145deg,#ffffff 0%,#f9fafb 56%,#f3f4f6 100%) !important;
+          border-color:#d1d5db !important;
+          box-shadow:0 10px 28px rgba(15,23,42,0.1) !important;
+        }
+        body.light-theme #tab-heatmap .cb-divider{
+          background:linear-gradient(to bottom,transparent,rgba(230,30,77,0.28),rgba(236,72,153,0.22),transparent) !important;
+        }
+        body.light-theme #tab-heatmap .cb-scene{
+          background:
+            radial-gradient(120% 85% at 50% 0%,rgba(255,56,92,0.12) 0%,rgba(255,255,255,0) 58%),
+            linear-gradient(180deg,rgba(255,255,255,0.96),rgba(243,244,246,0.85)) !important;
+        }
+        body.light-theme #tab-heatmap .cb-scene::before{
+          border-color:rgba(209,213,219,0.85) !important;
+          box-shadow:inset 0 0 26px rgba(148,163,184,0.2) !important;
+        }
+        body.light-theme #tab-heatmap .cb-scene-ab::before{
+          border-color:rgba(230,30,77,0.35) !important;
+          box-shadow:inset 0 0 30px rgba(255,56,92,0.1), inset 0 0 18px rgba(255,255,255,0.46) !important;
+        }
+        body.light-theme #tab-heatmap .cb-scene-cd::before{
+          border-color:rgba(236,72,153,0.35) !important;
+          box-shadow:inset 0 0 30px rgba(236,72,153,0.08), inset 0 0 18px rgba(255,255,255,0.46) !important;
+        }
+
+        body.light-theme #tab-heatmap .cb-face.cb-fb,
+        body.light-theme #tab-heatmap .cb-face.cb-lr,
+        body.light-theme #tab-heatmap .cb-face.cb-tb{
+          background:#ffffff !important;
+        }
+        body.light-theme #tab-heatmap .cb-face .hm-wall-card{
+          background:#ffffff !important;
+        }
+        body.light-theme #tab-heatmap .cb-face .hm-wall-header{
+          background:linear-gradient(90deg,#fff5f7,#ffe4eb) !important;
+          border-bottom:1px solid rgba(230,30,77,0.25) !important;
+        }
+        body.light-theme #tab-heatmap .cb-face .hm-wall-title{
+          color:#be123c !important;
+          text-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap .cb-face .hm-wall-meta{
+          color:#6b7280 !important;
+          text-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap .cb-face .hm-row-label{
+          background:rgba(255,56,92,0.13) !important;
+          border-color:rgba(230,30,77,0.32) !important;
+          color:#be123c !important;
+          box-shadow:none !important;
+          text-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap .cb-face .hm-burner-nums .hm-bnum{
+          color:#374151 !important;
+          text-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap .cb-face .hm-peep-label{
+          color:#4b5563 !important;
+          text-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap .cb-face .hm-peep-gradient-bar{
+          border-color:rgba(148,163,184,0.42) !important;
+        }
       </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
