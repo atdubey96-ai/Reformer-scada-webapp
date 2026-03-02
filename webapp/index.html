@@ -130,6 +130,20 @@ body.light-theme .app-topbar b{color:#1a3050;}
 body.light-theme #clock{color:#2a4a6a;}
 
 body.light-theme .app-banner-wrap{background:#e8eef8;border-bottom:2px solid rgba(243,112,34,0.4);}
+body.light-theme .app-banner-left{
+  border-color:rgba(249,115,22,0.36);
+  background:linear-gradient(150deg,rgba(255,255,255,0.9) 0%,rgba(251,146,60,0.14) 48%,rgba(191,219,254,0.24) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.95),0 8px 18px rgba(148,163,184,0.26),0 0 14px rgba(249,115,22,0.18);
+}
+body.light-theme .app-banner-right{
+  border-color:rgba(59,130,246,0.34);
+  background:linear-gradient(150deg,rgba(255,255,255,0.92) 0%,rgba(20,184,166,0.1) 46%,rgba(191,219,254,0.25) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.95),0 8px 18px rgba(148,163,184,0.26),0 0 14px rgba(59,130,246,0.16);
+}
+body.light-theme .app-banner-logo{
+  border-color:rgba(148,163,184,0.35);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.85),0 4px 12px rgba(100,116,139,0.24);
+}
 
 body.light-theme .app-header{
   background:linear-gradient(100deg,#dce6f4 55%,#c8d8ee);
@@ -822,6 +836,14 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
 .app-banner-left{
   display:flex;align-items:center;
   flex:0 0 auto;
+  position:relative;
+  isolation:isolate;
+  padding:5px 6px;
+  border-radius:14px;
+  border:1px solid rgba(251,146,60,0.42);
+  background:linear-gradient(150deg,rgba(255,255,255,0.17) 0%,rgba(30,58,138,0.16) 46%,rgba(2,6,23,0.24) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.26),0 8px 20px rgba(2,6,23,0.4),0 0 16px rgba(251,146,60,0.2);
+  overflow:hidden;
 }
 .app-banner-center{
   flex:1;display:flex;justify-content:center;align-items:center;
@@ -846,9 +868,62 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
 .app-banner-right{
   display:flex;align-items:center;justify-content:flex-end;
   flex:0 0 auto;
+  position:relative;
+  isolation:isolate;
+  padding:5px 6px;
+  border-radius:14px;
+  border:1px solid rgba(96,165,250,0.4);
+  background:linear-gradient(150deg,rgba(255,255,255,0.16) 0%,rgba(15,118,110,0.12) 46%,rgba(2,6,23,0.24) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.24),0 8px 20px rgba(2,6,23,0.4),0 0 16px rgba(96,165,250,0.18);
+  overflow:hidden;
+}
+.app-banner-left::before,
+.app-banner-right::before{
+  content:"";
+  position:absolute;
+  inset:1px;
+  border-radius:12px;
+  background:linear-gradient(122deg,rgba(255,255,255,0.3) 0%,rgba(255,255,255,0.1) 28%,rgba(255,255,255,0.03) 46%,rgba(255,255,255,0) 65%);
+  pointer-events:none;
+  z-index:1;
+}
+.app-banner-left::after,
+.app-banner-right::after{
+  content:"";
+  position:absolute;
+  top:-38%;
+  left:-48%;
+  width:60%;
+  height:190%;
+  background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.35) 48%,rgba(255,255,255,0) 100%);
+  transform:rotate(18deg);
+  filter:blur(0.25px);
+  opacity:0.7;
+  pointer-events:none;
+  z-index:2;
+  animation:bannerLogoGloss 5.4s ease-in-out infinite;
+}
+@keyframes bannerLogoGloss{
+  0%,100%{left:-48%;opacity:0.05;}
+  45%{left:22%;opacity:0.72;}
+  65%{left:56%;opacity:0.12;}
 }
 .app-banner-logo{
   height:68px;width:auto;object-fit:contain;display:block;
+  position:relative;
+  z-index:3;
+  border-radius:10px;
+  background:linear-gradient(145deg,rgba(255,255,255,0.1),rgba(255,255,255,0));
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 4px 14px rgba(15,23,42,0.45);
+  filter:saturate(1.08) contrast(1.06) brightness(1.02);
+  transition:transform .22s ease,box-shadow .22s ease,filter .22s ease;
+}
+.app-banner-left:hover .app-banner-logo,
+.app-banner-right:hover .app-banner-logo{
+  transform:translateY(-1px) scale(1.02);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 8px 18px rgba(15,23,42,0.5),0 0 14px rgba(148,163,184,0.28);
+  filter:saturate(1.13) contrast(1.09) brightness(1.04);
 }
 .app-banner-center-img{
   height:72px;max-width:640px;width:auto;object-fit:contain;display:block;
@@ -1775,6 +1850,20 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
   .app-banner-wrap{
     padding:6px 10px;
     gap:8px;
+  }
+  .app-banner-left,
+  .app-banner-right{
+    padding:3px 4px;
+    border-radius:10px;
+  }
+  .app-banner-left::before,
+  .app-banner-right::before{
+    border-radius:8px;
+  }
+  .app-banner-left::after,
+  .app-banner-right::after{
+    animation-duration:6.8s;
+    opacity:0.45;
   }
   .app-banner-logo{height:42px;}
   .app-banner-system{padding:0 8px;}
