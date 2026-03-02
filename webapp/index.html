@@ -2179,6 +2179,25 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
    TEMP DATA TAB
 ==================================================== */
 .td-field-group{display:flex;flex-direction:column;gap:6px;}
+.td-entry-layout{
+  display:grid;
+  grid-template-columns:minmax(320px,0.95fr) minmax(0,1.6fr);
+  gap:18px;
+  align-items:start;
+  margin-bottom:18px;
+}
+.td-entry-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+  padding:20px 24px;
+  min-width:0;
+}
+.td-manual-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
 .td-label{
   font-size:11px;font-weight:700;color:#7ec8f0;
   letter-spacing:0.6px;text-transform:uppercase;
@@ -2291,6 +2310,12 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 #td-saved-table .td-del-btn:hover{background:rgba(239,68,68,0.25);}
 body.light-theme #td-saved-table .td-dt-date{color:#1e293b;}
 body.light-theme #td-saved-table .td-dt-time{color:#2563eb;}
+@media (max-width:1220px){
+  #tab-tempdata .td-entry-layout{
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+}
 
 
 /* ── Reformer Heat Map — Dynamic Burner Flame Styles ── */
@@ -6240,7 +6265,7 @@ function clearHeatMapDateFilter(){
   <!-- TAB 3: Alarms -->
   <!-- TAB 3: Temp. Data -->
   <div id="tab-tempdata" class="tab-panel">
-    <div style="padding:24px 28px;max-width:1200px;margin:0 auto;">
+    <div style="padding:24px 28px;max-width:1680px;margin:0 auto;">
 
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;">
@@ -6294,12 +6319,13 @@ function clearHeatMapDateFilter(){
         </div>
       </div>
 
+      <div class="td-entry-layout">
       <!-- ── Section 1: General Temps ── -->
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:20px 24px;margin-bottom:18px;">
+      <div class="td-entry-card">
         <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);">
           ⚙️ Process Temperatures
         </div>
-        <div class="td-manual-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">
+        <div class="td-manual-grid">
 
           <!-- HGU Load -->
           <div class="td-field-group">
@@ -6353,7 +6379,7 @@ function clearHeatMapDateFilter(){
       </div>
 
       <!-- ── Section 2: Peep Hole Temperatures ── -->
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:20px 24px;margin-bottom:18px;">
+      <div class="td-entry-card">
         <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);">
           👁️ Peep Hole Temperatures — Peep Hole No. 1 – 15
         </div>
@@ -6457,6 +6483,7 @@ function clearHeatMapDateFilter(){
           <input type="number" id="td-ph-cd-top-14" class="td-ph-input" placeholder="14" step="2">
           <input type="number" id="td-ph-cd-top-15" class="td-ph-input" placeholder="15" step="2">
         </div>
+      </div>
       </div>
 
       <!-- ── Saved Entries Table ── -->
