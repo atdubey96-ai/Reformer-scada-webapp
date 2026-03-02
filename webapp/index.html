@@ -935,10 +935,45 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
   box-shadow:0 2px 20px rgba(0,0,0,0.5);
 }
 .app-header-main{
-  display:flex;justify-content:flex-end;align-items:center;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;
   padding:10px 28px;
 }
-.app-header-left{display:none;align-items:center;gap:16px;}
+.app-header-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  flex:1 1 auto;
+}
+.hm-header-tools{
+  display:none;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:thin;
+}
+.hm-header-tools .hm-legend-strip{
+  flex:0 0 auto;
+  padding:6px 10px;
+}
+.hm-header-tools .hm-header-filters{
+  flex:0 0 auto;
+  flex-wrap:nowrap;
+  gap:8px;
+}
+.hm-header-tools .hm-filter-chip{
+  padding:5px 10px;
+}
+body.heatmap-header-active #hm-header-tools{
+  display:flex !important;
+}
+body:not(.heatmap-header-active) #hm-header-tools{
+  display:none !important;
+}
 .app-iocl-mark{
   display:flex;align-items:center;gap:10px;
   padding-right:16px;border-right:1px solid rgba(255,255,255,0.15);
@@ -950,7 +985,7 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
 .app-system-title{font-size:15px;font-weight:700;color:#ffffff;letter-spacing:0.3px;text-shadow:0 1px 8px rgba(0,0,0,0.4);}
 .app-system-sub{font-size:10px;color:#a0bcd8;margin-top:3px;letter-spacing:0.5px;font-weight:500;}
 
-.app-header-right{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+.app-header-right{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap;flex:0 0 auto;}
 .hd-btn-notify-on{
   background:rgba(34,197,94,0.18);
   border-color:rgba(34,197,94,0.5);
@@ -1875,6 +1910,23 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     flex-direction:column;
     align-items:stretch;
     gap:10px;
+  }
+  .app-header-left{
+    width:100%;
+    flex:1 1 100%;
+  }
+  .hm-header-tools{
+    width:100%;
+    flex-wrap:wrap;
+    overflow:visible;
+  }
+  .hm-header-tools .hm-legend-strip{
+    width:100%;
+    box-sizing:border-box;
+  }
+  .hm-header-tools .hm-header-filters{
+    width:100%;
+    flex-wrap:wrap;
   }
   #notifyToggleBtn,
   #notifyTestBtn{
@@ -4282,7 +4334,54 @@ function clearHeatMapDateFilter(){
     </div>
   </div>
   <div class="app-header-main">
-    <div class="app-header-left"></div>
+    <div class="app-header-left">
+      <div id="hm-header-tools" class="hm-header-tools" style="display:none;">
+        <div class="hm-legend-strip">
+          <span class="hm-legend-title">BURNER STATE</span>
+          <div class="hm-legend-pill" style="background:rgba(22,163,74,0.14);border:1px solid rgba(22,163,74,0.45);">
+            <span style="font-size:15px;line-height:1;filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
+            <span class="hm-legend-pill-text" style="color:#4ade80;">OFF GAS (O)</span>
+          </div>
+          <div class="hm-legend-pill" style="background:rgba(217,119,6,0.14);border:1px solid rgba(217,119,6,0.45);">
+            <span style="font-size:15px;line-height:1;filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
+            <span class="hm-legend-pill-text" style="color:#fbbf24;">NG ONLY (N)</span>
+          </div>
+          <div class="hm-legend-pill" style="background:rgba(37,99,235,0.14);border:1px solid rgba(37,99,235,0.45);">
+            <span style="font-size:15px;line-height:1;filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
+            <span class="hm-legend-pill-text" style="color:#60a5fa;">BOTH (B)</span>
+          </div>
+          <div class="hm-legend-pill" style="background:rgba(71,85,105,0.2);border:1px solid rgba(100,116,139,0.45);">
+            <span style="font-size:13px;line-height:1;color:#94a3b8;">◼</span>
+            <span class="hm-legend-pill-text" style="color:#94a3b8;">CAPPED (C)</span>
+          </div>
+          <span class="hm-legend-title">PEEP HOLES</span>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="width:120px;height:14px;background:linear-gradient(to right,#1e40af,#3b82f6,#22c55e,#eab308,#ef4444);border-radius:4px;border:1px solid #334155;box-shadow:0 0 6px rgba(0,0,0,0.3);"></div>
+            <span style="font-size:10px;color:#94a3b8;">Cool → Hot gradient</span>
+          </div>
+        </div>
+        <div class="hm-toolbar-right hm-header-filters">
+          <div class="hm-filter-chip">
+            <span class="hm-filter-label">Shift:</span>
+            <select id="hm-shift-select" onchange="onHeatMapShiftChanged()" style="background:#0f1f38;border:1px solid #334155;border-radius:5px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;">
+              <option value="All" style="background:#0f1f38;">🔁 All Shifts</option>
+              <option value="Morning" style="background:#0f1f38;color:#34d399;">🌅 Morning</option>
+              <option value="Evening" style="background:#0f1f38;color:#fb923c;">🌆 Evening</option>
+              <option value="Night" style="background:#0f1f38;color:#818cf8;">🌙 Night</option>
+            </select>
+          </div>
+          <div class="hm-filter-chip">
+            <span class="hm-filter-label">Date:</span>
+            <input type="date" id="hm-date-input" onchange="onHeatMapDateChanged()" style="background:#0f1f38;border:1px solid #334155;border-radius:5px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;min-width:145px;">
+            <button type="button" onclick="clearHeatMapDateFilter()" title="Clear selected date and use latest data" style="background:rgba(30,64,175,0.16);border:1px solid rgba(59,130,246,0.45);border-radius:5px;color:#93c5fd;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;line-height:1.2;">
+              Latest
+            </button>
+          </div>
+          <span id="hm-ts-badge" style="display:none;"></span>
+          <div id="hm-shift-banner" style="display:none;align-items:center;gap:10px;padding:6px 14px;border:1px solid transparent;border-radius:8px;flex-wrap:nowrap;transition:background 0.3s,border-color 0.3s;font-size:12px;"></div>
+        </div>
+      </div>
+    </div>
     <div class="app-header-right">
       <button id="refreshDataBtn" class="hd-btn hd-btn-secondary" onclick="smartRefresh()">🔄 Refresh Data</button>
       <button class="hd-btn hd-btn-primary" onclick="exportToExcel()">💾 Save New Data</button>
@@ -4374,55 +4473,7 @@ function clearHeatMapDateFilter(){
   <div id="tab-heatmap" class="tab-panel tab-active">
     <div style="padding:14px 18px;background:#0b1525;min-height:100%;">
 
-      <!-- Header bar -->
-      <div class="hm-toolbar">
-        <div class="hm-legend-strip">
-          <span class="hm-legend-title">BURNER STATE</span>
-          <div class="hm-legend-pill" style="background:rgba(22,163,74,0.14);border:1px solid rgba(22,163,74,0.45);">
-            <span style="font-size:15px;line-height:1;filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
-            <span class="hm-legend-pill-text" style="color:#4ade80;">OFF GAS (O)</span>
-          </div>
-          <div class="hm-legend-pill" style="background:rgba(217,119,6,0.14);border:1px solid rgba(217,119,6,0.45);">
-            <span style="font-size:15px;line-height:1;filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
-            <span class="hm-legend-pill-text" style="color:#fbbf24;">NG ONLY (N)</span>
-          </div>
-          <div class="hm-legend-pill" style="background:rgba(37,99,235,0.14);border:1px solid rgba(37,99,235,0.45);">
-            <span style="font-size:15px;line-height:1;filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
-            <span class="hm-legend-pill-text" style="color:#60a5fa;">BOTH (B)</span>
-          </div>
-          <div class="hm-legend-pill" style="background:rgba(71,85,105,0.2);border:1px solid rgba(100,116,139,0.45);">
-            <span style="font-size:13px;line-height:1;color:#94a3b8;">◼</span>
-            <span class="hm-legend-pill-text" style="color:#94a3b8;">CAPPED (C)</span>
-          </div>
-          <span class="hm-legend-title">PEEP HOLES</span>
-          <div style="display:flex;align-items:center;gap:5px;">
-            <div style="width:120px;height:14px;background:linear-gradient(to right,#1e40af,#3b82f6,#22c55e,#eab308,#ef4444);border-radius:4px;border:1px solid #334155;box-shadow:0 0 6px rgba(0,0,0,0.3);"></div>
-            <span style="font-size:10px;color:#94a3b8;">Cool → Hot gradient</span>
-          </div>
-        </div>
-        <div class="hm-toolbar-right">
-          <div class="hm-filter-chip">
-            <span class="hm-filter-label">Shift:</span>
-            <select id="hm-shift-select" onchange="onHeatMapShiftChanged()" style="background:#0f1f38;border:1px solid #334155;border-radius:5px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;">
-              <option value="All" style="background:#0f1f38;">🔁 All Shifts</option>
-              <option value="Morning" style="background:#0f1f38;color:#34d399;">🌅 Morning</option>
-              <option value="Evening" style="background:#0f1f38;color:#fb923c;">🌆 Evening</option>
-              <option value="Night" style="background:#0f1f38;color:#818cf8;">🌙 Night</option>
-            </select>
-          </div>
-          <div class="hm-filter-chip">
-            <span class="hm-filter-label">Date:</span>
-            <input type="date" id="hm-date-input" onchange="onHeatMapDateChanged()" style="background:#0f1f38;border:1px solid #334155;border-radius:5px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;min-width:145px;">
-            <button type="button" onclick="clearHeatMapDateFilter()" title="Clear selected date and use latest data" style="background:rgba(30,64,175,0.16);border:1px solid rgba(59,130,246,0.45);border-radius:5px;color:#93c5fd;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;line-height:1.2;">
-              Latest
-            </button>
-          </div>
-          <span id="hm-ts-badge" style="display:none;"></span>
-          <div id="hm-shift-banner" style="display:none;align-items:center;gap:10px;padding:6px 14px;border:1px solid transparent;border-radius:8px;flex-wrap:nowrap;transition:background 0.3s,border-color 0.3s;font-size:12px;"></div>
-        </div>
-      </div>
-
-      <!-- Shift banner moved inline with shift buttons above -->
+      <!-- Heat-map controls moved to top header row (left of refresh/save). -->
 
       <!-- hidden offscreen wall render containers -->
       <div id="wall-render-host" style="position:fixed;left:-9999px;top:0;z-index:-1;pointer-events:none;width:900px;"></div>
@@ -9612,6 +9663,10 @@ function toggleTheme(isDark){
 /* ==================================================
    TAB SWITCHING
 ================================================== */
+function syncHeatMapHeaderTools(tab){
+  document.body.classList.toggle('heatmap-header-active', tab === 'heatmap');
+}
+
 function switchTab(tab){
   if(tab !== 'heatmap' && typeof setHeatMapCuboidZoom === 'function'){
     setHeatMapCuboidZoom(false);
@@ -9620,11 +9675,18 @@ function switchTab(tab){
   document.querySelectorAll('.btab').forEach(b => b.classList.remove('btab-active'));
   document.getElementById('tab-'+tab).classList.add('tab-active');
   document.getElementById('btab-'+tab).classList.add('btab-active');
+  syncHeatMapHeaderTools(tab);
   if(tab === 'alarms') refreshAlarmPanel();
   if(tab === 'heatmap' && typeof requestHeatMapRender === 'function') requestHeatMapRender(40);
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
 }
+
+(function initHeatMapHeaderTools(){
+  var active = document.querySelector('.tab-panel.tab-active');
+  var tab = active && active.id ? active.id.replace('tab-','') : 'heatmap';
+  syncHeatMapHeaderTools(tab);
+})();
 
 window.addEventListener("resize", function(){
   clearTimeout(burnerMobileResizeTimer);
