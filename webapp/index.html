@@ -2584,6 +2584,32 @@ body.light-theme #td-saved-table .td-dt-time{color:#2563eb;}
   font-size:10px;
   font-weight:700;
 }
+.hm-cuboid-heat-strip{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+  background:#0f1f38;
+  border:1px solid #1e3a5e;
+  border-radius:8px;
+  padding:8px 12px;
+  margin:0 0 10px 0;
+}
+.hm-cuboid-heat-bar{
+  width:min(420px,68vw);
+  height:14px;
+  background:linear-gradient(to right,#22c55e,#facc15,#ef4444);
+  border-radius:4px;
+  border:1px solid #334155;
+  box-shadow:0 0 6px rgba(0,0,0,0.3);
+}
+.hm-cuboid-heat-text{
+  font-size:10px;
+  color:#94a3b8;
+  font-weight:700;
+  letter-spacing:0.3px;
+}
 /* Wall selector buttons */
 .hm-wall-btn-bar{display:flex;gap:6px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;}
 .hm-wall-btn{
@@ -2642,6 +2668,16 @@ body.light-theme .hm-icon-item:hover{
 body.light-theme .quick-menu-panel .hm-icon-picker-btn{
   background:#f8fbff;border-color:#b8cde8;color:#1f2937;
 }
+body.light-theme .hm-cuboid-heat-strip{
+  background:#f8fbff;
+  border-color:#b8cde8;
+}
+body.light-theme .hm-cuboid-heat-bar{
+  border-color:#b8cde8;
+}
+body.light-theme .hm-cuboid-heat-text{
+  color:#4b5563;
+}
 @media (max-width: 900px){
   .hm-toolbar{
     flex-direction:column;
@@ -2657,6 +2693,12 @@ body.light-theme .quick-menu-panel .hm-icon-picker-btn{
   .hm-icon-picker{width:100%;}
   .hm-icon-picker-btn{width:100%;min-width:0;}
   .hm-icon-menu{left:0;right:0;min-width:0;}
+  .hm-cuboid-heat-strip{
+    justify-content:flex-start;
+  }
+  .hm-cuboid-heat-bar{
+    width:min(360px,86vw);
+  }
 }
 
 /* ── Individual wall panels: spread burners to fill full width ── */
@@ -4351,11 +4393,6 @@ function clearHeatMapDateFilter(){
             <span style="font-size:13px;line-height:1;color:#94a3b8;">◼</span>
             <span class="hm-legend-pill-text" style="color:#94a3b8;">CAPPED (C)</span>
           </div>
-          <span class="hm-legend-title">PEEP HOLES</span>
-          <div style="display:flex;align-items:center;gap:5px;">
-            <div style="width:120px;height:14px;background:linear-gradient(to right,#22c55e,#facc15,#ef4444);border-radius:4px;border:1px solid #334155;box-shadow:0 0 6px rgba(0,0,0,0.3);"></div>
-            <span style="font-size:10px;color:#94a3b8;">Cool → Hot gradient</span>
-          </div>
         </div>
         <div class="hm-toolbar-right hm-header-filters">
           <div class="hm-filter-chip">
@@ -5790,6 +5827,11 @@ function clearHeatMapDateFilter(){
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
       <div id="hm-cuboid-zoom-backdrop" onclick="setHeatMapCuboidZoom(false)" aria-hidden="true"></div>
+      <div class="hm-cuboid-heat-strip">
+        <span class="hm-legend-title">PEEP HOLES</span>
+        <div class="hm-cuboid-heat-bar"></div>
+        <span class="hm-cuboid-heat-text">Cold → Hot gradient</span>
+      </div>
       <div class="cb-dual-row">
 
         <!-- ══ AB SIDE CUBOID ══ -->
