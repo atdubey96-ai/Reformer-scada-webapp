@@ -4956,15 +4956,11 @@ function clearHeatMapDateFilter(){
         /* The outer ring — heavy cast-iron mount */
         .cb-peephole {
           width:68px; height:68px;
-          border-radius:6px;
+          border-radius:0;
           position:relative;
-          /* thick layered mount ring */
-          box-shadow:
-            0 0 0 3px #0b1826,
-            0 0 0 6px #192d42,
-            0 0 0 8px #0a141f,
-            0 0 18px 5px rgba(243,112,34,0.22),
-            inset 0 0 0 2px rgba(255,255,255,0.06);
+          border:2px solid rgba(203,213,225,0.72);
+          background:transparent;
+          box-shadow:none;
           overflow:hidden;
         }
         /*
@@ -4975,14 +4971,7 @@ function clearHeatMapDateFilter(){
           opening so the wall sweeps straight back into depth.
         */
         .cb-peephole-viewport {
-          position:absolute; inset:0;
-          overflow:hidden;
-          background:
-            linear-gradient(145deg, rgba(9,30,52,0.28) 0%, rgba(9,30,52,0.18) 100%),
-            radial-gradient(ellipse at center, rgba(126,200,240,0.10) 0%, rgba(5,14,26,0.08) 70%);
-          /* 3-D perspective for the content inside */
-          perspective: 55px;
-          perspective-origin: 0% 50%;
+          display:none;
         }
         /*
           The actual wall-card content:
@@ -4993,39 +4982,19 @@ function clearHeatMapDateFilter(){
           - width/translateY set inline per peephole by JS
         */
         .cb-peephole-content {
-          position:absolute;
-          transform-origin: 0% 50%;   /* anchor: left edge of hole */
-          pointer-events:none;
+          display:none;
         }
         /* vignette — darkens the left/right edges where wall strips sit,
            keeping the centre of the viewport clear for the main depth view */
         .cb-peephole-vignette {
-          position:absolute; inset:0; pointer-events:none; z-index:5;
-          background:
-            linear-gradient(90deg,
-              rgba(0,0,0,0.25) 0%,
-              transparent 22%,
-              transparent 78%,
-              rgba(0,0,0,0.32) 100%
-            ),
-            radial-gradient(ellipse 85% 85% at 50% 50%,
-              transparent 55%,
-              rgba(0,0,0,0.28) 100%
-            );
+          display:none;
         }
         /* glass-pane glint */
         .cb-peephole-glint {
-          position:absolute; inset:0; pointer-events:none; z-index:4;
-          background: linear-gradient(
-            135deg,
-            rgba(255,255,255,0.08) 0%,
-            transparent 55%
-          );
-          border-radius:5px;
+          display:none;
         }
         .cb-peephole-tag {
-          font-size:7px; font-weight:700; letter-spacing:1.5px;
-          color:rgba(255,255,255,0.25); text-align:center;
+          display:none;
         }
 
       </style>
