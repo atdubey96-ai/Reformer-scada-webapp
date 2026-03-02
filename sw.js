@@ -1,4 +1,4 @@
-const CACHE_NAME = "scada-burner-v13";
+const CACHE_NAME = "scada-burner-v14";
 const OFFLINE_URL = "./index.html";
 const CORE_ASSETS = [
   "./",
@@ -31,33 +31,39 @@ function isHtmlRequest(request) {
   return accept.indexOf("text/html") >= 0;
 }
 
-async function networkFirst(request) {
+function shouldPersistInCache(request) {
+  try {
+    const url = new URL(request.url);
+    const path = url.pathname || "";
+    return (
+      path === "/" ||
+      path.endsWith("/index.html") ||
+      path.endsWith("/manifest.webmanifest") ||
+      path.endsWith("/icon-192.svg") ||
+      path.endsWith("/icon-512.svg")
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+async function networkFresh(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
     const networkResponse = await fetch(request, { cache: "no-store" });
-    if (networkResponse && networkResponse.ok) {
+    if (networkResponse && networkResponse.ok && shouldPersistInCache(request)) {
       cache.put(request, networkResponse.clone());
     }
     return networkResponse;
   } catch (err) {
-    const cached = await cache.match(request);
+    const cached = await cache.match(request, { ignoreSearch: true });
     if (cached) return cached;
-    return cache.match(OFFLINE_URL);
+    if (isHtmlRequest(request)) {
+      const offline = await cache.match(OFFLINE_URL, { ignoreSearch: true });
+      if (offline) return offline;
+    }
+    return new Response("", { status: 504, statusText: "Offline" });
   }
-}
-
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-  const networkPromise = fetch(request)
-    .then((networkResponse) => {
-      if (networkResponse && networkResponse.ok) {
-        cache.put(request, networkResponse.clone());
-      }
-      return networkResponse;
-    })
-    .catch(() => null);
-  return cached || networkPromise || cache.match(OFFLINE_URL);
 }
 
 self.addEventListener("install", (event) => {
@@ -79,11 +85,5 @@ self.addEventListener("message", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   if (!event.request.url.startsWith(self.location.origin)) return;
-
-  if (isHtmlRequest(event.request)) {
-    event.respondWith(networkFirst(event.request));
-    return;
-  }
-
-  event.respondWith(staleWhileRevalidate(event.request));
+  event.respondWith(networkFresh(event.request));
 });
