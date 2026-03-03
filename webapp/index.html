@@ -6932,7 +6932,7 @@ function clearHeatMapDateFilter(){
           display:flex !important;
           flex-direction:column !important;
           justify-content:space-between !important;
-          padding:6px clamp(8px,calc(8px * var(--cb-front-scale)),24px) !important;
+          padding:6px clamp(10px,calc(10px * var(--cb-front-scale)),32px) !important;
           gap:0 !important;
           overflow:hidden !important;
         }
@@ -6946,7 +6946,7 @@ function clearHeatMapDateFilter(){
         #tab-heatmap .cb-face .hm-burner-nums{
           justify-content:space-between !important;
           gap:0 !important;
-          padding:0 clamp(4px,calc(8px * var(--cb-front-scale)),24px) !important;
+          padding:0 clamp(8px,calc(12px * var(--cb-front-scale)),34px) !important;
         }
         #tab-heatmap .cb-face .hm-burner-wrap{
           width:clamp(14px,calc(14px * var(--cb-front-scale)),42px) !important;
@@ -6968,8 +6968,8 @@ function clearHeatMapDateFilter(){
         }
         #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
           height:22px !important;
-          margin-left:clamp(8px,calc(10px * var(--cb-front-scale)),30px) !important;
-          margin-right:clamp(8px,calc(10px * var(--cb-front-scale)),30px) !important;
+          margin-left:clamp(10px,calc(14px * var(--cb-front-scale)),38px) !important;
+          margin-right:clamp(10px,calc(14px * var(--cb-front-scale)),38px) !important;
         }
         #tab-heatmap .cb-face .hm-peep-marker{
           height:26px !important;
@@ -7001,7 +7001,7 @@ function clearHeatMapDateFilter(){
           }
           #tab-heatmap .cb-face .hm-burners-line,
           #tab-heatmap .cb-face .hm-burner-nums{
-            padding:0 clamp(3px,calc(6px * var(--cb-front-scale)),18px) !important;
+            padding:0 clamp(4px,calc(8px * var(--cb-front-scale)),22px) !important;
           }
           #tab-heatmap .cb-face .hm-burner-wrap{
             width:clamp(12px,calc(12px * var(--cb-front-scale)),34px) !important;
@@ -7016,8 +7016,8 @@ function clearHeatMapDateFilter(){
           }
           #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
             height:18px !important;
-            margin-left:clamp(6px,calc(8px * var(--cb-front-scale)),20px) !important;
-            margin-right:clamp(6px,calc(8px * var(--cb-front-scale)),20px) !important;
+            margin-left:clamp(7px,calc(10px * var(--cb-front-scale)),24px) !important;
+            margin-right:clamp(7px,calc(10px * var(--cb-front-scale)),24px) !important;
           }
           #tab-heatmap .cb-face .hm-peep-temp-label{
             font-size:clamp(8px,calc(8px * var(--cb-front-scale)),12px) !important;
@@ -7062,7 +7062,7 @@ function clearHeatMapDateFilter(){
           <div class="cb-title" style="color:#F37022;background:rgba(243,112,34,0.1);border:1px solid rgba(243,112,34,0.35);">◀ AB SIDE</div>
 
           <div class="cb-scene cb-float cb-scene-ab" id="ab-scene">
-            <div class="cb-group" id="ab-cube" style="transform:rotateX(-8deg) rotateY(-85deg);">
+            <div class="cb-group" id="ab-cube" style="transform:rotateX(-4deg) rotateY(-85deg);">
 
               <!-- FRONT = Wall A -->
               <div class="cb-face cb-fb" id="face-ab-front" style="transform:translateZ(80px);border:2px solid rgba(243,112,34,0.75);background:#0a1628;">
@@ -7165,7 +7165,7 @@ function clearHeatMapDateFilter(){
           <div class="cb-title" style="color:#7ec8f0;background:rgba(126,200,240,0.1);border:1px solid rgba(126,200,240,0.35);">CD SIDE ▶</div>
 
           <div class="cb-scene cb-float cb-scene-cd" id="cd-scene">
-            <div class="cb-group" id="cd-cube" style="transform:rotateX(-8deg) rotateY(-85deg);">
+            <div class="cb-group" id="cd-cube" style="transform:rotateX(-4deg) rotateY(-85deg);">
 
               <!-- FRONT = Wall C -->
               <div class="cb-face cb-fb" id="face-cd-front" style="transform:translateZ(80px);border:2px solid rgba(243,112,34,0.75);background:#0a1628;">
@@ -7381,8 +7381,8 @@ function clearHeatMapDateFilter(){
           return { scene:scene, applyTransform:applyTransform };
         }
 
-        var _abDragCtrl = makeDraggable('ab-scene','ab-cube', -85, -8, -180,   0);
-        var _cdDragCtrl = makeDraggable('cd-scene','cd-cube', -85, -8, -180,   0);
+        var _abDragCtrl = makeDraggable('ab-scene','ab-cube', -85, -4, -180,   0);
+        var _cdDragCtrl = makeDraggable('cd-scene','cd-cube', -85, -4, -180,   0);
 
         function updateCuboidResponsiveScale(){
           var hmTab = document.getElementById("tab-heatmap");
