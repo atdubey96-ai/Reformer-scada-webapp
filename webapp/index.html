@@ -5982,6 +5982,245 @@ function clearHeatMapDateFilter(){
           color:var(--dk-text-sub) !important;
         }
       </style>
+      <style id="global-accent-gradient-unify-2026">
+        body:not(.light-theme){
+          --gs-accent-from:#5d2b06;
+          --gs-accent-mid:#b45a14;
+          --gs-accent-to:#f0a04a;
+          --gs-b-from:#123f7a;
+          --gs-b-mid:#1f6bc0;
+          --gs-b-to:#64b4ff;
+          --gs-n-from:#5a3306;
+          --gs-n-mid:#a96012;
+          --gs-n-to:#f3b75f;
+          --gs-o-from:#0f462b;
+          --gs-o-mid:#1d8b54;
+          --gs-o-to:#5fe39b;
+          --gs-c-from:#29343f;
+          --gs-c-mid:#4a5b6d;
+          --gs-c-to:#8ea2b7;
+          --gs-warn-from:#5f4308;
+          --gs-warn-mid:#b78412;
+          --gs-warn-to:#f4d46e;
+          --gs-major-from:#6a3207;
+          --gs-major-mid:#bf5f15;
+          --gs-major-to:#f1a162;
+          --gs-critical-from:#61151a;
+          --gs-critical-mid:#b7252f;
+          --gs-critical-to:#f07a81;
+          --gs-freq-from:#3a2467;
+          --gs-freq-mid:#6a45b2;
+          --gs-freq-to:#b9a0f5;
+          --gs-edge-strong:rgba(240,160,74,0.56);
+        }
+
+        body.light-theme{
+          --gs-accent-from:#9a4a08;
+          --gs-accent-mid:#d6731e;
+          --gs-accent-to:#f7bb77;
+          --gs-b-from:#1e4b87;
+          --gs-b-mid:#2f79cb;
+          --gs-b-to:#8bc7ff;
+          --gs-n-from:#7b4307;
+          --gs-n-mid:#c06c16;
+          --gs-n-to:#f8c97c;
+          --gs-o-from:#19603c;
+          --gs-o-mid:#27a264;
+          --gs-o-to:#86ebb8;
+          --gs-c-from:#4b5a69;
+          --gs-c-mid:#76889d;
+          --gs-c-to:#c5d2df;
+          --gs-warn-from:#816013;
+          --gs-warn-mid:#c3961c;
+          --gs-warn-to:#f5dd8e;
+          --gs-major-from:#8d420e;
+          --gs-major-mid:#cf7220;
+          --gs-major-to:#f6b17d;
+          --gs-critical-from:#8b1e26;
+          --gs-critical-mid:#cc3842;
+          --gs-critical-to:#f59aa0;
+          --gs-freq-from:#59359a;
+          --gs-freq-mid:#7c55c8;
+          --gs-freq-to:#cdb9f8;
+          --gs-edge-strong:rgba(215,115,30,0.52);
+        }
+
+        body .hd-btn-primary,
+        body .td-toolbar-btn-primary,
+        body .cw-btn-active,
+        body .hm-wall-btn-active,
+        body .ls-btn,
+        body .sdm-btn-action{
+          background:linear-gradient(120deg,var(--gs-accent-from) 0%,var(--gs-accent-mid) 56%,var(--gs-accent-to) 100%) !important;
+          border-color:var(--gs-edge-strong) !important;
+          color:#fff8f1 !important;
+          box-shadow:0 10px 20px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+        }
+
+        body td.B,
+        body .li-B,
+        body .ab-both,
+        body .hm-row-data-badge-B{
+          background:linear-gradient(120deg,var(--gs-b-from) 0%,var(--gs-b-mid) 58%,var(--gs-b-to) 100%) !important;
+          border-color:rgba(125,191,255,0.58) !important;
+          color:#eef7ff !important;
+        }
+        body td.N,
+        body .li-N,
+        body .ab-ng,
+        body .hm-row-data-badge-N{
+          background:linear-gradient(120deg,var(--gs-n-from) 0%,var(--gs-n-mid) 58%,var(--gs-n-to) 100%) !important;
+          border-color:rgba(247,194,111,0.6) !important;
+          color:#fff9ef !important;
+        }
+        body td.O,
+        body .li-O,
+        body .ab-og,
+        body .hm-row-data-badge-O{
+          background:linear-gradient(120deg,var(--gs-o-from) 0%,var(--gs-o-mid) 58%,var(--gs-o-to) 100%) !important;
+          border-color:rgba(132,235,185,0.56) !important;
+          color:#effff6 !important;
+        }
+        body td.C,
+        body .li-C,
+        body .ab-cold,
+        body .hm-row-data-badge-C{
+          background:linear-gradient(120deg,var(--gs-c-from) 0%,var(--gs-c-mid) 58%,var(--gs-c-to) 100%) !important;
+          border-color:rgba(176,193,209,0.52) !important;
+          color:#f2f8ff !important;
+        }
+
+        body td.B:hover,
+        body td.N:hover,
+        body td.O:hover,
+        body td.C:hover{
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.24),0 0 16px rgba(0,0,0,0.32) !important;
+        }
+
+        body .severity-normal,
+        body .asp-normal{
+          background:linear-gradient(120deg,var(--gs-o-from) 0%,var(--gs-o-mid) 58%,var(--gs-o-to) 100%) !important;
+          border-color:rgba(132,235,185,0.56) !important;
+          color:#effff6 !important;
+        }
+        body .severity-warning,
+        body .asp-warning,
+        body .alarm-chip-warning,
+        body .alc-sev-warning{
+          background:linear-gradient(120deg,var(--gs-warn-from) 0%,var(--gs-warn-mid) 58%,var(--gs-warn-to) 100%) !important;
+          border-color:rgba(245,221,142,0.62) !important;
+          color:#fff9e7 !important;
+        }
+        body .severity-major,
+        body .asp-major,
+        body .alarm-chip-major,
+        body .alc-sev-major{
+          background:linear-gradient(120deg,var(--gs-major-from) 0%,var(--gs-major-mid) 58%,var(--gs-major-to) 100%) !important;
+          border-color:rgba(246,177,125,0.62) !important;
+          color:#fff5ec !important;
+        }
+        body .severity-critical,
+        body .asp-critical,
+        body .alarm-chip-critical,
+        body .alc-sev-critical{
+          background:linear-gradient(120deg,var(--gs-critical-from) 0%,var(--gs-critical-mid) 58%,var(--gs-critical-to) 100%) !important;
+          border-color:rgba(245,154,160,0.62) !important;
+          color:#fff2f3 !important;
+        }
+        body .asp-freq,
+        body .alarm-chip-freq{
+          background:linear-gradient(120deg,var(--gs-freq-from) 0%,var(--gs-freq-mid) 58%,var(--gs-freq-to) 100%) !important;
+          border-color:rgba(205,185,248,0.62) !important;
+          color:#f7f3ff !important;
+        }
+
+        body .alarm-card-critical{
+          border-left-color:#d6424d !important;
+          background:linear-gradient(120deg,rgba(97,21,26,0.64) 0%,rgba(183,37,47,0.48) 58%,rgba(240,122,129,0.24) 100%) !important;
+        }
+        body .alarm-card-major{
+          border-left-color:#e07a2a !important;
+          background:linear-gradient(120deg,rgba(106,50,7,0.62) 0%,rgba(191,95,21,0.46) 58%,rgba(241,161,98,0.2) 100%) !important;
+        }
+        body .alarm-card-warning{
+          border-left-color:#d0a128 !important;
+          background:linear-gradient(120deg,rgba(95,67,8,0.62) 0%,rgba(183,132,18,0.46) 58%,rgba(244,212,110,0.2) 100%) !important;
+        }
+        body .alarm-card-freq{
+          border-left-color:#8363c9 !important;
+          background:linear-gradient(120deg,rgba(58,36,103,0.62) 0%,rgba(106,69,178,0.46) 58%,rgba(185,160,245,0.22) 100%) !important;
+        }
+
+        body .cleaning-table td.date-filled{
+          background:linear-gradient(120deg,#222d38 0%,#3a4a5a 58%,#657b92 100%) !important;
+          border-color:rgba(176,193,209,0.54) !important;
+        }
+        body .cleaning-table td.freq-alarm{
+          background:linear-gradient(120deg,var(--gs-critical-from) 0%,var(--gs-critical-mid) 58%,var(--gs-critical-to) 100%) !important;
+          border-color:rgba(245,154,160,0.7) !important;
+        }
+        body .cleaning-table td.ct-pending{
+          background:linear-gradient(120deg,var(--gs-warn-from) 0%,var(--gs-warn-mid) 58%,var(--gs-warn-to) 100%) !important;
+          border-color:rgba(245,221,142,0.76) !important;
+        }
+        body .cleaning-table td.freq-alarm .ct-date-label,
+        body .cleaning-table td.ct-pending .ct-date-label{
+          color:#fff6ea !important;
+        }
+        body .freq-alarm-panel{
+          background:linear-gradient(120deg,rgba(97,21,26,0.2) 0%,rgba(183,37,47,0.14) 58%,rgba(240,122,129,0.09) 100%) !important;
+          border-color:rgba(245,154,160,0.62) !important;
+        }
+        body .freq-alarm-header{
+          background:linear-gradient(120deg,rgba(97,21,26,0.34) 0%,rgba(183,37,47,0.24) 58%,rgba(240,122,129,0.14) 100%) !important;
+          border-bottom-color:rgba(245,154,160,0.48) !important;
+        }
+        body .freq-alarm-card{
+          background:linear-gradient(120deg,rgba(24,28,35,0.92) 0%,rgba(18,23,30,0.95) 100%) !important;
+          border-color:rgba(245,154,160,0.45) !important;
+        }
+        body .fac-badge{
+          background:linear-gradient(120deg,var(--gs-major-from) 0%,var(--gs-major-mid) 58%,var(--gs-major-to) 100%) !important;
+          border-color:rgba(246,177,125,0.56) !important;
+          color:#fff8f0 !important;
+        }
+        body .cl-unsaved-badge{
+          background:linear-gradient(120deg,var(--gs-warn-from) 0%,var(--gs-warn-mid) 58%,var(--gs-warn-to) 100%) !important;
+          border-color:rgba(245,221,142,0.66) !important;
+          color:#fff8ea !important;
+        }
+
+        body .hm-cuboid-heat-strip{
+          background:linear-gradient(120deg,#20160d 0%,#3a2814 56%,#6a4520 100%) !important;
+          border-color:rgba(240,160,74,0.4) !important;
+        }
+        body .hm-legend-strip{
+          background:linear-gradient(120deg,rgba(23,16,10,0.96) 0%,rgba(42,29,16,0.88) 100%) !important;
+          border-color:rgba(240,160,74,0.3) !important;
+        }
+        body .hm-legend-title{
+          color:#ffd3a4 !important;
+        }
+        body .hm-legend-strip .hm-legend-pill:nth-of-type(1){
+          background:linear-gradient(120deg,var(--gs-o-from) 0%,var(--gs-o-mid) 58%,var(--gs-o-to) 100%) !important;
+          border-color:rgba(132,235,185,0.56) !important;
+        }
+        body .hm-legend-strip .hm-legend-pill:nth-of-type(2){
+          background:linear-gradient(120deg,var(--gs-n-from) 0%,var(--gs-n-mid) 58%,var(--gs-n-to) 100%) !important;
+          border-color:rgba(247,194,111,0.6) !important;
+        }
+        body .hm-legend-strip .hm-legend-pill:nth-of-type(3){
+          background:linear-gradient(120deg,var(--gs-b-from) 0%,var(--gs-b-mid) 58%,var(--gs-b-to) 100%) !important;
+          border-color:rgba(125,191,255,0.58) !important;
+        }
+        body .hm-legend-strip .hm-legend-pill:nth-of-type(4){
+          background:linear-gradient(120deg,var(--gs-c-from) 0%,var(--gs-c-mid) 58%,var(--gs-c-to) 100%) !important;
+          border-color:rgba(176,193,209,0.54) !important;
+        }
+        body .hm-legend-strip .hm-legend-pill .hm-legend-pill-text{
+          color:#fff8ee !important;
+        }
+      </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
