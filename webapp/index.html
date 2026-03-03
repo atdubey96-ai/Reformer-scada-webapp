@@ -3540,8 +3540,8 @@ function buildWallHTML(wallName, peepBotVals, peepTopVals, wallData){
       + buildStateBadges(counts)
       + '</div>';
 
-    if(ri === 1) html += buildPeepLine(peepBotVals, botRange, "PH Bot<br>R1–R2");
-    if(ri === 3) html += buildPeepLine(peepTopVals, topRange, "PH Top<br>R3–R4");
+    if(ri === 1) html += buildPeepLine(peepBotVals, botRange, "PH TST<br>R1–R2");
+    if(ri === 3) html += buildPeepLine(peepTopVals, topRange, "PH TST<br>R3–R4");
   }
   html += '</div></div>';
   return html;
@@ -7014,6 +7014,7 @@ function clearHeatMapDateFilter(){
           min-width:clamp(34px,calc(34px * var(--cb-front-scale)),102px) !important;
           font-size:clamp(10px,calc(10px * var(--cb-front-scale)),16px) !important;
           padding:2px clamp(3px,calc(4px * var(--cb-front-scale)),12px) !important;
+          transform:translateX(clamp(3px,calc(4px * var(--cb-front-scale)),9px)) !important;
         }
 
         @media (max-width:900px){
@@ -7027,6 +7028,7 @@ function clearHeatMapDateFilter(){
           #tab-heatmap .cb-face .hm-peep-label{
             min-width:clamp(30px,calc(30px * var(--cb-front-scale)),72px) !important;
             font-size:clamp(8px,calc(8px * var(--cb-front-scale)),13px) !important;
+            transform:translateX(clamp(2px,calc(3px * var(--cb-front-scale)),6px)) !important;
           }
           #tab-heatmap .cb-face .hm-burners-line,
           #tab-heatmap .cb-face .hm-burner-nums{
