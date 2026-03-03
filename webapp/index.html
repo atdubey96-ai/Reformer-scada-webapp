@@ -7073,14 +7073,12 @@ html, body, body *, body *::before, body *::after, svg text{
         }
       </style>
       <style id="heatmap-side-legend-rails-2026">
-        #tab-heatmap .cb-dual-row{
+        #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid]{
           position:relative;
+          padding-left:62px !important;
+          padding-right:74px !important;
         }
-        #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-row{
-          padding-left:74px !important;
-          padding-right:92px !important;
-        }
-        #tab-heatmap .cb-dual-row .hm-cuboid-side-legend{
+        #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend{
           position:absolute;
           z-index:9;
           pointer-events:none;
@@ -7099,32 +7097,32 @@ html, body, body *, body *::before, body *::after, svg text{
           line-height:1;
           white-space:nowrap;
         }
-        #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-row .hm-cuboid-side-legend{
+        #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid] .hm-cuboid-side-legend{
           display:flex;
         }
         #tab-heatmap:not(.hm-cuboid-zoom-active) .hm-cuboid-heat-strip{
           display:none !important;
         }
-        #tab-heatmap .cb-dual-row .hm-cuboid-side-legend-left{
-          left:10px;
-          top:72px;
-          bottom:72px;
-          width:54px;
-          padding:8px 6px;
+        #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-left{
+          left:8px;
+          top:134px;
+          bottom:162px;
+          width:44px;
+          padding:6px 5px;
           flex-direction:column;
           align-items:center;
           justify-content:center;
-          gap:10px;
+          gap:8px;
         }
-        #tab-heatmap .cb-dual-row .hm-cuboid-side-legend-left .hm-cuboid-side-label{
+        #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-left .hm-cuboid-side-label{
           font-size:11px;
           font-weight:700;
           letter-spacing:1px;
           color:#d8e6fb;
         }
-        #tab-heatmap .cb-dual-row .hm-cuboid-side-legend-left .hm-cuboid-side-heat{
-          width:24px;
-          min-height:220px;
+        #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-left .hm-cuboid-side-heat{
+          width:18px;
+          min-height:160px;
           flex:1 1 auto;
           border-radius:8px;
           border:1px solid rgba(148,163,184,0.45);
@@ -7133,26 +7131,26 @@ html, body, body *, body *::before, body *::after, svg text{
             inset 0 0 0 1px rgba(255,255,255,0.12),
             0 7px 16px rgba(2,6,23,0.36);
         }
-        #tab-heatmap .cb-dual-row .hm-cuboid-side-legend-left .hm-cuboid-side-note{
-          font-size:10px;
+        #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-left .hm-cuboid-side-note{
+          font-size:9px;
           font-weight:700;
-          letter-spacing:0.7px;
+          letter-spacing:0.55px;
           color:#9eb4d3;
         }
-        #tab-heatmap .cb-dual-row .hm-cuboid-side-legend-right{
-          right:12px;
-          top:98px;
-          bottom:88px;
-          width:70px;
-          padding:8px 8px;
+        #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-right{
+          right:10px;
+          top:144px;
+          bottom:166px;
+          width:54px;
+          padding:6px 6px;
           flex-direction:column;
           align-items:center;
           justify-content:center;
-          gap:10px;
+          gap:8px;
         }
         #tab-heatmap .hm-cuboid-side-pill{
           width:100%;
-          min-height:122px;
+          min-height:76px;
           border-radius:999px;
           border:1px solid rgba(136,150,176,0.46);
           display:flex;
@@ -7167,9 +7165,9 @@ html, body, body *, body *::before, body *::after, svg text{
           line-height:1;
         }
         #tab-heatmap .hm-cuboid-side-pill-text{
-          font-size:11px;
+          font-size:9px;
           font-weight:700;
-          letter-spacing:0.6px;
+          letter-spacing:0.45px;
           color:#e2e8f0;
         }
         #tab-heatmap .hm-cuboid-side-pill.state-o{
@@ -7192,21 +7190,25 @@ html, body, body *, body *::before, body *::after, svg text{
           display:none !important;
         }
         @media (max-width:1200px){
-          #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-row{
-            padding-left:66px !important;
-            padding-right:80px !important;
+          #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid]{
+            padding-left:54px !important;
+            padding-right:64px !important;
           }
-          #tab-heatmap .cb-dual-row .hm-cuboid-side-legend-left{
-            left:8px;
+          #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-left{
+            left:6px;
+            width:40px;
+          }
+          #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-right{
+            right:6px;
             width:48px;
-          }
-          #tab-heatmap .cb-dual-row .hm-cuboid-side-legend-right{
-            right:8px;
-            width:62px;
           }
         }
         @media (max-width:900px){
-          #tab-heatmap .cb-dual-row .hm-cuboid-side-legend{
+          #tab-heatmap .cb-wrap[data-cuboid]{
+            padding-left:0 !important;
+            padding-right:0 !important;
+          }
+          #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend{
             display:none !important;
           }
           #tab-heatmap:not(.hm-cuboid-zoom-active) .hm-cuboid-heat-strip{
@@ -7246,32 +7248,32 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
       </div>
       <div class="cb-dual-row">
-        <div class="hm-cuboid-side-legend hm-cuboid-side-legend-left" aria-hidden="true">
-          <span class="hm-cuboid-side-legend-vert hm-cuboid-side-label">PEEP HOLES</span>
-          <div class="hm-cuboid-side-heat"></div>
-          <span class="hm-cuboid-side-legend-vert hm-cuboid-side-note">Cold → Hot gradient</span>
-        </div>
-        <div class="hm-cuboid-side-legend hm-cuboid-side-legend-right" aria-hidden="true">
-          <div class="hm-cuboid-side-pill state-o">
-            <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
-            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">OFF GAS (O)</span>
-          </div>
-          <div class="hm-cuboid-side-pill state-n">
-            <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
-            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">NG ONLY (N)</span>
-          </div>
-          <div class="hm-cuboid-side-pill state-b">
-            <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
-            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">BOTH (B)</span>
-          </div>
-          <div class="hm-cuboid-side-pill state-c">
-            <span class="hm-cuboid-side-pill-icon" style="font-size:14px;color:#94a3b8;">◼</span>
-            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">CAPPED (C)</span>
-          </div>
-        </div>
 
         <!-- ══ AB SIDE CUBOID ══ -->
         <div class="cb-wrap" data-cuboid="ab" ondblclick="setHeatMapCuboidZoom('ab')" title="Double-click to zoom AB cuboid">
+          <div class="hm-cuboid-side-legend hm-cuboid-side-legend-left" aria-hidden="true">
+            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-label">PEEP HOLES</span>
+            <div class="hm-cuboid-side-heat"></div>
+            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-note">Cold → Hot gradient</span>
+          </div>
+          <div class="hm-cuboid-side-legend hm-cuboid-side-legend-right" aria-hidden="true">
+            <div class="hm-cuboid-side-pill state-o">
+              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
+              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">OFF GAS (O)</span>
+            </div>
+            <div class="hm-cuboid-side-pill state-n">
+              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
+              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">NG ONLY (N)</span>
+            </div>
+            <div class="hm-cuboid-side-pill state-b">
+              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
+              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">BOTH (B)</span>
+            </div>
+            <div class="hm-cuboid-side-pill state-c">
+              <span class="hm-cuboid-side-pill-icon" style="font-size:14px;color:#94a3b8;">◼</span>
+              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">CAPPED (C)</span>
+            </div>
+          </div>
           <div class="cb-title" style="color:#F37022;background:rgba(243,112,34,0.1);border:1px solid rgba(243,112,34,0.35);">◀ AB SIDE</div>
 
           <div class="cb-scene cb-float cb-scene-ab" id="ab-scene">
@@ -7375,6 +7377,29 @@ html, body, body *, body *::before, body *::after, svg text{
 
         <!-- ══ CD SIDE CUBOID ══ -->
         <div class="cb-wrap" data-cuboid="cd" ondblclick="setHeatMapCuboidZoom('cd')" title="Double-click to zoom CD cuboid">
+          <div class="hm-cuboid-side-legend hm-cuboid-side-legend-left" aria-hidden="true">
+            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-label">PEEP HOLES</span>
+            <div class="hm-cuboid-side-heat"></div>
+            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-note">Cold → Hot gradient</span>
+          </div>
+          <div class="hm-cuboid-side-legend hm-cuboid-side-legend-right" aria-hidden="true">
+            <div class="hm-cuboid-side-pill state-o">
+              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
+              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">OFF GAS (O)</span>
+            </div>
+            <div class="hm-cuboid-side-pill state-n">
+              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
+              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">NG ONLY (N)</span>
+            </div>
+            <div class="hm-cuboid-side-pill state-b">
+              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
+              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">BOTH (B)</span>
+            </div>
+            <div class="hm-cuboid-side-pill state-c">
+              <span class="hm-cuboid-side-pill-icon" style="font-size:14px;color:#94a3b8;">◼</span>
+              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">CAPPED (C)</span>
+            </div>
+          </div>
           <div class="cb-title" style="color:#7ec8f0;background:rgba(126,200,240,0.1);border:1px solid rgba(126,200,240,0.35);">CD SIDE ▶</div>
 
           <div class="cb-scene cb-float cb-scene-cd" id="cd-scene">
