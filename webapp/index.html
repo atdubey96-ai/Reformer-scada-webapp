@@ -3551,12 +3551,14 @@ function buildPeepLine(vals, range, label){
   /* Build a continuous gradient bar for the peep hole row */
   var numericVals = [];
   var positions = [];
+  var trackSlots = 15;
   for(var ph = 0; ph < 15; ph++){
     var val = vals[ph];
     var numVal = (val !== "" && val !== null && val !== undefined && !isNaN(Number(val))) ? Number(val) : null;
     numericVals.push(numVal);
     if(numVal !== null){
-      positions.push({idx: ph, val: numVal, pct: (ph / 14 * 100)});
+      /* Align markers to burner column centers (B1..B15). */
+      positions.push({idx: ph, val: numVal, pct: ((ph + 0.5) / trackSlots * 100)});
     }
   }
 
@@ -3598,9 +3600,7 @@ function buildPeepLine(vals, range, label){
   for(var i = 0; i < positions.length; i++){
     var p = positions[i];
     var dotCol = tempToColor(p.val, range.min, range.max);
-    /* Keep edge markers fully inside the bar so cuboid faces never overflow. */
-    var safePct = Math.max(2, Math.min(98, p.pct));
-    var leftPct = safePct.toFixed(1);
+    var leftPct = p.pct.toFixed(2);
     /* Peep hole marker line */
     html += '<div class="hm-peep-marker" style="left:' + leftPct + '%;"></div>';
     /* Dot with tooltip */
@@ -6990,8 +6990,8 @@ function clearHeatMapDateFilter(){
           height:22px !important;
           min-width:0 !important;
           overflow:visible !important;
-          margin-left:calc(var(--hm-track-inset-left) + 0.6cm) !important;
-          margin-right:calc(var(--hm-track-inset-right) + 0.85cm) !important;
+          margin-left:var(--hm-track-inset-left) !important;
+          margin-right:var(--hm-track-inset-right) !important;
         }
         #tab-heatmap .cb-face .hm-peep-marker{
           height:22px !important;
@@ -7053,8 +7053,8 @@ function clearHeatMapDateFilter(){
           #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
             height:18px !important;
             overflow:visible !important;
-            margin-left:calc(var(--hm-track-inset-left) + 0.6cm) !important;
-            margin-right:calc(var(--hm-track-inset-right) + 0.85cm) !important;
+            margin-left:var(--hm-track-inset-left) !important;
+            margin-right:var(--hm-track-inset-right) !important;
           }
           #tab-heatmap .cb-face .hm-peep-marker{
             height:18px !important;
