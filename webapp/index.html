@@ -6390,6 +6390,327 @@ function clearHeatMapDateFilter(){
           #tab-heatmap .cb-face .hm-peep-temp-label{font-size:10px !important;}
         }
       </style>
+      <style id="warp-inspired-dark-global-2026">
+        body,
+        body.light-theme{
+          --warp-bg-0:#07090d;
+          --warp-bg-1:#0d1118;
+          --warp-bg-2:#121824;
+          --warp-surface-0:#0f141d;
+          --warp-surface-1:#151c28;
+          --warp-surface-2:#1b2432;
+          --warp-surface-3:#222d3d;
+          --warp-border:#2b374a;
+          --warp-border-strong:#3a4a63;
+          --warp-text:#e8eef8;
+          --warp-text-dim:#9eacc2;
+          --warp-accent:#7b83ff;
+          --warp-accent-2:#4ea0ff;
+          --warp-ok:#4dd4a6;
+          --warp-warn:#f3a757;
+          --warp-danger:#ff708f;
+          --warp-violet:#a286ff;
+          --warp-shadow:0 12px 30px rgba(0,0,0,0.35);
+        }
+
+        body,
+        body.light-theme{
+          background:
+            radial-gradient(120% 95% at 100% 0%,rgba(123,131,255,0.08) 0%,rgba(7,9,13,0) 60%),
+            radial-gradient(110% 88% at 0% 100%,rgba(78,160,255,0.06) 0%,rgba(7,9,13,0) 58%),
+            linear-gradient(180deg,var(--warp-bg-0) 0%,var(--warp-bg-1) 52%,var(--warp-bg-2) 100%) !important;
+          color:var(--warp-text) !important;
+        }
+
+        body .tab-panels,
+        body .tab-panel{
+          background:transparent !important;
+        }
+        body #tab-burner,
+        body #tab-cleaning,
+        body #tab-tempdata,
+        body #tab-heatmap,
+        body #tab-alarms{
+          background:linear-gradient(180deg,rgba(12,16,23,0.88),rgba(10,14,20,0.95)) !important;
+        }
+
+        body .app-banner-wrap,
+        body .app-header,
+        body .app-header-meta,
+        body .tab-bar,
+        body .ls-topbar,
+        body .app-topbar{
+          background:linear-gradient(120deg,#0d121b 0%,#141b28 58%,#171f2d 100%) !important;
+          border-color:var(--warp-border) !important;
+          box-shadow:var(--warp-shadow) !important;
+        }
+
+        body .legend,
+        body .wall,
+        body .analytics,
+        body .analysis-block,
+        body .cleaning-section,
+        body .cdash-period-card,
+        body .cdash-breakdown-block,
+        body .cleaning-table-wrap,
+        body .td-entry-card,
+        body .td-toolbar-pill,
+        body .td-fill-menu-wrap,
+        body .hm-wall-card,
+        body .hm-adjust-card,
+        body .alarms-section,
+        body .alarm-card,
+        body .alarm-list,
+        body .quick-menu-panel,
+        body .hm-icon-menu,
+        body .freq-alarm-panel,
+        body .freq-alarm-card{
+          background:linear-gradient(155deg,var(--warp-surface-1) 0%,var(--warp-surface-0) 54%,#0d131d 100%) !important;
+          border-color:var(--warp-border) !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.04),var(--warp-shadow) !important;
+          color:var(--warp-text) !important;
+        }
+
+        body .hm-cuboid-heat-strip,
+        body .hm-legend-strip,
+        body .hm-filter-chip{
+          background:linear-gradient(120deg,#131b29 0%,#1a2537 58%,#202d42 100%) !important;
+          border-color:var(--warp-border-strong) !important;
+        }
+
+        body .hm-legend-title,
+        body .td-toolbar-label,
+        body .hm-filter-label,
+        body .cw-selector-label{
+          color:#bdd1ee !important;
+        }
+
+        body .wh-title,
+        body .analysis-block h3,
+        body .alarms-header-left h2,
+        body .cleaning-section h2,
+        body .hm-wall-title{
+          color:#f2f6ff !important;
+        }
+        body .wh-sub,
+        body .analysis-block p,
+        body .cleaning-subtitle,
+        body .alarms-subtitle,
+        body .hm-wall-meta,
+        body .app-system-sub,
+        body .app-meta-item,
+        body .td-label,
+        body .td-unit,
+        body .td-toolbar-status,
+        body .cb-hint{
+          color:var(--warp-text-dim) !important;
+        }
+
+        body .hd-btn-primary,
+        body .td-toolbar-btn-primary,
+        body .cw-btn-active,
+        body .hm-wall-btn-active,
+        body .ls-btn,
+        body .sdm-btn-action{
+          background:linear-gradient(120deg,#6366f1 0%,#5b7dff 52%,#4694ff 100%) !important;
+          border-color:rgba(137,155,255,0.6) !important;
+          color:#f8fbff !important;
+          box-shadow:0 8px 22px rgba(76,99,217,0.38),inset 0 1px 0 rgba(255,255,255,0.2) !important;
+        }
+        body .hd-btn-primary:hover,
+        body .td-toolbar-btn-primary:hover,
+        body .cw-btn-active:hover,
+        body .hm-wall-btn-active:hover{
+          filter:brightness(1.05) !important;
+        }
+
+        body .hd-btn-secondary,
+        body .hm-wall-btn,
+        body .cw-btn,
+        body .td-toolbar-btn-soft,
+        body .td-toolbar-btn-muted,
+        body .cleaning-clear-btn,
+        body .cleaning-export-btn,
+        body .alarm-refresh-btn,
+        body .alarm-clear-all-btn,
+        body .alc-ack-btn,
+        body .quick-menu-panel .hd-btn,
+        body .sdm-btn-cancel{
+          background:linear-gradient(145deg,#1a2231 0%,#182131 100%) !important;
+          border-color:var(--warp-border-strong) !important;
+          color:#ced9ec !important;
+        }
+        body .hd-btn-secondary:hover,
+        body .hm-wall-btn:hover,
+        body .cw-btn:hover,
+        body .td-toolbar-btn-soft:hover,
+        body .td-toolbar-btn-muted:hover,
+        body .cleaning-clear-btn:hover,
+        body .cleaning-export-btn:hover,
+        body .alarm-refresh-btn:hover,
+        body .alarm-clear-all-btn:hover,
+        body .alc-ack-btn:hover{
+          background:linear-gradient(145deg,#212c3f 0%,#1d2839 100%) !important;
+          border-color:#4a5f7f !important;
+          color:#f2f6ff !important;
+        }
+
+        body .td-input,
+        body .td-ph-input,
+        body .td-fill-select,
+        body .td-toolbar-select,
+        body .td-toolbar-datetime,
+        body .hm-icon-picker-btn,
+        body .hm-icon-menu,
+        body .ls-input-box,
+        body #cleaningMonthSelect,
+        body .sdm-select,
+        body .sdm-preview{
+          background:linear-gradient(145deg,#131b28 0%,#101722 100%) !important;
+          border-color:var(--warp-border-strong) !important;
+          color:#e7eefb !important;
+        }
+
+        body th,
+        body #td-saved-table th,
+        body .cleaning-table th{
+          background:linear-gradient(180deg,#192335 0%,#141c2c 100%) !important;
+          border-color:var(--warp-border-strong) !important;
+          color:#c7d7f0 !important;
+        }
+        body td,
+        body #td-saved-table td,
+        body .cleaning-table td{
+          border-color:var(--warp-border) !important;
+          color:#e8eef8 !important;
+        }
+        body #td-saved-table tbody tr:nth-child(even){
+          background:rgba(255,255,255,0.02) !important;
+        }
+        body #td-saved-table tbody tr:hover{
+          background:rgba(123,131,255,0.08) !important;
+        }
+
+        body td.B,
+        body .li-B,
+        body .ab-both,
+        body .hm-row-data-badge-B{
+          background:linear-gradient(120deg,#1d3f7b 0%,#2f68c0 56%,#66a9ff 100%) !important;
+          border-color:rgba(132,185,255,0.6) !important;
+          color:#eef6ff !important;
+        }
+        body td.N,
+        body .li-N,
+        body .ab-ng,
+        body .hm-row-data-badge-N{
+          background:linear-gradient(120deg,#55330b 0%,#9c611d 58%,#e8ad61 100%) !important;
+          border-color:rgba(238,184,112,0.62) !important;
+          color:#fff8ed !important;
+        }
+        body td.O,
+        body .li-O,
+        body .ab-og,
+        body .hm-row-data-badge-O{
+          background:linear-gradient(120deg,#134832 0%,#22895f 56%,#5fd9ad 100%) !important;
+          border-color:rgba(110,223,182,0.58) !important;
+          color:#effff8 !important;
+        }
+        body td.C,
+        body .li-C,
+        body .ab-cold,
+        body .hm-row-data-badge-C{
+          background:linear-gradient(120deg,#2d3948 0%,#4c5f74 56%,#8fa3b8 100%) !important;
+          border-color:rgba(173,190,208,0.54) !important;
+          color:#f0f6ff !important;
+        }
+
+        body .severity-normal,
+        body .asp-normal{background:linear-gradient(120deg,#134832,#22895f,#5fd9ad) !important;color:#effff8 !important;border-color:rgba(110,223,182,0.58) !important;}
+        body .severity-warning,
+        body .asp-warning,
+        body .alarm-chip-warning,
+        body .alc-sev-warning{background:linear-gradient(120deg,#55330b,#9c611d,#e8ad61) !important;color:#fff8ed !important;border-color:rgba(238,184,112,0.62) !important;}
+        body .severity-major,
+        body .asp-major,
+        body .alarm-chip-major,
+        body .alc-sev-major{background:linear-gradient(120deg,#6a2f13,#b55624,#f09a65) !important;color:#fff3ea !important;border-color:rgba(242,170,126,0.62) !important;}
+        body .severity-critical,
+        body .asp-critical,
+        body .alarm-chip-critical,
+        body .alc-sev-critical{background:linear-gradient(120deg,#61162a,#af2b53,#f4709c) !important;color:#fff1f7 !important;border-color:rgba(248,140,176,0.62) !important;}
+        body .asp-freq,
+        body .alarm-chip-freq{background:linear-gradient(120deg,#35205f,#6444aa,#a78af5) !important;color:#f6f1ff !important;border-color:rgba(186,165,246,0.6) !important;}
+
+        body .alarm-card-critical{
+          border-left-color:#e65c86 !important;
+          background:linear-gradient(120deg,rgba(97,22,42,0.65),rgba(175,43,83,0.45),rgba(244,112,156,0.22)) !important;
+        }
+        body .alarm-card-major{
+          border-left-color:#ef8f58 !important;
+          background:linear-gradient(120deg,rgba(106,47,19,0.65),rgba(181,86,36,0.45),rgba(240,154,101,0.22)) !important;
+        }
+        body .alarm-card-warning{
+          border-left-color:#ebb267 !important;
+          background:linear-gradient(120deg,rgba(85,51,11,0.65),rgba(156,97,29,0.45),rgba(232,173,97,0.2)) !important;
+        }
+        body .alarm-card-freq{
+          border-left-color:#9e85f2 !important;
+          background:linear-gradient(120deg,rgba(53,32,95,0.64),rgba(100,68,170,0.45),rgba(167,138,245,0.22)) !important;
+        }
+
+        body .cleaning-table td.date-filled{
+          background:linear-gradient(120deg,#1f2f44 0%,#344a67 55%,#5e789a 100%) !important;
+          border-color:rgba(163,186,216,0.58) !important;
+        }
+        body .cleaning-table td.freq-alarm{
+          background:linear-gradient(120deg,#61162a 0%,#af2b53 56%,#f4709c 100%) !important;
+          border-color:rgba(248,140,176,0.76) !important;
+        }
+        body .cleaning-table td.ct-pending{
+          background:linear-gradient(120deg,#55330b 0%,#9c611d 58%,#e8ad61 100%) !important;
+          border-color:rgba(238,184,112,0.76) !important;
+        }
+        body .cleaning-table td.freq-alarm .ct-date-label,
+        body .cleaning-table td.ct-pending .ct-date-label{
+          color:#fff8ef !important;
+        }
+
+        body .hm-cuboid-heat-text,
+        body .td-dt-time,
+        body .app-meta-item b{
+          color:#dbe7fa !important;
+        }
+        body .cb-dual-row{
+          background:linear-gradient(145deg,#101725 0%,#0d141f 62%,#0b1119 100%) !important;
+          border-color:var(--warp-border-strong) !important;
+          box-shadow:0 16px 36px rgba(0,0,0,0.55) !important;
+        }
+        body .cb-divider{
+          background:linear-gradient(to bottom,transparent,rgba(123,131,255,0.62),rgba(78,160,255,0.58),transparent) !important;
+        }
+        body .cb-scene{
+          background:
+            radial-gradient(120% 86% at 50% 0%,rgba(123,131,255,0.16) 0%,rgba(7,9,13,0) 58%),
+            linear-gradient(180deg,rgba(16,22,34,0.78),rgba(8,12,19,0.58)) !important;
+        }
+        body .cb-scene::before{
+          border-color:rgba(126,154,192,0.44) !important;
+          box-shadow:inset 0 0 28px rgba(11,16,24,0.55) !important;
+        }
+
+        body .btab{
+          color:#a9bad4 !important;
+        }
+        body .btab:hover{
+          color:#e6eefd !important;
+          background:rgba(123,131,255,0.1) !important;
+        }
+        body .btab-active{
+          color:#f1f6ff !important;
+          background:linear-gradient(180deg,rgba(123,131,255,0.2),rgba(78,160,255,0.12)) !important;
+          border-top-color:rgba(123,131,255,0.7) !important;
+        }
+      </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
