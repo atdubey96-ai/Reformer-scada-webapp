@@ -5870,6 +5870,115 @@ function clearHeatMapDateFilter(){
           border-color:rgba(148,163,184,0.42) !important;
         }
       </style>
+      <style id="dark-theme-polish-2026">
+        body:not(.light-theme){
+          --dk-base-0:#050608;
+          --dk-base-1:#090b0f;
+          --dk-base-2:#0d1015;
+          --dk-edge-soft:rgba(148,163,184,0.26);
+          --dk-edge-strong:rgba(148,163,184,0.4);
+          --dk-text-main:#e8edf5;
+          --dk-text-sub:#c1c9d4;
+        }
+
+        body:not(.light-theme){
+          background:linear-gradient(180deg,var(--dk-base-0) 0%,var(--dk-base-2) 100%) !important;
+          color:var(--dk-text-main) !important;
+        }
+        body:not(.light-theme) .tab-panels{background:linear-gradient(180deg,#050608 0%,#0a0d11 100%) !important;}
+        body:not(.light-theme) .tab-panel{background:transparent !important;}
+        body:not(.light-theme) #tab-heatmap{background:linear-gradient(180deg,#06070a 0%,#0b0e13 100%) !important;}
+        body:not(.light-theme) #tab-burner{background:linear-gradient(180deg,#060709 0%,#0d1014 100%) !important;}
+        body:not(.light-theme) #tab-cleaning{background:linear-gradient(180deg,#060806 0%,#0d110e 100%) !important;}
+        body:not(.light-theme) #tab-tempdata{background:linear-gradient(180deg,#06070a 0%,#0d1014 100%) !important;}
+        body:not(.light-theme) #tab-alarms{background:linear-gradient(180deg,#070607 0%,#110d10 100%) !important;}
+
+        body:not(.light-theme) .app-header{
+          background:linear-gradient(100deg,#07090c 0%,#11151b 100%) !important;
+          border-bottom:1px solid var(--dk-edge-soft) !important;
+          box-shadow:0 8px 24px rgba(0,0,0,0.42) !important;
+        }
+        body:not(.light-theme) .app-banner-wrap{
+          background:linear-gradient(180deg,#0a0d12 0%,#0f1319 100%) !important;
+          border-bottom:1px solid var(--dk-edge-soft) !important;
+        }
+        body:not(.light-theme) .app-header-meta{
+          background:linear-gradient(180deg,#0a0d12 0%,#0e1218 100%) !important;
+        }
+
+        body:not(.light-theme) #tab-burner .legend,
+        body:not(.light-theme) #tab-burner .wall,
+        body:not(.light-theme) #tab-burner .analytics,
+        body:not(.light-theme) #tab-burner .analysis-block{
+          background:linear-gradient(160deg,#12161c 0%,#0d1015 100%) !important;
+          border-color:var(--dk-edge-soft) !important;
+          color:var(--dk-text-main) !important;
+        }
+
+        body:not(.light-theme) #tab-cleaning .cleaning-section,
+        body:not(.light-theme) #tab-cleaning .cdash-period-card,
+        body:not(.light-theme) #tab-cleaning .cdash-breakdown-block,
+        body:not(.light-theme) #tab-cleaning .cleaning-table-wrap{
+          background:linear-gradient(160deg,#121813 0%,#0d110e 100%) !important;
+          border-color:var(--dk-edge-soft) !important;
+          color:var(--dk-text-main) !important;
+        }
+
+        body:not(.light-theme) #tab-tempdata .td-entry-card,
+        body:not(.light-theme) #tab-tempdata .td-toolbar-pill,
+        body:not(.light-theme) #tab-tempdata [style*="background:rgba(255,255,255,0.03)"]{
+          background:linear-gradient(160deg,#12151a 0%,#0d1014 100%) !important;
+          border-color:var(--dk-edge-soft) !important;
+          color:var(--dk-text-main) !important;
+        }
+
+        body:not(.light-theme) #tab-alarms .alarms-section,
+        body:not(.light-theme) #tab-alarms .alarm-card,
+        body:not(.light-theme) #tab-alarms .alarm-list{
+          background:linear-gradient(160deg,#171115 0%,#100c10 100%) !important;
+          border-color:var(--dk-edge-soft) !important;
+          color:var(--dk-text-main) !important;
+        }
+        body:not(.light-theme) #tab-alarms .alarm-summary-pill{
+          border-color:var(--dk-edge-soft) !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 4px 14px rgba(0,0,0,0.28) !important;
+        }
+
+        body:not(.light-theme) .hm-wall-header,
+        body:not(.light-theme) .sdm-header,
+        body:not(.light-theme) .wall-header-bar{
+          background:linear-gradient(90deg,#1a1f27 0%,#141820 100%) !important;
+          border-bottom-color:var(--dk-edge-strong) !important;
+        }
+
+        body:not(.light-theme) [style*="background:#0f2744"],
+        body:not(.light-theme) [style*="background:#1a3560"],
+        body:not(.light-theme) [style*="background:#1e3a6a"],
+        body:not(.light-theme) [style*="background:#0f1f38"],
+        body:not(.light-theme) [style*="background:#0a1628"],
+        body:not(.light-theme) [style*="background:#0b1525"]{
+          background:#171b22 !important;
+        }
+        body:not(.light-theme) [style*="linear-gradient(90deg,#0f2744,#1a3560)"],
+        body:not(.light-theme) [style*="linear-gradient(90deg,#0f2744,#1e3a6a)"],
+        body:not(.light-theme) [style*="linear-gradient(90deg,#0f2744,#1e3a5e)"]{
+          background:linear-gradient(90deg,#1a1f27 0%,#141820 100%) !important;
+        }
+        body:not(.light-theme) [style*="border:1px solid #1e3a5e"],
+        body:not(.light-theme) [style*="border-bottom:2px solid #F37022"]{
+          border-color:var(--dk-edge-soft) !important;
+        }
+
+        body:not(.light-theme) .wh-sub,
+        body:not(.light-theme) .analysis-block p,
+        body:not(.light-theme) .cleaning-subtitle,
+        body:not(.light-theme) .td-toolbar-status,
+        body:not(.light-theme) .alarms-subtitle,
+        body:not(.light-theme) .app-meta-item,
+        body:not(.light-theme) .hm-wall-meta{
+          color:var(--dk-text-sub) !important;
+        }
+      </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
