@@ -13727,7 +13727,22 @@ function tempToColorInline(val, minT, maxT){
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
-      navigator.serviceWorker.register("./sw.js").then(function(reg){
+      var inWebappPath = (location.pathname || "").indexOf("/webapp/") === 0;
+      var expectedScope = inWebappPath ? (location.origin + "/webapp/") : (location.origin + "/");
+      var legacyScope = inWebappPath ? (location.origin + "/") : (location.origin + "/webapp/");
+      var swScope = inWebappPath ? "./" : "/";
+
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        regs.forEach(function(r){
+          try{
+            if(r && r.scope === legacyScope){
+              r.unregister();
+            }
+          }catch(e){}
+        });
+      }).catch(function(){});
+
+      navigator.serviceWorker.register("./sw.js", { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
         }
@@ -13741,6 +13756,9 @@ function tempToColorInline(val, minT, maxT){
           });
         });
         if(typeof reg.update === "function"){
+          reg.update().catch(function(){});
+        }
+        if(reg.scope !== expectedScope && typeof reg.update === "function"){
           reg.update().catch(function(){});
         }
       }).catch(function(){});

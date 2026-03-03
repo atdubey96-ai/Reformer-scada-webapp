@@ -1,4 +1,4 @@
-const CACHE_NAME = "scada-burner-v17";
+const CACHE_NAME = "scada-burner-v18";
 const OFFLINE_URL = "./index.html";
 const CORE_ASSETS = [
   "./",
