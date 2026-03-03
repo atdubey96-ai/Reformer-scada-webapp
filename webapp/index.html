@@ -3598,7 +3598,9 @@ function buildPeepLine(vals, range, label){
   for(var i = 0; i < positions.length; i++){
     var p = positions[i];
     var dotCol = tempToColor(p.val, range.min, range.max);
-    var leftPct = p.pct.toFixed(1);
+    /* Keep edge markers fully inside the bar so cuboid faces never overflow. */
+    var safePct = Math.max(2, Math.min(98, p.pct));
+    var leftPct = safePct.toFixed(1);
     /* Peep hole marker line */
     html += '<div class="hm-peep-marker" style="left:' + leftPct + '%;"></div>';
     /* Dot with tooltip */
@@ -6987,6 +6989,7 @@ function clearHeatMapDateFilter(){
         #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
           height:22px !important;
           min-width:0 !important;
+          overflow:hidden !important;
           margin-left:calc(var(--hm-track-inset-left) + 0.5cm) !important;
           margin-right:calc(var(--hm-track-inset-right) + 0.5cm) !important;
         }
@@ -7044,6 +7047,7 @@ function clearHeatMapDateFilter(){
           }
           #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
             height:18px !important;
+            overflow:hidden !important;
             margin-left:calc(var(--hm-track-inset-left) + 0.5cm) !important;
             margin-right:calc(var(--hm-track-inset-right) + 0.5cm) !important;
           }
