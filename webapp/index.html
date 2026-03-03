@@ -6739,9 +6739,9 @@ function clearHeatMapDateFilter(){
       </style>
       <style id="heatmap-cuboid-stacked-layout-2026">
         #tab-heatmap{
-          --cb-w:min(94vw,820px);
-          --cb-h:clamp(640px,74vh,820px);
-          --cb-d:clamp(150px,18vw,190px);
+          --cb-w:min(94vw,410px);
+          --cb-h:clamp(520px,62vh,580px);
+          --cb-d:clamp(80px,10vw,110px);
           --cb-w-half:calc(var(--cb-w) / 2);
           --cb-h-half:calc(var(--cb-h) / 2);
           --cb-d-half:calc(var(--cb-d) / 2);
@@ -6804,19 +6804,24 @@ function clearHeatMapDateFilter(){
           height:var(--cb-h) !important;
           margin-top:calc(-1 * var(--cb-h-half)) !important;
         }
+        #tab-heatmap .cb-inner-tube-wrap,
+        #tab-heatmap .cb-top-port-line{
+          transform:scaleX(calc(var(--cb-w) / 720)) !important;
+          transform-origin:50% 50% !important;
+        }
 
         @media (max-width:1200px){
           #tab-heatmap{
-            --cb-w:min(94vw,760px);
-            --cb-h:clamp(600px,70vh,760px);
-            --cb-d:clamp(130px,20vw,170px);
+            --cb-w:min(94vw,390px);
+            --cb-h:clamp(500px,60vh,560px);
+            --cb-d:clamp(74px,10vw,100px);
           }
         }
         @media (max-width:900px){
           #tab-heatmap{
-            --cb-w:min(94vw,620px);
-            --cb-h:clamp(520px,66vh,640px);
-            --cb-d:clamp(95px,20vw,130px);
+            --cb-w:min(94vw,360px);
+            --cb-h:clamp(460px,60vh,520px);
+            --cb-d:clamp(66px,10vw,90px);
           }
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-scene{
             height:calc(var(--cb-h) + 100px) !important;
@@ -6925,7 +6930,7 @@ function clearHeatMapDateFilter(){
           min-height:0 !important;
           display:flex !important;
           flex-direction:column !important;
-          justify-content:flex-start !important;
+          justify-content:space-between !important;
           padding:6px 8px !important;
           gap:0 !important;
           overflow:hidden !important;
@@ -6940,19 +6945,19 @@ function clearHeatMapDateFilter(){
         #tab-heatmap .cb-face .hm-burner-nums{
           justify-content:space-between !important;
           gap:0 !important;
-          padding:0 clamp(8px,1vw,16px) !important;
+          padding:0 clamp(4px,0.7vw,8px) !important;
         }
         #tab-heatmap .cb-face .hm-burner-wrap{
-          width:clamp(20px,1.5vw,28px) !important;
+          width:clamp(14px,1.05vw,20px) !important;
           flex:0 0 auto !important;
         }
         #tab-heatmap .cb-face .hm-burner-wrap svg{
-          width:clamp(16px,1.22vw,22px) !important;
-          height:clamp(26px,2.05vw,34px) !important;
+          width:clamp(11px,0.9vw,16px) !important;
+          height:clamp(18px,1.5vw,25px) !important;
         }
         #tab-heatmap .cb-face .hm-burner-nums .hm-bnum{
-          width:clamp(20px,1.5vw,28px) !important;
-          font-size:clamp(9px,0.72vw,12px) !important;
+          width:clamp(14px,1.05vw,20px) !important;
+          font-size:clamp(8px,0.62vw,10px) !important;
         }
 
         /* Match peep-hole gradient width with burner line */
@@ -6980,9 +6985,9 @@ function clearHeatMapDateFilter(){
         }
         #tab-heatmap .cb-face .hm-row-label,
         #tab-heatmap .cb-face .hm-peep-label{
-          min-width:44px !important;
-          font-size:11px !important;
-          padding:2px 4px !important;
+          min-width:34px !important;
+          font-size:10px !important;
+          padding:2px 3px !important;
         }
 
         @media (max-width:900px){
@@ -6990,23 +6995,23 @@ function clearHeatMapDateFilter(){
           #tab-heatmap .cb-face .hm-wall-meta{font-size:9px !important;}
           #tab-heatmap .cb-face .hm-row-label,
           #tab-heatmap .cb-face .hm-peep-label{
-            min-width:34px !important;
-            font-size:9px !important;
+            min-width:30px !important;
+            font-size:8px !important;
           }
           #tab-heatmap .cb-face .hm-burners-line,
           #tab-heatmap .cb-face .hm-burner-nums{
-            padding:0 6px !important;
+            padding:0 3px !important;
           }
           #tab-heatmap .cb-face .hm-burner-wrap{
-            width:16px !important;
+            width:12px !important;
           }
           #tab-heatmap .cb-face .hm-burner-wrap svg{
-            width:12px !important;
-            height:20px !important;
+            width:9px !important;
+            height:15px !important;
           }
           #tab-heatmap .cb-face .hm-burner-nums .hm-bnum{
-            width:16px !important;
-            font-size:8px !important;
+            width:12px !important;
+            font-size:7px !important;
           }
           #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
             height:18px !important;
