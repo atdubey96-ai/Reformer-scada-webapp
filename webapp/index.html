@@ -2347,7 +2347,7 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 .td-field-group{display:flex;flex-direction:column;gap:6px;}
 .td-entry-layout{
   display:grid;
-  grid-template-columns:minmax(320px,0.95fr) minmax(0,1.6fr);
+  grid-template-columns:minmax(260px,0.72fr) minmax(0,2.35fr);
   gap:18px;
   align-items:start;
   margin-bottom:18px;
@@ -11252,10 +11252,6 @@ function fillTdPeepFieldsFromVoiceNumbers(values){
         tdVoiceFillCellIndex++;
         continue;
       }
-      if(!tdVoiceFillUseFocusedOrder && String(current.value || "").trim() !== ""){
-        tdVoiceFillCellIndex++;
-        continue;
-      }
 
       var v = sanitizeTstVoiceValue(values[i]);
       if(!v){
@@ -11364,7 +11360,7 @@ function startTstVoiceInput(){
 
   var activeIndex = getTdActivePeepIndex();
   tdVoiceFillUseFocusedOrder = activeIndex >= 0;
-  tdVoiceFillCellIndex = tdVoiceFillUseFocusedOrder ? activeIndex : getFirstEmptyTdPeepIndex();
+  tdVoiceFillCellIndex = tdVoiceFillUseFocusedOrder ? activeIndex : 0;
   tdVoiceFillWritten = 0;
 
   try{
@@ -11375,7 +11371,7 @@ function startTstVoiceInput(){
     if(tdVoiceFillUseFocusedOrder){
       setTstVoiceFillStatus("Listening from selected cell...", "#7dd3fc");
     }else{
-      setTstVoiceFillStatus("Listening from first empty cell...", "#7dd3fc");
+      setTstVoiceFillStatus("Listening from first cell (override mode)...", "#7dd3fc");
     }
   }catch(err){
     tdVoiceFillListening = false;
