@@ -6926,6 +6926,10 @@ function clearHeatMapDateFilter(){
           flex:0 0 auto !important;
           padding:6px 10px !important;
         }
+        #tab-heatmap .cb-face .hm-wall-card{
+          --hm-track-inset-left:clamp(8px,calc(11px * var(--cb-front-scale)),30px);
+          --hm-track-inset-right:clamp(12px,calc(16px * var(--cb-front-scale)),44px);
+        }
         #tab-heatmap .cb-face .hm-body{
           flex:1 1 auto !important;
           min-height:0 !important;
@@ -6948,8 +6952,8 @@ function clearHeatMapDateFilter(){
           gap:0 !important;
           min-width:0 !important;
           overflow:hidden !important;
-          padding-left:clamp(8px,calc(11px * var(--cb-front-scale)),30px) !important;
-          padding-right:clamp(12px,calc(16px * var(--cb-front-scale)),44px) !important;
+          padding-left:var(--hm-track-inset-left) !important;
+          padding-right:var(--hm-track-inset-right) !important;
         }
         #tab-heatmap .cb-face .hm-burner-wrap{
           width:auto !important;
@@ -6977,18 +6981,20 @@ function clearHeatMapDateFilter(){
           padding:4px 0 !important;
           gap:4px !important;
           min-width:0 !important;
+          overflow-x:hidden !important;
+          overflow-y:visible !important;
         }
         #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
           height:22px !important;
           min-width:0 !important;
-          margin-left:clamp(10px,calc(14px * var(--cb-front-scale)),38px) !important;
-          margin-right:clamp(14px,calc(18px * var(--cb-front-scale)),46px) !important;
+          margin-left:var(--hm-track-inset-left) !important;
+          margin-right:var(--hm-track-inset-right) !important;
         }
         #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap .hm-peep-marker:first-child{
-          left:2% !important;
+          left:3% !important;
         }
         #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap .hm-peep-marker:last-child{
-          left:98% !important;
+          left:97% !important;
         }
         #tab-heatmap .cb-face .hm-peep-marker{
           height:26px !important;
@@ -7013,6 +7019,10 @@ function clearHeatMapDateFilter(){
         @media (max-width:900px){
           #tab-heatmap .cb-face .hm-wall-title{font-size:12px !important;}
           #tab-heatmap .cb-face .hm-wall-meta{font-size:9px !important;}
+          #tab-heatmap .cb-face .hm-wall-card{
+            --hm-track-inset-left:clamp(4px,calc(8px * var(--cb-front-scale)),20px);
+            --hm-track-inset-right:clamp(6px,calc(10px * var(--cb-front-scale)),24px);
+          }
           #tab-heatmap .cb-face .hm-row-label,
           #tab-heatmap .cb-face .hm-peep-label{
             min-width:clamp(30px,calc(30px * var(--cb-front-scale)),72px) !important;
@@ -7020,8 +7030,8 @@ function clearHeatMapDateFilter(){
           }
           #tab-heatmap .cb-face .hm-burners-line,
           #tab-heatmap .cb-face .hm-burner-nums{
-            padding-left:clamp(4px,calc(8px * var(--cb-front-scale)),20px) !important;
-            padding-right:clamp(6px,calc(10px * var(--cb-front-scale)),24px) !important;
+            padding-left:var(--hm-track-inset-left) !important;
+            padding-right:var(--hm-track-inset-right) !important;
           }
           #tab-heatmap .cb-face .hm-burner-wrap{
             width:auto !important;
@@ -7040,8 +7050,8 @@ function clearHeatMapDateFilter(){
           }
           #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
             height:18px !important;
-            margin-left:clamp(7px,calc(10px * var(--cb-front-scale)),24px) !important;
-            margin-right:clamp(9px,calc(12px * var(--cb-front-scale)),28px) !important;
+            margin-left:var(--hm-track-inset-left) !important;
+            margin-right:var(--hm-track-inset-right) !important;
           }
           #tab-heatmap .cb-face .hm-peep-temp-label{
             font-size:clamp(8px,calc(8px * var(--cb-front-scale)),12px) !important;
