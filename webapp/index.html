@@ -1815,6 +1815,14 @@ body.light-theme .cw-nudge{
   box-shadow:0 -4px 24px rgba(0,0,0,0.5);
   z-index:1000;
   padding-bottom:env(safe-area-inset-bottom, 0px);
+  transition:transform .26s ease, opacity .22s ease, box-shadow .22s ease;
+  will-change:transform;
+}
+.bottom-tab-bar.is-scroll-hidden{
+  transform:translateY(calc(100% + env(safe-area-inset-bottom, 0px)));
+  opacity:0.02;
+  pointer-events:none;
+  box-shadow:none;
 }
 .btab{
   flex:1;
@@ -6240,49 +6248,67 @@ function clearHeatMapDateFilter(){
         #tab-heatmap .cb-face.cb-lr,
         #tab-heatmap .cb-face.cb-tb{
           background:
-            linear-gradient(132deg,#e6ebf2 0%,#c4ccd7 18%,#8d98a8 34%,#d8dde5 52%,#7f8a9a 74%,#c8d0da 100%) !important;
-          border-color:rgba(236,242,248,0.9) !important;
+            linear-gradient(132deg,#a9b1bc 0%,#838d9a 18%,#5f6876 34%,#939daa 52%,#535c69 74%,#7f8997 100%) !important;
+          border-color:rgba(0,0,0,0.92) !important;
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.52),
-            inset 0 -1px 0 rgba(30,41,59,0.42),
-            inset 0 0 22px rgba(15,23,42,0.26),
-            0 8px 18px rgba(2,6,23,0.24) !important;
+            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 0 -1px 0 rgba(0,0,0,0.64),
+            inset 0 0 26px rgba(2,6,23,0.42),
+            0 8px 18px rgba(2,6,23,0.32) !important;
         }
 
         #tab-heatmap .cb-face.cb-fb{
           background:
-            linear-gradient(140deg,#edf2f7 0%,#cbd3dd 22%,#95a2b2 44%,#e4e9ef 62%,#8a95a6 84%,#d6dde6 100%) !important;
+            linear-gradient(140deg,#b6bec9 0%,#8f99a6 22%,#67717f 44%,#9ca6b3 62%,#5a6371 84%,#8b96a3 100%) !important;
         }
 
         #tab-heatmap .cb-face.cb-lr{
           background:
-            linear-gradient(90deg,#e3e8ef 0%,#a2adbc 36%,#d8dee6 58%,#8a95a5 100%) !important;
+            linear-gradient(90deg,#a7b0bc 0%,#6f7b8a 36%,#919ca9 58%,#56606f 100%) !important;
         }
 
         #tab-heatmap .cb-face.cb-tb{
           background:
-            linear-gradient(165deg,#f2f6fb 0%,#d4dce6 22%,#9ba8b8 48%,#dde3eb 72%,#8f9aaa 100%) !important;
+            linear-gradient(165deg,#b4bdc9 0%,#8a94a2 22%,#626d7b 48%,#97a1af 72%,#5b6675 100%) !important;
         }
 
         #tab-heatmap .cb-side-face-panel{
           background:
-            linear-gradient(180deg,rgba(240,244,250,0.42) 0%,rgba(157,168,184,0.34) 55%,rgba(224,231,239,0.38) 100%) !important;
+            linear-gradient(180deg,rgba(130,141,156,0.5) 0%,rgba(85,95,109,0.44) 55%,rgba(118,128,142,0.48) 100%) !important;
         }
         #tab-heatmap .cb-side-cutout-svg rect[mask]{
-          fill:rgba(148,160,176,0.92) !important;
+          fill:rgba(70,78,90,0.95) !important;
         }
         #tab-heatmap .cb-side-cutout-svg rect[fill="none"]{
-          stroke:rgba(245,248,252,0.9) !important;
+          stroke:rgba(0,0,0,0.9) !important;
           stroke-width:2.2 !important;
         }
 
         #tab-heatmap .cb-top-cap-inner{
           background:
-            linear-gradient(145deg,rgba(243,247,252,0.48) 0%,rgba(161,172,189,0.34) 52%,rgba(229,236,244,0.42) 100%) !important;
+            linear-gradient(145deg,rgba(142,152,166,0.52) 0%,rgba(88,98,112,0.44) 52%,rgba(124,135,149,0.5) 100%) !important;
         }
         #tab-heatmap .cb-top-cap-label{
           color:#f8fbff !important;
           text-shadow:0 1px 3px rgba(15,23,42,0.75) !important;
+        }
+
+        /* Keep back-face inner side black while outer side stays metallic. */
+        #face-ab-back::before,
+        #face-cd-back::before{
+          content:"";
+          position:absolute;
+          inset:0;
+          background:linear-gradient(180deg,#050608 0%,#000000 100%);
+          transform:rotateY(180deg) translateZ(1px);
+          backface-visibility:visible;
+          pointer-events:none;
+          z-index:1;
+        }
+        #face-ab-back > *,
+        #face-cd-back > *{
+          position:relative;
+          z-index:2;
         }
 
         #tab-heatmap .cb-face .hm-wall-card{
@@ -10619,6 +10645,43 @@ function toggleTheme(isDark){
 /* ==================================================
    TAB SWITCHING
 ================================================== */
+var _tabsRowAutoHide = { lastY:0, ticking:false };
+
+function setTabsRowHidden(hidden){
+  var bar = document.querySelector(".bottom-tab-bar");
+  if(!bar) return;
+  bar.classList.toggle("is-scroll-hidden", !!hidden);
+}
+
+function updateTabsRowAutoHide(){
+  var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+  if(y < 28){
+    setTabsRowHidden(false);
+    _tabsRowAutoHide.lastY = y;
+    return;
+  }
+  var delta = y - _tabsRowAutoHide.lastY;
+  if(Math.abs(delta) < 10) return;
+  if(delta > 0 && y > 120){
+    setTabsRowHidden(true);
+  }else if(delta < 0){
+    setTabsRowHidden(false);
+  }
+  _tabsRowAutoHide.lastY = y;
+}
+
+function initTabsRowAutoHide(){
+  _tabsRowAutoHide.lastY = window.pageYOffset || document.documentElement.scrollTop || 0;
+  window.addEventListener("scroll", function(){
+    if(_tabsRowAutoHide.ticking) return;
+    _tabsRowAutoHide.ticking = true;
+    window.requestAnimationFrame(function(){
+      updateTabsRowAutoHide();
+      _tabsRowAutoHide.ticking = false;
+    });
+  }, { passive:true });
+}
+
 function syncHeatMapHeaderTools(tab){
   document.body.classList.toggle('heatmap-header-active', tab === 'heatmap');
 }
@@ -10631,6 +10694,7 @@ function switchTab(tab){
   document.querySelectorAll('.btab').forEach(b => b.classList.remove('btab-active'));
   document.getElementById('tab-'+tab).classList.add('tab-active');
   document.getElementById('btab-'+tab).classList.add('btab-active');
+  setTabsRowHidden(false);
   syncHeatMapHeaderTools(tab);
   if(tab === 'alarms') refreshAlarmPanel();
   if(tab === 'heatmap' && typeof requestHeatMapRender === 'function') requestHeatMapRender(40);
@@ -10643,6 +10707,7 @@ function switchTab(tab){
   var tab = active && active.id ? active.id.replace('tab-','') : 'heatmap';
   syncHeatMapHeaderTools(tab);
 })();
+initTabsRowAutoHide();
 
 window.addEventListener("resize", function(){
   clearTimeout(burnerMobileResizeTimer);
