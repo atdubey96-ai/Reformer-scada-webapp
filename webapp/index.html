@@ -1570,14 +1570,21 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .cleaning-section .cleaning-subtitle{
   color:#64748b;font-size:12px;margin-bottom:16px;letter-spacing:0.3px;
 }
-.cleaning-table-wrap{overflow-x:auto;}
+.cleaning-table-wrap{
+  overflow-x:auto;
+  border:1px solid #334155;
+  border-radius:10px;
+  background:#0f172a;
+}
 .cleaning-table{
-  width:100%;border-collapse:collapse;min-width:500px;
+  width:100%;border-collapse:separate;border-spacing:0;min-width:500px;
 }
 .cleaning-table th{
   background:#0f172a;color:#94a3b8;
   padding:4px 6px;font-size:11px;
-  border:1px solid #334155;text-align:center;
+  border-right:1px solid #334155;
+  border-bottom:1px solid #334155;
+  text-align:center;
   letter-spacing:0.5px;text-transform:uppercase;
   white-space:nowrap;
 }
@@ -1585,12 +1592,15 @@ td select option{background:#1e293b;color:#e2e8f0;}
   color:#f97316;min-width:60px;
 }
 .cleaning-table td{
-  border:1px solid #334155;
+  border-right:1px solid #334155;
+  border-bottom:1px solid #334155;
   padding:0;text-align:center;
   background:linear-gradient(180deg,#0d1117 0%,#090c11 100%);height:auto;width:auto;
   position:relative;
   vertical-align:middle;
 }
+.cleaning-table tr > *:last-child{border-right:none;}
+.cleaning-table tbody tr:last-child td{border-bottom:none;}
 /* Wrapper inside each td for stacking date + alarm badge */
 .cleaning-table .ct-cell{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -5758,6 +5768,10 @@ function clearHeatMapDateFilter(){
         body.light-theme .cleaning-table td{
           border-color:#e5e7eb !important;
           color:#1f2937 !important;
+        }
+        body.light-theme .cleaning-table-wrap{
+          border-color:var(--abnb-border) !important;
+          background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%) !important;
         }
 
         body.light-theme .li-B,
