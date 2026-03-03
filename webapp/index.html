@@ -7076,9 +7076,13 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap .cb-dual-shell{
           position:relative;
         }
+        #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-shell .cb-dual-row{
+          padding-left:74px !important;
+          padding-right:92px !important;
+        }
         #tab-heatmap .hm-cuboid-side-legend{
           position:absolute;
-          z-index:8;
+          z-index:9;
           pointer-events:none;
           display:none;
           border:1px solid rgba(136,150,176,0.45);
@@ -7102,9 +7106,9 @@ html, body, body *, body *::before, body *::after, svg text{
           display:none !important;
         }
         #tab-heatmap .hm-cuboid-side-legend-left{
-          left:-72px;
-          top:70px;
-          bottom:70px;
+          left:10px;
+          top:72px;
+          bottom:72px;
           width:54px;
           padding:8px 6px;
           flex-direction:column;
@@ -7136,9 +7140,9 @@ html, body, body *, body *::before, body *::after, svg text{
           color:#9eb4d3;
         }
         #tab-heatmap .hm-cuboid-side-legend-right{
-          right:-84px;
-          top:96px;
-          bottom:86px;
+          right:12px;
+          top:98px;
+          bottom:88px;
           width:70px;
           padding:8px 8px;
           flex-direction:column;
@@ -7188,12 +7192,16 @@ html, body, body *, body *::before, body *::after, svg text{
           display:none !important;
         }
         @media (max-width:1200px){
+          #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-shell .cb-dual-row{
+            padding-left:66px !important;
+            padding-right:80px !important;
+          }
           #tab-heatmap .hm-cuboid-side-legend-left{
-            left:-62px;
+            left:8px;
             width:48px;
           }
           #tab-heatmap .hm-cuboid-side-legend-right{
-            right:-72px;
+            right:8px;
             width:62px;
           }
         }
