@@ -2032,6 +2032,11 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     padding:7px 9px;
     font-size:11px;
   }
+  #tab-tempdata .td-toolbar-row .td-voice-icon-btn{
+    width:32px;
+    height:32px;
+    min-width:32px;
+  }
   #tab-tempdata .td-toolbar-row .td-voice-live-preview{
     max-width:130px;
     padding:5px 7px;
@@ -2402,6 +2407,21 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   font-family:'Rajdhani',sans-serif;cursor:pointer;
   background:rgba(245,158,11,0.14);border-color:rgba(245,158,11,0.45);
   transition:opacity .2s,background .2s,border-color .2s,color .2s;
+}
+.td-voice-icon-btn{
+  width:34px;height:34px;min-width:34px;border-radius:8px;
+  border:1px solid rgba(16,185,129,0.45);
+  background:rgba(16,185,129,0.14);
+  color:#6ee7b7;
+  font-size:16px;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:'Rajdhani',sans-serif;cursor:pointer;
+  transition:opacity .2s,background .2s,border-color .2s,color .2s;
+}
+.td-voice-icon-btn:hover{
+  background:rgba(16,185,129,0.2);
+  border-color:rgba(16,185,129,0.62);
+  color:#a7f3d0;
 }
 .td-voice-live-preview{
   display:none;align-items:center;max-width:170px;
@@ -4580,12 +4600,12 @@ function clearHeatMapDateFilter(){
           z-index:5;
         }
         .cb-scene-ab::before{
-          border-color:rgba(243,112,34,0.28);
-          box-shadow:inset 0 0 34px rgba(243,112,34,0.1), inset 0 0 20px rgba(2,6,23,0.36);
+          border-color:rgba(226,232,240,0.62);
+          box-shadow:inset 0 0 34px rgba(226,232,240,0.12), inset 0 0 20px rgba(2,6,23,0.36);
         }
         .cb-scene-cd::before{
-          border-color:rgba(96,200,255,0.3);
-          box-shadow:inset 0 0 34px rgba(96,200,255,0.09), inset 0 0 20px rgba(2,6,23,0.36);
+          border-color:rgba(226,232,240,0.62);
+          box-shadow:inset 0 0 34px rgba(226,232,240,0.12), inset 0 0 20px rgba(2,6,23,0.36);
         }
         .cb-scene.cb-float{animation:none !important;}
         @keyframes cb-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
@@ -4604,6 +4624,11 @@ function clearHeatMapDateFilter(){
           backface-visibility:visible;
           box-sizing:border-box;
           overflow:hidden;
+        }
+        #tab-heatmap .cb-face.cb-fb,
+        #tab-heatmap .cb-face.cb-lr,
+        #tab-heatmap .cb-face.cb-tb{
+          border-color:rgba(226,232,240,0.62) !important;
         }
 
         /* Front & Back: W×H */
@@ -5485,12 +5510,12 @@ function clearHeatMapDateFilter(){
           box-shadow:inset 0 0 0 1px rgba(15,23,42,0.78), inset 0 0 14px rgba(0,0,0,0.66) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-scene-ab::before{
-          border-color:rgba(251,146,60,0.62) !important;
-          box-shadow:inset 0 0 22px rgba(251,146,60,0.16), inset 0 0 14px rgba(2,6,23,0.64) !important;
+          border-color:rgba(226,232,240,0.62) !important;
+          box-shadow:inset 0 0 22px rgba(226,232,240,0.16), inset 0 0 14px rgba(2,6,23,0.64) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-scene-cd::before{
-          border-color:rgba(203,213,225,0.62) !important;
-          box-shadow:inset 0 0 22px rgba(203,213,225,0.15), inset 0 0 14px rgba(2,6,23,0.64) !important;
+          border-color:rgba(226,232,240,0.62) !important;
+          box-shadow:inset 0 0 22px rgba(226,232,240,0.16), inset 0 0 14px rgba(2,6,23,0.64) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-face.cb-fb{
           background:linear-gradient(152deg,#353b44 0%,#272d35 52%,#181d24 100%) !important;
@@ -5794,12 +5819,12 @@ function clearHeatMapDateFilter(){
           box-shadow:inset 0 0 26px rgba(148,163,184,0.2) !important;
         }
         body.light-theme #tab-heatmap .cb-scene-ab::before{
-          border-color:rgba(230,30,77,0.35) !important;
-          box-shadow:inset 0 0 30px rgba(255,56,92,0.1), inset 0 0 18px rgba(255,255,255,0.46) !important;
+          border-color:rgba(226,232,240,0.78) !important;
+          box-shadow:inset 0 0 30px rgba(226,232,240,0.2), inset 0 0 18px rgba(255,255,255,0.46) !important;
         }
         body.light-theme #tab-heatmap .cb-scene-cd::before{
-          border-color:rgba(236,72,153,0.35) !important;
-          box-shadow:inset 0 0 30px rgba(236,72,153,0.08), inset 0 0 18px rgba(255,255,255,0.46) !important;
+          border-color:rgba(226,232,240,0.78) !important;
+          box-shadow:inset 0 0 30px rgba(226,232,240,0.2), inset 0 0 18px rgba(255,255,255,0.46) !important;
         }
 
         body.light-theme #tab-heatmap .cb-face.cb-fb{
@@ -6864,13 +6889,9 @@ function clearHeatMapDateFilter(){
           </button>
           <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
           <div class="td-fill-menu-wrap">
-            <span style="font-size:10px;font-weight:800;color:#7ec8f0;letter-spacing:0.6px;text-transform:uppercase;">Fill TST</span>
-            <select id="td-fill-mode" class="td-fill-select" onchange="onTstFillModeChanged()">
-              <option value="ramp">📈 Ramp Fill 930 (Default)</option>
-              <option value="ocr">📄 OCR File (PDF/Photo) to TST</option>
-              <option value="voice">🎙️ Voice Fill TST</option>
-            </select>
-            <button type="button" id="td-fill-run-btn" class="td-fill-run-btn" onclick="runSelectedTstFillAction()">📈 Ramp Fill 930</button>
+            <span style="font-size:10px;font-weight:800;color:#7ec8f0;letter-spacing:0.6px;text-transform:uppercase;">Ramp 930</span>
+            <button type="button" id="td-fill-run-btn" class="td-fill-run-btn" onclick="runSelectedTstFillAction()" title="Fill all 60 TST cells with 930">📈 Ramp 930</button>
+            <button type="button" id="td-voice-fill-btn" class="td-voice-icon-btn" onclick="toggleTstVoiceInput()" title="Voice Fill TST" aria-label="Voice Fill TST">🎙️</button>
             <span id="td-voice-live-preview" class="td-voice-live-preview"></span>
           </div>
           <div class="td-toolbar-status" style="display:none;">
@@ -11027,81 +11048,28 @@ var TD_VOICE_FILL_MAX_TEMP = 1200;
 var TD_RAMP_PRESET_BASE = 930;
 
 function getSelectedTstFillMode(){
-  var sel = document.getElementById("td-fill-mode");
-  return sel ? String(sel.value || "ramp") : "ramp";
+  return "ramp";
 }
 
 function updateTstFillRunButtonState(){
   var btn = document.getElementById("td-fill-run-btn");
   if(!btn) return;
 
-  var mode = getSelectedTstFillMode();
-  var voiceSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-
-  btn.disabled = false;
-  btn.style.opacity = "1";
-  btn.style.cursor = "pointer";
-
-  if(mode === "ocr"){
-    setTstVoiceLivePreview("", "#7dd3fc");
-    btn.textContent = tdPdfOcrBusy ? "⏳ Reading file..." : "📄 OCR File to TST";
-    btn.style.background = "rgba(56,189,248,0.14)";
-    btn.style.borderColor = "rgba(56,189,248,0.45)";
-    btn.style.color = "#7dd3fc";
-    if(tdPdfOcrBusy){
-      btn.disabled = true;
-      btn.style.opacity = "0.72";
-      btn.style.cursor = "not-allowed";
-    }
-    return;
-  }
-
-  if(mode === "voice"){
-    if(!voiceSupported){
-      setTstVoiceLivePreview("Voice unsupported", "#fca5a5");
-      btn.textContent = "🎙️ Voice unsupported";
-      btn.style.background = "rgba(100,116,139,0.18)";
-      btn.style.borderColor = "rgba(148,163,184,0.45)";
-      btn.style.color = "#cbd5e1";
-      btn.disabled = true;
-      btn.style.opacity = "0.6";
-      btn.style.cursor = "not-allowed";
-      return;
-    }
-    btn.textContent = tdVoiceFillListening ? "⏹ Stop Voice Fill" : "🎙️ Voice Fill TST";
-    btn.style.background = tdVoiceFillListening ? "rgba(239,68,68,0.16)" : "rgba(16,185,129,0.14)";
-    btn.style.borderColor = tdVoiceFillListening ? "rgba(248,113,113,0.55)" : "rgba(16,185,129,0.45)";
-    btn.style.color = tdVoiceFillListening ? "#fecaca" : "#6ee7b7";
-    if(tdVoiceFillListening){
-      var liveEl = document.getElementById("td-voice-live-preview");
-      if(liveEl && !String(liveEl.textContent || "").trim()){
-        setTstVoiceLivePreview("Listening...", "#7dd3fc");
-      }
-    }else{
-      setTstVoiceLivePreview("", "#7dd3fc");
-    }
-    return;
-  }
-
-  setTstVoiceLivePreview("", "#7dd3fc");
-  btn.textContent = "📈 Ramp Fill 930";
+  btn.disabled = tdPdfOcrBusy;
+  btn.style.opacity = tdPdfOcrBusy ? "0.72" : "1";
+  btn.style.cursor = tdPdfOcrBusy ? "not-allowed" : "pointer";
+  btn.textContent = "📈 Ramp 930";
   btn.style.background = "rgba(245,158,11,0.14)";
   btn.style.borderColor = "rgba(245,158,11,0.45)";
   btn.style.color = "#fbbf24";
 }
 
 function onTstFillModeChanged(){
-  var mode = getSelectedTstFillMode();
-  if(mode !== "voice" && tdVoiceFillListening){
-    try{ stopTstVoiceInput(); }catch(e){}
-  }
+  if(tdVoiceFillListening) return;
   updateTstFillRunButtonState();
 }
 
 function runSelectedTstFillAction(){
-  var mode = getSelectedTstFillMode();
-  if(mode === "ocr"){ openTstPdfOcrPicker(); return; }
-  if(mode === "voice"){ toggleTstVoiceInput(); return; }
   fillTstRampPreset930();
 }
 
@@ -11153,7 +11121,9 @@ function setTstVoiceFillButtonState(isListening){
     btn.disabled = !supported;
     btn.style.opacity = supported ? "1" : "0.55";
     btn.style.cursor = supported ? "pointer" : "not-allowed";
-    btn.textContent = listening ? "⏹ Stop Voice Fill" : "🎙️ Voice Fill TST";
+    btn.textContent = listening ? "⏹" : "🎙️";
+    btn.title = listening ? "Stop Voice Fill TST" : "Voice Fill TST";
+    btn.setAttribute("aria-label", listening ? "Stop Voice Fill TST" : "Voice Fill TST");
     btn.style.background = listening ? "rgba(239,68,68,0.16)" : "rgba(16,185,129,0.14)";
     btn.style.borderColor = listening ? "rgba(248,113,113,0.55)" : "rgba(16,185,129,0.45)";
     btn.style.color = listening ? "#fecaca" : "#6ee7b7";
@@ -12093,8 +12063,6 @@ async function handleTstPdfOcrSelect(event){
       setTstVoiceFillStatus("Voice not supported in this browser", "#fca5a5");
     }
     setTstRampFillStatus("Ramp preset idle", "#94a3b8");
-    var fillSel = document.getElementById("td-fill-mode");
-    if(fillSel) fillSel.value = "ramp";
     updateTstFillRunButtonState();
   });
 })();
