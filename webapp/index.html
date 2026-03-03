@@ -1593,23 +1593,26 @@ td select option{background:#1e293b;color:#e2e8f0;}
 }
 /* Wrapper inside each td for stacking date + alarm badge */
 .cleaning-table .ct-cell{
-  display:flex;flex-direction:column;align-items:center;
-  gap:0px;padding:2px 2px 1px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;padding:4px 3px;min-height:24px;
   position:relative;
 }
 /* Show formatted date text in-cell */
 .cleaning-table .ct-date-label{
-  font-size:10px;font-weight:700;color:#94a3b8;
+  width:100%;
+  text-align:center;
+  font-size:11px;font-weight:700;color:#94a3b8;
   font-family:'Rajdhani',sans-serif;
-  line-height:1;margin-bottom:1px;
+  letter-spacing:0.2px;
+  line-height:1.1;
   pointer-events:none;
   display:block;
 }
 .cleaning-table .ct-date-label.ct-date-filled{
-  color:#4ade80;
+  color:#e2e8f0;
 }
 .cleaning-table .ct-date-label.ct-date-placeholder{
-  color:#94a3b8;
+  color:transparent;
 }
 /* Alarm badge */
 .cleaning-table .ct-alarm-badge{
@@ -1631,38 +1634,38 @@ td select option{background:#1e293b;color:#e2e8f0;}
   white-space:nowrap;padding:6px 12px;
 }
 .cleaning-table input[type="date"]{
-  width:100%;background:transparent;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:3px;
-  color:#cbd5e1;font-size:11px;
-  font-family:'Rajdhani',sans-serif;
-  padding:2px 3px;outline:none;
+  position:absolute;inset:0;
+  width:100%;height:100%;min-width:0;
+  opacity:0;
+  background:transparent;border:none;border-radius:0;
+  color:transparent;font-size:11px;
+  font-family:'Rajdhani',sans-serif;padding:0;outline:none;
   cursor:pointer;
-  transition:border-color .2s,background .2s;
-  min-width:88px;
+  transition:none;
 }
 .cleaning-table input[type="date"]:hover{
-  border-color:rgba(243,112,34,0.4);
-  background:rgba(243,112,34,0.05);
+  border-color:transparent;
+  background:transparent;
 }
 .cleaning-table input[type="date"]:focus{
-  border-color:#F37022;
-  background:rgba(243,112,34,0.08);
-  box-shadow:0 0 0 2px rgba(243,112,34,0.15);
+  border-color:transparent;
+  background:transparent;
+  box-shadow:none;
 }
 .cleaning-table input[type="date"]::-webkit-calendar-picker-indicator{
-  filter:invert(0.6) sepia(1) saturate(2) hue-rotate(330deg);
-  cursor:pointer;opacity:0.7;
+  width:100%;height:100%;
+  opacity:0;cursor:pointer;
+  margin:0;
 }
 .cleaning-table input[type="date"]::-webkit-calendar-picker-indicator:hover{
-  opacity:1;
+  opacity:0;
 }
 /* Highlight cells that have a date set */
 .cleaning-table td.date-filled{
-  background:rgba(20,184,166,0.08);
+  background:rgba(148,163,184,0.14);
 }
 .cleaning-table td.date-filled input[type="date"]{
-  color:#4ade80;border-color:rgba(74,222,128,0.3);
+  color:transparent;border-color:transparent;
 }
 .cleaning-export-row{
   display:flex;align-items:center;justify-content:space-between;
@@ -9091,14 +9094,13 @@ function getFreqAlarms(){
   return alarms;
 }
 
-/* Format date input label: empty = DD/MM, selected = DD/MM/YYYY */
+/* Format date input label: empty = blank, selected = DD/MM/YY */
 function formatDateInput(input){
   const td = input.closest("td");
   const label = td ? td.querySelector(".ct-date-label") : null;
   if(input.value){
     const [y,m,d] = input.value.split("-");
-    const fmt = d+"/"+m+"/"+y;
-    input.style.cssText = "width:100%;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:3px;color:transparent;font-size:11px;padding:2px 3px;outline:none;cursor:pointer;min-width:72px;";
+    const fmt = d+"/"+m+"/"+String(y||"").slice(-2);
     if(label){
       label.textContent = fmt;
       label.classList.add("ct-date-filled");
@@ -9106,10 +9108,8 @@ function formatDateInput(input){
     }
     if(td){ td.setAttribute("data-val", fmt); }
   } else {
-    input.style.color = "";
-    input.style.textShadow = "";
     if(label){
-      label.textContent = "DD/MM";
+      label.textContent = "";
       label.classList.add("ct-date-placeholder");
       label.classList.remove("ct-date-filled");
     }
@@ -9272,6 +9272,21 @@ function buildCleaningTable(){
         td.appendChild(cellWrap);
 
         formatDateInput(input);
+        td.addEventListener("click", function(ev){
+          if(ev && ev.target === input) return;
+          try{
+            input.focus({preventScroll:true});
+          }catch(e){
+            try{ input.focus(); }catch(_){}
+          }
+          try{
+            if(typeof input.showPicker === "function"){
+              input.showPicker();
+              return;
+            }
+          }catch(e){}
+          try{ input.click(); }catch(e){}
+        });
 
         input.addEventListener("change", e => {
           const v = e.target.value;
