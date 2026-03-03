@@ -7302,17 +7302,11 @@ function clearHeatMapDateFilter(){
         setTimeout(updateCuboidResponsiveScale, 0);
 
         /* ── 2. Wall face renderer — direct HTML injection (no html2canvas) ──
-           The wall card is built at NATURAL_W=900px (same as before) and
-           scaled down to FACE_W=720px via CSS transform. The face div already
-           has overflow:hidden so nothing bleeds outside. CSS classes from the
-           page (.hm-wall-card, .hm-burner-wrap, etc.) apply globally so the
-           full burner-icon SVGs, flame animations and peep-hole bars render
-           identically to the flat wall cards at the bottom of the screen.
+           Render content directly at face size (100% x 100%) so wall data
+           scales with responsive cuboid dimensions. This removes the old
+           fixed 720/900 scaler that caused undersized/distorted wall content
+           after cuboids were enlarged.
         ── */
-        var FACE_W = 720, FACE_H = 500;
-        var NATURAL_W = 900;
-        var FACE_SCALE = FACE_W / NATURAL_W;   /* 0.8000 */
-        var NATURAL_H = Math.round(FACE_H / FACE_SCALE); /* 625 */
 
         function renderWallFace(wallName, peepBotVals, peepTopVals, wallData, faceEl, loadingEl, accentColor){
           /* Build the same wall-card HTML used by the flat bottom tables */
@@ -7325,19 +7319,12 @@ function clearHeatMapDateFilter(){
           faceEl.style.backgroundImage = '';
           faceEl.style.backgroundSize  = '';
 
-          /*
-            Inject a 900px-wide div and scale it down to 560px.
-            transform-origin:top left ensures the scaling anchors to the
-            face's top-left corner — no clipping math needed.
-            pointer-events:none keeps the 3D drag working.
-          */
+          /* Fill entire face with wall content. */
           faceEl.innerHTML =
             '<div style="'
             +   'position:absolute;top:0;left:0;'
-            +   'width:'+NATURAL_W+'px;'
-            +   'height:'+NATURAL_H+'px;'
-            +   'transform-origin:top left;'
-            +   'transform:scale('+FACE_SCALE.toFixed(6)+');'
+            +   'width:100%;'
+            +   'height:100%;'
             +   'pointer-events:none;'
             + '">'
             + html
