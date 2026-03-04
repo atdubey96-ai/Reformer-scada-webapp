@@ -12524,6 +12524,9 @@ var tdVoiceFillRecognition = null;
 var tdVoiceFillCellIndex = 0;
 var tdVoiceFillWritten = 0;
 var tdVoiceFillUseFocusedOrder = false;
+var tdVoiceLastFocusedIndex = -1;
+var tdVoiceLastFocusedAt = 0;
+var TD_VOICE_FOCUS_OVERRIDE_MS = 3500;
 var TD_VOICE_FILL_MIN_TEMP = 800;
 var TD_VOICE_FILL_MAX_TEMP = 1200;
 var TD_RAMP_PRESET_BASE = 930;
@@ -12669,6 +12672,16 @@ function getTdActivePeepIndex(){
   return ids.indexOf(active.id);
 }
 
+function noteTdPeepFocusByElement(el){
+  if(!el || !el.id) return;
+  if(String(el.id).indexOf("td-ph-") !== 0) return;
+  var ids = getTdPeepFieldIds();
+  var idx = ids.indexOf(el.id);
+  if(idx < 0) return;
+  tdVoiceLastFocusedIndex = idx;
+  tdVoiceLastFocusedAt = Date.now();
+}
+
 function getFirstEmptyTdPeepIndex(){
   var ids = getTdPeepFieldIds();
   for(var i=0; i<ids.length; i++){
@@ -12677,6 +12690,34 @@ function getFirstEmptyTdPeepIndex(){
     if(String(el.value || "").trim() === "") return i;
   }
   return 0;
+}
+
+function resolveTstVoiceStartCursor(){
+  var ids = getTdPeepFieldIds();
+  var max = ids.length;
+
+  var activeIndex = getTdActivePeepIndex();
+  if(activeIndex >= 0 && activeIndex < max){
+    return { index: activeIndex, source: "selected" };
+  }
+
+  var now = Date.now();
+  if(
+    tdVoiceLastFocusedIndex >= 0 &&
+    tdVoiceLastFocusedIndex < max &&
+    (now - tdVoiceLastFocusedAt) <= TD_VOICE_FOCUS_OVERRIDE_MS
+  ){
+    return { index: tdVoiceLastFocusedIndex, source: "selected" };
+  }
+
+  if(tdVoiceFillCellIndex >= 0 && tdVoiceFillCellIndex < max){
+    return { index: tdVoiceFillCellIndex, source: "resume" };
+  }
+  if(tdVoiceFillCellIndex >= max){
+    return { index: max, source: "end" };
+  }
+
+  return { index: getFirstEmptyTdPeepIndex(), source: "empty" };
 }
 
 function normalizeTstVoiceTranscript(text){
@@ -12839,20 +12880,31 @@ function startTstVoiceInput(){
     return;
   }
 
-  var activeIndex = getTdActivePeepIndex();
-  tdVoiceFillUseFocusedOrder = activeIndex >= 0;
-  tdVoiceFillCellIndex = tdVoiceFillUseFocusedOrder ? activeIndex : 0;
+  var cursor = resolveTstVoiceStartCursor();
+  var ids = getTdPeepFieldIds();
+  tdVoiceFillUseFocusedOrder = cursor.source === "selected";
+  tdVoiceFillCellIndex = cursor.index;
   tdVoiceFillWritten = 0;
+  if(tdVoiceFillCellIndex >= ids.length){
+    setTstVoiceFillButtonState(false);
+    setTstVoiceFillStatus("All cells already reached. Select a cell to start overwrite.", "#fbbf24");
+    setTstVoiceLivePreview("", "#7dd3fc");
+    return;
+  }
 
   try{
     rec.start();
     tdVoiceFillListening = true;
     setTstVoiceFillButtonState(true);
     setTstVoiceLivePreview("Listening...", "#7dd3fc");
-    if(tdVoiceFillUseFocusedOrder){
+    if(cursor.source === "selected"){
       setTstVoiceFillStatus("Listening from selected cell...", "#7dd3fc");
+    }else if(cursor.source === "resume"){
+      setTstVoiceFillStatus("Listening from previous stop position...", "#7dd3fc");
+    }else if(cursor.source === "empty"){
+      setTstVoiceFillStatus("Listening from first empty cell...", "#7dd3fc");
     }else{
-      setTstVoiceFillStatus("Listening from first cell (override mode)...", "#7dd3fc");
+      setTstVoiceFillStatus("Listening...", "#7dd3fc");
     }
   }catch(err){
     tdVoiceFillListening = false;
@@ -13539,6 +13591,9 @@ async function handleTstPdfOcrSelect(event){
     }else{
       setTstVoiceFillStatus("Voice not supported in this browser", "#fca5a5");
     }
+    document.addEventListener("focusin", function(ev){
+      noteTdPeepFocusByElement(ev && ev.target ? ev.target : null);
+    });
     setTstRampFillStatus("Ramp preset idle", "#94a3b8");
     updateTstFillRunButtonState();
   });
@@ -13642,6 +13697,9 @@ function deleteTempEntry(idx){
 
 function clearTempData(){
   setTempEditMode(-1);
+  tdVoiceFillCellIndex = 0;
+  tdVoiceLastFocusedIndex = -1;
+  tdVoiceLastFocusedAt = 0;
   var fields = ["td-hgu-load","td-ab-cot","td-cd-cot","td-flue-gas","td-excess-o2","td-prereformer-max","td-prereformer-min","td-methane-slip"];
   fields.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=""; });
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
