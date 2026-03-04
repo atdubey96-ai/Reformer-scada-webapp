@@ -4551,10 +4551,6 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
       </div>
     </div>
-    <div class="app-header-right">
-      <button id="refreshDataBtn" class="hd-btn hd-btn-secondary" onclick="smartRefresh()">🔄 Refresh Data</button>
-      <button class="hd-btn hd-btn-primary" onclick="exportToExcel()">💾 Save New Data</button>
-    </div>
 
   </div>
 
@@ -4569,6 +4565,7 @@ html, body, body *, body *::before, body *::after, svg text{
       <div class="app-meta-item"><b>Last Sync:</b> <span id="lastSync">—</span></div>
     </div>
     <div class="app-meta-right" id="appMetaRight">
+      <button id="refreshDataBtn" class="hd-btn hd-btn-secondary" onclick="handleGlobalRefreshClick()">🔄 Refresh Data</button>
       <div class="quick-menu-wrap" id="quickMenuWrap">
         <button class="quick-menu-btn" id="quickMenuBtn" type="button" onclick="toggleQuickMenu()" title="Quick menu">🔥</button>
         <div class="quick-menu-panel" id="quickMenuPanel" aria-hidden="true">
@@ -8142,9 +8139,14 @@ html, body, body *, body *::before, body *::after, svg text{
       <span class="legend-item li-N">N — NG Only</span>
       <span class="legend-item li-O">O — Off Gas</span>
       <span class="legend-item li-C">C — None / Cold</span>
-      <span id="burnerUnsavedBadge" class="cl-unsaved-badge" style="display:none;margin-left:auto;">
+    </div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0 2px;">
+      <span id="burnerUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
         ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
       </span>
+      <button class="hd-btn hd-btn-primary" onclick="exportToExcel()" style="padding:7px 14px;font-size:12px;border-radius:6px;">
+        💾 Save New Data
+      </button>
     </div>
     <div id="burner-mobile-wall-switch" class="burner-mobile-wall-switch" aria-label="Burner wall switch">
       <span class="burner-mobile-wall-label">Wall View</span>
@@ -8228,7 +8230,6 @@ html, body, body *, body *::before, body *::after, svg text{
           <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
             ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
           </span>
-          <button class="hd-btn hd-btn-primary" onclick="exportToExcel()" style="padding:8px 18px;font-size:13px;border-radius:6px;">💾 Save New Data</button>
           <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ Histroical Data</button>
           <div style="position:relative;display:inline-block;" id="cleaningClearWrap">
             <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 Delete Data ▾</button>
@@ -8340,9 +8341,6 @@ html, body, body *, body *::before, body *::after, svg text{
             <span id="td-voice-fill-status" style="display:none;">Voice idle</span>
           </div>
           <!-- Save / Clear -->
-          <button id="td-save-btn" onclick="saveTempData()" class="td-toolbar-btn td-toolbar-btn-primary">
-            💾 Save Entry
-          </button>
           <button onclick="clearTempData()" class="td-toolbar-btn td-toolbar-btn-muted">
             🗑 Clear
           </button>
@@ -8522,6 +8520,9 @@ html, body, body *, body *::before, body *::after, svg text{
           <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;">
             📋 Saved Entries
           </div>
+          <button id="td-save-btn" onclick="saveTempData()" class="td-toolbar-btn td-toolbar-btn-primary">
+            💾 Save New Data
+          </button>
         </div>
         <div style="overflow-x:auto;">
           <table id="td-saved-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
@@ -8565,7 +8566,6 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
         <div class="alarms-header-right">
           <button class="alarm-clear-all-btn" onclick="acknowledgeAllAlarms()">✔ Acknowledge All</button>
-          <button class="alarm-refresh-btn" onclick="refreshAlarmPanel()">↻ Refresh</button>
         </div>
       </div>
 
@@ -11249,6 +11249,24 @@ function syncHeatMapHeaderTools(tab){
   document.body.classList.toggle('heatmap-header-active', tab === 'heatmap');
 }
 
+function updateGlobalRefreshButtonLabel(tab){
+  var btn = document.getElementById("refreshDataBtn");
+  if(!btn) return;
+  var key = String(tab || "").toLowerCase();
+  btn.textContent = (key === "alarms") ? "↻ Refresh Alarms" : "🔄 Refresh Data";
+}
+
+function handleGlobalRefreshClick(){
+  var active = document.querySelector('.tab-panel.tab-active');
+  var tab = active && active.id ? active.id.replace('tab-','') : '';
+  if(tab === 'alarms'){
+    refreshAlarmPanel();
+    showToast("↻ Alarm panel refreshed");
+    return;
+  }
+  smartRefresh();
+}
+
 function switchTab(tab){
   if(tab !== 'heatmap' && typeof setHeatMapCuboidZoom === 'function'){
     setHeatMapCuboidZoom(false);
@@ -11263,12 +11281,14 @@ function switchTab(tab){
   if(tab === 'heatmap' && typeof requestHeatMapRender === 'function') requestHeatMapRender(40);
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
+  updateGlobalRefreshButtonLabel(tab);
 }
 
 (function initHeatMapHeaderTools(){
   var active = document.querySelector('.tab-panel.tab-active');
   var tab = active && active.id ? active.id.replace('tab-','') : 'heatmap';
   syncHeatMapHeaderTools(tab);
+  updateGlobalRefreshButtonLabel(tab);
 })();
 initTabsRowAutoHide();
 
@@ -12457,7 +12477,7 @@ var tdEditingIndex = -1;
 function updateTempSaveButtonLabel(){
   var btn = document.getElementById("td-save-btn");
   if(!btn) return;
-  btn.textContent = tdEditingIndex >= 0 ? "💾 Update Entry" : "💾 Save Entry";
+  btn.textContent = tdEditingIndex >= 0 ? "💾 Update Saved Data" : "💾 Save New Data";
 }
 
 function setTempEditMode(idx){
