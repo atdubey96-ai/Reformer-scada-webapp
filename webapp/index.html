@@ -1010,6 +1010,12 @@ body:not(.heatmap-header-active) #hm-header-tools{
   border-color:rgba(255,255,255,0.2);color:#d0e4f7;
 }
 .hd-btn-secondary:hover{background:rgba(255,255,255,0.15);color:#fff;}
+/* Keep global refresh CTA text pure white across theme overrides. */
+#refreshDataBtn,
+#refreshDataBtn:hover,
+#refreshDataBtn:disabled{
+  color:#fff !important;
+}
 .hd-btn-primary{
   background:linear-gradient(90deg,#1d4ed8,#2563eb);
   color:#fff;border-color:#3b82f6;
