@@ -2194,37 +2194,36 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
   0%,100%{ box-shadow:0 0 0 0 rgba(234,179,8,0); }
   50%{ box-shadow:0 0 8px 2px rgba(234,179,8,0.3); }
 }
-/* Burner tab save strip: keep controls inside viewport on all widths. */
-.burner-save-row{
+/* Burner tab legend row actions + unsaved strip */
+.legend-actions{
+  margin-left:auto;
   display:flex;
-  justify-content:flex-end;
   align-items:center;
   gap:8px;
   flex-wrap:wrap;
+  max-width:100%;
+}
+.burner-save-row{
+  display:none;
+  justify-content:flex-end;
+  align-items:center;
   padding:6px 16px 2px;
-  box-sizing:border-box;
-  width:100%;
 }
 .burner-save-row .cl-unsaved-badge{
   max-width:100%;
-  white-space:normal;
+  white-space:nowrap;
   line-height:1.25;
 }
-.burner-save-row .hd-btn{
-  flex:0 0 auto;
-}
 @media (max-width:900px){
+  .legend-actions{
+    width:100%;
+    justify-content:flex-end;
+  }
   .burner-save-row{
     padding:6px 12px 2px;
-    justify-content:flex-start;
+    justify-content:flex-end;
   }
-  .burner-save-row .cl-unsaved-badge{
-    flex:1 1 100%;
-  }
-  .burner-save-row .hd-btn{
-    margin-left:auto;
-    max-width:100%;
-  }
+  .burner-save-row .cl-unsaved-badge{white-space:normal;}
 }
 
 /* Pending cell — yellow dashed border */
@@ -8177,14 +8176,16 @@ html, body, body *, body *::before, body *::after, svg text{
       <span class="legend-item li-N">N — NG Only</span>
       <span class="legend-item li-O">O — Off Gas</span>
       <span class="legend-item li-C">C — None / Cold</span>
+      <div class="legend-actions">
+        <button class="hd-btn hd-btn-primary" onclick="exportToExcel()" style="padding:7px 14px;font-size:12px;border-radius:6px;">
+          💾 Save New Data
+        </button>
+      </div>
     </div>
     <div class="burner-save-row">
       <span id="burnerUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
         ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
       </span>
-      <button class="hd-btn hd-btn-primary" onclick="exportToExcel()" style="padding:7px 14px;font-size:12px;border-radius:6px;">
-        💾 Save New Data
-      </button>
     </div>
     <div id="burner-mobile-wall-switch" class="burner-mobile-wall-switch" aria-label="Burner wall switch">
       <span class="burner-mobile-wall-label">Wall View</span>
@@ -9227,11 +9228,15 @@ var burnerPending = {}; /* {wallName: {ri_ci: newValue}} — staged, not yet sav
 
 function markBurnerUnsaved(){
   var badge = document.getElementById("burnerUnsavedBadge");
+  var row = document.querySelector("#tab-burner .burner-save-row");
+  if(row) row.style.display = "flex";
   if(badge) badge.style.display = "inline-flex";
 }
 function clearBurnerUnsaved(){
   var badge = document.getElementById("burnerUnsavedBadge");
   if(badge) badge.style.display = "none";
+  var row = document.querySelector("#tab-burner .burner-save-row");
+  if(row) row.style.display = "none";
   burnerPending = {};
 }
 function commitBurnerPending(){
