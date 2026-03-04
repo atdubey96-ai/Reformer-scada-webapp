@@ -18,3 +18,19 @@ Then open:
 ## Main file
 
 - `index.html` - your full SCADA dashboard webpage
+
+## Stable Vercel Deployment (Recommended)
+
+To avoid Vercel "Cloning failed" issues, this repo includes:
+
+- `.github/workflows/vercel-production-deploy.yml`
+
+It deploys using Vercel CLI from GitHub Actions, which does not depend on Vercel's Git clone step.
+
+Set these repository secrets once in GitHub (`Settings > Secrets and variables > Actions`):
+
+1. `VERCEL_TOKEN`
+2. `VERCEL_ORG_ID`
+3. `VERCEL_PROJECT_ID`
+
+After this, every push to `main` triggers a production deploy reliably.
