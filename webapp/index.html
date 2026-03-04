@@ -8523,10 +8523,6 @@ html, body, body *, body *::before, body *::after, svg text{
             📋 Saved Entries
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button onclick="openAllPHModal()"
-              style="background:rgba(129,140,248,0.15);border:1px solid rgba(129,140,248,0.4);color:#818cf8;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;letter-spacing:0.5px;">
-              👁️ View All Peep Hole TST Data
-            </button>
             <button onclick="exportToExcel()"
               style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
               💾 Save to Burner Data File
@@ -13719,7 +13715,7 @@ function renderTempDataTable(){
     var dtHtml = '<div class="td-dt-wrap"><div class="td-dt-date">' + dtView.date + '</div>'
       + (dtView.time ? ('<div class="td-dt-time">' + dtView.time + '</div>') : '')
       + '</div>';
-    rows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">'
+    rows += '<tr onclick="openAllPHModal(' + i + ')" title="Open peep-hole details" style="border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
       + '<td style="text-align:left;">' + dtHtml + '</td>'
       + '<td style="text-align:center;"><span style="color:'+sc+';font-weight:700;font-size:11px;background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:10px;border:1px solid '+sc+'44;">' + ent.shift + '</span></td>'
       + '<td style="text-align:center;">' + (ent.hguLoad||"—") + '</td>'
@@ -13736,8 +13732,8 @@ function renderTempDataTable(){
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-top") + '</td>'
       + '<td style="text-align:center;">'
         + '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">'
-          + '<button onclick="editTempEntry(' + i + ')" style="background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.45);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Edit entry">✏️ Edit</button>'
-          + '<button onclick="deleteTempEntry(' + i + ')" style="background:rgba(192,57,43,0.2);color:#f87171;border:1px solid rgba(192,57,43,0.4);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Delete entry">🗑 Del</button>'
+          + '<button onclick="event.stopPropagation();editTempEntry(' + i + ')" style="background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.45);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Edit entry">✏️ Edit</button>'
+          + '<button onclick="event.stopPropagation();deleteTempEntry(' + i + ')" style="background:rgba(192,57,43,0.2);color:#f87171;border:1px solid rgba(192,57,43,0.4);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Delete entry">🗑 Del</button>'
         + '</div>'
       + '</td>'
       + '</tr>';
@@ -13749,11 +13745,16 @@ function renderTempDataTable(){
 /* ==================================================
    ALL PEEP HOLE TST DATA MODAL
 ================================================== */
-function openAllPHModal(){
+var allPhFocusedEntryIndex = -1;
+
+function openAllPHModal(entryIndex){
+  var idx = Number(entryIndex);
+  allPhFocusedEntryIndex = (isFinite(idx) && idx >= 0) ? Math.floor(idx) : -1;
   document.getElementById("all-ph-modal").style.display = "block";
   renderAllPHData();
 }
 function closeAllPHModal(){
+  allPhFocusedEntryIndex = -1;
   document.getElementById("all-ph-modal").style.display = "none";
 }
 
@@ -13805,10 +13806,29 @@ function buildEntryBurnerSnapshotHtml(entry){
 }
 
 function renderAllPHData(){
-  var filterShift = document.getElementById("all-ph-shift-filter").value;
-  var entries = getAllTempEntries();
-  if(filterShift && filterShift !== "All"){
-    entries = entries.filter(function(e){ return e.shift === filterShift; });
+  var filterEl = document.getElementById("all-ph-shift-filter");
+  var filterShift = filterEl ? filterEl.value : "All";
+  var titleEl = document.getElementById("all-ph-title");
+  var subtitleEl = document.getElementById("all-ph-subtitle");
+  var filterWrap = document.getElementById("all-ph-filter-wrap");
+
+  var allEntries = getAllTempEntries();
+  var entries = [];
+  var singleMode = (allPhFocusedEntryIndex >= 0 && allPhFocusedEntryIndex < allEntries.length);
+
+  if(singleMode){
+    entries = [allEntries[allPhFocusedEntryIndex]];
+    if(filterWrap) filterWrap.style.display = "none";
+    if(titleEl) titleEl.textContent = "👁️ PEEP HOLE TST DATA";
+    if(subtitleEl) subtitleEl.textContent = "Selected saved entry temperature readings with burner snapshot at that timestamp.";
+  }else{
+    if(filterWrap) filterWrap.style.display = "flex";
+    if(titleEl) titleEl.textContent = "👁️ ALL PEEP HOLE TST DATA";
+    if(subtitleEl) subtitleEl.textContent = "All saved temperature readings by shift · AB Bot · CD Bot · AB Top · CD Top";
+    entries = allEntries;
+    if(filterShift && filterShift !== "All"){
+      entries = entries.filter(function(e){ return e.shift === filterShift; });
+    }
   }
 
   var body = document.getElementById("all-ph-modal-body");
@@ -13984,11 +14004,11 @@ function tempToColorInline(val, minT, maxT){
     <!-- Modal Header -->
     <div style="background:linear-gradient(90deg,#0f2744,#1e3a6a);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #F37022;">
       <div>
-        <div style="font-size:17px;font-weight:700;color:#F37022;letter-spacing:1.5px;">👁️ ALL PEEP HOLE TST DATA</div>
-        <div style="font-size:11px;color:#7ec8f0;margin-top:2px;">All saved temperature readings by shift · AB Bot · CD Bot · AB Top · CD Top</div>
+        <div id="all-ph-title" style="font-size:17px;font-weight:700;color:#F37022;letter-spacing:1.5px;">👁️ ALL PEEP HOLE TST DATA</div>
+        <div id="all-ph-subtitle" style="font-size:11px;color:#7ec8f0;margin-top:2px;">All saved temperature readings by shift · AB Bot · CD Bot · AB Top · CD Top</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:5px 12px;">
+        <div id="all-ph-filter-wrap" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:5px 12px;">
           <span style="font-size:11px;font-weight:700;color:#7ec8f0;">Filter Shift:</span>
           <select id="all-ph-shift-filter" onchange="renderAllPHData()" style="background:#0f1f38;border:1px solid #334155;border-radius:5px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;outline:none;cursor:pointer;padding:3px 8px;">
             <option value="All">🔁 All Shifts</option>
