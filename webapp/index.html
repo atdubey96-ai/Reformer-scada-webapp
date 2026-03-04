@@ -8522,12 +8522,6 @@ html, body, body *, body *::before, body *::after, svg text{
           <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;">
             📋 Saved Entries
           </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button onclick="exportToExcel()"
-              style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;cursor:pointer;">
-              💾 Save to Burner Data File
-            </button>
-          </div>
         </div>
         <div style="overflow-x:auto;">
           <table id="td-saved-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
@@ -13578,7 +13572,7 @@ function editTempEntry(idx){
   try{ document.getElementById("tab-tempdata").scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){}
 }
 
-function saveTempData(){
+async function saveTempData(){
   var dt    = document.getElementById("td-datetime").value;
   var shift = document.getElementById("td-shift").value;
 
@@ -13620,6 +13614,13 @@ function saveTempData(){
   clearTempData();
   showToast(wasEdit ? "✅ Temperature entry updated." : "✅ Temperature entry saved successfully!");
   notifyAndBroadcast("tst_data_saved", wasEdit ? "TST Data Updated" : "TST Data Saved", wasEdit ? "A TST entry was updated successfully." : "A new TST entry was saved successfully.", "tst_data_saved", 5000);
+
+  try{
+    await exportToExcel();
+  }catch(syncErr){
+    console.warn("Auto save-to-file after TST save failed:", syncErr);
+    showToast("⚠ Entry saved, but burner data file sync failed.");
+  }
 }
 
 function deleteTempEntry(idx){
