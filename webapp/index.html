@@ -3314,6 +3314,70 @@ function getAllTempEntries(){
   return [];
 }
 
+function normalizeBurnerStateSnapshotValue(raw){
+  var s = String(raw == null ? "" : raw).toUpperCase().trim();
+  if(s === "O" || s === "N" || s === "B" || s === "C") return s;
+  return "C";
+}
+
+function sanitizeBurnerSnapshotShape(source){
+  var walls = ["A","B","C","D"];
+  var rowCount = 6;
+  var burnerCount = 15;
+  var src = source;
+
+  if(!src || typeof src !== "object"){
+    if(typeof buildDefaultData === "function"){
+      try{ src = buildDefaultData(); }catch(e){ src = {}; }
+    }else{
+      src = {};
+    }
+  }
+
+  var out = {};
+  for(var wi=0; wi<walls.length; wi++){
+    var wall = walls[wi];
+    var srcRows = Array.isArray(src[wall]) ? src[wall] : [];
+    out[wall] = [];
+    for(var ri=0; ri<rowCount; ri++){
+      var srcRow = Array.isArray(srcRows[ri]) ? srcRows[ri] : [];
+      var row = [];
+      for(var bi=0; bi<burnerCount; bi++){
+        row.push(normalizeBurnerStateSnapshotValue(srcRow[bi]));
+      }
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
+function readLiveBurnerTableData(){
+  try{
+    if(typeof data !== "undefined" && data && typeof data === "object" && Object.keys(data).length){
+      return data;
+    }
+  }catch(e){}
+  try{
+    var raw = localStorage.getItem("burnerData");
+    if(raw){
+      var parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === "object") return parsed;
+    }
+  }catch(e){}
+  return null;
+}
+
+function captureCurrentBurnerSnapshot(){
+  return sanitizeBurnerSnapshotShape(readLiveBurnerTableData());
+}
+
+function resolveHeatMapBurnerData(entry){
+  if(entry && entry.burnerSnapshot && typeof entry.burnerSnapshot === "object"){
+    return sanitizeBurnerSnapshotShape(entry.burnerSnapshot);
+  }
+  return sanitizeBurnerSnapshotShape(readLiveBurnerTableData());
+}
+
 function tempToColor(val, minT, maxT){
   /* Green (cold) -> Yellow (mid) -> Red (hot) */
   if(val === null || isNaN(val)) return "#334155";
@@ -3786,57 +3850,6 @@ function updateHeatMapCuboidKpiCards(hmData, abBot, abTop, cdBot, cdTop){
 }
 
 function renderHeatMap(){
-  /* ── Self-contained burner data loading ── */
-  /* Read burner data DIRECTLY from localStorage, bypassing loadData() entirely */
-  var hmData = null;
-
-  try {
-    var raw = localStorage.getItem("burnerData");
-    if(raw) hmData = JSON.parse(raw);
-  } catch(e){ hmData = null; }
-
-  /* Check if loaded data has any active (non-capped) burners */
-  var hasActive = false;
-  if(hmData && typeof hmData === 'object'){
-    var wKeys = Object.keys(hmData);
-    for(var wi=0; wi<wKeys.length && !hasActive; wi++){
-      var wRows = hmData[wKeys[wi]];
-      if(!wRows || !Array.isArray(wRows)) continue;
-      for(var ri=0; ri<wRows.length && !hasActive; ri++){
-        if(!wRows[ri] || !Array.isArray(wRows[ri])) continue;
-        for(var ci=0; ci<wRows[ri].length; ci++){
-          var sv = String(wRows[ri][ci]||"").toUpperCase();
-          if(sv==="O"||sv==="N"||sv==="B"){ hasActive=true; break; }
-        }
-      }
-    }
-  }
-
-  /* If no active burners or no data, build realistic defaults inline */
-  if(!hasActive){
-    var defaultPatterns = [
-      ["N","O","N","B","N","O","N","O","B","N","O","N","O","N","O"],
-      ["O","N","O","N","O","B","O","N","O","N","B","O","N","O","N"],
-      ["B","N","O","N","N","O","N","O","N","O","N","O","B","N","O"],
-      ["N","O","B","O","N","O","N","B","O","N","O","N","O","O","N"],
-      ["O","N","N","O","B","N","O","N","O","B","N","O","N","N","O"],
-      ["N","B","O","N","O","N","O","N","B","O","N","O","N","O","N"]
-    ];
-    hmData = {};
-    var wn = ["A","B","C","D"];
-    for(var wi=0; wi<wn.length; wi++){
-      hmData[wn[wi]] = [];
-      for(var ri=0; ri<6; ri++){
-        hmData[wn[wi]].push(defaultPatterns[(ri+wi) % defaultPatterns.length].slice());
-      }
-    }
-    /* Also fix the global and persist so other tabs work too */
-    try{ data = hmData; saveData(); }catch(e){}
-  } else {
-    /* Sync to global for other features */
-    try{ data = hmData; }catch(e){}
-  }
-
   var shiftSel = document.getElementById("hm-shift-select");
   var selectedShift = shiftSel ? shiftSel.value : "All";
 
@@ -3859,6 +3872,14 @@ function renderHeatMap(){
 
   /* ── Pick entry by chosen date (or latest if date blank) ── */
   var entry = resolveHeatMapEntryByDateValue(filteredEntries, selectedDate || "latest");
+  var hmData = resolveHeatMapBurnerData(entry);
+  var hasEntrySnapshot = !!(entry && entry.burnerSnapshot && typeof entry.burnerSnapshot === "object");
+  if(!hasEntrySnapshot){
+    var liveSource = readLiveBurnerTableData();
+    if(!liveSource){
+      try{ localStorage.setItem("burnerData", JSON.stringify(hmData)); }catch(e){}
+    }
+  }
 
   function getPH(e, key){
     if(!e || !e.peepHoles || !e.peepHoles[key]) return Array(15).fill("");
@@ -7711,30 +7732,9 @@ html, body, body *, body *::before, body *::after, svg text{
           _textureScheduled = false;
           if(!isHeatMapVisibleNow()) return;
 
-          /* Get burner data same way renderHeatMap does */
-          var hmData = null;
-          try{ var r=localStorage.getItem("burnerData"); if(r) hmData=JSON.parse(r); }catch(e){}
-          if(!hmData){
-            /* Use defaults */
-            var def=[
-              ["N","O","N","B","N","O","N","O","B","N","O","N","O","N","O"],
-              ["O","N","O","N","O","B","O","N","O","N","B","O","N","O","N"],
-              ["B","N","O","N","N","O","N","O","N","O","N","O","B","N","O"],
-              ["N","O","B","O","N","O","N","B","O","N","O","N","O","O","N"],
-              ["O","N","N","O","B","N","O","N","O","B","N","O","N","N","O"],
-              ["N","B","O","N","O","N","O","N","B","O","N","O","N","O","N"]
-            ];
-            hmData={};
-            ["A","B","C","D"].forEach(function(w,wi){
-              hmData[w]=[];
-              for(var ri=0;ri<6;ri++) hmData[w].push(def[(ri+wi)%def.length].slice());
-            });
-          }
-
-          /* Peep hole data */
+          /* Filter + peep-hole data */
           var shiftSel = document.getElementById("hm-shift-select");
           var shift = shiftSel ? shiftSel.value : "All";
-          /* Use selected date from heatmap date picker, same logic as renderHeatMap */
           var _allEnt = (typeof getAllTempEntries === 'function') ? getAllTempEntries() : [];
           var _filtEnt = _allEnt;
           if(shift && shift !== "All"){
@@ -7745,6 +7745,16 @@ html, body, body *, body *::before, body *::after, svg text{
           var entry = (typeof resolveHeatMapEntryByDateValue === "function")
             ? resolveHeatMapEntryByDateValue(_filtEnt, _dateVal || "latest")
             : (_filtEnt.length ? _filtEnt[0] : null);
+          var hmData = (typeof resolveHeatMapBurnerData === "function")
+            ? resolveHeatMapBurnerData(entry)
+            : {};
+          var hasEntrySnapshot = !!(entry && entry.burnerSnapshot && typeof entry.burnerSnapshot === "object");
+          if(!hasEntrySnapshot){
+            var liveSource = (typeof readLiveBurnerTableData === "function") ? readLiveBurnerTableData() : null;
+            if(!liveSource){
+              try{ localStorage.setItem("burnerData", JSON.stringify(hmData)); }catch(e){}
+            }
+          }
           function getPH(e,k){ return (e&&e.peepHoles&&e.peepHoles[k]) ? e.peepHoles[k] : Array(15).fill(""); }
           var abBot=getPH(entry,"ab-bot"), abTop=getPH(entry,"ab-top");
           var cdBot=getPH(entry,"cd-bot"), cdTop=getPH(entry,"cd-top");
@@ -13536,6 +13546,7 @@ function saveTempData(){
     preRefMax: document.getElementById("td-prereformer-max").value,
     preRefMin: document.getElementById("td-prereformer-min").value,
     methaneSlip: document.getElementById("td-methane-slip").value,
+    burnerSnapshot: captureCurrentBurnerSnapshot(),
     peepHoles: {}
   };
 
