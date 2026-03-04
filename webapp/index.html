@@ -6757,61 +6757,94 @@ html, body, body *, body *::before, body *::after, svg text{
           border-color:rgba(173,190,208,0.54) !important;
           color:#f0f6ff !important;
         }
-        /* Burner tab readability: calmer, higher-contrast state colors. */
+        /* Burner tab: bright glossy palette (matching reference style). */
+        body #tab-burner .legend .legend-item,
+        body #tab-burner .ab-pill{
+          border-radius:22px !important;
+          border-width:1px !important;
+          font-weight:800 !important;
+          letter-spacing:0.2px !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.36),0 8px 16px rgba(0,0,0,0.22) !important;
+          text-shadow:0 1px 2px rgba(0,0,0,0.32) !important;
+        }
+        body #tab-burner .legend .legend-item{
+          padding:6px 16px !important;
+          font-size:12.5px !important;
+        }
+        body #tab-burner .ab-pill{
+          padding:6px 14px !important;
+          font-size:12.5px !important;
+        }
         body #tab-burner td.B:not(.burner-pending){
-          background:linear-gradient(130deg,#173463 0%,#2f62b4 56%,#7fb5ff 100%) !important;
-          border-color:rgba(142,195,255,0.72) !important;
-          color:#f4f9ff !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 0 10px rgba(32,88,182,0.45) !important;
-          text-shadow:0 1px 2px rgba(0,0,0,0.46) !important;
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.34) 0%,rgba(255,255,255,0.08) 36%,rgba(255,255,255,0) 37%),
+            linear-gradient(135deg,#2d86ff 0%,#2f66ef 56%,#2552d1 100%) !important;
+          border-color:rgba(165,207,255,0.88) !important;
+          color:#f7fbff !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.36),0 0 13px rgba(58,137,255,0.54) !important;
         }
         body #tab-burner td.N:not(.burner-pending){
-          background:linear-gradient(130deg,#5b330d 0%,#a66321 56%,#e9b777 100%) !important;
-          border-color:rgba(246,196,120,0.74) !important;
-          color:#fff9ef !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.2),0 0 10px rgba(172,103,32,0.45) !important;
-          text-shadow:0 1px 2px rgba(0,0,0,0.44) !important;
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.3) 0%,rgba(255,255,255,0.08) 36%,rgba(255,255,255,0) 37%),
+            linear-gradient(135deg,#ffc338 0%,#f39f14 56%,#db7c08 100%) !important;
+          border-color:rgba(255,216,146,0.9) !important;
+          color:#fffaf1 !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),0 0 13px rgba(243,159,20,0.52) !important;
         }
         body #tab-burner td.O:not(.burner-pending){
-          background:linear-gradient(130deg,#11442f 0%,#1f8258 56%,#69d8ae 100%) !important;
-          border-color:rgba(122,229,189,0.72) !important;
-          color:#effff8 !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.2),0 0 10px rgba(26,138,94,0.44) !important;
-          text-shadow:0 1px 2px rgba(0,0,0,0.44) !important;
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.28) 0%,rgba(255,255,255,0.08) 36%,rgba(255,255,255,0) 37%),
+            linear-gradient(135deg,#59e692 0%,#2fcf68 56%,#1ba74d 100%) !important;
+          border-color:rgba(169,255,212,0.86) !important;
+          color:#f2fff8 !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),0 0 13px rgba(47,207,104,0.5) !important;
         }
         body #tab-burner td.C:not(.burner-pending){
-          background:linear-gradient(130deg,#24303c 0%,#425263 56%,#8193a8 100%) !important;
-          border-color:rgba(184,199,214,0.68) !important;
-          color:#f3f8ff !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.15),0 0 8px rgba(60,76,95,0.34) !important;
-          text-shadow:0 1px 2px rgba(0,0,0,0.4) !important;
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.24) 0%,rgba(255,255,255,0.07) 36%,rgba(255,255,255,0) 37%),
+            linear-gradient(135deg,#7b90ad 0%,#60778f 56%,#465b73 100%) !important;
+          border-color:rgba(206,220,236,0.8) !important;
+          color:#f5f9ff !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 0 10px rgba(96,119,143,0.4) !important;
         }
         body #tab-burner td.B:not(.burner-pending):hover,
         body #tab-burner td.N:not(.burner-pending):hover,
         body #tab-burner td.O:not(.burner-pending):hover,
         body #tab-burner td.C:not(.burner-pending):hover{
           transform:scale(1.07) !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 0 16px rgba(0,0,0,0.36) !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.45),0 0 18px rgba(0,0,0,0.34) !important;
         }
-        body #tab-burner .legend .li-B{
-          background:linear-gradient(130deg,#173463 0%,#2f62b4 56%,#7fb5ff 100%) !important;
-          border-color:rgba(142,195,255,0.72) !important;
-          color:#f4f9ff !important;
+        body #tab-burner .legend .li-B,
+        body #tab-burner .ab-both{
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.34) 0%,rgba(255,255,255,0.08) 38%,rgba(255,255,255,0) 39%),
+            linear-gradient(135deg,#2d86ff 0%,#2f66ef 56%,#2552d1 100%) !important;
+          border-color:rgba(165,207,255,0.88) !important;
+          color:#f7fbff !important;
         }
-        body #tab-burner .legend .li-N{
-          background:linear-gradient(130deg,#5b330d 0%,#a66321 56%,#e9b777 100%) !important;
-          border-color:rgba(246,196,120,0.74) !important;
-          color:#fff9ef !important;
+        body #tab-burner .legend .li-N,
+        body #tab-burner .ab-ng{
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.3) 0%,rgba(255,255,255,0.08) 38%,rgba(255,255,255,0) 39%),
+            linear-gradient(135deg,#ffc338 0%,#f39f14 56%,#db7c08 100%) !important;
+          border-color:rgba(255,216,146,0.9) !important;
+          color:#fffaf1 !important;
         }
-        body #tab-burner .legend .li-O{
-          background:linear-gradient(130deg,#11442f 0%,#1f8258 56%,#69d8ae 100%) !important;
-          border-color:rgba(122,229,189,0.72) !important;
-          color:#effff8 !important;
+        body #tab-burner .legend .li-O,
+        body #tab-burner .ab-og{
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.28) 0%,rgba(255,255,255,0.08) 38%,rgba(255,255,255,0) 39%),
+            linear-gradient(135deg,#59e692 0%,#2fcf68 56%,#1ba74d 100%) !important;
+          border-color:rgba(169,255,212,0.86) !important;
+          color:#f2fff8 !important;
         }
-        body #tab-burner .legend .li-C{
-          background:linear-gradient(130deg,#24303c 0%,#425263 56%,#8193a8 100%) !important;
-          border-color:rgba(184,199,214,0.68) !important;
-          color:#f3f8ff !important;
+        body #tab-burner .legend .li-C,
+        body #tab-burner .ab-cold{
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.24) 0%,rgba(255,255,255,0.07) 38%,rgba(255,255,255,0) 39%),
+            linear-gradient(135deg,#7b90ad 0%,#60778f 56%,#465b73 100%) !important;
+          border-color:rgba(206,220,236,0.8) !important;
+          color:#f5f9ff !important;
         }
 
         body .severity-normal,
