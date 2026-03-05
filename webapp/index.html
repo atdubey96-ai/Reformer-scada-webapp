@@ -10292,6 +10292,14 @@ function _doImport(file, onDone, silent){
       setTimeout(()=>{
         if(!silent) alert("✅ Import successful!\n"+Object.keys(nd).length+" wall(s) loaded, "+parsedCount+" cells updated.");
       },50);
+      if(!silent){
+        setTimeout(function(){
+          exportToExcel().catch(function(syncErr){
+            console.warn("Auto sync after import failed:", syncErr);
+            showToast("⚠ Import done locally, but central sync failed.");
+          });
+        }, 120);
+      }
 
     }catch(err){
       alert("Import error: "+err.message);
