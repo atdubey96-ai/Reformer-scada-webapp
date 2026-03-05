@@ -10111,7 +10111,7 @@ async function exportToExcel(){
   wsTD["!cols"] = tdHeaders.map(function(_,i){ return {wch: i<2?18:14}; });
   XLSX.utils.book_append_sheet(wb, wsTD, "Temp Data");
 
-  const fname = lastImportedFileName || "Burner_SCADA_Report.xlsx";
+  const fname = SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx";
 
   /* Primary: central server save (works on any PC) */
   var saveStatus = await autoExportToServer(wb, fname);
@@ -12275,6 +12275,7 @@ function base64ToFile(base64, filename){
 var SERVER_SYNC_TIMEOUT_MS = 22000;
 var SERVER_SYNC_RETRY_COUNT = 4;
 var SERVER_SYNC_RETRY_DELAY_MS = 1100;
+var SERVER_SYNC_FILE_NAME = "Burner_SCADA_Report.xlsx";
 var serverImportInFlight = null;
 var serverExportInFlight = null;
 var serverQueueFlushInFlight = null;
@@ -12326,21 +12327,28 @@ function saveLastServerSnapshot(payload){
   try{
     if(!payload || !payload.data_base64) return;
     localStorage.setItem(SERVER_SYNC_LAST_SNAPSHOT_KEY, JSON.stringify({
-      file_name: payload.file_name || "Burner_SCADA_Report.xlsx",
+      file_name: payload.file_name || SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx",
       data_base64: payload.data_base64,
       uploaded_by: payload.uploaded_by || null,
       saved_at: new Date().toISOString()
     }));
   }catch(e){}
 }
+function hashStringFNV1a(str){
+  var h = 2166136261 >>> 0;
+  for(var i=0; i<str.length; i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ("00000000" + ((h >>> 0).toString(16))).slice(-8);
+}
 function makeServerPayloadDigest(payload){
   if(!payload || !payload.data_base64) return "";
   var b64 = String(payload.data_base64);
   return [
-    String(payload.file_name || ""),
+    String(payload.file_name || SERVER_SYNC_FILE_NAME || ""),
     String(b64.length),
-    String(b64.slice(0, 96)),
-    String(b64.slice(-96))
+    hashStringFNV1a(b64)
   ].join("|");
 }
 function getLastImportedServerDigest(){
@@ -12434,7 +12442,7 @@ async function supabaseRestRequest(path, method, body, preferHeader){
 async function fetchLatestServerReportRow(){
   setLastServerSyncError("");
   var row = null;
-  var canonicalName = "Burner_SCADA_Report.xlsx";
+  var canonicalName = SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx";
   if(ensureSupaClient()){
     try{
       var q = await withTimeout(
@@ -12454,6 +12462,7 @@ async function fetchLatestServerReportRow(){
             supaClient
               .from(SUPABASE_TABLE)
               .select("file_name,data_base64,created_at,uploaded_by")
+              .ilike("file_name", "%.xlsx")
               .order("created_at", {ascending:false})
               .limit(1),
             SERVER_SYNC_TIMEOUT_MS
@@ -12473,8 +12482,7 @@ async function fetchLatestServerReportRow(){
     var canonicalEq = encodeURIComponent(canonicalName);
     var readPaths = [
       "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at,uploaded_by&file_name=eq." + canonicalEq + "&order=created_at.desc&limit=1",
-      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at,uploaded_by&order=created_at.desc&limit=1",
-      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at,uploaded_by&order=id.desc&limit=1"
+      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at,uploaded_by&file_name=ilike.*.xlsx&order=created_at.desc&limit=1"
     ];
     for(var r=0; r<readPaths.length; r++){
       try{
@@ -12513,7 +12521,7 @@ async function fetchLatestServerReportRow(){
 
 async function insertServerReportRow(payload){
   setLastServerSyncError("");
-  var fileName = (payload && payload.file_name) ? String(payload.file_name) : "Burner_SCADA_Report.xlsx";
+  var fileName = SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx";
   var writePayload = {
     file_name: fileName,
     data_base64: (payload && payload.data_base64) ? String(payload.data_base64) : "",
@@ -12616,16 +12624,11 @@ async function importServerReportPayload(payload){
   if(!payload || !payload.data_base64) return false;
   try{
     var digest = makeServerPayloadDigest(payload);
-    var pendingDigest = getPendingServerDigest();
-    var queuedLocal = loadQueuedServerExport();
-    if(queuedLocal && pendingDigest && digest && digest !== pendingDigest){
-      return false; /* protect newer local unsynced save from stale server overwrite */
-    }
     var lastDigest = getLastImportedServerDigest();
     if(digest && digest === lastDigest){
       return true; /* already synced on this device */
     }
-    var fileName = payload.file_name || "Burner_SCADA_Report.xlsx";
+    var fileName = payload.file_name || SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx";
     var file = base64ToFile(payload.data_base64, fileName);
     lastImportedFileName = fileName;
     var imported = await new Promise(function(resolve){
@@ -12660,7 +12663,7 @@ async function flushQueuedServerExport(showMsg){
     var queuedDigest = makeServerPayloadDigest(queued);
     for(var a=0; a<SERVER_SYNC_RETRY_COUNT; a++){
       var ok = await insertServerReportRow({
-        file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
+        file_name: SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx",
         data_base64: queued.data_base64,
         uploaded_by: queued.uploaded_by || null
       });
@@ -12669,7 +12672,7 @@ async function flushQueuedServerExport(showMsg){
         clearQueuedServerExport();
         if(queuedDigest) setLastImportedServerDigest(queuedDigest);
         saveLastServerSnapshot({
-          file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
+          file_name: SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx",
           data_base64: queued.data_base64,
           uploaded_by: queued.uploaded_by || null
         });
@@ -12701,21 +12704,22 @@ async function autoImportFromServer(showMsg){
         var pendingDigest = getPendingServerDigest();
         if(row && rowDigest && pendingDigest && rowDigest === pendingDigest){
           clearQueuedServerExport();
-          setLastImportedServerDigest(rowDigest);
-          saveLastServerSnapshot({
-            file_name: row.file_name || "Burner_SCADA_Report.xlsx",
-            data_base64: row.data_base64,
-            uploaded_by: row.uploaded_by || null
-          });
-          setCentralReachability(true);
-          updateLastSyncLabel(new Date());
-          if(showMsg) showToast("✅ Auto-loaded from central server");
-          return true;
+          if(rowDigest === getLastImportedServerDigest()){
+            saveLastServerSnapshot({
+              file_name: row.file_name || SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx",
+              data_base64: row.data_base64,
+              uploaded_by: row.uploaded_by || null
+            });
+            setCentralReachability(true);
+            updateLastSyncLabel(new Date());
+            if(showMsg) showToast("✅ Auto-loaded from central server");
+            return true;
+          }
         }
         var imported = await importServerReportPayload(row);
         if(imported){
           saveLastServerSnapshot({
-            file_name: row.file_name || "Burner_SCADA_Report.xlsx",
+            file_name: row.file_name || SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx",
             data_base64: row.data_base64,
             uploaded_by: row.uploaded_by || null
           });
@@ -12760,7 +12764,7 @@ async function autoExportToServer(wb, filename){
     }
 
     var payload = {
-      file_name: filename || "Burner_SCADA_Report.xlsx",
+      file_name: SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx",
       data_base64: base64,
       uploaded_by: (getLoggedInEmpId() || "") || null
     };
