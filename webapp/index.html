@@ -4946,7 +4946,7 @@ html, body, body *, body *::before, body *::after, svg text{
           margin-bottom:22px;user-select:none;
           background:linear-gradient(135deg,rgba(15,31,56,0.75),rgba(10,22,40,0.95));
           border:1px solid #1e3a5e;border-radius:14px;
-          padding:14px 12px 12px;box-shadow:0 4px 40px rgba(0,0,0,0.6);
+          padding:12px 10px 10px;box-shadow:0 4px 40px rgba(0,0,0,0.6);
           min-height:0;overflow:hidden;
         }
         .cb-divider{flex:0 0 1px;}
@@ -7045,7 +7045,10 @@ html, body, body *, body *::before, body *::after, svg text{
           flex-direction:column !important;
           align-items:stretch !important;
           gap:20px !important;
-          padding:16px 16px 20px !important;
+          padding:14px 22px 18px !important;
+          width:calc(100% + 24px) !important;
+          margin-left:-12px !important;
+          margin-right:-12px !important;
         }
         #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap{
           width:100% !important;
@@ -7121,8 +7124,11 @@ html, body, body *, body *::before, body *::after, svg text{
             height:calc(var(--cb-h) + 100px) !important;
           }
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-row{
-            padding:12px 10px 14px !important;
+            padding:10px 14px 12px !important;
             gap:14px !important;
+            width:calc(100% + 12px) !important;
+            margin-left:-6px !important;
+            margin-right:-6px !important;
           }
         }
       </style>
