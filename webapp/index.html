@@ -2203,13 +2203,7 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
   flex-wrap:wrap;
   max-width:100%;
 }
-.burner-save-row{
-  display:none;
-  justify-content:flex-end;
-  align-items:center;
-  padding:6px 16px 2px;
-}
-.burner-save-row .cl-unsaved-badge{
+.legend-actions .cl-unsaved-badge{
   max-width:100%;
   white-space:nowrap;
   line-height:1.25;
@@ -2219,11 +2213,7 @@ body{ padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px)); }
     width:100%;
     justify-content:flex-end;
   }
-  .burner-save-row{
-    padding:6px 12px 2px;
-    justify-content:flex-end;
-  }
-  .burner-save-row .cl-unsaved-badge{white-space:normal;}
+  .legend-actions .cl-unsaved-badge{white-space:normal;}
 }
 
 /* Pending cell — yellow dashed border */
@@ -8444,12 +8434,10 @@ html, body, body *, body *::before, body *::after, svg text{
         <button class="hd-btn hd-btn-primary" onclick="exportToExcel()" style="padding:7px 14px;font-size:12px;border-radius:6px;">
           💾 Save New Data
         </button>
+        <span id="burnerUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
+          ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
+        </span>
       </div>
-    </div>
-    <div class="burner-save-row">
-      <span id="burnerUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
-        ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
-      </span>
     </div>
     <div id="burner-mobile-wall-switch" class="burner-mobile-wall-switch" aria-label="Burner wall switch">
       <span class="burner-mobile-wall-label">Wall View</span>
@@ -9496,15 +9484,11 @@ var burnerPending = {}; /* {wallName: {ri_ci: newValue}} — staged, not yet sav
 
 function markBurnerUnsaved(){
   var badge = document.getElementById("burnerUnsavedBadge");
-  var row = document.querySelector("#tab-burner .burner-save-row");
-  if(row) row.style.display = "flex";
   if(badge) badge.style.display = "inline-flex";
 }
 function clearBurnerUnsaved(){
   var badge = document.getElementById("burnerUnsavedBadge");
   if(badge) badge.style.display = "none";
-  var row = document.querySelector("#tab-burner .burner-save-row");
-  if(row) row.style.display = "none";
   burnerPending = {};
 }
 function commitBurnerPending(){
