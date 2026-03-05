@@ -11000,7 +11000,6 @@ function buildCleaningTable(){
         input.type  = "date";
         const savedVal = (log[w] && log[w][key]) ? log[w][key] : "";
         input.value = savedVal;
-        if(savedVal) td.classList.add("date-filled");
 
         /* Mark freq alarm cells on load */
         const monthNow = new Date().toISOString().slice(0,7);
@@ -11054,8 +11053,6 @@ function buildCleaningTable(){
           if(!cleaningPending[w]) cleaningPending[w] = {};
           if(v){
             cleaningPending[w][key] = v;
-            td.classList.add("date-filled");
-            td.classList.add("ct-pending");
             /* Preview freq count (against saved history + current pending) */
             const monthStr = v.slice(0,7);
             const histCnt2 = countCleaningsInMonth(w, key, monthStr);
@@ -11068,9 +11065,7 @@ function buildCleaningTable(){
             }
           } else {
             delete cleaningPending[w][key];
-            td.classList.remove("date-filled");
             td.classList.remove("freq-alarm");
-            td.classList.remove("ct-pending");
             alarmBadge.textContent = "";
           }
           formatDateInput(input);
