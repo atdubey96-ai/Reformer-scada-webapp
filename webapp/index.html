@@ -10191,6 +10191,36 @@ async function exportToExcel(){
     XLSX.utils.book_append_sheet(wb, ws2, "Cleaning Wall "+w);
   });
 
+  /* Sheet: Cleaning History (all cleaning events) */
+  const hist = loadCleaningHistory();
+  const histRows = [["Wall","Row","Burner","Date"]];
+  WALL_NAMES.forEach(function(w){
+    const wallHist = (hist && hist[w]) ? hist[w] : {};
+    const keys = Object.keys(wallHist).sort(function(a,b){
+      var ma = String(a || "").match(/^R(\d+)B(\d+)$/i);
+      var mb = String(b || "").match(/^R(\d+)B(\d+)$/i);
+      var ra = ma ? parseInt(ma[1], 10) : 0;
+      var rb = mb ? parseInt(mb[1], 10) : 0;
+      if(ra !== rb) return ra - rb;
+      var ba = ma ? parseInt(ma[2], 10) : 0;
+      var bb = mb ? parseInt(mb[2], 10) : 0;
+      return ba - bb;
+    });
+    keys.forEach(function(key){
+      var mm = String(key || "").match(/^R(\d+)B(\d+)$/i);
+      if(!mm) return;
+      var rNum = parseInt(mm[1], 10);
+      var bNum = parseInt(mm[2], 10);
+      var dates = Array.isArray(wallHist[key]) ? wallHist[key].filter(Boolean).slice().sort() : [];
+      dates.forEach(function(d){
+        histRows.push([w, "R" + rNum, "B" + bNum, d]);
+      });
+    });
+  });
+  const wsHist = XLSX.utils.aoa_to_sheet(histRows);
+  wsHist["!cols"] = [{wch:8},{wch:8},{wch:10},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsHist, "Cleaning History");
+
   /* Sheet: Tip Damage Log */
   var tipDataSaved = loadTipData();
   var tipHeaders = ["#","Wall","Row","Burner","Tip Damage","Damage Date","Replaced","Replacement Date","Remarks"];
@@ -10290,6 +10320,49 @@ async function smartRefresh(){
   }
 }
 
+function normalizeImportedCleaningDate(rawVal){
+  if(rawVal == null) return "";
+  var s = String(rawVal).trim();
+  if(!s || s === "—" || s === "-" || /^n\/a$/i.test(s) || /^na$/i.test(s) || /^null$/i.test(s)) return "";
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+  var dmy = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if(dmy){
+    var dd = parseInt(dmy[1], 10);
+    var mm = parseInt(dmy[2], 10);
+    var yy = String(dmy[3]);
+    if(yy.length === 2){
+      var yyNum = parseInt(yy, 10);
+      yy = String(yyNum >= 70 ? (1900 + yyNum) : (2000 + yyNum));
+    }
+    var yyyy = parseInt(yy, 10);
+    var dt = new Date(Date.UTC(yyyy, mm - 1, dd));
+    if(!isNaN(dt.getTime()) && (dt.getUTCFullYear() === yyyy) && (dt.getUTCMonth() + 1 === mm) && (dt.getUTCDate() === dd)){
+      return String(yyyy).padStart(4, "0") + "-" + String(mm).padStart(2, "0") + "-" + String(dd).padStart(2, "0");
+    }
+  }
+
+  var parsed = new Date(s);
+  if(!isNaN(parsed.getTime())){
+    return parsed.toISOString().slice(0, 10);
+  }
+  return "";
+}
+
+function parseImportedCleaningWall(sheetName){
+  var s = String(sheetName || "").trim().toUpperCase();
+  var m = s.match(/(?:CLEANING\s+)?WALL\s*([ABCD])\b/);
+  return m ? m[1] : "";
+}
+
+function parseImportedIndex(rawVal){
+  if(rawVal == null) return 0;
+  var m = String(rawVal).match(/(\d{1,3})/);
+  if(!m) return 0;
+  var n = parseInt(m[1], 10);
+  return n > 0 ? n : 0;
+}
+
 function _doImport(file, onDone, silent){
   const reader=new FileReader();
 
@@ -10335,9 +10408,81 @@ function _doImport(file, onDone, silent){
         return;
       }
 
+      /* Parse Cleaning sheets (current log + optional history) */
+      var importedCleaningLog = {};
+      var importedCleaningHist = {};
+      var foundCleaningSheets = false;
+      var foundCleaningHistorySheet = false;
+
+      wb.SheetNames.forEach(function(sheetName){
+        var wall = parseImportedCleaningWall(sheetName);
+        if(!wall) return;
+        foundCleaningSheets = true;
+        var cws = wb.Sheets[sheetName];
+        if(!cws) return;
+        var cRows = XLSX.utils.sheet_to_json(cws, {header:1, raw:false, defval:""});
+        for(var rr=1; rr<=ROWS; rr++){
+          var rowVals = cRows[rr] || [];
+          for(var bb=1; bb<=BURNERS; bb++){
+            var ymd = normalizeImportedCleaningDate(rowVals[bb]);
+            if(!ymd) continue;
+            var key = "R" + rr + "B" + bb;
+            if(!importedCleaningLog[wall]) importedCleaningLog[wall] = {};
+            importedCleaningLog[wall][key] = ymd;
+            if(!importedCleaningHist[wall]) importedCleaningHist[wall] = {};
+            if(!importedCleaningHist[wall][key]) importedCleaningHist[wall][key] = [];
+            if(importedCleaningHist[wall][key].indexOf(ymd) === -1) importedCleaningHist[wall][key].push(ymd);
+          }
+        }
+      });
+
+      var histSheetName = wb.SheetNames.find(function(n){
+        return String(n || "").trim().toLowerCase() === "cleaning history";
+      });
+      if(histSheetName){
+        foundCleaningHistorySheet = true;
+        var hws = wb.Sheets[histSheetName];
+        var hRows = XLSX.utils.sheet_to_json(hws, {header:1, raw:false, defval:""});
+        hRows.slice(1).forEach(function(row){
+          var wallRaw = row && row[0] != null ? String(row[0]).trim().toUpperCase() : "";
+          var wallMatch = wallRaw.match(/[ABCD]/);
+          var wall = wallMatch ? wallMatch[0] : "";
+          var rNum = parseImportedIndex(row ? row[1] : "");
+          var bNum = parseImportedIndex(row ? row[2] : "");
+          var ymd = normalizeImportedCleaningDate(row ? row[3] : "");
+          if(!wall || !rNum || !bNum || !ymd) return;
+          if(rNum < 1 || rNum > ROWS || bNum < 1 || bNum > BURNERS) return;
+
+          var key = "R" + rNum + "B" + bNum;
+          if(!importedCleaningHist[wall]) importedCleaningHist[wall] = {};
+          if(!importedCleaningHist[wall][key]) importedCleaningHist[wall][key] = [];
+          if(importedCleaningHist[wall][key].indexOf(ymd) === -1) importedCleaningHist[wall][key].push(ymd);
+          if(!importedCleaningLog[wall]) importedCleaningLog[wall] = {};
+          if(!importedCleaningLog[wall][key] || ymd > importedCleaningLog[wall][key]){
+            importedCleaningLog[wall][key] = ymd;
+          }
+        });
+      }
+
+      Object.keys(importedCleaningHist).forEach(function(w){
+        Object.keys(importedCleaningHist[w]).forEach(function(k){
+          importedCleaningHist[w][k].sort();
+          if(!importedCleaningLog[w]) importedCleaningLog[w] = {};
+          if(!importedCleaningLog[w][k] && importedCleaningHist[w][k].length){
+            importedCleaningLog[w][k] = importedCleaningHist[w][k][importedCleaningHist[w][k].length - 1];
+          }
+        });
+      });
+
       /* overwrite in-memory data and persist */
       data=nd;
       saveData();
+
+      if(foundCleaningSheets || foundCleaningHistorySheet){
+        saveCleaningLog(importedCleaningLog);
+        saveCleaningHistory(importedCleaningHist);
+        if(typeof clearCleaningUnsaved === "function") clearCleaningUnsaved();
+      }
 
       /* FIX 3: force full re-render, then show alert so DOM paints first */
       generateAnalysis();   /* rebuilds wall tables and analysis */
