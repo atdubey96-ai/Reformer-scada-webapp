@@ -8033,6 +8033,23 @@ html, body, body *, body *::before, body *::after, svg text{
           fill:transparent !important;
         }
       </style>
+      <style id="cuboid-corner-soften-2026">
+        /* Slightly soften cuboid corner points without changing geometry/layout. */
+        #tab-heatmap .cb-face{
+          border-radius:10px !important;
+        }
+        #tab-heatmap .cb-face.cb-fb{
+          border-radius:12px !important;
+        }
+        #tab-heatmap .cb-face.cb-lr,
+        #tab-heatmap .cb-face.cb-tb{
+          border-radius:9px !important;
+        }
+        #tab-heatmap #face-ab-back::before,
+        #tab-heatmap #face-cd-back::before{
+          border-radius:inherit !important;
+        }
+      </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
