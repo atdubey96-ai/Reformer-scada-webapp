@@ -6391,6 +6391,26 @@ html, body, body *, body *::before, body *::after, svg text{
           stroke:rgba(0,0,0,0.9) !important;
           stroke-width:2.2 !important;
         }
+        /* Light theme: keep cuboid left/right wall-data side faces pure black. */
+        body.light-theme #tab-heatmap #face-ab-left,
+        body.light-theme #tab-heatmap #face-ab-right,
+        body.light-theme #tab-heatmap #face-cd-left,
+        body.light-theme #tab-heatmap #face-cd-right{
+          background:#000000 !important;
+          border-color:rgba(0,0,0,0.95) !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-left .cb-side-face-panel,
+        body.light-theme #tab-heatmap #face-ab-right .cb-side-face-panel,
+        body.light-theme #tab-heatmap #face-cd-left .cb-side-face-panel,
+        body.light-theme #tab-heatmap #face-cd-right .cb-side-face-panel{
+          background:#000000 !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-left .cb-side-cutout-svg rect[mask],
+        body.light-theme #tab-heatmap #face-ab-right .cb-side-cutout-svg rect[mask],
+        body.light-theme #tab-heatmap #face-cd-left .cb-side-cutout-svg rect[mask],
+        body.light-theme #tab-heatmap #face-cd-right .cb-side-cutout-svg rect[mask]{
+          fill:#000000 !important;
+        }
 
         #tab-heatmap .cb-top-cap-inner{
           background:
@@ -7398,6 +7418,93 @@ html, body, body *, body *::before, body *::after, svg text{
           }
         }
       </style>
+      <style id="heatmap-light-black-faces-2026">
+        /* Final light-theme override: force both cuboids' wall-data and side faces black. */
+        body.light-theme #tab-heatmap #face-ab-front,
+        body.light-theme #tab-heatmap #face-ab-back,
+        body.light-theme #tab-heatmap #face-cd-front,
+        body.light-theme #tab-heatmap #face-cd-back,
+        body.light-theme #tab-heatmap #face-ab-left,
+        body.light-theme #tab-heatmap #face-ab-right,
+        body.light-theme #tab-heatmap #face-cd-left,
+        body.light-theme #tab-heatmap #face-cd-right{
+          background:#000000 !important;
+          border-color:rgba(0,0,0,0.95) !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-front .hm-wall-card,
+        body.light-theme #tab-heatmap #face-ab-back .hm-wall-card,
+        body.light-theme #tab-heatmap #face-cd-front .hm-wall-card,
+        body.light-theme #tab-heatmap #face-cd-back .hm-wall-card{
+          background:#000000 !important;
+          border-color:rgba(255,255,255,0.18) !important;
+          box-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-front .hm-wall-header,
+        body.light-theme #tab-heatmap #face-ab-back .hm-wall-header,
+        body.light-theme #tab-heatmap #face-cd-front .hm-wall-header,
+        body.light-theme #tab-heatmap #face-cd-back .hm-wall-header{
+          background:#000000 !important;
+          border-bottom:1px solid rgba(255,255,255,0.22) !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-front .hm-wall-title,
+        body.light-theme #tab-heatmap #face-ab-back .hm-wall-title,
+        body.light-theme #tab-heatmap #face-cd-front .hm-wall-title,
+        body.light-theme #tab-heatmap #face-cd-back .hm-wall-title{
+          color:#f8fafc !important;
+          text-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-front .hm-wall-meta,
+        body.light-theme #tab-heatmap #face-ab-back .hm-wall-meta,
+        body.light-theme #tab-heatmap #face-cd-front .hm-wall-meta,
+        body.light-theme #tab-heatmap #face-cd-back .hm-wall-meta{
+          color:#cbd5e1 !important;
+          text-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-front .hm-row-label,
+        body.light-theme #tab-heatmap #face-ab-back .hm-row-label,
+        body.light-theme #tab-heatmap #face-cd-front .hm-row-label,
+        body.light-theme #tab-heatmap #face-cd-back .hm-row-label,
+        body.light-theme #tab-heatmap #face-ab-front .hm-peep-label,
+        body.light-theme #tab-heatmap #face-ab-back .hm-peep-label,
+        body.light-theme #tab-heatmap #face-cd-front .hm-peep-label,
+        body.light-theme #tab-heatmap #face-cd-back .hm-peep-label{
+          background:rgba(255,255,255,0.08) !important;
+          border-color:rgba(255,255,255,0.24) !important;
+          color:#e2e8f0 !important;
+          text-shadow:none !important;
+          box-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-front .hm-burner-nums .hm-bnum,
+        body.light-theme #tab-heatmap #face-ab-back .hm-burner-nums .hm-bnum,
+        body.light-theme #tab-heatmap #face-cd-front .hm-burner-nums .hm-bnum,
+        body.light-theme #tab-heatmap #face-cd-back .hm-burner-nums .hm-bnum{
+          color:#e5e7eb !important;
+          text-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-front .hm-peep-temp-label,
+        body.light-theme #tab-heatmap #face-ab-back .hm-peep-temp-label,
+        body.light-theme #tab-heatmap #face-cd-front .hm-peep-temp-label,
+        body.light-theme #tab-heatmap #face-cd-back .hm-peep-temp-label{
+          color:#f8fafc !important;
+          background:rgba(0,0,0,0.76) !important;
+          border-color:rgba(255,255,255,0.28) !important;
+          text-shadow:none !important;
+        }
+
+        /* Keep narrow left/right cuboid side panels black too. */
+        body.light-theme #tab-heatmap #face-ab-left .cb-side-face-panel,
+        body.light-theme #tab-heatmap #face-ab-right .cb-side-face-panel,
+        body.light-theme #tab-heatmap #face-cd-left .cb-side-face-panel,
+        body.light-theme #tab-heatmap #face-cd-right .cb-side-face-panel{
+          background:#000000 !important;
+        }
+        body.light-theme #tab-heatmap #face-ab-left .cb-side-cutout-svg rect[mask],
+        body.light-theme #tab-heatmap #face-ab-right .cb-side-cutout-svg rect[mask],
+        body.light-theme #tab-heatmap #face-cd-left .cb-side-cutout-svg rect[mask],
+        body.light-theme #tab-heatmap #face-cd-right .cb-side-cutout-svg rect[mask]{
+          fill:#000000 !important;
+        }
+      </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
@@ -7846,6 +7953,70 @@ html, body, body *, body *::before, body *::after, svg text{
            after cuboids were enlarged.
         ── */
 
+        function applyLightThemeCuboidFaceBlack(){
+          var isLight = !!(document.body && document.body.classList.contains('light-theme'));
+          var cuboidFaceIds = [
+            "face-ab-front","face-ab-back","face-cd-front","face-cd-back",
+            "face-ab-left","face-ab-right","face-cd-left","face-cd-right"
+          ];
+          cuboidFaceIds.forEach(function(id){
+            var el = document.getElementById(id);
+            if(!el) return;
+            if(isLight){
+              el.style.setProperty("background", "#000000", "important");
+              el.style.setProperty("border-color", "rgba(0,0,0,0.95)", "important");
+            }else{
+              el.style.removeProperty("background");
+              el.style.removeProperty("border-color");
+            }
+          });
+
+          var sidePanels = document.querySelectorAll(
+            "#face-ab-left .cb-side-face-panel,#face-ab-right .cb-side-face-panel,#face-cd-left .cb-side-face-panel,#face-cd-right .cb-side-face-panel"
+          );
+          sidePanels.forEach(function(el){
+            if(isLight) el.style.setProperty("background", "#000000", "important");
+            else el.style.removeProperty("background");
+          });
+
+          var sideMaskRects = document.querySelectorAll(
+            "#face-ab-left .cb-side-cutout-svg rect[mask],#face-ab-right .cb-side-cutout-svg rect[mask],#face-cd-left .cb-side-cutout-svg rect[mask],#face-cd-right .cb-side-cutout-svg rect[mask]"
+          );
+          sideMaskRects.forEach(function(el){
+            if(isLight) el.style.setProperty("fill", "#000000", "important");
+            else el.style.removeProperty("fill");
+          });
+
+          var wallCards = document.querySelectorAll(
+            "#face-ab-front .hm-wall-card,#face-ab-back .hm-wall-card,#face-cd-front .hm-wall-card,#face-cd-back .hm-wall-card,#hm-side-ab .hm-wall-card,#hm-side-cd .hm-wall-card"
+          );
+          wallCards.forEach(function(el){
+            if(isLight){
+              el.style.setProperty("background", "#000000", "important");
+              el.style.setProperty("border-color", "rgba(255,255,255,0.2)", "important");
+              el.style.setProperty("box-shadow", "none", "important");
+            }else{
+              el.style.removeProperty("background");
+              el.style.removeProperty("border-color");
+              el.style.removeProperty("box-shadow");
+            }
+          });
+
+          var wallHeaders = document.querySelectorAll(
+            "#face-ab-front .hm-wall-header,#face-ab-back .hm-wall-header,#face-cd-front .hm-wall-header,#face-cd-back .hm-wall-header,#hm-side-ab .hm-wall-header,#hm-side-cd .hm-wall-header"
+          );
+          wallHeaders.forEach(function(el){
+            if(isLight){
+              el.style.setProperty("background", "#000000", "important");
+              el.style.setProperty("border-bottom", "1px solid rgba(255,255,255,0.22)", "important");
+            }else{
+              el.style.removeProperty("background");
+              el.style.removeProperty("border-bottom");
+            }
+          });
+        }
+        window.applyLightThemeCuboidFaceBlack = applyLightThemeCuboidFaceBlack;
+
         function renderWallFace(wallName, peepBotVals, peepTopVals, wallData, faceEl, loadingEl, accentColor){
           /* Build the same wall-card HTML used by the flat bottom tables */
           var html = buildWallHTML(wallName, peepBotVals, peepTopVals, wallData);
@@ -7867,12 +8038,15 @@ html, body, body *, body *::before, body *::after, svg text{
             + '">'
             + html
             + '</div>';
+          applyLightThemeCuboidFaceBlack();
         }
 
         /* ── 3. Hook into renderHeatMap so textures refresh with data ── */
         var _origRenderHeatMap = window.renderHeatMap;
         window.renderHeatMap = function(){
           if(_origRenderHeatMap) _origRenderHeatMap.apply(this,arguments);
+          setTimeout(applyLightThemeCuboidFaceBlack, 0);
+          setTimeout(applyLightThemeCuboidFaceBlack, 180);
           if(window._hmSkipCuboidRefresh){
             window._hmSkipCuboidRefresh = false;
             return;
@@ -7960,6 +8134,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
           renderWallFace("D", cdBot, cdTop, hmData["D"],
             document.getElementById('face-cd-back'),  document.getElementById('face-cd-back-loading'),  '#60c8ff');
+          setTimeout(applyLightThemeCuboidFaceBlack, 0);
         }
         if(document.readyState === 'loading'){
           document.addEventListener('DOMContentLoaded', scheduleCuboidTextures);
@@ -11324,6 +11499,10 @@ function toggleTheme(isDark){
     document.body.classList.add('light-theme');
     localStorage.setItem('scada-theme','light');
   }
+  if(typeof applyLightThemeCuboidFaceBlack === "function"){
+    setTimeout(applyLightThemeCuboidFaceBlack, 0);
+    setTimeout(applyLightThemeCuboidFaceBlack, 180);
+  }
 }
 // Init theme from saved preference (script is at bottom so DOM is ready)
 (function initTheme(){
@@ -11335,6 +11514,10 @@ function toggleTheme(isDark){
   } else {
     document.body.classList.remove('light-theme');
     if(chk) chk.checked = true;
+  }
+  if(typeof applyLightThemeCuboidFaceBlack === "function"){
+    setTimeout(applyLightThemeCuboidFaceBlack, 0);
+    setTimeout(applyLightThemeCuboidFaceBlack, 180);
   }
 })();
 
