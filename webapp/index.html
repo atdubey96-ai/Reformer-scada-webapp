@@ -9198,6 +9198,9 @@ function subscribeCrossDeviceNotifications(){
           var body = p.body || "New data was saved from another device.";
           var tag = "shared_" + (p.eventType || "save") + "_" + (p.eventId || Date.now());
           notifyIfAllowed(title, body, tag, 0);
+          setTimeout(function(){
+            triggerServerAutoImport("realtime-broadcast");
+          }, 450);
         }catch(e){}
       })
       .subscribe(function(status){
@@ -9310,6 +9313,7 @@ function startServerSaveWatcher(){
           "server_save_" + createdAt,
           0
         );
+        triggerServerAutoImport("save-watcher");
       }
     }catch(e){}
   };
@@ -12255,6 +12259,7 @@ var serverQueueFlushInFlight = null;
 var SERVER_SYNC_QUEUE_KEY = "scadaQueuedServerExportV1";
 var SERVER_SYNC_LAST_SNAPSHOT_KEY = "scadaLastServerSnapshotV1";
 var SERVER_SYNC_LAST_IMPORTED_DIGEST_KEY = "scadaLastImportedServerDigestV1";
+var SERVER_SYNC_PENDING_DIGEST_KEY = "scadaPendingServerDigestV1";
 var lastServerSyncError = "";
 var lastServerAutoImportMs = 0;
 
@@ -12265,6 +12270,10 @@ function loadQueuedServerExport(){
     var obj = JSON.parse(raw);
     if(!obj || typeof obj !== "object") return null;
     if(!obj.data_base64) return null;
+    if(!getPendingServerDigest()){
+      var digest = makeServerPayloadDigest(obj);
+      if(digest) setPendingServerDigest(digest);
+    }
     return obj;
   }catch(e){
     return null;
@@ -12272,9 +12281,12 @@ function loadQueuedServerExport(){
 }
 function saveQueuedServerExport(payload){
   try{ localStorage.setItem(SERVER_SYNC_QUEUE_KEY, JSON.stringify(payload)); }catch(e){}
+  var digest = makeServerPayloadDigest(payload);
+  if(digest) setPendingServerDigest(digest);
 }
 function clearQueuedServerExport(){
   try{ localStorage.removeItem(SERVER_SYNC_QUEUE_KEY); }catch(e){}
+  clearPendingServerDigest();
 }
 function loadLastServerSnapshot(){
   try{
@@ -12319,6 +12331,23 @@ function getLastImportedServerDigest(){
 function setLastImportedServerDigest(digest){
   try{
     localStorage.setItem(SERVER_SYNC_LAST_IMPORTED_DIGEST_KEY, String(digest || ""));
+  }catch(e){}
+}
+function getPendingServerDigest(){
+  try{
+    return String(localStorage.getItem(SERVER_SYNC_PENDING_DIGEST_KEY) || "");
+  }catch(e){
+    return "";
+  }
+}
+function setPendingServerDigest(digest){
+  try{
+    localStorage.setItem(SERVER_SYNC_PENDING_DIGEST_KEY, String(digest || ""));
+  }catch(e){}
+}
+function clearPendingServerDigest(){
+  try{
+    localStorage.removeItem(SERVER_SYNC_PENDING_DIGEST_KEY);
   }catch(e){}
 }
 function setLastServerSyncError(msg){
@@ -12383,12 +12412,14 @@ async function supabaseRestRequest(path, method, body, preferHeader){
 async function fetchLatestServerReportRow(){
   setLastServerSyncError("");
   var row = null;
+  var canonicalName = "Burner_SCADA_Report.xlsx";
   if(ensureSupaClient()){
     try{
       var q = await withTimeout(
         supaClient
           .from(SUPABASE_TABLE)
-          .select("file_name,data_base64,created_at")
+          .select("file_name,data_base64,created_at,uploaded_by")
+          .eq("file_name", canonicalName)
           .order("created_at", {ascending:false})
           .limit(1),
         SERVER_SYNC_TIMEOUT_MS
@@ -12396,6 +12427,19 @@ async function fetchLatestServerReportRow(){
       if(q && !q.error){
         setCentralReachability(true);
         if(q.data && q.data.length) row = q.data[0];
+        if(!row){
+          var qAny = await withTimeout(
+            supaClient
+              .from(SUPABASE_TABLE)
+              .select("file_name,data_base64,created_at,uploaded_by")
+              .order("created_at", {ascending:false})
+              .limit(1),
+            SERVER_SYNC_TIMEOUT_MS
+          );
+          if(qAny && !qAny.error && qAny.data && qAny.data.length){
+            row = qAny.data[0];
+          }
+        }
       }else if(q && q.error){
         setLastServerSyncError(String(q.error.message || q.error.code || "sdk-read-failed"));
       }
@@ -12404,10 +12448,11 @@ async function fetchLatestServerReportRow(){
     }
   }
   if(!row){
+    var canonicalEq = encodeURIComponent(canonicalName);
     var readPaths = [
-      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at&order=created_at.desc&limit=1",
-      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at&order=id.desc&limit=1",
-      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at&limit=1"
+      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at,uploaded_by&file_name=eq." + canonicalEq + "&order=created_at.desc&limit=1",
+      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at,uploaded_by&order=created_at.desc&limit=1",
+      "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE) + "?select=file_name,data_base64,created_at,uploaded_by&order=id.desc&limit=1"
     ];
     for(var r=0; r<readPaths.length; r++){
       try{
@@ -12549,6 +12594,11 @@ async function importServerReportPayload(payload){
   if(!payload || !payload.data_base64) return false;
   try{
     var digest = makeServerPayloadDigest(payload);
+    var pendingDigest = getPendingServerDigest();
+    var queuedLocal = loadQueuedServerExport();
+    if(queuedLocal && pendingDigest && digest && digest !== pendingDigest){
+      return false; /* protect newer local unsynced save from stale server overwrite */
+    }
     var lastDigest = getLastImportedServerDigest();
     if(digest && digest === lastDigest){
       return true; /* already synced on this device */
@@ -12585,6 +12635,7 @@ async function flushQueuedServerExport(showMsg){
   serverQueueFlushInFlight = (async function(){
     var queued = loadQueuedServerExport();
     if(!queued || !queued.data_base64) return false;
+    var queuedDigest = makeServerPayloadDigest(queued);
     for(var a=0; a<SERVER_SYNC_RETRY_COUNT; a++){
       var ok = await insertServerReportRow({
         file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
@@ -12594,6 +12645,7 @@ async function flushQueuedServerExport(showMsg){
       if(ok){
         setCentralReachability(true);
         clearQueuedServerExport();
+        if(queuedDigest) setLastImportedServerDigest(queuedDigest);
         saveLastServerSnapshot({
           file_name: queued.file_name || "Burner_SCADA_Report.xlsx",
           data_base64: queued.data_base64,
@@ -12623,6 +12675,21 @@ async function autoImportFromServer(showMsg){
     for(var attempt=0; attempt<SERVER_SYNC_RETRY_COUNT; attempt++){
       try{
         var row = await fetchLatestServerReportRow();
+        var rowDigest = makeServerPayloadDigest(row);
+        var pendingDigest = getPendingServerDigest();
+        if(row && rowDigest && pendingDigest && rowDigest === pendingDigest){
+          clearQueuedServerExport();
+          setLastImportedServerDigest(rowDigest);
+          saveLastServerSnapshot({
+            file_name: row.file_name || "Burner_SCADA_Report.xlsx",
+            data_base64: row.data_base64,
+            uploaded_by: row.uploaded_by || null
+          });
+          setCentralReachability(true);
+          updateLastSyncLabel(new Date());
+          if(showMsg) showToast("✅ Auto-loaded from central server");
+          return true;
+        }
         var imported = await importServerReportPayload(row);
         if(imported){
           saveLastServerSnapshot({
@@ -12675,7 +12742,8 @@ async function autoExportToServer(wb, filename){
       data_base64: base64,
       uploaded_by: (getLoggedInEmpId() || "") || null
     };
-    setLastImportedServerDigest(makeServerPayloadDigest(payload));
+    var payloadDigest = makeServerPayloadDigest(payload);
+    if(payloadDigest) setPendingServerDigest(payloadDigest);
     saveLastServerSnapshot(payload);
 
     for(var attempt=0; attempt<SERVER_SYNC_RETRY_COUNT; attempt++){
@@ -12683,6 +12751,7 @@ async function autoExportToServer(wb, filename){
       if(ok){
         setCentralReachability(true);
         clearQueuedServerExport();
+        if(payloadDigest) setLastImportedServerDigest(payloadDigest);
         updateLastSyncLabel(new Date());
         return true;
       }
