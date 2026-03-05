@@ -11854,18 +11854,32 @@ var SUPABASE_URL = "https://xqkbrlcdbgykmatzwvct.supabase.co";
 var SUPABASE_TABLE = "scada_reports";
 var AUTH_TABLE = "scada_auth";
 var AUTH_ROW_ID = 1;
+var SUPABASE_DEFAULT_ANON_KEY = "sb_publishable_L99JfiV_68w79GJ10klTCg_R1H60L_D";
+function purgeStaleSupabaseAnonKeyOverride(){
+  try{
+    if(window.SCADA_ALLOW_LOCAL_SUPABASE_KEY === true) return;
+  }catch(e){}
+  try{
+    var stored = localStorage.getItem("scadaSupabaseAnonKey");
+    if(stored && String(stored).trim()){
+      localStorage.removeItem("scadaSupabaseAnonKey");
+    }
+  }catch(e){}
+}
 function getSupabaseAnonKey(){
+  purgeStaleSupabaseAnonKeyOverride();
   try{
     if(window.SCADA_SUPABASE_ANON_KEY && String(window.SCADA_SUPABASE_ANON_KEY).trim()){
       return String(window.SCADA_SUPABASE_ANON_KEY).trim();
     }
-    var stored = localStorage.getItem("scadaSupabaseAnonKey");
-    if(stored && String(stored).trim()){
-      return String(stored).trim();
+    if(window.SCADA_ALLOW_LOCAL_SUPABASE_KEY === true){
+      var stored = localStorage.getItem("scadaSupabaseAnonKey");
+      if(stored && String(stored).trim()){
+        return String(stored).trim();
+      }
     }
   }catch(e){}
-  /* Replace with your actual publishable key if needed */
-  return "sb_publishable_L99JfiV_68w79GJ10klTCg_R1H60L_D";
+  return SUPABASE_DEFAULT_ANON_KEY;
 }
 var SUPABASE_ANON_KEY = getSupabaseAnonKey();
 function trimTrailingSlash(v){
