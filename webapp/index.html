@@ -10718,20 +10718,30 @@ function showPostCleaningBurnerDataNudge(){
   notifyAndBroadcast("post_cleaning_burner_nudge", "Post-Cleaning Nudge", body, "post_cleaning_burner_nudge", 4000);
 }
 
-async function exportToExcel(){
+async function exportToExcel(options){
+  options = options || {};
+  var silent = !!options.silent;
   /* Commit pending burner changes */
   const hadBurnerPending = Object.keys(burnerPending).length > 0;
   commitBurnerPending();
-  if(hadBurnerPending){ render(); showToast("✅ Burner data saved successfully"); notifyAndBroadcast("burner_data_saved", "Burner Data Saved", "New burner data has been saved.", "burner_data_saved", 3000); }
+  if(hadBurnerPending){
+    render();
+    if(!silent){
+      showToast("✅ Burner data saved successfully");
+      notifyAndBroadcast("burner_data_saved", "Burner Data Saved", "New burner data has been saved.", "burner_data_saved", 3000);
+    }
+  }
 
   /* Commit pending cleaning changes */
   const hadCleaningPending = Object.keys(cleaningPending).length > 0;
   commitCleaningPending();
   if(hadCleaningPending){
     buildCleaningTable();
-    showToast("✅ Cleaning dates saved successfully");
-    notifyAndBroadcast("burner_cleaning_saved", "Burner Cleaning Saved", "New burner cleaning data has been saved.", "burner_cleaning_saved", 3000);
-    setTimeout(showPostCleaningBurnerDataNudge, 900);
+    if(!silent){
+      showToast("✅ Cleaning dates saved successfully");
+      notifyAndBroadcast("burner_cleaning_saved", "Burner Cleaning Saved", "New burner cleaning data has been saved.", "burner_cleaning_saved", 3000);
+      setTimeout(showPostCleaningBurnerDataNudge, 900);
+    }
   }
 
   const wb = XLSX.utils.book_new();
@@ -10837,8 +10847,9 @@ async function exportToExcel(){
   var saveStatus = await autoExportToServer(wb, fname);
   if(saveStatus === true){
     syncHealthMarkOk(new Date(), "Uploaded");
-    showToast("✅ Saved to central SCADA server");
-    return;
+    markCurrentAutoSyncDigest();
+    if(!silent) showToast("✅ Saved to central SCADA server");
+    return true;
   }
   if(saveStatus === "queued"){
     var qTag = (typeof shortServerSyncErrorTag === "function") ? shortServerSyncErrorTag() : "";
@@ -10847,11 +10858,13 @@ async function exportToExcel(){
       relayHint = " | Configure relay";
     }
     syncHealthMarkQueued(qTag ? ("Retry " + qTag) : "Waiting network");
-    showToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : "") + relayHint);
-    return;
+    markCurrentAutoSyncDigest();
+    if(!silent) showToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : "") + relayHint);
+    return "queued";
   }
   syncHealthMarkError("Central server unreachable");
-  showToast("❌ Save failed: central server is unreachable");
+  if(!silent) showToast("❌ Save failed: central server is unreachable");
+  return false;
 }
 
 /* ==================================================
@@ -13119,7 +13132,10 @@ async function getEffectivePasswordHash(){
       }else{
         syncHealthMarkError("Could not auto-load");
       }
+    }else{
+      markCurrentAutoSyncDigest();
     }
+    scheduleAutoRefreshOnOpen();
   }
 })();
 
@@ -13578,6 +13594,7 @@ async function autoImportFromServer(showMsg){
             setCentralReachability(true);
             updateLastSyncLabel(new Date());
             syncHealthMarkOk(new Date(), "Downloaded");
+            markCurrentAutoSyncDigest();
             if(showMsg) showToast("✅ Auto-loaded from central server");
             return true;
           }
@@ -13592,6 +13609,7 @@ async function autoImportFromServer(showMsg){
           setCentralReachability(true);
           updateLastSyncLabel(new Date());
           syncHealthMarkOk(new Date(), "Downloaded");
+          markCurrentAutoSyncDigest();
           if(showMsg) showToast("✅ Auto-loaded from central server");
           return true;
         }
@@ -13606,6 +13624,7 @@ async function autoImportFromServer(showMsg){
     if(loadedLocal){
       updateLastSyncLabel(new Date());
       syncHealthMarkError("Server offline (local copy)");
+      markCurrentAutoSyncDigest();
       if(showMsg) showToast("📴 Server unreachable: loaded last synced local copy");
       return true;
     }
@@ -13669,6 +13688,119 @@ async function autoExportToServer(wb, filename){
   }
 }
 
+var AUTO_SYNC_INTERVAL_MS = 30000;
+var AUTO_SYNC_SAVE_MIN_GAP_MS = 28000;
+var autoSyncCycleInFlight = false;
+var autoSaveLastAtMs = 0;
+var autoRefreshOnOpenDone = false;
+var AUTO_SYNC_LAST_DIGEST_KEY = "scadaAutoSyncDigestV1";
+
+function getAutoSyncDigest(){
+  try{
+    var dataPart = JSON.stringify(data || {});
+    var tempPart = JSON.stringify(Array.isArray(tempDataEntries) ? tempDataEntries : []);
+    var cleanPart = JSON.stringify((typeof loadCleaningLog === "function") ? (loadCleaningLog() || {}) : {});
+    var cleanHistPart = JSON.stringify((typeof loadCleaningHistory === "function") ? (loadCleaningHistory() || {}) : {});
+    var tipPart = JSON.stringify((typeof loadTipData === "function") ? (loadTipData() || []) : []);
+    return hashStringFNV1a([dataPart,tempPart,cleanPart,cleanHistPart,tipPart].join("|"));
+  }catch(e){
+    return "";
+  }
+}
+function getLastAutoSyncDigest(){
+  try{
+    return String(localStorage.getItem(AUTO_SYNC_LAST_DIGEST_KEY) || "");
+  }catch(e){
+    return "";
+  }
+}
+function setLastAutoSyncDigest(digest){
+  try{
+    localStorage.setItem(AUTO_SYNC_LAST_DIGEST_KEY, String(digest || ""));
+  }catch(e){}
+}
+function markCurrentAutoSyncDigest(){
+  var digest = getAutoSyncDigest();
+  if(digest) setLastAutoSyncDigest(digest);
+}
+function hasPendingLocalEdits(){
+  var burner = !!(burnerPending && typeof burnerPending === "object" && Object.keys(burnerPending).length);
+  var cleaning = !!(cleaningPending && typeof cleaningPending === "object" && Object.keys(cleaningPending).length);
+  return burner || cleaning;
+}
+async function autoSaveToServerIfNeeded(reason, forceSave){
+  if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return false;
+  if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight) return false;
+
+  var hasQueued = !!loadQueuedServerExport();
+  if(hasQueued){
+    syncHealthMarkQueued("Pending upload");
+    flushQueuedServerExport(false).catch(function(){});
+  }
+
+  var now = Date.now();
+  if(!forceSave && (now - autoSaveLastAtMs) < AUTO_SYNC_SAVE_MIN_GAP_MS) return false;
+
+  var digest = getAutoSyncDigest();
+  if(!digest) return false;
+  var lastDigest = getLastAutoSyncDigest();
+  var pendingEdits = hasPendingLocalEdits();
+
+  if(!forceSave && !pendingEdits && lastDigest && digest === lastDigest){
+    return false;
+  }
+
+  autoSaveLastAtMs = now;
+  var res = await exportToExcel({ silent:true, source:reason || "auto-sync" });
+  if(res === true || res === "queued"){
+    setLastAutoSyncDigest(digest);
+  }
+  return res;
+}
+async function autoRefreshFromServer(reason){
+  if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return false;
+  if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight || smartRefreshInFlight) return false;
+  if(typeof navigator !== "undefined" && navigator.onLine === false){
+    if(loadQueuedServerExport()) syncHealthMarkQueued("Offline pending upload");
+    return false;
+  }
+  syncHealthMarkSyncing((reason === "open") ? "Auto refresh on open" : "Auto refresh");
+  try{
+    var ok = await withTimeout(autoImportFromServer(false), 22000);
+    if(!ok) syncHealthMarkError("Auto refresh failed");
+    return !!ok;
+  }catch(e){
+    syncHealthMarkError("Auto refresh timeout");
+    return false;
+  }
+}
+async function runAutoSyncCycle(reason, opts){
+  opts = opts || {};
+  if(autoSyncCycleInFlight) return false;
+  if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return false;
+  autoSyncCycleInFlight = true;
+  try{
+    if(opts.save !== false){
+      await autoSaveToServerIfNeeded(reason, !!opts.forceSave);
+    }
+    if(opts.refresh !== false){
+      await autoRefreshFromServer(reason || "interval");
+    }
+    return true;
+  }finally{
+    autoSyncCycleInFlight = false;
+  }
+}
+function scheduleAutoRefreshOnOpen(){
+  if(autoRefreshOnOpenDone) return;
+  autoRefreshOnOpenDone = true;
+  setTimeout(function(){
+    runAutoSyncCycle("open", { save:false, refresh:true }).catch(function(err){
+      console.warn("auto refresh on open failed:", err);
+    });
+  }, 1200);
+}
+
 function triggerServerAutoImport(reason){
   if(!SERVER_SYNC_ENABLED) return;
   if(!isUserLoggedIn()) return;
@@ -13677,7 +13809,7 @@ function triggerServerAutoImport(reason){
   var now = Date.now();
   if(now - lastServerAutoImportMs < 20000) return;
   lastServerAutoImportMs = now;
-  autoImportFromServer(false).catch(function(err){
+  autoRefreshFromServer(reason || "trigger").catch(function(err){
     console.warn("autoImport trigger failed (" + String(reason || "manual") + "):", err);
   });
 }
@@ -13705,9 +13837,10 @@ setInterval(function(){
   if(!SERVER_SYNC_ENABLED) return;
   if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight) return;
   if(typeof navigator !== "undefined" && navigator.onLine === false) return;
-  if(loadQueuedServerExport()) flushQueuedServerExport(false).catch(function(){});
-  triggerServerAutoImport("interval");
-}, 45000);
+  runAutoSyncCycle("interval", { save:true, refresh:true }).catch(function(err){
+    console.warn("auto sync interval failed:", err);
+  });
+}, AUTO_SYNC_INTERVAL_MS);
 
 
 /* ── Full login with server auto-import support ── */
@@ -13750,7 +13883,10 @@ async function loginWithFolderSupport(){
     if(!serverOk){
       syncHealthMarkError("Could not auto-load");
       showToast("⚠ Could not auto-load from central server");
+    }else{
+      markCurrentAutoSyncDigest();
     }
+    scheduleAutoRefreshOnOpen();
   } else {
     err.style.display = "block";
     err.textContent   = "Incorrect password. Please try again.";
