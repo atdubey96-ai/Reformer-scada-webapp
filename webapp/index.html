@@ -4759,7 +4759,7 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
       </div>
 
-      <button class="ls-btn" onclick="login()">
+      <button class="ls-btn ls-btn-login" onclick="login()">
         <span>Sign In to Portal</span>
         <span class="ls-btn-arrow">&#8594;</span>
       </button>
@@ -8218,6 +8218,61 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap #face-ab-back::before,
         #tab-heatmap #face-cd-back::before{
           border-radius:inherit !important;
+        }
+      </style>
+      <style id="login-signin-btn-style-2026">
+        #loginScreen .ls-btn-login{
+          position:relative !important;
+          overflow:hidden !important;
+          border:1px solid rgba(103,208,255,0.44) !important;
+          border-radius:9px !important;
+          background:
+            linear-gradient(180deg,rgba(224,248,255,0.2) 0%,rgba(224,248,255,0.03) 26%,rgba(224,248,255,0) 100%),
+            linear-gradient(125deg,#0f2c46 0%,#1c4d71 52%,#2f7aa2 100%) !important;
+          color:#f4fbff !important;
+          box-shadow:
+            0 10px 24px rgba(7,27,45,0.62),
+            0 0 0 1px rgba(180,235,255,0.12) inset,
+            0 -1px 0 rgba(8,20,34,0.6) inset !important;
+          text-shadow:0 1px 2px rgba(3,11,20,0.58) !important;
+        }
+        #loginScreen .ls-btn-login::before{
+          content:"";
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+          background:linear-gradient(112deg,rgba(255,255,255,0.26) 0%,rgba(255,255,255,0.08) 35%,rgba(255,255,255,0) 62%);
+        }
+        #loginScreen .ls-btn-login > span{
+          position:relative;
+          z-index:1;
+        }
+        #loginScreen .ls-btn-login .ls-btn-arrow{
+          color:#c7f2ff !important;
+          font-size:20px !important;
+          text-shadow:0 0 8px rgba(86,207,255,0.36) !important;
+        }
+        #loginScreen .ls-btn-login:hover{
+          transform:translateY(-1px) !important;
+          box-shadow:
+            0 14px 30px rgba(11,39,63,0.68),
+            0 0 0 1px rgba(195,238,255,0.2) inset,
+            0 -1px 0 rgba(9,22,37,0.68) inset !important;
+          filter:brightness(1.05) saturate(1.06) !important;
+        }
+        #loginScreen .ls-btn-login:active{
+          transform:translateY(0) !important;
+          filter:brightness(0.98) !important;
+        }
+        body.light-theme #loginScreen .ls-btn-login{
+          border-color:rgba(230,30,77,0.48) !important;
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.32) 0%,rgba(255,255,255,0.06) 28%,rgba(255,255,255,0) 100%),
+            linear-gradient(128deg,#e11d48 0%,#f43f5e 52%,#fb7185 100%) !important;
+          color:#ffffff !important;
+          box-shadow:
+            0 10px 22px rgba(190,24,93,0.28),
+            0 0 0 1px rgba(255,255,255,0.28) inset !important;
         }
       </style>
       <style id="save-button-unify-2026">
