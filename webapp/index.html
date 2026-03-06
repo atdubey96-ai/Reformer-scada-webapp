@@ -1862,6 +1862,14 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .cleaning-walls-grid{
   display:flex;flex-direction:column;gap:24px;
 }
+.cleaning-main-outline{
+  margin-top:8px;
+  padding:10px 10px 12px;
+  border:1px solid rgba(92,122,156,0.46);
+  border-radius:14px;
+  background:linear-gradient(155deg,rgba(10,16,26,0.88) 0%,rgba(8,14,22,0.8) 56%,rgba(7,12,19,0.9) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 30px rgba(0,0,0,0.44);
+}
 /* ── Cleaning Wall Selector Buttons ── */
 .cw-selector{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
 .cw-selector-label{font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;margin-right:6px;}
@@ -1881,6 +1889,11 @@ body.light-theme .cw-btn{background:#e2eaf6;border-color:#b8cde8;color:#4a6a8a;}
 body.light-theme .cw-btn:hover{background:#d0dff2;color:#1e293b;}
 body.light-theme .cw-btn-active{background:linear-gradient(90deg,#d95008,#F37022);color:#fff;border-color:#F37022;}
 body.light-theme .cw-selector-label{color:#2a4a6a;}
+body.light-theme .cleaning-main-outline{
+  border-color:rgba(148,163,184,0.44);
+  background:linear-gradient(155deg,rgba(248,250,252,0.96) 0%,rgba(241,245,249,0.94) 56%,rgba(236,242,248,0.96) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), 0 10px 24px rgba(15,23,42,0.14);
+}
 .cw-nudge{
   margin-left:auto;
   display:inline-flex;
@@ -1903,6 +1916,10 @@ body.light-theme .cw-nudge{
   color:#065f46;
 }
 @media(max-width:1100px){
+  .cleaning-main-outline{
+    padding:8px 8px 10px;
+    border-radius:12px;
+  }
   .cw-nudge{
     margin-left:0;
     width:100%;
@@ -9335,38 +9352,40 @@ html, body, body *, body *::before, body *::after, svg text{
 
       <!-- High-frequency cleaning now uses the same bottom master alarm banner as burner imbalance -->
 
-      <!-- Wall Selector Buttons -->
-      <div class="cw-selector" id="cleaningWallSelector">
-        <span class="cw-selector-label">Select Wall:</span>
-        <button class="cw-btn cw-btn-active" id="cw-btn-A" onclick="switchCleaningWall('A')">🔥 Wall A</button>
-        <button class="cw-btn" id="cw-btn-B" onclick="switchCleaningWall('B')">🔥 Wall B</button>
-        <button class="cw-btn" id="cw-btn-C" onclick="switchCleaningWall('C')">🔥 Wall C</button>
-        <button class="cw-btn" id="cw-btn-D" onclick="switchCleaningWall('D')">🔥 Wall D</button>
-        <div class="cw-nudge" title="Post-cleaning reminder">📝 After cleaning, update inline Burner Data if condition changed.</div>
-      </div>
+      <div class="cleaning-main-outline">
+        <!-- Wall Selector Buttons -->
+        <div class="cw-selector" id="cleaningWallSelector">
+          <span class="cw-selector-label">Select Wall:</span>
+          <button class="cw-btn cw-btn-active" id="cw-btn-A" onclick="switchCleaningWall('A')">🔥 Wall A</button>
+          <button class="cw-btn" id="cw-btn-B" onclick="switchCleaningWall('B')">🔥 Wall B</button>
+          <button class="cw-btn" id="cw-btn-C" onclick="switchCleaningWall('C')">🔥 Wall C</button>
+          <button class="cw-btn" id="cw-btn-D" onclick="switchCleaningWall('D')">🔥 Wall D</button>
+          <div class="cw-nudge" title="Post-cleaning reminder">📝 After cleaning, update inline Burner Data if condition changed.</div>
+        </div>
 
-      <div id="cleaningTablesWrap" class="cleaning-walls-grid">
-        <!-- built by JS -->
-      </div>
-      <div class="cleaning-export-row">
-        <span id="cleaningStatus"></span>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-          <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
-            ⚠ Unsaved Changes — click <b>SAVE CLEANING DATA</b> to confirm
-          </span>
-          <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE CLEANING DATA</button>
-          <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ Histroical Data</button>
-          <div style="position:relative;display:inline-block;" id="cleaningClearWrap">
-            <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 Delete Data ▾</button>
-            <div id="cleaningClearMenu" style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.7);z-index:500;overflow:hidden;padding:6px 0;">
-              <div style="padding:8px 14px 6px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;border-bottom:1px solid #1e3a5e;margin-bottom:4px;">DELETE CLEANING DATA</div>
-              <button class="cl-menu-item" onclick="openClearByWall()">🧱 Clear by Wall</button>
-              <button class="cl-menu-item" onclick="openClearByRow()">📋 Clear by Row</button>
-              <button class="cl-menu-item" onclick="openClearByDateRange()">📅 Clear by Date Range</button>
-              <button class="cl-menu-item" onclick="openClearOlderThan()">🕐 Clear Older Than…</button>
-              <div style="height:1px;background:#1e3a5e;margin:4px 0;"></div>
-              <div style="padding:6px 14px 4px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;">CLEAR ALL</div>
-              <button class="cl-menu-item cl-menu-danger" onclick="openClearAllBurners()">⚠️ Clear All Burners…</button>
+        <div id="cleaningTablesWrap" class="cleaning-walls-grid">
+          <!-- built by JS -->
+        </div>
+        <div class="cleaning-export-row">
+          <span id="cleaningStatus"></span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+            <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
+              ⚠ Unsaved Changes — click <b>SAVE CLEANING DATA</b> to confirm
+            </span>
+            <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE CLEANING DATA</button>
+            <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ Histroical Data</button>
+            <div style="position:relative;display:inline-block;" id="cleaningClearWrap">
+              <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 Delete Data ▾</button>
+              <div id="cleaningClearMenu" style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.7);z-index:500;overflow:hidden;padding:6px 0;">
+                <div style="padding:8px 14px 6px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;border-bottom:1px solid #1e3a5e;margin-bottom:4px;">DELETE CLEANING DATA</div>
+                <button class="cl-menu-item" onclick="openClearByWall()">🧱 Clear by Wall</button>
+                <button class="cl-menu-item" onclick="openClearByRow()">📋 Clear by Row</button>
+                <button class="cl-menu-item" onclick="openClearByDateRange()">📅 Clear by Date Range</button>
+                <button class="cl-menu-item" onclick="openClearOlderThan()">🕐 Clear Older Than…</button>
+                <div style="height:1px;background:#1e3a5e;margin:4px 0;"></div>
+                <div style="padding:6px 14px 4px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;">CLEAR ALL</div>
+                <button class="cl-menu-item cl-menu-danger" onclick="openClearAllBurners()">⚠️ Clear All Burners…</button>
+              </div>
             </div>
           </div>
         </div>
