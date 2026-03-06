@@ -1189,31 +1189,33 @@ body:not(.heatmap-header-active) #hm-header-tools{
 ==================================================== */
 .alarm-banner{
   background:
-    linear-gradient(180deg,rgba(255,255,255,0.12) 0%,rgba(255,255,255,0.02) 24%,rgba(255,255,255,0) 100%),
-    linear-gradient(135deg,#741919 0%,#b91c1c 42%,#ef4444 100%);
+    linear-gradient(180deg,rgba(255,255,255,0.13) 0%,rgba(255,255,255,0.03) 24%,rgba(255,255,255,0) 100%),
+    linear-gradient(135deg,#6e1717 0%,#b71f1f 44%,#f04444 100%);
   color:#fff;
   text-align:left;
-  padding:10px 12px;
+  padding:11px 14px 10px;
   font-weight:700;
   font-size:13px;
   display:none;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap:12px;
   position:fixed;
-  bottom:76px;
-  left:12px;
-  right:12px;
+  bottom:82px;
+  left:clamp(10px,1.15vw,18px);
+  right:clamp(10px,1.15vw,18px);
   z-index:9999;
   border:1px solid rgba(255,255,255,0.18);
-  border-radius:20px;
+  border-radius:22px;
   box-shadow:
-    0 16px 34px rgba(84,18,18,0.34),
-    0 6px 14px rgba(0,0,0,0.22),
-    inset 0 1px 0 rgba(255,255,255,0.18);
+    0 20px 42px rgba(84,18,18,0.34),
+    0 8px 18px rgba(0,0,0,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(115,17,17,0.28);
   -webkit-backdrop-filter:blur(10px) saturate(116%);
   backdrop-filter:blur(10px) saturate(116%);
   overflow:hidden;
+  isolation:isolate;
 }
 .alarm-banner::before{
   content:"";
@@ -1221,7 +1223,8 @@ body:not(.heatmap-header-active) #hm-header-tools{
   inset:0;
   pointer-events:none;
   background:
-    radial-gradient(140% 120% at 0% 50%,rgba(251,191,36,0.22) 0%,rgba(251,191,36,0) 38%),
+    radial-gradient(120% 120% at 8% 16%,rgba(251,191,36,0.18) 0%,rgba(251,191,36,0) 34%),
+    radial-gradient(120% 140% at 100% 0%,rgba(255,255,255,0.14) 0%,rgba(255,255,255,0) 32%),
     linear-gradient(90deg,rgba(255,255,255,0.08),rgba(255,255,255,0) 16%,rgba(255,255,255,0.05) 82%,rgba(255,255,255,0.02));
 }
 .alarm-banner > *{
@@ -1238,26 +1241,27 @@ body:not(.heatmap-header-active) #hm-header-tools{
   background:linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,241,230,0.92));
   color:#7f1d1d;
   border:1px solid rgba(255,255,255,0.45);
-  padding:8px 16px;
+  padding:9px 18px 8px;
   border-radius:999px;
   cursor:pointer;
   font-weight:800;
   align-self:center;
   white-space:nowrap;
   font-size:11px;
-  letter-spacing:0.35px;
-  box-shadow:0 6px 16px rgba(76,16,16,0.16), inset 0 1px 0 rgba(255,255,255,0.5);
+  min-height:40px;
+  letter-spacing:0.45px;
+  box-shadow:0 8px 18px rgba(76,16,16,0.18), inset 0 1px 0 rgba(255,255,255,0.54);
 }
 .alarm-sections{
   display:flex;
   align-items:stretch;
-  gap:8px;
+  gap:9px;
   flex:1;
   min-width:0;
   overflow-x:auto;
   overflow-y:hidden;
   white-space:nowrap;
-  padding:1px 2px 2px 1px;
+  padding:2px 2px 3px 1px;
   scrollbar-width:none;
 }
 .alarm-sections::-webkit-scrollbar{
@@ -1268,11 +1272,12 @@ body:not(.heatmap-header-active) #hm-header-tools{
   cursor:pointer;
   color:#fff;
   background:rgba(0,0,0,0.18);
-  border-radius:18px;
+  border-radius:17px;
   border:1px solid rgba(255,255,255,0.22);
-  min-width:192px;
-  max-width:226px;
-  padding:7px 11px;
+  min-width:190px;
+  max-width:224px;
+  min-height:50px;
+  padding:8px 11px 7px;
   display:inline-flex;
   flex-direction:column;
   align-items:flex-start;
@@ -1327,18 +1332,19 @@ body:not(.heatmap-header-active) #hm-header-tools{
   .alarm-banner{
     flex-direction:column;
     align-items:stretch;
-    gap:10px;
-    left:6px;
-    right:6px;
-    bottom:70px;
-    padding:10px 10px 9px;
-    border-radius:16px;
+    gap:8px;
+    left:8px;
+    right:8px;
+    bottom:74px;
+    padding:10px 10px 10px;
+    border-radius:18px;
   }
   .alarm-sections{gap:6px;}
   .alarm-chip{
-    min-width:176px;
-    max-width:204px;
-    border-radius:16px;
+    min-width:170px;
+    max-width:198px;
+    min-height:48px;
+    border-radius:15px;
   }
   .alarm-banner button{
     align-self:stretch;
@@ -2199,7 +2205,7 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
   }
   .app-meta-item{font-size:10px;}
   .alarm-banner{
-    bottom:calc(70px + env(safe-area-inset-bottom, 0px));
+    bottom:calc(74px + env(safe-area-inset-bottom, 0px));
   }
   .bottom-tab-bar{
     display:flex;
