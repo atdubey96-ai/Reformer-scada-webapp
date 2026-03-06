@@ -8743,6 +8743,14 @@ html, body, body *, body *::before, body *::after, svg text{
           function getPH(e,k){ return (e&&e.peepHoles&&e.peepHoles[k]) ? e.peepHoles[k] : Array(15).fill(""); }
           var abBot=getPH(entry,"ab-bot"), abTop=getPH(entry,"ab-top");
           var cdBot=getPH(entry,"cd-bot"), cdTop=getPH(entry,"cd-top");
+          var cleaningSig = null;
+          try{
+            cleaningSig = (typeof getMergedCleaningLog === "function")
+              ? getMergedCleaningLog()
+              : ((typeof loadCleaningLog === "function") ? loadCleaningLog() : null);
+          }catch(_cleanErr){
+            cleaningSig = null;
+          }
 
           var nextSig = JSON.stringify({
             shift:shift || "All",
@@ -8751,7 +8759,8 @@ html, body, body *, body *::before, body *::after, svg text{
             iconSet:(typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "flame",
             hmData:hmData,
             abBot:abBot, abTop:abTop,
-            cdBot:cdBot, cdTop:cdTop
+            cdBot:cdBot, cdTop:cdTop,
+            cleaning:cleaningSig
           });
           if(nextSig === _lastCuboidTextureSig) return;
           _lastCuboidTextureSig = nextSig;
