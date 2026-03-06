@@ -8179,6 +8179,58 @@ html, body, body *, body *::before, body *::after, svg text{
           border-radius:inherit !important;
         }
       </style>
+      <style id="save-button-unify-2026">
+        body .scada-save-btn,
+        body.light-theme .scada-save-btn{
+          display:inline-flex !important;
+          align-items:center !important;
+          justify-content:center !important;
+          gap:8px !important;
+          min-height:40px !important;
+          padding:10px 20px !important;
+          border-radius:14px !important;
+          border:1px solid rgba(221,159,101,0.52) !important;
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.16) 0%,rgba(255,255,255,0.02) 22%,rgba(255,255,255,0) 100%),
+            linear-gradient(135deg,#2a2019 0%,#5a3726 44%,#8f5a34 100%) !important;
+          color:#fff8ee !important;
+          font-family:"Times New Roman", Times, serif !important;
+          font-size:13px !important;
+          font-weight:700 !important;
+          letter-spacing:0.8px !important;
+          text-transform:uppercase !important;
+          box-shadow:
+            0 12px 26px rgba(0,0,0,0.34),
+            0 0 0 1px rgba(255,210,170,0.08) inset,
+            inset 0 1px 0 rgba(255,255,255,0.18) !important;
+        }
+        body .scada-save-btn:hover,
+        body.light-theme .scada-save-btn:hover{
+          transform:translateY(-1px) !important;
+          border-color:rgba(245,185,129,0.76) !important;
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.03) 24%,rgba(255,255,255,0) 100%),
+            linear-gradient(135deg,#34261d 0%,#6a422a 46%,#ad6839 100%) !important;
+          color:#fffdf8 !important;
+          box-shadow:
+            0 16px 30px rgba(0,0,0,0.38),
+            0 0 22px rgba(205,123,54,0.18),
+            inset 0 1px 0 rgba(255,255,255,0.22) !important;
+          filter:none !important;
+        }
+        body .scada-save-btn:active,
+        body.light-theme .scada-save-btn:active{
+          transform:translateY(0) !important;
+          background:
+            linear-gradient(180deg,rgba(255,255,255,0.1) 0%,rgba(255,255,255,0.01) 24%,rgba(255,255,255,0) 100%),
+            linear-gradient(135deg,#241a14 0%,#4b2f22 46%,#7b4e31 100%) !important;
+        }
+        body .scada-save-btn:focus-visible,
+        body.light-theme .scada-save-btn:focus-visible{
+          outline:2px solid rgba(255,214,170,0.52) !important;
+          outline-offset:2px !important;
+        }
+      </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
@@ -9125,10 +9177,10 @@ html, body, body *, body *::before, body *::after, svg text{
       <span class="legend-item li-C">C — None / Cold</span>
       <div class="legend-actions">
         <span id="burnerUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
-          ⚠ Unsaved Changes — click <b>SAvE burner data</b> to confirm
+          ⚠ Unsaved Changes — click <b>SAVE BURNER DATA</b> to confirm
         </span>
         <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">
-          💾 SAvE burner data
+          💾 SAVE BURNER DATA
         </button>
       </div>
     </div>
@@ -9212,9 +9264,9 @@ html, body, body *, body *::before, body *::after, svg text{
         <span id="cleaningStatus"></span>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
           <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
-            ⚠ Unsaved Changes — click <b>SAVE Cleaning DATa</b> to confirm
+            ⚠ Unsaved Changes — click <b>SAVE CLEANING DATA</b> to confirm
           </span>
-          <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE Cleaning DATa</button>
+          <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE CLEANING DATA</button>
           <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ Histroical Data</button>
           <div style="position:relative;display:inline-block;" id="cleaningClearWrap">
             <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 Delete Data ▾</button>
@@ -9246,7 +9298,7 @@ html, body, body *, body *::before, body *::after, svg text{
           <div style="display:flex;gap:10px;align-items:center;">
             <span id="tipUnsavedBadge" style="display:none;font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);padding:4px 12px;border-radius:4px;">⚠ Unsaved Changes</span>
             <button onclick="addTipRow()" style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.35);color:#4ade80;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;font-family:Rajdhani,sans-serif;cursor:pointer;letter-spacing:0.5px;">＋ Add Row</button>
-            <button class="scada-save-btn" onclick="saveTipData()">💾 Save Tip data</button>
+            <button class="scada-save-btn" onclick="saveTipData()">💾 SAVE TIP DATA</button>
           </div>
         </div>
 
@@ -9502,7 +9554,7 @@ html, body, body *, body *::before, body *::after, svg text{
             📋 Saved Entries
           </div>
           <button id="td-save-btn" onclick="saveTempData()" class="td-toolbar-btn td-toolbar-btn-primary scada-save-btn">
-            💾 SAve TST data
+            💾 SAVE TST DATA
           </button>
         </div>
         <div style="overflow-x:auto;">
@@ -13946,7 +13998,7 @@ var tdEditingIndex = -1;
 function updateTempSaveButtonLabel(){
   var btn = document.getElementById("td-save-btn");
   if(!btn) return;
-  btn.textContent = tdEditingIndex >= 0 ? "💾 Update TST data" : "💾 SAve TST data";
+  btn.textContent = tdEditingIndex >= 0 ? "💾 UPDATE TST DATA" : "💾 SAVE TST DATA";
 }
 
 function setTempEditMode(idx){
