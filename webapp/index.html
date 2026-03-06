@@ -1930,7 +1930,7 @@ body.light-theme .cw-nudge{
   position:fixed;
   left:clamp(8px,1.4vw,18px);
   right:clamp(8px,1.4vw,18px);
-  bottom:max(8px, env(safe-area-inset-bottom, 0px));
+  bottom:max(2px, env(safe-area-inset-bottom, 0px));
   display:flex;
   border-radius:20px;
   background:
@@ -2175,7 +2175,7 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
     border-radius:16px;
     left:6px;
     right:6px;
-    bottom:max(6px, env(safe-area-inset-bottom, 0px));
+    bottom:max(2px, env(safe-area-inset-bottom, 0px));
   }
   .btab{
     flex:1 1 20%;
@@ -2705,6 +2705,46 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 .td-toolbar-status{
   display:flex;align-items:center;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   font-size:11px;color:#94a3b8;
+}
+.scada-save-btn{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:7px !important;
+  min-height:38px !important;
+  padding:9px 18px !important;
+  border-radius:12px !important;
+  border:1px solid rgba(134,160,196,0.38) !important;
+  background:linear-gradient(135deg,rgba(44,57,76,0.96) 0%,rgba(27,38,54,0.98) 56%,rgba(18,28,41,0.98) 100%) !important;
+  color:#edf5ff !important;
+  font-family:"Times New Roman", Times, serif !important;
+  font-size:12.5px !important;
+  font-weight:700 !important;
+  letter-spacing:0.45px !important;
+  cursor:pointer !important;
+  box-shadow:
+    0 10px 22px rgba(0,0,0,0.34),
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 0 0 1px rgba(123,160,214,0.1) !important;
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease, border-color .18s ease !important;
+  white-space:nowrap !important;
+}
+.scada-save-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(168,194,232,0.52) !important;
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    0 0 0 1px rgba(120,157,214,0.18) !important;
+  filter:brightness(1.04) !important;
+}
+.scada-save-btn:active{
+  transform:translateY(0);
+  filter:brightness(0.98) !important;
+}
+.scada-save-btn:focus-visible{
+  outline:2px solid rgba(147,197,253,0.42);
+  outline-offset:2px;
 }
 .td-row-label{
   font-size:11px;font-weight:700;letter-spacing:0.5px;
@@ -9085,10 +9125,10 @@ html, body, body *, body *::before, body *::after, svg text{
       <span class="legend-item li-C">C — None / Cold</span>
       <div class="legend-actions">
         <span id="burnerUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
-          ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
+          ⚠ Unsaved Changes — click <b>SAvE burner data</b> to confirm
         </span>
-        <button class="hd-btn hd-btn-primary" onclick="exportToExcel()" style="padding:7px 14px;font-size:12px;border-radius:6px;">
-          💾 Save New Data
+        <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">
+          💾 SAvE burner data
         </button>
       </div>
     </div>
@@ -9172,9 +9212,9 @@ html, body, body *, body *::before, body *::after, svg text{
         <span id="cleaningStatus"></span>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
           <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
-            ⚠ Unsaved Changes — click <b>Save New Data</b> to confirm
+            ⚠ Unsaved Changes — click <b>SAVE Cleaning DATa</b> to confirm
           </span>
-          <button class="hd-btn hd-btn-primary" onclick="exportToExcel()" style="padding:8px 18px;font-size:13px;border-radius:6px;">💾 Save New Data</button>
+          <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE Cleaning DATa</button>
           <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ Histroical Data</button>
           <div style="position:relative;display:inline-block;" id="cleaningClearWrap">
             <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 Delete Data ▾</button>
@@ -9206,6 +9246,7 @@ html, body, body *, body *::before, body *::after, svg text{
           <div style="display:flex;gap:10px;align-items:center;">
             <span id="tipUnsavedBadge" style="display:none;font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);padding:4px 12px;border-radius:4px;">⚠ Unsaved Changes</span>
             <button onclick="addTipRow()" style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.35);color:#4ade80;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;font-family:Rajdhani,sans-serif;cursor:pointer;letter-spacing:0.5px;">＋ Add Row</button>
+            <button class="scada-save-btn" onclick="saveTipData()">💾 Save Tip data</button>
           </div>
         </div>
 
@@ -9230,11 +9271,6 @@ html, body, body *, body *::before, body *::after, svg text{
               <!-- rows built by JS -->
             </tbody>
           </table>
-        </div>
-
-        <!-- Footer save strip -->
-        <div style="padding:12px 18px;background:rgba(255,255,255,0.02);border-top:1px solid #1e3a5e;display:flex;justify-content:flex-end;gap:10px;">
-          <button onclick="saveTipData()" style="background:linear-gradient(90deg,#d95008,#F37022);border:none;color:#fff;padding:8px 22px;border-radius:7px;font-size:13px;font-weight:700;font-family:Rajdhani,sans-serif;cursor:pointer;letter-spacing:0.5px;box-shadow:0 0 12px rgba(243,112,34,0.3);">💾 Save Tip Data</button>
         </div>
 
       </div><!-- /tip slab -->
@@ -9465,8 +9501,8 @@ html, body, body *, body *::before, body *::after, svg text{
           <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;">
             📋 Saved Entries
           </div>
-          <button id="td-save-btn" onclick="saveTempData()" class="td-toolbar-btn td-toolbar-btn-primary">
-            💾 Save New Data
+          <button id="td-save-btn" onclick="saveTempData()" class="td-toolbar-btn td-toolbar-btn-primary scada-save-btn">
+            💾 SAve TST data
           </button>
         </div>
         <div style="overflow-x:auto;">
@@ -13910,7 +13946,7 @@ var tdEditingIndex = -1;
 function updateTempSaveButtonLabel(){
   var btn = document.getElementById("td-save-btn");
   if(!btn) return;
-  btn.textContent = tdEditingIndex >= 0 ? "💾 Update Saved Data" : "💾 Save New Data";
+  btn.textContent = tdEditingIndex >= 0 ? "💾 Update TST data" : "💾 SAve TST data";
 }
 
 function setTempEditMode(idx){
