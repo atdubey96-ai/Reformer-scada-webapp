@@ -1188,26 +1188,45 @@ body:not(.heatmap-header-active) #hm-header-tools{
    MASTER ALARM
 ==================================================== */
 .alarm-banner{
-  background:linear-gradient(135deg,#7f1d1d 0%,#dc2626 45%,#ef4444 100%);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,0.12) 0%,rgba(255,255,255,0.02) 24%,rgba(255,255,255,0) 100%),
+    linear-gradient(135deg,#741919 0%,#b91c1c 42%,#ef4444 100%);
   color:#fff;
   text-align:left;
-  padding:4px 8px;
+  padding:10px 12px;
   font-weight:700;
   font-size:13px;
   display:none;
-  align-items:stretch;
+  align-items:center;
   justify-content:space-between;
-  gap:6px;
+  gap:10px;
   position:fixed;
-  bottom:72px;
-  left:10px;
-  right:10px;
+  bottom:76px;
+  left:12px;
+  right:12px;
   z-index:9999;
   border:1px solid rgba(255,255,255,0.18);
-  border-left:4px solid #fbbf24;
-  border-radius:14px 14px 0 0;
-  box-shadow:0 -8px 24px rgba(127,29,29,0.45), inset 0 1px 0 rgba(255,255,255,0.18);
-  backdrop-filter:blur(4px);
+  border-radius:20px;
+  box-shadow:
+    0 16px 34px rgba(84,18,18,0.34),
+    0 6px 14px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+  -webkit-backdrop-filter:blur(10px) saturate(116%);
+  backdrop-filter:blur(10px) saturate(116%);
+  overflow:hidden;
+}
+.alarm-banner::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(140% 120% at 0% 50%,rgba(251,191,36,0.22) 0%,rgba(251,191,36,0) 38%),
+    linear-gradient(90deg,rgba(255,255,255,0.08),rgba(255,255,255,0) 16%,rgba(255,255,255,0.05) 82%,rgba(255,255,255,0.02));
+}
+.alarm-banner > *{
+  position:relative;
+  z-index:1;
 }
 .alarm-visible{display:flex;}
 .alarm-active{display:flex;animation:alarmPulse 1.25s ease-in-out infinite;}
@@ -1216,45 +1235,53 @@ body:not(.heatmap-header-active) #hm-header-tools{
   50%{transform:translateY(-1px);filter:saturate(1.15);}
 }
 .alarm-banner > button{
-  background:rgba(255,255,255,0.95);
-  color:#9f1239;
-  border:1px solid rgba(255,255,255,0.5);
-  padding:4px 10px;
+  background:linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,241,230,0.92));
+  color:#7f1d1d;
+  border:1px solid rgba(255,255,255,0.45);
+  padding:8px 16px;
   border-radius:999px;
   cursor:pointer;
   font-weight:800;
   align-self:center;
   white-space:nowrap;
   font-size:11px;
+  letter-spacing:0.35px;
+  box-shadow:0 6px 16px rgba(76,16,16,0.16), inset 0 1px 0 rgba(255,255,255,0.5);
 }
 .alarm-sections{
   display:flex;
   align-items:stretch;
-  gap:6px;
+  gap:8px;
   flex:1;
   min-width:0;
   overflow-x:auto;
   overflow-y:hidden;
   white-space:nowrap;
-  padding-bottom:2px;
+  padding:1px 2px 2px 1px;
+  scrollbar-width:none;
+}
+.alarm-sections::-webkit-scrollbar{
+  display:none;
 }
 .alarm-chip{
   border:none;
   cursor:pointer;
   color:#fff;
-  background:rgba(0,0,0,0.2);
-  border-radius:999px;
+  background:rgba(0,0,0,0.18);
+  border-radius:18px;
   border:1px solid rgba(255,255,255,0.22);
-  min-width:180px;
-  max-width:210px;
-  padding:4px 8px;
+  min-width:192px;
+  max-width:226px;
+  padding:7px 11px;
   display:inline-flex;
   flex-direction:column;
   align-items:flex-start;
   justify-content:center;
-  gap:1px;
+  gap:2px;
   text-align:left;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.12);
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.12);
 }
 .alarm-chip:hover{filter:brightness(1.05);}
 .alarm-chip-critical{background:linear-gradient(135deg,rgba(127,29,29,0.92),rgba(220,38,38,0.92));}
@@ -1262,16 +1289,16 @@ body:not(.heatmap-header-active) #hm-header-tools{
 .alarm-chip-warning{background:linear-gradient(135deg,rgba(133,77,14,0.9),rgba(202,138,4,0.9));}
 .alarm-chip-freq{background:linear-gradient(135deg,rgba(30,64,175,0.9),rgba(37,99,235,0.9));}
 .alarm-chip-title{
-  font-size:10px;
+  font-size:10.5px;
   font-weight:800;
-  letter-spacing:0.3px;
+  letter-spacing:0.38px;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
   width:100%;
 }
 .alarm-chip-desc{
-  font-size:9px;
+  font-size:9.5px;
   opacity:0.95;
   white-space:nowrap;
   overflow:hidden;
@@ -1300,15 +1327,23 @@ body:not(.heatmap-header-active) #hm-header-tools{
   .alarm-banner{
     flex-direction:column;
     align-items:stretch;
-    gap:8px;
+    gap:10px;
     left:6px;
     right:6px;
-    bottom:66px;
-    border-radius:12px 12px 0 0;
+    bottom:70px;
+    padding:10px 10px 9px;
+    border-radius:16px;
   }
   .alarm-sections{gap:6px;}
-  .alarm-chip{min-width:165px;max-width:190px;}
-  .alarm-banner button{align-self:flex-end;}
+  .alarm-chip{
+    min-width:176px;
+    max-width:204px;
+    border-radius:16px;
+  }
+  .alarm-banner button{
+    align-self:stretch;
+    width:100%;
+  }
 }
 
 /* ====================================================
@@ -2164,7 +2199,7 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
   }
   .app-meta-item{font-size:10px;}
   .alarm-banner{
-    bottom:calc(68px + env(safe-area-inset-bottom, 0px));
+    bottom:calc(70px + env(safe-area-inset-bottom, 0px));
   }
   .bottom-tab-bar{
     display:flex;
