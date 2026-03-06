@@ -4347,7 +4347,7 @@ function renderHeatMap(){
 
   /* ── Render wall cards on demand (lighter initial load) ── */
   var activeWall = (typeof _activeHeatMapWall !== "undefined" && _activeHeatMapWall) ? _activeHeatMapWall : "A";
-  var wallPanelsVisible = (typeof _hmWallPanelsVisible === "boolean") ? _hmWallPanelsVisible : true;
+  var wallPanelsVisible = (typeof _hmWallPanelsVisible === "boolean") ? _hmWallPanelsVisible : false;
   window._hmRenderSnapshot = {
     hmData: hmData,
     abBot: abBot,
@@ -9075,7 +9075,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
       <!-- Wall selector buttons -->
       <div class="hm-wall-btn-bar" id="hm-wall-btn-bar">
-        <button class="hm-wall-btn hm-wall-btn-active" id="hm-wbtn-A" onclick="switchHeatMapWall('A')">🔥 Wall A</button>
+        <button class="hm-wall-btn" id="hm-wbtn-A" onclick="switchHeatMapWall('A')">🔥 Wall A</button>
         <button class="hm-wall-btn" id="hm-wbtn-B" onclick="switchHeatMapWall('B')">🔥 Wall B</button>
         <button class="hm-wall-btn" id="hm-wbtn-C" onclick="switchHeatMapWall('C')">🔥 Wall C</button>
         <button class="hm-wall-btn" id="hm-wbtn-D" onclick="switchHeatMapWall('D')">🔥 Wall D</button>
@@ -9102,7 +9102,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
       <script>
       var _activeHeatMapWall = "A";
-      var _hmWallPanelsVisible = true;
+      var _hmWallPanelsVisible = false;
       var _hmCuboidZoomActive = false;
       var _hmCuboidZoomTarget = "";
       var _hmCuboidZoomKeyBound = false;
@@ -9317,7 +9317,7 @@ html, body, body *, body *::before, body *::after, svg text{
       }
       (function initHeatMapDefaultWall(){
         _activeHeatMapWall = "A";
-        _hmWallPanelsVisible = true;
+        _hmWallPanelsVisible = false;
         if(typeof requestHeatMapRender === "function") requestHeatMapRender(40);
         initHeatMapIconPicker();
         initMobileCuboidToggle();
