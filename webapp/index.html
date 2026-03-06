@@ -3021,37 +3021,7 @@ body.light-theme #td-saved-table .td-dt-time{color:#2563eb;}
   letter-spacing:0.3px;
 }
 /* Wall selector buttons */
-.hm-wall-selector-card{
-  margin:0 0 12px;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid rgba(96,165,250,0.34);
-  background:linear-gradient(165deg,rgba(13,22,36,0.9) 0%,rgba(8,14,24,0.86) 56%,rgba(6,10,18,0.92) 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 24px rgba(2,6,23,0.4);
-}
-.hm-wall-selector-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-}
-.hm-wall-selector-title{
-  font-size:12px;
-  font-weight:800;
-  letter-spacing:0.8px;
-  color:#dbe7fa;
-  text-transform:uppercase;
-  text-shadow:0 1px 2px rgba(0,0,0,0.58);
-}
-.hm-wall-selector-body{
-  margin-top:8px;
-  display:block;
-}
-.hm-wall-selector-card.hm-wall-selector-collapsed .hm-wall-selector-body{
-  display:none;
-}
 .hm-wall-btn-bar{display:flex;gap:6px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;}
-.hm-wall-selector-body .hm-wall-btn-bar{margin-bottom:0;}
 .hm-wall-btn{
   background:rgba(255,255,255,0.04);border:1px solid #334155;color:#94a3b8;
   padding:7px 22px;border-radius:7px;font-size:12px;font-weight:700;
@@ -3098,15 +3068,6 @@ body.light-theme #td-saved-table .td-dt-time{color:#2563eb;}
 body.light-theme .hm-wall-btn{background:rgba(0,0,0,0.04);border-color:#b8cde8;color:#4a6a8a;}
 body.light-theme .hm-wall-btn:hover{background:rgba(243,112,34,0.1);color:#F37022;border-color:#F37022;}
 body.light-theme .hm-wall-btn-active{background:rgba(243,112,34,0.12)!important;border-color:#F37022!important;color:#F37022!important;}
-body.light-theme .hm-wall-selector-card{
-  background:linear-gradient(180deg,#f3f7fd 0%,#e8f0fa 100%);
-  border-color:#b8cde8;
-  box-shadow:0 10px 24px rgba(30,58,90,0.14), inset 0 1px 0 rgba(255,255,255,0.92);
-}
-body.light-theme .hm-wall-selector-title{
-  color:#22374f;
-  text-shadow:none;
-}
 body.light-theme .hm-icon-menu{
   background:#e8f0fa;border-color:#b8cde8;box-shadow:0 12px 24px rgba(30,58,94,0.2);
 }
@@ -4386,6 +4347,7 @@ function renderHeatMap(){
 
   /* ── Render wall cards on demand (lighter initial load) ── */
   var activeWall = (typeof _activeHeatMapWall !== "undefined" && _activeHeatMapWall) ? _activeHeatMapWall : "A";
+  var wallPanelsVisible = (typeof _hmWallPanelsVisible === "boolean") ? _hmWallPanelsVisible : true;
   window._hmRenderSnapshot = {
     hmData: hmData,
     abBot: abBot,
@@ -4399,7 +4361,8 @@ function renderHeatMap(){
 
   updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
   clearHeatMapPanelContent();
-  if(activeWall) ensureHeatMapWallBuilt(activeWall);
+  if(typeof applyHeatMapWallPanelState === "function") applyHeatMapWallPanelState();
+  if(wallPanelsVisible && activeWall) ensureHeatMapWallBuilt(activeWall);
 }
 
 function hmToNumericTemps(vals){
@@ -4669,29 +4632,6 @@ function toggleHeatMapAdjustmentCard(forceOpen){
   if(open) card.classList.remove("hm-adjust-collapsed");
   else card.classList.add("hm-adjust-collapsed");
   btn.textContent = open ? "Hide" : "Show";
-}
-
-var HEATMAP_WALL_SELECTOR_STATE_KEY = "SCADA_HM_WALL_SELECTOR_OPEN";
-function toggleHeatMapWallSelector(forceOpen){
-  var card = document.getElementById("hm-wall-selector-card");
-  var btn = document.getElementById("hm-wall-selector-toggle-btn");
-  if(!card || !btn) return;
-  var open = (typeof forceOpen === "boolean") ? forceOpen : card.classList.contains("hm-wall-selector-collapsed");
-  if(open) card.classList.remove("hm-wall-selector-collapsed");
-  else card.classList.add("hm-wall-selector-collapsed");
-  btn.textContent = open ? "Hide" : "Show";
-  try{
-    localStorage.setItem(HEATMAP_WALL_SELECTOR_STATE_KEY, open ? "1" : "0");
-  }catch(_hmWallSelErr){}
-}
-function initHeatMapWallSelectorCard(){
-  var open = true;
-  try{
-    var saved = localStorage.getItem(HEATMAP_WALL_SELECTOR_STATE_KEY);
-    if(saved === "0") open = false;
-    else if(saved === "1") open = true;
-  }catch(_hmWallSelInitErr){}
-  toggleHeatMapWallSelector(open);
 }
 
 /* Coalesce burst updates from dropdown/tab/button events */
@@ -7020,13 +6960,13 @@ html, body, body *, body *::before, body *::after, svg text{
           text-shadow:0 1px 2px rgba(0,0,0,0.68) !important;
         }
         body:not(.light-theme) .cleaning-main-outline{
-          background:linear-gradient(160deg,#080d14 0%,#060b11 56%,#05090f 100%) !important;
-          border-color:rgba(120,138,162,0.44) !important;
+          background:linear-gradient(160deg,#090c11 0%,#07090d 56%,#05070a 100%) !important;
+          border-color:rgba(86,98,116,0.52) !important;
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), 0 16px 34px rgba(0,0,0,0.52) !important;
         }
         body:not(.light-theme) .cleaning-table-wrap{
-          background:linear-gradient(160deg,#070c13 0%,#050a10 62%,#04080d 100%) !important;
-          border-color:rgba(120,138,162,0.42) !important;
+          background:linear-gradient(160deg,#080b10 0%,#06080c 62%,#04060a 100%) !important;
+          border-color:rgba(86,98,116,0.48) !important;
         }
         body:not(.light-theme) .cleaning-wall-title{
           background:linear-gradient(90deg,rgba(243,112,34,0.15),rgba(243,112,34,0.04)) !important;
@@ -7034,18 +6974,22 @@ html, body, body *, body *::before, body *::after, svg text{
           border-left-color:#f37022 !important;
         }
         body:not(.light-theme) .cleaning-table th{
-          background:linear-gradient(180deg,#111825 0%,#0b111b 100%) !important;
+          background:linear-gradient(180deg,#12171d 0%,#0d1217 100%) !important;
           color:#cddbf1 !important;
-          border-color:rgba(110,130,156,0.46) !important;
+          border-color:rgba(86,98,116,0.56) !important;
         }
         body:not(.light-theme) .cleaning-table td{
-          background:linear-gradient(180deg,#070d16 0%,#050a12 100%) !important;
-          border-color:rgba(94,114,140,0.42) !important;
+          background:linear-gradient(180deg,#080c12 0%,#060a10 100%) !important;
+          border-color:rgba(72,84,100,0.5) !important;
           color:#e7eef9 !important;
         }
         body:not(.light-theme) .cleaning-table td:first-child{
-          background:linear-gradient(180deg,#151d2b 0%,#0e1520 100%) !important;
+          background:linear-gradient(180deg,#1a2028 0%,#121820 100%) !important;
           color:#f1f5fb !important;
+        }
+        body:not(.light-theme) .cleaning-table td.date-filled{
+          background:linear-gradient(180deg,#0b1118 0%,#080d14 100%) !important;
+          border-color:rgba(72,84,100,0.56) !important;
         }
         body:not(.light-theme) .cleaning-table .ct-date-label{
           color:#d5e0f3 !important;
@@ -9130,20 +9074,12 @@ html, body, body *, body *::before, body *::after, svg text{
       </div>
 
       <!-- Wall selector buttons -->
-      <div id="hm-wall-selector-card" class="hm-wall-selector-card">
-        <div class="hm-wall-selector-head">
-          <div class="hm-wall-selector-title">🔥 Heat Map Wall Selector</div>
-          <button type="button" id="hm-wall-selector-toggle-btn" class="hm-adjust-toggle" onclick="toggleHeatMapWallSelector()">Hide</button>
-        </div>
-        <div class="hm-wall-selector-body" id="hm-wall-selector-body">
-          <div class="hm-wall-btn-bar" id="hm-wall-btn-bar">
-            <button class="hm-wall-btn hm-wall-btn-active" id="hm-wbtn-A" onclick="switchHeatMapWall('A')">🔥 Wall A</button>
-            <button class="hm-wall-btn" id="hm-wbtn-B" onclick="switchHeatMapWall('B')">🔥 Wall B</button>
-            <button class="hm-wall-btn" id="hm-wbtn-C" onclick="switchHeatMapWall('C')">🔥 Wall C</button>
-            <button class="hm-wall-btn" id="hm-wbtn-D" onclick="switchHeatMapWall('D')">🔥 Wall D</button>
-            <button class="hm-wall-btn" id="hm-cuboid-toggle-btn" style="display:none;" onclick="toggleMobileCuboid()"></button>
-          </div>
-        </div>
+      <div class="hm-wall-btn-bar" id="hm-wall-btn-bar">
+        <button class="hm-wall-btn hm-wall-btn-active" id="hm-wbtn-A" onclick="switchHeatMapWall('A')">🔥 Wall A</button>
+        <button class="hm-wall-btn" id="hm-wbtn-B" onclick="switchHeatMapWall('B')">🔥 Wall B</button>
+        <button class="hm-wall-btn" id="hm-wbtn-C" onclick="switchHeatMapWall('C')">🔥 Wall C</button>
+        <button class="hm-wall-btn" id="hm-wbtn-D" onclick="switchHeatMapWall('D')">🔥 Wall D</button>
+        <button class="hm-wall-btn" id="hm-cuboid-toggle-btn" style="display:none;" onclick="toggleMobileCuboid()"></button>
       </div>
 
       <!-- Individual wall panels (only one visible at a time, except "ALL") -->
@@ -9166,6 +9102,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
       <script>
       var _activeHeatMapWall = "A";
+      var _hmWallPanelsVisible = true;
       var _hmCuboidZoomActive = false;
       var _hmCuboidZoomTarget = "";
       var _hmCuboidZoomKeyBound = false;
@@ -9239,18 +9176,30 @@ html, body, body *, body *::before, body *::after, svg text{
           if(key === "escape") closeHeatMapIconMenu();
         });
       }
-      function switchHeatMapWall(wall){
-        _activeHeatMapWall = wall || "A";
+      function applyHeatMapWallPanelState(){
         var walls = ['A','B','C','D'];
-        for(var i=0;i<walls.length;i++){
+        var show = (_hmWallPanelsVisible !== false);
+        for(var i=0; i<walls.length; i++){
           var key = walls[i];
-          var panel = document.getElementById('hm-wall-panel-'+key);
-          var btn = document.getElementById('hm-wbtn-'+key);
-          if(panel) panel.style.display = (key === _activeHeatMapWall) ? 'block' : 'none';
-          if(btn) btn.classList.toggle('hm-wall-btn-active', key === _activeHeatMapWall);
+          var panel = document.getElementById('hm-wall-panel-' + key);
+          var btn = document.getElementById('hm-wbtn-' + key);
+          var isActive = show && key === _activeHeatMapWall;
+          if(panel) panel.style.display = isActive ? 'block' : 'none';
+          if(btn) btn.classList.toggle('hm-wall-btn-active', isActive);
         }
         var panelAll = document.getElementById("hm-wall-panel-ALL");
         if(panelAll) panelAll.style.display = "none";
+      }
+      function switchHeatMapWall(wall){
+        var nextWall = wall || "A";
+        if(_activeHeatMapWall === nextWall && _hmWallPanelsVisible){
+          _hmWallPanelsVisible = false;
+          applyHeatMapWallPanelState();
+          return;
+        }
+        _activeHeatMapWall = nextWall;
+        _hmWallPanelsVisible = true;
+        applyHeatMapWallPanelState();
         if(window._hmRenderSnapshot && typeof ensureHeatMapWallBuilt === "function"){
           ensureHeatMapWallBuilt(_activeHeatMapWall);
         } else if(typeof requestHeatMapRender === "function"){
@@ -9368,11 +9317,11 @@ html, body, body *, body *::before, body *::after, svg text{
       }
       (function initHeatMapDefaultWall(){
         _activeHeatMapWall = "A";
+        _hmWallPanelsVisible = true;
         if(typeof requestHeatMapRender === "function") requestHeatMapRender(40);
         initHeatMapIconPicker();
         initMobileCuboidToggle();
         initHeatMapCuboidZoom();
-        initHeatMapWallSelectorCard();
       })();
       </script>
 
