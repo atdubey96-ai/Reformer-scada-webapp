@@ -5021,15 +5021,12 @@ html, body, body *, body *::before, body *::after, svg text{
         .cb-scene::before{
           content:"";
           position:absolute;
-          top:0;
-          bottom:0;
-          left:-12px;
-          right:-12px;
-          border-radius:16px;
+          inset:0;
+          border-radius:14px;
           border:1px solid rgba(148,163,184,0.18);
           box-shadow:inset 0 0 30px rgba(2,6,23,0.28);
           pointer-events:none;
-          z-index:11;
+          z-index:5;
         }
         .cb-scene-ab::before{
           border-color:rgba(226,232,240,0.62);
@@ -7267,7 +7264,7 @@ html, body, body *, body *::before, body *::after, svg text{
       </style>
       <style id="heatmap-cuboid-stacked-layout-2026">
         #tab-heatmap{
-          --cb-w:min(94vw,1230px);
+          --cb-w:min(90vw,1230px);
           --cb-h:clamp(520px,62vh,580px);
           --cb-d:clamp(80px,10vw,110px);
           --cb-front-scale:calc(var(--cb-w) / 410);
@@ -7344,14 +7341,14 @@ html, body, body *, body *::before, body *::after, svg text{
 
         @media (max-width:1200px){
           #tab-heatmap{
-            --cb-w:min(94vw,1170px);
+            --cb-w:min(90vw,1170px);
             --cb-h:clamp(500px,60vh,560px);
             --cb-d:clamp(74px,10vw,100px);
           }
         }
         @media (max-width:900px){
           #tab-heatmap{
-            --cb-w:min(94vw,1080px);
+            --cb-w:min(90vw,1080px);
             --cb-h:clamp(460px,60vh,520px);
             --cb-d:clamp(66px,10vw,90px);
           }
