@@ -4329,7 +4329,7 @@ function renderHeatMap(){
   }
 
   /* ── Render wall cards on demand (lighter initial load) ── */
-  var activeWall = (typeof _activeHeatMapWall !== "undefined" && _activeHeatMapWall) ? _activeHeatMapWall : "ALL";
+  var activeWall = (typeof _activeHeatMapWall !== "undefined" && _activeHeatMapWall) ? _activeHeatMapWall : "A";
   window._hmRenderSnapshot = {
     hmData: hmData,
     abBot: abBot,
@@ -9016,8 +9016,14 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
       </div>
 
-      <!-- Mobile cuboid toggle (kept independent of wall selection controls) -->
-      <button class="hm-wall-btn" id="hm-cuboid-toggle-btn" style="display:none;" onclick="toggleMobileCuboid()"></button>
+      <!-- Wall selector buttons -->
+      <div class="hm-wall-btn-bar" id="hm-wall-btn-bar">
+        <button class="hm-wall-btn hm-wall-btn-active" id="hm-wbtn-A" onclick="switchHeatMapWall('A')">🔥 Wall A</button>
+        <button class="hm-wall-btn" id="hm-wbtn-B" onclick="switchHeatMapWall('B')">🔥 Wall B</button>
+        <button class="hm-wall-btn" id="hm-wbtn-C" onclick="switchHeatMapWall('C')">🔥 Wall C</button>
+        <button class="hm-wall-btn" id="hm-wbtn-D" onclick="switchHeatMapWall('D')">🔥 Wall D</button>
+        <button class="hm-wall-btn" id="hm-cuboid-toggle-btn" style="display:none;" onclick="toggleMobileCuboid()"></button>
+      </div>
 
       <!-- Individual wall panels (only one visible at a time, except "ALL") -->
       <div id="hm-wall-panel-A" style="display:none;"></div>
@@ -9038,7 +9044,7 @@ html, body, body *, body *::before, body *::after, svg text{
       </div>
 
       <script>
-      var _activeHeatMapWall = "ALL";
+      var _activeHeatMapWall = "A";
       var _hmCuboidZoomActive = false;
       var _hmCuboidZoomTarget = "";
       var _hmCuboidZoomKeyBound = false;
@@ -9112,15 +9118,20 @@ html, body, body *, body *::before, body *::after, svg text{
           if(key === "escape") closeHeatMapIconMenu();
         });
       }
-      function switchHeatMapWall(){
-        _activeHeatMapWall = "ALL";
-        var walls = ['A','B','C','D','ALL'];
+      function switchHeatMapWall(wall){
+        _activeHeatMapWall = wall || "A";
+        var walls = ['A','B','C','D'];
         for(var i=0;i<walls.length;i++){
-          var panel = document.getElementById('hm-wall-panel-'+walls[i]);
-          if(panel) panel.style.display = (walls[i] === "ALL") ? 'block' : 'none';
+          var key = walls[i];
+          var panel = document.getElementById('hm-wall-panel-'+key);
+          var btn = document.getElementById('hm-wbtn-'+key);
+          if(panel) panel.style.display = (key === _activeHeatMapWall) ? 'block' : 'none';
+          if(btn) btn.classList.toggle('hm-wall-btn-active', key === _activeHeatMapWall);
         }
+        var panelAll = document.getElementById("hm-wall-panel-ALL");
+        if(panelAll) panelAll.style.display = "none";
         if(window._hmRenderSnapshot && typeof ensureHeatMapWallBuilt === "function"){
-          ensureHeatMapWallBuilt("ALL");
+          ensureHeatMapWallBuilt(_activeHeatMapWall);
         } else if(typeof requestHeatMapRender === "function"){
           window._hmSkipCuboidRefresh = true;
           requestHeatMapRender(20);
@@ -9211,6 +9222,7 @@ html, body, body *, body *::before, body *::after, svg text{
           el.addEventListener("focusin", function(){ activeZones += 1; update(); });
           el.addEventListener("focusout", function(){ activeZones = Math.max(0, activeZones - 1); update(); });
         }
+        bindZone(document.getElementById("hm-wall-btn-bar"));
         bindZone(document.querySelector(".bottom-tab-bar"));
       }
       if(document.readyState === "loading"){
@@ -9234,7 +9246,7 @@ html, body, body *, body *::before, body *::after, svg text{
         btn.classList.toggle("hm-wall-btn-active", enabled);
       }
       (function initHeatMapDefaultWall(){
-        _activeHeatMapWall = "ALL";
+        _activeHeatMapWall = "A";
         if(typeof requestHeatMapRender === "function") requestHeatMapRender(40);
         initHeatMapIconPicker();
         initMobileCuboidToggle();
