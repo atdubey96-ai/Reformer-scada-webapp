@@ -4329,12 +4329,7 @@ function renderHeatMap(){
   }
 
   /* ── Render wall cards on demand (lighter initial load) ── */
-  var activeWall = (typeof _activeHeatMapWall !== "undefined" && _activeHeatMapWall) ? _activeHeatMapWall : null;
-  var hintEl = document.getElementById("hm-wall-hint");
-  if(hintEl){
-    hintEl.style.display = activeWall ? "none" : "block";
-  }
-
+  var activeWall = (typeof _activeHeatMapWall !== "undefined" && _activeHeatMapWall) ? _activeHeatMapWall : "ALL";
   window._hmRenderSnapshot = {
     hmData: hmData,
     abBot: abBot,
@@ -9021,18 +9016,8 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
       </div>
 
-      <!-- Wall selector buttons + individual wall containers -->
-      <div class="hm-wall-btn-bar" id="hm-wall-btn-bar">
-        <button class="hm-wall-btn" id="hm-wbtn-A" onclick="switchHeatMapWall('A')">🔥 Wall A</button>
-        <button class="hm-wall-btn" id="hm-wbtn-B" onclick="switchHeatMapWall('B')">🔥 Wall B</button>
-        <button class="hm-wall-btn" id="hm-wbtn-C" onclick="switchHeatMapWall('C')">🔥 Wall C</button>
-        <button class="hm-wall-btn" id="hm-wbtn-D" onclick="switchHeatMapWall('D')">🔥 Wall D</button>
-        <button class="hm-wall-btn" id="hm-wbtn-ALL" onclick="switchHeatMapWall('ALL')">📋 Every Wall</button>
-        <button class="hm-wall-btn" id="hm-cuboid-toggle-btn" style="display:none;" onclick="toggleMobileCuboid()"></button>
-      </div>
-      <div id="hm-wall-hint" style="display:block;text-align:center;font-size:11px;color:#94a3b8;letter-spacing:0.6px;margin:-4px 0 10px 0;">
-        Select a wall button to load burner tables
-      </div>
+      <!-- Mobile cuboid toggle (kept independent of wall selection controls) -->
+      <button class="hm-wall-btn" id="hm-cuboid-toggle-btn" style="display:none;" onclick="toggleMobileCuboid()"></button>
 
       <!-- Individual wall panels (only one visible at a time, except "ALL") -->
       <div id="hm-wall-panel-A" style="display:none;"></div>
@@ -9053,7 +9038,7 @@ html, body, body *, body *::before, body *::after, svg text{
       </div>
 
       <script>
-      var _activeHeatMapWall = null;
+      var _activeHeatMapWall = "ALL";
       var _hmCuboidZoomActive = false;
       var _hmCuboidZoomTarget = "";
       var _hmCuboidZoomKeyBound = false;
@@ -9127,24 +9112,18 @@ html, body, body *, body *::before, body *::after, svg text{
           if(key === "escape") closeHeatMapIconMenu();
         });
       }
-      function switchHeatMapWall(wall){
-        _activeHeatMapWall = (_activeHeatMapWall === wall) ? null : wall;
+      function switchHeatMapWall(){
+        _activeHeatMapWall = "ALL";
         var walls = ['A','B','C','D','ALL'];
         for(var i=0;i<walls.length;i++){
           var panel = document.getElementById('hm-wall-panel-'+walls[i]);
-          var btn   = document.getElementById('hm-wbtn-'+walls[i]);
-          if(panel) panel.style.display = (walls[i]===_activeHeatMapWall) ? 'block' : 'none';
-          if(btn) btn.classList.toggle('hm-wall-btn-active', walls[i]===_activeHeatMapWall);
+          if(panel) panel.style.display = (walls[i] === "ALL") ? 'block' : 'none';
         }
-        var hintEl = document.getElementById("hm-wall-hint");
-        if(hintEl) hintEl.style.display = _activeHeatMapWall ? "none" : "block";
-        if(_activeHeatMapWall){
-          if(window._hmRenderSnapshot && typeof ensureHeatMapWallBuilt === "function"){
-            ensureHeatMapWallBuilt(_activeHeatMapWall);
-          } else if(typeof requestHeatMapRender === "function"){
-            window._hmSkipCuboidRefresh = true;
-            requestHeatMapRender(20);
-          }
+        if(window._hmRenderSnapshot && typeof ensureHeatMapWallBuilt === "function"){
+          ensureHeatMapWallBuilt("ALL");
+        } else if(typeof requestHeatMapRender === "function"){
+          window._hmSkipCuboidRefresh = true;
+          requestHeatMapRender(20);
         }
       }
       function setHeatMapCuboidZoom(forceState){
@@ -9232,7 +9211,6 @@ html, body, body *, body *::before, body *::after, svg text{
           el.addEventListener("focusin", function(){ activeZones += 1; update(); });
           el.addEventListener("focusout", function(){ activeZones = Math.max(0, activeZones - 1); update(); });
         }
-        bindZone(document.getElementById("hm-wall-btn-bar"));
         bindZone(document.querySelector(".bottom-tab-bar"));
       }
       if(document.readyState === "loading"){
@@ -9256,14 +9234,8 @@ html, body, body *, body *::before, body *::after, svg text{
         btn.classList.toggle("hm-wall-btn-active", enabled);
       }
       (function initHeatMapDefaultWall(){
-        var isMobileLite =
-          (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
-          (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
-        var mobileCuboidEnabled = localStorage.getItem("hm-mobile-cuboid") === "1";
-        if(isMobileLite && !mobileCuboidEnabled){
-          _activeHeatMapWall = "ALL";
-          if(typeof requestHeatMapRender === "function") requestHeatMapRender(40);
-        }
+        _activeHeatMapWall = "ALL";
+        if(typeof requestHeatMapRender === "function") requestHeatMapRender(40);
         initHeatMapIconPicker();
         initMobileCuboidToggle();
         initHeatMapCuboidZoom();
