@@ -9421,15 +9421,14 @@ html, body, body *, body *::before, body *::after, svg text{
           <!-- built by JS -->
         </div>
         <div class="cleaning-export-row">
-          <span id="cleaningStatus"></span>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+          <span id="cleaningStatus" style="display:none;"></span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-start;width:100%;">
             <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
               ⚠ Unsaved Changes — click <b>SAVE CLEANING DATA</b> to confirm
             </span>
-            <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE CLEANING DATA</button>
-            <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ Histroical Data</button>
+            <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ HISTORICAL DATA</button>
             <div style="position:relative;display:inline-block;" id="cleaningClearWrap">
-              <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 Delete Data ▾</button>
+              <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 CLEAR DATA ▾</button>
               <div id="cleaningClearMenu" style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.7);z-index:500;overflow:hidden;padding:6px 0;">
                 <div style="padding:8px 14px 6px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;border-bottom:1px solid #1e3a5e;margin-bottom:4px;">DELETE CLEANING DATA</div>
                 <button class="cl-menu-item" onclick="openClearByWall()">🧱 Clear by Wall</button>
@@ -9441,6 +9440,7 @@ html, body, body *, body *::before, body *::after, svg text{
                 <button class="cl-menu-item cl-menu-danger" onclick="openClearAllBurners()">⚠️ Clear All Burners…</button>
               </div>
             </div>
+            <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE CLEANING DATA</button>
           </div>
         </div>
       </div>
