@@ -9414,15 +9414,7 @@ html, body, body *, body *::before, body *::after, svg text{
           <button class="cw-btn" id="cw-btn-B" onclick="switchCleaningWall('B')">🔥 Wall B</button>
           <button class="cw-btn" id="cw-btn-C" onclick="switchCleaningWall('C')">🔥 Wall C</button>
           <button class="cw-btn" id="cw-btn-D" onclick="switchCleaningWall('D')">🔥 Wall D</button>
-          <div class="cw-nudge" title="Post-cleaning reminder">📝 After cleaning, update inline Burner Data if condition changed.</div>
-        </div>
-
-        <div id="cleaningTablesWrap" class="cleaning-walls-grid">
-          <!-- built by JS -->
-        </div>
-        <div class="cleaning-export-row">
-          <span id="cleaningStatus" style="display:none;"></span>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-start;width:100%;">
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
             <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
               ⚠ Unsaved Changes — click <b>SAVE CLEANING DATA</b> to confirm
             </span>
@@ -9442,6 +9434,13 @@ html, body, body *, body *::before, body *::after, svg text{
             </div>
             <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE CLEANING DATA</button>
           </div>
+        </div>
+
+        <div id="cleaningTablesWrap" class="cleaning-walls-grid">
+          <!-- built by JS -->
+        </div>
+        <div class="cleaning-export-row" style="display:none;">
+          <span id="cleaningStatus" style="display:none;"></span>
         </div>
       </div>
 
