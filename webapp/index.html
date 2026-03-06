@@ -9323,9 +9323,14 @@ html, body, body *, body *::before, body *::after, svg text{
 
       <!-- High-frequency cleaning now uses the same bottom master alarm banner as burner imbalance -->
 
-      <!-- Cleaning reminder -->
-      <div class="cw-nudge" title="Post-cleaning reminder" style="margin:8px 0 12px 0;">
-        📝 After cleaning, update inline Burner Data if condition changed.
+      <!-- Wall Selector Buttons -->
+      <div class="cw-selector" id="cleaningWallSelector">
+        <span class="cw-selector-label">Select Wall:</span>
+        <button class="cw-btn cw-btn-active" id="cw-btn-A" onclick="switchCleaningWall('A')">🔥 Wall A</button>
+        <button class="cw-btn" id="cw-btn-B" onclick="switchCleaningWall('B')">🔥 Wall B</button>
+        <button class="cw-btn" id="cw-btn-C" onclick="switchCleaningWall('C')">🔥 Wall C</button>
+        <button class="cw-btn" id="cw-btn-D" onclick="switchCleaningWall('D')">🔥 Wall D</button>
+        <div class="cw-nudge" title="Post-cleaning reminder">📝 After cleaning, update inline Burner Data if condition changed.</div>
       </div>
 
       <div id="cleaningTablesWrap" class="cleaning-walls-grid">
@@ -11566,7 +11571,7 @@ function populateBurnerSelectorOptions(wallSel, rowSel, burSel){
 }
 function setDefaultBurnerSelectorValues(wallSel, rowSel, burSel){
   if(!wallSel || !rowSel || !burSel) return;
-  wallSel.value = (typeof cleaningWallFilter !== "undefined" && cleaningWallFilter !== "ALL") ? cleaningWallFilter : "A";
+  wallSel.value = (typeof cleaningWallFilter !== "undefined" && cleaningWallFilter) ? cleaningWallFilter : "A";
   rowSel.value = "1";
   burSel.value = "1";
 }
@@ -11838,10 +11843,14 @@ function commitCleaningPending(){
   clearCleaningUnsaved(); /* resets cleaningPending = {} */
 }
 
-var cleaningWallFilter = "ALL"; /* cleaning status always shows all walls */
+var cleaningWallFilter = "A"; /* default wall for cleaning status */
 
-function switchCleaningWall(){
-  cleaningWallFilter = "ALL";
+function switchCleaningWall(wall){
+  cleaningWallFilter = wall;
+  ["A","B","C","D"].forEach(function(w){
+    var btn = document.getElementById("cw-btn-"+w);
+    if(btn) btn.className = (w === wall) ? "cw-btn cw-btn-active" : "cw-btn";
+  });
   buildCleaningTable();
 }
 
@@ -11851,8 +11860,8 @@ function buildCleaningTable(){
   if(!wrap) return;
   wrap.innerHTML = "";
 
-  /* Cleaning status tab always renders all walls. */
-  var wallsToShow = WALL_NAMES;
+  /* Render only selected cleaning wall. */
+  var wallsToShow = [cleaningWallFilter];
 
   wallsToShow.forEach(w => {
     /* Wall section container */
