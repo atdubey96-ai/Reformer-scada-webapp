@@ -9323,15 +9323,9 @@ html, body, body *, body *::before, body *::after, svg text{
 
       <!-- High-frequency cleaning now uses the same bottom master alarm banner as burner imbalance -->
 
-      <!-- Wall Selector Buttons -->
-      <div class="cw-selector" id="cleaningWallSelector">
-        <span class="cw-selector-label">Select Wall:</span>
-        <button class="cw-btn cw-btn-active" id="cw-btn-A" onclick="switchCleaningWall('A')">🔥 Wall A</button>
-        <button class="cw-btn" id="cw-btn-B" onclick="switchCleaningWall('B')">🔥 Wall B</button>
-        <button class="cw-btn" id="cw-btn-C" onclick="switchCleaningWall('C')">🔥 Wall C</button>
-        <button class="cw-btn" id="cw-btn-D" onclick="switchCleaningWall('D')">🔥 Wall D</button>
-        <button class="cw-btn" id="cw-btn-ALL" onclick="switchCleaningWall('ALL')">📋 Every Wall</button>
-        <div class="cw-nudge" title="Post-cleaning reminder">📝 After cleaning, update inline Burner Data if condition changed.</div>
+      <!-- Cleaning reminder -->
+      <div class="cw-nudge" title="Post-cleaning reminder" style="margin:8px 0 12px 0;">
+        📝 After cleaning, update inline Burner Data if condition changed.
       </div>
 
       <div id="cleaningTablesWrap" class="cleaning-walls-grid">
@@ -11844,18 +11838,10 @@ function commitCleaningPending(){
   clearCleaningUnsaved(); /* resets cleaningPending = {} */
 }
 
-var cleaningWallFilter = "A"; /* default to Wall A */
+var cleaningWallFilter = "ALL"; /* cleaning status always shows all walls */
 
-function switchCleaningWall(wall){
-  cleaningWallFilter = wall;
-  /* Update button active states */
-  ["A","B","C","D","ALL"].forEach(function(w){
-    var btn = document.getElementById("cw-btn-"+w);
-    if(btn){
-      if(w === wall) btn.className = "cw-btn cw-btn-active";
-      else btn.className = "cw-btn";
-    }
-  });
+function switchCleaningWall(){
+  cleaningWallFilter = "ALL";
   buildCleaningTable();
 }
 
@@ -11865,8 +11851,8 @@ function buildCleaningTable(){
   if(!wrap) return;
   wrap.innerHTML = "";
 
-  /* Filter walls based on selection */
-  var wallsToShow = cleaningWallFilter === "ALL" ? WALL_NAMES : [cleaningWallFilter];
+  /* Cleaning status tab always renders all walls. */
+  var wallsToShow = WALL_NAMES;
 
   wallsToShow.forEach(w => {
     /* Wall section container */
