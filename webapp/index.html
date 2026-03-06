@@ -155,6 +155,12 @@ body.light-theme .app-system-sub{color:#4a6a8a;}
 body.light-theme .app-header-meta{background:rgba(0,0,0,0.06);border-top:1px solid #c8d8ee;}
 body.light-theme .app-meta-item{color:#4a6a8a;}
 body.light-theme .app-meta-item b{color:#1e293b;}
+body.light-theme #syncHealthChip{
+  background:linear-gradient(135deg,#eef4fb,#dbe8f6);
+  border-color:rgba(100,116,139,0.38);
+  color:#0f172a;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.8),0 2px 8px rgba(15,23,42,0.1);
+}
 
 body.light-theme .hd-btn-secondary{
   background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.2);color:#1e3a5a;
@@ -1096,6 +1102,78 @@ body:not(.heatmap-header-active) #hm-header-tools{
   justify-content:flex-end;
   gap:8px;
   flex:0 0 auto;
+}
+#syncHealthChip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 10px;
+  min-height:30px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,0.45);
+  background:linear-gradient(135deg,rgba(15,23,42,0.72),rgba(30,41,59,0.65));
+  color:#e2e8f0;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.2px;
+  white-space:nowrap;
+  max-width:min(56vw, 360px);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08);
+}
+#syncHealthChip .sync-health-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#94a3b8;
+  box-shadow:0 0 0 2px rgba(148,163,184,0.22);
+  flex:0 0 auto;
+}
+#syncHealthChip .sync-health-text{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#syncHealthChip.sync-ok{
+  border-color:rgba(34,197,94,0.52);
+  background:linear-gradient(135deg,rgba(6,78,59,0.82),rgba(15,118,110,0.62));
+  color:#dcfce7;
+}
+#syncHealthChip.sync-ok .sync-health-dot{
+  background:#22c55e;
+  box-shadow:0 0 0 2px rgba(34,197,94,0.22), 0 0 8px rgba(34,197,94,0.45);
+}
+#syncHealthChip.sync-queued{
+  border-color:rgba(251,191,36,0.58);
+  background:linear-gradient(135deg,rgba(120,53,15,0.88),rgba(180,83,9,0.66));
+  color:#fef3c7;
+}
+#syncHealthChip.sync-queued .sync-health-dot{
+  background:#f59e0b;
+  box-shadow:0 0 0 2px rgba(245,158,11,0.22), 0 0 8px rgba(245,158,11,0.4);
+}
+#syncHealthChip.sync-error{
+  border-color:rgba(248,113,113,0.62);
+  background:linear-gradient(135deg,rgba(127,29,29,0.88),rgba(185,28,28,0.64));
+  color:#fee2e2;
+}
+#syncHealthChip.sync-error .sync-health-dot{
+  background:#ef4444;
+  box-shadow:0 0 0 2px rgba(239,68,68,0.22), 0 0 8px rgba(239,68,68,0.45);
+}
+#syncHealthChip.sync-syncing{
+  border-color:rgba(56,189,248,0.6);
+  background:linear-gradient(135deg,rgba(8,47,73,0.9),rgba(3,105,161,0.68));
+  color:#e0f2fe;
+}
+#syncHealthChip.sync-syncing .sync-health-dot{
+  background:#38bdf8;
+  box-shadow:0 0 0 2px rgba(56,189,248,0.22), 0 0 8px rgba(56,189,248,0.5);
+  animation:syncDotPulse 1.2s ease-in-out infinite;
+}
+@keyframes syncDotPulse{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(0.72);opacity:0.45;}
 }
 .app-meta-item{font-size:10.5px;color:#a0bcd8;display:flex;align-items:center;gap:5px;}
 .app-meta-item b{color:#d8eaf8;font-weight:600;}
@@ -2075,6 +2153,14 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
   .app-meta-right{
     width:100%;
     justify-content:flex-end;
+  }
+  #syncHealthChip{
+    max-width:100%;
+    min-height:32px;
+    padding:6px 10px;
+    font-size:11px;
+    flex:1 1 100%;
+    justify-content:center;
   }
   .app-meta-item{font-size:10px;}
   .alarm-banner{
@@ -4732,6 +4818,10 @@ html, body, body *, body *::before, body *::after, svg text{
       <div class="app-meta-item"><b>Last Sync:</b> <span id="lastSync">—</span></div>
     </div>
     <div class="app-meta-right" id="appMetaRight">
+      <div id="syncHealthChip" class="sync-health-chip sync-syncing" title="Syncing status">
+        <span class="sync-health-dot"></span>
+        <span id="syncHealthText" class="sync-health-text">Syncing · Checking server</span>
+      </div>
       <button id="refreshDataBtn" class="hd-btn hd-btn-secondary" onclick="handleGlobalRefreshClick()">🔄 Refresh Data</button>
       <div class="quick-menu-wrap" id="quickMenuWrap">
         <button class="quick-menu-btn" id="quickMenuBtn" type="button" onclick="toggleQuickMenu()" title="Quick menu">🔥</button>
@@ -9996,8 +10086,68 @@ function updateLastSyncLabel(ts){
   if(isNaN(d.getTime())) d = new Date();
   ls.textContent = d.toLocaleDateString("en-IN") + " " + d.toLocaleTimeString("en-IN");
 }
+function formatSyncHealthTime(ts){
+  var d = ts instanceof Date ? ts : new Date(ts || Date.now());
+  if(isNaN(d.getTime())) d = new Date();
+  var ddmmyy = d.toLocaleDateString("en-IN", { day:"2-digit", month:"2-digit", year:"2-digit" });
+  var hhmm = d.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" });
+  return ddmmyy + " " + hhmm;
+}
+function setSyncHealth(state, detail, ts){
+  var chip = document.getElementById("syncHealthChip");
+  var text = document.getElementById("syncHealthText");
+  if(!chip || !text) return;
+
+  var label = "Checking";
+  var cls = "sync-syncing";
+  if(state === "ok"){
+    label = "Server OK";
+    cls = "sync-ok";
+  }else if(state === "queued"){
+    label = "Queued";
+    cls = "sync-queued";
+  }else if(state === "error"){
+    label = "Sync Error";
+    cls = "sync-error";
+  }else if(state === "syncing"){
+    label = "Syncing";
+    cls = "sync-syncing";
+  }
+
+  chip.classList.remove("sync-ok","sync-queued","sync-error","sync-syncing");
+  chip.classList.add(cls);
+
+  var suffix = "";
+  if(ts) suffix = formatSyncHealthTime(ts);
+  if(detail){
+    suffix = suffix ? (suffix + " · " + detail) : String(detail);
+  }
+  var msg = suffix ? (label + " · " + suffix) : label;
+  text.textContent = msg;
+
+  var lastErr = "";
+  try{
+    if(typeof lastServerSyncError === "string" && lastServerSyncError.trim()){
+      lastErr = lastServerSyncError.trim();
+    }
+  }catch(e){}
+  chip.title = lastErr ? (msg + " | " + lastErr) : msg;
+}
+function syncHealthMarkOk(ts, note){
+  setSyncHealth("ok", note || "", ts || new Date());
+}
+function syncHealthMarkQueued(note){
+  setSyncHealth("queued", note || "Waiting for network");
+}
+function syncHealthMarkError(note){
+  setSyncHealth("error", note || "Check network and refresh");
+}
+function syncHealthMarkSyncing(note){
+  setSyncHealth("syncing", note || "Working");
+}
 setInterval(updateClock,1000);
 updateClock();
+syncHealthMarkSyncing("Checking server");
 
 /* ==================================================
    DATA
@@ -10683,8 +10833,10 @@ async function exportToExcel(){
   const fname = SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx";
 
   /* Primary: central server save (works on any PC) */
+  syncHealthMarkSyncing("Uploading");
   var saveStatus = await autoExportToServer(wb, fname);
   if(saveStatus === true){
+    syncHealthMarkOk(new Date(), "Uploaded");
     showToast("✅ Saved to central SCADA server");
     return;
   }
@@ -10694,9 +10846,11 @@ async function exportToExcel(){
     if(qTag === "DNS/NET" && (typeof getRelayBaseUrl === "function") && !getRelayBaseUrl()){
       relayHint = " | Configure relay";
     }
+    syncHealthMarkQueued(qTag ? ("Retry " + qTag) : "Waiting network");
     showToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : "") + relayHint);
     return;
   }
+  syncHealthMarkError("Central server unreachable");
   showToast("❌ Save failed: central server is unreachable");
 }
 
@@ -10718,6 +10872,7 @@ function setRefreshButtonBusy(busy){
   btn.style.opacity = busy ? "0.75" : "1";
   btn.style.pointerEvents = busy ? "none" : "auto";
   btn.textContent = busy ? "⏳ Refreshing..." : "🔄 Refresh Data";
+  if(busy) syncHealthMarkSyncing("Refreshing");
 }
 async function smartRefresh(){
   if(smartRefreshInFlight){
@@ -10730,9 +10885,13 @@ async function smartRefresh(){
   flushQueuedServerExport(false).catch(function(){});
   try{
     var okServer = await withTimeout(autoImportFromServer(true), 22000);
-    if(!okServer) showToast("⚠ Could not refresh from central server");
+    if(!okServer){
+      syncHealthMarkError("Refresh failed");
+      showToast("⚠ Could not refresh from central server");
+    }
     return !!okServer;
   }catch(e){
+    syncHealthMarkError("Refresh timeout");
     showToast("⚠ Refresh timed out. Try again.");
     return false;
   }finally{
@@ -12939,9 +13098,28 @@ async function getEffectivePasswordHash(){
 (async function restoreServerSyncOnLoad(){
   if(isUserLoggedIn()){
     var lastSnap = loadLastServerSnapshot();
-    if(lastSnap && lastSnap.saved_at) updateLastSyncLabel(lastSnap.saved_at);
+    var hasQueued = !!loadQueuedServerExport();
+    if(lastSnap && lastSnap.saved_at){
+      updateLastSyncLabel(lastSnap.saved_at);
+      if(hasQueued){
+        syncHealthMarkQueued("Pending upload");
+      }else{
+        syncHealthMarkOk(lastSnap.saved_at, "Cached");
+      }
+    }else if(hasQueued){
+      syncHealthMarkQueued("Pending upload");
+    }else{
+      syncHealthMarkSyncing("Checking server");
+    }
     flushQueuedServerExport(false).catch(function(){});
-    await autoImportFromServer(false);
+    var okInit = await autoImportFromServer(false);
+    if(!okInit){
+      if(loadQueuedServerExport()){
+        syncHealthMarkQueued("Pending upload");
+      }else{
+        syncHealthMarkError("Could not auto-load");
+      }
+    }
   }
 })();
 
@@ -13343,6 +13521,7 @@ async function flushQueuedServerExport(showMsg){
   serverQueueFlushInFlight = (async function(){
     var queued = loadQueuedServerExport();
     if(!queued || !queued.data_base64) return false;
+    syncHealthMarkQueued("Sending pending data");
     var queuedDigest = makeServerPayloadDigest(queued);
     for(var a=0; a<SERVER_SYNC_RETRY_COUNT; a++){
       var ok = await insertServerReportRow({
@@ -13360,12 +13539,14 @@ async function flushQueuedServerExport(showMsg){
           uploaded_by: queued.uploaded_by || null
         });
         updateLastSyncLabel(new Date());
+        syncHealthMarkOk(new Date(), "Queued upload sent");
         if(showMsg) showToast("✅ Pending save synced to central server");
         return true;
       }
       setCentralReachability(false);
       if(a < SERVER_SYNC_RETRY_COUNT - 1) await delayMs(getRetryDelayMs(SERVER_SYNC_RETRY_DELAY_MS, a));
     }
+    syncHealthMarkQueued("Retry pending upload");
     return false;
   })();
   try{
@@ -13380,6 +13561,7 @@ async function autoImportFromServer(showMsg){
   if(!SERVER_SYNC_ENABLED) return false;
   if(serverImportInFlight) return serverImportInFlight;
   serverImportInFlight = (async function(){
+    if(showMsg) syncHealthMarkSyncing("Downloading");
     for(var attempt=0; attempt<SERVER_SYNC_RETRY_COUNT; attempt++){
       try{
         var row = await fetchLatestServerReportRow();
@@ -13395,6 +13577,7 @@ async function autoImportFromServer(showMsg){
             });
             setCentralReachability(true);
             updateLastSyncLabel(new Date());
+            syncHealthMarkOk(new Date(), "Downloaded");
             if(showMsg) showToast("✅ Auto-loaded from central server");
             return true;
           }
@@ -13408,6 +13591,7 @@ async function autoImportFromServer(showMsg){
           });
           setCentralReachability(true);
           updateLastSyncLabel(new Date());
+          syncHealthMarkOk(new Date(), "Downloaded");
           if(showMsg) showToast("✅ Auto-loaded from central server");
           return true;
         }
@@ -13421,9 +13605,11 @@ async function autoImportFromServer(showMsg){
     var loadedLocal = await importServerReportPayload(localFallback);
     if(loadedLocal){
       updateLastSyncLabel(new Date());
+      syncHealthMarkError("Server offline (local copy)");
       if(showMsg) showToast("📴 Server unreachable: loaded last synced local copy");
       return true;
     }
+    syncHealthMarkError("No server data");
     return false;
   })();
   try{
@@ -13438,11 +13624,13 @@ async function autoExportToServer(wb, filename){
   if(!SERVER_SYNC_ENABLED) return false;
   if(serverExportInFlight) return serverExportInFlight;
   serverExportInFlight = (async function(){
+    syncHealthMarkSyncing("Uploading");
     var base64 = "";
     try{
       base64 = XLSX.write(wb, {bookType:"xlsx", type:"base64"});
     }catch(err){
       console.warn("XLSX write failed:", err);
+      syncHealthMarkError("Export encoding failed");
       return false;
     }
 
@@ -13462,6 +13650,7 @@ async function autoExportToServer(wb, filename){
         clearQueuedServerExport();
         if(payloadDigest) setLastImportedServerDigest(payloadDigest);
         updateLastSyncLabel(new Date());
+        syncHealthMarkOk(new Date(), "Uploaded");
         return true;
       }
       setCentralReachability(false);
@@ -13469,6 +13658,7 @@ async function autoExportToServer(wb, filename){
     }
 
     saveQueuedServerExport(payload);
+    syncHealthMarkQueued("Waiting network");
     setTimeout(function(){ flushQueuedServerExport(false).catch(function(){}); }, 5000);
     return "queued";
   })();
@@ -13493,6 +13683,7 @@ function triggerServerAutoImport(reason){
 }
 
 window.addEventListener("online", function(){
+  syncHealthMarkSyncing("Network restored");
   flushQueuedServerExport(true).catch(function(){});
   triggerServerAutoImport("online");
 });
@@ -13553,9 +13744,13 @@ async function loginWithFolderSupport(){
     try{ await maybeOfferBiometricEnrollment(empId); }catch(e){}
     
     /* Primary: central server sync for all PCs */
+    syncHealthMarkSyncing("Checking server");
     flushQueuedServerExport(false).catch(function(){});
     var serverOk = await autoImportFromServer(true);
-    if(!serverOk) showToast("⚠ Could not auto-load from central server");
+    if(!serverOk){
+      syncHealthMarkError("Could not auto-load");
+      showToast("⚠ Could not auto-load from central server");
+    }
   } else {
     err.style.display = "block";
     err.textContent   = "Incorrect password. Please try again.";
