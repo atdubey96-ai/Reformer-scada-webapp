@@ -1574,6 +1574,26 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .analysis-block p{color:#94a3b8;font-size:13px;margin:3px 0;}
 .analysis-block p b{color:#e2e8f0;}
 .chart-wrap{position:relative;height:220px;margin-top:12px;}
+.chart-wrap-pie{
+  padding:8px 8px 2px;
+  border-radius:12px;
+  border:1px solid rgba(148,163,184,0.2);
+  background:
+    radial-gradient(140% 110% at 8% 0%,rgba(34,197,94,0.2) 0%,rgba(34,197,94,0) 52%),
+    radial-gradient(130% 100% at 95% 8%,rgba(245,158,11,0.16) 0%,rgba(245,158,11,0) 48%),
+    linear-gradient(155deg,rgba(9,14,23,0.9),rgba(18,26,38,0.72));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 10px 24px rgba(2,6,23,0.35);
+}
+.chart-wrap-pie canvas{filter:drop-shadow(0 10px 10px rgba(2,6,23,0.3));}
+body.light-theme .chart-wrap-pie{
+  border-color:rgba(148,163,184,0.35);
+  background:
+    radial-gradient(140% 110% at 8% 0%,rgba(59,130,246,0.16) 0%,rgba(59,130,246,0) 50%),
+    radial-gradient(130% 100% at 95% 8%,rgba(34,197,94,0.14) 0%,rgba(34,197,94,0) 46%),
+    linear-gradient(150deg,rgba(255,255,255,0.92),rgba(241,245,249,0.88));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.8),0 8px 18px rgba(148,163,184,0.28);
+}
+body.light-theme .chart-wrap-pie canvas{filter:drop-shadow(0 7px 8px rgba(100,116,139,0.22));}
 @media (min-width:1700px){
   #analysisContainer{grid-template-columns:repeat(5,minmax(250px,1fr));}
 }
@@ -11068,6 +11088,67 @@ function getImbalanceInfo(N, O, imb, sev, wallName){
   return {direction, dirColor, desc, action};
 }
 
+function getThemeGradientColor(varName, fallback){
+  const v = getComputedStyle(document.body).getPropertyValue(varName);
+  return (v && v.trim()) || fallback;
+}
+
+function getAnalyticsPieStops(idx){
+  const palettes = [
+    [ // Both
+      getThemeGradientColor("--gs-b-to", "#9dd2ff"),
+      getThemeGradientColor("--gs-b-mid", "#3b82f6"),
+      getThemeGradientColor("--gs-b-from", "#1e3a8a")
+    ],
+    [ // NG
+      getThemeGradientColor("--gs-n-to", "#f9d98f"),
+      getThemeGradientColor("--gs-n-mid", "#f59e0b"),
+      getThemeGradientColor("--gs-n-from", "#92400e")
+    ],
+    [ // Off Gas
+      getThemeGradientColor("--gs-o-to", "#7ce5a8"),
+      getThemeGradientColor("--gs-o-mid", "#22c55e"),
+      getThemeGradientColor("--gs-o-from", "#166534")
+    ],
+    [ // Cold
+      getThemeGradientColor("--gs-c-to", "#d2dbe6"),
+      getThemeGradientColor("--gs-c-mid", "#94a3b8"),
+      getThemeGradientColor("--gs-c-from", "#475569")
+    ]
+  ];
+  return palettes[idx] || palettes[0];
+}
+
+function buildAnalyticsPieSliceGradient(context){
+  const idx = context.dataIndex || 0;
+  const stops = getAnalyticsPieStops(idx);
+  const chart = context.chart;
+  const meta = chart.getDatasetMeta(context.datasetIndex);
+  const arc = meta && meta.data ? meta.data[idx] : null;
+  if(!arc || !Number.isFinite(arc.x) || !Number.isFinite(arc.y)) return stops[1];
+  /* Rich radial sweep: bright core -> saturated mid -> deep edge for premium look. */
+  const outer = arc.outerRadius || Math.min(chart.width, chart.height) * 0.38;
+  const inner = Math.max(0, (arc.innerRadius || 0) * 0.6);
+  const gradient = chart.ctx.createRadialGradient(
+    arc.x - outer * 0.28, arc.y - outer * 0.35, inner,
+    arc.x, arc.y, outer * 1.02
+  );
+  gradient.addColorStop(0, stops[0]);
+  gradient.addColorStop(0.56, stops[1]);
+  gradient.addColorStop(1, stops[2]);
+  return gradient;
+}
+
+function buildAnalyticsPieBorderColor(context){
+  const idx = context.dataIndex || 0;
+  const stops = getAnalyticsPieStops(idx);
+  return stops[2];
+}
+
+function analyticsLegendColor(){
+  return document.body.classList.contains("light-theme") ? "#334155" : "#e2e8f0";
+}
+
 function generateAnalysis(){
   wallSeverity={};
   const container=document.getElementById("analysisContainer");
@@ -11135,7 +11216,7 @@ function generateAnalysis(){
         <div class="ab-alarm-title">✅ Status</div>
         <div class="ab-alarm-desc">${desc}</div>
       </div>`}
-      <div class="chart-wrap"><canvas id="ch_${wallName.replace(/\s/g,'_')}"></canvas></div>`;
+      <div class="chart-wrap chart-wrap-pie"><canvas id="ch_${wallName.replace(/\s/g,'_')}"></canvas></div>`;
     container.appendChild(block);
 
     const cv=document.getElementById("ch_"+wallName.replace(/\s/g,'_'));
@@ -11143,18 +11224,41 @@ function generateAnalysis(){
       type:"pie",
       data:{
         labels:["Both","NG","Off Gas","Cold"],
-        datasets:[{data:[B,N,O,C],
-          backgroundColor:["#2563eb","#fde047","#fb923c","#64748b"],
-          borderColor:"#0f172a",borderWidth:2}]
+        datasets:[{
+          data:[B,N,O,C],
+          backgroundColor:buildAnalyticsPieSliceGradient,
+          borderColor:buildAnalyticsPieBorderColor,
+          borderWidth:1.8,
+          spacing:1,
+          hoverOffset:13,
+          hoverBorderColor:"rgba(255,255,255,0.82)",
+          hoverBorderWidth:2.2
+        }]
       },
       options:{
         responsive:true,
         maintainAspectRatio:false,
+        animation:{duration:900,easing:"easeOutQuart"},
         layout:{padding:{top:4,right:6,bottom:2,left:6}},
         plugins:{
+          tooltip:{
+            backgroundColor:"rgba(15,23,42,0.95)",
+            borderColor:"rgba(148,163,184,0.28)",
+            borderWidth:1,
+            padding:10,
+            titleColor:"#f8fafc",
+            bodyColor:"#e2e8f0"
+          },
           legend:{
             position:"bottom",
-            labels:{color:"#e2e8f0",font:{size:12},boxWidth:12,padding:12}
+            labels:{
+              color:analyticsLegendColor(),
+              font:{size:12,weight:"600"},
+              usePointStyle:true,
+              pointStyle:"circle",
+              boxWidth:10,
+              padding:12
+            }
           }
         }
       }
