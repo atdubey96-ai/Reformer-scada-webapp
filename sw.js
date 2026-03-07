@@ -1,4 +1,5 @@
-const CACHE_NAME = "scada-burner-v30";
+const CACHE_PREFIX = "scada-burner-v";
+const CACHE_NAME = "scada-burner-v31";
 const OFFLINE_URL = "./index.html";
 const CORE_ASSETS = [
   "./",
@@ -20,7 +21,7 @@ async function cleanupOldCaches() {
   const keys = await caches.keys();
   await Promise.all(
     keys
-      .filter((key) => key !== CACHE_NAME)
+      .filter((key) => key.indexOf(CACHE_PREFIX) === 0 && key !== CACHE_NAME)
       .map((key) => caches.delete(key))
   );
 }
