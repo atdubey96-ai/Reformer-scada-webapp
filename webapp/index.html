@@ -13499,24 +13499,14 @@ function applyMobileHorizontalScrollFixes(){
   var peepWraps = document.querySelectorAll(wrapSelector);
 
   if(!isMobile){
+    /* Keep desktop grid templates intact (modal rows were collapsing to 1 column). */
     peepRows.forEach(function(row){
       row.style.minWidth = "";
       row.style.width = "";
       row.style.maxWidth = "";
-      row.style.gridTemplateColumns = "";
     });
-    peepWraps.forEach(function(wrap){
-      wrap.classList.remove("td-temp-scroll");
-      wrap.style.overflowX = "";
-      wrap.style.overflowY = "";
-      wrap.style.webkitOverflowScrolling = "";
-      wrap.style.touchAction = "";
-    });
-    document.querySelectorAll(".td-temp-scroll").forEach(function(parent){
-      parent.classList.remove("td-temp-scroll");
-      parent.style.overflowX = "";
-      parent.style.webkitOverflowScrolling = "";
-    });
+    peepWraps.forEach(function(wrap){ wrap.classList.remove("td-temp-scroll"); });
+    document.querySelectorAll(".td-temp-scroll").forEach(function(parent){ parent.classList.remove("td-temp-scroll"); });
     return;
   }
 
