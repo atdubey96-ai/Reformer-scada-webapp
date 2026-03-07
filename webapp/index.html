@@ -3795,8 +3795,8 @@ async function maybeOfferBiometricEnrollment(empId){
   try{
   var current = _bioRead();
   if(current && current.credId && current.empId === empKey) return;
-  if(!confirm("Enable fingerprint login on this mobile device for EMP-" + empId + "?")) return;
     try{
+      /* Skip the extra site-level confirm and hand off directly to the native passkey sheet. */
       var ok = await enrollBiometricForEmp(empId);
       if(ok) showToast("✅ Fingerprint login enabled on this device");
     }catch(e){
