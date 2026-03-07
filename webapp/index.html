@@ -3493,18 +3493,49 @@ function openChangePasswordFromForgot(){
   showChangePasswordModal();
 }
 async function login(){
+  if(window._scadaLoginInFlight) return false;
+  window._scadaLoginInFlight = true;
+
+  function setLoginBusyState(busy){
+    var loginBtn = document.querySelector("#loginScreen .ls-btn-login");
+    if(loginBtn){
+      loginBtn.disabled = !!busy;
+      loginBtn.style.pointerEvents = busy ? "none" : "";
+      loginBtn.style.opacity = busy ? "0.72" : "";
+    }
+    var bioBtn = document.getElementById("ls-biometric-btn");
+    if(bioBtn){
+      if(busy){
+        if(!bioBtn.disabled) bioBtn.setAttribute("data-busy-temp-disabled", "1");
+        bioBtn.disabled = true;
+        bioBtn.style.pointerEvents = "none";
+        bioBtn.style.opacity = "0.72";
+      }else{
+        if(bioBtn.getAttribute("data-busy-temp-disabled") === "1"){
+          bioBtn.disabled = false;
+          bioBtn.removeAttribute("data-busy-temp-disabled");
+        }
+        bioBtn.style.pointerEvents = "";
+        bioBtn.style.opacity = bioBtn.disabled ? "0.6" : "1";
+      }
+    }
+  }
+
+  setLoginBusyState(true);
+  try{
   var empId2 = document.getElementById("employeeIdInput").value.trim();
   var pw = document.getElementById("passwordInput").value;
   var err = document.getElementById("ls-error");
-  if(!empId2){ err.style.display="block"; err.textContent="Please enter your Employee ID."; return; }
+  if(!empId2){ err.style.display="block"; err.textContent="Please enter your Employee ID."; return false; }
 
   /* Primary path */
   if(typeof loginWithFolderSupport === "function") {
     try {
       await loginWithFolderSupport();
-      if(isUserLoggedIn()) return;
+      if(isUserLoggedIn()) return true;
     } catch(e) {
       console.warn("loginWithFolderSupport failed, falling back:", e);
+      if(isUserLoggedIn()) return true;
     }
   }
 
@@ -3532,16 +3563,25 @@ async function login(){
     if(opEl2) opEl2.innerHTML = "<b>Operator:</b> EMP-" + empId2;
     if(typeof init === "function") init();
     try{ await maybeOfferBiometricEnrollment(empId2); }catch(e){}
+    return true;
   } else {
     err.style.display="block";
     err.textContent="Incorrect password. Please try again.";
     document.getElementById("passwordInput").value="";
     document.getElementById("passwordInput").focus();
+    return false;
+  }
+  } finally {
+    window._scadaLoginInFlight = false;
+    setLoginBusyState(false);
   }
 }
 
 function handleLoginEnterKey(event){
   var e = event || window.event;
+  if(e && String(e.type || "").toLowerCase() !== "keydown") return true;
+  if(e && e.repeat) return false;
+  if(window._scadaLoginInFlight) return false;
   var key = e && e.key ? String(e.key).toLowerCase() : "";
   var code = e && typeof e.keyCode === "number" ? e.keyCode : 0;
   var which = e && typeof e.which === "number" ? e.which : 0;
@@ -3641,14 +3681,28 @@ async function enrollBiometricForEmp(empId){
 }
 async function maybeOfferBiometricEnrollment(empId){
   if(!_bioIsMobile() || !_bioAvailable()) return;
-  var current = _bioRead();
-  if(current && current.credId && current.empId === String(empId || "").trim()) return;
-  if(!confirm("Enable fingerprint login on this mobile device for EMP-" + empId + "?")) return;
+  var empKey = String(empId || "").trim();
+  if(!empKey) return;
+  if(window._scadaBioOfferInFlight) return;
+  var seenKey = "scadaBioOfferShown::" + empKey;
   try{
-    var ok = await enrollBiometricForEmp(empId);
-    if(ok) showToast("✅ Fingerprint login enabled on this device");
-  }catch(e){
-    showToast("⚠ Fingerprint setup was cancelled or failed");
+    if(sessionStorage.getItem(seenKey) === "1") return;
+    sessionStorage.setItem(seenKey, "1");
+  }catch(e){}
+
+  window._scadaBioOfferInFlight = true;
+  try{
+  var current = _bioRead();
+  if(current && current.credId && current.empId === empKey) return;
+  if(!confirm("Enable fingerprint login on this mobile device for EMP-" + empId + "?")) return;
+    try{
+      var ok = await enrollBiometricForEmp(empId);
+      if(ok) showToast("✅ Fingerprint login enabled on this device");
+    }catch(e){
+      showToast("⚠ Fingerprint setup was cancelled or failed");
+    }
+  } finally {
+    window._scadaBioOfferInFlight = false;
   }
 }
 async function loginWithBiometric(){
