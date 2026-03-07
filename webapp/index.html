@@ -4839,6 +4839,9 @@ html, body, body *, body *::before, body *::after, svg text{
     display:flex !important;
     margin:4px 0 8px !important;
   }
+  #tab-heatmap.hm-mobile-cuboid-hidden .cb-dual-shell{
+    display:none !important;
+  }
   #tab-heatmap .cb-wrap{min-width:0 !important;}
   #tab-heatmap .cb-scene{
     height:clamp(260px,42vh,340px) !important;
@@ -9013,14 +9016,15 @@ html, body, body *, body *::before, body *::after, svg text{
           (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
         var _mobileCuboidEnabled = true;
         if(_isMobileLite){
-          try{ localStorage.setItem("hm-mobile-cuboid", "1"); }catch(e){}
+          var _storedMobileCuboid = "";
+          try{ _storedMobileCuboid = String(localStorage.getItem("hm-mobile-cuboid") || "").trim(); }catch(e){}
+          _mobileCuboidEnabled = (_storedMobileCuboid === "1" || _storedMobileCuboid === "true");
+          if(!_mobileCuboidEnabled){
+            var _hmTabLite = document.getElementById("tab-heatmap");
+            if(_hmTabLite) _hmTabLite.classList.add("hm-mobile-cuboid-hidden");
+          }
         }
         var _disableCuboidMotion = false;
-        if(_isMobileLite && !_mobileCuboidEnabled){
-          var cbRowLite = document.querySelector("#tab-heatmap .cb-dual-row");
-          if(cbRowLite) cbRowLite.style.display = "none";
-          return; /* Keep lightweight mode on mobile unless user enables 3D option */
-        }
 
 
         /* ── 1. Drag interaction — smooth momentum, hard clamp, no bounce ──
@@ -9604,10 +9608,45 @@ html, body, body *, body *::before, body *::after, svg text{
           });
         }
       }
-      function toggleMobileCuboid(){
-        try{ localStorage.setItem("hm-mobile-cuboid", "1"); }catch(e){}
-        var cbRow = document.querySelector("#tab-heatmap .cb-dual-row");
-        if(cbRow) cbRow.style.display = "";
+      function isMobileLiteViewport(){
+        return (
+          (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
+          (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches)
+        );
+      }
+      function getMobileCuboidPreference(){
+        var val = "";
+        try{ val = String(localStorage.getItem("hm-mobile-cuboid") || "").trim(); }catch(e){}
+        return (val === "1" || val === "true");
+      }
+      function setMobileCuboidVisibility(enabled){
+        var isMobile = isMobileLiteViewport();
+        var show = isMobile ? !!enabled : true;
+        var hmTab = document.getElementById("tab-heatmap");
+        var shell = hmTab ? hmTab.querySelector(".cb-dual-shell") : null;
+        var btn = document.getElementById("hm-cuboid-toggle-btn");
+
+        if(isMobile){
+          try{ localStorage.setItem("hm-mobile-cuboid", show ? "1" : "0"); }catch(e){}
+        } else {
+          try{ localStorage.removeItem("hm-mobile-cuboid"); }catch(e){}
+        }
+
+        if(hmTab) hmTab.classList.toggle("hm-mobile-cuboid-hidden", !show);
+        if(shell){
+          shell.style.display = show ? "" : "none";
+        }
+
+        if(btn){
+          btn.textContent = show ? "🧊 Cuboid: ON" : "🧊 Cuboid: OFF";
+          btn.classList.toggle("hm-wall-btn-active", show);
+        }
+
+        if(!show){
+          if(typeof setHeatMapCuboidZoom === "function") setHeatMapCuboidZoom(false);
+          return;
+        }
+
         if(typeof window.updateCuboidResponsiveScale === "function"){
           setTimeout(window.updateCuboidResponsiveScale, 0);
           setTimeout(window.updateCuboidResponsiveScale, 90);
@@ -9616,6 +9655,14 @@ html, body, body *, body *::before, body *::after, svg text{
           window._hmSkipCuboidRefresh = false;
           requestHeatMapRender(20);
         }
+      }
+      function toggleMobileCuboid(){
+        var isMobile = isMobileLiteViewport();
+        if(!isMobile){
+          setMobileCuboidVisibility(true);
+          return;
+        }
+        setMobileCuboidVisibility(!getMobileCuboidPreference());
       }
       function initHeatMapInteractionPerf(){
         var hmTab = document.getElementById("tab-heatmap");
@@ -9641,7 +9688,9 @@ html, body, body *, body *::before, body *::after, svg text{
       function initMobileCuboidToggle(){
         var btn = document.getElementById("hm-cuboid-toggle-btn");
         if(!btn) return;
-        btn.style.display = "none";
+        var isMobile = isMobileLiteViewport();
+        btn.style.display = isMobile ? "" : "none";
+        setMobileCuboidVisibility(isMobile ? getMobileCuboidPreference() : true);
       }
       (function initHeatMapDefaultWall(){
         _activeHeatMapWall = "A";
@@ -13152,24 +13201,52 @@ initTabsRowAutoHide();
 
 window.addEventListener("resize", function(){
   clearTimeout(burnerMobileResizeTimer);
-  burnerMobileResizeTimer = setTimeout(applyBurnerMobileWallFilter, 120);
+  burnerMobileResizeTimer = setTimeout(function(){
+    applyBurnerMobileWallFilter();
+    applyMobileHorizontalScrollFixes();
+    if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
+  }, 120);
 });
 window.addEventListener("orientationchange", function(){
-  setTimeout(applyBurnerMobileWallFilter, 120);
+  setTimeout(function(){
+    applyBurnerMobileWallFilter();
+    applyMobileHorizontalScrollFixes();
+    if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
+  }, 120);
 });
 
 function applyMobileHorizontalScrollFixes(){
   var isMobile =
     (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
     (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
-  if(!isMobile) return;
+  var selector = '#tab-tempdata [style*="grid-template-columns:80px repeat(15,1fr)"],#all-ph-modal-body [style*="grid-template-columns:80px repeat(15,1fr)"]';
+  var peepRows = document.querySelectorAll(selector);
 
-  /* Backward compatibility for previous horizontal peep-hole grid */
-  var peepRows = document.querySelectorAll('#tab-tempdata [style*="grid-template-columns:80px repeat(15,1fr)"]');
+  if(!isMobile){
+    peepRows.forEach(function(row){
+      row.style.minWidth = "";
+      row.style.width = "";
+      row.style.maxWidth = "";
+    });
+    document.querySelectorAll(".td-temp-scroll").forEach(function(parent){
+      parent.classList.remove("td-temp-scroll");
+      parent.style.overflowX = "";
+      parent.style.webkitOverflowScrolling = "";
+    });
+    return;
+  }
+
+  /* Enforce a real overflow width so mobile can horizontally scroll 15 PH columns reliably. */
   peepRows.forEach(function(row){
     row.style.minWidth = "980px";
+    row.style.width = "980px";
+    row.style.maxWidth = "none";
     var parent = row.parentElement;
-    if(parent) parent.classList.add("td-temp-scroll");
+    if(parent){
+      parent.classList.add("td-temp-scroll");
+      parent.style.overflowX = "auto";
+      parent.style.webkitOverflowScrolling = "touch";
+    }
   });
 }
 
@@ -16073,6 +16150,7 @@ function renderAllPHData(){
   });
 
   body.innerHTML = html;
+  setTimeout(applyMobileHorizontalScrollFixes, 0);
 }
 
 function tempToColorInline(val, minT, maxT){
