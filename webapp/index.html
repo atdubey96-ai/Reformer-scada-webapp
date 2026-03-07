@@ -2749,6 +2749,18 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 .td-ph-grid-row{
   min-width:1010px;
 }
+@media (min-width: 901px){
+  #tab-tempdata .td-ph-grid-scroll{
+    overflow-x:visible !important;
+    padding-bottom:0 !important;
+  }
+  #tab-tempdata .td-ph-grid-row{
+    min-width:0 !important;
+    width:100% !important;
+    max-width:none !important;
+    grid-template-columns:120px repeat(15,minmax(0,1fr)) !important;
+  }
+}
 .td-fill-menu-wrap{
   display:flex;align-items:center;gap:8px;
   background:rgba(255,255,255,0.05);
