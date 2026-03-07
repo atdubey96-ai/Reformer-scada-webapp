@@ -2747,7 +2747,7 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   border-radius:999px;
 }
 .td-ph-grid-row{
-  min-width:980px;
+  min-width:1010px;
 }
 .td-fill-menu-wrap{
   display:flex;align-items:center;gap:8px;
@@ -5029,7 +5029,7 @@ html, body, body *, body *::before, body *::after, svg text{
     touch-action:pan-x pan-y !important;
   }
   #tab-tempdata .td-ph-grid-row{
-    min-width:980px !important;
+    min-width:1010px !important;
   }
   #tab-tempdata .td-manual-grid{grid-template-columns:1fr 1fr !important;}
   #tab-tempdata #td-saved-table{min-width:980px !important;}
@@ -10064,7 +10064,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
         <div class="td-ph-grid-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;max-width:100%;">
         <!-- Number header row -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;margin-bottom:6px;align-items:center;">
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;margin-bottom:6px;align-items:center;">
           <div style="font-size:10px;color:#64748b;text-align:center;font-weight:700;letter-spacing:0.5px;">PH No.</div>
           <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">1</div>
           <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">2</div>
@@ -10084,7 +10084,7 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
 
         <!-- AB Bottom -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;align-items:center;margin-bottom:8px;">
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;margin-bottom:8px;">
           <div class="td-row-label" style="background:rgba(243,112,34,0.15);border-color:rgba(243,112,34,0.35);color:#F37022;">AB Bot.</div>
           <input type="number" id="td-ph-ab-bot-1"  class="td-ph-input" placeholder="1"  step="2">
           <input type="number" id="td-ph-ab-bot-2"  class="td-ph-input" placeholder="2"  step="2">
@@ -10104,7 +10104,7 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
 
         <!-- CD Bottom -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;align-items:center;margin-bottom:8px;">
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;margin-bottom:8px;">
           <div class="td-row-label" style="background:rgba(96,200,255,0.1);border-color:rgba(96,200,255,0.3);color:#7ec8f0;">CD Bot.</div>
           <input type="number" id="td-ph-cd-bot-1"  class="td-ph-input" placeholder="1"  step="2">
           <input type="number" id="td-ph-cd-bot-2"  class="td-ph-input" placeholder="2"  step="2">
@@ -10124,7 +10124,7 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
 
         <!-- AB Top -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;align-items:center;margin-bottom:8px;">
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;margin-bottom:8px;">
           <div class="td-row-label" style="background:rgba(243,112,34,0.15);border-color:rgba(243,112,34,0.35);color:#F37022;">AB Top</div>
           <input type="number" id="td-ph-ab-top-1"  class="td-ph-input" placeholder="1"  step="2">
           <input type="number" id="td-ph-ab-top-2"  class="td-ph-input" placeholder="2"  step="2">
@@ -10144,7 +10144,7 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
 
         <!-- CD Top -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;align-items:center;">
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;">
           <div class="td-row-label" style="background:rgba(96,200,255,0.1);border-color:rgba(96,200,255,0.3);color:#7ec8f0;">CD Top</div>
           <input type="number" id="td-ph-cd-top-1"  class="td-ph-input" placeholder="1"  step="2">
           <input type="number" id="td-ph-cd-top-2"  class="td-ph-input" placeholder="2"  step="2">
@@ -13351,7 +13351,7 @@ function applyMobileHorizontalScrollFixes(){
   var isMobile =
     (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
     (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
-  var rowSelector = '#tab-tempdata .td-ph-grid-row,#all-ph-modal-body .td-ph-grid-row,#tab-tempdata [style*="grid-template-columns:80px repeat(15,1fr)"],#all-ph-modal-body [style*="grid-template-columns:80px repeat(15,1fr)"]';
+  var rowSelector = '#tab-tempdata .td-ph-grid-row,#all-ph-modal-body .td-ph-grid-row,#tab-tempdata [style*="grid-template-columns:80px repeat(15,1fr)"],#all-ph-modal-body [style*="grid-template-columns:80px repeat(15,1fr)"],#tab-tempdata [style*="grid-template-columns:80px repeat(15,56px)"],#all-ph-modal-body [style*="grid-template-columns:80px repeat(15,56px)"]';
   var wrapSelector = '#tab-tempdata .td-ph-grid-scroll,#all-ph-modal-body .td-ph-grid-scroll';
   var peepRows = document.querySelectorAll(rowSelector);
   var peepWraps = document.querySelectorAll(wrapSelector);
@@ -13386,8 +13386,8 @@ function applyMobileHorizontalScrollFixes(){
     wrap.style.touchAction = "pan-x pan-y";
   });
   peepRows.forEach(function(row){
-    row.style.minWidth = "980px";
-    row.style.width = "980px";
+    row.style.minWidth = "1010px";
+    row.style.width = "max-content";
     row.style.maxWidth = "none";
     var parent = row.parentElement;
     if(parent){
@@ -16265,7 +16265,7 @@ function renderAllPHData(){
     html += '<div style="padding:14px 16px;">';
     html += '<div class="td-ph-grid-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;max-width:100%;">';
     // Header row
-    html += '<div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:4px;margin-bottom:6px;">';
+    html += '<div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:4px;margin-bottom:6px;">';
     html += '<div style="font-size:10px;color:#64748b;font-weight:700;text-align:center;">PH No.</div>';
     for(var ph=1;ph<=15;ph++){
       html += '<div style="font-size:10px;color:#7ec8f0;font-weight:700;text-align:center;background:rgba(255,255,255,0.05);border-radius:3px;padding:2px 0;">'+ph+'</div>';
@@ -16279,7 +16279,7 @@ function renderAllPHData(){
       var maxT = nums.length ? Math.max.apply(null,nums) : null;
       var rowColor = phRowColors[rk];
 
-      html += '<div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:4px;margin-bottom:4px;align-items:center;">';
+      html += '<div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:4px;margin-bottom:4px;align-items:center;">';
       html += '<div style="font-size:10px;font-weight:700;color:'+rowColor+';text-align:center;background:rgba(0,0,0,0.3);border-radius:4px;padding:4px 2px;border:1px solid '+rowColor+'44;">'+phRowLabels[rk]+'</div>';
 
       for(var ph=0;ph<15;ph++){
