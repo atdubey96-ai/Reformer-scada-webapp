@@ -16725,58 +16725,10 @@ function tempToColorInline(val, minT, maxT){
 (function(){
   var deferredInstallPrompt = null;
   var installButtons = [document.getElementById("installAppBtn"), document.getElementById("installAppFab")].filter(Boolean);
-  var SW_BUILD_KEY = "scadaSwBuildId";
-  var SW_BUILD_ID = "2026-03-07-syncfix-2";
-  var SW_CACHE_PREFIX = "scada-burner-v";
-  var SW_CURRENT_CACHE = "scada-burner-v31";
-  var SW_SCRIPT_URL = "./sw.js?v=31";
 
   function showInstallButtons(show){
     installButtons.forEach(function(btn){
       btn.style.display = show ? "inline-flex" : "none";
-    });
-  }
-
-  function shouldManageScope(scope, expectedScope, legacyScope){
-    if(!scope) return false;
-    if(scope === expectedScope || scope === legacyScope) return true;
-    return (
-      scope === (location.origin + "/") ||
-      scope.indexOf(location.origin + "/webapp/") === 0
-    );
-  }
-
-  function purgeScadaCaches(){
-    if(!("caches" in window)) return Promise.resolve();
-    return caches.keys().then(function(keys){
-      var targets = keys.filter(function(key){
-        return key.indexOf(SW_CACHE_PREFIX) === 0 && key !== SW_CURRENT_CACHE;
-      });
-      return Promise.all(targets.map(function(key){ return caches.delete(key); }));
-    }).catch(function(){});
-  }
-
-  function registerScadaServiceWorker(swScope, expectedScope){
-    return navigator.serviceWorker.register(SW_SCRIPT_URL, { scope: swScope, updateViaCache: "none" }).then(function(reg){
-      if(reg.waiting){
-        reg.waiting.postMessage({type:"SKIP_WAITING"});
-      }
-      reg.addEventListener("updatefound", function(){
-        var nw = reg.installing;
-        if(!nw) return;
-        nw.addEventListener("statechange", function(){
-          if(nw.state === "installed" && navigator.serviceWorker.controller){
-            nw.postMessage({type:"SKIP_WAITING"});
-          }
-        });
-      });
-      if(typeof reg.update === "function"){
-        reg.update().catch(function(){});
-      }
-      if(reg.scope !== expectedScope && typeof reg.update === "function"){
-        reg.update().catch(function(){});
-      }
-      return reg;
     });
   }
 
@@ -16786,34 +16738,37 @@ function tempToColorInline(val, minT, maxT){
       var expectedScope = inWebappPath ? (location.origin + "/webapp/") : (location.origin + "/");
       var legacyScope = inWebappPath ? (location.origin + "/") : (location.origin + "/webapp/");
       var swScope = inWebappPath ? "./" : "/";
-      var forceCleanup = false;
-      try{
-        var prevBuild = String(localStorage.getItem(SW_BUILD_KEY) || "");
-        forceCleanup = prevBuild !== SW_BUILD_ID;
-        if(forceCleanup) localStorage.setItem(SW_BUILD_KEY, SW_BUILD_ID);
-      }catch(e){}
 
       navigator.serviceWorker.getRegistrations().then(function(regs){
-        var tasks = [];
         regs.forEach(function(r){
           try{
-            var scope = r && r.scope ? r.scope : "";
-            if(forceCleanup){
-              if(shouldManageScope(scope, expectedScope, legacyScope)){
-                tasks.push(r.unregister());
-              }
-            }else if(scope === legacyScope){
-              tasks.push(r.unregister());
+            if(r && r.scope === legacyScope){
+              r.unregister();
             }
           }catch(e){}
         });
-        return Promise.all(tasks);
-      }).catch(function(){})
-      .then(function(){ return purgeScadaCaches(); })
-      .then(function(){ return registerScadaServiceWorker(swScope, expectedScope); })
-      .catch(function(){
-        registerScadaServiceWorker(swScope, expectedScope).catch(function(){});
-      });
+      }).catch(function(){});
+
+      navigator.serviceWorker.register("./sw.js", { scope: swScope, updateViaCache: "none" }).then(function(reg){
+        if(reg.waiting){
+          reg.waiting.postMessage({type:"SKIP_WAITING"});
+        }
+        reg.addEventListener("updatefound", function(){
+          var nw = reg.installing;
+          if(!nw) return;
+          nw.addEventListener("statechange", function(){
+            if(nw.state === "installed" && navigator.serviceWorker.controller){
+              nw.postMessage({type:"SKIP_WAITING"});
+            }
+          });
+        });
+        if(typeof reg.update === "function"){
+          reg.update().catch(function(){});
+        }
+        if(reg.scope !== expectedScope && typeof reg.update === "function"){
+          reg.update().catch(function(){});
+        }
+      }).catch(function(){});
     });
     navigator.serviceWorker.addEventListener("controllerchange", function(){
       if(window.__scadaSwReloaded) return;
