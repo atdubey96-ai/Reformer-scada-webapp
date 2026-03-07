@@ -4035,10 +4035,8 @@ function buildPeepLine(vals, range, label){
     html += '<div class="hm-peep-marker" style="left:' + leftPct + '%;"></div>';
     /* Dot with tooltip */
     html += '<div class="hm-peep-dot" style="left:' + leftPct + '%;background:' + dotCol + ';" title="PH' + (p.idx+1) + ': ' + p.val + '°C"></div>';
-    /* Temperature label above (show for every 3rd or if few points) */
-    if(positions.length <= 5 || i % 2 === 0 || i === positions.length - 1){
-      html += '<div class="hm-peep-temp-label" style="left:' + leftPct + '%;">' + p.val + '°</div>';
-    }
+    /* Temperature label above: show all available PH values (1..15) */
+    html += '<div class="hm-peep-temp-label" style="left:' + leftPct + '%;">' + p.val + '°</div>';
   }
 
   html += '</div>';
