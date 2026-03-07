@@ -1575,25 +1575,27 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .analysis-block p b{color:#e2e8f0;}
 .chart-wrap{position:relative;height:220px;margin-top:12px;}
 .chart-wrap-pie{
-  padding:8px 8px 2px;
-  border-radius:12px;
-  border:1px solid rgba(148,163,184,0.2);
+  padding:10px 10px 4px;
+  border-radius:14px;
+  border:1px solid rgba(148,163,184,0.3);
   background:
-    radial-gradient(140% 110% at 8% 0%,rgba(34,197,94,0.2) 0%,rgba(34,197,94,0) 52%),
-    radial-gradient(130% 100% at 95% 8%,rgba(245,158,11,0.16) 0%,rgba(245,158,11,0) 48%),
-    linear-gradient(155deg,rgba(9,14,23,0.9),rgba(18,26,38,0.72));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 10px 24px rgba(2,6,23,0.35);
+    radial-gradient(130% 100% at 10% 0%,rgba(74,222,128,0.12) 0%,rgba(74,222,128,0) 50%),
+    radial-gradient(120% 90% at 95% 8%,rgba(250,204,21,0.1) 0%,rgba(250,204,21,0) 46%),
+    linear-gradient(160deg,rgba(9,14,23,0.96),rgba(17,24,39,0.9));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 8px 20px rgba(2,6,23,0.34);
 }
-.chart-wrap-pie canvas{filter:drop-shadow(0 10px 10px rgba(2,6,23,0.3));}
+.chart-wrap-pie canvas{
+  filter:none !important;
+  image-rendering:-webkit-optimize-contrast;
+}
 body.light-theme .chart-wrap-pie{
-  border-color:rgba(148,163,184,0.35);
+  border-color:rgba(148,163,184,0.42);
   background:
-    radial-gradient(140% 110% at 8% 0%,rgba(59,130,246,0.16) 0%,rgba(59,130,246,0) 50%),
-    radial-gradient(130% 100% at 95% 8%,rgba(34,197,94,0.14) 0%,rgba(34,197,94,0) 46%),
-    linear-gradient(150deg,rgba(255,255,255,0.92),rgba(241,245,249,0.88));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.8),0 8px 18px rgba(148,163,184,0.28);
+    radial-gradient(130% 95% at 8% 0%,rgba(59,130,246,0.16) 0%,rgba(59,130,246,0) 48%),
+    linear-gradient(150deg,rgba(255,255,255,0.96),rgba(241,245,249,0.94));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.9),0 7px 16px rgba(148,163,184,0.24);
 }
-body.light-theme .chart-wrap-pie canvas{filter:drop-shadow(0 7px 8px rgba(100,116,139,0.22));}
+body.light-theme .chart-wrap-pie canvas{filter:none !important;}
 @media (min-width:1700px){
   #analysisContainer{grid-template-columns:repeat(5,minmax(250px,1fr));}
 }
@@ -11096,24 +11098,24 @@ function getThemeGradientColor(varName, fallback){
 function getAnalyticsPieStops(idx){
   const palettes = [
     [ // Both
-      getThemeGradientColor("--gs-b-to", "#9dd2ff"),
-      getThemeGradientColor("--gs-b-mid", "#3b82f6"),
-      getThemeGradientColor("--gs-b-from", "#1e3a8a")
+      getThemeGradientColor("--gs-b-to", "#dbeafe"),
+      getThemeGradientColor("--gs-b-mid", "#60a5fa"),
+      getThemeGradientColor("--gs-b-from", "#2563eb")
     ],
     [ // NG
-      getThemeGradientColor("--gs-n-to", "#f9d98f"),
-      getThemeGradientColor("--gs-n-mid", "#f59e0b"),
-      getThemeGradientColor("--gs-n-from", "#92400e")
+      getThemeGradientColor("--gs-n-to", "#fef3c7"),
+      getThemeGradientColor("--gs-n-mid", "#fbbf24"),
+      getThemeGradientColor("--gs-n-from", "#d97706")
     ],
     [ // Off Gas
-      getThemeGradientColor("--gs-o-to", "#7ce5a8"),
-      getThemeGradientColor("--gs-o-mid", "#22c55e"),
-      getThemeGradientColor("--gs-o-from", "#166534")
+      getThemeGradientColor("--gs-o-to", "#dcfce7"),
+      getThemeGradientColor("--gs-o-mid", "#4ade80"),
+      getThemeGradientColor("--gs-o-from", "#16a34a")
     ],
     [ // Cold
-      getThemeGradientColor("--gs-c-to", "#d2dbe6"),
+      getThemeGradientColor("--gs-c-to", "#e2e8f0"),
       getThemeGradientColor("--gs-c-mid", "#94a3b8"),
-      getThemeGradientColor("--gs-c-from", "#475569")
+      getThemeGradientColor("--gs-c-from", "#64748b")
     ]
   ];
   return palettes[idx] || palettes[0];
@@ -11130,11 +11132,11 @@ function buildAnalyticsPieSliceGradient(context){
   const outer = arc.outerRadius || Math.min(chart.width, chart.height) * 0.38;
   const inner = Math.max(0, (arc.innerRadius || 0) * 0.6);
   const gradient = chart.ctx.createRadialGradient(
-    arc.x - outer * 0.28, arc.y - outer * 0.35, inner,
-    arc.x, arc.y, outer * 1.02
+    arc.x - outer * 0.18, arc.y - outer * 0.24, inner,
+    arc.x, arc.y, outer
   );
   gradient.addColorStop(0, stops[0]);
-  gradient.addColorStop(0.56, stops[1]);
+  gradient.addColorStop(0.52, stops[1]);
   gradient.addColorStop(1, stops[2]);
   return gradient;
 }
@@ -11228,11 +11230,11 @@ function generateAnalysis(){
           data:[B,N,O,C],
           backgroundColor:buildAnalyticsPieSliceGradient,
           borderColor:buildAnalyticsPieBorderColor,
-          borderWidth:1.8,
-          spacing:1,
-          hoverOffset:13,
+          borderWidth:2.2,
+          spacing:0,
+          hoverOffset:10,
           hoverBorderColor:"rgba(255,255,255,0.82)",
-          hoverBorderWidth:2.2
+          hoverBorderWidth:2.8
         }]
       },
       options:{
