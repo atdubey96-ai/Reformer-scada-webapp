@@ -2749,6 +2749,58 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 .td-ph-grid-row{
   min-width:1010px;
 }
+.td-ph-mobile-matrix{
+  display:none;
+  margin-top:2px;
+}
+.td-ph-mobile-matrix-header,
+.td-ph-mobile-matrix-row{
+  display:grid;
+  grid-template-columns:52px repeat(4,minmax(0,1fr));
+  gap:6px;
+  align-items:center;
+}
+.td-ph-mobile-matrix-header{
+  margin-bottom:8px;
+}
+.td-ph-mobile-matrix-row{
+  margin-bottom:6px;
+}
+.td-ph-mobile-matrix-cell{
+  min-height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;
+  font-size:12px;
+  letter-spacing:0.3px;
+}
+.td-ph-mobile-matrix-cell-ph{
+  color:#94a3b8;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+}
+.td-ph-mobile-matrix-head{
+  color:#cbd5e1;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);
+}
+.td-ph-mobile-matrix-head-ab{
+  color:#F37022;
+  border-color:rgba(243,112,34,0.35);
+  background:rgba(243,112,34,0.14);
+}
+.td-ph-mobile-matrix-head-cd{
+  color:#7ec8f0;
+  border-color:rgba(126,200,240,0.35);
+  background:rgba(126,200,240,0.12);
+}
+.td-ph-mobile-input{
+  min-width:0;
+  padding:6px 4px;
+}
 @media (min-width: 901px){
   #tab-tempdata .td-ph-grid-scroll{
     overflow-x:visible !important;
@@ -2763,12 +2815,15 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 }
 @media (max-width: 900px){
   #tab-tempdata .td-ph-grid-scroll{
-    display:block !important;
+    display:none !important;
     overflow-x:auto !important;
     overflow-y:hidden !important;
     -webkit-overflow-scrolling:touch !important;
     touch-action:pan-x !important;
     overscroll-behavior-x:contain !important;
+  }
+  #tab-tempdata .td-ph-mobile-matrix{
+    display:block !important;
   }
   #tab-tempdata .td-ph-grid-row{
     min-width:1010px !important;
@@ -10229,6 +10284,7 @@ html, body, body *, body *::before, body *::after, svg text{
           <input type="number" id="td-ph-cd-top-15" class="td-ph-input" placeholder="15" step="2">
         </div>
         </div>
+        <div id="td-ph-mobile-matrix" class="td-ph-mobile-matrix" aria-label="Peep hole temperatures mobile matrix"></div>
       </div>
       </div>
 
@@ -15225,6 +15281,7 @@ function fillTdPeepFieldsFromVoiceNumbers(values){
     }
     if(tdVoiceFillCellIndex >= ids.length) break;
   }
+  if(writes > 0) syncTdMobileMatrixFromBase();
   return writes;
 }
 
@@ -15616,6 +15673,98 @@ function getTdPeepFieldIds(){
   return ids;
 }
 
+var TD_MOBILE_MATRIX_ROW_KEYS = ["ab-bot","cd-bot","ab-top","cd-top"];
+var TD_MOBILE_MATRIX_ROW_LABELS = {
+  "ab-bot":"AB Bot",
+  "cd-bot":"CD Bot",
+  "ab-top":"AB Top",
+  "cd-top":"CD Top"
+};
+var tdMobileMatrixBuilt = false;
+var tdMobileMatrixBaseBound = false;
+
+function buildTdMobileMatrixIfNeeded(){
+  var root = document.getElementById("td-ph-mobile-matrix");
+  if(!root || tdMobileMatrixBuilt) return;
+
+  var html = '';
+  html += '<div class="td-ph-mobile-matrix-header">';
+  html += '<div class="td-ph-mobile-matrix-cell td-ph-mobile-matrix-head">PH</div>';
+  html += '<div class="td-ph-mobile-matrix-cell td-ph-mobile-matrix-head td-ph-mobile-matrix-head-ab">AB Bot</div>';
+  html += '<div class="td-ph-mobile-matrix-cell td-ph-mobile-matrix-head td-ph-mobile-matrix-head-cd">CD Bot</div>';
+  html += '<div class="td-ph-mobile-matrix-cell td-ph-mobile-matrix-head td-ph-mobile-matrix-head-ab">AB Top</div>';
+  html += '<div class="td-ph-mobile-matrix-cell td-ph-mobile-matrix-head td-ph-mobile-matrix-head-cd">CD Top</div>';
+  html += '</div>';
+
+  for(var ph=1; ph<=15; ph++){
+    html += '<div class="td-ph-mobile-matrix-row">';
+    html += '<div class="td-ph-mobile-matrix-cell td-ph-mobile-matrix-cell-ph">' + ph + '</div>';
+    for(var k=0; k<TD_MOBILE_MATRIX_ROW_KEYS.length; k++){
+      var rowKey = TD_MOBILE_MATRIX_ROW_KEYS[k];
+      var targetId = "td-ph-" + rowKey + "-" + ph;
+      var aria = (TD_MOBILE_MATRIX_ROW_LABELS[rowKey] || rowKey) + " PH " + ph;
+      html += '<input type="number" class="td-ph-input td-ph-mobile-input" step="2" placeholder="' + ph + '" data-target="' + targetId + '" aria-label="' + aria + '">';
+    }
+    html += '</div>';
+  }
+
+  root.innerHTML = html;
+
+  var mirrors = root.querySelectorAll("input[data-target]");
+  for(var i=0; i<mirrors.length; i++){
+    (function(mirror){
+      mirror.addEventListener("input", function(){
+        var targetId = mirror.getAttribute("data-target");
+        if(!targetId) return;
+        var base = document.getElementById(targetId);
+        if(!base) return;
+        if(base.value !== mirror.value){
+          base.value = mirror.value;
+          try{ base.dispatchEvent(new Event("input", { bubbles:true })); }catch(e){}
+        }
+      });
+      mirror.addEventListener("focus", function(){
+        var targetId = mirror.getAttribute("data-target");
+        if(!targetId) return;
+        var base = document.getElementById(targetId);
+        if(base) noteTdPeepFocusByElement(base);
+      });
+    })(mirrors[i]);
+  }
+
+  tdMobileMatrixBuilt = true;
+  bindTdMobileMatrixBaseInputs();
+  syncTdMobileMatrixFromBase();
+}
+
+function bindTdMobileMatrixBaseInputs(){
+  if(tdMobileMatrixBaseBound) return;
+  var ids = getTdPeepFieldIds();
+  for(var i=0; i<ids.length; i++){
+    var base = document.getElementById(ids[i]);
+    if(!base) continue;
+    base.addEventListener("input", syncTdMobileMatrixFromBase);
+    base.addEventListener("change", syncTdMobileMatrixFromBase);
+  }
+  tdMobileMatrixBaseBound = true;
+}
+
+function syncTdMobileMatrixFromBase(){
+  if(!tdMobileMatrixBuilt) return;
+  var root = document.getElementById("td-ph-mobile-matrix");
+  if(!root) return;
+  var mirrors = root.querySelectorAll("input[data-target]");
+  for(var i=0; i<mirrors.length; i++){
+    var mirror = mirrors[i];
+    var targetId = mirror.getAttribute("data-target");
+    if(!targetId) continue;
+    var base = document.getElementById(targetId);
+    if(!base) continue;
+    var v = String(base.value || "");
+    if(mirror.value !== v) mirror.value = v;
+  }
+}
+
 function sanitizeTstValue(raw){
   if(raw === null || raw === undefined) return "";
   var token = String(raw).trim();
@@ -15639,6 +15788,7 @@ function fillTdPeepFieldsFromList(values, onlyNonEmpty){
     el.value = val;
     if(val !== "") written++;
   }
+  syncTdMobileMatrixFromBase();
   return written;
 }
 
@@ -16020,6 +16170,9 @@ async function handleTstPdfOcrSelect(event){
       if(saved) tempDataEntries = JSON.parse(saved);
       renderTempDataTable();
     } catch(e){}
+    buildTdMobileMatrixIfNeeded();
+    syncTdMobileMatrixFromBase();
+    applyMobileHorizontalScrollFixes();
     setTstPdfOcrStatus("OCR idle", "#94a3b8");
     setTstVoiceFillButtonState(false);
     if(getTstVoiceRecognitionCtor()){
@@ -16057,6 +16210,7 @@ function editTempEntry(idx){
       if(inp) inp.value = (vals[ph-1] != null ? vals[ph-1] : "");
     }
   });
+  syncTdMobileMatrixFromBase();
 
   setTempEditMode(idx);
   showToast("✏️ Entry loaded for editing. Update values and click Update Entry.");
@@ -16150,6 +16304,7 @@ function clearTempData(){
     var now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
     dtInput.value=now.toISOString().slice(0,16);
   }
+  syncTdMobileMatrixFromBase();
 }
 
 function phMinMax(entry, rk){
