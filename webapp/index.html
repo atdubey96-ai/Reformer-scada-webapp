@@ -5021,7 +5021,7 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-tempdata .td-entry-card{
     padding:12px !important;
-    overflow-x:auto !important;
+    overflow-x:visible !important;
   }
   #tab-tempdata .td-ph-grid-scroll{
     overflow-x:auto !important;
@@ -10062,7 +10062,7 @@ html, body, body *, body *::before, body *::after, svg text{
           👁️ Peep Hole Temperatures — Peep Hole No. 1 – 15
         </div>
 
-        <div class="td-ph-grid-scroll">
+        <div class="td-ph-grid-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;max-width:100%;">
         <!-- Number header row -->
         <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:6px;margin-bottom:6px;align-items:center;">
           <div style="font-size:10px;color:#64748b;text-align:center;font-weight:700;letter-spacing:0.5px;">PH No.</div>
@@ -16263,7 +16263,7 @@ function renderAllPHData(){
 
     // Peep hole data
     html += '<div style="padding:14px 16px;">';
-    html += '<div class="td-ph-grid-scroll">';
+    html += '<div class="td-ph-grid-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;max-width:100%;">';
     // Header row
     html += '<div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,1fr);gap:4px;margin-bottom:6px;">';
     html += '<div style="font-size:10px;color:#64748b;font-weight:700;text-align:center;">PH No.</div>';
