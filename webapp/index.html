@@ -2738,6 +2738,7 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   overflow-y:visible;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-x pan-y;
+  overscroll-behavior-x:contain;
   padding-bottom:3px;
 }
 .td-ph-grid-scroll::-webkit-scrollbar{height:6px;}
@@ -13296,6 +13297,56 @@ window.addEventListener("orientationchange", function(){
   }, 120);
 });
 
+function bindPeepHoleHorizontalDrag(el){
+  if(!el || el._tdPhDragBound) return;
+  el._tdPhDragBound = true;
+  var startX = 0;
+  var startY = 0;
+  var startLeft = 0;
+  var dragging = false;
+  var axisLock = "";
+
+  el.addEventListener("touchstart", function(ev){
+    if(!ev.touches || ev.touches.length !== 1) return;
+    var t = ev.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    startLeft = el.scrollLeft;
+    dragging = true;
+    axisLock = "";
+  }, { passive:true });
+
+  el.addEventListener("touchmove", function(ev){
+    if(!dragging || !ev.touches || ev.touches.length !== 1) return;
+    var t = ev.touches[0];
+    var dx = t.clientX - startX;
+    var dy = t.clientY - startY;
+    if(!axisLock){
+      if(Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+      axisLock = (Math.abs(dx) > Math.abs(dy)) ? "x" : "y";
+    }
+    if(axisLock !== "x") return;
+    el.scrollLeft = startLeft - dx;
+    if(ev.cancelable) ev.preventDefault();
+  }, { passive:false });
+
+  function endDrag(){
+    dragging = false;
+    axisLock = "";
+  }
+  el.addEventListener("touchend", endDrag, { passive:true });
+  el.addEventListener("touchcancel", endDrag, { passive:true });
+}
+
+function ensurePeepHoleHorizontalDragBindings(){
+  var isMobile =
+    (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
+    (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
+  if(!isMobile) return;
+  var wraps = document.querySelectorAll("#tab-tempdata .td-ph-grid-scroll,#all-ph-modal-body .td-ph-grid-scroll");
+  wraps.forEach(bindPeepHoleHorizontalDrag);
+}
+
 function applyMobileHorizontalScrollFixes(){
   var isMobile =
     (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
@@ -13345,6 +13396,7 @@ function applyMobileHorizontalScrollFixes(){
       parent.style.webkitOverflowScrolling = "touch";
     }
   });
+  ensurePeepHoleHorizontalDragBindings();
 }
 
 /* ==================================================
