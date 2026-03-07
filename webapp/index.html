@@ -2761,6 +2761,22 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
     grid-template-columns:120px repeat(15,minmax(0,1fr)) !important;
   }
 }
+@media (max-width: 900px){
+  #tab-tempdata .td-ph-grid-scroll{
+    display:block !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    touch-action:pan-x !important;
+    overscroll-behavior-x:contain !important;
+  }
+  #tab-tempdata .td-ph-grid-row{
+    min-width:1010px !important;
+    width:max-content !important;
+    max-width:none !important;
+    grid-template-columns:80px repeat(15,56px) !important;
+  }
+}
 .td-fill-menu-wrap{
   display:flex;align-items:center;gap:8px;
   background:rgba(255,255,255,0.05);
@@ -13370,19 +13386,24 @@ function bindPeepHoleHorizontalDrag(el){
   var startLeft = 0;
   var dragging = false;
   var axisLock = "";
+  function canScrollX(){
+    return (el.scrollWidth - el.clientWidth) > 4;
+  }
 
   el.addEventListener("touchstart", function(ev){
     if(!ev.touches || ev.touches.length !== 1) return;
+    if(!canScrollX()) return;
     var t = ev.touches[0];
     startX = t.clientX;
     startY = t.clientY;
     startLeft = el.scrollLeft;
     dragging = true;
     axisLock = "";
-  }, { passive:true });
+  }, { passive:true, capture:true });
 
   el.addEventListener("touchmove", function(ev){
     if(!dragging || !ev.touches || ev.touches.length !== 1) return;
+    if(!canScrollX()) return;
     var t = ev.touches[0];
     var dx = t.clientX - startX;
     var dy = t.clientY - startY;
@@ -13393,7 +13414,7 @@ function bindPeepHoleHorizontalDrag(el){
     if(axisLock !== "x") return;
     el.scrollLeft = startLeft - dx;
     if(ev.cancelable) ev.preventDefault();
-  }, { passive:false });
+  }, { passive:false, capture:true });
 
   function endDrag(){
     dragging = false;
@@ -13426,6 +13447,7 @@ function applyMobileHorizontalScrollFixes(){
       row.style.minWidth = "";
       row.style.width = "";
       row.style.maxWidth = "";
+      row.style.gridTemplateColumns = "";
     });
     peepWraps.forEach(function(wrap){
       wrap.classList.remove("td-temp-scroll");
@@ -13446,19 +13468,22 @@ function applyMobileHorizontalScrollFixes(){
   peepWraps.forEach(function(wrap){
     wrap.classList.add("td-temp-scroll");
     wrap.style.overflowX = "auto";
-    wrap.style.overflowY = "visible";
+    wrap.style.overflowY = "hidden";
     wrap.style.webkitOverflowScrolling = "touch";
-    wrap.style.touchAction = "pan-x pan-y";
+    wrap.style.touchAction = "pan-x";
   });
   peepRows.forEach(function(row){
     row.style.minWidth = "1010px";
     row.style.width = "max-content";
     row.style.maxWidth = "none";
+    row.style.gridTemplateColumns = "80px repeat(15,56px)";
     var parent = row.parentElement;
     if(parent){
       parent.classList.add("td-temp-scroll");
       parent.style.overflowX = "auto";
+      parent.style.overflowY = "hidden";
       parent.style.webkitOverflowScrolling = "touch";
+      parent.style.touchAction = "pan-x";
     }
   });
   ensurePeepHoleHorizontalDragBindings();
