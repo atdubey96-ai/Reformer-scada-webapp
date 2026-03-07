@@ -1103,6 +1103,22 @@ body:not(.heatmap-header-active) #hm-header-tools{
   gap:8px;
   flex:0 0 auto;
 }
+.mobile-meta-logo-wrap{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+.mobile-meta-logo{
+  display:block;
+  width:32px;
+  height:32px;
+  object-fit:cover;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,0.48);
+  background:#0f172a;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.16),0 6px 12px rgba(2,6,23,0.34);
+}
 #syncHealthChip{
   display:inline-flex;
   align-items:center;
@@ -1216,6 +1232,7 @@ body:not(.heatmap-header-active) #hm-header-tools{
   backdrop-filter:blur(10px) saturate(116%);
   overflow:hidden;
   isolation:isolate;
+  transition:transform .24s ease, opacity .22s ease, box-shadow .22s ease;
 }
 .alarm-banner::before{
   content:"";
@@ -1236,6 +1253,13 @@ body:not(.heatmap-header-active) #hm-header-tools{
 @keyframes alarmPulse{
   0%,100%{transform:translateY(0);filter:saturate(1);}
   50%{transform:translateY(-1px);filter:saturate(1.15);}
+}
+.alarm-banner.is-scroll-hidden{
+  transform:translateY(calc(100% + 24px)) !important;
+  opacity:0.01;
+  pointer-events:none;
+  box-shadow:none;
+  animation:none !important;
 }
 .alarm-banner > button{
   background:linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,241,230,0.92));
@@ -1577,9 +1601,9 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .chart-wrap-pie{
   padding:10px 10px 4px;
   border-radius:14px;
-  border:1px solid rgba(148,163,184,0.3);
-  background:linear-gradient(180deg,#05070b 0%,#0b1119 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06),0 8px 20px rgba(2,6,23,0.34);
+  border:1px solid rgba(148,163,184,0.42);
+  background:linear-gradient(180deg,#04070c 0%,#080d14 54%,#0b121b 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 12px 28px rgba(2,6,23,0.52);
 }
 .chart-wrap-pie canvas{
   filter:none !important;
@@ -4710,42 +4734,55 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   .app-header-meta{
     padding:8px 10px !important;
-    display:flex !important;
+    display:grid !important;
+    grid-template-columns:auto 1fr auto !important;
     align-items:center !important;
-    justify-content:space-between !important;
     gap:8px !important;
     min-height:56px !important;
+  }
+  .mobile-meta-logo-wrap{
+    display:flex !important;
+  }
+  .mobile-meta-logo{
+    width:30px !important;
+    height:30px !important;
+    border-radius:7px !important;
   }
   .app-meta-left{
     display:flex !important;
     align-items:center !important;
-    gap:10px !important;
+    gap:8px !important;
     flex-wrap:nowrap !important;
     overflow-x:auto !important;
+    min-width:0 !important;
     scrollbar-width:none !important;
   }
   .app-meta-left::-webkit-scrollbar{display:none !important;}
   .app-meta-left .app-meta-item{
     white-space:nowrap !important;
-    font-size:12px !important;
+    font-size:11px !important;
   }
   .app-meta-left .app-meta-item:nth-child(n+3){display:none !important;}
   #syncHealthChip{display:none !important;}
   .app-meta-right{
     display:flex !important;
     align-items:center !important;
-    gap:8px !important;
+    justify-content:flex-end !important;
+    gap:6px !important;
+    min-width:0 !important;
+    width:auto !important;
     flex:0 0 auto !important;
   }
   #refreshDataBtn{
-    padding:8px 10px !important;
-    min-height:38px !important;
-    font-size:12px !important;
+    padding:7px 9px !important;
+    min-height:36px !important;
+    font-size:11px !important;
     border-radius:10px !important;
+    white-space:nowrap !important;
   }
   .quick-menu-btn{
-    width:42px !important;
-    height:42px !important;
+    width:38px !important;
+    height:38px !important;
     border-radius:50% !important;
   }
 
@@ -4791,8 +4828,26 @@ html, body, body *, body *::before, body *::after, svg text{
     border-radius:14px !important;
   }
 
-  #tab-heatmap .cb-dual-row{display:none !important;}
-  #tab-heatmap .hm-cuboid-heat-strip{display:none !important;}
+  #tab-heatmap .cb-dual-row{
+    display:flex !important;
+    width:100% !important;
+    margin:6px 0 8px !important;
+    padding:6px 4px !important;
+    gap:10px !important;
+  }
+  #tab-heatmap .hm-cuboid-heat-strip{
+    display:flex !important;
+    margin:4px 0 8px !important;
+  }
+  #tab-heatmap .cb-wrap{min-width:0 !important;}
+  #tab-heatmap .cb-scene{
+    height:clamp(260px,42vh,340px) !important;
+  }
+  #tab-heatmap .cb-hint{
+    font-size:10px !important;
+    letter-spacing:0.45px !important;
+    margin-top:2px !important;
+  }
   #tab-heatmap #hm-adjust-card{
     margin:8px 0 10px !important;
     padding:10px !important;
@@ -5164,6 +5219,9 @@ html, body, body *, body *::before, body *::after, svg text{
 
   <!-- Meta strip -->
   <div class="app-header-meta">
+    <div class="mobile-meta-logo-wrap" aria-hidden="true">
+      <img id="mobileMetaLogo" class="mobile-meta-logo" alt="IOCL">
+    </div>
     <div class="app-meta-left">
       <div class="app-meta-item"><span class="meta-dot"></span> <b>Status:</b> Live</div>
       <div class="app-meta-item"><b>Walls:</b> A · B · C · D</div>
@@ -7669,19 +7727,19 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         @media (max-width:900px){
           #tab-heatmap{
-            --cb-w:min(90vw,1080px);
-            --cb-h:clamp(460px,60vh,520px);
-            --cb-d:clamp(66px,10vw,90px);
+            --cb-w:min(94vw,760px);
+            --cb-h:clamp(300px,42vh,360px);
+            --cb-d:clamp(44px,8vw,58px);
           }
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-scene{
-            height:calc(var(--cb-h) + 100px) !important;
+            height:calc(var(--cb-h) + 74px) !important;
           }
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-row{
-            padding:8px 20px 9px !important;
-            gap:14px !important;
-            width:calc(100% + 20px) !important;
-            margin-left:-10px !important;
-            margin-right:-10px !important;
+            padding:6px 8px 8px !important;
+            gap:10px !important;
+            width:calc(100% + 6px) !important;
+            margin-left:-3px !important;
+            margin-right:-3px !important;
           }
         }
       </style>
@@ -8953,7 +9011,10 @@ html, body, body *, body *::before, body *::after, svg text{
         var _isMobileLite =
           (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
           (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
-        var _mobileCuboidEnabled = localStorage.getItem("hm-mobile-cuboid") === "1";
+        var _mobileCuboidEnabled = true;
+        if(_isMobileLite){
+          try{ localStorage.setItem("hm-mobile-cuboid", "1"); }catch(e){}
+        }
         var _disableCuboidMotion = false;
         if(_isMobileLite && !_mobileCuboidEnabled){
           var cbRowLite = document.querySelector("#tab-heatmap .cb-dual-row");
@@ -9544,9 +9605,17 @@ html, body, body *, body *::before, body *::after, svg text{
         }
       }
       function toggleMobileCuboid(){
-        var enabled = localStorage.getItem("hm-mobile-cuboid") === "1";
-        localStorage.setItem("hm-mobile-cuboid", enabled ? "0" : "1");
-        location.reload();
+        try{ localStorage.setItem("hm-mobile-cuboid", "1"); }catch(e){}
+        var cbRow = document.querySelector("#tab-heatmap .cb-dual-row");
+        if(cbRow) cbRow.style.display = "";
+        if(typeof window.updateCuboidResponsiveScale === "function"){
+          setTimeout(window.updateCuboidResponsiveScale, 0);
+          setTimeout(window.updateCuboidResponsiveScale, 90);
+        }
+        if(typeof requestHeatMapRender === "function"){
+          window._hmSkipCuboidRefresh = false;
+          requestHeatMapRender(20);
+        }
       }
       function initHeatMapInteractionPerf(){
         var hmTab = document.getElementById("tab-heatmap");
@@ -9570,19 +9639,9 @@ html, body, body *, body *::before, body *::after, svg text{
         initHeatMapInteractionPerf();
       }
       function initMobileCuboidToggle(){
-        var isMobileLite =
-          (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
-          (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
         var btn = document.getElementById("hm-cuboid-toggle-btn");
         if(!btn) return;
-        if(!isMobileLite){
-          btn.style.display = "none";
-          return;
-        }
-        var enabled = localStorage.getItem("hm-mobile-cuboid") === "1";
-        btn.style.display = "inline-flex";
-        btn.textContent = enabled ? "🧊 3D Cuboid: ON" : "🧊 3D Cuboid: OFF";
-        btn.classList.toggle("hm-wall-btn-active", enabled);
+        btn.style.display = "none";
       }
       (function initHeatMapDefaultWall(){
         _activeHeatMapWall = "A";
@@ -11095,24 +11154,24 @@ function getThemeGradientColor(varName, fallback){
 function getAnalyticsPieStops(idx){
   const palettes = [
     [ // Both
-      getThemeGradientColor("--gs-b-to", "#dbeafe"),
       getThemeGradientColor("--gs-b-mid", "#60a5fa"),
-      getThemeGradientColor("--gs-b-from", "#2563eb")
+      getThemeGradientColor("--gs-b-from", "#2563eb"),
+      "#1d4ed8"
     ],
     [ // NG
-      getThemeGradientColor("--gs-n-to", "#fef3c7"),
       getThemeGradientColor("--gs-n-mid", "#fbbf24"),
-      getThemeGradientColor("--gs-n-from", "#d97706")
+      getThemeGradientColor("--gs-n-from", "#f59e0b"),
+      "#b45309"
     ],
     [ // Off Gas
-      getThemeGradientColor("--gs-o-to", "#dcfce7"),
       getThemeGradientColor("--gs-o-mid", "#4ade80"),
-      getThemeGradientColor("--gs-o-from", "#16a34a")
+      getThemeGradientColor("--gs-o-from", "#16a34a"),
+      "#166534"
     ],
     [ // Cold
-      getThemeGradientColor("--gs-c-to", "#e2e8f0"),
       getThemeGradientColor("--gs-c-mid", "#94a3b8"),
-      getThemeGradientColor("--gs-c-from", "#64748b")
+      getThemeGradientColor("--gs-c-from", "#64748b"),
+      "#334155"
     ]
   ];
   return palettes[idx] || palettes[0];
@@ -11129,11 +11188,11 @@ function buildAnalyticsPieSliceGradient(context){
   const outer = arc.outerRadius || Math.min(chart.width, chart.height) * 0.38;
   const inner = Math.max(0, (arc.innerRadius || 0) * 0.6);
   const gradient = chart.ctx.createRadialGradient(
-    arc.x - outer * 0.18, arc.y - outer * 0.24, inner,
+    arc.x - outer * 0.12, arc.y - outer * 0.16, inner,
     arc.x, arc.y, outer
   );
   gradient.addColorStop(0, stops[0]);
-  gradient.addColorStop(0.52, stops[1]);
+  gradient.addColorStop(0.58, stops[1]);
   gradient.addColorStop(1, stops[2]);
   return gradient;
 }
@@ -11227,11 +11286,11 @@ function generateAnalysis(){
           data:[B,N,O,C],
           backgroundColor:buildAnalyticsPieSliceGradient,
           borderColor:buildAnalyticsPieBorderColor,
-          borderWidth:2.2,
+          borderWidth:2.8,
           spacing:0,
-          hoverOffset:10,
-          hoverBorderColor:"rgba(255,255,255,0.82)",
-          hoverBorderWidth:2.8
+          hoverOffset:6,
+          hoverBorderColor:"rgba(226,232,240,0.96)",
+          hoverBorderWidth:3.2
         }]
       },
       options:{
@@ -13000,8 +13059,9 @@ var _tabsRowAutoHide = { lastY:0, ticking:false };
 
 function setTabsRowHidden(hidden){
   var bar = document.querySelector(".bottom-tab-bar");
-  if(!bar) return;
-  bar.classList.toggle("is-scroll-hidden", !!hidden);
+  if(bar) bar.classList.toggle("is-scroll-hidden", !!hidden);
+  var alarm = document.getElementById("masterAlarm");
+  if(alarm) alarm.classList.toggle("is-scroll-hidden", !!hidden);
 }
 
 function updateTabsRowAutoHide(){
@@ -13044,6 +13104,15 @@ function updateGlobalRefreshButtonLabel(tab){
   btn.textContent = (key === "alarms") ? "↻ Refresh Alarms" : "🔄 Refresh Data";
 }
 
+function initMobileMetaLogo(){
+  var mobileLogo = document.getElementById("mobileMetaLogo");
+  if(!mobileLogo) return;
+  if(mobileLogo.getAttribute("src")) return;
+  var desktopLogo = document.querySelector(".app-banner-left .app-banner-logo");
+  var src = desktopLogo ? desktopLogo.getAttribute("src") : "";
+  if(src) mobileLogo.setAttribute("src", src);
+}
+
 function handleGlobalRefreshClick(){
   var active = document.querySelector('.tab-panel.tab-active');
   var tab = active && active.id ? active.id.replace('tab-','') : '';
@@ -13077,6 +13146,7 @@ function switchTab(tab){
   var tab = active && active.id ? active.id.replace('tab-','') : 'heatmap';
   syncHeatMapHeaderTools(tab);
   updateGlobalRefreshButtonLabel(tab);
+  initMobileMetaLogo();
 })();
 initTabsRowAutoHide();
 
