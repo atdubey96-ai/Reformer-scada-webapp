@@ -8839,6 +8839,10 @@ html, body, body *, body *::before, body *::after, svg text{
           the exact same palette as dark theme. This intentionally overrides
           older experimental light-theme cuboid blocks above.
         */
+        body.light-theme #tab-heatmap .cb-dual-shell,
+        body.light-theme #tab-heatmap #hm-cuboid-zoom-backdrop{
+          display:none !important;
+        }
         body.light-theme #tab-heatmap .cb-dual-row{
           background:linear-gradient(145deg,#12151a 0%,#0d1014 58%,#090c10 100%) !important;
           border-color:rgba(148,163,184,0.54) !important;
@@ -10069,7 +10073,8 @@ html, body, body *, body *::before, body *::after, svg text{
       }
       function setMobileCuboidVisibility(enabled){
         var isMobile = isMobileLiteViewport();
-        var show = isMobile ? !!enabled : true;
+        var isLightTheme = !!(document.body && document.body.classList.contains("light-theme"));
+        var show = isLightTheme ? false : (isMobile ? !!enabled : true);
         var hmTab = document.getElementById("tab-heatmap");
         var shell = hmTab ? hmTab.querySelector(".cb-dual-shell") : null;
         var btn = document.getElementById("hm-cuboid-toggle-btn");
@@ -10086,6 +10091,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         if(btn){
+          btn.style.display = (!isLightTheme && isMobile) ? "" : "none";
           btn.textContent = show ? "🧊 Cuboid: ON" : "🧊 Cuboid: OFF";
           btn.classList.toggle("hm-wall-btn-active", show);
         }
@@ -10137,7 +10143,6 @@ html, body, body *, body *::before, body *::after, svg text{
         var btn = document.getElementById("hm-cuboid-toggle-btn");
         if(!btn) return;
         var isMobile = isMobileLiteViewport();
-        btn.style.display = isMobile ? "" : "none";
         setMobileCuboidVisibility(isMobile ? getMobileCuboidPreference() : true);
       }
       (function initHeatMapDefaultWall(){
@@ -13664,6 +13669,9 @@ function toggleTheme(isDark){
     setTimeout(applyLightThemeCuboidFaceBlack, 0);
     setTimeout(applyLightThemeCuboidFaceBlack, 180);
   }
+  if(typeof initMobileCuboidToggle === "function"){
+    setTimeout(initMobileCuboidToggle, 0);
+  }
   refreshThemeSensitivePanels();
 }
 // Init theme from saved preference (script is at bottom so DOM is ready)
@@ -13680,6 +13688,9 @@ function toggleTheme(isDark){
   if(typeof applyLightThemeCuboidFaceBlack === "function"){
     setTimeout(applyLightThemeCuboidFaceBlack, 0);
     setTimeout(applyLightThemeCuboidFaceBlack, 180);
+  }
+  if(typeof initMobileCuboidToggle === "function"){
+    setTimeout(initMobileCuboidToggle, 0);
   }
   refreshThemeSensitivePanels();
 })();
