@@ -9679,6 +9679,50 @@ html, body, body *, body *::before, body *::after, svg text{
           <div id="hm-analysisContainer"></div>
         </div>
 
+        <div class="cleaning-section">
+          <h2>🧹 Burner Cleaning Log</h2>
+          <div class="cleaning-subtitle">Cleaning analysis summary for all 4 walls.</div>
+
+          <div id="hm-cleaningDashboard" class="cleaning-dashboard">
+            <div class="cdash-period-row">
+              <div class="cdash-period-card">
+                <div class="cdash-period-icon">📅</div>
+                <div class="cdash-period-val" id="hm-cdash-val-today">0</div>
+                <div class="cdash-period-label">Cleaned Today</div>
+              </div>
+              <div class="cdash-period-card">
+                <div class="cdash-period-icon">📆</div>
+                <div class="cdash-period-val" id="hm-cdash-val-week">0</div>
+                <div class="cdash-period-label">This Week</div>
+              </div>
+              <div class="cdash-period-card">
+                <div class="cdash-period-icon">🗓</div>
+                <div class="cdash-period-val" id="hm-cdash-val-month">0</div>
+                <div class="cdash-period-label">
+                  <select id="hm-cleaningMonthSelect" onchange="handleCleaningMonthSelectChange(this.value)" title="Select month">
+                  </select>
+                </div>
+              </div>
+              <div class="cdash-period-card cdash-total-card">
+                <div class="cdash-period-icon">🔥</div>
+                <div class="cdash-period-val" id="hm-cdash-val-total">0</div>
+                <div class="cdash-period-label">Total Cleaned</div>
+                <div class="cdash-period-sub" id="hm-cdash-val-pct">of 360</div>
+              </div>
+            </div>
+            <div class="cdash-breakdown-row">
+              <div class="cdash-breakdown-block">
+                <div class="cdash-breakdown-title">Wall-wise Cleaned</div>
+                <div id="hm-cdash-wall-bars" class="cdash-bars"></div>
+              </div>
+              <div class="cdash-breakdown-block">
+                <div class="cdash-breakdown-title">Row-wise Cleaned (All Walls)</div>
+                <div id="hm-cdash-row-bars" class="cdash-bars"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="hm-saved-entries-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:20px 24px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
             <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;">
