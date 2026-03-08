@@ -9518,11 +9518,25 @@ html, body, body *, body *::before, body *::after, svg text{
 
         function applyLightThemeCuboidFaceBlack(){
           var isLight = !!(document.body && document.body.classList.contains('light-theme'));
-          var cuboidFaceIds = [
-            "face-ab-front","face-ab-back","face-cd-front","face-cd-back",
+          var frontBackFaceIds = [
+            "face-ab-front","face-ab-back","face-cd-front","face-cd-back"
+          ];
+          var sideFaceIds = [
             "face-ab-left","face-ab-right","face-cd-left","face-cd-right"
           ];
-          cuboidFaceIds.forEach(function(id){
+          frontBackFaceIds.forEach(function(id){
+            var el = document.getElementById(id);
+            if(!el) return;
+            if(isLight){
+              el.style.setProperty("background", "transparent", "important");
+              el.style.removeProperty("border-color");
+            }else{
+              el.style.removeProperty("background");
+              el.style.removeProperty("border-color");
+            }
+          });
+
+          sideFaceIds.forEach(function(id){
             var el = document.getElementById(id);
             if(!el) return;
             if(isLight){
@@ -9551,12 +9565,12 @@ html, body, body *, body *::before, body *::after, svg text{
           });
 
           var wallCards = document.querySelectorAll(
-            "#face-ab-front .hm-wall-card,#face-ab-back .hm-wall-card,#face-cd-front .hm-wall-card,#face-cd-back .hm-wall-card,#hm-side-ab .hm-wall-card,#hm-side-cd .hm-wall-card"
+            "#face-ab-front .hm-wall-card,#face-ab-back .hm-wall-card,#face-cd-front .hm-wall-card,#face-cd-back .hm-wall-card"
           );
           wallCards.forEach(function(el){
             if(isLight){
-              el.style.setProperty("background", "#000000", "important");
-              el.style.setProperty("border-color", "rgba(255,255,255,0.2)", "important");
+              el.style.setProperty("background", "transparent", "important");
+              el.style.setProperty("border-color", "rgba(148,163,184,0.24)", "important");
               el.style.setProperty("box-shadow", "none", "important");
             }else{
               el.style.removeProperty("background");
@@ -9566,12 +9580,12 @@ html, body, body *, body *::before, body *::after, svg text{
           });
 
           var wallHeaders = document.querySelectorAll(
-            "#face-ab-front .hm-wall-header,#face-ab-back .hm-wall-header,#face-cd-front .hm-wall-header,#face-cd-back .hm-wall-header,#hm-side-ab .hm-wall-header,#hm-side-cd .hm-wall-header"
+            "#face-ab-front .hm-wall-header,#face-ab-back .hm-wall-header,#face-cd-front .hm-wall-header,#face-cd-back .hm-wall-header"
           );
           wallHeaders.forEach(function(el){
             if(isLight){
-              el.style.setProperty("background", "#000000", "important");
-              el.style.setProperty("border-bottom", "1px solid rgba(255,255,255,0.22)", "important");
+              el.style.setProperty("background", "transparent", "important");
+              el.style.setProperty("border-bottom", "2px solid rgba(251,146,60,0.72)", "important");
             }else{
               el.style.removeProperty("background");
               el.style.removeProperty("border-bottom");
