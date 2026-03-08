@@ -1422,7 +1422,8 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
 .wall-container{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px;}
 @media(max-width:900px){
   .wall-container{grid-template-columns:1fr;padding:12px;}
-  #analysisContainer{grid-template-columns:1fr;}
+  #analysisContainer,
+  #hm-analysisContainer{grid-template-columns:1fr;}
   .analytics{margin:12px;padding:14px;}
 }
 .wall{background:#1e293b;padding:14px;border-radius:8px;border:1px solid #334155;overflow:hidden;}
@@ -1594,7 +1595,8 @@ td select option{background:#1e293b;color:#e2e8f0;}
 ==================================================== */
 .analytics{background:#1e293b;margin:20px;padding:20px;border-radius:8px;border:1px solid #334155;}
 .analytics h2{margin:0 0 16px;color:#f97316;font-size:17px;}
-#analysisContainer{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px;}
+#analysisContainer,
+#hm-analysisContainer{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px;}
 .analysis-block{background:#0f172a;padding:15px;border-radius:8px;border:1px solid #334155;}
 .analysis-block h3{color:#38bdf8;font-size:14px;margin-bottom:8px;}
 .analysis-block p{color:#94a3b8;font-size:13px;margin:3px 0;}
@@ -1631,7 +1633,8 @@ body.light-theme .chart-wrap-pie{
 }
 body.light-theme .chart-wrap-pie canvas{filter:none !important;}
 @media (min-width:1700px){
-  #analysisContainer{grid-template-columns:repeat(5,minmax(250px,1fr));}
+  #analysisContainer,
+  #hm-analysisContainer{grid-template-columns:repeat(5,minmax(250px,1fr));}
 }
 
 /* Analysis block — counts pills */
@@ -5081,7 +5084,8 @@ html, body, body *, body *::before, body *::after, svg text{
     padding-bottom:4px !important;
   }
   #tab-burner #walls .wall{min-width:860px !important;}
-  #analysisContainer{
+  #analysisContainer,
+  #hm-analysisContainer{
     grid-template-columns:1fr !important;
     gap:10px !important;
   }
@@ -10558,6 +10562,7 @@ const ROWS           = 6;
 const BURNERS        = 15;
 const TEXT_MAP       = {B:"#000",N:"#000",O:"#000",C:"#fff"};
 const chartInstances = {};
+const hmChartInstances = {};
 
 /* ==================================================
    LOGIN / LOGOUT
@@ -11624,74 +11629,17 @@ function analyticsGridColor(){
   return isAnalyticsLightTheme() ? "rgba(15,23,42,0.10)" : "rgba(148,163,184,0.16)";
 }
 
-function mirrorBurnerAnalysisToHeatMap(){
-  var source = document.getElementById("analysisContainer");
-  var target = document.getElementById("hm-analysisContainer");
-  if(!target) return;
-  target.innerHTML = "";
-  if(!source) return;
-
-  var blocks = source.querySelectorAll(".analysis-block");
-  blocks.forEach(function(block){
-    var clone = block.cloneNode(true);
-    var srcCanvases = block.querySelectorAll("canvas");
-    var cloneCanvases = clone.querySelectorAll("canvas");
-    for(var i=0; i<cloneCanvases.length; i++){
-      var srcCanvas = srcCanvases[i];
-      var cloneCanvas = cloneCanvases[i];
-      if(!srcCanvas || !cloneCanvas) continue;
-      try{
-        var img = document.createElement("img");
-        img.src = srcCanvas.toDataURL("image/png");
-        img.alt = "Burner analytics chart";
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.display = "block";
-        cloneCanvas.replaceWith(img);
-      }catch(e){}
-    }
-    target.appendChild(clone);
+function destroyChartStore(store){
+  Object.keys(store || {}).forEach(function(key){
+    try{
+      if(store[key] && typeof store[key].destroy === "function") store[key].destroy();
+    }catch(e){}
+    delete store[key];
   });
 }
 
-function generateAnalysis(){
-  wallSeverity={};
-  const container=document.getElementById("analysisContainer");
-  container.innerHTML="";
-  Object.values(chartInstances).forEach(c=>c.destroy());
-  Object.keys(chartInstances).forEach(k=>delete chartInstances[k]);
-  var wallLabels = [];
-  var cntBoth = [];
-  var cntNG = [];
-  var cntOG = [];
-  var cntCold = [];
-
-  Object.entries(data).forEach(([wallName,rows])=>{
-    let N=0,O=0,B=0,C=0;
-    rows.flat().forEach(c=>{
-      if(c==="N")N++;else if(c==="O")O++;
-      else if(c==="B")B++;else C++;
-    });
-    const imb=Math.abs(N-O);
-    let sev="normal";
-    if(imb>5&&imb<=10) sev="warning";
-    if(imb>10&&imb<=20) sev="major";
-    if(imb>20) sev="critical";
-    wallSeverity[wallName]=sev;
-    wallLabels.push("Wall " + wallName);
-    cntBoth.push(B);
-    cntNG.push(N);
-    cntOG.push(O);
-    cntCold.push(C);
-
-    const displayName = "Wall "+wallName;
-    const {direction,dirColor,desc,action}=getImbalanceInfo(N,O,imb,sev,displayName);
-    const sc=sev==="normal"?"#4ade80":sev==="warning"?"#facc15":sev==="major"?"#fb923c":"#f87171";
-
-    const block=document.createElement("div");
-    block.className="analysis-block";
-    block.setAttribute("data-wall-analysis", wallName);
-    block.innerHTML=`
+function buildAnalyticsBlockHtml(displayName, B, N, O, C, imb, sc, direction, dirColor, sev, desc, action, canvasId){
+  return `
       <h3>${displayName}</h3>
       <div class="ab-counts">
         <span class="ab-pill ab-both">Both: <b>${B}</b></span>
@@ -11721,92 +11669,194 @@ function generateAnalysis(){
         <div class="ab-alarm-title">✅ Status</div>
         <div class="ab-alarm-desc">${desc}</div>
       </div>`}
-      <div class="chart-wrap chart-wrap-pie"><canvas id="ch_${wallName.replace(/\s/g,'_')}"></canvas></div>`;
-    container.appendChild(block);
+      <div class="chart-wrap chart-wrap-pie"><canvas id="${canvasId}"></canvas></div>`;
+}
 
-    const cv=document.getElementById("ch_"+wallName.replace(/\s/g,'_'));
-    chartInstances[wallName]=new Chart(cv,{
-      type:"pie",
-      data:{
-        labels:["Both","NG","Off Gas","Cold"],
-        datasets:[{
-          data:[B,N,O,C],
-          backgroundColor:buildAnalyticsPieSliceGradient,
-          borderColor:buildAnalyticsPieBorderColor,
-          borderWidth:3,
-          spacing:0,
-          hoverOffset:8,
-          hoverBorderColor:analyticsPieHoverBorderColor(),
-          hoverBorderWidth:3.4
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        animation:{duration:900,easing:"easeOutQuart"},
-        layout:{padding:{top:4,right:6,bottom:2,left:6}},
-        plugins:{
-          tooltip:{
-            backgroundColor:"rgba(15,23,42,0.95)",
-            borderColor:"rgba(148,163,184,0.28)",
-            borderWidth:1,
-            padding:10,
-            titleColor:"#f8fafc",
-            bodyColor:"#e2e8f0"
-          },
-          legend:{
-            position:"bottom",
-            labels:{
-              color:analyticsLegendColor(),
-              font:{size:12,weight:"600"},
-              usePointStyle:true,
-              pointStyle:"circle",
-              boxWidth:10,
-              padding:12
-            }
+function createAnalyticsPieChart(canvas, B, N, O, C){
+  if(!canvas) return null;
+  return new Chart(canvas,{
+    type:"pie",
+    data:{
+      labels:["Both","NG","Off Gas","Cold"],
+      datasets:[{
+        data:[B,N,O,C],
+        backgroundColor:buildAnalyticsPieSliceGradient,
+        borderColor:buildAnalyticsPieBorderColor,
+        borderWidth:3,
+        spacing:0,
+        hoverOffset:8,
+        hoverBorderColor:analyticsPieHoverBorderColor(),
+        hoverBorderWidth:3.4
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      animation:{duration:900,easing:"easeOutQuart"},
+      layout:{padding:{top:4,right:6,bottom:2,left:6}},
+      plugins:{
+        tooltip:{
+          backgroundColor:"rgba(15,23,42,0.95)",
+          borderColor:"rgba(148,163,184,0.28)",
+          borderWidth:1,
+          padding:10,
+          titleColor:"#f8fafc",
+          bodyColor:"#e2e8f0"
+        },
+        legend:{
+          position:"bottom",
+          labels:{
+            color:analyticsLegendColor(),
+            font:{size:12,weight:"600"},
+            usePointStyle:true,
+            pointStyle:"circle",
+            boxWidth:10,
+            padding:12
           }
         }
       }
-    });
+    }
+  });
+}
+
+function createAnalyticsSummaryChart(canvas, wallLabels, cntBoth, cntNG, cntOG, cntCold){
+  if(!canvas) return null;
+  return new Chart(canvas, {
+    type:"bar",
+    data:{
+      labels: wallLabels,
+      datasets:[
+        {label:"NG", data:cntNG, backgroundColor:"#f59e0b"},
+        {label:"Off Gas", data:cntOG, backgroundColor:"#22c55e"},
+        {label:"Both", data:cntBoth, backgroundColor:"#3b82f6"},
+        {label:"None", data:cntCold, backgroundColor:"#64748b"}
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{padding:{top:4,right:6,bottom:2,left:6}},
+      interaction:{mode:"index", intersect:false},
+      scales:{
+        x:{ticks:{color:analyticsAxisColor(),font:{size:11,weight:"600"}},grid:{display:false}},
+        y:{beginAtZero:true,ticks:{color:analyticsAxisMutedColor(),font:{size:11,weight:"600"}},grid:{color:analyticsGridColor()}}
+      },
+      plugins:{
+        legend:{
+          position:"bottom",
+          labels:{color:analyticsLegendColor(),font:{size:12,weight:"600"},boxWidth:12,padding:12}
+        }
+      }
+    }
+  });
+}
+
+function mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold){
+  var target = document.getElementById("hm-analysisContainer");
+  if(!target) return;
+  destroyChartStore(hmChartInstances);
+  target.innerHTML = "";
+
+  wallEntries.forEach(function(item){
+    var block = document.createElement("div");
+    block.className = "analysis-block";
+    block.setAttribute("data-wall-analysis", item.wallName);
+    var canvasId = "hm_ch_" + String(item.wallName).replace(/\s/g, "_");
+    block.innerHTML = buildAnalyticsBlockHtml(
+      item.displayName,
+      item.B,
+      item.N,
+      item.O,
+      item.C,
+      item.imb,
+      item.sc,
+      item.direction,
+      item.dirColor,
+      item.sev,
+      item.desc,
+      item.action,
+      canvasId
+    );
+    target.appendChild(block);
+    hmChartInstances[item.wallName] = createAnalyticsPieChart(document.getElementById(canvasId), item.B, item.N, item.O, item.C);
   });
 
   var summaryBlock = document.createElement("div");
   summaryBlock.className = "analysis-block";
   summaryBlock.setAttribute("data-wall-analysis", "SUMMARY");
-  summaryBlock.innerHTML = `
-    <h3>Wall-Wise Burner Mix Summary</h3>
-    <div class="chart-wrap"><canvas id="analysisWallSummaryChart"></canvas></div>`;
+  summaryBlock.innerHTML = '<h3>Wall-Wise Burner Mix Summary</h3><div class="chart-wrap"><canvas id="hm_analysisWallSummaryChart"></canvas></div>';
+  target.appendChild(summaryBlock);
+  hmChartInstances["_wallSummary"] = createAnalyticsSummaryChart(document.getElementById("hm_analysisWallSummaryChart"), wallLabels, cntBoth, cntNG, cntOG, cntCold);
+}
+
+function generateAnalysis(){
+  wallSeverity={};
+  const container=document.getElementById("analysisContainer");
+  container.innerHTML="";
+  destroyChartStore(chartInstances);
+  destroyChartStore(hmChartInstances);
+  var wallLabels = [];
+  var cntBoth = [];
+  var cntNG = [];
+  var cntOG = [];
+  var cntCold = [];
+  var wallEntries = [];
+
+  Object.entries(data).forEach(([wallName,rows])=>{
+    let N=0,O=0,B=0,C=0;
+    rows.flat().forEach(c=>{
+      if(c==="N")N++;else if(c==="O")O++;
+      else if(c==="B")B++;else C++;
+    });
+    const imb=Math.abs(N-O);
+    let sev="normal";
+    if(imb>5&&imb<=10) sev="warning";
+    if(imb>10&&imb<=20) sev="major";
+    if(imb>20) sev="critical";
+    wallSeverity[wallName]=sev;
+    wallLabels.push("Wall " + wallName);
+    cntBoth.push(B);
+    cntNG.push(N);
+    cntOG.push(O);
+    cntCold.push(C);
+
+    const displayName = "Wall "+wallName;
+    const {direction,dirColor,desc,action}=getImbalanceInfo(N,O,imb,sev,displayName);
+    const sc=sev==="normal"?"#4ade80":sev==="warning"?"#facc15":sev==="major"?"#fb923c":"#f87171";
+    wallEntries.push({
+      wallName: wallName,
+      displayName: displayName,
+      B: B,
+      N: N,
+      O: O,
+      C: C,
+      imb: imb,
+      sev: sev,
+      sc: sc,
+      direction: direction,
+      dirColor: dirColor,
+      desc: desc,
+      action: action
+    });
+
+    const block=document.createElement("div");
+    block.className="analysis-block";
+    block.setAttribute("data-wall-analysis", wallName);
+    block.innerHTML = buildAnalyticsBlockHtml(displayName, B, N, O, C, imb, sc, direction, dirColor, sev, desc, action, "ch_" + wallName.replace(/\s/g,'_'));
+    container.appendChild(block);
+
+    const cv=document.getElementById("ch_"+wallName.replace(/\s/g,'_'));
+    chartInstances[wallName] = createAnalyticsPieChart(cv, B, N, O, C);
+  });
+
+  var summaryBlock = document.createElement("div");
+  summaryBlock.className = "analysis-block";
+  summaryBlock.setAttribute("data-wall-analysis", "SUMMARY");
+  summaryBlock.innerHTML = '<h3>Wall-Wise Burner Mix Summary</h3><div class="chart-wrap"><canvas id="analysisWallSummaryChart"></canvas></div>';
   container.appendChild(summaryBlock);
   const summaryCanvas=document.getElementById("analysisWallSummaryChart");
   if(summaryCanvas){
-    chartInstances["_wallSummary"] = new Chart(summaryCanvas, {
-      type:"bar",
-      data:{
-        labels: wallLabels,
-        datasets:[
-          {label:"NG", data:cntNG, backgroundColor:"#f59e0b"},
-          {label:"Off Gas", data:cntOG, backgroundColor:"#22c55e"},
-          {label:"Both", data:cntBoth, backgroundColor:"#3b82f6"},
-          {label:"None", data:cntCold, backgroundColor:"#64748b"}
-        ]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        layout:{padding:{top:4,right:6,bottom:2,left:6}},
-        interaction:{mode:"index", intersect:false},
-        scales:{
-          x:{ticks:{color:analyticsAxisColor(),font:{size:11,weight:"600"}},grid:{display:false}},
-          y:{beginAtZero:true,ticks:{color:analyticsAxisMutedColor(),font:{size:11,weight:"600"}},grid:{color:analyticsGridColor()}}
-        },
-        plugins:{
-          legend:{
-            position:"bottom",
-            labels:{color:analyticsLegendColor(),font:{size:12,weight:"600"},boxWidth:12,padding:12}
-          }
-        }
-      }
-    });
+    chartInstances["_wallSummary"] = createAnalyticsSummaryChart(summaryCanvas, wallLabels, cntBoth, cntNG, cntOG, cntCold);
   }
 
   /* Unified bottom banner + sound for imbalance and high-frequency cleaning alarms */
@@ -11818,8 +11868,7 @@ function generateAnalysis(){
   render();
   refreshAlarmPanel();
   updateAlarmTabBadge();
-  setTimeout(mirrorBurnerAnalysisToHeatMap, 80);
-  setTimeout(mirrorBurnerAnalysisToHeatMap, 520);
+  mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
 }
 
 function refreshThemeSensitivePanels(){
