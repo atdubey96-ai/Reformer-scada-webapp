@@ -9655,7 +9655,7 @@ html, body, body *, body *::before, body *::after, svg text{
             scene.style.cursor = "default";
             scene.style.touchAction = "auto";
             applyTransform();
-            return { scene:scene, applyTransform:applyTransform };
+            return { scene:scene, cube:cube, applyTransform:applyTransform };
           }
 
           function stopRAF(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } }
@@ -9718,7 +9718,7 @@ html, body, body *, body *::before, body *::after, svg text{
           window.addEventListener('touchend',  onUp);
 
           applyTransform();
-          return { scene:scene, applyTransform:applyTransform };
+          return { scene:scene, cube:cube, applyTransform:applyTransform };
         }
 
         var _abDragCtrl = makeDraggable('ab-scene','ab-cube', -76, -4, -180,   0);
@@ -9727,27 +9727,35 @@ html, body, body *, body *::before, body *::after, svg text{
         function updateCuboidResponsiveScale(){
           var hmTab = document.getElementById("tab-heatmap");
           var zoomMode = !!(hmTab && hmTab.classList.contains("hm-cuboid-zoom-active"));
-          var tabStyle = hmTab ? window.getComputedStyle(hmTab) : null;
-          var baseW = tabStyle ? parseFloat(tabStyle.getPropertyValue("--cb-w")) : NaN;
-          var baseH = tabStyle ? parseFloat(tabStyle.getPropertyValue("--cb-h")) : NaN;
-          if(!isFinite(baseW) || baseW <= 0) baseW = 760;
-          if(!isFinite(baseH) || baseH <= 0) baseH = 500;
 
           var ctrls = [_abDragCtrl, _cdDragCtrl];
           for(var i=0; i<ctrls.length; i++){
             var ctrl = ctrls[i];
-            if(!ctrl || !ctrl.scene) continue;
+            if(!ctrl || !ctrl.scene || !ctrl.cube) continue;
             var w = ctrl.scene.clientWidth || 0;
             if(w < 140) continue; /* hidden tab or not laid out yet */
-            var sceneH = ctrl.scene.clientHeight || Math.max(baseH + 110, 640);
+            var fbFace = ctrl.cube.querySelector(".cb-face.cb-fb");
+            var lrFace = ctrl.cube.querySelector(".cb-face.cb-lr");
+            var baseW = fbFace ? (fbFace.offsetWidth || fbFace.clientWidth) : 0;
+            var baseH = fbFace ? (fbFace.offsetHeight || fbFace.clientHeight) : 0;
+            var baseD = lrFace ? (lrFace.offsetWidth || lrFace.clientWidth) : 0;
+            if(!isFinite(baseW) || baseW <= 0) baseW = 760;
+            if(!isFinite(baseH) || baseH <= 0) baseH = 500;
+            if(!isFinite(baseD) || baseD <= 0) baseD = 110;
+
+            var sceneH = ctrl.scene.clientHeight || Math.max(baseH + baseD + 80, 620);
             var wrap = (ctrl.scene.closest && ctrl.scene.closest(".cb-wrap[data-cuboid]")) || null;
             var isZoomTarget = !!(zoomMode && wrap && wrap.classList.contains("hm-cuboid-zoom-target"));
-            var padW = isZoomTarget ? 24 : 8;
-            var padH = isZoomTarget ? 24 : 8;
-            var maxScale = isZoomTarget ? 4.5 : 1.0;
-            var minScale = isZoomTarget ? 0.60 : 0.62;
-            var fitScaleW = (w - padW) / (baseW * 1.03);
-            var fitScaleH = (sceneH - padH) / (baseH * 1.05);
+            var padW = isZoomTarget ? 24 : 14;
+            var padH = isZoomTarget ? 24 : 16;
+            var maxScale = isZoomTarget ? 4.5 : 0.95;
+            var minScale = isZoomTarget ? 0.58 : 0.56;
+            var fitScaleW = isZoomTarget
+              ? (w - padW) / (baseW * 1.01)
+              : (w - padW) / ((baseW + (baseD * 0.28)) * 1.02);
+            var fitScaleH = isZoomTarget
+              ? (sceneH - padH) / (baseH * 1.02)
+              : (sceneH - padH) / ((baseH + (baseD * 0.18)) * 1.02);
             var scale = Math.min(fitScaleW, fitScaleH);
             if(!isFinite(scale)) scale = 1;
             scale = Math.max(minScale, Math.min(maxScale, scale));
