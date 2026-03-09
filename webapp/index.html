@@ -9727,23 +9727,28 @@ html, body, body *, body *::before, body *::after, svg text{
         function updateCuboidResponsiveScale(){
           var hmTab = document.getElementById("tab-heatmap");
           var zoomMode = !!(hmTab && hmTab.classList.contains("hm-cuboid-zoom-active"));
+          var tabStyle = hmTab ? window.getComputedStyle(hmTab) : null;
+          var baseW = tabStyle ? parseFloat(tabStyle.getPropertyValue("--cb-w")) : NaN;
+          var baseH = tabStyle ? parseFloat(tabStyle.getPropertyValue("--cb-h")) : NaN;
+          if(!isFinite(baseW) || baseW <= 0) baseW = 760;
+          if(!isFinite(baseH) || baseH <= 0) baseH = 500;
+
           var ctrls = [_abDragCtrl, _cdDragCtrl];
           for(var i=0; i<ctrls.length; i++){
             var ctrl = ctrls[i];
             if(!ctrl || !ctrl.scene) continue;
             var w = ctrl.scene.clientWidth || 0;
             if(w < 140) continue; /* hidden tab or not laid out yet */
+            var sceneH = ctrl.scene.clientHeight || Math.max(baseH + 110, 640);
             var wrap = (ctrl.scene.closest && ctrl.scene.closest(".cb-wrap[data-cuboid]")) || null;
             var isZoomTarget = !!(zoomMode && wrap && wrap.classList.contains("hm-cuboid-zoom-target"));
-            var scalePad = isZoomTarget ? 20 : 6;
-            var hFactor = isZoomTarget ? 1.08 : 1.02;
-            var maxScale = isZoomTarget ? 4.5 : 1.24;
-            var minScale = isZoomTarget ? 0.60 : 0.84;
-
-            var scaleW = (w - scalePad) / 760;
-            var sceneH = ctrl.scene.clientHeight || 680;
-            var scaleH = (sceneH * hFactor) / 680;
-            var scale = Math.min(scaleW, scaleH);
+            var padW = isZoomTarget ? 24 : 8;
+            var padH = isZoomTarget ? 24 : 8;
+            var maxScale = isZoomTarget ? 4.5 : 1.0;
+            var minScale = isZoomTarget ? 0.60 : 0.62;
+            var fitScaleW = (w - padW) / (baseW * 1.03);
+            var fitScaleH = (sceneH - padH) / (baseH * 1.05);
+            var scale = Math.min(fitScaleW, fitScaleH);
             if(!isFinite(scale)) scale = 1;
             scale = Math.max(minScale, Math.min(maxScale, scale));
             ctrl.scene.setAttribute('data-cb-scale', scale.toFixed(4));
