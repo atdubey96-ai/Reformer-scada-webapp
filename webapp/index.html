@@ -9313,6 +9313,22 @@ html, body, body *, body *::before, body *::after, svg text{
           }
         }
       </style>
+      <style id="tempdata-ph-number-light-20260310">
+        body.light-theme #tab-tempdata .td-ph-grid-scroll .td-ph-grid-row:first-child > div{
+          color:#111827 !important;
+        }
+        body.light-theme #tab-tempdata .td-ph-grid-scroll .td-ph-grid-row:first-child > div:first-child{
+          color:#334155 !important;
+        }
+        body.light-theme #tab-tempdata .td-ph-input{
+          color:#6b7280 !important;
+          font-weight:700 !important;
+        }
+        body.light-theme #tab-tempdata .td-ph-input::placeholder{
+          color:#9ca3af !important;
+          opacity:1 !important;
+        }
+      </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
@@ -10572,10 +10588,6 @@ html, body, body *, body *::before, body *::after, svg text{
             <input type="datetime-local" id="td-datetime"
               class="td-toolbar-datetime">
           </div>
-          <button type="button" onclick="downloadTstTemplate()"
-            class="td-toolbar-btn td-toolbar-btn-soft">
-            ⬇️ Download TST Format
-          </button>
           <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
           <div class="td-fill-menu-wrap">
             <span style="font-size:10px;font-weight:800;color:#7ec8f0;letter-spacing:0.6px;text-transform:uppercase;">Ramp 930</span>
@@ -10591,6 +10603,9 @@ html, body, body *, body *::before, body *::after, svg text{
           <!-- Save / Clear -->
           <button onclick="clearTempData()" class="td-toolbar-btn td-toolbar-btn-muted">
             🗑 Clear
+          </button>
+          <button id="td-save-btn" onclick="saveTempData()" class="td-toolbar-btn td-toolbar-btn-primary scada-save-btn">
+            💾 SAVE TST DATA
           </button>
         </div>
       </div>
@@ -10771,9 +10786,6 @@ html, body, body *, body *::before, body *::after, svg text{
           <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;">
             📋 Saved Entries
           </div>
-          <button id="td-save-btn" onclick="saveTempData()" class="td-toolbar-btn td-toolbar-btn-primary scada-save-btn">
-            💾 SAVE TST DATA
-          </button>
         </div>
         <div class="td-saved-scroll">
           <table id="td-saved-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
