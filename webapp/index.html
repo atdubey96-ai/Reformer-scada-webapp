@@ -1600,12 +1600,48 @@ td select option{background:#1e293b;color:#e2e8f0;}
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
   gap:20px;
-  align-items:start;
+  align-items:stretch;
 }
-.analysis-block{background:#0f172a;padding:15px;border-radius:8px;border:1px solid #334155;}
+.analysis-block{
+  background:#0f172a;
+  padding:15px;
+  border-radius:8px;
+  border:1px solid #334155;
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
 .analysis-block h3{color:#38bdf8;font-size:14px;margin-bottom:8px;}
 .analysis-block p{color:#94a3b8;font-size:13px;margin:3px 0;}
 .analysis-block p b{color:#e2e8f0;}
+.analysis-wall-card{
+  min-height:640px;
+}
+.analysis-wall-card .ab-alarm-box{
+  min-height:132px;
+  max-height:178px;
+  overflow:auto;
+}
+.analysis-wall-card .ab-alarm-box::-webkit-scrollbar{
+  width:6px;
+}
+.analysis-wall-card .ab-alarm-box::-webkit-scrollbar-thumb{
+  background:rgba(148,163,184,0.45);
+  border-radius:999px;
+}
+.analysis-wall-card .chart-wrap{
+  margin-top:auto;
+  flex:0 0 255px;
+  height:255px;
+}
+.analysis-summary-card{
+  min-height:640px;
+}
+.analysis-summary-card .chart-wrap{
+  margin-top:auto;
+  flex:1 1 auto;
+  min-height:360px;
+}
 .hm-bottom-series{display:flex;flex-direction:column;gap:22px;margin-top:26px;}
 #tab-heatmap .hm-bottom-series .analytics,
 #tab-heatmap .hm-bottom-series .cleaning-section,
@@ -1630,6 +1666,23 @@ body.light-theme .td-saved-entries-outline{
     inset 0 1px 0 rgba(255,255,255,0.85),
     0 0 0 1px rgba(148,163,184,0.24),
     0 8px 20px rgba(148,163,184,0.28);
+}
+@media (max-width:900px){
+  .analysis-wall-card,
+  .analysis-summary-card{
+    min-height:auto;
+  }
+  .analysis-wall-card .ab-alarm-box{
+    min-height:0;
+    max-height:none;
+  }
+  .analysis-wall-card .chart-wrap{
+    flex:0 0 220px;
+    height:220px;
+  }
+  .analysis-summary-card .chart-wrap{
+    min-height:220px;
+  }
 }
 .chart-wrap{position:relative;height:220px;margin-top:12px;}
 .chart-wrap-pie{
@@ -12130,7 +12183,7 @@ function mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, 
 
   wallEntries.forEach(function(item){
     var block = document.createElement("div");
-    block.className = "analysis-block";
+    block.className = "analysis-block analysis-wall-card";
     block.setAttribute("data-wall-analysis", item.wallName);
     var canvasId = "hm_ch_" + String(item.wallName).replace(/\s/g, "_");
     block.innerHTML = buildAnalyticsBlockHtml(
@@ -12153,7 +12206,7 @@ function mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, 
   });
 
   var summaryBlock = document.createElement("div");
-  summaryBlock.className = "analysis-block";
+  summaryBlock.className = "analysis-block analysis-summary-card";
   summaryBlock.setAttribute("data-wall-analysis", "SUMMARY");
   summaryBlock.innerHTML = '<h3>Wall-Wise Burner Mix Summary</h3><div class="chart-wrap"><canvas id="hm_analysisWallSummaryChart"></canvas></div>';
   target.appendChild(summaryBlock);
@@ -12211,7 +12264,7 @@ function generateAnalysis(){
     });
 
     const block=document.createElement("div");
-    block.className="analysis-block";
+    block.className="analysis-block analysis-wall-card";
     block.setAttribute("data-wall-analysis", wallName);
     block.innerHTML = buildAnalyticsBlockHtml(displayName, B, N, O, C, imb, sc, direction, dirColor, sev, desc, action, "ch_" + wallName.replace(/\s/g,'_'));
     container.appendChild(block);
@@ -12221,7 +12274,7 @@ function generateAnalysis(){
   });
 
   var summaryBlock = document.createElement("div");
-  summaryBlock.className = "analysis-block";
+  summaryBlock.className = "analysis-block analysis-summary-card";
   summaryBlock.setAttribute("data-wall-analysis", "SUMMARY");
   summaryBlock.innerHTML = '<h3>Wall-Wise Burner Mix Summary</h3><div class="chart-wrap"><canvas id="analysisWallSummaryChart"></canvas></div>';
   container.appendChild(summaryBlock);
