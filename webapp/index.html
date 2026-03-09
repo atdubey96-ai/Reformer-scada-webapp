@@ -8190,8 +8190,9 @@ html, body, body *, body *::before, body *::after, svg text{
       <style id="heatmap-side-legend-rails-2026">
         #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid]{
           position:relative;
-          padding-left:84px !important;
-          padding-right:114px !important;
+          padding-left:0 !important;
+          padding-right:0 !important;
+          overflow:visible !important;
         }
         #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend{
           position:absolute;
@@ -8217,7 +8218,7 @@ html, body, body *, body *::before, body *::after, svg text{
           display:none !important;
         }
         #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-left{
-          left:4px;
+          left:-72px;
           top:112px;
           bottom:124px;
           width:50px;
@@ -8249,7 +8250,7 @@ html, body, body *, body *::before, body *::after, svg text{
           color:#9eb4d3;
         }
         #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-right{
-          right:4px;
+          right:-78px;
           top:124px;
           bottom:130px;
           width:56px;
@@ -8318,15 +8319,15 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         @media (max-width:1200px){
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid]{
-            padding-left:72px !important;
-            padding-right:98px !important;
+            padding-left:0 !important;
+            padding-right:0 !important;
           }
           #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-left{
-            left:3px;
+            left:-60px;
             width:46px;
           }
           #tab-heatmap .cb-wrap[data-cuboid] .hm-cuboid-side-legend-right{
-            right:3px;
+            right:-66px;
             width:52px;
           }
         }
@@ -9160,7 +9161,7 @@ html, body, body *, body *::before, body *::after, svg text{
           width:100%;
           max-width:100%;
           margin:0 auto 18px;
-          padding:10px 32px 16px;
+          padding:10px 96px 18px;
           box-sizing:border-box;
           overflow:hidden;
           border:1px solid rgba(148,163,184,0.34);
@@ -9169,13 +9170,18 @@ html, body, body *, body *::before, body *::after, svg text{
           box-shadow:inset 0 0 0 1px rgba(255,255,255,0.03);
         }
         #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-shell .cb-dual-row{
-          width:calc(100% + 10px) !important;
-          margin-left:-5px !important;
-          margin-right:-5px !important;
+          width:100% !important;
+          margin-left:0 !important;
+          margin-right:0 !important;
         }
         body.light-theme #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-shell{
           border-color:rgba(100,116,139,0.24);
           box-shadow:inset 0 0 0 1px rgba(255,255,255,0.5);
+        }
+        @media (max-width:1200px){
+          #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-shell{
+            padding:10px 78px 16px;
+          }
         }
         @media (max-width:900px){
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-dual-shell{
@@ -9190,18 +9196,18 @@ html, body, body *, body *::before, body *::after, svg text{
       </style>
       <style id="heatmap-cuboid-scene-outline-gap-20260309">
         #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid] .cb-scene::before{
-          inset:-18px -26px -16px -26px !important;
-          border-radius:18px !important;
+          inset:0 !important;
+          border-radius:14px !important;
         }
         @media (max-width:1200px){
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid] .cb-scene::before{
-            inset:-14px -20px -12px -20px !important;
-            border-radius:16px !important;
+            inset:0 !important;
+            border-radius:14px !important;
           }
         }
         @media (max-width:900px){
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid] .cb-scene::before{
-            inset:-8px -10px -8px -10px !important;
+            inset:0 !important;
             border-radius:14px !important;
           }
         }
