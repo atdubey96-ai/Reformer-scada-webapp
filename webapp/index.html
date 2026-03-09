@@ -4524,6 +4524,7 @@ function renderHeatMap(){
   /* ── Prominent shift/data status banner ── */
   var tsBadgeEl = document.getElementById("hm-ts-badge");
   var shiftBannerEl = document.getElementById("hm-shift-banner");
+  var isLightTheme = !!(document.body && document.body.classList.contains("light-theme"));
 
   var shiftColors  = {Morning:"#34d399", Evening:"#fb923c", Night:"#818cf8"};
   var shiftIcons   = {Morning:"🌅", Evening:"🌆", Night:"🌙"};
@@ -4547,37 +4548,47 @@ function renderHeatMap(){
     var icon = shiftIcons[entry.shift]   || "📋";
     var bg   = shiftBg[entry.shift]      || "rgba(126,200,240,0.1)";
     var bdr  = shiftBorder[entry.shift]  || "rgba(126,200,240,0.3)";
+    var bannerBg = isLightTheme
+      ? "linear-gradient(180deg,rgba(255,255,255,0.96),rgba(237,244,251,0.95))"
+      : bg;
+    var labelColor = isLightTheme ? "#64748b" : "#94a3b8";
+    var dateColor = isLightTheme ? "#334155" : "#e2e8f0";
+    var dividerColor = isLightTheme ? "rgba(129,140,248,0.24)" : bdr;
 
     /* small badge in header */
     if(tsBadgeEl){
-      tsBadgeEl.innerHTML = '<span style="color:#94a3b8;">Data:</span> <b style="color:#e2e8f0;">'+entry.dt+'</b>';
+      tsBadgeEl.innerHTML = '<span style="color:'+(isLightTheme ? "#64748b" : "#94a3b8")+';">Data:</span> <b style="color:'+(isLightTheme ? "#0f172a" : "#e2e8f0")+';">'+entry.dt+'</b>';
       tsBadgeEl.style.borderColor = bdr;
     }
 
     /* inline compact banner beside shift buttons */
     if(shiftBannerEl){
       shiftBannerEl.style.display = "flex";
-      shiftBannerEl.style.background = bg;
+      shiftBannerEl.style.background = bannerBg;
       shiftBannerEl.style.borderColor = bdr;
       shiftBannerEl.innerHTML =
         '<span style="font-size:14px;">'+icon+'</span>'
-        +'<span style="font-size:11px;color:#94a3b8;letter-spacing:0.5px;">Displaying:</span>'
+        +'<span class="hm-shift-banner-label" style="font-size:11px;color:'+labelColor+';letter-spacing:0.5px;">Displaying:</span>'
         +'<span style="font-size:13px;font-weight:800;color:'+sc+';letter-spacing:1px;">'+entry.shift.toUpperCase()+' SHIFT</span>'
-        +'<div style="width:1px;height:22px;background:'+bdr+';margin:0 4px;"></div>'
-        +'<span style="font-size:11px;font-weight:700;color:#e2e8f0;">'+entry.dt+'</span>';
+        +'<div class="hm-shift-banner-divider" style="width:1px;height:22px;background:'+dividerColor+';margin:0 4px;"></div>'
+        +'<span class="hm-shift-banner-date" style="font-size:11px;font-weight:700;color:'+dateColor+';">'+entry.dt+'</span>';
     }
   } else {
     if(tsBadgeEl){
-      tsBadgeEl.innerHTML = '<span style="color:#f87171;">'+noDataMsg+'</span>';
+      tsBadgeEl.innerHTML = '<span style="color:'+(isLightTheme ? "#b91c1c" : "#f87171")+';">'+noDataMsg+'</span>';
       tsBadgeEl.style.borderColor = "rgba(248,113,113,0.35)";
     }
     if(shiftBannerEl){
       shiftBannerEl.style.display = "flex";
-      shiftBannerEl.style.background = "rgba(248,113,113,0.08)";
-      shiftBannerEl.style.borderColor = "rgba(248,113,113,0.25)";
+      shiftBannerEl.style.background = isLightTheme
+        ? "linear-gradient(180deg,rgba(255,255,255,0.96),rgba(254,242,242,0.95))"
+        : "rgba(248,113,113,0.08)";
+      shiftBannerEl.style.borderColor = isLightTheme
+        ? "rgba(239,68,68,0.26)"
+        : "rgba(248,113,113,0.25)";
       shiftBannerEl.innerHTML =
         '<span style="font-size:14px;">⚠️</span>'
-        +'<span style="font-size:12px;font-weight:700;color:#f87171;">'+noDataMsg+'</span>';
+        +'<span class="hm-shift-banner-date" style="font-size:12px;font-weight:700;color:'+(isLightTheme ? "#b91c1c" : "#f87171")+';">'+noDataMsg+'</span>';
     }
   }
 
@@ -9091,6 +9102,56 @@ html, body, body *, body *::before, body *::after, svg text{
         body.light-theme .scada-save-btn:focus-visible{
           outline:2px solid rgba(168,215,235,0.52) !important;
           outline-offset:2px !important;
+        }
+      </style>
+      <style id="heatmap-light-contrast-fix-20260309">
+        body.light-theme #hm-adjust-card{
+          background:linear-gradient(180deg,#f7fafc 0%,#edf3fb 100%) !important;
+          border-color:#c7d4e4 !important;
+          box-shadow:0 10px 22px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.92) !important;
+        }
+        body.light-theme #hm-adjust-card .hm-adjust-title{
+          color:#7c3f10 !important;
+          text-shadow:0 1px 0 rgba(255,255,255,0.88) !important;
+        }
+        body.light-theme #hm-header-tools .hm-filter-chip{
+          background:linear-gradient(180deg,#ffffff 0%,#eef4fb 100%) !important;
+          border-color:rgba(100,116,139,0.28) !important;
+          box-shadow:0 8px 18px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.95) !important;
+        }
+        body.light-theme #hm-header-tools .hm-filter-label{
+          color:#334155 !important;
+        }
+        body.light-theme #hm-shift-select,
+        body.light-theme #hm-date-input{
+          background:#ffffff !important;
+          border-color:rgba(100,116,139,0.34) !important;
+          color:#0f172a !important;
+          box-shadow:inset 0 1px 2px rgba(15,23,42,0.06) !important;
+        }
+        body.light-theme #hm-shift-select option{
+          background:#ffffff !important;
+          color:#0f172a !important;
+        }
+        body.light-theme #hm-header-tools button[onclick="clearHeatMapDateFilter()"]{
+          background:linear-gradient(180deg,#3b82f6 0%,#2563eb 100%) !important;
+          border-color:#1d4ed8 !important;
+          color:#ffffff !important;
+          box-shadow:0 8px 16px rgba(37,99,235,0.2) !important;
+        }
+        body.light-theme #hm-shift-banner{
+          background:linear-gradient(180deg,rgba(255,255,255,0.96),rgba(237,244,251,0.95)) !important;
+          border-color:rgba(129,140,248,0.3) !important;
+          box-shadow:0 10px 22px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.92) !important;
+        }
+        body.light-theme #hm-shift-banner .hm-shift-banner-label{
+          color:#64748b !important;
+        }
+        body.light-theme #hm-shift-banner .hm-shift-banner-date{
+          color:#334155 !important;
+        }
+        body.light-theme #hm-shift-banner .hm-shift-banner-divider{
+          background:rgba(129,140,248,0.24) !important;
         }
       </style>
 
