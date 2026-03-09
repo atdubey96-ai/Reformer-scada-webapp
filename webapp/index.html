@@ -1756,6 +1756,36 @@ body.light-theme .ab-chart-totals .ab-pill{
 .ab-alarm-critical{background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.45);}
 .ab-alarm-critical .ab-alarm-title{color:#f87171;}
 
+/* Snapshot wall selector (All PH modal) */
+.snap-wall-switch{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:10px;
+}
+.snap-wall-btn{
+  background:rgba(15,23,42,0.72);
+  border:1px solid rgba(126,200,240,0.34);
+  color:#cbd5e1;
+  border-radius:8px;
+  padding:6px 12px;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  cursor:pointer;
+  transition:all 0.18s ease;
+}
+.snap-wall-btn:hover{
+  border-color:rgba(126,200,240,0.72);
+  color:#e2e8f0;
+}
+.snap-wall-btn.active{
+  background:linear-gradient(90deg,#0f2744,#17325a);
+  border-color:#2f5f96;
+  color:#ffffff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.15),0 4px 14px rgba(2,6,23,0.34);
+}
+
 /* ====================================================
    CLEANING DASHBOARD
 ==================================================== */
@@ -17216,6 +17246,22 @@ function burnerStateVisual(state){
   return {bg:"linear-gradient(180deg,#374151,#1f2937)", border:"rgba(148,163,184,0.45)", text:"#e2e8f0"};
 }
 
+var snapshotWallRenderCounter = 0;
+
+function switchEntrySnapshotWall(groupId, wall){
+  var host = document.getElementById(groupId);
+  if(!host) return;
+  var target = String(wall || "A").toUpperCase();
+  host.querySelectorAll("[data-snap-wall-btn]").forEach(function(btn){
+    var isActive = String(btn.getAttribute("data-wall") || "").toUpperCase() === target;
+    btn.classList.toggle("active", isActive);
+  });
+  host.querySelectorAll("[data-snap-wall-panel]").forEach(function(panel){
+    var isShow = String(panel.getAttribute("data-wall") || "").toUpperCase() === target;
+    panel.style.display = isShow ? "block" : "none";
+  });
+}
+
 function buildEntryBurnerSnapshotHtml(entry){
   var snap = getEntryBurnerSnapshot(entry);
   if(!snap){
@@ -17223,14 +17269,24 @@ function buildEntryBurnerSnapshotHtml(entry){
   }
 
   var walls = ["A","B","C","D"];
-  var html = '<div style="margin-top:14px;padding:12px;border:1px solid #1e3a5e;border-radius:10px;background:rgba(2,8,24,0.45);">';
+  snapshotWallRenderCounter += 1;
+  var groupId = "entry-snapshot-wall-group-" + snapshotWallRenderCounter;
+  var html = '<div id="' + groupId + '" style="margin-top:14px;padding:12px;border:1px solid #1e3a5e;border-radius:10px;background:rgba(2,8,24,0.45);">';
   html += '<div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:0.6px;margin-bottom:10px;">Burner Table Snapshot (saved with this TST entry)</div>';
+  html += '<div class="snap-wall-switch">';
+  for(var bi=0; bi<walls.length; bi++){
+    var bWall = walls[bi];
+    var isActiveBtn = bWall === "A" ? " active" : "";
+    html += '<button type="button" class="snap-wall-btn' + isActiveBtn + '" data-snap-wall-btn data-wall="' + bWall + '" onclick="switchEntrySnapshotWall(\'' + groupId + '\',\'' + bWall + '\')">🔥 Wall ' + bWall + '</button>';
+  }
+  html += '</div>';
 
   for(var wi=0; wi<walls.length; wi++){
     var wall = walls[wi];
     var rows = Array.isArray(snap[wall]) ? snap[wall] : [];
+    var panelDisplay = wall === "A" ? "block" : "none";
 
-    html += '<div style="margin-bottom:10px;border:1px solid rgba(30,58,94,0.8);border-radius:8px;overflow:auto;background:rgba(15,23,42,0.55);">';
+    html += '<div data-snap-wall-panel data-wall="' + wall + '" style="display:' + panelDisplay + ';margin-bottom:10px;border:1px solid rgba(30,58,94,0.8);border-radius:8px;overflow:auto;background:rgba(15,23,42,0.55);">';
     html += '<div style="position:sticky;left:0;background:linear-gradient(90deg,#10233f,#17325a);padding:6px 10px;border-bottom:1px solid #1e3a5e;font-size:11px;font-weight:700;color:#e2e8f0;">Wall ' + wall + '</div>';
     html += '<div style="min-width:760px;padding:8px;">';
     html += '<div style="display:grid;grid-template-columns:44px repeat(15,minmax(36px,1fr));gap:4px;align-items:center;">';
