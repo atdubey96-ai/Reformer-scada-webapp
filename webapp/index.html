@@ -1596,7 +1596,12 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .analytics{background:#1e293b;margin:20px;padding:20px;border-radius:8px;border:1px solid #334155;}
 .analytics h2{margin:0 0 16px;color:#f97316;font-size:17px;}
 #analysisContainer,
-#hm-analysisContainer{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px;}
+#hm-analysisContainer{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:20px;
+  align-items:start;
+}
 .analysis-block{background:#0f172a;padding:15px;border-radius:8px;border:1px solid #334155;}
 .analysis-block h3{color:#38bdf8;font-size:14px;margin-bottom:8px;}
 .analysis-block p{color:#94a3b8;font-size:13px;margin:3px 0;}
@@ -1611,6 +1616,20 @@ td select option{background:#1e293b;color:#e2e8f0;}
   max-height:260px;
   -webkit-overflow-scrolling:touch;
   border-radius:10px;
+}
+.td-saved-entries-outline{
+  border:1px solid rgba(126,200,240,0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 0 0 1px rgba(15,31,56,0.35),
+    0 10px 26px rgba(2,6,23,0.34);
+}
+body.light-theme .td-saved-entries-outline{
+  border-color:rgba(59,130,246,0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.85),
+    0 0 0 1px rgba(148,163,184,0.24),
+    0 8px 20px rgba(148,163,184,0.28);
 }
 .chart-wrap{position:relative;height:220px;margin-top:12px;}
 .chart-wrap-pie{
@@ -1632,10 +1651,6 @@ body.light-theme .chart-wrap-pie{
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.9),0 7px 16px rgba(148,163,184,0.24);
 }
 body.light-theme .chart-wrap-pie canvas{filter:none !important;}
-@media (min-width:1700px){
-  #analysisContainer,
-  #hm-analysisContainer{grid-template-columns:repeat(5,minmax(250px,1fr));}
-}
 
 /* Analysis block — counts pills */
 .ab-counts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
@@ -3947,10 +3962,42 @@ function captureCurrentBurnerSnapshot(){
 }
 
 function getEntryBurnerSnapshot(entry){
-  if(entry && entry.burnerSnapshot && typeof entry.burnerSnapshot === "object"){
-    return sanitizeBurnerSnapshotShape(entry.burnerSnapshot);
+  if(!entry || typeof entry !== "object") return null;
+  var candidates = [
+    entry.burnerSnapshot,
+    entry.burner_snapshot,
+    entry.snapshot,
+    entry.burnerSnapshotJson
+  ];
+  for(var i=0; i<candidates.length; i++){
+    var snap = candidates[i];
+    if(!snap) continue;
+    if(typeof snap === "string"){
+      try{ snap = JSON.parse(snap); }catch(e){ snap = null; }
+    }
+    if(snap && typeof snap === "object"){
+      return sanitizeBurnerSnapshotShape(snap);
+    }
   }
   return null;
+}
+
+function ensureTempEntriesHaveSnapshots(){
+  if(!Array.isArray(tempDataEntries) || !tempDataEntries.length) return false;
+  var fallback = captureCurrentBurnerSnapshot();
+  if(!fallback || typeof fallback !== "object") return false;
+  var changed = false;
+  for(var i=0; i<tempDataEntries.length; i++){
+    var ent = tempDataEntries[i];
+    if(!ent || typeof ent !== "object") continue;
+    if(getEntryBurnerSnapshot(ent)) continue;
+    ent.burnerSnapshot = sanitizeBurnerSnapshotShape(fallback);
+    changed = true;
+  }
+  if(changed){
+    try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); }catch(e){}
+  }
+  return changed;
 }
 
 function tempToColor(val, minT, maxT){
@@ -5647,33 +5694,33 @@ html, body, body *, body *::before, body *::after, svg text{
         .cb-kpi-row{
           position:absolute;
           left:50%;
-          top:10px;
+          top:12px;
           transform:translateX(-50%);
           display:flex;
           flex-wrap:wrap;
           justify-content:center;
-          gap:5px;
+          gap:6px;
           z-index:7;
           width:max-content;
-          max-width:96%;
+          max-width:98%;
           pointer-events:none;
         }
         .cb-kpi-chip{
           display:inline-flex;align-items:center;gap:4px;
-          padding:2px 6px;
+          padding:3px 10px;
           border-radius:999px;
-          font-size:9px;
+          font-size:11px;
           font-weight:700;
           letter-spacing:0.2px;
           border:1px solid rgba(148,163,184,0.35);
-          background:rgba(2,6,23,0.7);
+          background:linear-gradient(180deg,rgba(7,17,40,0.92),rgba(2,8,23,0.8));
           color:#e2e8f0;
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
           line-height:1.2;
           white-space:nowrap;
           backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
         }
-        .cb-kpi-chip b{font-size:11px;letter-spacing:0.4px;}
+        .cb-kpi-chip b{font-size:13px;letter-spacing:0.4px;}
         .cb-kpi-O{border-color:rgba(34,197,94,0.48);color:#86efac;}
         .cb-kpi-N{border-color:rgba(251,191,36,0.48);color:#fcd34d;}
         .cb-kpi-B{border-color:rgba(96,165,250,0.52);color:#93c5fd;}
@@ -9474,9 +9521,9 @@ html, body, body *, body *::before, body *::after, svg text{
 
             </div>
             <div class="cb-kpi-row" id="cb-kpi-ab">
-              <span class="cb-kpi-chip cb-kpi-O">🔥O <b id="cb-ab-o">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-N">🔥N <b id="cb-ab-n">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-B">🔥B <b id="cb-ab-b">0</b></span>
+              <span class="cb-kpi-chip cb-kpi-O">🔥 O <b id="cb-ab-o">0</b></span>
+              <span class="cb-kpi-chip cb-kpi-N">🔥 N <b id="cb-ab-n">0</b></span>
+              <span class="cb-kpi-chip cb-kpi-B">🔥 B <b id="cb-ab-b">0</b></span>
               <span class="cb-kpi-chip cb-kpi-C">◼ C <b id="cb-ab-c">0</b></span>
               <span class="cb-kpi-chip cb-kpi-temp" id="cb-ab-temp">PH Avg --</span>
             </div>
@@ -9600,9 +9647,9 @@ html, body, body *, body *::before, body *::after, svg text{
 
             </div>
             <div class="cb-kpi-row" id="cb-kpi-cd">
-              <span class="cb-kpi-chip cb-kpi-O">🔥O <b id="cb-cd-o">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-N">🔥N <b id="cb-cd-n">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-B">🔥B <b id="cb-cd-b">0</b></span>
+              <span class="cb-kpi-chip cb-kpi-O">🔥 O <b id="cb-cd-o">0</b></span>
+              <span class="cb-kpi-chip cb-kpi-N">🔥 N <b id="cb-cd-n">0</b></span>
+              <span class="cb-kpi-chip cb-kpi-B">🔥 B <b id="cb-cd-b">0</b></span>
               <span class="cb-kpi-chip cb-kpi-C">◼ C <b id="cb-cd-c">0</b></span>
               <span class="cb-kpi-chip cb-kpi-temp" id="cb-cd-temp">PH Avg --</span>
             </div>
@@ -9996,10 +10043,10 @@ html, body, body *, body *::before, body *::after, svg text{
       })();
       </script>
 
-      <div id="hm-adjust-card" class="hm-adjust-card hm-adjust-collapsed">
+      <div id="hm-adjust-card" class="hm-adjust-card">
         <div class="hm-adjust-head">
           <div class="hm-adjust-title">🎯 Burner Adjustment Logic (TST + Cleaning Priority)</div>
-          <button type="button" id="hm-adjust-toggle-btn" class="hm-adjust-toggle" onclick="toggleHeatMapAdjustmentCard()">Show</button>
+          <button type="button" id="hm-adjust-toggle-btn" class="hm-adjust-toggle" onclick="toggleHeatMapAdjustmentCard()">Hide</button>
         </div>
         <div class="hm-adjust-body" id="hm-adjust-body">
           <div class="hm-adjust-sub">
@@ -10095,9 +10142,6 @@ html, body, body *, body *::before, body *::after, svg text{
             <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;">
               📋 Saved Entries
             </div>
-            <button id="hm-td-save-btn" onclick="saveTempData()" class="td-toolbar-btn td-toolbar-btn-primary scada-save-btn">
-              💾 SAVE TST DATA
-            </button>
           </div>
           <div class="td-saved-scroll">
             <table id="hm-td-saved-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
@@ -10781,7 +10825,7 @@ html, body, body *, body *::before, body *::after, svg text{
       </div>
 
       <!-- ── Saved Entries Table ── -->
-      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:20px 24px;">
+      <div class="td-entry-card td-saved-entries-outline">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
           <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;">
             📋 Saved Entries
@@ -12324,6 +12368,7 @@ async function exportToExcel(options){
   phRowKeys.forEach(function(rk){
     for(var ph=1;ph<=15;ph++) tdHeaders.push(phRowLabels[rk]+" PH"+ph);
   });
+  tdHeaders.push("Burner Snapshot JSON");
   var tdRows = [tdHeaders];
   if(Array.isArray(tempDataEntries) && tempDataEntries.length){
     tempDataEntries.forEach(function(e){
@@ -12333,6 +12378,8 @@ async function exportToExcel(options){
         var vals=(e.peepHoles&&e.peepHoles[rk])?e.peepHoles[rk]:[];
         for(var ph=0;ph<15;ph++) row.push(vals[ph]!==undefined?vals[ph]:"");
       });
+      var snapshot = getEntryBurnerSnapshot(e);
+      row.push(snapshot ? JSON.stringify(snapshot) : "");
       tdRows.push(row);
     });
   }
@@ -12608,6 +12655,7 @@ function _doImport(file, onDone, silent){
             var idxPreMax     = colIdx(["pre-ref max","prereformer max"], idxHguLoad>=0 ? 7 : 6);
             var idxPreMin     = colIdx(["pre-ref min","prereformer min"], idxHguLoad>=0 ? 8 : 7);
             var idxMethane    = colIdx(["methane slip"], -1);
+            var idxSnapshot   = colIdx(["burner snapshot json","burner snapshot","snapshot"], -1);
             var phRowKeys2    = ["ab-bot","cd-bot","ab-top","cd-top"];
             var colOffsetStart = idxMethane>=0 ? idxMethane + 1 : (idxHguLoad>=0 ? 10 : 8);
 
@@ -12635,8 +12683,21 @@ function _doImport(file, onDone, silent){
                   colOffset++;
                 }
               });
+              if(idxSnapshot >= 0){
+                var rawSnap = row[idxSnapshot];
+                var parsedSnap = null;
+                if(rawSnap && typeof rawSnap === "string"){
+                  try{ parsedSnap = JSON.parse(rawSnap); }catch(e){}
+                }else if(rawSnap && typeof rawSnap === "object"){
+                  parsedSnap = rawSnap;
+                }
+                if(parsedSnap && typeof parsedSnap === "object"){
+                  entry.burnerSnapshot = sanitizeBurnerSnapshotShape(parsedSnap);
+                }
+              }
               tempDataEntries.push(entry);
             });
+            ensureTempEntriesHaveSnapshots();
             try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); }catch(e){}
             renderTempDataTable();
           }
@@ -16770,6 +16831,7 @@ async function handleTstPdfOcrSelect(event){
     try{
       var saved = localStorage.getItem("tempDataEntries");
       if(saved) tempDataEntries = JSON.parse(saved);
+      ensureTempEntriesHaveSnapshots();
       renderTempDataTable();
     } catch(e){}
     buildTdMobileMatrixIfNeeded();
