@@ -15258,16 +15258,23 @@ async function withTimeout(promise, ms){
 }
 async function fetchWithTimeout(url, options, ms){
   var opts = options ? Object.assign({}, options) : {};
+  var timeoutMs = (typeof ms === "number" && ms > 0) ? ms : 12000;
   var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
   if(controller) opts.signal = controller.signal;
   var timer = null;
-  try{
+  var timeoutPromise = new Promise(function(_, reject){
     timer = setTimeout(function(){
       if(controller){
         try{ controller.abort(); }catch(_e){}
       }
-    }, ms);
-    return await fetch(url, opts);
+      reject(new Error("fetch-timeout"));
+    }, timeoutMs);
+  });
+  try{
+    return await Promise.race([
+      fetch(url, opts),
+      timeoutPromise
+    ]);
   } finally {
     if(timer) clearTimeout(timer);
   }
@@ -18259,7 +18266,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-syncdebug-3";
+      var swBuild = "20260310-syncdebug-4";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
