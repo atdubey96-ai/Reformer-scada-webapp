@@ -848,6 +848,13 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
 .quick-menu-panel.open{display:flex;}
 .quick-menu-panel .hd-btn{width:100%;justify-content:flex-start;padding:8px 10px;font-size:12px;min-height:34px;}
 .quick-menu-panel .theme-toggle-wrap{width:100%;justify-content:space-between;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:6px 10px;box-sizing:border-box;}
+.quick-menu-panel #syncDebugChip{
+  width:100%;
+  max-width:100%;
+  min-height:34px;
+  box-sizing:border-box;
+  justify-content:flex-start;
+}
 .app-topbar span{display:flex;align-items:center;gap:5px;}
 .app-topbar b{color:#c8dff5;font-weight:600;}
 
@@ -5988,13 +5995,13 @@ html, body, body *, body *::before, body *::after, svg text{
         <span class="sync-health-dot"></span>
         <span id="syncHealthText" class="sync-health-text">Syncing · Checking server</span>
       </div>
-      <div id="syncDebugChip" class="sync-debug-chip sync-debug-info" title="Last sync endpoint status">
-        <span id="syncDebugText" class="sync-debug-text">DBG SYNC -- · idle</span>
-      </div>
       <button id="refreshDataBtn" class="hd-btn hd-btn-secondary" onclick="handleGlobalRefreshClick()">🔄 Refresh Data</button>
       <div class="quick-menu-wrap" id="quickMenuWrap">
         <button class="quick-menu-btn" id="quickMenuBtn" type="button" onclick="toggleQuickMenu()" title="Quick menu">🔥</button>
         <div class="quick-menu-panel" id="quickMenuPanel" aria-hidden="true">
+          <div id="syncDebugChip" class="sync-debug-chip sync-debug-info" title="Last sync endpoint status">
+            <span id="syncDebugText" class="sync-debug-text">DBG SYNC -- · idle</span>
+          </div>
           <div class="theme-toggle-wrap" title="Toggle dark/light theme">
             <span>☀️</span>
             <label class="theme-toggle">
@@ -16018,6 +16025,7 @@ async function importServerReportPayload(payload){
         clearTimeout(t);
         buildCleaningTable();
         if(digest) setLastImportedServerDigest(digest);
+        refreshHeatMapAfterServerSync();
         resolve(true);
       }, true);
     });
@@ -16026,6 +16034,31 @@ async function importServerReportPayload(payload){
     console.warn("importServerReportPayload failed:", err);
     return false;
   }
+}
+
+function refreshHeatMapAfterServerSync(){
+  var refreshNow = function(){
+    try{
+      if(typeof renderHeatMap === "function"){
+        try{ window._hmSkipCuboidRefresh = false; }catch(_e){}
+        renderHeatMap();
+      }else if(typeof requestHeatMapRender === "function"){
+        requestHeatMapRender(0);
+      }
+      if(window._hmRenderSnapshot){
+        if(typeof updateHeatMapAdjustmentLogic === "function"){
+          updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
+        }
+        if(typeof ensureHeatMapWallBuilt === "function" && typeof _activeHeatMapWall !== "undefined" && _activeHeatMapWall){
+          ensureHeatMapWallBuilt(_activeHeatMapWall);
+        }
+      }
+    }catch(err){
+      console.warn("refreshHeatMapAfterServerSync failed:", err);
+    }
+  };
+  refreshNow();
+  setTimeout(refreshNow, 140);
 }
 
 async function flushQueuedServerExport(showMsg){
@@ -16092,6 +16125,7 @@ async function autoImportFromServer(showMsg){
             updateLastSyncLabel(new Date());
             syncHealthMarkOk(new Date(), "Downloaded");
             markCurrentAutoSyncDigest();
+            refreshHeatMapAfterServerSync();
             if(showMsg) showToast("✅ Auto-loaded from central server");
             return true;
           }
@@ -16107,6 +16141,7 @@ async function autoImportFromServer(showMsg){
           updateLastSyncLabel(new Date());
           syncHealthMarkOk(new Date(), "Downloaded");
           markCurrentAutoSyncDigest();
+          refreshHeatMapAfterServerSync();
           if(showMsg) showToast("✅ Auto-loaded from central server");
           return true;
         }
@@ -16122,6 +16157,7 @@ async function autoImportFromServer(showMsg){
       updateLastSyncLabel(new Date());
       syncHealthMarkError("Server offline (local copy)");
       markCurrentAutoSyncDigest();
+      refreshHeatMapAfterServerSync();
       if(showMsg) showToast("📴 Server unreachable: loaded last synced local copy");
       return true;
     }
@@ -16446,6 +16482,7 @@ async function loginWithFolderSupport(){
     }else{
       markCurrentAutoSyncDigest();
     }
+    refreshHeatMapAfterServerSync();
     scheduleAutoRefreshOnOpen();
   } else {
     err.style.display = "block";
@@ -18274,7 +18311,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-syncdebug-6";
+      var swBuild = "20260310-syncdebug-7";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
