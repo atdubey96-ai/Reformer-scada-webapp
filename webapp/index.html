@@ -16294,6 +16294,43 @@ function scheduleAutoRefreshOnOpen(){
   }, 1200);
 }
 
+function isSyncBootstrapLikelyStuck(){
+  try{
+    var txt = "";
+    var dbg = "";
+    var tEl = document.getElementById("syncHealthText");
+    var dEl = document.getElementById("syncDebugText");
+    if(tEl) txt = String(tEl.textContent || "").trim();
+    if(dEl) dbg = String(dEl.textContent || "").trim();
+    var checking = /checking server/i.test(txt) || /checking server/i.test(dbg);
+    var unknown = /dbg\s+sync\s+--/i.test(dbg);
+    return checking || unknown;
+  }catch(e){
+    return false;
+  }
+}
+
+function ensureStartupServerSyncRecovery(){
+  if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return;
+  if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight || smartRefreshInFlight) return;
+  if(!isSyncBootstrapLikelyStuck()) return;
+  clearSyncDebug("Recovery bootstrap");
+  syncHealthMarkSyncing("Recovery sync");
+  if(typeof restoreServerSyncOnLoad === "function"){
+    restoreServerSyncOnLoad().catch(function(err){
+      console.warn("startup recovery restore failed:", err);
+      syncHealthMarkQueued("Recovery deferred");
+    });
+    return;
+  }
+  if(typeof smartRefresh === "function"){
+    smartRefresh().catch(function(err){
+      console.warn("startup recovery refresh failed:", err);
+      syncHealthMarkQueued("Recovery deferred");
+    });
+  }
+}
+
 function triggerServerAutoImport(reason){
   if(!SERVER_SYNC_ENABLED) return;
   if(!isUserLoggedIn()) return;
@@ -16344,6 +16381,12 @@ if(isUserLoggedIn()){
     });
   }, 0);
 }
+window.addEventListener("load", function(){
+  setTimeout(ensureStartupServerSyncRecovery, 1500);
+});
+window.addEventListener("pageshow", function(){
+  setTimeout(ensureStartupServerSyncRecovery, 600);
+});
 
 
 /* ── Full login with server auto-import support ── */
@@ -18216,7 +18259,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-syncdebug-2";
+      var swBuild = "20260310-syncdebug-3";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
