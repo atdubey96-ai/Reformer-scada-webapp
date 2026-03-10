@@ -14799,11 +14799,12 @@ function applyMobileHorizontalScrollFixes(){
       row.style.maxWidth = "";
       row.style.gridTemplateColumns = "";
     });
+    /* Preserve saved-entry modal table layout on desktop. */
     modalRows.forEach(function(row){
-      row.style.minWidth = "";
-      row.style.width = "";
-      row.style.maxWidth = "";
-      row.style.gridTemplateColumns = "";
+      row.style.minWidth = "1010px";
+      row.style.width = "max-content";
+      row.style.maxWidth = "none";
+      row.style.gridTemplateColumns = "80px repeat(15,56px)";
     });
     tabWraps.forEach(function(wrap){
       wrap.classList.remove("td-temp-scroll");
@@ -14814,16 +14815,15 @@ function applyMobileHorizontalScrollFixes(){
       wrap.style.display = "";
     });
     modalWraps.forEach(function(wrap){
-      wrap.classList.remove("td-temp-scroll");
-      wrap.style.overflowX = "";
-      wrap.style.overflowY = "";
-      wrap.style.webkitOverflowScrolling = "";
-      wrap.style.touchAction = "";
+      wrap.classList.add("td-temp-scroll");
+      wrap.style.overflowX = "auto";
+      wrap.style.overflowY = "hidden";
+      wrap.style.webkitOverflowScrolling = "touch";
+      wrap.style.touchAction = "pan-x";
     });
     if(mobileMatrix){
       mobileMatrix.style.display = "";
     }
-    document.querySelectorAll(".td-temp-scroll").forEach(function(parent){ parent.classList.remove("td-temp-scroll"); });
     return;
   }
 
@@ -18274,7 +18274,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-syncdebug-5";
+      var swBuild = "20260310-syncdebug-6";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
