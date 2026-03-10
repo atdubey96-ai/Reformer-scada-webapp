@@ -1,8 +1,5 @@
-const CACHE_NAME = "scada-burner-v30";
-const OFFLINE_URL = "./index.html";
+const CACHE_NAME = "scada-burner-v33";
 const CORE_ASSETS = [
-  "./",
-  "./index.html",
   "./manifest.webmanifest",
   "./icon-192.svg",
   "./icon-512.svg"
@@ -35,9 +32,12 @@ function shouldPersistInCache(request) {
   try {
     const url = new URL(request.url);
     const path = url.pathname || "";
+    const dest = request.destination || "";
+    if (dest === "script" || dest === "style" || dest === "image" || dest === "font") {
+      return true;
+    }
+    if (path.indexOf("/api/") >= 0) return false;
     return (
-      path === "/" ||
-      path.endsWith("/index.html") ||
       path.endsWith("/manifest.webmanifest") ||
       path.endsWith("/icon-192.svg") ||
       path.endsWith("/icon-512.svg")
@@ -49,6 +49,13 @@ function shouldPersistInCache(request) {
 
 async function networkFresh(request) {
   const cache = await caches.open(CACHE_NAME);
+  if (isHtmlRequest(request)) {
+    try {
+      return await fetch(request, { cache: "no-store" });
+    } catch (err) {
+      return new Response("", { status: 503, statusText: "Offline" });
+    }
+  }
   try {
     const networkResponse = await fetch(request, { cache: "no-store" });
     if (networkResponse && networkResponse.ok && shouldPersistInCache(request)) {
@@ -58,10 +65,6 @@ async function networkFresh(request) {
   } catch (err) {
     const cached = await cache.match(request, { ignoreSearch: true });
     if (cached) return cached;
-    if (isHtmlRequest(request)) {
-      const offline = await cache.match(OFFLINE_URL, { ignoreSearch: true });
-      if (offline) return offline;
-    }
     return new Response("", { status: 504, statusText: "Offline" });
   }
 }

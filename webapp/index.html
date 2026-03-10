@@ -12864,11 +12864,28 @@ async function smartRefresh(){
   try{
     var okServer = await withTimeout(autoImportFromServer(true), 22000);
     if(!okServer){
+      var localFallback = loadLastServerSnapshot();
+      var loadedLocal = await importServerReportPayload(localFallback);
+      if(loadedLocal){
+        syncHealthMarkQueued("Server offline · local snapshot");
+        showToast("📴 Server unavailable. Loaded last synced local copy.");
+        return true;
+      }
       syncHealthMarkError("Refresh failed");
       showToast("⚠ Could not refresh from central server");
+      return false;
     }
-    return !!okServer;
+    return true;
   }catch(e){
+    try{
+      var localFallback2 = loadLastServerSnapshot();
+      var loadedLocal2 = await importServerReportPayload(localFallback2);
+      if(loadedLocal2){
+        syncHealthMarkQueued("Refresh timeout · local snapshot");
+        showToast("📴 Refresh timed out. Showing last synced local copy.");
+        return true;
+      }
+    }catch(_ignore){}
     syncHealthMarkError("Refresh timeout");
     showToast("⚠ Refresh timed out. Try again.");
     return false;
@@ -17889,7 +17906,8 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      navigator.serviceWorker.register("./sw.js", { scope: swScope, updateViaCache: "none" }).then(function(reg){
+      var swBuild = "20260310-refreshfix-1";
+      navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
         }
