@@ -3111,6 +3111,43 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 #hm-td-saved-table .td-dt-date{font-size:12px;font-weight:700;color:#e2e8f0;letter-spacing:0.2px;white-space:nowrap;}
 #td-saved-table .td-dt-time,
 #hm-td-saved-table .td-dt-time{font-size:11px;font-weight:700;color:#7ec8f0;white-space:nowrap;}
+#td-saved-table .td-shift-chip,
+#hm-td-saved-table .td-shift-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:68px;
+  padding:2px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  border:1px solid transparent;
+  line-height:1.2;
+}
+#td-saved-table .td-shift-morning,
+#hm-td-saved-table .td-shift-morning{
+  color:#34d399;
+  background:rgba(16,185,129,0.18);
+  border-color:rgba(16,185,129,0.45);
+}
+#td-saved-table .td-shift-evening,
+#hm-td-saved-table .td-shift-evening{
+  color:#fb923c;
+  background:rgba(249,115,22,0.18);
+  border-color:rgba(249,115,22,0.45);
+}
+#td-saved-table .td-shift-night,
+#hm-td-saved-table .td-shift-night{
+  color:#818cf8;
+  background:rgba(99,102,241,0.18);
+  border-color:rgba(99,102,241,0.5);
+}
+#td-saved-table .td-shift-generic,
+#hm-td-saved-table .td-shift-generic{
+  color:#cbd5e1;
+  background:rgba(148,163,184,0.14);
+  border-color:rgba(148,163,184,0.42);
+}
 #td-saved-table .td-del-btn,
 #hm-td-saved-table .td-del-btn{
   background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);
@@ -3123,6 +3160,32 @@ body.light-theme #td-saved-table .td-dt-date,
 body.light-theme #hm-td-saved-table .td-dt-date{color:#1e293b;}
 body.light-theme #td-saved-table .td-dt-time,
 body.light-theme #hm-td-saved-table .td-dt-time{color:#2563eb;}
+body.light-theme #td-saved-table td,
+body.light-theme #hm-td-saved-table td{color:#111827 !important;}
+body.light-theme #td-saved-table .td-shift-morning,
+body.light-theme #hm-td-saved-table .td-shift-morning{
+  color:#065f46 !important;
+  background:rgba(16,185,129,0.24) !important;
+  border-color:rgba(5,150,105,0.52) !important;
+}
+body.light-theme #td-saved-table .td-shift-evening,
+body.light-theme #hm-td-saved-table .td-shift-evening{
+  color:#9a3412 !important;
+  background:rgba(249,115,22,0.24) !important;
+  border-color:rgba(234,88,12,0.54) !important;
+}
+body.light-theme #td-saved-table .td-shift-night,
+body.light-theme #hm-td-saved-table .td-shift-night{
+  color:#312e81 !important;
+  background:rgba(99,102,241,0.25) !important;
+  border-color:rgba(79,70,229,0.58) !important;
+}
+body.light-theme #td-saved-table .td-shift-generic,
+body.light-theme #hm-td-saved-table .td-shift-generic{
+  color:#334155 !important;
+  background:rgba(148,163,184,0.2) !important;
+  border-color:rgba(100,116,139,0.5) !important;
+}
 @media (max-width:1220px){
   #tab-tempdata .td-entry-layout{
     grid-template-columns:1fr;
@@ -17173,6 +17236,14 @@ function formatTempEntryDateTime(rawDt){
   return {date:s, time:""};
 }
 
+function getSavedEntryShiftChipClass(shift){
+  var s = String(shift || "").trim().toLowerCase();
+  if(s === "morning") return "td-shift-chip td-shift-morning";
+  if(s === "evening") return "td-shift-chip td-shift-evening";
+  if(s === "night") return "td-shift-chip td-shift-night";
+  return "td-shift-chip td-shift-generic";
+}
+
 function renderTempDataTableInto(tbodyId){
   var tbody = document.getElementById(tbodyId);
   if(!tbody) return;
@@ -17181,18 +17252,18 @@ function renderTempDataTableInto(tbodyId){
     return;
   }
   var display = tempDataEntries.slice();
-  var shiftColors = {Morning:"#34d399",Evening:"#fb923c",Night:"#818cf8"};
   var rows = "";
   for(var i = 0; i < display.length; i++){
     var ent = display[i];
-    var sc = shiftColors[ent.shift] || "#94a3b8";
+    var shiftLabel = ent.shift || "—";
+    var shiftChipClass = getSavedEntryShiftChipClass(shiftLabel);
     var dtView = formatTempEntryDateTime(ent.dt);
     var dtHtml = '<div class="td-dt-wrap"><div class="td-dt-date">' + dtView.date + '</div>'
       + (dtView.time ? ('<div class="td-dt-time">' + dtView.time + '</div>') : '')
       + '</div>';
     rows += '<tr onclick="openAllPHModal(' + i + ')" title="Open peep-hole details" style="border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
       + '<td style="text-align:left;">' + dtHtml + '</td>'
-      + '<td style="text-align:center;"><span style="color:'+sc+';font-weight:700;font-size:11px;background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:10px;border:1px solid '+sc+'44;">' + ent.shift + '</span></td>'
+      + '<td style="text-align:center;"><span class="' + shiftChipClass + '">' + shiftLabel + '</span></td>'
       + '<td style="text-align:center;">' + (ent.hguLoad||"—") + '</td>'
       + '<td style="text-align:center;">' + (ent.abCot  || "—") + '</td>'
       + '<td style="text-align:center;">' + (ent.cdCot  || "—") + '</td>'
