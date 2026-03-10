@@ -14568,10 +14568,7 @@ function init(){
   setTimeout(renderHeatMap, 0);
 }
 
-/* auto-init if session already active */
-if(isUserLoggedIn()){
-  init();
-}
+/* auto-init for logged sessions is handled later, after sync stack initialization */
 
 
 /* ==================================================
@@ -16379,19 +16376,30 @@ setInterval(function(){
   });
 }, AUTO_SYNC_INTERVAL_MS);
 
-/* Run logged-in restore only after all sync constants/helpers are initialized. */
+/* Run logged-in bootstrap only after all sync constants/helpers are initialized. */
+var loggedSessionBootDone = false;
+function bootLoggedSessionAfterRefresh(){
+  if(loggedSessionBootDone) return;
+  if(!isUserLoggedIn()) return;
+  loggedSessionBootDone = true;
+  try{
+    init();
+  }catch(err){
+    console.warn("init on logged session failed:", err);
+  }
+  restoreServerSyncOnLoad().catch(function(err){
+    console.warn("restoreServerSyncOnLoad failed:", err);
+    syncHealthMarkQueued("Restore deferred");
+  });
+}
 if(isUserLoggedIn()){
-  setTimeout(function(){
-    restoreServerSyncOnLoad().catch(function(err){
-      console.warn("restoreServerSyncOnLoad failed:", err);
-      syncHealthMarkQueued("Restore deferred");
-    });
-  }, 0);
+  setTimeout(bootLoggedSessionAfterRefresh, 0);
 }
 window.addEventListener("load", function(){
   setTimeout(ensureStartupServerSyncRecovery, 1500);
 });
 window.addEventListener("pageshow", function(){
+  setTimeout(bootLoggedSessionAfterRefresh, 120);
   setTimeout(ensureStartupServerSyncRecovery, 600);
 });
 
@@ -18266,7 +18274,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-syncdebug-4";
+      var swBuild = "20260310-syncdebug-5";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
