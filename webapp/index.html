@@ -5611,6 +5611,18 @@ html, body, body *, body *::before, body *::after, svg text{
     min-width:0 !important;
     overflow-x:hidden !important;
   }
+  #tab-heatmap .hm-bottom-series{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:hidden !important;
+  }
+  #tab-heatmap .hm-bottom-series > *{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
   #tab-heatmap .analysis-block,
   #tab-burner .analysis-block{
     width:100% !important;
@@ -5634,6 +5646,13 @@ html, body, body *, body *::before, body *::after, svg text{
     width:100% !important;
     max-width:100% !important;
     height:auto !important;
+  }
+  #tab-heatmap .analysis-block h3,
+  #tab-burner .analysis-block h3,
+  #tab-heatmap .analysis-block p,
+  #tab-burner .analysis-block p{
+    overflow-wrap:anywhere !important;
+    word-break:break-word !important;
   }
   #tab-heatmap .ab-chart-totals{
     left:6px !important;
@@ -15047,8 +15066,9 @@ function getSyncRelayToken(){
       return String(stored).trim();
     }
   }catch(e){}
-  return "";
+  return String(SYNC_RELAY_DEFAULT_TOKEN || "").trim();
 }
+var SYNC_RELAY_DEFAULT_TOKEN = "8a5de7628e37e292e58ea748b8127675be94c95ee27217c6250ff0782aae7651";
 var SYNC_RELAY_URL = getSyncRelayUrl();
 var SYNC_RELAY_TOKEN = getSyncRelayToken();
 function refreshSyncRelayConfig(){
@@ -15579,6 +15599,18 @@ async function supabaseRestRequest(path, method, body, preferHeader){
 async function fetchLatestServerReportRow(){
   setLastServerSyncError("");
   var row = null;
+  try{
+    if(getRelayBaseUrl()){
+      var relayRowFast = await withTimeout(fetchLatestServerReportViaRelay(), 6000);
+      if(relayRowFast){
+        setCentralReachability(true);
+        setLastServerSyncError("");
+        return relayRowFast;
+      }
+    }
+  }catch(_eRelayFast){
+    setLastServerSyncError(String((_eRelayFast && _eRelayFast.message) || _eRelayFast || "relay-read-fast-error"));
+  }
   var canonicalName = SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx";
   if(ensureSupaClient()){
     try{
@@ -15667,6 +15699,20 @@ async function insertServerReportRow(payload){
   if(!writePayload.data_base64){
     setLastServerSyncError("empty-data");
     return false;
+  }
+
+  try{
+    if(getRelayBaseUrl()){
+      var relayOkFast = await withTimeout(insertServerReportViaRelay(writePayload), 6500);
+      if(relayOkFast){
+        setCentralReachability(true);
+        setLastServerSyncError("");
+        return true;
+      }
+      setLastServerSyncError("relay-write-failed");
+    }
+  }catch(_eRelayFast){
+    setLastServerSyncError(String((_eRelayFast && _eRelayFast.message) || _eRelayFast || "relay-write-fast-error"));
   }
 
   if(ensureSupaClient()){
@@ -17973,7 +18019,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-refreshfix-2";
+      var swBuild = "20260310-refreshfix-3";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
