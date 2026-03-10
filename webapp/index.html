@@ -12914,9 +12914,9 @@ async function exportToExcel(options){
     if(!silent) showToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : "") + relayHint);
     return "queued";
   }
-  syncHealthMarkError("Central server unreachable");
-  if(!silent) showToast("❌ Save failed: central server is unreachable");
-  return false;
+  syncHealthMarkQueued("Central offline · local save");
+  if(!silent) showToast("📶 Central unavailable. Data kept locally and queued for auto-sync.");
+  return "queued";
 }
 
 /* ==================================================
@@ -15028,6 +15028,8 @@ function getQueryParam(name){
     return "";
   }
 }
+var SYNC_RELAY_DEFAULT_URL = "https://scada-relay.iocscadasync.workers.dev";
+var SYNC_RELAY_DEFAULT_TOKEN = "8a5de7628e37e292e58ea748b8127675be94c95ee27217c6250ff0782aae7651";
 function getSyncRelayUrl(){
   try{
     var qp = getQueryParam("relay");
@@ -15046,7 +15048,7 @@ function getSyncRelayUrl(){
       return trimTrailingSlash(stored);
     }
   }catch(e){}
-  return "https://scada-relay.iocscadasync.workers.dev";
+  return SYNC_RELAY_DEFAULT_URL;
 }
 function getSyncRelayToken(){
   try{
@@ -15066,9 +15068,9 @@ function getSyncRelayToken(){
       return String(stored).trim();
     }
   }catch(e){}
-  return String(SYNC_RELAY_DEFAULT_TOKEN || "").trim();
+  var fallback = String(SYNC_RELAY_DEFAULT_TOKEN || "").trim();
+  return fallback;
 }
-var SYNC_RELAY_DEFAULT_TOKEN = "8a5de7628e37e292e58ea748b8127675be94c95ee27217c6250ff0782aae7651";
 var SYNC_RELAY_URL = getSyncRelayUrl();
 var SYNC_RELAY_TOKEN = getSyncRelayToken();
 function refreshSyncRelayConfig(){
@@ -15184,27 +15186,101 @@ function getRelayBaseUrl(){
   refreshSyncRelayConfig();
   return trimTrailingSlash(SYNC_RELAY_URL || "");
 }
-function makeRelayHeaders(method){
+function normalizeRelayToken(v){
+  var t = String(v == null ? "" : v).trim();
+  if(!t || /^undefined$/i.test(t) || /^null$/i.test(t)) return "";
+  return t;
+}
+function getRelayBaseCandidates(){
+  refreshSyncRelayConfig();
+  var list = [];
+  function addBase(u){
+    var b = trimTrailingSlash(String(u || ""));
+    if(!b || !/^https?:\/\//i.test(b)) return;
+    if(list.indexOf(b) >= 0) return;
+    list.push(b);
+  }
+  addBase(SYNC_RELAY_URL);
+  try{ addBase(window.SCADA_SYNC_RELAY_URL || ""); }catch(e){}
+  addBase(SYNC_RELAY_DEFAULT_URL);
+  return list;
+}
+function getRelayTokenCandidates(){
+  refreshSyncRelayConfig();
+  var list = [];
+  function addToken(v){
+    var t = normalizeRelayToken(v);
+    if(!t) return;
+    if(list.indexOf(t) >= 0) return;
+    list.push(t);
+  }
+  addToken(SYNC_RELAY_TOKEN);
+  try{ addToken(localStorage.getItem("scadaSyncRelayToken")); }catch(e){}
+  addToken(SYNC_RELAY_DEFAULT_TOKEN);
+  if(!list.length) list.push("");
+  return list;
+}
+function rememberRelayWorkingConfig(base, token){
+  var b = trimTrailingSlash(String(base || ""));
+  var t = normalizeRelayToken(token);
+  if(b){
+    SYNC_RELAY_URL = b;
+    try{ localStorage.setItem("scadaSyncRelayUrl", b); }catch(e){}
+  }
+  if(t){
+    SYNC_RELAY_TOKEN = t;
+    try{ localStorage.setItem("scadaSyncRelayToken", t); }catch(e){}
+  }
+}
+function makeRelayHeaders(method, relayToken){
   var h = {
     Accept:"application/json",
     "Cache-Control":"no-cache"
   };
   if(method !== "GET" && method !== "HEAD") h["Content-Type"] = "application/json";
-  if(SYNC_RELAY_TOKEN) h["x-scada-relay-key"] = SYNC_RELAY_TOKEN;
+  var tok = normalizeRelayToken(relayToken);
+  if(tok) h["x-scada-relay-key"] = tok;
   return h;
 }
 async function relayRequest(path, method, payload, timeoutMs){
-  var base = getRelayBaseUrl();
-  if(!base || typeof fetch !== "function") return null;
+  var bases = getRelayBaseCandidates();
+  if(!bases.length || typeof fetch !== "function") return null;
   var p = String(path || "");
   if(p && p.charAt(0) !== "/") p = "/" + p;
-  var url = base + p;
-  return await fetchWithTimeout(url,{
-    method: method || "GET",
-    cache: "no-store",
-    headers: makeRelayHeaders(method || "GET"),
-    body: (payload != null && method !== "GET" && method !== "HEAD") ? JSON.stringify(payload) : undefined
-  }, timeoutMs || SERVER_SYNC_TIMEOUT_MS);
+  var m = method || "GET";
+  var tokens = getRelayTokenCandidates();
+  var lastRes = null;
+  var lastErr = null;
+
+  for(var bi=0; bi<bases.length; bi++){
+    var base = bases[bi];
+    var url = base + p;
+    for(var ti=0; ti<tokens.length; ti++){
+      var token = tokens[ti];
+      try{
+        var res = await fetchWithTimeout(url,{
+          method: m,
+          cache: "no-store",
+          headers: makeRelayHeaders(m, token),
+          body: (payload != null && m !== "GET" && m !== "HEAD") ? JSON.stringify(payload) : undefined
+        }, timeoutMs || SERVER_SYNC_TIMEOUT_MS);
+        lastRes = res;
+        if(res && (res.ok || res.status === 201 || res.status === 202 || res.status === 204)){
+          rememberRelayWorkingConfig(base, token);
+          return res;
+        }
+        if(res && (res.status === 401 || res.status === 403)){
+          continue;
+        }
+      }catch(e){
+        lastErr = e;
+      }
+    }
+  }
+
+  if(lastRes) return lastRes;
+  if(lastErr) throw lastErr;
+  return null;
 }
 function normalizeAuthPayload(obj){
   if(!obj || typeof obj !== "object") return null;
@@ -15410,7 +15486,7 @@ async function getEffectivePasswordHash(){
       if(loadQueuedServerExport()){
         syncHealthMarkQueued("Pending upload");
       }else{
-        syncHealthMarkError("Could not auto-load");
+        syncHealthMarkQueued("No central update");
       }
     }else{
       markCurrentAutoSyncDigest();
@@ -18019,7 +18095,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-refreshfix-3";
+      var swBuild = "20260310-refreshfix-4";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
