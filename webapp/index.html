@@ -161,6 +161,12 @@ body.light-theme #syncHealthChip{
   color:#0f172a;
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.8),0 2px 8px rgba(15,23,42,0.1);
 }
+body.light-theme #syncDebugChip{
+  background:linear-gradient(135deg,#f8fafc,#e2e8f0);
+  border-color:rgba(100,116,139,0.36);
+  color:#0f172a;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.9),0 2px 8px rgba(15,23,42,0.1);
+}
 
 body.light-theme .hd-btn-secondary{
   background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.2);color:#1e3a5a;
@@ -1188,6 +1194,44 @@ body:not(.heatmap-header-active) #hm-header-tools{
   background:#38bdf8;
   box-shadow:0 0 0 2px rgba(56,189,248,0.22), 0 0 8px rgba(56,189,248,0.5);
   animation:syncDotPulse 1.2s ease-in-out infinite;
+}
+#syncDebugChip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 10px;
+  min-height:30px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,0.45);
+  background:linear-gradient(135deg,rgba(15,23,42,0.72),rgba(30,41,59,0.65));
+  color:#e2e8f0;
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:0.2px;
+  white-space:nowrap;
+  max-width:min(58vw, 400px);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08);
+}
+#syncDebugChip .sync-debug-text{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#syncDebugChip.sync-debug-ok{
+  border-color:rgba(34,197,94,0.52);
+  background:linear-gradient(135deg,rgba(6,78,59,0.82),rgba(15,118,110,0.62));
+  color:#dcfce7;
+}
+#syncDebugChip.sync-debug-fail{
+  border-color:rgba(248,113,113,0.62);
+  background:linear-gradient(135deg,rgba(127,29,29,0.9),rgba(185,28,28,0.66));
+  color:#fee2e2;
+}
+#syncDebugChip.sync-debug-info{
+  border-color:rgba(56,189,248,0.6);
+  background:linear-gradient(135deg,rgba(8,47,73,0.9),rgba(3,105,161,0.68));
+  color:#e0f2fe;
 }
 @keyframes syncDotPulse{
   0%,100%{transform:scale(1);opacity:1;}
@@ -5174,6 +5218,13 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   .app-meta-left .app-meta-item:nth-child(n+3){display:none !important;}
   #syncHealthChip{display:none !important;}
+  #syncDebugChip{
+    display:inline-flex !important;
+    min-height:32px !important;
+    padding:5px 8px !important;
+    max-width:min(56vw,220px) !important;
+    font-size:9.5px !important;
+  }
   .app-meta-right{
     display:flex !important;
     align-items:center !important;
@@ -5936,6 +5987,9 @@ html, body, body *, body *::before, body *::after, svg text{
       <div id="syncHealthChip" class="sync-health-chip sync-syncing" title="Syncing status">
         <span class="sync-health-dot"></span>
         <span id="syncHealthText" class="sync-health-text">Syncing · Checking server</span>
+      </div>
+      <div id="syncDebugChip" class="sync-debug-chip sync-debug-info" title="Last sync endpoint status">
+        <span id="syncDebugText" class="sync-debug-text">DBG SYNC -- · idle</span>
       </div>
       <button id="refreshDataBtn" class="hd-btn hd-btn-secondary" onclick="handleGlobalRefreshClick()">🔄 Refresh Data</button>
       <div class="quick-menu-wrap" id="quickMenuWrap">
@@ -12027,9 +12081,54 @@ function syncHealthMarkError(note){
 function syncHealthMarkSyncing(note){
   setSyncHealth("syncing", note || "Working");
 }
+var syncDebugStickyFailUntil = 0;
+function normalizeSyncDebugDetail(detail){
+  var t = String(detail || "").replace(/\s+/g, " ").trim();
+  if(!t) return "";
+  if(t.length > 70) t = t.slice(0, 67) + "...";
+  return t;
+}
+function setSyncDebug(endpoint, code, detail, level, force){
+  var chip = document.getElementById("syncDebugChip");
+  var text = document.getElementById("syncDebugText");
+  if(!chip || !text) return;
+  var now = Date.now();
+  var lvl = String(level || "info").toLowerCase();
+  var ep = String(endpoint || "Sync").trim();
+  if(!ep) ep = "Sync";
+  var sc = (code == null || code === "") ? "--" : String(code).trim();
+  var dt = normalizeSyncDebugDetail(detail);
+
+  if(!force && lvl !== "fail" && syncDebugStickyFailUntil > now){
+    return;
+  }
+  if(lvl === "fail"){
+    syncDebugStickyFailUntil = now + 45000;
+  }else if(force){
+    syncDebugStickyFailUntil = 0;
+  }
+
+  chip.classList.remove("sync-debug-ok", "sync-debug-fail", "sync-debug-info");
+  if(lvl === "ok"){
+    chip.classList.add("sync-debug-ok");
+  }else if(lvl === "fail"){
+    chip.classList.add("sync-debug-fail");
+  }else{
+    chip.classList.add("sync-debug-info");
+  }
+
+  var msg = "DBG " + ep + " " + sc;
+  if(dt) msg += " · " + dt;
+  text.textContent = msg;
+  chip.title = msg + " · " + new Date(now).toLocaleTimeString("en-IN");
+}
+function clearSyncDebug(detail){
+  setSyncDebug("Sync", "--", detail || "idle", "info", true);
+}
 setInterval(updateClock,1000);
 updateClock();
 syncHealthMarkSyncing("Checking server");
+clearSyncDebug("Checking server");
 
 /* ==================================================
    DATA
@@ -12946,6 +13045,7 @@ async function smartRefresh(){
   }
   smartRefreshInFlight = true;
   setRefreshButtonBusy(true);
+  clearSyncDebug("Manual refresh");
   showToast("🔄 Refreshing...");
   flushQueuedServerExport(false).catch(function(){});
   try{
@@ -15266,14 +15366,19 @@ async function relayRequest(path, method, payload, timeoutMs){
         }, timeoutMs || SERVER_SYNC_TIMEOUT_MS);
         lastRes = res;
         if(res && (res.ok || res.status === 201 || res.status === 202 || res.status === 204)){
+          setSyncDebug("Relay", res.status, p || "/", "ok");
           rememberRelayWorkingConfig(base, token);
           return res;
+        }
+        if(res){
+          setSyncDebug("Relay", res.status, p || "/", "fail");
         }
         if(res && (res.status === 401 || res.status === 403)){
           continue;
         }
       }catch(e){
         lastErr = e;
+        setSyncDebug("Relay", "ERR", (p || "/") + " " + String((e && e.message) || e || "network"), "fail");
       }
     }
   }
@@ -15661,11 +15766,16 @@ async function supabaseRestRequest(path, method, body, preferHeader){
         body: (body != null && method !== "GET" && method !== "HEAD") ? JSON.stringify(body) : undefined
       }, SERVER_SYNC_TIMEOUT_MS);
       if(res && (res.status === 401 || res.status === 403) && i < modes.length - 1){
+        setSyncDebug("Supabase", res.status, path, "fail");
         continue;
+      }
+      if(res){
+        setSyncDebug("Supabase", res.status, path, res.ok ? "ok" : "fail");
       }
       return res;
     }catch(e){
       lastErr = e;
+      setSyncDebug("Supabase", "ERR", path + " " + String((e && e.message) || e || "network"), "fail");
     }
   }
   if(lastErr) throw lastErr;
@@ -18095,7 +18205,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-refreshfix-4";
+      var swBuild = "20260310-syncdebug-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
