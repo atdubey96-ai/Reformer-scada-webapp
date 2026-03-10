@@ -15568,37 +15568,38 @@ async function getEffectivePasswordHash(){
 }
 
 
-/* Auto import once when already logged in */
-(async function restoreServerSyncOnLoad(){
-  if(isUserLoggedIn()){
-    var lastSnap = loadLastServerSnapshot();
-    var hasQueued = !!loadQueuedServerExport();
-    if(lastSnap && lastSnap.saved_at){
-      updateLastSyncLabel(lastSnap.saved_at);
-      if(hasQueued){
-        syncHealthMarkQueued("Pending upload");
-      }else{
-        syncHealthMarkOk(lastSnap.saved_at, "Cached");
-      }
-    }else if(hasQueued){
+/* Auto import once when already logged in.
+   NOTE: invoked later after sync constants are initialized. */
+async function restoreServerSyncOnLoad(){
+  if(!isUserLoggedIn()) return;
+  var lastSnap = loadLastServerSnapshot();
+  var hasQueued = !!loadQueuedServerExport();
+  if(lastSnap && lastSnap.saved_at){
+    updateLastSyncLabel(lastSnap.saved_at);
+    if(hasQueued){
       syncHealthMarkQueued("Pending upload");
     }else{
-      syncHealthMarkSyncing("Checking server");
+      syncHealthMarkOk(lastSnap.saved_at, "Cached");
     }
-    flushQueuedServerExport(false).catch(function(){});
-    var okInit = await autoImportFromServer(false);
-    if(!okInit){
-      if(loadQueuedServerExport()){
-        syncHealthMarkQueued("Pending upload");
-      }else{
-        syncHealthMarkQueued("No central update");
-      }
-    }else{
-      markCurrentAutoSyncDigest();
-    }
-    scheduleAutoRefreshOnOpen();
+  }else if(hasQueued){
+    syncHealthMarkQueued("Pending upload");
+  }else{
+    syncHealthMarkSyncing("Checking server");
   }
-})();
+  clearSyncDebug("Startup restore");
+  flushQueuedServerExport(false).catch(function(){});
+  var okInit = await autoImportFromServer(false);
+  if(!okInit){
+    if(loadQueuedServerExport()){
+      syncHealthMarkQueued("Pending upload");
+    }else{
+      syncHealthMarkQueued("No central update");
+    }
+  }else{
+    markCurrentAutoSyncDigest();
+  }
+  scheduleAutoRefreshOnOpen();
+}
 
 function base64ToFile(base64, filename){
   var bin = atob(base64);
@@ -16333,6 +16334,16 @@ setInterval(function(){
     console.warn("auto sync interval failed:", err);
   });
 }, AUTO_SYNC_INTERVAL_MS);
+
+/* Run logged-in restore only after all sync constants/helpers are initialized. */
+if(isUserLoggedIn()){
+  setTimeout(function(){
+    restoreServerSyncOnLoad().catch(function(err){
+      console.warn("restoreServerSyncOnLoad failed:", err);
+      syncHealthMarkQueued("Restore deferred");
+    });
+  }, 0);
+}
 
 
 /* ── Full login with server auto-import support ── */
@@ -18205,7 +18216,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-syncdebug-1";
+      var swBuild = "20260310-syncdebug-2";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
