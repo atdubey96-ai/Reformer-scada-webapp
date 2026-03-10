@@ -4054,7 +4054,7 @@ async function loginWithBiometric(){
     if(opEl) opEl.innerHTML = "<b>Operator:</b> EMP-" + rec.empId;
     init();
     var serverOk = await autoImportFromServer(true);
-    if(!serverOk) showToast("⚠ Could not auto-load from central server");
+    if(!serverOk) syncHealthMarkQueued("Server unavailable · local mode");
   }catch(e){
     if(err){
       err.style.display = "block";
@@ -5588,6 +5588,74 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-heatmap .hm-wall-btn{
     min-width:96px !important;
     white-space:nowrap !important;
+  }
+
+  /* Keep dark/light mobile analytics fully inside viewport */
+  #tab-heatmap .analytics,
+  #tab-burner .analytics{
+    margin:0 !important;
+    padding:12px !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:hidden !important;
+    box-sizing:border-box !important;
+  }
+  #tab-heatmap #hm-analysisContainer,
+  #tab-burner #analysisContainer{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:hidden !important;
+  }
+  #tab-heatmap .analysis-block,
+  #tab-burner .analysis-block{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+  }
+  #tab-heatmap .chart-wrap,
+  #tab-burner .chart-wrap,
+  #tab-heatmap .chart-wrap-pie,
+  #tab-burner .chart-wrap-pie{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+  }
+  #tab-heatmap .chart-wrap canvas,
+  #tab-burner .chart-wrap canvas{
+    width:100% !important;
+    max-width:100% !important;
+    height:auto !important;
+  }
+  #tab-heatmap .ab-chart-totals{
+    left:6px !important;
+    right:6px !important;
+    gap:4px !important;
+  }
+  #tab-heatmap .ab-chart-totals .ab-pill,
+  #tab-burner .ab-chart-totals .ab-pill{
+    font-size:10px !important;
+    padding:2px 6px !important;
+    line-height:1.15 !important;
+  }
+
+  /* Prevent adjustment cards from exceeding viewport width */
+  #tab-heatmap .hm-adjust-grid{
+    grid-template-columns:1fr !important;
+    gap:8px !important;
+  }
+  #tab-heatmap .hm-adjust-item{
+    min-width:0 !important;
+    width:100% !important;
+    box-sizing:border-box !important;
   }
 }
 
@@ -12871,9 +12939,9 @@ async function smartRefresh(){
         showToast("📴 Server unavailable. Loaded last synced local copy.");
         return true;
       }
-      syncHealthMarkError("Refresh failed");
-      showToast("⚠ Could not refresh from central server");
-      return false;
+      syncHealthMarkQueued("No central update");
+      showToast("ℹ No central update found. Keeping current local data.");
+      return true;
     }
     return true;
   }catch(e){
@@ -12886,9 +12954,9 @@ async function smartRefresh(){
         return true;
       }
     }catch(_ignore){}
-    syncHealthMarkError("Refresh timeout");
-    showToast("⚠ Refresh timed out. Try again.");
-    return false;
+    syncHealthMarkQueued("Refresh timeout");
+    showToast("📶 Refresh timed out. Keeping current local data.");
+    return true;
   }finally{
     setRefreshButtonBusy(false);
     smartRefreshInFlight = false;
@@ -14959,7 +15027,7 @@ function getSyncRelayUrl(){
       return trimTrailingSlash(stored);
     }
   }catch(e){}
-  return "";
+  return "https://scada-relay.iocscadasync.workers.dev";
 }
 function getSyncRelayToken(){
   try{
@@ -15959,10 +16027,10 @@ async function autoRefreshFromServer(reason){
   syncHealthMarkSyncing((reason === "open") ? "Auto refresh on open" : "Auto refresh");
   try{
     var ok = await withTimeout(autoImportFromServer(false), 22000);
-    if(!ok) syncHealthMarkError("Auto refresh failed");
+    if(!ok) syncHealthMarkQueued("Auto refresh deferred");
     return !!ok;
   }catch(e){
-    syncHealthMarkError("Auto refresh timeout");
+    syncHealthMarkQueued("Auto refresh timeout");
     return false;
   }
 }
@@ -16073,8 +16141,7 @@ async function loginWithFolderSupport(){
     flushQueuedServerExport(false).catch(function(){});
     var serverOk = await autoImportFromServer(true);
     if(!serverOk){
-      syncHealthMarkError("Could not auto-load");
-      showToast("⚠ Could not auto-load from central server");
+      syncHealthMarkQueued("Server unavailable · local mode");
     }else{
       markCurrentAutoSyncDigest();
     }
@@ -17906,7 +17973,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-refreshfix-1";
+      var swBuild = "20260310-refreshfix-2";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
