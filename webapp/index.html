@@ -5403,6 +5403,200 @@ html, body, body *, body *::before, body *::after, svg text{
   }
 }
 </style>
+<style id="mobile-conference-overhaul-20260310">
+@media (max-width:900px){
+  :root{
+    --m-bg:#050a12;
+    --m-surface:#0d1726;
+    --m-surface-2:#0a1322;
+    --m-border:rgba(112,146,186,0.34);
+    --m-text:#dbe7fb;
+    --m-muted:#8ea5c4;
+  }
+
+  body{
+    background:radial-gradient(1100px 520px at 50% -120px, #15243a 0%, var(--m-bg) 55%) !important;
+    color:var(--m-text) !important;
+  }
+  body.light-theme{
+    background:#f2f5fb !important;
+  }
+
+  .app-header{
+    backdrop-filter:blur(8px) saturate(1.15) !important;
+    -webkit-backdrop-filter:blur(8px) saturate(1.15) !important;
+  }
+  .app-header-meta{
+    padding:8px 10px !important;
+    min-height:58px !important;
+    gap:8px !important;
+  }
+  .app-meta-left .app-meta-item{
+    color:#c9daee !important;
+    font-size:11px !important;
+    font-weight:700 !important;
+    letter-spacing:0.25px !important;
+  }
+  body.light-theme .app-meta-left .app-meta-item{
+    color:#1c2f49 !important;
+  }
+
+  .tab-panels{
+    padding:8px 8px 94px !important;
+    gap:10px !important;
+  }
+  .tab-panel{
+    padding:0 !important;
+    margin:0 !important;
+  }
+  #tab-heatmap > div,
+  #tab-burner,
+  #tab-cleaning .cleaning-section,
+  #tab-tempdata > div,
+  #tab-alarms .alarms-section{
+    margin:0 !important;
+    padding:12px !important;
+    border-radius:18px !important;
+    border:1px solid var(--m-border) !important;
+    background:linear-gradient(165deg, var(--m-surface) 0%, var(--m-surface-2) 100%) !important;
+    box-shadow:0 14px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+  }
+  body.light-theme #tab-heatmap > div,
+  body.light-theme #tab-burner,
+  body.light-theme #tab-cleaning .cleaning-section,
+  body.light-theme #tab-tempdata > div,
+  body.light-theme #tab-alarms .alarms-section{
+    background:linear-gradient(180deg,#ffffff 0%,#f4f7fb 100%) !important;
+    border-color:rgba(67,96,136,0.24) !important;
+    box-shadow:0 10px 24px rgba(14,24,42,0.12), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+  }
+
+  .bottom-tab-bar{
+    left:10px !important;
+    right:10px !important;
+    bottom:8px !important;
+    border-radius:16px !important;
+    border:1px solid rgba(109,145,189,0.42) !important;
+    background:linear-gradient(180deg, rgba(14,23,35,0.96) 0%, rgba(9,16,28,0.94) 100%) !important;
+    box-shadow:0 14px 26px rgba(0,0,0,0.42) !important;
+  }
+  body.light-theme .bottom-tab-bar{
+    background:linear-gradient(180deg, rgba(250,252,255,0.97) 0%, rgba(236,242,250,0.94) 100%) !important;
+    border-color:rgba(94,122,163,0.32) !important;
+    box-shadow:0 10px 24px rgba(28,42,66,0.16) !important;
+  }
+  .bottom-tab-bar .btab{
+    border-radius:12px !important;
+  }
+
+  #masterAlarm{
+    left:10px !important;
+    right:10px !important;
+    bottom:78px !important;
+    border-radius:14px !important;
+    box-shadow:0 12px 24px rgba(120,19,19,0.34) !important;
+  }
+
+  #tab-heatmap .hm-toolbar-row,
+  #tab-tempdata .td-toolbar-row{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:8px !important;
+  }
+  #tab-heatmap .hm-toolbar-pill,
+  #tab-tempdata .td-toolbar-pill{
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  #tab-burner #walls,
+  #tab-cleaning #cleaningTablesWrap,
+  #tab-tempdata .td-saved-scroll{
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    scrollbar-width:thin !important;
+  }
+  #tab-burner #walls .wall{min-width:860px !important;}
+  #tab-cleaning .cleaning-table{min-width:880px !important;}
+  #tab-cleaning #tipDamageTable{min-width:980px !important;}
+  #tab-tempdata #td-saved-table{min-width:920px !important;}
+
+  #tab-tempdata .td-entry-layout{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:10px !important;
+  }
+  #tab-tempdata .td-entry-card{
+    padding:12px !important;
+    border-radius:14px !important;
+  }
+  #tab-tempdata .td-manual-grid{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+  #tab-tempdata .td-field-group{
+    min-width:0 !important;
+  }
+  #tab-tempdata .td-input{
+    min-height:42px !important;
+    font-size:18px !important;
+  }
+
+  /* Lock TST peep-hole editor to vertical mobile matrix only */
+  #tab-tempdata .td-ph-grid-scroll{
+    display:none !important;
+    overflow:hidden !important;
+  }
+  #tab-tempdata #td-ph-mobile-matrix,
+  #tab-tempdata .td-ph-mobile-matrix{
+    display:block !important;
+    margin-top:4px !important;
+  }
+  #tab-tempdata .td-ph-mobile-matrix-header,
+  #tab-tempdata .td-ph-mobile-matrix-row{
+    grid-template-columns:44px repeat(4,minmax(0,1fr)) !important;
+    gap:8px !important;
+    align-items:center !important;
+  }
+  #tab-tempdata .td-ph-mobile-matrix-cell{
+    min-height:36px !important;
+    font-size:12px !important;
+    border-radius:8px !important;
+  }
+  #tab-tempdata .td-ph-mobile-matrix-cell-ph{
+    font-size:13px !important;
+    font-weight:800 !important;
+  }
+  #tab-tempdata .td-ph-mobile-input{
+    min-height:36px !important;
+    padding:6px 4px !important;
+    font-size:14px !important;
+    border-radius:8px !important;
+  }
+
+  #tab-heatmap .hm-wall-btn-bar{
+    position:sticky !important;
+    top:66px !important;
+    z-index:25 !important;
+    padding:8px !important;
+    border-radius:12px !important;
+    overflow-x:auto !important;
+    flex-wrap:nowrap !important;
+    gap:7px !important;
+  }
+  #tab-heatmap .hm-wall-btn{
+    min-width:96px !important;
+    white-space:nowrap !important;
+  }
+}
+
+@media (min-width:560px) and (max-width:900px){
+  #tab-tempdata .td-manual-grid{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -14390,32 +14584,79 @@ function applyMobileHorizontalScrollFixes(){
   var isMobile =
     (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
     (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
-  var rowSelector = '#tab-tempdata .td-ph-grid-row,#all-ph-modal-body .td-ph-grid-row,#tab-tempdata [style*="grid-template-columns:80px repeat(15,1fr)"],#all-ph-modal-body [style*="grid-template-columns:80px repeat(15,1fr)"],#tab-tempdata [style*="grid-template-columns:80px repeat(15,56px)"],#all-ph-modal-body [style*="grid-template-columns:80px repeat(15,56px)"]';
-  var wrapSelector = '#tab-tempdata .td-ph-grid-scroll,#all-ph-modal-body .td-ph-grid-scroll';
-  var peepRows = document.querySelectorAll(rowSelector);
-  var peepWraps = document.querySelectorAll(wrapSelector);
+  var tabRows = document.querySelectorAll('#tab-tempdata .td-ph-grid-row,#tab-tempdata [style*="grid-template-columns:80px repeat(15,1fr)"],#tab-tempdata [style*="grid-template-columns:80px repeat(15,56px)"]');
+  var tabWraps = document.querySelectorAll('#tab-tempdata .td-ph-grid-scroll');
+  var modalRows = document.querySelectorAll('#all-ph-modal-body .td-ph-grid-row,#all-ph-modal-body [style*="grid-template-columns:80px repeat(15,1fr)"],#all-ph-modal-body [style*="grid-template-columns:80px repeat(15,56px)"]');
+  var modalWraps = document.querySelectorAll('#all-ph-modal-body .td-ph-grid-scroll');
+  var mobileMatrix = document.getElementById("td-ph-mobile-matrix");
 
   if(!isMobile){
-    /* Keep desktop grid templates intact (modal rows were collapsing to 1 column). */
-    peepRows.forEach(function(row){
+    /* Keep desktop grid templates intact. */
+    tabRows.forEach(function(row){
       row.style.minWidth = "";
       row.style.width = "";
       row.style.maxWidth = "";
+      row.style.gridTemplateColumns = "";
     });
-    peepWraps.forEach(function(wrap){ wrap.classList.remove("td-temp-scroll"); });
+    modalRows.forEach(function(row){
+      row.style.minWidth = "";
+      row.style.width = "";
+      row.style.maxWidth = "";
+      row.style.gridTemplateColumns = "";
+    });
+    tabWraps.forEach(function(wrap){
+      wrap.classList.remove("td-temp-scroll");
+      wrap.style.overflowX = "";
+      wrap.style.overflowY = "";
+      wrap.style.webkitOverflowScrolling = "";
+      wrap.style.touchAction = "";
+      wrap.style.display = "";
+    });
+    modalWraps.forEach(function(wrap){
+      wrap.classList.remove("td-temp-scroll");
+      wrap.style.overflowX = "";
+      wrap.style.overflowY = "";
+      wrap.style.webkitOverflowScrolling = "";
+      wrap.style.touchAction = "";
+    });
+    if(mobileMatrix){
+      mobileMatrix.style.display = "";
+    }
     document.querySelectorAll(".td-temp-scroll").forEach(function(parent){ parent.classList.remove("td-temp-scroll"); });
     return;
   }
 
-  /* Enforce a real overflow width so mobile can horizontally scroll 15 PH columns reliably. */
-  peepWraps.forEach(function(wrap){
+  /* Mobile TST tab is intentionally vertical-only to avoid fragile horizontal scroll behavior. */
+  tabWraps.forEach(function(wrap){
+    wrap.classList.remove("td-temp-scroll");
+    wrap.style.display = "none";
+    wrap.style.overflowX = "hidden";
+    wrap.style.overflowY = "hidden";
+    wrap.style.touchAction = "auto";
+  });
+  tabRows.forEach(function(row){
+    row.style.minWidth = "";
+    row.style.width = "";
+    row.style.maxWidth = "";
+    row.style.gridTemplateColumns = "";
+    var parent = row.parentElement;
+    if(parent) parent.classList.remove("td-temp-scroll");
+  });
+  if(mobileMatrix){
+    mobileMatrix.style.display = "block";
+  }
+  if(typeof buildTdMobileMatrixIfNeeded === "function") buildTdMobileMatrixIfNeeded();
+  if(typeof syncTdMobileMatrixFromBase === "function") syncTdMobileMatrixFromBase();
+
+  /* Keep modal/table viewers horizontally scrollable on mobile. */
+  modalWraps.forEach(function(wrap){
     wrap.classList.add("td-temp-scroll");
     wrap.style.overflowX = "auto";
     wrap.style.overflowY = "hidden";
     wrap.style.webkitOverflowScrolling = "touch";
     wrap.style.touchAction = "pan-x";
   });
-  peepRows.forEach(function(row){
+  modalRows.forEach(function(row){
     row.style.minWidth = "1010px";
     row.style.width = "max-content";
     row.style.maxWidth = "none";
