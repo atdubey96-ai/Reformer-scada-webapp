@@ -5108,6 +5108,9 @@ function renderHeatMap(){
     entryDt: entry ? entry.dt : ""
   };
 
+  if(typeof r3dSyncFromHeatMapSnapshot === "function"){
+    r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
+  }
   updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
   clearHeatMapPanelContent();
   if(typeof applyHeatMapWallPanelState === "function") applyHeatMapWallPanelState();
@@ -11279,11 +11282,11 @@ html, body, body *, body *::before, body *::after, svg text{
             </div>
             <div class="r3d-panel-section">
               <h3>Live Parameters</h3>
-              <div class="r3d-info-row"><span class="r3d-info-label">Chamber A Temp</span><span class="r3d-info-value hot">842 °C</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Chamber B Temp</span><span class="r3d-info-value hot">818 °C</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Header Pressure</span><span class="r3d-info-value warn">3.2 bar</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Flame Status</span><span class="r3d-info-value ok">Active</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Fuel Flow</span><span class="r3d-info-value">124 m³/h</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Chamber A PH Avg</span><span class="r3d-info-value hot" id="r3d-live-ab-temp">-- °C</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Chamber B PH Avg</span><span class="r3d-info-value hot" id="r3d-live-cd-temp">-- °C</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Shift Filter</span><span class="r3d-info-value warn" id="r3d-live-shift">Latest</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Entry Time</span><span class="r3d-info-value ok" id="r3d-live-dt">--</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Flame Status</span><span class="r3d-info-value" id="r3d-live-flame">Waiting for data</span></div>
             </div>
             <div class="r3d-panel-section">
               <h3>Legend</h3>
@@ -14999,6 +15002,7 @@ var reformer3DState = {
   camera:null,
   scene:null,
   pivotGroup:null,
+  wallOverlays:{},
   autoRotate:true,
   isDragging:false,
   prevMouse:{x:0,y:0},
@@ -15099,7 +15103,372 @@ function r3dAddLabel(text, x, y, z){
   reformer3DState.pivotGroup.add(sp);
 }
 
-function r3dBuildChamber(xCenter, dims, mats){
+function r3dRoundRectPath(ctx, x, y, w, h, r){
+  var rad = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.lineTo(x + w - rad, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+  ctx.lineTo(x + w, y + h - rad);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+  ctx.lineTo(x + rad, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+  ctx.lineTo(x, y + rad);
+  ctx.quadraticCurveTo(x, y, x + rad, y);
+  ctx.closePath();
+}
+
+function r3dAverageTemp(valsA, valsB){
+  var nums = [];
+  var addVals = function(vals){
+    if(!Array.isArray(vals)) return;
+    for(var i=0; i<vals.length; i++){
+      var n = Number(vals[i]);
+      if(isFinite(n)) nums.push(n);
+    }
+  };
+  addVals(valsA);
+  addVals(valsB);
+  if(!nums.length) return null;
+  var sum = 0;
+  for(var j=0; j<nums.length; j++) sum += nums[j];
+  return Math.round(sum / nums.length);
+}
+
+function r3dSetInfo(id, text, cls){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = String(text);
+  el.classList.remove("hot", "warn", "ok");
+  if(cls) el.classList.add(cls);
+}
+
+function r3dCreateWallOverlay(dims, wallKey, side){
+  var canvas = document.createElement("canvas");
+  canvas.width = 1600;
+  canvas.height = 960;
+  var tex = new THREE.CanvasTexture(canvas);
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  var mat = new THREE.MeshBasicMaterial({
+    map:tex,
+    transparent:true,
+    side:THREE.DoubleSide,
+    depthWrite:false
+  });
+  var mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(dims.sZ - 0.22, dims.sY - 0.18),
+    mat
+  );
+  mesh.position.set(side === "left" ? (-dims.sX/2 - 0.016) : (dims.sX/2 + 0.016), dims.sY/2, 0);
+  mesh.rotation.y = (side === "left") ? (Math.PI / 2) : (-Math.PI / 2);
+  mesh.renderOrder = 5;
+  return { wallKey:wallKey, side:side, canvas:canvas, texture:tex, material:mat, mesh:mesh };
+}
+
+function r3dGetWallCleaningMap(wallKey){
+  var view = {};
+  try{
+    view = (typeof getMergedCleaningLog === "function") ? (getMergedCleaningLog() || {}) : ((typeof loadCleaningLog === "function" ? loadCleaningLog() : {}) || {});
+  }catch(e){
+    view = {};
+  }
+  return view[wallKey] || {};
+}
+
+function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned){
+  var s = String(state || "C").toUpperCase();
+  if(s !== "O" && s !== "N" && s !== "B") s = "C";
+  var palette = {
+    O:{flame:"#16a34a", core:"#86efac", inner:"#dcfce7", stem:"#15803d"},
+    N:{flame:"#d97706", core:"#fcd34d", inner:"#fef9c3", stem:"#b45309"},
+    B:{flame:"#2563eb", core:"#93c5fd", inner:"#dbeafe", stem:"#1d4ed8"},
+    C:{flame:"#3a5068", core:"#556b85", inner:"#64748b", stem:"#233244"}
+  }[s];
+
+  if(s === "C"){
+    ctx.fillStyle = palette.flame;
+    ctx.fillRect(x - 7, y - 3, 14, 6);
+    ctx.fillStyle = palette.core;
+    ctx.fillRect(x - 3, y + 2, 6, 16);
+    ctx.fillStyle = palette.inner;
+    ctx.fillRect(x - 10, y + 18, 20, 5);
+  }else{
+    ctx.fillStyle = palette.stem;
+    r3dRoundRectPath(ctx, x - 4, y + 8, 8, 14, 4);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(x, y - 22);
+    ctx.bezierCurveTo(x + 14, y - 8, x + 9, y + 7, x, y + 10);
+    ctx.bezierCurveTo(x - 9, y + 7, x - 14, y - 8, x, y - 22);
+    ctx.closePath();
+    ctx.fillStyle = palette.flame;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(x, y - 13);
+    ctx.bezierCurveTo(x + 7, y - 5, x + 5, y + 3, x, y + 5);
+    ctx.bezierCurveTo(x - 5, y + 3, x - 7, y - 5, x, y - 13);
+    ctx.closePath();
+    ctx.fillStyle = palette.core;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(x, y - 7);
+    ctx.bezierCurveTo(x + 3, y - 3, x + 2, y + 1, x, y + 2);
+    ctx.bezierCurveTo(x - 2, y + 1, x - 3, y - 3, x, y - 7);
+    ctx.closePath();
+    ctx.fillStyle = palette.inner;
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(12,18,26,0.92)";
+    r3dRoundRectPath(ctx, x - 10, y + 19, 20, 5, 2.5);
+    ctx.fill();
+  }
+
+  ctx.beginPath();
+  ctx.arc(x + 18, y - 4, 4.2, 0, Math.PI * 2);
+  ctx.fillStyle = cleaned ? "#4ade80" : "rgba(148,163,184,0.68)";
+  ctx.fill();
+  ctx.lineWidth = 1.3;
+  ctx.strokeStyle = cleaned ? "rgba(187,247,208,0.92)" : "rgba(226,232,240,0.45)";
+  ctx.stroke();
+}
+
+function r3dDrawPeepBar(ctx, label, vals, left, centerY, width){
+  var barHeight = 36;
+  var barTop = centerY - (barHeight / 2);
+  var gridLeft = left;
+  var slotW = width / 15;
+  var positions = [];
+  for(var i=0; i<15; i++){
+    var n = Number(Array.isArray(vals) ? vals[i] : "");
+    if(isFinite(n)){
+      positions.push({
+        idx:i,
+        val:n,
+        x:gridLeft + slotW * (i + 0.5)
+      });
+    }
+  }
+
+  ctx.fillStyle = "rgba(6,11,18,0.84)";
+  r3dRoundRectPath(ctx, 20, centerY - 23, 92, 46, 12);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.16)";
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.fillStyle = "#f8fafc";
+  ctx.font = "700 22px Times New Roman, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, 66, centerY);
+
+  ctx.save();
+  r3dRoundRectPath(ctx, gridLeft, barTop, width, barHeight, 12);
+  ctx.clip();
+
+  if(positions.length){
+    var grad = ctx.createLinearGradient(gridLeft, 0, gridLeft + width, 0);
+    for(var p=0; p<positions.length; p++){
+      var stop = (positions[p].idx + 0.5) / 15;
+      grad.addColorStop(Math.max(0, Math.min(1, stop)), tempToColor(positions[p].val, 860, 1000));
+    }
+    grad.addColorStop(0, tempToColor(positions[0].val, 860, 1000));
+    grad.addColorStop(1, tempToColor(positions[positions.length - 1].val, 860, 1000));
+    ctx.fillStyle = grad;
+  }else{
+    ctx.fillStyle = "rgba(31,41,55,0.8)";
+  }
+  ctx.fillRect(gridLeft, barTop, width, barHeight);
+  ctx.restore();
+
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  r3dRoundRectPath(ctx, gridLeft, barTop, width, barHeight, 12);
+  ctx.stroke();
+
+  for(var m=0; m<15; m++){
+    var mx = gridLeft + slotW * (m + 0.5);
+    ctx.strokeStyle = "rgba(255,255,255,0.58)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(mx, barTop - 3);
+    ctx.lineTo(mx, barTop + barHeight + 3);
+    ctx.stroke();
+    if(positions.length){
+      var tempVal = Number(Array.isArray(vals) ? vals[m] : "");
+      if(isFinite(tempVal)){
+        ctx.beginPath();
+        ctx.arc(mx, centerY, 5, 0, Math.PI * 2);
+        ctx.fillStyle = tempToColor(tempVal, 860, 1000);
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(255,255,255,0.95)";
+        ctx.stroke();
+
+        var pillW = 58;
+        ctx.fillStyle = "rgba(52,44,34,0.86)";
+        r3dRoundRectPath(ctx, mx - pillW/2, barTop - 30, pillW, 22, 7);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.18)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "700 15px Times New Roman, serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(tempVal + "°", mx, barTop - 19);
+      }
+    }
+  }
+}
+
+function r3dPaintWallOverlay(overlay, wallKey, snapshot){
+  if(!overlay || !overlay.canvas || !overlay.texture) return;
+  var ctx = overlay.canvas.getContext("2d");
+  var w = overlay.canvas.width;
+  var h = overlay.canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  if(!snapshot || !snapshot.hmData){
+    overlay.texture.needsUpdate = true;
+    return;
+  }
+
+  var rows = (snapshot.hmData && snapshot.hmData[wallKey] && Array.isArray(snapshot.hmData[wallKey])) ? snapshot.hmData[wallKey] : [];
+  var topVals = (wallKey === "A" || wallKey === "B") ? (snapshot.abTop || []) : (snapshot.cdTop || []);
+  var botVals = (wallKey === "A" || wallKey === "B") ? (snapshot.abBot || []) : (snapshot.cdBot || []);
+  var wallCleaning = r3dGetWallCleaningMap(wallKey);
+
+  var padX = 26;
+  var topPad = 26;
+  var titleY = topPad + 20;
+  var gridLeft = 145;
+  var gridRight = w - 22;
+  var gridW = gridRight - gridLeft;
+  var slotW = gridW / 15;
+  var burnerNumY = 115;
+  var itemCenters = [190, 290, 390, 495, 600, 700, 805, 900];
+  var rowOrder = [6, 5, 4, "PH_TOP", 3, 2, "PH_BOT", 1];
+
+  ctx.fillStyle = "rgba(6,10,18,0.54)";
+  r3dRoundRectPath(ctx, 6, 8, w - 12, h - 16, 28);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(5,9,18,0.72)";
+  ctx.fillRect(0, 0, w, 92);
+  ctx.strokeStyle = "rgba(243,112,34,0.72)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, 92);
+  ctx.lineTo(w, 92);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 34px Times New Roman, serif";
+  ctx.fillText("WALL " + wallKey, padX, titleY + 8);
+  ctx.font = "700 20px Times New Roman, serif";
+  ctx.textAlign = "right";
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.fillText("6 rows × 15 burners", w - padX, titleY + 8);
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 22px Times New Roman, serif";
+  ctx.fillStyle = "#ffffff";
+  for(var bn=1; bn<=15; bn++){
+    var bx = gridLeft + slotW * (bn - 0.5);
+    ctx.fillText("B" + bn, bx, burnerNumY);
+  }
+
+  ctx.fillStyle = "rgba(8,14,24,0.76)";
+  r3dRoundRectPath(ctx, 18, burnerNumY - 20, 64, 40, 12);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 20px Times New Roman, serif";
+  ctx.fillText("—", 50, burnerNumY);
+
+  for(var ii=0; ii<rowOrder.length; ii++){
+    var item = rowOrder[ii];
+    var centerY = itemCenters[ii];
+    var lineY = centerY + ((typeof item === "string") ? 26 : 38);
+    ctx.strokeStyle = "rgba(148,163,184,0.22)";
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(14, lineY);
+    ctx.lineTo(w - 14, lineY);
+    ctx.stroke();
+
+    if(item === "PH_TOP"){
+      r3dDrawPeepBar(ctx, "PH TST", topVals, gridLeft, centerY, gridW);
+      continue;
+    }
+    if(item === "PH_BOT"){
+      r3dDrawPeepBar(ctx, "PH TST", botVals, gridLeft, centerY, gridW);
+      continue;
+    }
+
+    ctx.fillStyle = "rgba(8,14,24,0.76)";
+    r3dRoundRectPath(ctx, 12, centerY - 24, 88, 48, 12);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 22px Times New Roman, serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("ROW " + item, 56, centerY);
+
+    var rowData = Array.isArray(rows[item - 1]) ? rows[item - 1] : [];
+    for(var ci=0; ci<15; ci++){
+      var state = String(rowData[ci] || "C").toUpperCase();
+      var burnerX = gridLeft + slotW * (ci + 0.5);
+      var cleaned = !!String(wallCleaning["R" + item + "B" + (ci + 1)] || "").trim();
+      r3dDrawBurnerGlyph(ctx, burnerX, centerY + 4, state, cleaned);
+    }
+  }
+
+  overlay.texture.needsUpdate = true;
+}
+
+function r3dSyncFromHeatMapSnapshot(snapshot){
+  if(!snapshot || !snapshot.hmData){
+    r3dSetInfo("r3d-live-ab-temp", "-- °C");
+    r3dSetInfo("r3d-live-cd-temp", "-- °C");
+    r3dSetInfo("r3d-live-shift", "Latest");
+    r3dSetInfo("r3d-live-dt", "--");
+    r3dSetInfo("r3d-live-flame", "Waiting for data");
+    return;
+  }
+
+  var abAvg = r3dAverageTemp(snapshot.abBot || [], snapshot.abTop || []);
+  var cdAvg = r3dAverageTemp(snapshot.cdBot || [], snapshot.cdTop || []);
+  var counts = hmCountStatesForWalls(snapshot.hmData, ["A","B","C","D"]);
+  var activeBurners = counts.O + counts.N + counts.B;
+  var shiftText = (snapshot.selectedShift && snapshot.selectedShift !== "All") ? snapshot.selectedShift : "All / Latest";
+  var flameText = activeBurners > 0 ? (activeBurners + " active burners") : "No active burners";
+
+  r3dSetInfo("r3d-live-ab-temp", abAvg !== null ? (abAvg + " °C") : "-- °C", abAvg === null ? "" : (abAvg > 970 ? "hot" : (abAvg < 910 ? "warn" : "ok")));
+  r3dSetInfo("r3d-live-cd-temp", cdAvg !== null ? (cdAvg + " °C") : "-- °C", cdAvg === null ? "" : (cdAvg > 970 ? "hot" : (cdAvg < 910 ? "warn" : "ok")));
+  r3dSetInfo("r3d-live-shift", shiftText, "warn");
+  r3dSetInfo("r3d-live-dt", snapshot.entryDt || "Latest", "ok");
+  r3dSetInfo("r3d-live-flame", flameText, activeBurners > 0 ? "ok" : "warn");
+
+  if(!reformer3DState.initialized || !reformer3DState.wallOverlays) return;
+  ["A","B","C","D"].forEach(function(wallKey){
+    r3dPaintWallOverlay(reformer3DState.wallOverlays[wallKey], wallKey, snapshot);
+  });
+}
+
+function r3dBuildChamber(xCenter, dims, mats, chamberKey){
   var g = new THREE.Group();
   g.position.set(xCenter, 0, 0);
 
@@ -15123,6 +15492,15 @@ function r3dBuildChamber(xCenter, dims, mats){
   rw.position.set(dims.sX/2-dims.wallT/2, dims.sY/2, 0);
   rw.castShadow = true;
   g.add(rw);
+
+  var leftWallKey = chamberKey === "A" ? "A" : "C";
+  var rightWallKey = chamberKey === "A" ? "B" : "D";
+  var leftOverlay = r3dCreateWallOverlay(dims, leftWallKey, "left");
+  var rightOverlay = r3dCreateWallOverlay(dims, rightWallKey, "right");
+  reformer3DState.wallOverlays[leftWallKey] = leftOverlay;
+  reformer3DState.wallOverlays[rightWallKey] = rightOverlay;
+  g.add(leftOverlay.mesh);
+  g.add(rightOverlay.mesh);
 
   var tw = new THREE.Mesh(new THREE.BoxGeometry(dims.sX, dims.wallT, dims.sZ), mats.rustMat);
   tw.position.set(0, dims.sY-dims.wallT/2, 0);
@@ -15245,8 +15623,9 @@ function initReformer3DTab(){
       edgeMat:new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.25})
     };
 
-    pivotGroup.add(r3dBuildChamber(dims.chamberAx, dims, mats));
-    pivotGroup.add(r3dBuildChamber(dims.chamberBx, dims, mats));
+    reformer3DState.wallOverlays = {};
+    pivotGroup.add(r3dBuildChamber(dims.chamberAx, dims, mats, "A"));
+    pivotGroup.add(r3dBuildChamber(dims.chamberBx, dims, mats, "B"));
 
     var commonTubeLen = dims.sZ + 0.4;
     var ctGeo = new THREE.CylinderGeometry(dims.commonTubeR, dims.commonTubeR, commonTubeLen, 16);
@@ -15360,6 +15739,10 @@ function initReformer3DTab(){
     reformer3DState.initRequested = false;
     r3dUpdateCamera();
     r3dSetStatus("");
+    if(!window._hmRenderSnapshot && typeof renderHeatMap === "function"){
+      try{ renderHeatMap(); }catch(e){}
+    }
+    r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
 
     (function animate(){
       if(!reformer3DState.initialized || !reformer3DState.renderer || !reformer3DState.camera || !reformer3DState.pivotGroup) return;
@@ -15427,6 +15810,12 @@ function switchTab(tab){
   if(tab === 'reformer3d'){
     setTimeout(function(){
       initReformer3DTab();
+      if(typeof renderHeatMap === "function"){
+        try{ renderHeatMap(); }catch(e){}
+      }
+      if(typeof r3dSyncFromHeatMapSnapshot === "function"){
+        r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
+      }
       r3dResize();
     }, 40);
   }
