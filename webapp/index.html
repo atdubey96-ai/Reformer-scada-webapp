@@ -16140,7 +16140,7 @@ function initReformer3DTab(){
       requestAnimationFrame(animate);
       var now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
       reformer3DState.overlayAnimPhase = now * 0.0085;
-      if(reformer3DState.autoRotate) reformer3DState.rotation.y += 0.003;
+      if(reformer3DState.autoRotate) reformer3DState.rotation.y += 0.0012;
       reformer3DState.pivotGroup.rotation.x = reformer3DState.rotation.x;
       reformer3DState.pivotGroup.rotation.y = reformer3DState.rotation.y;
       if(r3dIsActive() && reformer3DState.latestSnapshot && (now - reformer3DState.lastOverlayPaintAt) > 140){
