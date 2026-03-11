@@ -2319,6 +2319,33 @@ body.light-theme .cw-nudge{
   font-size:12px;font-weight:700;letter-spacing:0.4px;
   max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+#btab-reformer3d{
+  flex:1.08;
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04));
+  border-color:rgba(148,163,184,0.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08);
+}
+#btab-reformer3d .btab-icon{
+  width:34px;
+  height:34px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.22),rgba(255,255,255,0.04) 60%,rgba(255,255,255,0) 100%);
+  border:1px solid rgba(148,163,184,0.26);
+  box-shadow:0 0 0 1px rgba(15,23,42,0.18) inset;
+}
+#btab-reformer3d.btab-active{
+  background:linear-gradient(180deg,rgba(243,112,34,0.3),rgba(243,112,34,0.14)) !important;
+  border-color:rgba(243,112,34,0.55) !important;
+  box-shadow:0 10px 20px rgba(243,112,34,0.18), inset 0 1px 0 rgba(255,214,185,0.38);
+}
+#btab-reformer3d.btab-active .btab-icon{
+  background:radial-gradient(circle at 35% 30%,rgba(255,226,194,0.42),rgba(243,112,34,0.18) 58%,rgba(243,112,34,0.04) 100%);
+  border-color:rgba(243,112,34,0.45);
+}
 
 /* Add bottom padding to body so content isn't hidden under tab bar */
 body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
@@ -11481,13 +11508,13 @@ html, body, body *, body *::before, body *::after, svg text{
     <span class="btab-icon">🌡️</span>
     <span class="btab-label">Reformer Heat Map</span>
   </button>
-  <button class="btab" id="btab-reformer3d" onclick="switchTab('reformer3d')">
-    <span class="btab-icon">🧱</span>
-    <span class="btab-label">Reformer 3D</span>
-  </button>
   <button class="btab" id="btab-burner" onclick="switchTab('burner')">
     <span class="btab-icon">🔥</span>
     <span class="btab-label">Burner Data &amp; Analysis</span>
+  </button>
+  <button class="btab" id="btab-reformer3d" onclick="switchTab('reformer3d')">
+    <span class="btab-icon">🧱</span>
+    <span class="btab-label">Reformer 3D</span>
   </button>
   <button class="btab" id="btab-cleaning" onclick="switchTab('cleaning')">
     <span class="btab-icon">🧹</span>
