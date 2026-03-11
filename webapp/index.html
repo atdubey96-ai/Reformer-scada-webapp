@@ -15162,7 +15162,7 @@ function r3dCreateWallOverlay(dims, wallKey, side){
     mat
   );
   mesh.position.set(side === "left" ? (-dims.sX/2 - 0.016) : (dims.sX/2 + 0.016), dims.sY/2, 0);
-  mesh.rotation.y = (side === "left") ? (Math.PI / 2) : (-Math.PI / 2);
+  mesh.rotation.y = (side === "left") ? (-Math.PI / 2) : (Math.PI / 2);
   mesh.renderOrder = 5;
   return { wallKey:wallKey, side:side, canvas:canvas, texture:tex, material:mat, mesh:mesh };
 }
@@ -15479,9 +15479,12 @@ function r3dBuildChamber(xCenter, dims, mats, chamberKey){
   inner.position.set(0, dims.sY/2, 0);
   g.add(inner);
 
-  var pL = new THREE.PointLight(0xFF4422, 0.15, 3);
+  var pL = new THREE.PointLight(0xFFAA66, 0.58, 7);
   pL.position.set(0, dims.sY/2, 0);
   g.add(pL);
+  var pL2 = new THREE.PointLight(0xBFD7FF, 0.24, 7);
+  pL2.position.set(0, dims.sY * 0.72, 0);
+  g.add(pL2);
 
   var lw = new THREE.Mesh(new THREE.BoxGeometry(dims.wallT, dims.sY, dims.sZ), mats.rustMat);
   lw.position.set(-dims.sX/2+dims.wallT/2, dims.sY/2, 0);
@@ -15589,7 +15592,7 @@ function initReformer3DTab(){
     var fl = new THREE.DirectionalLight(0x8899AA, 0.3);
     fl.position.set(-6, 4, -6);
     scene.add(fl);
-    var wl = new THREE.PointLight(0xFFAA66, 0.3, 20);
+    var wl = new THREE.PointLight(0xFFAA66, 0.45, 24);
     wl.position.set(0, 6, 8);
     scene.add(wl);
 
@@ -15616,7 +15619,16 @@ function initReformer3DTab(){
     var mats = {
       rustMat:new THREE.MeshStandardMaterial({color:0x9A8578, metalness:0.65, roughness:0.45, side:THREE.DoubleSide}),
       headerMat:new THREE.MeshStandardMaterial({color:0xB0A090, metalness:0.6, roughness:0.4}),
-      blackMat:new THREE.MeshStandardMaterial({color:0x0A0A0A, metalness:0.1, roughness:0.8, side:THREE.DoubleSide}),
+      blackMat:new THREE.MeshStandardMaterial({
+        color:0x2a3440,
+        emissive:0x10151d,
+        metalness:0.08,
+        roughness:0.88,
+        transparent:true,
+        opacity:0.18,
+        depthWrite:false,
+        side:THREE.DoubleSide
+      }),
       tubeMat:new THREE.MeshStandardMaterial({color:0x8899AA, metalness:0.75, roughness:0.3}),
       commonTubeMat:new THREE.MeshStandardMaterial({color:0x7090A8, metalness:0.7, roughness:0.25}),
       baseMat:new THREE.MeshStandardMaterial({color:0x334155, metalness:0.2, roughness:0.7}),
