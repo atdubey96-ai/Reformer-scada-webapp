@@ -72,6 +72,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <style>
 
@@ -2345,6 +2346,212 @@ body.light-theme .cw-nudge{
 #btab-reformer3d.btab-active .btab-icon{
   background:radial-gradient(circle at 35% 30%,rgba(255,226,194,0.42),rgba(243,112,34,0.18) 58%,rgba(243,112,34,0.04) 100%);
   border-color:rgba(243,112,34,0.45);
+}
+
+/* Reformer 3D tab */
+.r3d-shell{
+  padding:24px 28px;
+  max-width:1680px;
+  margin:0 auto;
+}
+.r3d-stage-card{
+  border-radius:24px;
+  border:1px solid rgba(148,163,184,0.24);
+  background:
+    radial-gradient(120% 100% at 50% -12%,rgba(232,81,26,0.08) 0%,rgba(232,81,26,0) 52%),
+    linear-gradient(180deg,rgba(12,18,28,0.98) 0%,rgba(9,14,22,0.98) 100%);
+  box-shadow:0 20px 50px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.05);
+  overflow:hidden;
+}
+.r3d-stage-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  padding:18px 22px;
+  border-bottom:1px solid rgba(148,163,184,0.16);
+  background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0));
+}
+.r3d-stage-title{
+  font-size:22px;
+  font-weight:700;
+  color:#f8fafc;
+  letter-spacing:0.4px;
+}
+.r3d-stage-subtitle{
+  margin-top:4px;
+  font-size:12px;
+  color:#94a3b8;
+}
+.r3d-stage-badge{
+  flex:0 0 auto;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid rgba(232,81,26,0.38);
+  background:linear-gradient(180deg,rgba(232,81,26,0.2),rgba(232,81,26,0.08));
+  color:#ffd7c8;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.7px;
+  text-transform:uppercase;
+}
+.r3d-main{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 300px;
+  min-height:min(74vh,860px);
+}
+.r3d-canvas-area{
+  position:relative;
+  min-height:620px;
+  background:#0b0f14;
+}
+#reformer3d-canvas{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.r3d-canvas-hint{
+  position:absolute;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  color:rgba(255,255,255,0.34);
+  font-size:11px;
+  letter-spacing:0.3px;
+  pointer-events:none;
+  white-space:nowrap;
+}
+.r3d-status{
+  position:absolute;
+  top:16px;
+  left:16px;
+  z-index:2;
+  display:none;
+  padding:8px 12px;
+  border-radius:12px;
+  background:rgba(127,29,29,0.92);
+  border:1px solid rgba(248,113,113,0.36);
+  color:#fee2e2;
+  font-size:12px;
+  font-weight:700;
+}
+.r3d-side-panel{
+  width:100%;
+  background:#10151c;
+  border-left:1px solid #1e2530;
+  padding:22px 18px;
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+  overflow-y:auto;
+}
+.r3d-panel-section h3{
+  font-size:10px;
+  font-weight:700;
+  color:#94a3b8;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  margin-bottom:14px;
+}
+.r3d-info-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:8px 0;
+  border-bottom:1px solid #1a2030;
+}
+.r3d-info-row:last-child{border-bottom:none;}
+.r3d-info-label{
+  font-size:12px;
+  color:#94a3b8;
+}
+.r3d-info-value{
+  font-size:13px;
+  font-weight:600;
+  color:#ffffff;
+  text-align:right;
+}
+.r3d-info-value.ok{color:#6ee7b7;}
+.r3d-info-value.warn{color:#fbbf24;}
+.r3d-info-value.hot{color:#ff9d73;}
+.r3d-control-group{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.r3d-control-btn{
+  font-size:12px;
+  font-weight:700;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid #2a3140;
+  background:linear-gradient(180deg,#1a2030,#151c29);
+  color:#d7deea;
+  cursor:pointer;
+  transition:all .2s ease;
+  text-align:left;
+}
+.r3d-control-btn:hover{
+  background:linear-gradient(180deg,#222a3a,#192334);
+  color:#ffffff;
+  border-color:#3a4355;
+}
+.r3d-legend{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.r3d-legend-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  color:#aab4c4;
+}
+.r3d-legend-swatch{
+  width:12px;
+  height:12px;
+  border-radius:3px;
+  flex:0 0 auto;
+}
+body.light-theme .r3d-stage-card{
+  border-color:rgba(67,96,136,0.22);
+  background:
+    radial-gradient(120% 100% at 50% -12%,rgba(232,81,26,0.08) 0%,rgba(232,81,26,0) 52%),
+    linear-gradient(180deg,#f8fbff 0%,#ecf2f8 100%);
+  box-shadow:0 16px 38px rgba(14,24,42,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+body.light-theme .r3d-stage-title{color:#0f172a;}
+body.light-theme .r3d-stage-subtitle{color:#64748b;}
+body.light-theme .r3d-canvas-area{background:#0b0f14;}
+body.light-theme .r3d-side-panel{
+  background:linear-gradient(180deg,#eef4fa,#e7eef7);
+  border-left-color:rgba(67,96,136,0.18);
+}
+body.light-theme .r3d-panel-section h3,
+body.light-theme .r3d-info-label{color:#64748b;}
+body.light-theme .r3d-info-value{color:#0f172a;}
+body.light-theme .r3d-info-row{border-bottom-color:rgba(67,96,136,0.12);}
+body.light-theme .r3d-control-btn{
+  background:linear-gradient(180deg,#ffffff,#edf3fa);
+  border-color:rgba(67,96,136,0.22);
+  color:#24364d;
+}
+body.light-theme .r3d-control-btn:hover{
+  background:linear-gradient(180deg,#ffffff,#e7eef8);
+  color:#0f172a;
+  border-color:rgba(67,96,136,0.3);
+}
+body.light-theme .r3d-legend-item{color:#4b5f78;}
+@media (max-width:1180px){
+  .r3d-main{
+    grid-template-columns:1fr;
+  }
+  .r3d-side-panel{
+    border-left:none;
+    border-top:1px solid #1e2530;
+  }
 }
 
 /* Add bottom padding to body so content isn't hidden under tab bar */
@@ -11047,7 +11254,62 @@ html, body, body *, body *::before, body *::after, svg text{
   </div>
 
   <div id="tab-reformer3d" class="tab-panel">
-    <div style="padding:24px 28px;max-width:1680px;margin:0 auto;"></div>
+    <div class="r3d-shell">
+      <div class="r3d-stage-card">
+        <div class="r3d-stage-header">
+          <div>
+            <div class="r3d-stage-title">Reformer 3D Viewer</div>
+            <div class="r3d-stage-subtitle">Dual-chamber furnace model with peep-hole faces, vertical tubes, and common header tube.</div>
+          </div>
+          <div class="r3d-stage-badge">Desktop 3D</div>
+        </div>
+        <div class="r3d-main">
+          <div class="r3d-canvas-area">
+            <div id="reformer3d-status" class="r3d-status"></div>
+            <canvas id="reformer3d-canvas"></canvas>
+            <div class="r3d-canvas-hint">Click and drag to rotate · Scroll to zoom</div>
+          </div>
+          <div class="r3d-side-panel">
+            <div class="r3d-panel-section">
+              <h3>Burner Unit Info</h3>
+              <div class="r3d-info-row"><span class="r3d-info-label">Unit Type</span><span class="r3d-info-value">Dual-Chamber Furnace</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Unit ID</span><span class="r3d-info-value">GR-BU-017</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Status</span><span class="r3d-info-value ok">Operational</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Tubes/Chamber</span><span class="r3d-info-value">8</span></div>
+            </div>
+            <div class="r3d-panel-section">
+              <h3>Live Parameters</h3>
+              <div class="r3d-info-row"><span class="r3d-info-label">Chamber A Temp</span><span class="r3d-info-value hot">842 °C</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Chamber B Temp</span><span class="r3d-info-value hot">818 °C</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Header Pressure</span><span class="r3d-info-value warn">3.2 bar</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Flame Status</span><span class="r3d-info-value ok">Active</span></div>
+              <div class="r3d-info-row"><span class="r3d-info-label">Fuel Flow</span><span class="r3d-info-value">124 m³/h</span></div>
+            </div>
+            <div class="r3d-panel-section">
+              <h3>Legend</h3>
+              <div class="r3d-legend">
+                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#A0887A"></div>Chamber Walls (Silver-Rust)</div>
+                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#B0A090"></div>Header Slab</div>
+                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#1a1a1a"></div>Interior (Black)</div>
+                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#8899AA"></div>Vertical Tubes</div>
+                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#7090A8"></div>Common Header Tube</div>
+                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#334155"></div>Base Platform</div>
+              </div>
+            </div>
+            <div class="r3d-panel-section">
+              <h3>Controls</h3>
+              <div class="r3d-control-group">
+                <button class="r3d-control-btn" type="button" onclick="r3dResetCam()">⟲ Reset View</button>
+                <button class="r3d-control-btn" type="button" onclick="r3dViewFront()">◉ Front View (Peep Holes)</button>
+                <button class="r3d-control-btn" type="button" onclick="r3dViewSide()">◉ Side View (Large Face)</button>
+                <button class="r3d-control-btn" type="button" onclick="r3dViewTop()">◉ Top View</button>
+                <button class="r3d-control-btn" type="button" onclick="r3dToggleAutoRotate()">↻ Auto Rotate</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- TAB 1: Burner Data & Analysis -->
@@ -14730,6 +14992,426 @@ function handleGlobalRefreshClick(){
   smartRefresh();
 }
 
+var reformer3DState = {
+  initialized:false,
+  initRequested:false,
+  renderer:null,
+  camera:null,
+  scene:null,
+  pivotGroup:null,
+  autoRotate:true,
+  isDragging:false,
+  prevMouse:{x:0,y:0},
+  rotation:{x:-0.3,y:0.5},
+  camDist:16
+};
+
+function r3dCanvas(){
+  return document.getElementById("reformer3d-canvas");
+}
+
+function r3dStatusEl(){
+  return document.getElementById("reformer3d-status");
+}
+
+function r3dSetStatus(msg){
+  var el = r3dStatusEl();
+  if(!el) return;
+  if(msg){
+    el.textContent = String(msg);
+    el.style.display = "block";
+  }else{
+    el.textContent = "";
+    el.style.display = "none";
+  }
+}
+
+function r3dIsActive(){
+  var tab = document.getElementById("tab-reformer3d");
+  return !!(tab && tab.classList.contains("tab-active"));
+}
+
+function r3dUpdateCamera(){
+  if(!reformer3DState.camera) return;
+  reformer3DState.camera.position.set(0, 5, reformer3DState.camDist);
+  reformer3DState.camera.lookAt(0, 1.5, 0);
+}
+
+function r3dResize(){
+  if(!reformer3DState.initialized || !reformer3DState.renderer || !reformer3DState.camera) return;
+  var canvas = r3dCanvas();
+  if(!canvas || !canvas.parentElement) return;
+  var rect = canvas.parentElement.getBoundingClientRect();
+  if(rect.width < 40 || rect.height < 40) return;
+  reformer3DState.camera.aspect = rect.width / rect.height;
+  reformer3DState.camera.updateProjectionMatrix();
+  reformer3DState.renderer.setSize(rect.width, rect.height, false);
+  reformer3DState.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  r3dUpdateCamera();
+}
+
+function r3dMakeFace(fW, fH, h, y1, y2){
+  var s = new THREE.Shape();
+  s.moveTo(0,0); s.lineTo(fW,0); s.lineTo(fW,fH); s.lineTo(0,fH); s.lineTo(0,0);
+  var cx = fW / 2;
+  var h1 = new THREE.Path();
+  h1.moveTo(cx-h/2,y1-h/2); h1.lineTo(cx+h/2,y1-h/2); h1.lineTo(cx+h/2,y1+h/2); h1.lineTo(cx-h/2,y1+h/2); h1.lineTo(cx-h/2,y1-h/2);
+  s.holes.push(h1);
+  var h2 = new THREE.Path();
+  h2.moveTo(cx-h/2,y2-h/2); h2.lineTo(cx+h/2,y2-h/2); h2.lineTo(cx+h/2,y2+h/2); h2.lineTo(cx-h/2,y2+h/2); h2.lineTo(cx-h/2,y2-h/2);
+  s.holes.push(h2);
+  return s;
+}
+
+function r3dAddFrame(parent, x, y, z, size){
+  var s = size / 2 + 0.04;
+  var pts = [
+    new THREE.Vector3(-s,-s,0),
+    new THREE.Vector3(s,-s,0),
+    new THREE.Vector3(s,s,0),
+    new THREE.Vector3(-s,s,0),
+    new THREE.Vector3(-s,-s,0)
+  ];
+  var fr = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({color:0xCCBBAA, transparent:true, opacity:0.7})
+  );
+  fr.position.set(x, y, z);
+  if(z < 0) fr.rotation.y = Math.PI;
+  parent.add(fr);
+}
+
+function r3dAddLabel(text, x, y, z){
+  var c = document.createElement("canvas");
+  c.width = 450;
+  c.height = 64;
+  var ctx = c.getContext("2d");
+  ctx.font = "600 20px Times New Roman, serif";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 225, 32);
+  var tex = new THREE.CanvasTexture(c);
+  var mat = new THREE.SpriteMaterial({map:tex, transparent:true, opacity:0.6});
+  var sp = new THREE.Sprite(mat);
+  sp.position.set(x, y, z);
+  sp.scale.set(3.2, 0.5, 1);
+  reformer3DState.pivotGroup.add(sp);
+}
+
+function r3dBuildChamber(xCenter, dims, mats){
+  var g = new THREE.Group();
+  g.position.set(xCenter, 0, 0);
+
+  var inner = new THREE.Mesh(
+    new THREE.BoxGeometry(dims.sX-dims.wallT*2-0.02, dims.sY-dims.wallT*2-0.02, dims.sZ-dims.wallT*2-0.02),
+    mats.blackMat
+  );
+  inner.position.set(0, dims.sY/2, 0);
+  g.add(inner);
+
+  var pL = new THREE.PointLight(0xFF4422, 0.15, 3);
+  pL.position.set(0, dims.sY/2, 0);
+  g.add(pL);
+
+  var lw = new THREE.Mesh(new THREE.BoxGeometry(dims.wallT, dims.sY, dims.sZ), mats.rustMat);
+  lw.position.set(-dims.sX/2+dims.wallT/2, dims.sY/2, 0);
+  lw.castShadow = true;
+  g.add(lw);
+
+  var rw = new THREE.Mesh(new THREE.BoxGeometry(dims.wallT, dims.sY, dims.sZ), mats.rustMat);
+  rw.position.set(dims.sX/2-dims.wallT/2, dims.sY/2, 0);
+  rw.castShadow = true;
+  g.add(rw);
+
+  var tw = new THREE.Mesh(new THREE.BoxGeometry(dims.sX, dims.wallT, dims.sZ), mats.rustMat);
+  tw.position.set(0, dims.sY-dims.wallT/2, 0);
+  g.add(tw);
+
+  var bw = new THREE.Mesh(new THREE.BoxGeometry(dims.sX, dims.wallT, dims.sZ), mats.rustMat);
+  bw.position.set(0, dims.wallT/2, 0);
+  g.add(bw);
+
+  var frontShape = r3dMakeFace(dims.sX, dims.sY, dims.hs, dims.hy1, dims.hy2);
+  var frontGeo = new THREE.ExtrudeGeometry(frontShape, {depth:dims.wallT, bevelEnabled:false});
+  var frontW = new THREE.Mesh(frontGeo, mats.rustMat);
+  frontW.position.set(-dims.sX/2, 0, dims.sZ/2-dims.wallT);
+  frontW.castShadow = true;
+  g.add(frontW);
+
+  var backShape = r3dMakeFace(dims.sX, dims.sY, dims.hs, dims.hy1, dims.hy2);
+  var backGeo = new THREE.ExtrudeGeometry(backShape, {depth:dims.wallT, bevelEnabled:false});
+  var backW = new THREE.Mesh(backGeo, mats.rustMat);
+  backW.position.set(-dims.sX/2, 0, -dims.sZ/2);
+  backW.castShadow = true;
+  g.add(backW);
+
+  r3dAddFrame(g, 0, dims.hy1, dims.sZ/2+0.01, dims.hs);
+  r3dAddFrame(g, 0, dims.hy2, dims.sZ/2+0.01, dims.hs);
+  r3dAddFrame(g, 0, dims.hy1, -dims.sZ/2-0.01, dims.hs);
+  r3dAddFrame(g, 0, dims.hy2, -dims.sZ/2-0.01, dims.hs);
+
+  var wire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(dims.sX, dims.sY, dims.sZ)), mats.edgeMat);
+  wire.position.set(0, dims.sY/2, 0);
+  g.add(wire);
+
+  var vertTop = dims.sY + dims.hdrH + 0.1;
+  for(var i=0; i<dims.tubeCount; i++){
+    var tz = dims.tubeZStart + i * dims.tubeSpacing;
+    var vGeo = new THREE.CylinderGeometry(dims.tubeR, dims.tubeR, vertTop, 12);
+    var vt = new THREE.Mesh(vGeo, mats.tubeMat);
+    vt.position.set(0, vertTop/2, tz);
+    vt.castShadow = true;
+    g.add(vt);
+  }
+
+  return g;
+}
+
+function initReformer3DTab(){
+  if(reformer3DState.initialized || reformer3DState.initRequested) return;
+  reformer3DState.initRequested = true;
+
+  if(typeof THREE === "undefined"){
+    r3dSetStatus("3D library failed to load.");
+    reformer3DState.initRequested = false;
+    return;
+  }
+
+  var canvas = r3dCanvas();
+  if(!canvas || !canvas.parentElement){
+    reformer3DState.initRequested = false;
+    return;
+  }
+
+  var rect = canvas.parentElement.getBoundingClientRect();
+  if(rect.width < 40 || rect.height < 40){
+    reformer3DState.initRequested = false;
+    setTimeout(function(){
+      if(r3dIsActive()) initReformer3DTab();
+    }, 120);
+    return;
+  }
+
+  try{
+    var scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0B0F14);
+
+    var camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.1, 1000);
+    var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+    renderer.setSize(rect.width, rect.height, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.9);
+    dl.position.set(6, 12, 10);
+    dl.castShadow = true;
+    scene.add(dl);
+    var fl = new THREE.DirectionalLight(0x8899AA, 0.3);
+    fl.position.set(-6, 4, -6);
+    scene.add(fl);
+    var wl = new THREE.PointLight(0xFFAA66, 0.3, 20);
+    wl.position.set(0, 6, 8);
+    scene.add(wl);
+
+    var pivotGroup = new THREE.Group();
+    scene.add(pivotGroup);
+
+    reformer3DState.scene = scene;
+    reformer3DState.camera = camera;
+    reformer3DState.renderer = renderer;
+    reformer3DState.pivotGroup = pivotGroup;
+
+    var dims = {
+      sX:1.8, sY:3.5, sZ:5.0, wallT:0.15, gap:3.5,
+      hs:0.5, hdrH:0.2, tubeCount:8, tubeR:0.06, commonTubeR:0.15
+    };
+    dims.hy1 = dims.sY * 0.33;
+    dims.hy2 = dims.sY * 0.68;
+    dims.tubeZStart = -(dims.sZ - 0.6) / 2;
+    dims.tubeSpacing = (dims.sZ - 0.6) / (dims.tubeCount - 1);
+    dims.commonTubeY = dims.sY + dims.hdrH + 0.35;
+    dims.chamberAx = -dims.gap/2 - dims.sX/2;
+    dims.chamberBx = dims.gap/2 + dims.sX/2;
+
+    var mats = {
+      rustMat:new THREE.MeshStandardMaterial({color:0x9A8578, metalness:0.65, roughness:0.45, side:THREE.DoubleSide}),
+      headerMat:new THREE.MeshStandardMaterial({color:0xB0A090, metalness:0.6, roughness:0.4}),
+      blackMat:new THREE.MeshStandardMaterial({color:0x0A0A0A, metalness:0.1, roughness:0.8, side:THREE.DoubleSide}),
+      tubeMat:new THREE.MeshStandardMaterial({color:0x8899AA, metalness:0.75, roughness:0.3}),
+      commonTubeMat:new THREE.MeshStandardMaterial({color:0x7090A8, metalness:0.7, roughness:0.25}),
+      baseMat:new THREE.MeshStandardMaterial({color:0x334155, metalness:0.2, roughness:0.7}),
+      edgeMat:new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.25})
+    };
+
+    pivotGroup.add(r3dBuildChamber(dims.chamberAx, dims, mats));
+    pivotGroup.add(r3dBuildChamber(dims.chamberBx, dims, mats));
+
+    var commonTubeLen = dims.sZ + 0.4;
+    var ctGeo = new THREE.CylinderGeometry(dims.commonTubeR, dims.commonTubeR, commonTubeLen, 16);
+    var ctTube = new THREE.Mesh(ctGeo, mats.commonTubeMat);
+    ctTube.rotation.x = Math.PI / 2;
+    ctTube.position.set(0, dims.commonTubeY, 0);
+    ctTube.castShadow = true;
+    pivotGroup.add(ctTube);
+
+    var capGeo = new THREE.SphereGeometry(dims.commonTubeR, 12, 12);
+    var capF = new THREE.Mesh(capGeo, mats.commonTubeMat);
+    capF.position.set(0, dims.commonTubeY, commonTubeLen/2);
+    pivotGroup.add(capF);
+    var capB = new THREE.Mesh(capGeo, mats.commonTubeMat);
+    capB.position.set(0, dims.commonTubeY, -commonTubeLen/2);
+    pivotGroup.add(capB);
+
+    function addConnectors(chamberX){
+      for(var i=0; i<dims.tubeCount; i++){
+        var tz = dims.tubeZStart + i * dims.tubeSpacing;
+        var ax = chamberX, ay = dims.sY + dims.hdrH + 0.1, az = tz;
+        var bx = 0, by = dims.commonTubeY, bz = tz;
+        var dx = bx - ax, dy = by - ay, dz = bz - az;
+        var lenAB = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        var connGeo = new THREE.CylinderGeometry(dims.tubeR, dims.tubeR, lenAB, 8);
+        var conn = new THREE.Mesh(connGeo, mats.tubeMat);
+        conn.position.set((ax+bx)/2, (ay+by)/2, (az+bz)/2);
+        var dir = new THREE.Vector3(dx,dy,dz).normalize();
+        var up = new THREE.Vector3(0,1,0);
+        var quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
+        conn.setRotationFromQuaternion(quat);
+        conn.castShadow = true;
+        pivotGroup.add(conn);
+      }
+    }
+
+    addConnectors(dims.chamberAx);
+    addConnectors(dims.chamberBx);
+
+    var hdrW = dims.gap + dims.sX * 2;
+    var hdrGeo = new THREE.BoxGeometry(hdrW, dims.hdrH, dims.sZ);
+    var hdr = new THREE.Mesh(hdrGeo, mats.headerMat);
+    hdr.position.set(0, dims.sY + dims.hdrH/2, 0);
+    hdr.castShadow = true;
+    pivotGroup.add(hdr);
+    var hdrEdge = new THREE.LineSegments(new THREE.EdgesGeometry(hdrGeo), mats.edgeMat);
+    hdrEdge.position.set(0, dims.sY + dims.hdrH/2, 0);
+    pivotGroup.add(hdrEdge);
+
+    var bGeo = new THREE.BoxGeometry(hdrW + 1.5, 0.12, dims.sZ + 1.5);
+    var base = new THREE.Mesh(bGeo, mats.baseMat);
+    base.position.set(0, -0.06, 0);
+    base.receiveShadow = true;
+    pivotGroup.add(base);
+    var bEdge = new THREE.LineSegments(new THREE.EdgesGeometry(bGeo), mats.edgeMat);
+    bEdge.position.set(0, -0.06, 0);
+    pivotGroup.add(bEdge);
+
+    var grid = new THREE.GridHelper(24, 48, 0x1A2030, 0x1A2030);
+    grid.position.set(0, -0.07, 0);
+    pivotGroup.add(grid);
+
+    r3dAddLabel("Chamber A", dims.chamberAx, dims.commonTubeY+0.7, 0);
+    r3dAddLabel("Chamber B", dims.chamberBx, dims.commonTubeY+0.7, 0);
+    r3dAddLabel("Common Header Tube", 0, dims.commonTubeY+0.5, dims.sZ/2+1.2);
+    r3dAddLabel("← Front", 0, -0.6, dims.sZ/2+1.2);
+    r3dAddLabel("Back →", 0, -0.6, -dims.sZ/2-1.2);
+
+    canvas.addEventListener("mousedown", function(e){
+      reformer3DState.isDragging = true;
+      reformer3DState.autoRotate = false;
+      reformer3DState.prevMouse = {x:e.clientX, y:e.clientY};
+    });
+    canvas.addEventListener("mousemove", function(e){
+      if(!reformer3DState.isDragging) return;
+      reformer3DState.rotation.y += (e.clientX - reformer3DState.prevMouse.x) * 0.005;
+      reformer3DState.rotation.x += (e.clientY - reformer3DState.prevMouse.y) * 0.005;
+      reformer3DState.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, reformer3DState.rotation.x));
+      reformer3DState.prevMouse = {x:e.clientX, y:e.clientY};
+    });
+    canvas.addEventListener("mouseup", function(){ reformer3DState.isDragging = false; });
+    canvas.addEventListener("mouseleave", function(){ reformer3DState.isDragging = false; });
+    canvas.addEventListener("wheel", function(e){
+      e.preventDefault();
+      reformer3DState.camDist += e.deltaY * 0.01;
+      reformer3DState.camDist = Math.max(4, Math.min(35, reformer3DState.camDist));
+    }, { passive:false });
+
+    var touchState = null;
+    canvas.addEventListener("touchstart", function(e){
+      if(e.touches.length === 1){
+        reformer3DState.isDragging = true;
+        reformer3DState.autoRotate = false;
+        touchState = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+      }
+    }, { passive:true });
+    canvas.addEventListener("touchmove", function(e){
+      if(!reformer3DState.isDragging || !touchState) return;
+      e.preventDefault();
+      reformer3DState.rotation.y += (e.touches[0].clientX - touchState.x) * 0.005;
+      reformer3DState.rotation.x += (e.touches[0].clientY - touchState.y) * 0.005;
+      reformer3DState.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, reformer3DState.rotation.x));
+      touchState = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+    }, { passive:false });
+    canvas.addEventListener("touchend", function(){
+      reformer3DState.isDragging = false;
+      touchState = null;
+    });
+
+    reformer3DState.initialized = true;
+    reformer3DState.initRequested = false;
+    r3dUpdateCamera();
+    r3dSetStatus("");
+
+    (function animate(){
+      if(!reformer3DState.initialized || !reformer3DState.renderer || !reformer3DState.camera || !reformer3DState.pivotGroup) return;
+      requestAnimationFrame(animate);
+      if(reformer3DState.autoRotate) reformer3DState.rotation.y += 0.003;
+      reformer3DState.pivotGroup.rotation.x = reformer3DState.rotation.x;
+      reformer3DState.pivotGroup.rotation.y = reformer3DState.rotation.y;
+      r3dUpdateCamera();
+      if(r3dIsActive()){
+        reformer3DState.renderer.render(reformer3DState.scene, reformer3DState.camera);
+      }
+    })();
+
+    if(r3dIsActive()){
+      reformer3DState.renderer.render(reformer3DState.scene, reformer3DState.camera);
+    }
+  }catch(err){
+    reformer3DState.initRequested = false;
+    reformer3DState.initialized = false;
+    console.warn("initReformer3DTab failed:", err);
+    r3dSetStatus("Unable to load 3D reformer viewer.");
+  }
+}
+
+function r3dResetCam(){
+  reformer3DState.rotation = {x:-0.3, y:0.5};
+  reformer3DState.camDist = 16;
+  reformer3DState.autoRotate = true;
+}
+
+function r3dViewFront(){
+  reformer3DState.rotation = {x:-0.08, y:0};
+  reformer3DState.camDist = 14;
+  reformer3DState.autoRotate = false;
+}
+
+function r3dViewSide(){
+  reformer3DState.rotation = {x:-0.15, y:-Math.PI/2};
+  reformer3DState.camDist = 14;
+  reformer3DState.autoRotate = false;
+}
+
+function r3dViewTop(){
+  reformer3DState.rotation = {x:-Math.PI/2.2, y:0};
+  reformer3DState.camDist = 16;
+  reformer3DState.autoRotate = false;
+}
+
+function r3dToggleAutoRotate(){
+  reformer3DState.autoRotate = !reformer3DState.autoRotate;
+}
+
 function switchTab(tab){
   if(tab !== 'heatmap' && typeof setHeatMapCuboidZoom === 'function'){
     setHeatMapCuboidZoom(false);
@@ -14742,6 +15424,12 @@ function switchTab(tab){
   syncHeatMapHeaderTools(tab);
   if(tab === 'alarms') refreshAlarmPanel();
   if(tab === 'heatmap' && typeof requestHeatMapRender === 'function') requestHeatMapRender(40);
+  if(tab === 'reformer3d'){
+    setTimeout(function(){
+      initReformer3DTab();
+      r3dResize();
+    }, 40);
+  }
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
   updateGlobalRefreshButtonLabel(tab);
@@ -14761,6 +15449,7 @@ window.addEventListener("resize", function(){
   burnerMobileResizeTimer = setTimeout(function(){
     applyBurnerMobileWallFilter();
     applyMobileHorizontalScrollFixes();
+    r3dResize();
     if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
   }, 120);
 });
@@ -14768,6 +15457,7 @@ window.addEventListener("orientationchange", function(){
   setTimeout(function(){
     applyBurnerMobileWallFilter();
     applyMobileHorizontalScrollFixes();
+    r3dResize();
     if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
   }, 120);
 });
