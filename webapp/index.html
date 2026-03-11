@@ -234,6 +234,26 @@ body.light-theme #hm-td-saved-table td{color:#1e293b;border-color:#dde8f4;}
 body.light-theme .theme-toggle-wrap{color:#2a4a6a;}
 body.light-theme .theme-slider{background:#334155;}
 body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;}
+body.light-theme .interface-mode-wrap{
+  background:linear-gradient(180deg,#ffffff 0%,#eef4fb 100%);
+  border-color:rgba(100,116,139,0.22);
+}
+body.light-theme .interface-mode-title{color:#334155;}
+body.light-theme .interface-mode-btn{
+  background:linear-gradient(180deg,#ffffff 0%,#edf3fa 100%);
+  border-color:rgba(100,116,139,0.24);
+  color:#1f2937;
+}
+body.light-theme .interface-mode-btn:hover{
+  border-color:rgba(59,130,246,0.36);
+  color:#111827;
+}
+body.light-theme .interface-mode-btn.active{
+  background:linear-gradient(180deg,rgba(243,112,34,0.22),rgba(243,112,34,0.1));
+  border-color:rgba(243,112,34,0.48);
+  color:#7c2d12;
+}
+body.light-theme .interface-mode-note{color:#64748b;}
 
 /* ====================================================
    LOGIN — IOCL CORPORATE  (High-Contrast Vibrant)
@@ -855,6 +875,53 @@ body.light-theme .theme-toggle input:checked + .theme-slider{background:#94b4d8;
   min-height:34px;
   box-sizing:border-box;
   justify-content:flex-start;
+}
+.interface-mode-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.16);
+  border-radius:8px;
+  padding:9px 10px;
+}
+.interface-mode-title{
+  font-size:11px;
+  font-weight:700;
+  color:#cbd5e1;
+  letter-spacing:0.45px;
+}
+.interface-mode-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+.interface-mode-btn{
+  min-height:34px;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,0.22);
+  background:linear-gradient(180deg,rgba(15,31,56,0.92),rgba(9,20,38,0.96));
+  color:#dbe7f4;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.3px;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+.interface-mode-btn:hover{
+  border-color:rgba(126,200,240,0.44);
+  color:#ffffff;
+}
+.interface-mode-btn.active{
+  background:linear-gradient(180deg,rgba(243,112,34,0.28),rgba(243,112,34,0.12));
+  border-color:rgba(243,112,34,0.52);
+  color:#ffe6d9;
+  box-shadow:0 8px 18px rgba(243,112,34,0.16), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.interface-mode-note{
+  font-size:10px;
+  color:#94a3b8;
+  line-height:1.35;
 }
 .app-topbar span{display:flex;align-items:center;gap:5px;}
 .app-topbar b{color:#c8dff5;font-weight:600;}
@@ -5576,6 +5643,9 @@ html, body, body *, body *::before, body *::after, svg text{
     font-size:10px !important;
     line-height:1.12 !important;
   }
+  .interface-mode-wrap{
+    display:none !important;
+  }
 
   #masterAlarm{
     left:10px !important;
@@ -6291,6 +6361,14 @@ html, body, body *, body *::before, body *::after, svg text{
         <div class="quick-menu-panel" id="quickMenuPanel" aria-hidden="true">
           <div id="syncDebugChip" class="sync-debug-chip sync-debug-info" title="Last sync endpoint status">
             <span id="syncDebugText" class="sync-debug-text">DBG SYNC -- · idle</span>
+          </div>
+          <div class="interface-mode-wrap" id="interfaceModeWrap">
+            <div class="interface-mode-title">🧭 Desktop Interface</div>
+            <div class="interface-mode-options">
+              <button type="button" class="interface-mode-btn" id="interfaceModeHeatBtn" onclick="setDesktopPrimaryInterfaceMode('heatmap')">Heat Map</button>
+              <button type="button" class="interface-mode-btn" id="interfaceMode3DBtn" onclick="setDesktopPrimaryInterfaceMode('reformer3d')">Reformer 3D</button>
+            </div>
+            <div class="interface-mode-note">Desktop shows one primary reformer view at a time. Mobile remains unchanged.</div>
           </div>
           <div class="theme-toggle-wrap" title="Toggle dark/light theme">
             <span>☀️</span>
@@ -12376,6 +12454,75 @@ function toggleQuickMenu(){
   }
 }
 
+var desktopPrimaryInterfaceMode = (function(){
+  try{
+    var saved = String(localStorage.getItem("desktopPrimaryInterfaceMode") || "").toLowerCase().trim();
+    return saved === "reformer3d" ? "reformer3d" : "heatmap";
+  }catch(e){
+    return "heatmap";
+  }
+})();
+
+function isDesktopPrimaryInterfaceViewport(){
+  return !(window.matchMedia && window.matchMedia("(max-width: 900px)").matches);
+}
+
+function getDesktopPrimaryInterfaceMode(){
+  return desktopPrimaryInterfaceMode === "reformer3d" ? "reformer3d" : "heatmap";
+}
+
+function updateDesktopPrimaryInterfacePickerUi(){
+  var isDesktop = isDesktopPrimaryInterfaceViewport();
+  var wrap = document.getElementById("interfaceModeWrap");
+  if(wrap) wrap.style.display = isDesktop ? "flex" : "none";
+  var mode = isDesktop ? getDesktopPrimaryInterfaceMode() : "heatmap";
+  var heatBtn = document.getElementById("interfaceModeHeatBtn");
+  var r3dBtn = document.getElementById("interfaceMode3DBtn");
+  if(heatBtn){
+    heatBtn.classList.toggle("active", mode === "heatmap");
+    heatBtn.setAttribute("aria-pressed", mode === "heatmap" ? "true" : "false");
+  }
+  if(r3dBtn){
+    r3dBtn.classList.toggle("active", mode === "reformer3d");
+    r3dBtn.setAttribute("aria-pressed", mode === "reformer3d" ? "true" : "false");
+  }
+}
+
+function applyDesktopPrimaryInterfaceMode(forceSwitch){
+  var isDesktop = isDesktopPrimaryInterfaceViewport();
+  var mode = isDesktop ? getDesktopPrimaryInterfaceMode() : "heatmap";
+  var heatBtn = document.getElementById("btab-heatmap");
+  var r3dBtn = document.getElementById("btab-reformer3d");
+  if(heatBtn) heatBtn.style.display = (mode === "heatmap" || !isDesktop) ? "" : "none";
+  if(r3dBtn) r3dBtn.style.display = (isDesktop && mode === "reformer3d") ? "" : "none";
+
+  updateDesktopPrimaryInterfacePickerUi();
+
+  if(!forceSwitch) return;
+  if(typeof isUserLoggedIn === "function" && !isUserLoggedIn()) return;
+  if(typeof switchTab !== "function") return;
+
+  var activePanel = document.querySelector(".tab-panel.tab-active");
+  var activeTab = activePanel && activePanel.id ? activePanel.id.replace("tab-","") : "heatmap";
+  if(!isDesktop){
+    if(activeTab === "reformer3d") switchTab("heatmap");
+    return;
+  }
+  if(mode === "heatmap" && activeTab === "reformer3d"){
+    switchTab("heatmap");
+  }else if(mode === "reformer3d" && activeTab === "heatmap"){
+    switchTab("reformer3d");
+  }
+}
+
+function setDesktopPrimaryInterfaceMode(mode){
+  var next = String(mode || "").toLowerCase().trim() === "reformer3d" ? "reformer3d" : "heatmap";
+  desktopPrimaryInterfaceMode = next;
+  try{ localStorage.setItem("desktopPrimaryInterfaceMode", next); }catch(e){}
+  applyDesktopPrimaryInterfaceMode(true);
+  closeQuickMenu();
+}
+
 function closeQuickMenu(){
   var panel = document.getElementById("quickMenuPanel");
   if(!panel) return;
@@ -15068,6 +15215,7 @@ function init(){
   startServerSaveWatcher();
   /* Render heatmap on load since it is the first visible tab */
   setTimeout(renderHeatMap, 0);
+  setTimeout(function(){ applyDesktopPrimaryInterfaceMode(true); }, 40);
 }
 
 /* auto-init for logged sessions is handled later, after sync stack initialization */
@@ -16090,6 +16238,7 @@ function switchTab(tab){
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
   updateGlobalRefreshButtonLabel(tab);
+  updateDesktopPrimaryInterfacePickerUi();
 }
 
 (function initHeatMapHeaderTools(){
@@ -16107,6 +16256,7 @@ window.addEventListener("resize", function(){
     applyBurnerMobileWallFilter();
     applyMobileHorizontalScrollFixes();
     r3dResize();
+    applyDesktopPrimaryInterfaceMode(true);
     if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
   }, 120);
 });
@@ -16115,6 +16265,7 @@ window.addEventListener("orientationchange", function(){
     applyBurnerMobileWallFilter();
     applyMobileHorizontalScrollFixes();
     r3dResize();
+    applyDesktopPrimaryInterfaceMode(true);
     if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
   }, 120);
 });
