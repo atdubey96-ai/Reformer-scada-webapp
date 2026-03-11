@@ -2481,6 +2481,7 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
     margin:4px 2px;
     border-radius:10px;
   }
+  #btab-reformer3d{display:none !important;}
   #btab-burner{order:1;}
   #btab-cleaning{order:2;}
   #btab-heatmap{order:3;}
@@ -7427,6 +7428,7 @@ html, body, body *, body *::before, body *::after, svg text{
         body:not(.light-theme) .tab-panels{background:linear-gradient(180deg,#050608 0%,#0a0d11 100%) !important;}
         body:not(.light-theme) .tab-panel{background:transparent !important;}
         body:not(.light-theme) #tab-heatmap{background:linear-gradient(180deg,#06070a 0%,#0b0e13 100%) !important;}
+        body:not(.light-theme) #tab-reformer3d{background:linear-gradient(180deg,#06070a 0%,#0b0e13 100%) !important;}
         body:not(.light-theme) #tab-burner{background:linear-gradient(180deg,#060709 0%,#0d1014 100%) !important;}
         body:not(.light-theme) #tab-cleaning{background:linear-gradient(180deg,#060806 0%,#0d110e 100%) !important;}
         body:not(.light-theme) #tab-tempdata{background:linear-gradient(180deg,#06070a 0%,#0d1014 100%) !important;}
@@ -7986,6 +7988,7 @@ html, body, body *, body *::before, body *::after, svg text{
         body .tab-panel{
           background:transparent !important;
         }
+        body #tab-reformer3d,
         body #tab-burner,
         body #tab-cleaning,
         body #tab-tempdata,
@@ -9025,6 +9028,7 @@ html, body, body *, body *::before, body *::after, svg text{
         body.light-theme .tab-panel,
         body.light-theme .wall-container,
         body.light-theme #tab-heatmap,
+        body.light-theme #tab-reformer3d,
         body.light-theme #tab-burner,
         body.light-theme #tab-cleaning,
         body.light-theme #tab-tempdata,
@@ -11015,6 +11019,10 @@ html, body, body *, body *::before, body *::after, svg text{
     </div>
   </div>
 
+  <div id="tab-reformer3d" class="tab-panel">
+    <div style="padding:24px 28px;max-width:1680px;margin:0 auto;"></div>
+  </div>
+
   <!-- TAB 1: Burner Data & Analysis -->
   <div id="tab-burner" class="tab-panel">
     <div class="legend">
@@ -11472,6 +11480,10 @@ html, body, body *, body *::before, body *::after, svg text{
   <button class="btab btab-active" id="btab-heatmap" class="btab btab-active" onclick="switchTab('heatmap')">
     <span class="btab-icon">🌡️</span>
     <span class="btab-label">Reformer Heat Map</span>
+  </button>
+  <button class="btab" id="btab-reformer3d" onclick="switchTab('reformer3d')">
+    <span class="btab-icon">🧱</span>
+    <span class="btab-label">Reformer 3D</span>
   </button>
   <button class="btab" id="btab-burner" onclick="switchTab('burner')">
     <span class="btab-icon">🔥</span>
