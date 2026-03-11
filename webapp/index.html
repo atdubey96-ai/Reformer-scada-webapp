@@ -15003,6 +15003,9 @@ var reformer3DState = {
   scene:null,
   pivotGroup:null,
   wallOverlays:{},
+  latestSnapshot:null,
+  overlayAnimPhase:0,
+  lastOverlayPaintAt:0,
   autoRotate:true,
   isDragging:false,
   prevMouse:{x:0,y:0},
@@ -15151,20 +15154,42 @@ function r3dCreateWallOverlay(dims, wallKey, side){
   tex.minFilter = THREE.LinearFilter;
   tex.magFilter = THREE.LinearFilter;
   tex.generateMipmaps = false;
-  var mat = new THREE.MeshBasicMaterial({
+  var matOuter = new THREE.MeshBasicMaterial({
     map:tex,
     transparent:true,
-    side:THREE.DoubleSide,
+    side:THREE.FrontSide,
     depthWrite:false
   });
-  var mesh = new THREE.Mesh(
+  var matInner = new THREE.MeshBasicMaterial({
+    map:tex,
+    transparent:true,
+    side:THREE.FrontSide,
+    depthWrite:false
+  });
+  var outerMesh = new THREE.Mesh(
     new THREE.PlaneGeometry(dims.sZ - 0.22, dims.sY - 0.18),
-    mat
+    matOuter
   );
-  mesh.position.set(side === "left" ? (-dims.sX/2 - 0.016) : (dims.sX/2 + 0.016), dims.sY/2, 0);
-  mesh.rotation.y = (side === "left") ? (-Math.PI / 2) : (Math.PI / 2);
-  mesh.renderOrder = 5;
-  return { wallKey:wallKey, side:side, canvas:canvas, texture:tex, material:mat, mesh:mesh };
+  var innerMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(dims.sZ - 0.22, dims.sY - 0.18),
+    matInner
+  );
+  outerMesh.position.set(side === "left" ? (-dims.sX/2 - 0.016) : (dims.sX/2 + 0.016), dims.sY/2, 0);
+  outerMesh.rotation.y = (side === "left") ? (-Math.PI / 2) : (Math.PI / 2);
+  outerMesh.renderOrder = 5;
+  innerMesh.position.set(side === "left" ? (-dims.sX/2 + dims.wallT + 0.018) : (dims.sX/2 - dims.wallT - 0.018), dims.sY/2, 0);
+  innerMesh.rotation.y = (side === "left") ? (Math.PI / 2) : (-Math.PI / 2);
+  innerMesh.renderOrder = 5;
+  return {
+    wallKey:wallKey,
+    side:side,
+    canvas:canvas,
+    texture:tex,
+    outerMaterial:matOuter,
+    innerMaterial:matInner,
+    outerMesh:outerMesh,
+    innerMesh:innerMesh
+  };
 }
 
 function r3dGetWallCleaningMap(wallKey){
@@ -15177,7 +15202,7 @@ function r3dGetWallCleaningMap(wallKey){
   return view[wallKey] || {};
 }
 
-function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned){
+function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase){
   var s = String(state || "C").toUpperCase();
   if(s !== "O" && s !== "N" && s !== "B") s = "C";
   var palette = {
@@ -15186,6 +15211,9 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned){
     B:{flame:"#2563eb", core:"#93c5fd", inner:"#dbeafe", stem:"#1d4ed8"},
     C:{flame:"#3a5068", core:"#556b85", inner:"#64748b", stem:"#233244"}
   }[s];
+  var pulse = (s === "C") ? 0 : (0.5 + 0.5 * Math.sin(animPhase || 0));
+  var lift = (s === "C") ? 0 : (2.5 + pulse * 2.5);
+  var glow = (s === "C") ? 0 : (6 + pulse * 10);
 
   if(s === "C"){
     ctx.fillStyle = palette.flame;
@@ -15199,26 +15227,30 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned){
     r3dRoundRectPath(ctx, x - 4, y + 8, 8, 14, 4);
     ctx.fill();
 
+    ctx.save();
+    ctx.shadowBlur = glow;
+    ctx.shadowColor = palette.flame;
     ctx.beginPath();
-    ctx.moveTo(x, y - 22);
-    ctx.bezierCurveTo(x + 14, y - 8, x + 9, y + 7, x, y + 10);
-    ctx.bezierCurveTo(x - 9, y + 7, x - 14, y - 8, x, y - 22);
+    ctx.moveTo(x, y - 22 - lift);
+    ctx.bezierCurveTo(x + 14, y - 8 - lift * 0.55, x + 9, y + 7, x, y + 10);
+    ctx.bezierCurveTo(x - 9, y + 7, x - 14, y - 8 - lift * 0.55, x, y - 22 - lift);
     ctx.closePath();
     ctx.fillStyle = palette.flame;
     ctx.fill();
+    ctx.restore();
 
     ctx.beginPath();
-    ctx.moveTo(x, y - 13);
-    ctx.bezierCurveTo(x + 7, y - 5, x + 5, y + 3, x, y + 5);
-    ctx.bezierCurveTo(x - 5, y + 3, x - 7, y - 5, x, y - 13);
+    ctx.moveTo(x, y - 13 - lift * 0.55);
+    ctx.bezierCurveTo(x + 7, y - 5 - lift * 0.35, x + 5, y + 3, x, y + 5);
+    ctx.bezierCurveTo(x - 5, y + 3, x - 7, y - 5 - lift * 0.35, x, y - 13 - lift * 0.55);
     ctx.closePath();
     ctx.fillStyle = palette.core;
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(x, y - 7);
-    ctx.bezierCurveTo(x + 3, y - 3, x + 2, y + 1, x, y + 2);
-    ctx.bezierCurveTo(x - 2, y + 1, x - 3, y - 3, x, y - 7);
+    ctx.moveTo(x, y - 7 - lift * 0.3);
+    ctx.bezierCurveTo(x + 3, y - 3 - lift * 0.18, x + 2, y + 1, x, y + 2);
+    ctx.bezierCurveTo(x - 2, y + 1, x - 3, y - 3 - lift * 0.18, x, y - 7 - lift * 0.3);
     ctx.closePath();
     ctx.fillStyle = palette.inner;
     ctx.fill();
@@ -15432,14 +15464,22 @@ function r3dPaintWallOverlay(overlay, wallKey, snapshot){
       var state = String(rowData[ci] || "C").toUpperCase();
       var burnerX = gridLeft + slotW * (ci + 0.5);
       var cleaned = !!String(wallCleaning["R" + item + "B" + (ci + 1)] || "").trim();
-      r3dDrawBurnerGlyph(ctx, burnerX, centerY + 4, state, cleaned);
+      r3dDrawBurnerGlyph(ctx, burnerX, centerY + 4, state, cleaned, (reformer3DState.overlayAnimPhase || 0) + (ii * 0.55) + (ci * 0.28));
     }
   }
 
   overlay.texture.needsUpdate = true;
 }
 
+function r3dRefreshWallOverlays(snapshot){
+  if(!snapshot || !reformer3DState.wallOverlays) return;
+  ["A","B","C","D"].forEach(function(wallKey){
+    r3dPaintWallOverlay(reformer3DState.wallOverlays[wallKey], wallKey, snapshot);
+  });
+}
+
 function r3dSyncFromHeatMapSnapshot(snapshot){
+  reformer3DState.latestSnapshot = snapshot || null;
   if(!snapshot || !snapshot.hmData){
     r3dSetInfo("r3d-live-ab-temp", "-- °C");
     r3dSetInfo("r3d-live-cd-temp", "-- °C");
@@ -15463,9 +15503,7 @@ function r3dSyncFromHeatMapSnapshot(snapshot){
   r3dSetInfo("r3d-live-flame", flameText, activeBurners > 0 ? "ok" : "warn");
 
   if(!reformer3DState.initialized || !reformer3DState.wallOverlays) return;
-  ["A","B","C","D"].forEach(function(wallKey){
-    r3dPaintWallOverlay(reformer3DState.wallOverlays[wallKey], wallKey, snapshot);
-  });
+  r3dRefreshWallOverlays(snapshot);
 }
 
 function r3dBuildChamber(xCenter, dims, mats, chamberKey){
@@ -15502,8 +15540,10 @@ function r3dBuildChamber(xCenter, dims, mats, chamberKey){
   var rightOverlay = r3dCreateWallOverlay(dims, rightWallKey, "right");
   reformer3DState.wallOverlays[leftWallKey] = leftOverlay;
   reformer3DState.wallOverlays[rightWallKey] = rightOverlay;
-  g.add(leftOverlay.mesh);
-  g.add(rightOverlay.mesh);
+  g.add(leftOverlay.outerMesh);
+  g.add(leftOverlay.innerMesh);
+  g.add(rightOverlay.outerMesh);
+  g.add(rightOverlay.innerMesh);
 
   var tw = new THREE.Mesh(new THREE.BoxGeometry(dims.sX, dims.wallT, dims.sZ), mats.rustMat);
   tw.position.set(0, dims.sY-dims.wallT/2, 0);
@@ -15759,9 +15799,15 @@ function initReformer3DTab(){
     (function animate(){
       if(!reformer3DState.initialized || !reformer3DState.renderer || !reformer3DState.camera || !reformer3DState.pivotGroup) return;
       requestAnimationFrame(animate);
+      var now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+      reformer3DState.overlayAnimPhase = now * 0.0085;
       if(reformer3DState.autoRotate) reformer3DState.rotation.y += 0.003;
       reformer3DState.pivotGroup.rotation.x = reformer3DState.rotation.x;
       reformer3DState.pivotGroup.rotation.y = reformer3DState.rotation.y;
+      if(r3dIsActive() && reformer3DState.latestSnapshot && (now - reformer3DState.lastOverlayPaintAt) > 140){
+        reformer3DState.lastOverlayPaintAt = now;
+        r3dRefreshWallOverlays(reformer3DState.latestSnapshot);
+      }
       r3dUpdateCamera();
       if(r3dIsActive()){
         reformer3DState.renderer.render(reformer3DState.scene, reformer3DState.camera);
