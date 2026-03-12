@@ -3630,22 +3630,9 @@ body.light-theme #hm-td-saved-table .td-shift-generic{
   position:relative;
   contain:layout style;
 }
-.hm-burner-wrap > svg,
-.hm-burner-wrap > .hm-flame-asset{
-  position:relative;
-  z-index:1;
-}
-.hm-burner-wrap .hm-flame-asset{
-  width:20px;
-  height:28px;
-  object-fit:contain;
-  display:block;
-  filter:var(--hm-flame-filter,none);
-}
 .hm-burner-wrap:hover{transform:scale(1.35);}
 /* Active flames: flicker only on SVG */
-.hm-burner-wrap.hm-flame svg,
-.hm-burner-wrap.hm-flame .hm-flame-asset{
+.hm-burner-wrap.hm-flame svg{
   animation:hmFlameFlicker 1.8s ease-in-out infinite;
   transform-origin:50% 100%;
   will-change:transform,opacity;
@@ -3661,45 +3648,15 @@ body.light-theme #hm-td-saved-table .td-shift-generic{
   opacity:0.6;
   pointer-events:none;
 }
-.hm-flame-O{--hm-flame-filter:hue-rotate(95deg) saturate(1.22) brightness(0.98);}
-.hm-flame-N{--hm-flame-filter:saturate(1.03) brightness(1.02);}
-.hm-flame-B{--hm-flame-filter:hue-rotate(178deg) saturate(1.55) brightness(1.03);}
 .hm-flame-O::after{background:radial-gradient(ellipse,rgba(34,197,94,0.85) 0%,transparent 70%);box-shadow:0 0 7px 3px rgba(22,163,74,0.45);}
 .hm-flame-N::after{background:radial-gradient(ellipse,rgba(251,191,36,0.85) 0%,transparent 70%);box-shadow:0 0 7px 3px rgba(217,119,6,0.45);}
 .hm-flame-B::after{background:radial-gradient(ellipse,rgba(147,197,253,0.85) 0%,transparent 70%);box-shadow:0 0 7px 3px rgba(37,99,235,0.45);}
 /* Stagger SVG flicker across 5 groups for organic look */
-.hm-burners-line .hm-burner-wrap:nth-child(5n+1) svg,
-.hm-burners-line .hm-burner-wrap:nth-child(5n+1) .hm-flame-asset{animation-delay:0.1s;}
-.hm-burners-line .hm-burner-wrap:nth-child(5n+2) svg,
-.hm-burners-line .hm-burner-wrap:nth-child(5n+2) .hm-flame-asset{animation-delay:0.35s;}
-.hm-burners-line .hm-burner-wrap:nth-child(5n+3) svg,
-.hm-burners-line .hm-burner-wrap:nth-child(5n+3) .hm-flame-asset{animation-delay:0.7s;}
-.hm-burners-line .hm-burner-wrap:nth-child(5n+4) svg,
-.hm-burners-line .hm-burner-wrap:nth-child(5n+4) .hm-flame-asset{animation-delay:1.1s;}
-.hm-burners-line .hm-burner-wrap:nth-child(5n+5) svg,
-.hm-burners-line .hm-burner-wrap:nth-child(5n+5) .hm-flame-asset{animation-delay:0.55s;}
-.cb-face .hm-burner-wrap.hm-burner-smoke::before{
-  content:'';
-  position:absolute;
-  left:50%;
-  top:1px;
-  transform:translateX(-50%);
-  width:26px;
-  height:30px;
-  border-radius:999px;
-  background:radial-gradient(circle at 50% 42%,rgba(5,8,14,0.92) 0%,rgba(12,15,22,0.78) 34%,rgba(8,10,16,0.42) 58%,rgba(8,10,16,0) 84%);
-  opacity:0.96;
-  pointer-events:none;
-  z-index:0;
-}
-.cb-face .hm-burner-wrap.hm-burner-smoke svg,
-.cb-face .hm-burner-wrap.hm-burner-smoke .hm-flame-asset{
-  filter:var(--hm-flame-filter,none) brightness(0.38) saturate(0.62) contrast(1.02) !important;
-  opacity:0.96 !important;
-}
-.cb-face .hm-burner-wrap.hm-burner-smoke::after{
-  opacity:0.08 !important;
-}
+.hm-burners-line .hm-burner-wrap:nth-child(5n+1) svg{animation-delay:0.1s;}
+.hm-burners-line .hm-burner-wrap:nth-child(5n+2) svg{animation-delay:0.35s;}
+.hm-burners-line .hm-burner-wrap:nth-child(5n+3) svg{animation-delay:0.7s;}
+.hm-burners-line .hm-burner-wrap:nth-child(5n+4) svg{animation-delay:1.1s;}
+.hm-burners-line .hm-burner-wrap:nth-child(5n+5) svg{animation-delay:0.55s;}
 /* Cleaning marker (hidden by default; enabled only on cuboid faces) */
 .hm-clean-dot{
   display:none;
@@ -3855,12 +3812,6 @@ body.light-theme #hm-td-saved-table .td-shift-generic{
 }
 .hm-icon-picker-text{font-size:11px;letter-spacing:0.5px;opacity:0.9;}
 .hm-icon-picker-preview{font-size:14px;line-height:1;}
-.hm-icon-inline-asset{
-  width:15px;
-  height:15px;
-  object-fit:contain;
-  display:block;
-}
 .hm-icon-picker-caret{font-size:11px;opacity:0.9;}
 .hm-icon-menu{
   position:absolute;top:calc(100% + 6px);right:0;min-width:240px;
@@ -3974,11 +3925,7 @@ body.light-theme .hm-cuboid-heat-text{
 #hm-wall-panel-A .hm-burner-wrap svg,
 #hm-wall-panel-B .hm-burner-wrap svg,
 #hm-wall-panel-C .hm-burner-wrap svg,
-#hm-wall-panel-D .hm-burner-wrap svg,
-#hm-wall-panel-A .hm-burner-wrap .hm-flame-asset,
-#hm-wall-panel-B .hm-burner-wrap .hm-flame-asset,
-#hm-wall-panel-C .hm-burner-wrap .hm-flame-asset,
-#hm-wall-panel-D .hm-burner-wrap .hm-flame-asset{
+#hm-wall-panel-D .hm-burner-wrap svg{
   width:26px;height:36px;
 }
 /* Bottom wall tables: keep burner icons static (no flame animation) */
@@ -3993,12 +3940,7 @@ body.light-theme .hm-cuboid-heat-text{
 #hm-wall-panel-B .hm-burner-wrap.hm-flame svg,
 #hm-wall-panel-C .hm-burner-wrap.hm-flame svg,
 #hm-wall-panel-D .hm-burner-wrap.hm-flame svg,
-#hm-wall-panel-ALL .hm-burner-wrap.hm-flame svg,
-#hm-wall-panel-A .hm-burner-wrap.hm-flame .hm-flame-asset,
-#hm-wall-panel-B .hm-burner-wrap.hm-flame .hm-flame-asset,
-#hm-wall-panel-C .hm-burner-wrap.hm-flame .hm-flame-asset,
-#hm-wall-panel-D .hm-burner-wrap.hm-flame .hm-flame-asset,
-#hm-wall-panel-ALL .hm-burner-wrap.hm-flame .hm-flame-asset{
+#hm-wall-panel-ALL .hm-burner-wrap.hm-flame svg{
   animation:none !important;
 }
 #hm-wall-panel-A .hm-burner-wrap.hm-flame::after,
@@ -4659,7 +4601,7 @@ function tempToColor(val, minT, maxT){
 
 /* Burner Icon SVG presets for heat map walls + cuboid faces */
 var HM_BURNER_ICON_PRESETS = {
-  flame: { label:"Flame", glyph:"🔥", previewHtml:'<img class="hm-icon-inline-asset" src="flame-icon.avif" alt="Flame">' },
+  flame: { label:"Classic Flame", glyph:"🔥" },
   twin:  { label:"Twin Flame",    glyph:"♨️" },
   jet:   { label:"Jet Cone",      glyph:"⚡" },
   ring:  { label:"Halo Core",     glyph:"⭕" },
@@ -4688,9 +4630,6 @@ function getHeatMapBurnerIconPreset(key){
 
 function buildHeatMapActiveBurnerSvg(iconSet, c){
   var setKey = HM_BURNER_ICON_PRESETS[iconSet] ? iconSet : "flame";
-  if(setKey === "flame"){
-    return '<img class="hm-flame-asset" src="flame-icon.avif" alt="" draggable="false">';
-  }
   if(setKey === "twin"){
     return '<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">'
       + '<path d="M7.2 4.5 C5.7 7 4.7 8.8 5 11 C5.3 12.8 7.2 14 7.2 14 C7.2 14 9.1 12.8 9.4 11 C9.7 8.9 8.7 7.1 7.2 4.5Z" fill="'+c.flame+'" opacity="0.9"/>'
@@ -4785,15 +4724,14 @@ function buildHeatMapActiveBurnerSvg(iconSet, c){
     + '</svg>';
 }
 
-function burnerIconHTML(state, tip, burnerNum, cleanedDate, smokeHigh){
+function burnerIconHTML(state, tip, burnerNum, cleanedDate){
   var s = (state||"C").toUpperCase();
   var cleaned = !!String(cleanedDate || "").trim();
-  var smokeClass = smokeHigh ? " hm-burner-smoke" : "";
   var cleanTitle = cleaned ? ("Cleaned: " + formatYMDToDisplay(cleanedDate)) : "Not cleaned";
   var cleanClass = cleaned ? "hm-clean-dot hm-clean-yes" : "hm-clean-dot hm-clean-no";
   var finalTip = tip + " | " + cleanTitle;
   if(s === "C"){
-    return '<div class="hm-burner-wrap'+smokeClass+'" title="'+finalTip+'">'
+    return '<div class="hm-burner-wrap" title="'+finalTip+'">'
       + '<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">'
       + '<rect x="7" y="15" width="6" height="9" rx="2" fill="#2d3f55"/>'
       + '<rect x="5" y="23" width="10" height="3" rx="1.5" fill="#1e293b"/>'
@@ -4807,7 +4745,7 @@ function burnerIconHTML(state, tip, burnerNum, cleanedDate, smokeHigh){
   };
   var c = colors[s] || colors["N"];
   var iconSet = getHeatMapBurnerIconSet();
-  return '<div class="hm-burner-wrap hm-flame hm-flame-'+s+smokeClass+'" title="'+finalTip+'">'
+  return '<div class="hm-burner-wrap hm-flame hm-flame-'+s+'" title="'+finalTip+'">'
     + buildHeatMapActiveBurnerSvg(iconSet, c)
     + '<span class="'+cleanClass+'" aria-hidden="true"></span>'
     + '</div>';
@@ -4825,23 +4763,6 @@ function buildWallHTML(wallName, peepBotVals, peepTopVals, wallData){
   }
   var botRange = calcRange(peepBotVals);
   var topRange = calcRange(peepTopVals);
-  var smokeTargets = {};
-  function markSmoke(rowNum, burnerNum){
-    smokeTargets["R" + rowNum + "B" + burnerNum] = true;
-  }
-  function isHighPeep(val){
-    return val !== "" && val !== null && val !== undefined && !isNaN(Number(val)) && Number(val) > 970;
-  }
-  for(var smokeIdx = 0; smokeIdx < 15; smokeIdx++){
-    if(isHighPeep(peepTopVals[smokeIdx])){
-      markSmoke(4, smokeIdx + 1);
-      markSmoke(3, smokeIdx + 1);
-    }
-    if(isHighPeep(peepBotVals[smokeIdx])){
-      markSmoke(2, smokeIdx + 1);
-      markSmoke(1, smokeIdx + 1);
-    }
-  }
 
   /* Count burner states per row */
   function countStates(rowData){
@@ -4895,7 +4816,7 @@ function buildWallHTML(wallName, peepBotVals, peepTopVals, wallData){
       var key = "R" + displayRowNum + "B" + (ci+1);
       var cleanedDate = wallCleaning[key] || "";
       var tip = "Wall " + wallName + " R" + displayRowNum + " B" + (ci+1) + " [" + state + "]";
-      html += burnerIconHTML(state, tip, ci+1, cleanedDate, !!smokeTargets[key]);
+      html += burnerIconHTML(state, tip, ci+1, cleanedDate);
     }
     html += '</div>'
       + buildStateBadges(counts)
@@ -6491,12 +6412,12 @@ html, body, body *, body *::before, body *::after, svg text{
             <div class="hm-icon-picker" id="hm-icon-picker">
               <button type="button" class="hm-icon-picker-btn" id="hm-icon-picker-btn" onclick="toggleHeatMapIconMenu(event)" aria-haspopup="true" aria-expanded="false">
                 <span class="hm-icon-picker-text">Style</span>
-                <span class="hm-icon-picker-preview" id="hm-icon-picker-preview"><img class="hm-icon-inline-asset" src="flame-icon.avif" alt="Flame"></span>
-                <span id="hm-icon-picker-label">Flame</span>
+                <span class="hm-icon-picker-preview" id="hm-icon-picker-preview">🔥</span>
+                <span id="hm-icon-picker-label">Classic Flame</span>
                 <span class="hm-icon-picker-caret">▾</span>
               </button>
               <div class="hm-icon-menu" id="hm-icon-menu" role="menu" aria-label="Select burner icon style">
-                <button type="button" class="hm-icon-item" data-icon-set="flame" onclick="setHeatMapBurnerIconSet('flame', event)"><img class="hm-icon-inline-asset" src="flame-icon.avif" alt=""> Flame</button>
+                <button type="button" class="hm-icon-item" data-icon-set="flame" onclick="setHeatMapBurnerIconSet('flame', event)">🔥 Classic Flame</button>
                 <button type="button" class="hm-icon-item" data-icon-set="twin" onclick="setHeatMapBurnerIconSet('twin', event)">♨️ Twin Flame</button>
                 <button type="button" class="hm-icon-item" data-icon-set="jet" onclick="setHeatMapBurnerIconSet('jet', event)">⚡ Jet Cone</button>
                 <button type="button" class="hm-icon-item" data-icon-set="ring" onclick="setHeatMapBurnerIconSet('ring', event)">⭕ Halo Core</button>
@@ -6857,11 +6778,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
         /* Burner wrap & icon sizing */
         .cb-face .hm-burner-wrap        { width: 36px !important; }
-        .cb-face .hm-burner-wrap svg,
-        .cb-face .hm-burner-wrap .hm-flame-asset{
-          width: 28px !important;
-          height: 44px !important;
-        }
+        .cb-face .hm-burner-wrap svg    { width: 28px !important; height: 44px !important; }
 
         @keyframes cbFlameLite{
           0%,100%{transform:scaleY(1) scaleX(1);opacity:0.9;}
@@ -6874,35 +6791,18 @@ html, body, body *, body *::before, body *::after, svg text{
           content:none !important;
           display:none !important;
         }
-        .cb-face .hm-burner-wrap.hm-flame svg,
-        .cb-face .hm-burner-wrap.hm-flame .hm-flame-asset{
+        .cb-face .hm-burner-wrap.hm-flame svg{
           display:block !important;
           transform-origin:50% 100%;
           animation:cbFlameLite 2.25s ease-in-out infinite !important;
           will-change:auto;
-        }
-        .cb-face .hm-burner-wrap.hm-flame svg{
           filter:none !important;
         }
-        .cb-face .hm-burner-wrap.hm-flame .hm-flame-asset{
-          filter:var(--hm-flame-filter,none) !important;
-        }
-        .cb-face .hm-burner-wrap.hm-burner-smoke svg{
-          filter:brightness(0.38) saturate(0.62) contrast(1.02) !important;
-        }
-        .cb-face .hm-burner-wrap.hm-burner-smoke .hm-flame-asset{
-          filter:var(--hm-flame-filter,none) brightness(0.38) saturate(0.62) contrast(1.02) !important;
-        }
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+1).hm-flame svg,
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+1).hm-flame .hm-flame-asset{ animation-delay:0.10s; }
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+2).hm-flame svg,
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+2).hm-flame .hm-flame-asset{ animation-delay:0.70s; }
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+3).hm-flame svg,
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+3).hm-flame .hm-flame-asset{ animation-delay:1.30s; }
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+4).hm-flame svg,
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+4).hm-flame .hm-flame-asset{ animation-delay:2.00s; }
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+5).hm-flame svg,
-        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+5).hm-flame .hm-flame-asset{ animation-delay:2.60s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+1).hm-flame svg{ animation-delay:0.10s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+2).hm-flame svg{ animation-delay:0.70s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+3).hm-flame svg{ animation-delay:1.30s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+4).hm-flame svg{ animation-delay:2.00s; }
+        .cb-face .hm-burners-line .hm-burner-wrap:nth-child(5n+5).hm-flame svg{ animation-delay:2.60s; }
 
         /* Cuboid faces: keep subtle motion, but lighter than main wall tables */
         .cb-face .hm-burner-wrap:hover,
@@ -6917,8 +6817,7 @@ html, body, body *, body *::before, body *::after, svg text{
         .cb-face .hm-flame-O::after{background:radial-gradient(ellipse,rgba(34,197,94,0.45) 0%,transparent 74%) !important;box-shadow:none !important;}
         .cb-face .hm-flame-N::after{background:radial-gradient(ellipse,rgba(251,191,36,0.45) 0%,transparent 74%) !important;box-shadow:none !important;}
         .cb-face .hm-flame-B::after{background:radial-gradient(ellipse,rgba(147,197,253,0.45) 0%,transparent 74%) !important;box-shadow:none !important;}
-        .cb-peephole-content .hm-burner-wrap.hm-flame svg,
-        .cb-peephole-content .hm-burner-wrap.hm-flame .hm-flame-asset{
+        .cb-peephole-content .hm-burner-wrap.hm-flame svg{
           animation:none !important;
           opacity:0.82;
         }
@@ -6929,9 +6828,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
         /* Cuboid flame icons animate lightly; pause during heavy interactions */
         #tab-heatmap.hm-interacting .cb-face .hm-burner-wrap.hm-flame svg,
-        #tab-heatmap.hm-interacting .cb-face .hm-burner-wrap.hm-flame .hm-flame-asset,
-        #tab-heatmap.hm-interacting .cb-peephole-content .hm-burner-wrap.hm-flame svg,
-        #tab-heatmap.hm-interacting .cb-peephole-content .hm-burner-wrap.hm-flame .hm-flame-asset{
+        #tab-heatmap.hm-interacting .cb-peephole-content .hm-burner-wrap.hm-flame svg{
           animation-play-state:paused !important;
           opacity:0.82 !important;
         }
@@ -9021,8 +8918,7 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap .cb-face .hm-burner-wrap{
           width:clamp(30px,2.25vw,46px) !important;
         }
-        #tab-heatmap .cb-face .hm-burner-wrap svg,
-        #tab-heatmap .cb-face .hm-burner-wrap .hm-flame-asset{
+        #tab-heatmap .cb-face .hm-burner-wrap svg{
           width:clamp(24px,1.95vw,34px) !important;
           height:clamp(38px,3.25vw,56px) !important;
         }
@@ -9065,8 +8961,7 @@ html, body, body *, body *::before, body *::after, svg text{
           #tab-heatmap .cb-face .hm-burner-wrap{
             width:clamp(24px,4.4vw,32px) !important;
           }
-          #tab-heatmap .cb-face .hm-burner-wrap svg,
-          #tab-heatmap .cb-face .hm-burner-wrap .hm-flame-asset{
+          #tab-heatmap .cb-face .hm-burner-wrap svg{
             width:clamp(18px,3.4vw,24px) !important;
             height:clamp(28px,5.2vw,38px) !important;
           }
@@ -9130,8 +9025,7 @@ html, body, body *, body *::before, body *::after, svg text{
           display:flex !important;
           justify-content:center !important;
         }
-        #tab-heatmap .cb-face .hm-burner-wrap svg,
-        #tab-heatmap .cb-face .hm-burner-wrap .hm-flame-asset{
+        #tab-heatmap .cb-face .hm-burner-wrap svg{
           width:clamp(25px,calc(27px * var(--cb-front-scale)),60px) !important;
           height:clamp(39px,calc(39px * var(--cb-front-scale)),76px) !important;
         }
@@ -9206,8 +9100,7 @@ html, body, body *, body *::before, body *::after, svg text{
             max-width:clamp(24px,calc(24px * var(--cb-front-scale)),52px) !important;
             flex:1 1 0 !important;
           }
-          #tab-heatmap .cb-face .hm-burner-wrap svg,
-          #tab-heatmap .cb-face .hm-burner-wrap .hm-flame-asset{
+          #tab-heatmap .cb-face .hm-burner-wrap svg{
             width:clamp(19px,calc(21px * var(--cb-front-scale)),46px) !important;
             height:clamp(30px,calc(31px * var(--cb-front-scale)),58px) !important;
           }
@@ -11256,14 +11149,11 @@ html, body, body *, body *::before, body *::after, svg text{
         var key = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "flame";
         var preset = (typeof getHeatMapBurnerIconPreset === "function")
           ? getHeatMapBurnerIconPreset(key)
-          : {label:"Flame", glyph:"🔥"};
+          : {label:"Classic Flame", glyph:"🔥"};
         var labelEl = document.getElementById("hm-icon-picker-label");
         var iconEl = document.getElementById("hm-icon-picker-preview");
         if(labelEl) labelEl.textContent = preset.label;
-        if(iconEl){
-          if(preset && preset.previewHtml) iconEl.innerHTML = preset.previewHtml;
-          else iconEl.textContent = preset.glyph;
-        }
+        if(iconEl) iconEl.textContent = preset.glyph;
         var wrap = document.getElementById("hm-icon-picker");
         var btn = document.getElementById("hm-icon-picker-btn");
         if(wrap) wrap.classList.toggle("hm-icon-picker-open", _hmIconMenuOpen);
