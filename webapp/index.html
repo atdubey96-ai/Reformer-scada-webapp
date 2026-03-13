@@ -11340,17 +11340,17 @@ html, body, body *, body *::before, body *::after, svg text{
           wire.position.set(0, sY / 2, 0);
           chamber.add(wire);
 
-          var padGeo = new THREE.BoxGeometry(sX + 0.9, 0.12, sZ + 0.9);
+          var padGeo = new THREE.BoxGeometry(sX + 0.62, 0.1, sZ + 0.62);
           var groundPad = new THREE.Mesh(padGeo, baseMat);
-          groundPad.position.set(0, -0.06, 0);
+          groundPad.position.set(0, -0.05, 0);
           groundPad.receiveShadow = true;
           parent.add(groundPad);
 
           var padEdge = new THREE.LineSegments(new THREE.EdgesGeometry(padGeo), edgeMat);
-          padEdge.position.set(0, -0.06, 0);
+          padEdge.position.set(0, -0.05, 0);
           parent.add(padEdge);
 
-          var grid = new THREE.GridHelper(14, 28, 0x1A2030, 0x1A2030);
+          var grid = new THREE.GridHelper(10, 20, 0x1A2030, 0x1A2030);
           grid.position.set(0, -0.07, 0);
           parent.add(grid);
 
@@ -11382,7 +11382,7 @@ html, body, body *, body *::before, body *::after, svg text{
           canvas.addEventListener("wheel", function(e){
             e.preventDefault();
             state.camDist += e.deltaY * 0.01;
-            state.camDist = Math.max(4, Math.min(35, state.camDist));
+            state.camDist = Math.max(3.8, Math.min(30, state.camDist));
           }, {passive:false});
 
           canvas.addEventListener("touchstart", function(e){
@@ -11444,11 +11444,11 @@ html, body, body *, body *::before, body *::after, svg text{
             renderer:renderer,
             scene:scene,
             pivotGroup:pivotGroup,
-            autoRotate:true,
+            autoRotate:false,
             isDragging:false,
             prevMouse:{x:0, y:0},
-            rotation:{x:-0.3, y:0.5},
-            camDist:16,
+            rotation:{x:-0.15, y:-Math.PI / 2},
+            camDist:11.4,
             touchStart:null,
             wallOverlays:buildResult.wallOverlays || {},
             latestSnapshot:null,
@@ -11491,8 +11491,8 @@ html, body, body *, body *::before, body *::after, svg text{
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
               state.pivotGroup.rotation.x = state.rotation.x;
               state.pivotGroup.rotation.y = state.rotation.y;
-              state.camera.position.set(0, 5, state.camDist);
-              state.camera.lookAt(0, 1.5, 0);
+              state.camera.position.set(0, 4.45, state.camDist);
+              state.camera.lookAt(0, 2.15, 0);
               state.renderer.render(state.scene, state.camera);
             });
           }
@@ -11523,16 +11523,16 @@ html, body, body *, body *::before, body *::after, svg text{
         window.hmUploadedResetCam = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.rotation = {x:hmUploadedClampRotationX(-0.3), y:0.5};
-          viewer.camDist = 16;
-          viewer.autoRotate = true;
+          viewer.rotation = {x:hmUploadedClampRotationX(-0.15), y:-Math.PI / 2};
+          viewer.camDist = 11.4;
+          viewer.autoRotate = false;
         };
 
         window.hmUploadedViewFront = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
           viewer.rotation = {x:hmUploadedClampRotationX(-0.08), y:0};
-          viewer.camDist = 14;
+          viewer.camDist = 12.4;
           viewer.autoRotate = false;
         };
 
@@ -11540,7 +11540,7 @@ html, body, body *, body *::before, body *::after, svg text{
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
           viewer.rotation = {x:hmUploadedClampRotationX(-0.15), y:-Math.PI / 2};
-          viewer.camDist = 14;
+          viewer.camDist = 11.4;
           viewer.autoRotate = false;
         };
 
@@ -11548,7 +11548,7 @@ html, body, body *, body *::before, body *::after, svg text{
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
           viewer.rotation = {x:hmUploadedClampRotationX(-Math.PI / 2.2), y:0};
-          viewer.camDist = 16;
+          viewer.camDist = 13.6;
           viewer.autoRotate = false;
         };
 
