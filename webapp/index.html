@@ -5348,6 +5348,9 @@ function renderHeatMap(){
   if(typeof r3dSyncFromHeatMapSnapshot === "function"){
     r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
   }
+  if(typeof hmUploadedSyncFromHeatMapSnapshot === "function"){
+    hmUploadedSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
+  }
   updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
   clearHeatMapPanelContent();
   if(typeof applyHeatMapWallPanelState === "function") applyHeatMapWallPanelState();
@@ -10663,7 +10666,6 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="eyebrow">Section 01</div>
                   <h1 class="section-title">AB Chamber</h1>
                 </div>
-                <p class="section-copy">This first section contains only the AB cuboid chamber. It keeps the upper header removed, shows zero interconnection, and uses its own separate ground pad. Scroll down for the full CD chamber section.</p>
               </div>
 
               <div class="viewer-layout">
@@ -10687,15 +10689,16 @@ html, body, body *, body *::before, body *::after, svg text{
 
                   <div class="panel-section">
                     <h3>Live Parameters</h3>
-                    <div class="info-row"><span class="info-label">Chamber Temp</span><span class="info-value hot">842 °C</span></div>
-                    <div class="info-row"><span class="info-label">Flame Status</span><span class="info-value ok">Active</span></div>
-                    <div class="info-row"><span class="info-label">Fuel Flow</span><span class="info-value">124 m³/h</span></div>
+                    <div class="info-row"><span class="info-label">Chamber Temp</span><span class="info-value" id="hm-uploaded-ab-temp">-- °C</span></div>
+                    <div class="info-row"><span class="info-label">Flame Status</span><span class="info-value" id="hm-uploaded-ab-flame">Waiting for data</span></div>
+                    <div class="info-row"><span class="info-label">Data Stamp</span><span class="info-value" id="hm-uploaded-ab-stamp">Latest</span></div>
                   </div>
 
                   <div class="panel-section">
                     <h3>Legend</h3>
                     <div class="legend">
                       <div class="legend-item"><div class="legend-swatch" style="background:#A0887A"></div>Transparent Chamber Shell</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#F97316"></div>Live Wall Data Overlay</div>
                       <div class="legend-item"><div class="legend-swatch" style="background:#8FA8BC"></div>Protruding Vertical Tubes</div>
                       <div class="legend-item"><div class="legend-swatch" style="background:#7090A8"></div>Common Header Pipe</div>
                       <div class="legend-item"><div class="legend-swatch" style="background:#1a1a1a"></div>Open Interior Volume</div>
@@ -10723,7 +10726,6 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="eyebrow">Section 02</div>
                   <h1 class="section-title">CD Chamber</h1>
                 </div>
-                <p class="section-copy">This second section contains only the CD cuboid chamber. It is shown independently on its own ground pad with no link back to AB.</p>
               </div>
 
               <div class="viewer-layout">
@@ -10747,15 +10749,16 @@ html, body, body *, body *::before, body *::after, svg text{
 
                   <div class="panel-section">
                     <h3>Live Parameters</h3>
-                    <div class="info-row"><span class="info-label">Chamber Temp</span><span class="info-value hot">818 °C</span></div>
-                    <div class="info-row"><span class="info-label">Flame Status</span><span class="info-value ok">Active</span></div>
-                    <div class="info-row"><span class="info-label">Fuel Flow</span><span class="info-value">119 m³/h</span></div>
+                    <div class="info-row"><span class="info-label">Chamber Temp</span><span class="info-value" id="hm-uploaded-cd-temp">-- °C</span></div>
+                    <div class="info-row"><span class="info-label">Flame Status</span><span class="info-value" id="hm-uploaded-cd-flame">Waiting for data</span></div>
+                    <div class="info-row"><span class="info-label">Data Stamp</span><span class="info-value" id="hm-uploaded-cd-stamp">Latest</span></div>
                   </div>
 
                   <div class="panel-section">
                     <h3>Legend</h3>
                     <div class="legend">
                       <div class="legend-item"><div class="legend-swatch" style="background:#A0887A"></div>Transparent Chamber Shell</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#F97316"></div>Live Wall Data Overlay</div>
                       <div class="legend-item"><div class="legend-swatch" style="background:#8FA8BC"></div>Protruding Vertical Tubes</div>
                       <div class="legend-item"><div class="legend-swatch" style="background:#7090A8"></div>Common Header Pipe</div>
                       <div class="legend-item"><div class="legend-swatch" style="background:#1a1a1a"></div>Open Interior Volume</div>
@@ -10867,6 +10870,102 @@ html, body, body *, body *::before, body *::after, svg text{
           parent.add(sprite);
         }
 
+        function hmUploadedAverageTemp(valsA, valsB){
+          var sum = 0;
+          var count = 0;
+          [valsA, valsB].forEach(function(list){
+            if(!Array.isArray(list)) return;
+            list.forEach(function(val){
+              var n = Number(val);
+              if(isFinite(n)){
+                sum += n;
+                count++;
+              }
+            });
+          });
+          return count ? Math.round(sum / count) : null;
+        }
+
+        function hmUploadedCountStates(hmData, wallKeys){
+          var counts = {O:0, N:0, B:0, C:0};
+          wallKeys.forEach(function(wallKey){
+            var rows = hmData && Array.isArray(hmData[wallKey]) ? hmData[wallKey] : [];
+            rows.forEach(function(row){
+              if(!Array.isArray(row)) return;
+              row.forEach(function(cell){
+                var state = String(cell || "C").toUpperCase();
+                if(!counts.hasOwnProperty(state)) state = "C";
+                counts[state]++;
+              });
+            });
+          });
+          return counts;
+        }
+
+        function hmUploadedSetInfo(id, text, cls){
+          var el = document.getElementById(id);
+          if(!el) return;
+          el.textContent = String(text);
+          el.classList.remove("hot", "warn", "ok");
+          if(cls) el.classList.add(cls);
+        }
+
+        function hmUploadedRefreshViewerOverlays(state, snapshot){
+          if(!state || !state.wallOverlays || typeof r3dPaintWallOverlay !== "function") return;
+          var prevPhase = null;
+          if(typeof reformer3DState === "object" && reformer3DState){
+            prevPhase = reformer3DState.overlayAnimPhase;
+            reformer3DState.overlayAnimPhase = state.overlayAnimPhase || 0;
+          }
+          Object.keys(state.wallOverlays).forEach(function(wallKey){
+            r3dPaintWallOverlay(state.wallOverlays[wallKey], wallKey, snapshot);
+          });
+          if(typeof reformer3DState === "object" && reformer3DState){
+            reformer3DState.overlayAnimPhase = prevPhase;
+          }
+        }
+
+        function hmUploadedSyncLivePanels(snapshot){
+          if(!snapshot || !snapshot.hmData){
+            hmUploadedSetInfo("hm-uploaded-ab-temp", "-- °C", "");
+            hmUploadedSetInfo("hm-uploaded-cd-temp", "-- °C", "");
+            hmUploadedSetInfo("hm-uploaded-ab-flame", "Waiting for data", "");
+            hmUploadedSetInfo("hm-uploaded-cd-flame", "Waiting for data", "");
+            hmUploadedSetInfo("hm-uploaded-ab-stamp", "Latest", "");
+            hmUploadedSetInfo("hm-uploaded-cd-stamp", "Latest", "");
+            return;
+          }
+
+          var abAvg = hmUploadedAverageTemp(snapshot.abBot || [], snapshot.abTop || []);
+          var cdAvg = hmUploadedAverageTemp(snapshot.cdBot || [], snapshot.cdTop || []);
+          var abCounts = hmUploadedCountStates(snapshot.hmData, ["A", "B"]);
+          var cdCounts = hmUploadedCountStates(snapshot.hmData, ["C", "D"]);
+          var abActive = abCounts.O + abCounts.N + abCounts.B;
+          var cdActive = cdCounts.O + cdCounts.N + cdCounts.B;
+          var stamp = snapshot.entryDt || "Latest";
+          if(snapshot.selectedShift && snapshot.selectedShift !== "All"){
+            stamp = snapshot.selectedShift + " · " + stamp;
+          }
+
+          hmUploadedSetInfo("hm-uploaded-ab-temp", abAvg !== null ? (abAvg + " °C") : "-- °C", abAvg === null ? "" : (abAvg > 970 ? "hot" : (abAvg < 910 ? "warn" : "ok")));
+          hmUploadedSetInfo("hm-uploaded-cd-temp", cdAvg !== null ? (cdAvg + " °C") : "-- °C", cdAvg === null ? "" : (cdAvg > 970 ? "hot" : (cdAvg < 910 ? "warn" : "ok")));
+          hmUploadedSetInfo("hm-uploaded-ab-flame", abActive > 0 ? (abActive + " active burners") : "No active burners", abActive > 0 ? "ok" : "warn");
+          hmUploadedSetInfo("hm-uploaded-cd-flame", cdActive > 0 ? (cdActive + " active burners") : "No active burners", cdActive > 0 ? "ok" : "warn");
+          hmUploadedSetInfo("hm-uploaded-ab-stamp", stamp, "ok");
+          hmUploadedSetInfo("hm-uploaded-cd-stamp", stamp, "ok");
+        }
+
+        function hmUploadedSyncFromHeatMapSnapshot(snapshot){
+          hmUploadedSyncLivePanels(snapshot);
+          Object.keys(hmUploadedViewers).forEach(function(key){
+            var state = hmUploadedViewers[key];
+            if(!state) return;
+            state.latestSnapshot = snapshot || null;
+            state.lastOverlayPaintAt = 0;
+            hmUploadedRefreshViewerOverlays(state, snapshot || null);
+          });
+        }
+
         function hmUploadedBuildChamberScene(parent, label){
           var sX = 1.8, sY = 3.5, sZ = 5.0, wallT = 0.15;
           var hs = 0.5, hy1 = sY * 0.33, hy2 = sY * 0.68;
@@ -10903,6 +11002,10 @@ html, body, body *, body *::before, body *::after, svg text{
           var commonTubeMat = new THREE.MeshStandardMaterial({color:0x7090A8, metalness:0.7, roughness:0.25});
           var baseMat = new THREE.MeshStandardMaterial({color:0x334155, metalness:0.2, roughness:0.7});
           var edgeMat = new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.25});
+          var wallOverlays = {};
+          var overlayDims = {sX:sX, sY:sY, sZ:sZ, wallT:wallT};
+          var leftWallKey = label === "AB" ? "A" : "C";
+          var rightWallKey = label === "AB" ? "B" : "D";
 
           var chamber = new THREE.Group();
           parent.add(chamber);
@@ -10927,6 +11030,17 @@ html, body, body *, body *::before, body *::after, svg text{
           rightWall.position.set(sX / 2 - wallT / 2, sY / 2, 0);
           rightWall.castShadow = true;
           chamber.add(rightWall);
+
+          if(typeof r3dCreateWallOverlay === "function"){
+            var leftOverlay = r3dCreateWallOverlay(overlayDims, leftWallKey, "left");
+            var rightOverlay = r3dCreateWallOverlay(overlayDims, rightWallKey, "right");
+            wallOverlays[leftWallKey] = leftOverlay;
+            wallOverlays[rightWallKey] = rightOverlay;
+            chamber.add(leftOverlay.outerMesh);
+            chamber.add(leftOverlay.innerMesh);
+            chamber.add(rightOverlay.outerMesh);
+            chamber.add(rightOverlay.innerMesh);
+          }
 
           var topWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), shellMat);
           topWall.position.set(0, sY - wallT / 2, 0);
@@ -11006,6 +11120,7 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedAddLabel(parent, label, 0, sY + 0.7, 0);
           hmUploadedAddLabel(parent, "Front", 0, -0.6, sZ / 2 + 1.2);
           hmUploadedAddLabel(parent, "Back", 0, -0.6, -sZ / 2 - 1.2);
+          return {wallOverlays:wallOverlays};
         }
 
         function hmUploadedAttachControls(state){
@@ -11084,7 +11199,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
           var pivotGroup = new THREE.Group();
           scene.add(pivotGroup);
-          hmUploadedBuildChamberScene(pivotGroup, label);
+          var buildResult = hmUploadedBuildChamberScene(pivotGroup, label) || {};
 
           var state = {
             canvas:canvas,
@@ -11097,7 +11212,11 @@ html, body, body *, body *::before, body *::after, svg text{
             prevMouse:{x:0, y:0},
             rotation:{x:-0.3, y:0.5},
             camDist:16,
-            touchStart:null
+            touchStart:null,
+            wallOverlays:buildResult.wallOverlays || {},
+            latestSnapshot:null,
+            lastOverlayPaintAt:0,
+            overlayAnimPhase:0
           };
 
           hmUploadedAttachControls(state);
@@ -11122,9 +11241,15 @@ html, body, body *, body *::before, body *::after, svg text{
 
           function frame(){
             requestAnimationFrame(frame);
+            var now = performance.now();
             Object.keys(hmUploadedViewers).forEach(function(key){
               var state = hmUploadedViewers[key];
               if(!state) return;
+              state.overlayAnimPhase = now * 0.0085;
+              if((now - state.lastOverlayPaintAt) > 140){
+                state.lastOverlayPaintAt = now;
+                hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
+              }
               if(state.autoRotate) state.rotation.y += 0.003;
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
               state.pivotGroup.rotation.x = state.rotation.x;
@@ -11151,10 +11276,12 @@ html, body, body *, body *::before, body *::after, svg text{
             hmUploadedStartAnimation();
           }
           hmUploadedResizeAllViewers();
+          hmUploadedSyncFromHeatMapSnapshot(window._hmRenderSnapshot || null);
         }
 
         window.hmUploadedEnsureViewer = hmUploadedEnsureViewer;
         window.hmUploadedResizeAllViewers = hmUploadedResizeAllViewers;
+        window.hmUploadedSyncFromHeatMapSnapshot = hmUploadedSyncFromHeatMapSnapshot;
 
         window.hmUploadedResetCam = function(name){
           var viewer = hmUploadedViewers[name];
