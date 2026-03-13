@@ -4728,21 +4728,24 @@ var HM_BURNER_ICON_PRESETS = {
 var _hmBurnerIconSet = (function(){
   var raw = "";
   try{ raw = String(localStorage.getItem("hm-burner-icon-set") || "").toLowerCase(); }catch(e){}
-  if(raw === "crystal") raw = "inferno";
-  return HM_BURNER_ICON_PRESETS[raw] ? raw : "flame";
+  if(raw === "crystal" || raw === "flame"){
+    raw = "inferno";
+    try{ localStorage.setItem("hm-burner-icon-set", raw); }catch(e){}
+  }
+  return HM_BURNER_ICON_PRESETS[raw] ? raw : "inferno";
 })();
 
 function getHeatMapBurnerIconSet(){
-  if(!HM_BURNER_ICON_PRESETS[_hmBurnerIconSet]) _hmBurnerIconSet = "flame";
+  if(!HM_BURNER_ICON_PRESETS[_hmBurnerIconSet] || _hmBurnerIconSet === "flame") _hmBurnerIconSet = "inferno";
   return _hmBurnerIconSet;
 }
 
 function getHeatMapBurnerIconPreset(key){
-  return HM_BURNER_ICON_PRESETS[key] || HM_BURNER_ICON_PRESETS.flame;
+  return HM_BURNER_ICON_PRESETS[key] || HM_BURNER_ICON_PRESETS.inferno;
 }
 
 function buildHeatMapActiveBurnerSvg(iconSet, c){
-  var setKey = HM_BURNER_ICON_PRESETS[iconSet] ? iconSet : "flame";
+  var setKey = HM_BURNER_ICON_PRESETS[iconSet] ? iconSet : "inferno";
   if(setKey === "twin"){
     return '<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">'
       + '<path d="M7.2 4.5 C5.7 7 4.7 8.8 5 11 C5.3 12.8 7.2 14 7.2 14 C7.2 14 9.1 12.8 9.4 11 C9.7 8.9 8.7 7.1 7.2 4.5Z" fill="'+c.flame+'" opacity="0.9"/>'
@@ -6529,11 +6532,10 @@ html, body, body *, body *::before, body *::after, svg text{
               <button type="button" class="hm-icon-picker-btn" id="hm-icon-picker-btn" onclick="toggleHeatMapIconMenu(event)" aria-haspopup="true" aria-expanded="false">
                 <span class="hm-icon-picker-text">Style</span>
                 <span class="hm-icon-picker-preview" id="hm-icon-picker-preview">🔥</span>
-                <span id="hm-icon-picker-label">Classic Flame</span>
+                <span id="hm-icon-picker-label">Reformer Flame</span>
                 <span class="hm-icon-picker-caret">▾</span>
               </button>
               <div class="hm-icon-menu" id="hm-icon-menu" role="menu" aria-label="Select burner icon style">
-                <button type="button" class="hm-icon-item" data-icon-set="flame" onclick="setHeatMapBurnerIconSet('flame', event)">🔥 Classic Flame</button>
                 <button type="button" class="hm-icon-item" data-icon-set="twin" onclick="setHeatMapBurnerIconSet('twin', event)">♨️ Twin Flame</button>
                 <button type="button" class="hm-icon-item" data-icon-set="jet" onclick="setHeatMapBurnerIconSet('jet', event)">⚡ Jet Cone</button>
                 <button type="button" class="hm-icon-item" data-icon-set="ring" onclick="setHeatMapBurnerIconSet('ring', event)">⭕ Halo Core</button>
@@ -10493,20 +10495,49 @@ html, body, body *, body *::before, body *::after, svg text{
           justify-content:space-between;
           align-items:flex-end;
           gap:24px;
-          margin-bottom:20px;
+          margin-bottom:24px;
+        }
+        #tab-heatmap .hm-uploaded-viewer .section-head > div:first-child{
+          display:flex;
+          flex-direction:column;
+          align-items:flex-start;
+          gap:12px;
         }
         #tab-heatmap .hm-uploaded-viewer .eyebrow{
-          font-size:10px;
-          font-weight:600;
-          color:#999;
+          display:inline-flex;
+          align-items:center;
+          gap:10px;
+          padding:8px 16px;
+          border-radius:999px;
+          border:1px solid rgba(232,81,26,0.28);
+          background:linear-gradient(180deg,rgba(10,18,32,0.96),rgba(13,25,43,0.82));
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 12px 26px rgba(4,10,20,0.26);
+          font-size:11px;
+          font-weight:800;
+          color:#f4b183;
           text-transform:uppercase;
-          letter-spacing:1.8px;
-          margin-bottom:10px;
+          letter-spacing:4px;
+          margin-bottom:0;
+        }
+        #tab-heatmap .hm-uploaded-viewer .eyebrow::before{
+          content:"";
+          width:10px;
+          height:10px;
+          border-radius:50%;
+          background:radial-gradient(circle at 35% 35%,#ffe0bf 0%,#e8511a 68%,#8f3710 100%);
+          box-shadow:0 0 18px rgba(232,81,26,0.5);
         }
         #tab-heatmap .hm-uploaded-viewer .section-title{
-          font-size:32px;
-          font-weight:600;
-          line-height:1.1;
+          font-family:'Rajdhani','Outfit',sans-serif;
+          font-size:clamp(44px,5vw,74px);
+          font-weight:800;
+          line-height:0.95;
+          letter-spacing:0.6px;
+          color:transparent;
+          background:linear-gradient(115deg,#fff8eb 0%,#ffffff 24%,#7ec8f0 58%,#e8511a 100%);
+          -webkit-background-clip:text;
+          background-clip:text;
+          text-shadow:0 16px 34px rgba(4,12,24,0.34);
         }
         #tab-heatmap .hm-uploaded-viewer .section-copy{
           max-width:520px;
@@ -10642,7 +10673,7 @@ html, body, body *, body *::before, body *::after, svg text{
             align-items:flex-start;
           }
           #tab-heatmap .hm-uploaded-viewer .section-title{
-            font-size:28px;
+            font-size:clamp(34px,11vw,54px);
           }
           #tab-heatmap .hm-uploaded-viewer .viewer-layout{
             flex-direction:column;
@@ -10910,6 +10941,69 @@ html, body, body *, body *::before, body *::after, svg text{
           if(cls) el.classList.add(cls);
         }
 
+        var hmUploadedBurnerImageCache = {};
+
+        function hmUploadedGetBurnerColors(state){
+          return ({
+            O:{flame:"#16a34a", core:"#86efac", inner:"#dcfce7", stem:"#15803d"},
+            N:{flame:"#d97706", core:"#fcd34d", inner:"#fef9c3", stem:"#b45309"},
+            B:{flame:"#2563eb", core:"#93c5fd", inner:"#dbeafe", stem:"#1d4ed8"}
+          })[state] || {flame:"#d97706", core:"#fcd34d", inner:"#fef9c3", stem:"#b45309"};
+        }
+
+        function hmUploadedBuildClosedBurnerSvg(){
+          return '<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">'
+            + '<rect x="7" y="15" width="6" height="9" rx="2" fill="#2d3f55"/>'
+            + '<rect x="5" y="23" width="10" height="3" rx="1.5" fill="#1e293b"/>'
+            + '<rect x="3" y="12" width="14" height="4" rx="2" fill="#3a5068"/>'
+            + '</svg>';
+        }
+
+        function hmUploadedGetBurnerImage(iconSet, state){
+          var key = String(iconSet || "inferno") + ":" + String(state || "C");
+          if(hmUploadedBurnerImageCache[key]) return hmUploadedBurnerImageCache[key];
+          var svg = (state === "C")
+            ? hmUploadedBuildClosedBurnerSvg()
+            : buildHeatMapActiveBurnerSvg(iconSet, hmUploadedGetBurnerColors(state));
+          var img = new Image();
+          img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+          img.onload = function(){
+            if(typeof window.hmUploadedSyncFromHeatMapSnapshot === "function"){
+              setTimeout(function(){
+                window.hmUploadedSyncFromHeatMapSnapshot(window._hmRenderSnapshot || null);
+              }, 0);
+            }
+          };
+          hmUploadedBurnerImageCache[key] = img;
+          return img;
+        }
+
+        function hmUploadedDrawCleanDot(ctx, x, y, cleaned){
+          ctx.beginPath();
+          ctx.arc(x, y, 4.2, 0, Math.PI * 2);
+          ctx.fillStyle = cleaned ? "#4ade80" : "rgba(148,163,184,0.72)";
+          ctx.fill();
+          ctx.lineWidth = 1.3;
+          ctx.strokeStyle = cleaned ? "rgba(187,247,208,0.92)" : "rgba(226,232,240,0.45)";
+          ctx.stroke();
+        }
+
+        function hmUploadedDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase){
+          var s = String(state || "C").toUpperCase();
+          if(s !== "O" && s !== "N" && s !== "B") s = "C";
+          var iconSet = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "inferno";
+          if(iconSet === "flame") iconSet = "inferno";
+          var img = hmUploadedGetBurnerImage(iconSet, s);
+          var pulseLift = (s === "C") ? 0 : (0.8 + Math.sin(animPhase || 0) * 1.1);
+          if(img && img.complete && img.naturalWidth > 0){
+            ctx.drawImage(img, x - 16, y - 31 - pulseLift, 32, 45);
+          }else if(typeof r3dDrawBurnerGlyph === "function"){
+            r3dDrawBurnerGlyph(ctx, x, y, s, cleaned, animPhase);
+            return;
+          }
+          hmUploadedDrawCleanDot(ctx, x + 18, y - 4, cleaned);
+        }
+
         function hmUploadedPrepareOverlay(overlay){
           if(!overlay || !overlay.outerMaterial) return;
           overlay.outerMaterial.transparent = true;
@@ -11047,7 +11141,7 @@ html, body, body *, body *::before, body *::after, svg text{
               var state = String(rowData[ci] || "C").toUpperCase();
               var burnerX = gridLeft + slotW * (ci + 0.5);
               var cleaned = !!String(wallCleaning["R" + item + "B" + (ci + 1)] || "").trim();
-              r3dDrawBurnerGlyph(ctx, burnerX, centerY + 4, state, cleaned, (animPhaseBase || 0) + (ii * 0.55) + (ci * 0.28));
+              hmUploadedDrawBurnerGlyph(ctx, burnerX, centerY + 4, state, cleaned, (animPhaseBase || 0) + (ii * 0.55) + (ci * 0.28));
             }
           }
 
@@ -11110,9 +11204,9 @@ html, body, body *, body *::before, body *::after, svg text{
           var tubeZStart = -(sZ - 0.6) / 2;
           var tubeSpacing = (sZ - 0.6) / (tubeCount - 1);
           var tubeBottomY = wallT + 0.12;
-          var hdrH = 0.2;
-          var commonTubeY = sY + hdrH + 0.35;
-          var commonTubeR = 0.13;
+          var hdrH = 0.14;
+          var commonTubeY = sY + hdrH + 0.22;
+          var commonTubeR = 0.11;
           var commonTubeLen = sZ + 0.4;
           var tubeHeight = commonTubeY - tubeBottomY;
 
@@ -11626,10 +11720,10 @@ html, body, body *, body *::before, body *::after, svg text{
       var _hmIconMenuOpen = false;
       var _hmIconMenuBound = false;
       function updateHeatMapBurnerIconPickerUi(){
-        var key = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "flame";
+        var key = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "inferno";
         var preset = (typeof getHeatMapBurnerIconPreset === "function")
           ? getHeatMapBurnerIconPreset(key)
-          : {label:"Classic Flame", glyph:"🔥"};
+          : {label:"Reformer Flame", glyph:"🔥"};
         var labelEl = document.getElementById("hm-icon-picker-label");
         var iconEl = document.getElementById("hm-icon-picker-preview");
         if(labelEl) labelEl.textContent = preset.label;
@@ -11666,11 +11760,15 @@ html, body, body *, body *::before, body *::after, svg text{
           if(typeof ev.stopPropagation === "function") ev.stopPropagation();
         }
         var next = String(key || "").toLowerCase();
-        if(!HM_BURNER_ICON_PRESETS[next]) next = "flame";
-        var prev = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "flame";
+        if(next === "flame") next = "inferno";
+        if(!HM_BURNER_ICON_PRESETS[next]) next = "inferno";
+        var prev = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "inferno";
         _hmBurnerIconSet = next;
         try{ localStorage.setItem("hm-burner-icon-set", next); }catch(e){}
         closeHeatMapIconMenu();
+        if(typeof hmUploadedSyncFromHeatMapSnapshot === "function"){
+          hmUploadedSyncFromHeatMapSnapshot(window._hmRenderSnapshot || null);
+        }
         if(prev !== next){
           if(typeof requestHeatMapRender === "function"){
             window._hmSkipCuboidRefresh = false;
