@@ -10805,6 +10805,22 @@ html, body, body *, body *::before, body *::after, svg text{
           return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
         }
 
+        function hmUploadedClampCamDist(state, value){
+          if(!state) return value;
+          var baseDist = state.defaultCamDist || 10.4;
+          var minDist = Math.max(3.8, baseDist * 0.72);
+          var maxDist = baseDist * 1.5;
+          return Math.max(minDist, Math.min(maxDist, value));
+        }
+
+        function hmUploadedSetViewState(state, rotation, camDist, autoRotate){
+          if(!state) return;
+          state.rotation = rotation;
+          state.defaultCamDist = camDist;
+          state.camDist = hmUploadedClampCamDist(state, camDist);
+          state.autoRotate = !!autoRotate;
+        }
+
         function hmUploadedGetCanvasSize(canvas){
           var rect = canvas.parentElement.getBoundingClientRect();
           return {
@@ -11389,8 +11405,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
           canvas.addEventListener("wheel", function(e){
             e.preventDefault();
-            state.camDist += e.deltaY * 0.01;
-            state.camDist = Math.max(3.8, Math.min(30, state.camDist));
+            state.camDist = hmUploadedClampCamDist(state, state.camDist + e.deltaY * 0.01);
           }, {passive:false});
 
           canvas.addEventListener("touchstart", function(e){
@@ -11456,6 +11471,7 @@ html, body, body *, body *::before, body *::after, svg text{
             isDragging:false,
             prevMouse:{x:0, y:0},
             rotation:{x:SIDE_VIEW_ROTATION_X, y:-Math.PI / 2},
+            defaultCamDist:10.4,
             camDist:10.4,
             touchStart:null,
             wallOverlays:buildResult.wallOverlays || {},
@@ -11531,33 +11547,45 @@ html, body, body *, body *::before, body *::after, svg text{
         window.hmUploadedResetCam = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.rotation = {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:-Math.PI / 2};
-          viewer.camDist = 10.4;
-          viewer.autoRotate = true;
+          hmUploadedSetViewState(
+            viewer,
+            {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:-Math.PI / 2},
+            10.4,
+            true
+          );
         };
 
         window.hmUploadedViewFront = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.rotation = {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:0};
-          viewer.camDist = 11.1;
-          viewer.autoRotate = false;
+          hmUploadedSetViewState(
+            viewer,
+            {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:0},
+            11.1,
+            false
+          );
         };
 
         window.hmUploadedViewSide = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.rotation = {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:-Math.PI / 2};
-          viewer.camDist = 10.4;
-          viewer.autoRotate = false;
+          hmUploadedSetViewState(
+            viewer,
+            {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:-Math.PI / 2},
+            10.4,
+            false
+          );
         };
 
         window.hmUploadedViewTop = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.rotation = {x:ROTATION_X_MIN, y:0};
-          viewer.camDist = 11.7;
-          viewer.autoRotate = false;
+          hmUploadedSetViewState(
+            viewer,
+            {x:ROTATION_X_MIN, y:0},
+            11.7,
+            false
+          );
         };
 
         window.hmUploadedToggleAutoRotate = function(name){
