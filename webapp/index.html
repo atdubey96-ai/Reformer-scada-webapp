@@ -10910,19 +10910,143 @@ html, body, body *, body *::before, body *::after, svg text{
           if(cls) el.classList.add(cls);
         }
 
+        function hmUploadedPrepareOverlay(overlay){
+          if(!overlay || !overlay.outerMaterial) return;
+          overlay.outerMaterial.transparent = true;
+          overlay.outerMaterial.depthWrite = true;
+          overlay.outerMaterial.alphaTest = 0.06;
+          overlay.outerMaterial.polygonOffset = true;
+          overlay.outerMaterial.polygonOffsetFactor = -1;
+          overlay.outerMaterial.polygonOffsetUnits = -2;
+          overlay.outerMaterial.needsUpdate = true;
+          if(overlay.outerMesh) overlay.outerMesh.renderOrder = 8;
+          if(overlay.innerMesh) overlay.innerMesh.visible = false;
+        }
+
+        function hmUploadedPaintWallOverlay(overlay, wallKey, snapshot, animPhaseBase){
+          if(!overlay || !overlay.canvas || !overlay.texture) return;
+          var ctx = overlay.canvas.getContext("2d");
+          var w = overlay.canvas.width;
+          var h = overlay.canvas.height;
+          ctx.clearRect(0, 0, w, h);
+          if(!snapshot || !snapshot.hmData){
+            overlay.texture.needsUpdate = true;
+            return;
+          }
+
+          var rows = (snapshot.hmData && snapshot.hmData[wallKey] && Array.isArray(snapshot.hmData[wallKey])) ? snapshot.hmData[wallKey] : [];
+          var topVals = (wallKey === "A" || wallKey === "B") ? (snapshot.abTop || []) : (snapshot.cdTop || []);
+          var botVals = (wallKey === "A" || wallKey === "B") ? (snapshot.abBot || []) : (snapshot.cdBot || []);
+          var wallCleaning = (typeof r3dGetWallCleaningMap === "function") ? r3dGetWallCleaningMap(wallKey) : {};
+
+          var padX = 26;
+          var titleY = 46;
+          var gridLeft = 145;
+          var gridRight = w - 22;
+          var gridW = gridRight - gridLeft;
+          var slotW = gridW / 15;
+          var burnerNumY = 116;
+          var itemCenters = [190, 290, 390, 495, 600, 700, 805, 900];
+          var rowOrder = [6, 5, 4, "PH_TOP", 3, 2, "PH_BOT", 1];
+
+          var outerGrad = ctx.createLinearGradient(0, 0, w, h);
+          outerGrad.addColorStop(0, "rgba(16,13,20,0.99)");
+          outerGrad.addColorStop(0.45, "rgba(44,33,30,0.99)");
+          outerGrad.addColorStop(1, "rgba(18,15,22,0.99)");
+          ctx.fillStyle = outerGrad;
+          r3dRoundRectPath(ctx, 8, 10, w - 16, h - 20, 30);
+          ctx.fill();
+
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = "rgba(185,142,106,0.32)";
+          ctx.stroke();
+
+          var headGrad = ctx.createLinearGradient(0, 0, w, 0);
+          headGrad.addColorStop(0, "rgba(6,8,16,0.98)");
+          headGrad.addColorStop(0.55, "rgba(12,13,22,0.985)");
+          headGrad.addColorStop(1, "rgba(8,9,16,0.98)");
+          ctx.fillStyle = headGrad;
+          r3dRoundRectPath(ctx, 18, 20, w - 36, 82, 22);
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(243,112,34,0.78)";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(18, 102);
+          ctx.lineTo(w - 18, 102);
+          ctx.stroke();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.font = "700 36px Times New Roman, serif";
+          ctx.fillText("WALL " + wallKey, padX + 2, titleY + 12);
+
+          ctx.textAlign = "right";
+          ctx.font = "700 20px Times New Roman, serif";
+          ctx.fillStyle = "rgba(255,255,255,0.98)";
+          ctx.fillText("6 rows x 15 burners", w - padX, titleY + 10);
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = "700 20px Times New Roman, serif";
+          ctx.fillStyle = "#ffffff";
+          for(var bn=1; bn<=15; bn++){
+            var bx = gridLeft + slotW * (bn - 0.5);
+            ctx.fillText("B" + bn, bx, burnerNumY);
+          }
+
+          for(var ii=0; ii<rowOrder.length; ii++){
+            var item = rowOrder[ii];
+            var centerY = itemCenters[ii];
+            var lineY = centerY + ((typeof item === "string") ? 26 : 38);
+
+            ctx.strokeStyle = "rgba(120,127,160,0.24)";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(22, lineY);
+            ctx.lineTo(w - 22, lineY);
+            ctx.stroke();
+
+            if(item === "PH_TOP"){
+              r3dDrawPeepBar(ctx, "PH TST", topVals, gridLeft, centerY, gridW);
+              continue;
+            }
+            if(item === "PH_BOT"){
+              r3dDrawPeepBar(ctx, "PH TST", botVals, gridLeft, centerY, gridW);
+              continue;
+            }
+
+            ctx.fillStyle = "rgba(4,8,18,0.98)";
+            r3dRoundRectPath(ctx, 20, centerY - 24, 92, 48, 13);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(120,143,175,0.28)";
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "700 22px Times New Roman, serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("ROW " + item, 66, centerY);
+
+            var rowData = Array.isArray(rows[item - 1]) ? rows[item - 1] : [];
+            for(var ci=0; ci<15; ci++){
+              var state = String(rowData[ci] || "C").toUpperCase();
+              var burnerX = gridLeft + slotW * (ci + 0.5);
+              var cleaned = !!String(wallCleaning["R" + item + "B" + (ci + 1)] || "").trim();
+              r3dDrawBurnerGlyph(ctx, burnerX, centerY + 4, state, cleaned, (animPhaseBase || 0) + (ii * 0.55) + (ci * 0.28));
+            }
+          }
+
+          overlay.texture.needsUpdate = true;
+        }
+
         function hmUploadedRefreshViewerOverlays(state, snapshot){
-          if(!state || !state.wallOverlays || typeof r3dPaintWallOverlay !== "function") return;
-          var prevPhase = null;
-          if(typeof reformer3DState === "object" && reformer3DState){
-            prevPhase = reformer3DState.overlayAnimPhase;
-            reformer3DState.overlayAnimPhase = state.overlayAnimPhase || 0;
-          }
+          if(!state || !state.wallOverlays) return;
           Object.keys(state.wallOverlays).forEach(function(wallKey){
-            r3dPaintWallOverlay(state.wallOverlays[wallKey], wallKey, snapshot);
+            hmUploadedPaintWallOverlay(state.wallOverlays[wallKey], wallKey, snapshot, state.overlayAnimPhase || 0);
           });
-          if(typeof reformer3DState === "object" && reformer3DState){
-            reformer3DState.overlayAnimPhase = prevPhase;
-          }
         }
 
         function hmUploadedSyncLivePanels(snapshot){
@@ -11034,12 +11158,12 @@ html, body, body *, body *::before, body *::after, svg text{
           if(typeof r3dCreateWallOverlay === "function"){
             var leftOverlay = r3dCreateWallOverlay(overlayDims, leftWallKey, "left");
             var rightOverlay = r3dCreateWallOverlay(overlayDims, rightWallKey, "right");
+            hmUploadedPrepareOverlay(leftOverlay);
+            hmUploadedPrepareOverlay(rightOverlay);
             wallOverlays[leftWallKey] = leftOverlay;
             wallOverlays[rightWallKey] = rightOverlay;
             chamber.add(leftOverlay.outerMesh);
             chamber.add(rightOverlay.outerMesh);
-            leftOverlay.innerMesh.visible = false;
-            rightOverlay.innerMesh.visible = false;
           }
 
           var topWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), shellMat);
