@@ -10849,7 +10849,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="viewer-layout">
                 <div class="canvas-area fade-in">
                   <canvas id="hm-uploaded-ab-canvas" class="viewer-canvas"></canvas>
-                  <div class="canvas-hint">Click and drag to rotate · Scroll to zoom</div>
+                  <div class="canvas-hint">Click and drag left/right to rotate</div>
                 </div>
 
                 <aside class="side-panel fade-in">
@@ -10925,7 +10925,6 @@ html, body, body *, body *::before, body *::after, svg text{
                       <button class="control-btn secondary" onclick="hmUploadedResetCam('ab')">⟲ Reset View</button>
                       <button class="control-btn secondary" onclick="hmUploadedViewFront('ab')">◉ Front View</button>
                       <button class="control-btn secondary" onclick="hmUploadedViewSide('ab')">◉ Side View</button>
-                      <button class="control-btn secondary" onclick="hmUploadedViewTop('ab')">◉ Top View</button>
                       <button class="control-btn secondary" onclick="hmUploadedToggleAutoRotate('ab')">↻ Auto Rotate</button>
                     </div>
                   </div>
@@ -10943,7 +10942,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="viewer-layout">
                 <div class="canvas-area fade-in">
                   <canvas id="hm-uploaded-cd-canvas" class="viewer-canvas"></canvas>
-                  <div class="canvas-hint">Click and drag to rotate · Scroll to zoom</div>
+                  <div class="canvas-hint">Click and drag left/right to rotate</div>
                 </div>
 
                 <aside class="side-panel fade-in">
@@ -11019,7 +11018,6 @@ html, body, body *, body *::before, body *::after, svg text{
                       <button class="control-btn secondary" onclick="hmUploadedResetCam('cd')">⟲ Reset View</button>
                       <button class="control-btn secondary" onclick="hmUploadedViewFront('cd')">◉ Front View</button>
                       <button class="control-btn secondary" onclick="hmUploadedViewSide('cd')">◉ Side View</button>
-                      <button class="control-btn secondary" onclick="hmUploadedViewTop('cd')">◉ Top View</button>
                       <button class="control-btn secondary" onclick="hmUploadedToggleAutoRotate('cd')">↻ Auto Rotate</button>
                     </div>
                   </div>
@@ -11038,8 +11036,8 @@ html, body, body *, body *::before, body *::after, svg text{
         var hmUploadedViewers = {};
         var hmUploadedInitialized = false;
         var hmUploadedAnimating = false;
-        var SIDE_VIEW_ROTATION_X = -0.22;
-        var VIEW_TILT_LIMIT = Math.PI / 6;
+        var SIDE_VIEW_ROTATION_X = 0;
+        var VIEW_TILT_LIMIT = 0;
         var ROTATION_X_MIN = SIDE_VIEW_ROTATION_X - VIEW_TILT_LIMIT;
         var ROTATION_X_MAX = SIDE_VIEW_ROTATION_X + VIEW_TILT_LIMIT;
         var HM_UPLOADED_VIEW_BASE_DIST = {
@@ -11049,7 +11047,7 @@ html, body, body *, body *::before, body *::after, svg text{
         };
 
         function hmUploadedClampRotationX(value){
-          return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
+          return SIDE_VIEW_ROTATION_X;
         }
 
         function hmUploadedGetResponsiveCamDistForView(canvas, viewName){
@@ -11683,17 +11681,12 @@ html, body, body *, body *::before, body *::after, svg text{
           canvas.addEventListener("mousemove", function(e){
             if(!state.isDragging) return;
             state.rotation.y += (e.clientX - state.prevMouse.x) * 0.005;
-            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + (e.clientY - state.prevMouse.y) * 0.005);
+            state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
             state.prevMouse = {x:e.clientX, y:e.clientY};
           });
 
           canvas.addEventListener("mouseup", function(){ state.isDragging = false; });
           canvas.addEventListener("mouseleave", function(){ state.isDragging = false; });
-
-          canvas.addEventListener("wheel", function(e){
-            e.preventDefault();
-            state.camDist = hmUploadedClampCamDist(state, state.camDist + e.deltaY * 0.01);
-          }, {passive:false});
 
           canvas.addEventListener("touchstart", function(e){
             if(e.touches.length !== 1) return;
@@ -11706,7 +11699,7 @@ html, body, body *, body *::before, body *::after, svg text{
             if(!state.isDragging || !state.touchStart) return;
             e.preventDefault();
             state.rotation.y += (e.touches[0].clientX - state.touchStart.x) * 0.005;
-            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + (e.touches[0].clientY - state.touchStart.y) * 0.005);
+            state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
             state.touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
           }, {passive:false});
 
@@ -11803,7 +11796,7 @@ html, body, body *, body *::before, body *::after, svg text{
               }
               if(state.autoRotate) state.rotation.y += 0.0022;
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
-              state.pivotGroup.rotation.x = state.rotation.x;
+              state.pivotGroup.rotation.x = SIDE_VIEW_ROTATION_X;
               state.pivotGroup.rotation.y = state.rotation.y;
               state.camera.position.set(0, 4.9, state.camDist);
               state.camera.lookAt(0, 1.15, 0);
