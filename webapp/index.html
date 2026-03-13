@@ -10800,65 +10800,52 @@ html, body, body *, body *::before, body *::after, svg text{
         var VIEW_TILT_LIMIT = Math.PI / 18;
         var ROTATION_X_MIN = SIDE_VIEW_ROTATION_X - VIEW_TILT_LIMIT;
         var ROTATION_X_MAX = SIDE_VIEW_ROTATION_X + VIEW_TILT_LIMIT;
-        var HM_UPLOADED_VIEW_BASE_ZOOM = {
-          side:1.72,
-          front:1.56,
-          top:1.42
+        var HM_UPLOADED_VIEW_BASE_DIST = {
+          side:10.4,
+          front:11.1,
+          top:11.7
         };
-        var HM_UPLOADED_ORTHO_FRUSTUM_HEIGHT = 8.8;
 
         function hmUploadedClampRotationX(value){
           return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
         }
 
-        function hmUploadedGetResponsiveCamZoomForView(canvas, viewName){
+        function hmUploadedGetResponsiveCamDistForView(canvas, viewName){
           var size = canvas ? hmUploadedGetCanvasSize(canvas) : {width:1280, height:720};
-          var baseZoom = HM_UPLOADED_VIEW_BASE_ZOOM[viewName] || HM_UPLOADED_VIEW_BASE_ZOOM.side;
+          var baseDist = HM_UPLOADED_VIEW_BASE_DIST[viewName] || HM_UPLOADED_VIEW_BASE_DIST.side;
           var widthScale = Math.max(0, Math.min(1, (size.width - 720) / 780));
           var heightScale = Math.max(0, Math.min(1, (size.height - 440) / 420));
-          var factor = 1 + (widthScale * 0.16) + (heightScale * 0.1);
-          if(viewName === "front") factor -= 0.04;
-          if(viewName === "top") factor -= 0.08;
-          factor = Math.max(0.96, Math.min(1.28, factor));
-          return Number((baseZoom * factor).toFixed(2));
+          var factor = 1 - (widthScale * 0.14) - (heightScale * 0.08);
+          if(viewName === "front") factor += 0.03;
+          if(viewName === "top") factor += 0.06;
+          factor = Math.max(0.78, Math.min(1.02, factor));
+          return Number((baseDist * factor).toFixed(2));
         }
 
-        function hmUploadedClampCamZoom(state, value){
+        function hmUploadedClampCamDist(state, value){
           if(!state) return value;
-          var baseZoom = state.defaultCamZoom || hmUploadedGetResponsiveCamZoomForView(state.canvas, state.viewPreset || "side");
-          var minZoom = Math.max(0.72, baseZoom / 1.5);
-          var maxZoom = baseZoom * 1.4;
-          return Math.max(minZoom, Math.min(maxZoom, value));
+          var baseDist = state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
+          var minDist = Math.max(3.8, baseDist * 0.72);
+          var maxDist = baseDist * 1.5;
+          return Math.max(minDist, Math.min(maxDist, value));
         }
 
         function hmUploadedSetViewState(state, viewName, rotation, autoRotate){
           if(!state) return;
           state.rotation = rotation;
           state.viewPreset = viewName || "side";
-          state.defaultCamZoom = hmUploadedGetResponsiveCamZoomForView(state.canvas, state.viewPreset);
-          state.camZoom = hmUploadedClampCamZoom(state, state.defaultCamZoom);
+          state.defaultCamDist = hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset);
+          state.camDist = hmUploadedClampCamDist(state, state.defaultCamDist);
           state.autoRotate = !!autoRotate;
         }
 
-        function hmUploadedRefreshResponsiveCamZoom(state){
+        function hmUploadedRefreshResponsiveCamDist(state){
           if(!state || !state.canvas) return;
-          var nextDefault = hmUploadedGetResponsiveCamZoomForView(state.canvas, state.viewPreset || "side");
-          var prevDefault = state.defaultCamZoom || nextDefault;
-          var zoomRatio = prevDefault ? (state.camZoom / prevDefault) : 1;
-          state.defaultCamZoom = nextDefault;
-          state.camZoom = hmUploadedClampCamZoom(state, nextDefault * zoomRatio);
-        }
-
-        function hmUploadedSetCameraFrustum(camera, size){
-          if(!camera || !size) return;
-          var aspect = size.width / size.height;
-          var halfHeight = HM_UPLOADED_ORTHO_FRUSTUM_HEIGHT / 2;
-          var halfWidth = halfHeight * aspect;
-          camera.left = -halfWidth;
-          camera.right = halfWidth;
-          camera.top = halfHeight;
-          camera.bottom = -halfHeight;
-          camera.updateProjectionMatrix();
+          var nextDefault = hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
+          var prevDefault = state.defaultCamDist || nextDefault;
+          var zoomRatio = prevDefault ? (state.camDist / prevDefault) : 1;
+          state.defaultCamDist = nextDefault;
+          state.camDist = hmUploadedClampCamDist(state, nextDefault * zoomRatio);
         }
 
         function hmUploadedGetCanvasSize(canvas){
@@ -11445,7 +11432,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
           canvas.addEventListener("wheel", function(e){
             e.preventDefault();
-            state.camZoom = hmUploadedClampCamZoom(state, state.camZoom - e.deltaY * 0.0016);
+            state.camDist = hmUploadedClampCamDist(state, state.camDist + e.deltaY * 0.01);
           }, {passive:false});
 
           canvas.addEventListener("touchstart", function(e){
@@ -11474,12 +11461,11 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!canvas) return null;
 
           var size = hmUploadedGetCanvasSize(canvas);
-          var initialCamZoom = hmUploadedGetResponsiveCamZoomForView(canvas, "side");
+          var initialCamDist = hmUploadedGetResponsiveCamDistForView(canvas, "side");
           var scene = new THREE.Scene();
           scene.background = new THREE.Color(0x0B0F14);
 
-          var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
-          hmUploadedSetCameraFrustum(camera, size);
+          var camera = new THREE.PerspectiveCamera(45, size.width / size.height, 0.1, 1000);
           var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
           renderer.setSize(size.width, size.height, false);
           renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -11514,8 +11500,8 @@ html, body, body *, body *::before, body *::after, svg text{
             prevMouse:{x:0, y:0},
             rotation:{x:SIDE_VIEW_ROTATION_X, y:-Math.PI / 2},
             viewPreset:"side",
-            defaultCamZoom:initialCamZoom,
-            camZoom:initialCamZoom,
+            defaultCamDist:initialCamDist,
+            camDist:initialCamDist,
             touchStart:null,
             wallOverlays:buildResult.wallOverlays || {},
             latestSnapshot:null,
@@ -11532,10 +11518,11 @@ html, body, body *, body *::before, body *::after, svg text{
             var state = hmUploadedViewers[key];
             if(!state || !state.canvas || !state.canvas.parentElement) return;
             var size = hmUploadedGetCanvasSize(state.canvas);
-            hmUploadedSetCameraFrustum(state.camera, size);
+            state.camera.aspect = size.width / size.height;
+            state.camera.updateProjectionMatrix();
             state.renderer.setSize(size.width, size.height, false);
             state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-            hmUploadedRefreshResponsiveCamZoom(state);
+            hmUploadedRefreshResponsiveCamDist(state);
           });
         }
 
@@ -11558,9 +11545,7 @@ html, body, body *, body *::before, body *::after, svg text{
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
               state.pivotGroup.rotation.x = state.rotation.x;
               state.pivotGroup.rotation.y = state.rotation.y;
-              state.camera.zoom = state.camZoom;
-              state.camera.updateProjectionMatrix();
-              state.camera.position.set(0, 4.9, 16);
+              state.camera.position.set(0, 4.9, state.camDist);
               state.camera.lookAt(0, 1.15, 0);
               state.renderer.render(state.scene, state.camera);
             });
