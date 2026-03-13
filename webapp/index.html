@@ -1792,12 +1792,104 @@ td select option{background:#1e293b;color:#e2e8f0;}
     0 0 0 1px rgba(15,31,56,0.35),
     0 10px 26px rgba(2,6,23,0.34);
 }
+.td-saved-filter-bar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(126,200,240,0.18);
+  background:linear-gradient(180deg,rgba(15,23,42,0.82),rgba(15,23,42,0.48));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.td-saved-filter-label{
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.9px;
+  text-transform:uppercase;
+  color:#7ec8f0;
+}
+.td-saved-filter-select,
+.td-saved-filter-input{
+  height:38px;
+  border-radius:10px;
+  border:1px solid rgba(126,200,240,0.22);
+  background:rgba(2,6,23,0.62);
+  color:#e2e8f0;
+  padding:0 12px;
+  font-size:13px;
+  font-weight:700;
+  font-family:'Times New Roman', Times, serif;
+}
+.td-saved-filter-select{
+  min-width:220px;
+}
+.td-saved-filter-input{
+  width:110px;
+}
+.td-saved-filter-select:disabled,
+.td-saved-filter-input:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+.td-saved-filter-sep{
+  color:#94a3b8;
+  font-size:13px;
+  font-weight:700;
+}
+.td-saved-filter-clear{
+  height:38px;
+  border:none;
+  border-radius:10px;
+  padding:0 14px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.7px;
+  text-transform:uppercase;
+  color:#f8fafc;
+  background:linear-gradient(135deg,#475569,#334155);
+  box-shadow:0 10px 20px rgba(2,6,23,0.28), inset 0 1px 0 rgba(255,255,255,0.12);
+  cursor:pointer;
+}
+.td-saved-filter-clear:hover{
+  filter:brightness(1.06);
+}
+.td-saved-filter-status{
+  margin-left:auto;
+  font-size:12px;
+  font-weight:700;
+  color:#cbd5e1;
+}
 body.light-theme .td-saved-entries-outline{
   border-color:rgba(59,130,246,0.35);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.85),
     0 0 0 1px rgba(148,163,184,0.24),
     0 8px 20px rgba(148,163,184,0.28);
+}
+body.light-theme .td-saved-filter-bar{
+  border-color:rgba(59,130,246,0.18);
+  background:linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.92));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.94), 0 8px 18px rgba(148,163,184,0.18);
+}
+body.light-theme .td-saved-filter-label{
+  color:#334155;
+}
+body.light-theme .td-saved-filter-select,
+body.light-theme .td-saved-filter-input{
+  background:#ffffff;
+  border-color:#cbd5e1;
+  color:#111827;
+}
+body.light-theme .td-saved-filter-sep,
+body.light-theme .td-saved-filter-status{
+  color:#475569;
+}
+body.light-theme .td-saved-filter-clear{
+  color:#ffffff;
+  background:linear-gradient(135deg,#64748b,#475569);
 }
 @media (max-width:900px){
   .analysis-wall-card,
@@ -3508,21 +3600,29 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   border:1px solid;padding:6px 3px;
 }
 #td-saved-table thead th,
-#hm-td-saved-table thead th{position:sticky;top:0;z-index:2;background:rgba(255,255,255,0.06);}
+#hm-td-saved-table thead th,
+#r3d-td-saved-table thead th{position:sticky;top:0;z-index:2;background:rgba(255,255,255,0.06);}
 #td-saved-table tbody tr:nth-child(even),
-#hm-td-saved-table tbody tr:nth-child(even){background:rgba(255,255,255,0.025);}
+#hm-td-saved-table tbody tr:nth-child(even),
+#r3d-td-saved-table tbody tr:nth-child(even){background:rgba(255,255,255,0.025);}
 #td-saved-table tbody tr:hover,
-#hm-td-saved-table tbody tr:hover{background:rgba(255,255,255,0.05);}
+#hm-td-saved-table tbody tr:hover,
+#r3d-td-saved-table tbody tr:hover{background:rgba(255,255,255,0.05);}
 #td-saved-table td,
-#hm-td-saved-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);color:#cbd5e1;vertical-align:top;}
+#hm-td-saved-table td,
+#r3d-td-saved-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);color:#cbd5e1;vertical-align:top;}
 #td-saved-table .td-dt-wrap,
-#hm-td-saved-table .td-dt-wrap{display:flex;flex-direction:column;gap:2px;line-height:1.15;min-width:132px;}
+#hm-td-saved-table .td-dt-wrap,
+#r3d-td-saved-table .td-dt-wrap{display:flex;flex-direction:column;gap:2px;line-height:1.15;min-width:132px;}
 #td-saved-table .td-dt-date,
-#hm-td-saved-table .td-dt-date{font-size:12px;font-weight:700;color:#e2e8f0;letter-spacing:0.2px;white-space:nowrap;}
+#hm-td-saved-table .td-dt-date,
+#r3d-td-saved-table .td-dt-date{font-size:12px;font-weight:700;color:#e2e8f0;letter-spacing:0.2px;white-space:nowrap;}
 #td-saved-table .td-dt-time,
-#hm-td-saved-table .td-dt-time{font-size:11px;font-weight:700;color:#7ec8f0;white-space:nowrap;}
+#hm-td-saved-table .td-dt-time,
+#r3d-td-saved-table .td-dt-time{font-size:11px;font-weight:700;color:#7ec8f0;white-space:nowrap;}
 #td-saved-table .td-shift-chip,
-#hm-td-saved-table .td-shift-chip{
+#hm-td-saved-table .td-shift-chip,
+#r3d-td-saved-table .td-shift-chip{
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -3535,63 +3635,76 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   line-height:1.2;
 }
 #td-saved-table .td-shift-morning,
-#hm-td-saved-table .td-shift-morning{
+#hm-td-saved-table .td-shift-morning,
+#r3d-td-saved-table .td-shift-morning{
   color:#34d399;
   background:rgba(16,185,129,0.18);
   border-color:rgba(16,185,129,0.45);
 }
 #td-saved-table .td-shift-evening,
-#hm-td-saved-table .td-shift-evening{
+#hm-td-saved-table .td-shift-evening,
+#r3d-td-saved-table .td-shift-evening{
   color:#fb923c;
   background:rgba(249,115,22,0.18);
   border-color:rgba(249,115,22,0.45);
 }
 #td-saved-table .td-shift-night,
-#hm-td-saved-table .td-shift-night{
+#hm-td-saved-table .td-shift-night,
+#r3d-td-saved-table .td-shift-night{
   color:#818cf8;
   background:rgba(99,102,241,0.18);
   border-color:rgba(99,102,241,0.5);
 }
 #td-saved-table .td-shift-generic,
-#hm-td-saved-table .td-shift-generic{
+#hm-td-saved-table .td-shift-generic,
+#r3d-td-saved-table .td-shift-generic{
   color:#cbd5e1;
   background:rgba(148,163,184,0.14);
   border-color:rgba(148,163,184,0.42);
 }
 #td-saved-table .td-del-btn,
-#hm-td-saved-table .td-del-btn{
+#hm-td-saved-table .td-del-btn,
+#r3d-td-saved-table .td-del-btn{
   background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);
   color:#f87171;padding:4px 10px;border-radius:5px;
   font-size:11px;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;
 }
 #td-saved-table .td-del-btn:hover,
-#hm-td-saved-table .td-del-btn:hover{background:rgba(239,68,68,0.25);}
+#hm-td-saved-table .td-del-btn:hover,
+#r3d-td-saved-table .td-del-btn:hover{background:rgba(239,68,68,0.25);}
 body.light-theme #td-saved-table .td-dt-date,
-body.light-theme #hm-td-saved-table .td-dt-date{color:#1e293b;}
+body.light-theme #hm-td-saved-table .td-dt-date,
+body.light-theme #r3d-td-saved-table .td-dt-date{color:#1e293b;}
 body.light-theme #td-saved-table .td-dt-time,
-body.light-theme #hm-td-saved-table .td-dt-time{color:#2563eb;}
+body.light-theme #hm-td-saved-table .td-dt-time,
+body.light-theme #r3d-td-saved-table .td-dt-time{color:#2563eb;}
 body.light-theme #td-saved-table td,
-body.light-theme #hm-td-saved-table td{color:#111827 !important;}
+body.light-theme #hm-td-saved-table td,
+body.light-theme #r3d-td-saved-table td{color:#111827 !important;}
 body.light-theme #td-saved-table .td-shift-morning,
-body.light-theme #hm-td-saved-table .td-shift-morning{
+body.light-theme #hm-td-saved-table .td-shift-morning,
+body.light-theme #r3d-td-saved-table .td-shift-morning{
   color:#065f46 !important;
   background:rgba(16,185,129,0.24) !important;
   border-color:rgba(5,150,105,0.52) !important;
 }
 body.light-theme #td-saved-table .td-shift-evening,
-body.light-theme #hm-td-saved-table .td-shift-evening{
+body.light-theme #hm-td-saved-table .td-shift-evening,
+body.light-theme #r3d-td-saved-table .td-shift-evening{
   color:#9a3412 !important;
   background:rgba(249,115,22,0.24) !important;
   border-color:rgba(234,88,12,0.54) !important;
 }
 body.light-theme #td-saved-table .td-shift-night,
-body.light-theme #hm-td-saved-table .td-shift-night{
+body.light-theme #hm-td-saved-table .td-shift-night,
+body.light-theme #r3d-td-saved-table .td-shift-night{
   color:#312e81 !important;
   background:rgba(99,102,241,0.25) !important;
   border-color:rgba(79,70,229,0.58) !important;
 }
 body.light-theme #td-saved-table .td-shift-generic,
-body.light-theme #hm-td-saved-table .td-shift-generic{
+body.light-theme #hm-td-saved-table .td-shift-generic,
+body.light-theme #r3d-td-saved-table .td-shift-generic{
   color:#334155 !important;
   background:rgba(148,163,184,0.2) !important;
   border-color:rgba(100,116,139,0.5) !important;
@@ -11108,6 +11221,15 @@ html, body, body *, body *::before, body *::after, svg text{
               📋 Saved Entries
             </div>
           </div>
+          <div class="td-saved-filter-bar" data-saved-filter-bar>
+            <span class="td-saved-filter-label">Filter</span>
+            <select class="td-saved-filter-select" data-saved-filter-field onchange="setSavedEntryFilterFromControls(this)" aria-label="Saved entries filter parameter"></select>
+            <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-min oninput="setSavedEntryFilterFromControls(this)" placeholder="Min" aria-label="Saved entries minimum value">
+            <span class="td-saved-filter-sep">to</span>
+            <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-max oninput="setSavedEntryFilterFromControls(this)" placeholder="Max" aria-label="Saved entries maximum value">
+            <button type="button" class="td-saved-filter-clear" onclick="clearSavedEntryFilter()">Clear</button>
+            <span class="td-saved-filter-status" data-saved-filter-status></span>
+          </div>
           <div class="td-saved-scroll">
             <table id="hm-td-saved-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
               <thead>
@@ -11537,6 +11659,15 @@ html, body, body *, body *::before, body *::after, svg text{
               📋 Saved Entries
             </div>
           </div>
+          <div class="td-saved-filter-bar" data-saved-filter-bar>
+            <span class="td-saved-filter-label">Filter</span>
+            <select class="td-saved-filter-select" data-saved-filter-field onchange="setSavedEntryFilterFromControls(this)" aria-label="Saved entries filter parameter"></select>
+            <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-min oninput="setSavedEntryFilterFromControls(this)" placeholder="Min" aria-label="Saved entries minimum value">
+            <span class="td-saved-filter-sep">to</span>
+            <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-max oninput="setSavedEntryFilterFromControls(this)" placeholder="Max" aria-label="Saved entries maximum value">
+            <button type="button" class="td-saved-filter-clear" onclick="clearSavedEntryFilter()">Clear</button>
+            <span class="td-saved-filter-status" data-saved-filter-status></span>
+          </div>
           <div class="td-saved-scroll">
             <table id="r3d-td-saved-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
               <thead>
@@ -11955,6 +12086,15 @@ html, body, body *, body *::before, body *::after, svg text{
           <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;">
             📋 Saved Entries
           </div>
+        </div>
+        <div class="td-saved-filter-bar" data-saved-filter-bar>
+          <span class="td-saved-filter-label">Filter</span>
+          <select class="td-saved-filter-select" data-saved-filter-field onchange="setSavedEntryFilterFromControls(this)" aria-label="Saved entries filter parameter"></select>
+          <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-min oninput="setSavedEntryFilterFromControls(this)" placeholder="Min" aria-label="Saved entries minimum value">
+          <span class="td-saved-filter-sep">to</span>
+          <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-max oninput="setSavedEntryFilterFromControls(this)" placeholder="Max" aria-label="Saved entries maximum value">
+          <button type="button" class="td-saved-filter-clear" onclick="clearSavedEntryFilter()">Clear</button>
+          <span class="td-saved-filter-status" data-saved-filter-status></span>
         </div>
         <div class="td-saved-scroll">
           <table id="td-saved-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
@@ -19456,24 +19596,176 @@ function getSavedEntryShiftChipClass(shift){
   return "td-shift-chip td-shift-generic";
 }
 
-function renderTempDataTableInto(tbodyId){
+var SAVED_ENTRY_FILTER_STORAGE_KEY = "scadaSavedEntryRangeFilter";
+var SAVED_ENTRY_FILTER_FIELDS = [
+  {key:"hguLoad", label:"HGU Load (%)"},
+  {key:"abCot", label:"AB COT (°C)"},
+  {key:"cdCot", label:"CD COT (°C)"},
+  {key:"flueGas", label:"Flue Gas (°C)"},
+  {key:"excessO2", label:"O2 (%Vol)"},
+  {key:"preRefMax", label:"Pre-ref Max (°C)"},
+  {key:"preRefMin", label:"Pre-ref Min (°C)"},
+  {key:"methaneSlip", label:"Methane Slip (%Vol)"}
+];
+
+function sanitizeSavedEntryFilterState(raw){
+  var fallback = {field:"", min:"", max:""};
+  if(!raw || typeof raw !== "object") return fallback;
+  var field = String(raw.field || "").trim();
+  var validField = "";
+  for(var i=0;i<SAVED_ENTRY_FILTER_FIELDS.length;i++){
+    if(SAVED_ENTRY_FILTER_FIELDS[i].key === field){
+      validField = field;
+      break;
+    }
+  }
+  return {
+    field: validField,
+    min: String(raw.min == null ? "" : raw.min).trim(),
+    max: String(raw.max == null ? "" : raw.max).trim()
+  };
+}
+
+function loadSavedEntryFilterState(){
+  try{
+    var saved = localStorage.getItem(SAVED_ENTRY_FILTER_STORAGE_KEY);
+    if(saved) return sanitizeSavedEntryFilterState(JSON.parse(saved));
+  }catch(e){}
+  return {field:"", min:"", max:""};
+}
+
+var savedEntryFilterState = loadSavedEntryFilterState();
+
+function persistSavedEntryFilterState(){
+  try{
+    localStorage.setItem(SAVED_ENTRY_FILTER_STORAGE_KEY, JSON.stringify(savedEntryFilterState));
+  }catch(e){}
+}
+
+function getSavedEntryFilterFieldMeta(fieldKey){
+  for(var i=0;i<SAVED_ENTRY_FILTER_FIELDS.length;i++){
+    if(SAVED_ENTRY_FILTER_FIELDS[i].key === fieldKey) return SAVED_ENTRY_FILTER_FIELDS[i];
+  }
+  return null;
+}
+
+function ensureSavedEntryFilterOptions(){
+  var options = '<option value="">Select parameter</option>';
+  for(var i=0;i<SAVED_ENTRY_FILTER_FIELDS.length;i++){
+    var meta = SAVED_ENTRY_FILTER_FIELDS[i];
+    options += '<option value="' + meta.key + '">' + meta.label + '</option>';
+  }
+  document.querySelectorAll("[data-saved-filter-field]").forEach(function(selectEl){
+    if(selectEl.getAttribute("data-options-ready") === "1") return;
+    selectEl.innerHTML = options;
+    selectEl.setAttribute("data-options-ready", "1");
+  });
+}
+
+function parseSavedEntryFilterNumber(raw){
+  var s = String(raw == null ? "" : raw).trim();
+  if(!s) return NaN;
+  s = s.replace(/,/g, "");
+  var match = s.match(/-?\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : NaN;
+}
+
+function syncSavedEntryFilterUi(meta){
+  ensureSavedEntryFilterOptions();
+  var activeFieldMeta = getSavedEntryFilterFieldMeta(savedEntryFilterState.field);
+  var hasBounds = savedEntryFilterState.min !== "" || savedEntryFilterState.max !== "";
+  var statusText = "";
+  if(meta && typeof meta.displayCount === "number" && typeof meta.totalCount === "number"){
+    statusText = meta.totalCount ? (meta.displayCount + " / " + meta.totalCount + " shown") : "No entries";
+  }else if(activeFieldMeta && hasBounds){
+    statusText = activeFieldMeta.label;
+  }else{
+    statusText = tempDataEntries.length ? (tempDataEntries.length + " entries") : "No entries";
+  }
+  document.querySelectorAll("[data-saved-filter-bar]").forEach(function(bar){
+    var fieldEl = bar.querySelector("[data-saved-filter-field]");
+    var minEl = bar.querySelector("[data-saved-filter-min]");
+    var maxEl = bar.querySelector("[data-saved-filter-max]");
+    var statusEl = bar.querySelector("[data-saved-filter-status]");
+    if(fieldEl) fieldEl.value = savedEntryFilterState.field || "";
+    if(minEl){
+      minEl.value = savedEntryFilterState.min || "";
+      minEl.disabled = !savedEntryFilterState.field;
+    }
+    if(maxEl){
+      maxEl.value = savedEntryFilterState.max || "";
+      maxEl.disabled = !savedEntryFilterState.field;
+    }
+    if(statusEl) statusEl.textContent = statusText;
+  });
+}
+
+function setSavedEntryFilterFromControls(sourceEl){
+  var bar = sourceEl && sourceEl.closest ? sourceEl.closest("[data-saved-filter-bar]") : document.querySelector("[data-saved-filter-bar]");
+  if(!bar) return;
+  savedEntryFilterState = sanitizeSavedEntryFilterState({
+    field: (bar.querySelector("[data-saved-filter-field]") || {}).value || "",
+    min: (bar.querySelector("[data-saved-filter-min]") || {}).value || "",
+    max: (bar.querySelector("[data-saved-filter-max]") || {}).value || ""
+  });
+  persistSavedEntryFilterState();
+  renderTempDataTable();
+}
+
+function clearSavedEntryFilter(){
+  savedEntryFilterState = {field:"", min:"", max:""};
+  persistSavedEntryFilterState();
+  renderTempDataTable();
+}
+
+function getFilteredTempDataEntries(){
+  var rows = tempDataEntries.map(function(ent, idx){
+    return {ent: ent, originalIndex: idx};
+  });
+  var state = sanitizeSavedEntryFilterState(savedEntryFilterState);
+  if(!state.field) return rows;
+  var min = parseSavedEntryFilterNumber(state.min);
+  var max = parseSavedEntryFilterNumber(state.max);
+  var hasMin = isFinite(min);
+  var hasMax = isFinite(max);
+  if(!hasMin && !hasMax) return rows;
+  if(hasMin && hasMax && min > max){
+    var swap = min;
+    min = max;
+    max = swap;
+  }
+  return rows.filter(function(row){
+    var value = parseSavedEntryFilterNumber(row && row.ent ? row.ent[state.field] : "");
+    if(!isFinite(value)) return false;
+    if(hasMin && value < min) return false;
+    if(hasMax && value > max) return false;
+    return true;
+  });
+}
+
+function renderTempDataTableInto(tbodyId, display, totalCount){
   var tbody = document.getElementById(tbodyId);
   if(!tbody) return;
-  if(!tempDataEntries.length){
+  if(!totalCount){
     tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
     return;
   }
-  var display = tempDataEntries.slice();
+  if(!display.length){
+    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#94a3b8;padding:20px;">No entries match the selected filter.</td></tr>';
+    return;
+  }
   var rows = "";
   for(var i = 0; i < display.length; i++){
-    var ent = display[i];
+    var row = display[i];
+    var ent = row.ent;
+    var originalIndex = row.originalIndex;
     var shiftLabel = ent.shift || "—";
     var shiftChipClass = getSavedEntryShiftChipClass(shiftLabel);
     var dtView = formatTempEntryDateTime(ent.dt);
     var dtHtml = '<div class="td-dt-wrap"><div class="td-dt-date">' + dtView.date + '</div>'
       + (dtView.time ? ('<div class="td-dt-time">' + dtView.time + '</div>') : '')
       + '</div>';
-    rows += '<tr onclick="openAllPHModal(' + i + ')" title="Open peep-hole details" style="border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
+    rows += '<tr onclick="openAllPHModal(' + originalIndex + ')" title="Open peep-hole details" style="border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
       + '<td style="text-align:left;">' + dtHtml + '</td>'
       + '<td style="text-align:center;"><span class="' + shiftChipClass + '">' + shiftLabel + '</span></td>'
       + '<td style="text-align:center;">' + (ent.hguLoad||"—") + '</td>'
@@ -19490,8 +19782,8 @@ function renderTempDataTableInto(tbodyId){
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-top") + '</td>'
       + '<td style="text-align:center;">'
         + '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">'
-          + '<button onclick="event.stopPropagation();editTempEntry(' + i + ')" style="background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.45);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Edit entry">✏️ Edit</button>'
-          + '<button onclick="event.stopPropagation();deleteTempEntry(' + i + ')" style="background:rgba(192,57,43,0.2);color:#f87171;border:1px solid rgba(192,57,43,0.4);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Delete entry">🗑 Del</button>'
+          + '<button onclick="event.stopPropagation();editTempEntry(' + originalIndex + ')" style="background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.45);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Edit entry">✏️ Edit</button>'
+          + '<button onclick="event.stopPropagation();deleteTempEntry(' + originalIndex + ')" style="background:rgba(192,57,43,0.2);color:#f87171;border:1px solid rgba(192,57,43,0.4);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Delete entry">🗑 Del</button>'
         + '</div>'
       + '</td>'
       + '</tr>';
@@ -19500,9 +19792,11 @@ function renderTempDataTableInto(tbodyId){
 }
 
 function renderTempDataTable(){
-  renderTempDataTableInto("td-saved-tbody");
-  renderTempDataTableInto("hm-td-saved-tbody");
-  renderTempDataTableInto("r3d-td-saved-tbody");
+  var display = getFilteredTempDataEntries();
+  syncSavedEntryFilterUi({displayCount: display.length, totalCount: tempDataEntries.length});
+  renderTempDataTableInto("td-saved-tbody", display, tempDataEntries.length);
+  renderTempDataTableInto("hm-td-saved-tbody", display, tempDataEntries.length);
+  renderTempDataTableInto("r3d-td-saved-tbody", display, tempDataEntries.length);
 }
 
 
