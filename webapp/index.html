@@ -10875,6 +10875,34 @@ html, body, body *, body *::before, body *::after, svg text{
           parent.add(sprite);
         }
 
+        function hmUploadedAddTopFaceLabel(parent, text, x, y, z){
+          var c = document.createElement("canvas");
+          c.width = 1024;
+          c.height = 256;
+          var ctx = c.getContext("2d");
+          ctx.clearRect(0, 0, c.width, c.height);
+          ctx.fillStyle = "rgba(255,255,255,0.92)";
+          ctx.font = "700 88px Times New Roman, serif";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.shadowColor = "rgba(8,10,18,0.28)";
+          ctx.shadowBlur = 10;
+          ctx.fillText(text, 26, 126);
+
+          var tex = new THREE.CanvasTexture(c);
+          tex.minFilter = THREE.LinearFilter;
+          tex.magFilter = THREE.LinearFilter;
+
+          var mesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.18, 0.28),
+            new THREE.MeshBasicMaterial({map:tex, transparent:true, depthWrite:false})
+          );
+          mesh.rotation.x = -Math.PI / 2;
+          mesh.position.set(x, y, z);
+          mesh.renderOrder = 9;
+          parent.add(mesh);
+        }
+
         function hmUploadedAverageTemp(valsA, valsB){
           var sum = 0;
           var count = 0;
@@ -11191,13 +11219,10 @@ html, body, body *, body *::before, body *::after, svg text{
             side:THREE.DoubleSide
           });
           var topShellMat = new THREE.MeshStandardMaterial({
-            color:0x9A8578,
-            metalness:0.52,
-            roughness:0.42,
-            side:THREE.DoubleSide,
-            transparent:true,
-            opacity:0.58,
-            depthWrite:false
+            color:0x9E7F68,
+            metalness:0.18,
+            roughness:0.76,
+            side:THREE.DoubleSide
           });
           var innerMat = new THREE.MeshStandardMaterial({
             color:0x0A0A0A,
@@ -11329,7 +11354,7 @@ html, body, body *, body *::before, body *::after, svg text{
           grid.position.set(0, -0.07, 0);
           parent.add(grid);
 
-          hmUploadedAddLabel(parent, label, 0, sY + 0.7, 0);
+          hmUploadedAddTopFaceLabel(parent, "Chamber " + label, -0.12, sY + wallT / 2 + 0.006, -1.58);
           hmUploadedAddLabel(parent, "Front", 0, -0.6, sZ / 2 + 1.2);
           hmUploadedAddLabel(parent, "Back", 0, -0.6, -sZ / 2 - 1.2);
           return {wallOverlays:wallOverlays};
