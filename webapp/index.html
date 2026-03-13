@@ -10454,11 +10454,361 @@ html, body, body *, body *::before, body *::after, svg text{
           color:#4b5563 !important;
         }
       </style>
+      <style id="heatmap-cuboid-reworked-reference-20260313">
+        #tab-heatmap{
+          --cb-ref-shell:#9a8578;
+          --cb-ref-shell-line:rgba(233,215,204,0.56);
+          --cb-ref-shell-fill:rgba(154,133,120,0.16);
+          --cb-ref-shell-fill-light:rgba(203,186,173,0.18);
+          --cb-ref-tube:#8899aa;
+          --cb-ref-tube-light:#d6e3ee;
+          --cb-ref-header:#7090a8;
+          --cb-ref-header-light:#87a4ba;
+          --cb-ref-ground:#334155;
+          --cb-ref-ground-line:rgba(148,163,184,0.24);
+          --cb-ref-accent-ab:243,112,34;
+          --cb-ref-accent-cd:126,200,240;
+        }
+        #tab-heatmap .cb-dual-shell.hm-reworked-shell{
+          background:
+            radial-gradient(circle at top,rgba(232,81,26,0.1) 0%,transparent 32%),
+            linear-gradient(180deg,rgba(8,12,18,0.98) 0%,rgba(5,9,14,0.98) 100%);
+          border:1px solid rgba(30,37,48,0.94);
+          border-radius:20px;
+          box-shadow:0 16px 42px rgba(0,0,0,0.46);
+          overflow:hidden;
+        }
+        body.light-theme #tab-heatmap .cb-dual-shell.hm-reworked-shell{
+          background:
+            radial-gradient(circle at top,rgba(232,81,26,0.08) 0%,transparent 34%),
+            linear-gradient(180deg,#ffffff 0%,#edf3f9 100%);
+          border-color:rgba(148,163,184,0.34);
+          box-shadow:0 12px 28px rgba(15,23,42,0.1);
+        }
+        #tab-heatmap .cb-wrap.hm-reworked-wrap{
+          position:relative;
+        }
+        #tab-heatmap .cb-wrap.hm-reworked-wrap .cb-title{
+          font-size:14px;
+          letter-spacing:2.6px;
+          padding:6px 20px;
+        }
+        #tab-heatmap .cb-wrap.hm-reworked-wrap .cb-subtitle{
+          display:block;
+          margin-bottom:8px;
+          font-size:10px;
+          color:#97a6b7;
+          letter-spacing:0.7px;
+          text-transform:uppercase;
+          text-align:center;
+        }
+        body.light-theme #tab-heatmap .cb-wrap.hm-reworked-wrap .cb-subtitle{
+          color:#64748b;
+        }
+        #tab-heatmap .cb-scene.hm-reworked-scene{
+          border-radius:24px;
+          background:
+            radial-gradient(circle at 50% 8%,rgba(var(--cb-accent-rgb,243,112,34),0.18) 0%,transparent 32%),
+            linear-gradient(180deg,rgba(18,25,36,0.88),rgba(8,12,20,0.98));
+          border:1px solid rgba(148,163,184,0.18);
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 28px rgba(2,6,23,0.32);
+        }
+        #tab-heatmap .cb-scene.hm-reworked-scene::before{
+          border-radius:24px;
+          border-color:rgba(148,163,184,0.22) !important;
+          box-shadow:inset 0 0 36px rgba(2,6,23,0.34) !important;
+        }
+        #tab-heatmap .cb-scene.hm-reworked-scene::after{
+          content:"";
+          position:absolute;
+          inset:0;
+          border-radius:24px;
+          background:
+            linear-gradient(rgba(255,255,255,0.04) 1px,transparent 1px),
+            linear-gradient(90deg,rgba(255,255,255,0.04) 1px,transparent 1px);
+          background-size:100% 44px,44px 100%;
+          opacity:0.16;
+          pointer-events:none;
+          z-index:0;
+        }
+        #tab-heatmap .cb-scene.hm-reworked-scene .cb-group{
+          z-index:1;
+        }
+        body.light-theme #tab-heatmap .cb-scene.hm-reworked-scene{
+          background:
+            radial-gradient(circle at 50% 8%,rgba(var(--cb-accent-rgb,243,112,34),0.1) 0%,transparent 34%),
+            linear-gradient(180deg,#f8fbff 0%,#e8f0f8 100%);
+          border-color:rgba(148,163,184,0.26);
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.65), inset 0 0 24px rgba(148,163,184,0.12);
+        }
+        body.light-theme #tab-heatmap .cb-scene.hm-reworked-scene::after{
+          background:
+            linear-gradient(rgba(15,23,42,0.04) 1px,transparent 1px),
+            linear-gradient(90deg,rgba(15,23,42,0.04) 1px,transparent 1px);
+          opacity:0.22;
+        }
+        #tab-heatmap .cb-ground-grid{
+          position:absolute;
+          left:50%;
+          bottom:22px;
+          width:min(86%,720px);
+          height:42px;
+          transform:translateX(-50%);
+          border-radius:999px;
+          background:
+            linear-gradient(90deg,transparent 0%,rgba(148,163,184,0.08) 14%,rgba(148,163,184,0.16) 50%,rgba(148,163,184,0.08) 86%,transparent 100%);
+          filter:blur(1px);
+          opacity:0.6;
+          pointer-events:none;
+          z-index:0;
+        }
+        #tab-heatmap .cb-ground-pad{
+          position:absolute;
+          left:50%;
+          bottom:34px;
+          width:min(74%,640px);
+          height:24px;
+          transform:translateX(-50%);
+          border-radius:999px;
+          border:1px solid var(--cb-ref-ground-line);
+          background:linear-gradient(180deg,rgba(67,83,104,0.96),rgba(41,55,73,0.94));
+          box-shadow:0 18px 26px rgba(0,0,0,0.34);
+          pointer-events:none;
+          z-index:0;
+        }
+        #tab-heatmap .cb-ground-pad::before{
+          content:"";
+          position:absolute;
+          left:10%;
+          right:10%;
+          top:-6px;
+          height:34px;
+          border-radius:999px;
+          background:radial-gradient(ellipse at center,rgba(var(--cb-accent-rgb,243,112,34),0.18) 0%,transparent 72%);
+          filter:blur(12px);
+          opacity:0.85;
+        }
+        #tab-heatmap .cb-scene-note{
+          position:absolute;
+          left:50%;
+          bottom:70px;
+          transform:translateX(-50%);
+          padding:6px 12px;
+          border-radius:999px;
+          background:rgba(2,6,23,0.58);
+          border:1px solid rgba(var(--cb-accent-rgb,243,112,34),0.18);
+          color:#cbd5e1;
+          font-size:10px;
+          font-weight:700;
+          letter-spacing:1px;
+          text-transform:uppercase;
+          white-space:nowrap;
+          pointer-events:none;
+          z-index:2;
+        }
+        body.light-theme #tab-heatmap .cb-scene-note{
+          background:rgba(255,255,255,0.92);
+          color:#334155;
+          border-color:rgba(var(--cb-accent-rgb,243,112,34),0.24);
+        }
+        #tab-heatmap .hm-reworked-cube .cb-face.cb-fb{
+          border:1.6px solid var(--cb-ref-shell-line) !important;
+          background:linear-gradient(180deg,var(--cb-ref-shell-fill),rgba(154,133,120,0.06)) !important;
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.08),
+            inset 0 0 0 1px rgba(203,213,225,0.12),
+            inset 0 0 30px rgba(10,10,10,0.18),
+            0 10px 18px rgba(0,0,0,0.16) !important;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-face.cb-lr{
+          border:1.5px solid rgba(233,215,204,0.42) !important;
+          background:linear-gradient(180deg,rgba(154,133,120,0.14),rgba(154,133,120,0.08)) !important;
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.07),
+            inset 0 0 22px rgba(10,10,10,0.14) !important;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-face.cb-tb{
+          border:1.5px solid rgba(224,206,196,0.44) !important;
+          background:transparent !important;
+          box-shadow:none !important;
+        }
+        body.light-theme #tab-heatmap .hm-reworked-cube .cb-face.cb-fb{
+          background:linear-gradient(180deg,var(--cb-ref-shell-fill-light),rgba(203,186,173,0.08)) !important;
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.72),
+            inset 0 0 0 1px rgba(148,163,184,0.16),
+            inset 0 0 20px rgba(148,163,184,0.12) !important;
+        }
+        body.light-theme #tab-heatmap .hm-reworked-cube .cb-face.cb-lr{
+          background:linear-gradient(180deg,rgba(203,186,173,0.18),rgba(203,186,173,0.1)) !important;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-side-face-panel{
+          background:linear-gradient(180deg,rgba(146,128,114,0.18) 0%,rgba(116,101,88,0.08) 100%) !important;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-side-cutout-svg rect[mask]{
+          fill:rgba(2,6,23,0.72) !important;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-side-cutout-svg rect[fill="none"]{
+          stroke:rgba(203,213,225,0.72) !important;
+          stroke-width:2 !important;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-inner-tube{
+          width:18px;
+          margin-left:-9px;
+          height:calc(var(--cb-h) + 58px) !important;
+          margin-top:calc(-1 * var(--cb-h-half) - 29px) !important;
+          background:
+            linear-gradient(90deg,rgba(214,227,238,0.92) 0%,rgba(136,153,170,0.98) 18%,rgba(114,135,155,0.96) 52%,rgba(214,227,238,0.86) 100%);
+          border:1px solid rgba(255,255,255,0.12);
+          box-shadow:
+            0 0 0 1px rgba(255,255,255,0.06),
+            0 0 14px rgba(136,153,170,0.16),
+            inset 0 0 8px rgba(255,255,255,0.1) !important;
+          opacity:0.88;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-inner-tube::before{
+          width:2px;
+          background:linear-gradient(180deg,rgba(255,255,255,0.16) 0%,rgba(214,227,238,0.28) 14%,rgba(136,153,170,0.18) 70%,transparent 100%);
+        }
+        #tab-heatmap .hm-reworked-cube .cb-top-cap-inner{
+          width:96%;
+          height:78%;
+          border-radius:18px;
+          background:linear-gradient(180deg,rgba(154,133,120,0.18),rgba(154,133,120,0.04)) !important;
+          border:1px solid rgba(233,215,204,0.32);
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 20px rgba(10,10,10,0.12) !important;
+          overflow:visible;
+          transform-style:preserve-3d;
+        }
+        body.light-theme #tab-heatmap .hm-reworked-cube .cb-top-cap-inner{
+          background:linear-gradient(180deg,rgba(203,186,173,0.18),rgba(203,186,173,0.04)) !important;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe{
+          position:absolute;
+          left:50%;
+          top:50%;
+          width:20px;
+          height:112px;
+          transform:translate(-50%,-50%) translateZ(2px);
+          border-radius:999px;
+          border:1px solid rgba(255,255,255,0.18);
+          background:linear-gradient(180deg,var(--cb-ref-header-light) 0%,var(--cb-ref-header) 42%,#5e7b90 100%);
+          box-shadow:0 0 16px rgba(112,144,168,0.22);
+        }
+        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe::before,
+        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe::after{
+          content:"";
+          position:absolute;
+          left:50%;
+          width:24px;
+          height:24px;
+          transform:translateX(-50%);
+          border-radius:50%;
+          border:1px solid rgba(255,255,255,0.18);
+          background:linear-gradient(180deg,var(--cb-ref-header-light) 0%,var(--cb-ref-header) 100%);
+        }
+        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe::before{top:-4px;}
+        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe::after{bottom:-4px;}
+        #tab-heatmap .hm-reworked-cube .cb-top-port{
+          width:26px;
+          height:26px;
+          border-radius:50%;
+          border:1px solid rgba(255,255,255,0.16);
+          background:radial-gradient(circle at 35% 35%,var(--cb-ref-tube-light) 0%,var(--cb-ref-tube) 42%,#647e93 100%);
+          box-shadow:
+            0 0 0 3px rgba(9,14,20,0.34),
+            0 0 12px rgba(112,144,168,0.22);
+          z-index:2;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-top-port::before{
+          content:"";
+          position:absolute;
+          left:var(--tube-bridge-left,auto);
+          right:var(--tube-bridge-right,auto);
+          top:50%;
+          width:var(--tube-bridge-width,0px);
+          height:8px;
+          transform:translateY(-50%);
+          border-radius:999px;
+          background:linear-gradient(180deg,var(--cb-ref-header-light) 0%,var(--cb-ref-header) 42%,#5e7b90 100%);
+          box-shadow:0 0 8px rgba(112,144,168,0.16);
+          z-index:0;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-top-port::after{
+          content:"";
+          position:absolute;
+          left:50%;
+          top:50%;
+          width:16px;
+          height:40px;
+          transform:translate(-50%,-72%);
+          border-radius:999px;
+          border:1px solid rgba(255,255,255,0.12);
+          background:linear-gradient(180deg,var(--cb-ref-tube-light) 0%,var(--cb-ref-tube) 18%,#72879b 100%);
+          box-shadow:0 0 12px rgba(136,153,170,0.16);
+          z-index:1;
+        }
+        #tab-heatmap .hm-reworked-cube .cb-top-cap-label{
+          bottom:-18px;
+          color:#e2e8f0 !important;
+          letter-spacing:2px;
+        }
+        body.light-theme #tab-heatmap .hm-reworked-cube .cb-top-cap-label{
+          color:#334155 !important;
+        }
+        #tab-heatmap .hm-reworked-cube #face-ab-bottom,
+        #tab-heatmap .hm-reworked-cube #face-cd-bottom{
+          border-color:rgba(100,116,139,0.26) !important;
+        }
+        #tab-heatmap .hm-reworked-cube #face-ab-bottom span,
+        #tab-heatmap .hm-reworked-cube #face-cd-bottom span{
+          color:#64748b !important;
+          letter-spacing:2.4px !important;
+        }
+        @media (max-width:900px){
+          #tab-heatmap .cb-dual-shell.hm-reworked-shell{
+            border-radius:16px;
+          }
+          #tab-heatmap .cb-wrap.hm-reworked-wrap .cb-subtitle{
+            font-size:9px;
+            letter-spacing:0.5px;
+          }
+          #tab-heatmap .cb-ground-pad{
+            height:18px;
+            bottom:22px;
+          }
+          #tab-heatmap .cb-ground-grid{
+            bottom:12px;
+            height:30px;
+          }
+          #tab-heatmap .cb-scene-note{
+            bottom:50px;
+            font-size:9px;
+            padding:5px 10px;
+          }
+          #tab-heatmap .hm-reworked-cube .cb-top-header-pipe{
+            width:16px;
+            height:78px;
+          }
+          #tab-heatmap .hm-reworked-cube .cb-top-port{
+            width:20px;
+            height:20px;
+          }
+          #tab-heatmap .hm-reworked-cube .cb-top-port::after{
+            width:12px;
+            height:28px;
+          }
+          #tab-heatmap .hm-reworked-cube .cb-inner-tube{
+            width:14px;
+            margin-left:-7px;
+          }
+        }
+      </style>
 
       <!-- html2canvas removed — faces render via direct HTML injection -->
 
       <div id="hm-cuboid-zoom-backdrop" onclick="setHeatMapCuboidZoom(false)" aria-hidden="true"></div>
-      <div class="cb-dual-shell">
+      <div class="cb-dual-shell hm-reworked-shell">
       <div class="hm-cuboid-heat-strip">
         <div class="hm-legend-strip">
           <span class="hm-legend-title">BURNER STATE</span>
@@ -10488,7 +10838,7 @@ html, body, body *, body *::before, body *::after, svg text{
       <div class="cb-dual-row">
 
         <!-- ══ AB SIDE CUBOID ══ -->
-        <div class="cb-wrap" data-cuboid="ab" ondblclick="setHeatMapCuboidZoom('ab')" title="Double-click to zoom AB cuboid">
+        <div class="cb-wrap hm-reworked-wrap" data-cuboid="ab" ondblclick="setHeatMapCuboidZoom('ab')" title="Double-click to zoom AB cuboid">
           <div class="hm-cuboid-side-legend hm-cuboid-side-legend-left" aria-hidden="true">
             <span class="hm-cuboid-side-legend-vert hm-cuboid-side-label">COLD</span>
             <div class="hm-cuboid-side-heat"></div>
@@ -10512,35 +10862,38 @@ html, body, body *, body *::before, body *::after, svg text{
               <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">CLOSED (C)</span>
             </div>
           </div>
-          <div class="cb-title" style="color:#F37022;background:rgba(243,112,34,0.1);border:1px solid rgba(243,112,34,0.35);">◀ AB SIDE</div>
+          <div class="cb-title" style="color:#F37022;background:rgba(243,112,34,0.1);border:1px solid rgba(243,112,34,0.35);">AB CHAMBER</div>
+          <div class="cb-subtitle">Wall A front · Wall B back · AB PH/TST feed</div>
 
-          <div class="cb-scene cb-float cb-scene-ab" id="ab-scene">
-            <div class="cb-group" id="ab-cube" style="transform:rotateX(-4deg) rotateY(-76deg);">
+          <div class="cb-scene cb-float cb-scene-ab hm-reworked-scene" id="ab-scene" style="--cb-accent-rgb:243,112,34;">
+            <div class="cb-ground-grid" aria-hidden="true"></div>
+            <div class="cb-ground-pad" aria-hidden="true"></div>
+            <div class="cb-group hm-reworked-cube" id="ab-cube" style="transform:rotateX(-4deg) rotateY(-76deg);">
 
               <!-- FRONT = Wall A -->
-              <div class="cb-face cb-fb" id="face-ab-front" style="transform:translateZ(80px);border:2px solid rgba(243,112,34,0.75);background:#0a1628;">
+              <div class="cb-face cb-fb" id="face-ab-front" style="transform:translateZ(80px);background:rgba(10,22,40,0.55);">
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#F37022;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-ab-front-loading">⏳ RENDERING WALL A…</div>
               </div>
 
               <!-- BACK = Wall B -->
-              <div class="cb-face cb-fb" id="face-ab-back" style="transform:rotateY(180deg) translateZ(80px);border:2px solid rgba(251,146,60,0.65);background:#0a1628;">
+              <div class="cb-face cb-fb" id="face-ab-back" style="transform:rotateY(180deg) translateZ(80px);background:rgba(10,22,40,0.55);">
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fb923c;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-ab-back-loading">⏳ RENDERING WALL B…</div>
               </div>
 
-              <!-- Internal tubes (visible mainly from top cap) -->
+              <!-- Internal tubes -->
               <div class="cb-inner-tube-wrap" aria-hidden="true">
-                <div class="cb-inner-tube" style="--tube-x:-224px;--cb-tube-rgb:243,112,34;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-160px;--cb-tube-rgb:243,112,34;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-96px;--cb-tube-rgb:243,112,34;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-32px;--cb-tube-rgb:243,112,34;"></div>
-                <div class="cb-inner-tube" style="--tube-x:32px;--cb-tube-rgb:243,112,34;"></div>
-                <div class="cb-inner-tube" style="--tube-x:96px;--cb-tube-rgb:243,112,34;"></div>
-                <div class="cb-inner-tube" style="--tube-x:160px;--cb-tube-rgb:243,112,34;"></div>
-                <div class="cb-inner-tube" style="--tube-x:224px;--cb-tube-rgb:243,112,34;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-224px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-160px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-96px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-32px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:32px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:96px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:160px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:224px;--cb-tube-rgb:136,153,170;"></div>
               </div>
 
               <!-- LEFT side cap -->
-              <div class="cb-face cb-lr" id="face-ab-left" style="transform:rotateY(-90deg) translateZ(360px);border:1.5px solid rgba(243,112,34,0.35);">
+              <div class="cb-face cb-lr" id="face-ab-left" style="transform:rotateY(-90deg) translateZ(360px);">
                 <div class="cb-side-face-panel" aria-hidden="true">
                   <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
                     <defs>
@@ -10550,7 +10903,7 @@ html, body, body *, body *::before, body *::after, svg text{
                         <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
                       </mask>
                     </defs>
-                    <rect x="0" y="0" width="160" height="500" fill="rgba(0,0,0,0.92)" mask="url(#cb-mask-ab-l)"></rect>
+                    <rect x="0" y="0" width="160" height="500" fill="rgba(2,6,23,0.72)" mask="url(#cb-mask-ab-l)"></rect>
                     <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
                     <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
                   </svg>
@@ -10558,7 +10911,7 @@ html, body, body *, body *::before, body *::after, svg text{
               </div>
 
               <!-- RIGHT side cap -->
-              <div class="cb-face cb-lr" id="face-ab-right" style="transform:rotateY(90deg) translateZ(360px);border:1.5px solid rgba(251,146,60,0.35);">
+              <div class="cb-face cb-lr" id="face-ab-right" style="transform:rotateY(90deg) translateZ(360px);">
                 <div class="cb-side-face-panel" aria-hidden="true">
                   <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
                     <defs>
@@ -10568,7 +10921,7 @@ html, body, body *, body *::before, body *::after, svg text{
                         <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
                       </mask>
                     </defs>
-                    <rect x="0" y="0" width="160" height="500" fill="rgba(0,0,0,0.92)" mask="url(#cb-mask-ab-r)"></rect>
+                    <rect x="0" y="0" width="160" height="500" fill="rgba(2,6,23,0.72)" mask="url(#cb-mask-ab-r)"></rect>
                     <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
                     <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
                   </svg>
@@ -10576,25 +10929,26 @@ html, body, body *, body *::before, body *::after, svg text{
               </div>
 
               <!-- TOP cap -->
-              <div class="cb-face cb-tb" id="face-ab-top" style="transform:rotateX(90deg) translateZ(250px);background:transparent;border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
-                <div class="cb-top-cap-inner" style="--cb-tube-rgb:243,112,34;">
+              <div class="cb-face cb-tb" id="face-ab-top" style="transform:rotateX(90deg) translateZ(250px);display:flex;align-items:center;justify-content:center;">
+                <div class="cb-top-cap-inner">
+                  <div class="cb-top-header-pipe"></div>
                   <div class="cb-top-port-line">
-                    <span class="cb-top-port" style="--tube-x:-224px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-160px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-96px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-32px;"></span>
-                    <span class="cb-top-port" style="--tube-x:32px;"></span>
-                    <span class="cb-top-port" style="--tube-x:96px;"></span>
-                    <span class="cb-top-port" style="--tube-x:160px;"></span>
-                    <span class="cb-top-port" style="--tube-x:224px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-224px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:224px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-160px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:160px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-96px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:96px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-32px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:32px;"></span>
+                    <span class="cb-top-port" style="--tube-x:32px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:32px;"></span>
+                    <span class="cb-top-port" style="--tube-x:96px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:96px;"></span>
+                    <span class="cb-top-port" style="--tube-x:160px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:160px;"></span>
+                    <span class="cb-top-port" style="--tube-x:224px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:224px;"></span>
                   </div>
-                  <span class="cb-top-cap-label">AB — REFORMER TOP</span>
+                  <span class="cb-top-cap-label">AB CHAMBER · COMMON HEADER</span>
                 </div>
               </div>
 
               <!-- BOTTOM cap -->
-              <div class="cb-face cb-tb" id="face-ab-bottom" style="transform:rotateX(-90deg) translateZ(250px);background:transparent;border:1.5px solid rgba(100,116,139,0.25);display:flex;align-items:center;justify-content:center;">
-                <span style="font-size:9px;font-weight:700;color:#334155;letter-spacing:3px;">BASE</span>
+              <div class="cb-face cb-tb" id="face-ab-bottom" style="transform:rotateX(-90deg) translateZ(250px);display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:9px;font-weight:700;letter-spacing:3px;">GROUND PAD</span>
               </div>
 
             </div>
@@ -10605,7 +10959,8 @@ html, body, body *, body *::before, body *::after, svg text{
               <span class="cb-kpi-chip cb-kpi-C">◼ C <b id="cb-ab-c">0</b></span>
               <span class="cb-kpi-chip cb-kpi-temp" id="cb-ab-temp">PH Avg --</span>
             </div>
-            <div class="cb-glow" style="background:radial-gradient(ellipse,rgba(243,112,34,0.4) 0%,transparent 70%);"></div>
+            <div class="cb-scene-note">Transparent shell · protruding tubes · separate ground</div>
+            <div class="cb-glow" style="background:radial-gradient(ellipse,rgba(243,112,34,0.26) 0%,transparent 70%);"></div>
           </div>
           <div class="cb-hint">← DRAG LEFT / RIGHT TO ROTATE · DOUBLE-CLICK TO ZOOM →</div>
           <div id="ab-load-status" class="cb-loading" style="display:none;">Generating wall textures…</div>
@@ -10614,7 +10969,7 @@ html, body, body *, body *::before, body *::after, svg text{
         <div class="cb-divider"></div>
 
         <!-- ══ CD SIDE CUBOID ══ -->
-        <div class="cb-wrap" data-cuboid="cd" ondblclick="setHeatMapCuboidZoom('cd')" title="Double-click to zoom CD cuboid">
+        <div class="cb-wrap hm-reworked-wrap" data-cuboid="cd" ondblclick="setHeatMapCuboidZoom('cd')" title="Double-click to zoom CD cuboid">
           <div class="hm-cuboid-side-legend hm-cuboid-side-legend-left" aria-hidden="true">
             <span class="hm-cuboid-side-legend-vert hm-cuboid-side-label">COLD</span>
             <div class="hm-cuboid-side-heat"></div>
@@ -10638,35 +10993,38 @@ html, body, body *, body *::before, body *::after, svg text{
               <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">CLOSED (C)</span>
             </div>
           </div>
-          <div class="cb-title" style="color:#7ec8f0;background:rgba(126,200,240,0.1);border:1px solid rgba(126,200,240,0.35);">CD SIDE ▶</div>
+          <div class="cb-title" style="color:#7ec8f0;background:rgba(126,200,240,0.1);border:1px solid rgba(126,200,240,0.35);">CD CHAMBER</div>
+          <div class="cb-subtitle">Wall C front · Wall D back · CD PH/TST feed</div>
 
-          <div class="cb-scene cb-float cb-scene-cd" id="cd-scene">
-            <div class="cb-group" id="cd-cube" style="transform:rotateX(-4deg) rotateY(-76deg);">
+          <div class="cb-scene cb-float cb-scene-cd hm-reworked-scene" id="cd-scene" style="--cb-accent-rgb:126,200,240;">
+            <div class="cb-ground-grid" aria-hidden="true"></div>
+            <div class="cb-ground-pad" aria-hidden="true"></div>
+            <div class="cb-group hm-reworked-cube" id="cd-cube" style="transform:rotateX(-4deg) rotateY(-76deg);">
 
               <!-- FRONT = Wall C -->
-              <div class="cb-face cb-fb" id="face-cd-front" style="transform:translateZ(80px);border:2px solid rgba(243,112,34,0.75);background:#0a1628;">
+              <div class="cb-face cb-fb" id="face-cd-front" style="transform:translateZ(80px);background:rgba(10,22,40,0.55);">
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#7ec8f0;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-cd-front-loading">⏳ RENDERING WALL C…</div>
               </div>
 
               <!-- BACK = Wall D -->
-              <div class="cb-face cb-fb" id="face-cd-back" style="transform:rotateY(180deg) translateZ(80px);border:2px solid rgba(251,146,60,0.65);background:#0a1628;">
+              <div class="cb-face cb-fb" id="face-cd-back" style="transform:rotateY(180deg) translateZ(80px);background:rgba(10,22,40,0.55);">
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#60c8ff;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-cd-back-loading">⏳ RENDERING WALL D…</div>
               </div>
 
-              <!-- Internal tubes (visible mainly from top cap) -->
+              <!-- Internal tubes -->
               <div class="cb-inner-tube-wrap" aria-hidden="true">
-                <div class="cb-inner-tube" style="--tube-x:-224px;--cb-tube-rgb:126,200,240;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-160px;--cb-tube-rgb:126,200,240;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-96px;--cb-tube-rgb:126,200,240;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-32px;--cb-tube-rgb:126,200,240;"></div>
-                <div class="cb-inner-tube" style="--tube-x:32px;--cb-tube-rgb:126,200,240;"></div>
-                <div class="cb-inner-tube" style="--tube-x:96px;--cb-tube-rgb:126,200,240;"></div>
-                <div class="cb-inner-tube" style="--tube-x:160px;--cb-tube-rgb:126,200,240;"></div>
-                <div class="cb-inner-tube" style="--tube-x:224px;--cb-tube-rgb:126,200,240;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-224px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-160px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-96px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:-32px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:32px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:96px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:160px;--cb-tube-rgb:136,153,170;"></div>
+                <div class="cb-inner-tube" style="--tube-x:224px;--cb-tube-rgb:136,153,170;"></div>
               </div>
 
               <!-- LEFT side cap -->
-              <div class="cb-face cb-lr" id="face-cd-left" style="transform:rotateY(-90deg) translateZ(360px);border:1.5px solid rgba(243,112,34,0.35);">
+              <div class="cb-face cb-lr" id="face-cd-left" style="transform:rotateY(-90deg) translateZ(360px);">
                 <div class="cb-side-face-panel" aria-hidden="true">
                   <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
                     <defs>
@@ -10676,7 +11034,7 @@ html, body, body *, body *::before, body *::after, svg text{
                         <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
                       </mask>
                     </defs>
-                    <rect x="0" y="0" width="160" height="500" fill="rgba(0,0,0,0.92)" mask="url(#cb-mask-cd-l)"></rect>
+                    <rect x="0" y="0" width="160" height="500" fill="rgba(2,6,23,0.72)" mask="url(#cb-mask-cd-l)"></rect>
                     <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
                     <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
                   </svg>
@@ -10684,7 +11042,7 @@ html, body, body *, body *::before, body *::after, svg text{
               </div>
 
               <!-- RIGHT side cap -->
-              <div class="cb-face cb-lr" id="face-cd-right" style="transform:rotateY(90deg) translateZ(360px);border:1.5px solid rgba(251,146,60,0.35);">
+              <div class="cb-face cb-lr" id="face-cd-right" style="transform:rotateY(90deg) translateZ(360px);">
                 <div class="cb-side-face-panel" aria-hidden="true">
                   <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
                     <defs>
@@ -10694,7 +11052,7 @@ html, body, body *, body *::before, body *::after, svg text{
                         <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
                       </mask>
                     </defs>
-                    <rect x="0" y="0" width="160" height="500" fill="rgba(0,0,0,0.92)" mask="url(#cb-mask-cd-r)"></rect>
+                    <rect x="0" y="0" width="160" height="500" fill="rgba(2,6,23,0.72)" mask="url(#cb-mask-cd-r)"></rect>
                     <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
                     <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
                   </svg>
@@ -10702,25 +11060,26 @@ html, body, body *, body *::before, body *::after, svg text{
               </div>
 
               <!-- TOP cap -->
-              <div class="cb-face cb-tb" id="face-cd-top" style="transform:rotateX(90deg) translateZ(250px);background:transparent;border:1.5px solid rgba(243,112,34,0.5);display:flex;align-items:center;justify-content:center;">
-                <div class="cb-top-cap-inner" style="--cb-tube-rgb:126,200,240;">
+              <div class="cb-face cb-tb" id="face-cd-top" style="transform:rotateX(90deg) translateZ(250px);display:flex;align-items:center;justify-content:center;">
+                <div class="cb-top-cap-inner">
+                  <div class="cb-top-header-pipe"></div>
                   <div class="cb-top-port-line">
-                    <span class="cb-top-port" style="--tube-x:-224px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-160px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-96px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-32px;"></span>
-                    <span class="cb-top-port" style="--tube-x:32px;"></span>
-                    <span class="cb-top-port" style="--tube-x:96px;"></span>
-                    <span class="cb-top-port" style="--tube-x:160px;"></span>
-                    <span class="cb-top-port" style="--tube-x:224px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-224px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:224px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-160px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:160px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-96px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:96px;"></span>
+                    <span class="cb-top-port" style="--tube-x:-32px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:32px;"></span>
+                    <span class="cb-top-port" style="--tube-x:32px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:32px;"></span>
+                    <span class="cb-top-port" style="--tube-x:96px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:96px;"></span>
+                    <span class="cb-top-port" style="--tube-x:160px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:160px;"></span>
+                    <span class="cb-top-port" style="--tube-x:224px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:224px;"></span>
                   </div>
-                  <span class="cb-top-cap-label">CD — REFORMER TOP</span>
+                  <span class="cb-top-cap-label">CD CHAMBER · COMMON HEADER</span>
                 </div>
               </div>
 
               <!-- BOTTOM cap -->
-              <div class="cb-face cb-tb" id="face-cd-bottom" style="transform:rotateX(-90deg) translateZ(250px);background:transparent;border:1.5px solid rgba(100,116,139,0.25);display:flex;align-items:center;justify-content:center;">
-                <span style="font-size:9px;font-weight:700;color:#334155;letter-spacing:3px;">BASE</span>
+              <div class="cb-face cb-tb" id="face-cd-bottom" style="transform:rotateX(-90deg) translateZ(250px);display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:9px;font-weight:700;letter-spacing:3px;">GROUND PAD</span>
               </div>
 
             </div>
@@ -10731,7 +11090,8 @@ html, body, body *, body *::before, body *::after, svg text{
               <span class="cb-kpi-chip cb-kpi-C">◼ C <b id="cb-cd-c">0</b></span>
               <span class="cb-kpi-chip cb-kpi-temp" id="cb-cd-temp">PH Avg --</span>
             </div>
-            <div class="cb-glow" style="background:radial-gradient(ellipse,rgba(243,112,34,0.4) 0%,transparent 70%);"></div>
+            <div class="cb-scene-note">Transparent shell · protruding tubes · separate ground</div>
+            <div class="cb-glow" style="background:radial-gradient(ellipse,rgba(126,200,240,0.24) 0%,transparent 70%);"></div>
           </div>
           <div class="cb-hint">← DRAG LEFT / RIGHT TO ROTATE · DOUBLE-CLICK TO ZOOM →</div>
           <div id="cd-load-status" class="cb-loading" style="display:none;">Generating wall textures…</div>
