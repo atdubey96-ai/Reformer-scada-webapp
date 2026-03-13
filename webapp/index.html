@@ -10503,12 +10503,24 @@ html, body, body *, body *::before, body *::after, svg text{
           align-items:flex-start;
           gap:0;
         }
+        #tab-heatmap .hm-uploaded-viewer .section-title-chip{
+          display:inline-flex;
+          align-items:center;
+          padding:10px 24px;
+          border-radius:999px;
+          border:1px solid rgba(244,177,131,0.38);
+          background:linear-gradient(135deg,rgba(52,33,27,0.86),rgba(16,20,28,0.82));
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.08),
+            0 10px 22px rgba(0,0,0,0.26),
+            0 0 0 1px rgba(243,112,34,0.08);
+        }
         #tab-heatmap .hm-uploaded-viewer .section-title{
           font-family:'Rajdhani','Outfit',sans-serif;
-          font-size:clamp(28px,3.2vw,46px);
+          font-size:clamp(22px,2.35vw,34px);
           font-weight:700;
           line-height:1;
-          letter-spacing:0.3px;
+          letter-spacing:0.22px;
           color:transparent;
           background:linear-gradient(110deg,#f8fafc 0%,#dbeafe 32%,#7ec8f0 68%,#f4b183 100%);
           -webkit-background-clip:text;
@@ -10566,6 +10578,91 @@ html, body, body *, body *::before, body *::after, svg text{
           letter-spacing:1.5px;
           margin-bottom:14px;
         }
+        #tab-heatmap .hm-uploaded-viewer .state-grid{
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill{
+          display:flex;
+          align-items:center;
+          gap:10px;
+          min-height:54px;
+          padding:10px 12px;
+          border-radius:16px;
+          border:1px solid rgba(148,163,184,0.24);
+          background:linear-gradient(180deg,rgba(17,24,39,0.92),rgba(15,23,42,0.78));
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-icon{
+          width:30px;
+          height:30px;
+          border-radius:999px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:13px;
+          font-weight:700;
+          color:#f8fafc;
+          box-shadow:0 6px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.14);
+          flex:0 0 auto;
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-copy{
+          display:flex;
+          flex-direction:column;
+          min-width:0;
+          gap:2px;
+          flex:1 1 auto;
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-name{
+          font-size:11px;
+          font-weight:700;
+          letter-spacing:0.4px;
+          color:#e2e8f0;
+          white-space:nowrap;
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-type{
+          font-size:10px;
+          font-weight:600;
+          color:#94a3b8;
+          white-space:nowrap;
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-count{
+          font-size:19px;
+          font-weight:700;
+          line-height:1;
+          color:#ffffff;
+          margin-left:auto;
+          flex:0 0 auto;
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-B{
+          border-color:rgba(96,165,250,0.34);
+          background:linear-gradient(180deg,rgba(30,64,175,0.28),rgba(15,23,42,0.82));
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-B .state-pill-icon{
+          background:linear-gradient(180deg,#3b82f6,#1d4ed8);
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-C{
+          border-color:rgba(148,163,184,0.28);
+          background:linear-gradient(180deg,rgba(71,85,105,0.24),rgba(15,23,42,0.82));
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-C .state-pill-icon{
+          background:linear-gradient(180deg,#94a3b8,#475569);
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-O{
+          border-color:rgba(74,222,128,0.34);
+          background:linear-gradient(180deg,rgba(22,163,74,0.24),rgba(15,23,42,0.82));
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-O .state-pill-icon{
+          background:linear-gradient(180deg,#22c55e,#15803d);
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-N{
+          border-color:rgba(251,191,36,0.34);
+          background:linear-gradient(180deg,rgba(217,119,6,0.24),rgba(15,23,42,0.82));
+        }
+        #tab-heatmap .hm-uploaded-viewer .state-pill-N .state-pill-icon{
+          background:linear-gradient(180deg,#f59e0b,#b45309);
+        }
         #tab-heatmap .hm-uploaded-viewer .info-row{
           display:flex;
           justify-content:space-between;
@@ -10604,6 +10701,76 @@ html, body, body *, body *::before, body *::after, svg text{
           width:12px;
           height:12px;
           border-radius:3px;
+        }
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-vertical{
+          display:flex;
+          align-items:stretch;
+          gap:16px;
+          min-height:200px;
+        }
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-axis{
+          display:flex;
+          flex-direction:column;
+          align-items:center;
+          justify-content:flex-start;
+          gap:12px;
+          flex:0 0 auto;
+        }
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-chip{
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          padding:6px 12px;
+          border-radius:999px;
+          border:1px solid rgba(243,112,34,0.34);
+          background:linear-gradient(180deg,rgba(52,44,34,0.9),rgba(30,25,20,0.82));
+          color:#f8fafc;
+          font-size:11px;
+          font-weight:700;
+          letter-spacing:0.7px;
+          text-transform:uppercase;
+        }
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-bar{
+          width:32px;
+          flex:1 1 auto;
+          min-height:160px;
+          border-radius:999px;
+          background:linear-gradient(180deg,#22c55e 0%,#facc15 52%,#ef4444 100%);
+          box-shadow:
+            inset 0 0 0 1px rgba(255,255,255,0.22),
+            0 12px 24px rgba(0,0,0,0.24);
+        }
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-notes{
+          display:flex;
+          flex-direction:column;
+          justify-content:space-between;
+          min-height:200px;
+          padding:6px 0;
+        }
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-stop{
+          display:flex;
+          flex-direction:column;
+          gap:3px;
+        }
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-cap{
+          font-size:13px;
+          font-weight:700;
+          color:#f8fafc;
+          letter-spacing:0.3px;
+        }
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-cap.cool{color:#86efac;}
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-cap.hot{color:#fda4af;}
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-limit{
+          font-size:12px;
+          font-weight:600;
+          color:#cbd5e1;
+        }
+        #tab-heatmap .hm-uploaded-viewer .temp-legend-mid{
+          font-size:11px;
+          font-weight:700;
+          color:#94a3b8;
+          letter-spacing:0.5px;
+          text-transform:uppercase;
         }
         #tab-heatmap .hm-uploaded-viewer .control-group{
           display:flex;
@@ -10670,7 +10837,7 @@ html, body, body *, body *::before, body *::after, svg text{
             <section class="viewer-section">
               <div class="section-head fade-in">
                 <div>
-                  <h1 class="section-title">AB Chamber</h1>
+                  <div class="section-title-chip"><h1 class="section-title">AB Chamber</h1></div>
                 </div>
               </div>
 
@@ -10682,15 +10849,41 @@ html, body, body *, body *::before, body *::after, svg text{
 
                 <aside class="side-panel fade-in">
                   <div class="panel-section">
-                    <h3>Chamber Info</h3>
-                    <div class="info-row"><span class="info-label">Section Name</span><span class="info-value">AB</span></div>
-                    <div class="info-row"><span class="info-label">Shape</span><span class="info-value">Single Cuboid</span></div>
-                    <div class="info-row"><span class="info-label">Shell</span><span class="info-value">Transparent</span></div>
-                    <div class="info-row"><span class="info-label">Tube Bundle</span><span class="info-value">8 Protruding Tubes</span></div>
-                    <div class="info-row"><span class="info-label">Common Header</span><span class="info-value">Front to Back</span></div>
-                    <div class="info-row"><span class="info-label">Shared Header Slab</span><span class="info-value warn">Removed</span></div>
-                    <div class="info-row"><span class="info-label">Interconnection</span><span class="info-value">None</span></div>
-                    <div class="info-row"><span class="info-label">Ground</span><span class="info-value">Separate Pad</span></div>
+                    <h3>Burner State Legend</h3>
+                    <div class="state-grid">
+                      <div class="state-pill state-pill-B">
+                        <div class="state-pill-icon">B</div>
+                        <div class="state-pill-copy">
+                          <div class="state-pill-name">Both</div>
+                          <div class="state-pill-type">Blue Burner</div>
+                        </div>
+                        <div class="state-pill-count" id="hm-uploaded-ab-count-B">0</div>
+                      </div>
+                      <div class="state-pill state-pill-C">
+                        <div class="state-pill-icon">C</div>
+                        <div class="state-pill-copy">
+                          <div class="state-pill-name">Cold</div>
+                          <div class="state-pill-type">Closed / None</div>
+                        </div>
+                        <div class="state-pill-count" id="hm-uploaded-ab-count-C">0</div>
+                      </div>
+                      <div class="state-pill state-pill-O">
+                        <div class="state-pill-icon">O</div>
+                        <div class="state-pill-copy">
+                          <div class="state-pill-name">Off Gas</div>
+                          <div class="state-pill-type">Green Burner</div>
+                        </div>
+                        <div class="state-pill-count" id="hm-uploaded-ab-count-O">0</div>
+                      </div>
+                      <div class="state-pill state-pill-N">
+                        <div class="state-pill-icon">N</div>
+                        <div class="state-pill-copy">
+                          <div class="state-pill-name">NG Only</div>
+                          <div class="state-pill-type">Amber Burner</div>
+                        </div>
+                        <div class="state-pill-count" id="hm-uploaded-ab-count-N">0</div>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="panel-section">
@@ -10701,14 +10894,23 @@ html, body, body *, body *::before, body *::after, svg text{
                   </div>
 
                   <div class="panel-section">
-                    <h3>Legend</h3>
-                    <div class="legend">
-                      <div class="legend-item"><div class="legend-swatch" style="background:#A0887A"></div>Transparent Chamber Shell</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#F97316"></div>Live Wall Data Overlay</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#8FA8BC"></div>Protruding Vertical Tubes</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#7090A8"></div>Common Header Pipe</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#1a1a1a"></div>Open Interior Volume</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#334155"></div>Ground Pad</div>
+                    <h3>TST Gradient</h3>
+                    <div class="temp-legend-vertical">
+                      <div class="temp-legend-axis">
+                        <div class="temp-legend-chip">PH TST</div>
+                        <div class="temp-legend-bar"></div>
+                      </div>
+                      <div class="temp-legend-notes">
+                        <div class="temp-legend-stop">
+                          <span class="temp-legend-cap cool">Cold</span>
+                          <span class="temp-legend-limit">860°C</span>
+                        </div>
+                        <div class="temp-legend-mid">TST Range</div>
+                        <div class="temp-legend-stop">
+                          <span class="temp-legend-cap hot">Hot</span>
+                          <span class="temp-legend-limit">1000°C</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -10729,7 +10931,7 @@ html, body, body *, body *::before, body *::after, svg text{
             <section class="viewer-section">
               <div class="section-head fade-in">
                 <div>
-                  <h1 class="section-title">CD Chamber</h1>
+                  <div class="section-title-chip"><h1 class="section-title">CD Chamber</h1></div>
                 </div>
               </div>
 
@@ -10741,15 +10943,41 @@ html, body, body *, body *::before, body *::after, svg text{
 
                 <aside class="side-panel fade-in">
                   <div class="panel-section">
-                    <h3>Chamber Info</h3>
-                    <div class="info-row"><span class="info-label">Section Name</span><span class="info-value">CD</span></div>
-                    <div class="info-row"><span class="info-label">Shape</span><span class="info-value">Single Cuboid</span></div>
-                    <div class="info-row"><span class="info-label">Shell</span><span class="info-value">Transparent</span></div>
-                    <div class="info-row"><span class="info-label">Tube Bundle</span><span class="info-value">8 Protruding Tubes</span></div>
-                    <div class="info-row"><span class="info-label">Common Header</span><span class="info-value">Front to Back</span></div>
-                    <div class="info-row"><span class="info-label">Shared Header Slab</span><span class="info-value warn">Removed</span></div>
-                    <div class="info-row"><span class="info-label">Interconnection</span><span class="info-value">None</span></div>
-                    <div class="info-row"><span class="info-label">Ground</span><span class="info-value">Separate Pad</span></div>
+                    <h3>Burner State Legend</h3>
+                    <div class="state-grid">
+                      <div class="state-pill state-pill-B">
+                        <div class="state-pill-icon">B</div>
+                        <div class="state-pill-copy">
+                          <div class="state-pill-name">Both</div>
+                          <div class="state-pill-type">Blue Burner</div>
+                        </div>
+                        <div class="state-pill-count" id="hm-uploaded-cd-count-B">0</div>
+                      </div>
+                      <div class="state-pill state-pill-C">
+                        <div class="state-pill-icon">C</div>
+                        <div class="state-pill-copy">
+                          <div class="state-pill-name">Cold</div>
+                          <div class="state-pill-type">Closed / None</div>
+                        </div>
+                        <div class="state-pill-count" id="hm-uploaded-cd-count-C">0</div>
+                      </div>
+                      <div class="state-pill state-pill-O">
+                        <div class="state-pill-icon">O</div>
+                        <div class="state-pill-copy">
+                          <div class="state-pill-name">Off Gas</div>
+                          <div class="state-pill-type">Green Burner</div>
+                        </div>
+                        <div class="state-pill-count" id="hm-uploaded-cd-count-O">0</div>
+                      </div>
+                      <div class="state-pill state-pill-N">
+                        <div class="state-pill-icon">N</div>
+                        <div class="state-pill-copy">
+                          <div class="state-pill-name">NG Only</div>
+                          <div class="state-pill-type">Amber Burner</div>
+                        </div>
+                        <div class="state-pill-count" id="hm-uploaded-cd-count-N">0</div>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="panel-section">
@@ -10760,14 +10988,23 @@ html, body, body *, body *::before, body *::after, svg text{
                   </div>
 
                   <div class="panel-section">
-                    <h3>Legend</h3>
-                    <div class="legend">
-                      <div class="legend-item"><div class="legend-swatch" style="background:#A0887A"></div>Transparent Chamber Shell</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#F97316"></div>Live Wall Data Overlay</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#8FA8BC"></div>Protruding Vertical Tubes</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#7090A8"></div>Common Header Pipe</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#1a1a1a"></div>Open Interior Volume</div>
-                      <div class="legend-item"><div class="legend-swatch" style="background:#334155"></div>Ground Pad</div>
+                    <h3>TST Gradient</h3>
+                    <div class="temp-legend-vertical">
+                      <div class="temp-legend-axis">
+                        <div class="temp-legend-chip">PH TST</div>
+                        <div class="temp-legend-bar"></div>
+                      </div>
+                      <div class="temp-legend-notes">
+                        <div class="temp-legend-stop">
+                          <span class="temp-legend-cap cool">Cold</span>
+                          <span class="temp-legend-limit">860°C</span>
+                        </div>
+                        <div class="temp-legend-mid">TST Range</div>
+                        <div class="temp-legend-stop">
+                          <span class="temp-legend-cap hot">Hot</span>
+                          <span class="temp-legend-limit">1000°C</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -10986,6 +11223,12 @@ html, body, body *, body *::before, body *::after, svg text{
           el.textContent = String(text);
           el.classList.remove("hot", "warn", "ok");
           if(cls) el.classList.add(cls);
+        }
+
+        function hmUploadedSetCount(id, value){
+          var el = document.getElementById(id);
+          if(!el) return;
+          el.textContent = isFinite(Number(value)) ? String(value) : "0";
         }
 
         var hmUploadedBurnerImageCache = {};
@@ -11210,6 +11453,10 @@ html, body, body *, body *::before, body *::after, svg text{
             hmUploadedSetInfo("hm-uploaded-cd-flame", "Waiting for data", "");
             hmUploadedSetInfo("hm-uploaded-ab-stamp", "Latest", "");
             hmUploadedSetInfo("hm-uploaded-cd-stamp", "Latest", "");
+            ["B","C","O","N"].forEach(function(code){
+              hmUploadedSetCount("hm-uploaded-ab-count-" + code, 0);
+              hmUploadedSetCount("hm-uploaded-cd-count-" + code, 0);
+            });
             return;
           }
 
@@ -11230,6 +11477,14 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedSetInfo("hm-uploaded-cd-flame", cdActive > 0 ? (cdActive + " active burners") : "No active burners", cdActive > 0 ? "ok" : "warn");
           hmUploadedSetInfo("hm-uploaded-ab-stamp", stamp, "ok");
           hmUploadedSetInfo("hm-uploaded-cd-stamp", stamp, "ok");
+          hmUploadedSetCount("hm-uploaded-ab-count-B", abCounts.B);
+          hmUploadedSetCount("hm-uploaded-ab-count-C", abCounts.C);
+          hmUploadedSetCount("hm-uploaded-ab-count-O", abCounts.O);
+          hmUploadedSetCount("hm-uploaded-ab-count-N", abCounts.N);
+          hmUploadedSetCount("hm-uploaded-cd-count-B", cdCounts.B);
+          hmUploadedSetCount("hm-uploaded-cd-count-C", cdCounts.C);
+          hmUploadedSetCount("hm-uploaded-cd-count-O", cdCounts.O);
+          hmUploadedSetCount("hm-uploaded-cd-count-N", cdCounts.N);
         }
 
         function hmUploadedSyncFromHeatMapSnapshot(snapshot){
