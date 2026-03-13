@@ -10454,1030 +10454,757 @@ html, body, body *, body *::before, body *::after, svg text{
           color:#4b5563 !important;
         }
       </style>
-      <style id="heatmap-cuboid-reworked-reference-20260313">
-        #tab-heatmap{
-          --cb-ref-shell:#9a8578;
-          --cb-ref-shell-line:rgba(233,215,204,0.56);
-          --cb-ref-shell-fill:rgba(154,133,120,0.16);
-          --cb-ref-shell-fill-light:rgba(203,186,173,0.18);
-          --cb-ref-tube:#8899aa;
-          --cb-ref-tube-light:#d6e3ee;
-          --cb-ref-header:#7090a8;
-          --cb-ref-header-light:#87a4ba;
-          --cb-ref-ground:#334155;
-          --cb-ref-ground-line:rgba(148,163,184,0.24);
-          --cb-ref-accent-ab:243,112,34;
-          --cb-ref-accent-cd:126,200,240;
-        }
-        #tab-heatmap .cb-dual-shell.hm-reworked-shell{
-          background:
-            radial-gradient(circle at top,rgba(232,81,26,0.1) 0%,transparent 32%),
-            linear-gradient(180deg,rgba(8,12,18,0.98) 0%,rgba(5,9,14,0.98) 100%);
-          border:1px solid rgba(30,37,48,0.94);
-          border-radius:20px;
-          box-shadow:0 16px 42px rgba(0,0,0,0.46);
-          overflow:hidden;
-        }
-        body.light-theme #tab-heatmap .cb-dual-shell.hm-reworked-shell{
-          background:
-            radial-gradient(circle at top,rgba(232,81,26,0.08) 0%,transparent 34%),
-            linear-gradient(180deg,#ffffff 0%,#edf3f9 100%);
-          border-color:rgba(148,163,184,0.34);
-          box-shadow:0 12px 28px rgba(15,23,42,0.1);
-        }
-        #tab-heatmap .cb-wrap.hm-reworked-wrap{
-          position:relative;
-        }
-        #tab-heatmap .cb-wrap.hm-reworked-wrap .cb-title{
-          font-size:14px;
-          letter-spacing:2.6px;
-          padding:6px 20px;
-        }
-        #tab-heatmap .cb-wrap.hm-reworked-wrap .cb-subtitle{
-          display:block;
-          margin-bottom:8px;
-          font-size:10px;
-          color:#97a6b7;
-          letter-spacing:0.7px;
-          text-transform:uppercase;
-          text-align:center;
-        }
-        body.light-theme #tab-heatmap .cb-wrap.hm-reworked-wrap .cb-subtitle{
-          color:#64748b;
-        }
-        #tab-heatmap .cb-scene.hm-reworked-scene{
-          border-radius:24px;
-          background:
-            radial-gradient(circle at 50% 8%,rgba(var(--cb-accent-rgb,243,112,34),0.18) 0%,transparent 32%),
-            linear-gradient(180deg,rgba(18,25,36,0.88),rgba(8,12,20,0.98));
-          border:1px solid rgba(148,163,184,0.18);
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 28px rgba(2,6,23,0.32);
-        }
-        #tab-heatmap .cb-scene.hm-reworked-scene::before{
-          border-radius:24px;
-          border-color:rgba(148,163,184,0.22) !important;
-          box-shadow:inset 0 0 36px rgba(2,6,23,0.34) !important;
-        }
-        #tab-heatmap .cb-scene.hm-reworked-scene::after{
-          content:"";
-          position:absolute;
-          inset:0;
-          border-radius:24px;
-          background:
-            linear-gradient(rgba(255,255,255,0.04) 1px,transparent 1px),
-            linear-gradient(90deg,rgba(255,255,255,0.04) 1px,transparent 1px);
-          background-size:100% 44px,44px 100%;
-          opacity:0.16;
-          pointer-events:none;
-          z-index:0;
-        }
-        #tab-heatmap .cb-scene.hm-reworked-scene .cb-group{
-          z-index:1;
-        }
-        body.light-theme #tab-heatmap .cb-scene.hm-reworked-scene{
-          background:
-            radial-gradient(circle at 50% 8%,rgba(var(--cb-accent-rgb,243,112,34),0.1) 0%,transparent 34%),
-            linear-gradient(180deg,#f8fbff 0%,#e8f0f8 100%);
-          border-color:rgba(148,163,184,0.26);
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.65), inset 0 0 24px rgba(148,163,184,0.12);
-        }
-        body.light-theme #tab-heatmap .cb-scene.hm-reworked-scene::after{
-          background:
-            linear-gradient(rgba(15,23,42,0.04) 1px,transparent 1px),
-            linear-gradient(90deg,rgba(15,23,42,0.04) 1px,transparent 1px);
-          opacity:0.22;
-        }
-        #tab-heatmap .cb-ground-grid{
-          position:absolute;
-          left:50%;
-          bottom:22px;
-          width:min(86%,720px);
-          height:42px;
-          transform:translateX(-50%);
-          border-radius:999px;
-          background:
-            linear-gradient(90deg,transparent 0%,rgba(148,163,184,0.08) 14%,rgba(148,163,184,0.16) 50%,rgba(148,163,184,0.08) 86%,transparent 100%);
-          filter:blur(1px);
-          opacity:0.6;
-          pointer-events:none;
-          z-index:0;
-        }
-        #tab-heatmap .cb-ground-pad{
-          position:absolute;
-          left:50%;
-          bottom:34px;
-          width:min(74%,640px);
-          height:24px;
-          transform:translateX(-50%);
-          border-radius:999px;
-          border:1px solid var(--cb-ref-ground-line);
-          background:linear-gradient(180deg,rgba(67,83,104,0.96),rgba(41,55,73,0.94));
-          box-shadow:0 18px 26px rgba(0,0,0,0.34);
-          pointer-events:none;
-          z-index:0;
-        }
-        #tab-heatmap .cb-ground-pad::before{
-          content:"";
-          position:absolute;
-          left:10%;
-          right:10%;
-          top:-6px;
-          height:34px;
-          border-radius:999px;
-          background:radial-gradient(ellipse at center,rgba(var(--cb-accent-rgb,243,112,34),0.18) 0%,transparent 72%);
-          filter:blur(12px);
-          opacity:0.85;
-        }
-        #tab-heatmap .cb-scene-note{
-          position:absolute;
-          left:50%;
-          bottom:70px;
-          transform:translateX(-50%);
-          padding:6px 12px;
-          border-radius:999px;
-          background:rgba(2,6,23,0.58);
-          border:1px solid rgba(var(--cb-accent-rgb,243,112,34),0.18);
-          color:#cbd5e1;
-          font-size:10px;
-          font-weight:700;
-          letter-spacing:1px;
-          text-transform:uppercase;
-          white-space:nowrap;
-          pointer-events:none;
-          z-index:2;
-        }
-        body.light-theme #tab-heatmap .cb-scene-note{
-          background:rgba(255,255,255,0.92);
-          color:#334155;
-          border-color:rgba(var(--cb-accent-rgb,243,112,34),0.24);
-        }
-        #tab-heatmap .hm-reworked-cube .cb-face.cb-fb{
-          border:1.6px solid var(--cb-ref-shell-line) !important;
-          background:linear-gradient(180deg,var(--cb-ref-shell-fill),rgba(154,133,120,0.06)) !important;
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.08),
-            inset 0 0 0 1px rgba(203,213,225,0.12),
-            inset 0 0 30px rgba(10,10,10,0.18),
-            0 10px 18px rgba(0,0,0,0.16) !important;
-        }
-        #tab-heatmap .hm-reworked-cube .cb-face.cb-lr{
-          border:1.5px solid rgba(233,215,204,0.42) !important;
-          background:linear-gradient(180deg,rgba(154,133,120,0.14),rgba(154,133,120,0.08)) !important;
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.07),
-            inset 0 0 22px rgba(10,10,10,0.14) !important;
-        }
-        #tab-heatmap .hm-reworked-cube .cb-face.cb-tb{
-          border:1.5px solid rgba(224,206,196,0.44) !important;
-          background:transparent !important;
+      <style id="heatmap-uploaded-cuboids-20260313">
+        #tab-heatmap .hm-uploaded-viewer-shell.cb-dual-shell{
+          display:block !important;
+          padding:0 !important;
+          border:none !important;
+          border-radius:0 !important;
+          background:none !important;
           box-shadow:none !important;
+          overflow:visible !important;
         }
-        body.light-theme #tab-heatmap .hm-reworked-cube .cb-face.cb-fb{
-          background:linear-gradient(180deg,var(--cb-ref-shell-fill-light),rgba(203,186,173,0.08)) !important;
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.72),
-            inset 0 0 0 1px rgba(148,163,184,0.16),
-            inset 0 0 20px rgba(148,163,184,0.12) !important;
+        #tab-heatmap .hm-uploaded-viewer{
+          font-family:'Outfit',sans-serif;
+          color:#fff;
         }
-        body.light-theme #tab-heatmap .hm-reworked-cube .cb-face.cb-lr{
-          background:linear-gradient(180deg,rgba(203,186,173,0.18),rgba(203,186,173,0.1)) !important;
+        #tab-heatmap .hm-uploaded-viewer *{
+          box-sizing:border-box;
         }
-        #tab-heatmap .hm-reworked-cube .cb-side-face-panel{
-          background:linear-gradient(180deg,rgba(146,128,114,0.18) 0%,rgba(116,101,88,0.08) 100%) !important;
+        #tab-heatmap .hm-uploaded-viewer h1,
+        #tab-heatmap .hm-uploaded-viewer h3,
+        #tab-heatmap .hm-uploaded-viewer p{
+          margin:0;
         }
-        #tab-heatmap .hm-reworked-cube .cb-side-cutout-svg rect[mask]{
-          fill:rgba(2,6,23,0.72) !important;
+        #tab-heatmap .hm-uploaded-viewer .viewer-stack{
+          display:flex;
+          flex-direction:column;
         }
-        #tab-heatmap .hm-reworked-cube .cb-side-cutout-svg rect[fill="none"]{
-          stroke:rgba(203,213,225,0.72) !important;
-          stroke-width:2 !important;
+        #tab-heatmap .hm-uploaded-viewer .viewer-section{
+          min-height:calc(100vh - 56px);
+          padding:28px;
+          border-bottom:1px solid #1E2530;
         }
-        #tab-heatmap .hm-reworked-cube .cb-inner-tube{
-          width:18px;
-          margin-left:-9px;
-          height:calc(var(--cb-h) + 58px) !important;
-          margin-top:calc(-1 * var(--cb-h-half) - 29px) !important;
-          background:
-            linear-gradient(90deg,rgba(214,227,238,0.92) 0%,rgba(136,153,170,0.98) 18%,rgba(114,135,155,0.96) 52%,rgba(214,227,238,0.86) 100%);
-          border:1px solid rgba(255,255,255,0.12);
-          box-shadow:
-            0 0 0 1px rgba(255,255,255,0.06),
-            0 0 14px rgba(136,153,170,0.16),
-            inset 0 0 8px rgba(255,255,255,0.1) !important;
-          opacity:0.88;
+        #tab-heatmap .hm-uploaded-viewer .section-head{
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-end;
+          gap:24px;
+          margin-bottom:20px;
         }
-        #tab-heatmap .hm-reworked-cube .cb-inner-tube::before{
-          width:2px;
-          background:linear-gradient(180deg,rgba(255,255,255,0.16) 0%,rgba(214,227,238,0.28) 14%,rgba(136,153,170,0.18) 70%,transparent 100%);
+        #tab-heatmap .hm-uploaded-viewer .eyebrow{
+          font-size:10px;
+          font-weight:600;
+          color:#999;
+          text-transform:uppercase;
+          letter-spacing:1.8px;
+          margin-bottom:10px;
         }
-        #tab-heatmap .hm-reworked-cube .cb-top-cap-inner{
-          width:96%;
-          height:78%;
-          border-radius:18px;
-          background:linear-gradient(180deg,rgba(154,133,120,0.18),rgba(154,133,120,0.04)) !important;
-          border:1px solid rgba(233,215,204,0.32);
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 20px rgba(10,10,10,0.12) !important;
-          overflow:visible;
-          transform-style:preserve-3d;
+        #tab-heatmap .hm-uploaded-viewer .section-title{
+          font-size:32px;
+          font-weight:600;
+          line-height:1.1;
         }
-        body.light-theme #tab-heatmap .hm-reworked-cube .cb-top-cap-inner{
-          background:linear-gradient(180deg,rgba(203,186,173,0.18),rgba(203,186,173,0.04)) !important;
+        #tab-heatmap .hm-uploaded-viewer .section-copy{
+          max-width:520px;
+          font-size:14px;
+          line-height:1.6;
+          color:#A9B2BE;
         }
-        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe{
+        #tab-heatmap .hm-uploaded-viewer .viewer-layout{
+          display:flex;
+          gap:24px;
+          min-height:calc(100vh - 188px);
+        }
+        #tab-heatmap .hm-uploaded-viewer .canvas-area{
+          flex:1;
+          position:relative;
+          min-height:520px;
+          border:1px solid #1E2530;
+          border-radius:24px;
+          overflow:hidden;
+          background:radial-gradient(circle at top,rgba(232,81,26,.14),transparent 42%),linear-gradient(180deg,#121924 0%,#0B0F14 100%);
+        }
+        #tab-heatmap .hm-uploaded-viewer .viewer-canvas{
+          width:100%;
+          height:100%;
+          display:block;
+        }
+        #tab-heatmap .hm-uploaded-viewer .canvas-hint{
           position:absolute;
-          left:50%;
-          top:50%;
-          width:20px;
-          height:112px;
-          transform:translate(-50%,-50%) translateZ(2px);
-          border-radius:999px;
-          border:1px solid rgba(255,255,255,0.18);
-          background:linear-gradient(180deg,var(--cb-ref-header-light) 0%,var(--cb-ref-header) 42%,#5e7b90 100%);
-          box-shadow:0 0 16px rgba(112,144,168,0.22);
+          bottom:18px;
+          left:22px;
+          font-size:11px;
+          color:rgba(255,255,255,.34);
+          pointer-events:none;
         }
-        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe::before,
-        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe::after{
-          content:"";
-          position:absolute;
-          left:50%;
-          width:24px;
-          height:24px;
-          transform:translateX(-50%);
-          border-radius:50%;
-          border:1px solid rgba(255,255,255,0.18);
-          background:linear-gradient(180deg,var(--cb-ref-header-light) 0%,var(--cb-ref-header) 100%);
+        #tab-heatmap .hm-uploaded-viewer .side-panel{
+          width:300px;
+          background:#10151C;
+          border:1px solid #1E2530;
+          border-radius:24px;
+          padding:24px 20px;
+          display:flex;
+          flex-direction:column;
+          gap:24px;
         }
-        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe::before{top:-4px;}
-        #tab-heatmap .hm-reworked-cube .cb-top-header-pipe::after{bottom:-4px;}
-        #tab-heatmap .hm-reworked-cube .cb-top-port{
-          width:26px;
-          height:26px;
-          border-radius:50%;
-          border:1px solid rgba(255,255,255,0.16);
-          background:radial-gradient(circle at 35% 35%,var(--cb-ref-tube-light) 0%,var(--cb-ref-tube) 42%,#647e93 100%);
-          box-shadow:
-            0 0 0 3px rgba(9,14,20,0.34),
-            0 0 12px rgba(112,144,168,0.22);
-          z-index:2;
+        #tab-heatmap .hm-uploaded-viewer .panel-section h3{
+          font-size:10px;
+          font-weight:600;
+          color:#999;
+          text-transform:uppercase;
+          letter-spacing:1.5px;
+          margin-bottom:14px;
         }
-        #tab-heatmap .hm-reworked-cube .cb-top-port::before{
-          content:"";
-          position:absolute;
-          left:var(--tube-bridge-left,auto);
-          right:var(--tube-bridge-right,auto);
-          top:50%;
-          width:var(--tube-bridge-width,0px);
-          height:8px;
-          transform:translateY(-50%);
-          border-radius:999px;
-          background:linear-gradient(180deg,var(--cb-ref-header-light) 0%,var(--cb-ref-header) 42%,#5e7b90 100%);
-          box-shadow:0 0 8px rgba(112,144,168,0.16);
-          z-index:0;
+        #tab-heatmap .hm-uploaded-viewer .info-row{
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          padding:8px 0;
+          border-bottom:1px solid #1A2030;
         }
-        #tab-heatmap .hm-reworked-cube .cb-top-port::after{
-          content:"";
-          position:absolute;
-          left:50%;
-          top:50%;
-          width:16px;
-          height:40px;
-          transform:translate(-50%,-72%);
-          border-radius:999px;
-          border:1px solid rgba(255,255,255,0.12);
-          background:linear-gradient(180deg,var(--cb-ref-tube-light) 0%,var(--cb-ref-tube) 18%,#72879b 100%);
-          box-shadow:0 0 12px rgba(136,153,170,0.16);
-          z-index:1;
+        #tab-heatmap .hm-uploaded-viewer .info-row:last-child{
+          border-bottom:none;
         }
-        #tab-heatmap .hm-reworked-cube .cb-top-cap-label{
-          bottom:-18px;
-          color:#e2e8f0 !important;
-          letter-spacing:2px;
+        #tab-heatmap .hm-uploaded-viewer .info-label{
+          font-size:12px;
+          color:#999;
         }
-        body.light-theme #tab-heatmap .hm-reworked-cube .cb-top-cap-label{
-          color:#334155 !important;
+        #tab-heatmap .hm-uploaded-viewer .info-value{
+          font-size:13px;
+          font-weight:500;
+          color:#FFF;
         }
-        #tab-heatmap .hm-reworked-cube #face-ab-bottom,
-        #tab-heatmap .hm-reworked-cube #face-cd-bottom{
-          border-color:rgba(100,116,139,0.26) !important;
+        #tab-heatmap .hm-uploaded-viewer .info-value.ok{color:#6EE7B7;}
+        #tab-heatmap .hm-uploaded-viewer .info-value.warn{color:#FBBF24;}
+        #tab-heatmap .hm-uploaded-viewer .info-value.hot{color:#E8511A;}
+        #tab-heatmap .hm-uploaded-viewer .legend{
+          display:flex;
+          flex-direction:column;
+          gap:8px;
         }
-        #tab-heatmap .hm-reworked-cube #face-ab-bottom span,
-        #tab-heatmap .hm-reworked-cube #face-cd-bottom span{
-          color:#64748b !important;
-          letter-spacing:2.4px !important;
+        #tab-heatmap .hm-uploaded-viewer .legend-item{
+          display:flex;
+          align-items:center;
+          gap:8px;
+          font-size:12px;
+          color:#999;
         }
-        @media (max-width:900px){
-          #tab-heatmap .cb-dual-shell.hm-reworked-shell{
-            border-radius:16px;
+        #tab-heatmap .hm-uploaded-viewer .legend-swatch{
+          width:12px;
+          height:12px;
+          border-radius:3px;
+        }
+        #tab-heatmap .hm-uploaded-viewer .control-group{
+          display:flex;
+          flex-direction:column;
+          gap:8px;
+        }
+        #tab-heatmap .hm-uploaded-viewer .control-btn{
+          font-family:'Outfit',sans-serif;
+          font-size:12px;
+          font-weight:500;
+          padding:10px 14px;
+          border-radius:6px;
+          border:none;
+          cursor:pointer;
+          transition:all .2s;
+          text-align:left;
+          display:flex;
+          align-items:center;
+          gap:8px;
+        }
+        #tab-heatmap .hm-uploaded-viewer .control-btn.secondary{
+          background:#1A2030;
+          color:#CCC;
+          border:1px solid #2A3140;
+        }
+        #tab-heatmap .hm-uploaded-viewer .control-btn.secondary:hover{
+          background:#222A3A;
+          color:#FFF;
+        }
+        #tab-heatmap .hm-uploaded-viewer .fade-in{
+          opacity:0;
+          animation:hmUploadedFadeIn .6s ease forwards;
+        }
+        @keyframes hmUploadedFadeIn{
+          to{opacity:1;}
+        }
+        @media (max-width:960px){
+          #tab-heatmap .hm-uploaded-viewer .viewer-section{
+            padding:20px;
           }
-          #tab-heatmap .cb-wrap.hm-reworked-wrap .cb-subtitle{
-            font-size:9px;
-            letter-spacing:0.5px;
+          #tab-heatmap .hm-uploaded-viewer .section-head{
+            flex-direction:column;
+            align-items:flex-start;
           }
-          #tab-heatmap .cb-ground-pad{
-            height:18px;
-            bottom:22px;
+          #tab-heatmap .hm-uploaded-viewer .section-title{
+            font-size:28px;
           }
-          #tab-heatmap .cb-ground-grid{
-            bottom:12px;
-            height:30px;
+          #tab-heatmap .hm-uploaded-viewer .viewer-layout{
+            flex-direction:column;
           }
-          #tab-heatmap .cb-scene-note{
-            bottom:50px;
-            font-size:9px;
-            padding:5px 10px;
+          #tab-heatmap .hm-uploaded-viewer .side-panel{
+            width:100%;
           }
-          #tab-heatmap .hm-reworked-cube .cb-top-header-pipe{
-            width:16px;
-            height:78px;
-          }
-          #tab-heatmap .hm-reworked-cube .cb-top-port{
-            width:20px;
-            height:20px;
-          }
-          #tab-heatmap .hm-reworked-cube .cb-top-port::after{
-            width:12px;
-            height:28px;
-          }
-          #tab-heatmap .hm-reworked-cube .cb-inner-tube{
-            width:14px;
-            margin-left:-7px;
+          #tab-heatmap .hm-uploaded-viewer .canvas-area{
+            min-height:420px;
           }
         }
       </style>
 
-      <!-- html2canvas removed — faces render via direct HTML injection -->
+      <div id="hm-cuboid-zoom-backdrop" style="display:none;" aria-hidden="true"></div>
+      <div class="cb-dual-shell hm-uploaded-viewer-shell">
+        <div class="hm-uploaded-viewer">
+          <div class="viewer-stack">
+            <section class="viewer-section">
+              <div class="section-head fade-in">
+                <div>
+                  <div class="eyebrow">Section 01</div>
+                  <h1 class="section-title">AB Chamber</h1>
+                </div>
+                <p class="section-copy">This first section contains only the AB cuboid chamber. It keeps the upper header removed, shows zero interconnection, and uses its own separate ground pad. Scroll down for the full CD chamber section.</p>
+              </div>
 
-      <div id="hm-cuboid-zoom-backdrop" onclick="setHeatMapCuboidZoom(false)" aria-hidden="true"></div>
-      <div class="cb-dual-shell hm-reworked-shell">
-      <div class="hm-cuboid-heat-strip">
-        <div class="hm-legend-strip">
-          <span class="hm-legend-title">BURNER STATE</span>
-          <div class="hm-legend-pill" style="background:rgba(22,163,74,0.14);border:1px solid rgba(22,163,74,0.45);">
-            <span style="font-size:15px;line-height:1;filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
-            <span class="hm-legend-pill-text" style="color:#4ade80;">OFF GAS (O)</span>
+              <div class="viewer-layout">
+                <div class="canvas-area fade-in">
+                  <canvas id="hm-uploaded-ab-canvas" class="viewer-canvas"></canvas>
+                  <div class="canvas-hint">Click and drag to rotate · Scroll to zoom</div>
+                </div>
+
+                <aside class="side-panel fade-in">
+                  <div class="panel-section">
+                    <h3>Chamber Info</h3>
+                    <div class="info-row"><span class="info-label">Section Name</span><span class="info-value">AB</span></div>
+                    <div class="info-row"><span class="info-label">Shape</span><span class="info-value">Single Cuboid</span></div>
+                    <div class="info-row"><span class="info-label">Shell</span><span class="info-value">Transparent</span></div>
+                    <div class="info-row"><span class="info-label">Tube Bundle</span><span class="info-value">8 Protruding Tubes</span></div>
+                    <div class="info-row"><span class="info-label">Common Header</span><span class="info-value">Front to Back</span></div>
+                    <div class="info-row"><span class="info-label">Shared Header Slab</span><span class="info-value warn">Removed</span></div>
+                    <div class="info-row"><span class="info-label">Interconnection</span><span class="info-value">None</span></div>
+                    <div class="info-row"><span class="info-label">Ground</span><span class="info-value">Separate Pad</span></div>
+                  </div>
+
+                  <div class="panel-section">
+                    <h3>Live Parameters</h3>
+                    <div class="info-row"><span class="info-label">Chamber Temp</span><span class="info-value hot">842 °C</span></div>
+                    <div class="info-row"><span class="info-label">Flame Status</span><span class="info-value ok">Active</span></div>
+                    <div class="info-row"><span class="info-label">Fuel Flow</span><span class="info-value">124 m³/h</span></div>
+                  </div>
+
+                  <div class="panel-section">
+                    <h3>Legend</h3>
+                    <div class="legend">
+                      <div class="legend-item"><div class="legend-swatch" style="background:#A0887A"></div>Transparent Chamber Shell</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#8FA8BC"></div>Protruding Vertical Tubes</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#7090A8"></div>Common Header Pipe</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#1a1a1a"></div>Open Interior Volume</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#334155"></div>Ground Pad</div>
+                    </div>
+                  </div>
+
+                  <div class="panel-section">
+                    <h3>Controls</h3>
+                    <div class="control-group">
+                      <button class="control-btn secondary" onclick="hmUploadedResetCam('ab')">⟲ Reset View</button>
+                      <button class="control-btn secondary" onclick="hmUploadedViewFront('ab')">◉ Front View</button>
+                      <button class="control-btn secondary" onclick="hmUploadedViewSide('ab')">◉ Side View</button>
+                      <button class="control-btn secondary" onclick="hmUploadedViewTop('ab')">◉ Top View</button>
+                      <button class="control-btn secondary" onclick="hmUploadedToggleAutoRotate('ab')">↻ Auto Rotate</button>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+            </section>
+
+            <section class="viewer-section">
+              <div class="section-head fade-in">
+                <div>
+                  <div class="eyebrow">Section 02</div>
+                  <h1 class="section-title">CD Chamber</h1>
+                </div>
+                <p class="section-copy">This second section contains only the CD cuboid chamber. It is shown independently on its own ground pad with no link back to AB.</p>
+              </div>
+
+              <div class="viewer-layout">
+                <div class="canvas-area fade-in">
+                  <canvas id="hm-uploaded-cd-canvas" class="viewer-canvas"></canvas>
+                  <div class="canvas-hint">Click and drag to rotate · Scroll to zoom</div>
+                </div>
+
+                <aside class="side-panel fade-in">
+                  <div class="panel-section">
+                    <h3>Chamber Info</h3>
+                    <div class="info-row"><span class="info-label">Section Name</span><span class="info-value">CD</span></div>
+                    <div class="info-row"><span class="info-label">Shape</span><span class="info-value">Single Cuboid</span></div>
+                    <div class="info-row"><span class="info-label">Shell</span><span class="info-value">Transparent</span></div>
+                    <div class="info-row"><span class="info-label">Tube Bundle</span><span class="info-value">8 Protruding Tubes</span></div>
+                    <div class="info-row"><span class="info-label">Common Header</span><span class="info-value">Front to Back</span></div>
+                    <div class="info-row"><span class="info-label">Shared Header Slab</span><span class="info-value warn">Removed</span></div>
+                    <div class="info-row"><span class="info-label">Interconnection</span><span class="info-value">None</span></div>
+                    <div class="info-row"><span class="info-label">Ground</span><span class="info-value">Separate Pad</span></div>
+                  </div>
+
+                  <div class="panel-section">
+                    <h3>Live Parameters</h3>
+                    <div class="info-row"><span class="info-label">Chamber Temp</span><span class="info-value hot">818 °C</span></div>
+                    <div class="info-row"><span class="info-label">Flame Status</span><span class="info-value ok">Active</span></div>
+                    <div class="info-row"><span class="info-label">Fuel Flow</span><span class="info-value">119 m³/h</span></div>
+                  </div>
+
+                  <div class="panel-section">
+                    <h3>Legend</h3>
+                    <div class="legend">
+                      <div class="legend-item"><div class="legend-swatch" style="background:#A0887A"></div>Transparent Chamber Shell</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#8FA8BC"></div>Protruding Vertical Tubes</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#7090A8"></div>Common Header Pipe</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#1a1a1a"></div>Open Interior Volume</div>
+                      <div class="legend-item"><div class="legend-swatch" style="background:#334155"></div>Ground Pad</div>
+                    </div>
+                  </div>
+
+                  <div class="panel-section">
+                    <h3>Controls</h3>
+                    <div class="control-group">
+                      <button class="control-btn secondary" onclick="hmUploadedResetCam('cd')">⟲ Reset View</button>
+                      <button class="control-btn secondary" onclick="hmUploadedViewFront('cd')">◉ Front View</button>
+                      <button class="control-btn secondary" onclick="hmUploadedViewSide('cd')">◉ Side View</button>
+                      <button class="control-btn secondary" onclick="hmUploadedViewTop('cd')">◉ Top View</button>
+                      <button class="control-btn secondary" onclick="hmUploadedToggleAutoRotate('cd')">↻ Auto Rotate</button>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+            </section>
           </div>
-          <div class="hm-legend-pill" style="background:rgba(217,119,6,0.14);border:1px solid rgba(217,119,6,0.45);">
-            <span style="font-size:15px;line-height:1;filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
-            <span class="hm-legend-pill-text" style="color:#fbbf24;">NG ONLY (N)</span>
-          </div>
-          <div class="hm-legend-pill" style="background:rgba(37,99,235,0.14);border:1px solid rgba(37,99,235,0.45);">
-            <span style="font-size:15px;line-height:1;filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
-            <span class="hm-legend-pill-text" style="color:#60a5fa;">BOTH (B)</span>
-          </div>
-          <div class="hm-legend-pill" style="background:rgba(71,85,105,0.2);border:1px solid rgba(100,116,139,0.45);">
-            <span style="font-size:13px;line-height:1;color:#94a3b8;">◼</span>
-            <span class="hm-legend-pill-text" style="color:#94a3b8;">CLOSED (C)</span>
-          </div>
-        </div>
-        <div class="hm-cuboid-heat-group">
-          <span class="hm-legend-title">PEEP HOLES</span>
-          <div class="hm-cuboid-heat-bar"></div>
-          <span class="hm-cuboid-heat-text">860°C Cold → 1000°C Hot</span>
         </div>
       </div>
-      <div class="cb-dual-row">
-
-        <!-- ══ AB SIDE CUBOID ══ -->
-        <div class="cb-wrap hm-reworked-wrap" data-cuboid="ab" ondblclick="setHeatMapCuboidZoom('ab')" title="Double-click to zoom AB cuboid">
-          <div class="hm-cuboid-side-legend hm-cuboid-side-legend-left" aria-hidden="true">
-            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-label">COLD</span>
-            <div class="hm-cuboid-side-heat"></div>
-            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-note">HOT</span>
-          </div>
-          <div class="hm-cuboid-side-legend hm-cuboid-side-legend-right" aria-hidden="true">
-            <div class="hm-cuboid-side-pill state-o">
-              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
-              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">OFF GAS (O)</span>
-            </div>
-            <div class="hm-cuboid-side-pill state-n">
-              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
-              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">NG ONLY (N)</span>
-            </div>
-            <div class="hm-cuboid-side-pill state-b">
-              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
-              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">BOTH (B)</span>
-            </div>
-            <div class="hm-cuboid-side-pill state-c">
-              <span class="hm-cuboid-side-pill-icon" style="font-size:14px;color:#94a3b8;">◼</span>
-              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">CLOSED (C)</span>
-            </div>
-          </div>
-          <div class="cb-title" style="color:#F37022;background:rgba(243,112,34,0.1);border:1px solid rgba(243,112,34,0.35);">AB CHAMBER</div>
-          <div class="cb-subtitle">Wall A front · Wall B back · AB PH/TST feed</div>
-
-          <div class="cb-scene cb-float cb-scene-ab hm-reworked-scene" id="ab-scene" style="--cb-accent-rgb:243,112,34;">
-            <div class="cb-ground-grid" aria-hidden="true"></div>
-            <div class="cb-ground-pad" aria-hidden="true"></div>
-            <div class="cb-group hm-reworked-cube" id="ab-cube" style="transform:rotateX(-4deg) rotateY(-76deg);">
-
-              <!-- FRONT = Wall A -->
-              <div class="cb-face cb-fb" id="face-ab-front" style="transform:translateZ(80px);background:rgba(10,22,40,0.55);">
-                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#F37022;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-ab-front-loading">⏳ RENDERING WALL A…</div>
-              </div>
-
-              <!-- BACK = Wall B -->
-              <div class="cb-face cb-fb" id="face-ab-back" style="transform:rotateY(180deg) translateZ(80px);background:rgba(10,22,40,0.55);">
-                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fb923c;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-ab-back-loading">⏳ RENDERING WALL B…</div>
-              </div>
-
-              <!-- Internal tubes -->
-              <div class="cb-inner-tube-wrap" aria-hidden="true">
-                <div class="cb-inner-tube" style="--tube-x:-224px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-160px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-96px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-32px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:32px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:96px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:160px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:224px;--cb-tube-rgb:136,153,170;"></div>
-              </div>
-
-              <!-- LEFT side cap -->
-              <div class="cb-face cb-lr" id="face-ab-left" style="transform:rotateY(-90deg) translateZ(360px);">
-                <div class="cb-side-face-panel" aria-hidden="true">
-                  <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
-                    <defs>
-                      <mask id="cb-mask-ab-l">
-                        <rect x="0" y="0" width="160" height="500" fill="#fff"></rect>
-                        <rect x="46" y="118" width="68" height="68" fill="#000"></rect>
-                        <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
-                      </mask>
-                    </defs>
-                    <rect x="0" y="0" width="160" height="500" fill="rgba(2,6,23,0.72)" mask="url(#cb-mask-ab-l)"></rect>
-                    <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
-                    <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- RIGHT side cap -->
-              <div class="cb-face cb-lr" id="face-ab-right" style="transform:rotateY(90deg) translateZ(360px);">
-                <div class="cb-side-face-panel" aria-hidden="true">
-                  <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
-                    <defs>
-                      <mask id="cb-mask-ab-r">
-                        <rect x="0" y="0" width="160" height="500" fill="#fff"></rect>
-                        <rect x="46" y="118" width="68" height="68" fill="#000"></rect>
-                        <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
-                      </mask>
-                    </defs>
-                    <rect x="0" y="0" width="160" height="500" fill="rgba(2,6,23,0.72)" mask="url(#cb-mask-ab-r)"></rect>
-                    <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
-                    <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- TOP cap -->
-              <div class="cb-face cb-tb" id="face-ab-top" style="transform:rotateX(90deg) translateZ(250px);display:flex;align-items:center;justify-content:center;">
-                <div class="cb-top-cap-inner">
-                  <div class="cb-top-header-pipe"></div>
-                  <div class="cb-top-port-line">
-                    <span class="cb-top-port" style="--tube-x:-224px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:224px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-160px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:160px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-96px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:96px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-32px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:32px;"></span>
-                    <span class="cb-top-port" style="--tube-x:32px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:32px;"></span>
-                    <span class="cb-top-port" style="--tube-x:96px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:96px;"></span>
-                    <span class="cb-top-port" style="--tube-x:160px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:160px;"></span>
-                    <span class="cb-top-port" style="--tube-x:224px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:224px;"></span>
-                  </div>
-                  <span class="cb-top-cap-label">AB CHAMBER · COMMON HEADER</span>
-                </div>
-              </div>
-
-              <!-- BOTTOM cap -->
-              <div class="cb-face cb-tb" id="face-ab-bottom" style="transform:rotateX(-90deg) translateZ(250px);display:flex;align-items:center;justify-content:center;">
-                <span style="font-size:9px;font-weight:700;letter-spacing:3px;">GROUND PAD</span>
-              </div>
-
-            </div>
-            <div class="cb-kpi-row" id="cb-kpi-ab">
-              <span class="cb-kpi-chip cb-kpi-O">🔥 O <b id="cb-ab-o">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-N">🔥 N <b id="cb-ab-n">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-B">🔥 B <b id="cb-ab-b">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-C">◼ C <b id="cb-ab-c">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-temp" id="cb-ab-temp">PH Avg --</span>
-            </div>
-            <div class="cb-scene-note">Transparent shell · protruding tubes · separate ground</div>
-            <div class="cb-glow" style="background:radial-gradient(ellipse,rgba(243,112,34,0.26) 0%,transparent 70%);"></div>
-          </div>
-          <div class="cb-hint">← DRAG LEFT / RIGHT TO ROTATE · DOUBLE-CLICK TO ZOOM →</div>
-          <div id="ab-load-status" class="cb-loading" style="display:none;">Generating wall textures…</div>
-        </div>
-
-        <div class="cb-divider"></div>
-
-        <!-- ══ CD SIDE CUBOID ══ -->
-        <div class="cb-wrap hm-reworked-wrap" data-cuboid="cd" ondblclick="setHeatMapCuboidZoom('cd')" title="Double-click to zoom CD cuboid">
-          <div class="hm-cuboid-side-legend hm-cuboid-side-legend-left" aria-hidden="true">
-            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-label">COLD</span>
-            <div class="hm-cuboid-side-heat"></div>
-            <span class="hm-cuboid-side-legend-vert hm-cuboid-side-note">HOT</span>
-          </div>
-          <div class="hm-cuboid-side-legend hm-cuboid-side-legend-right" aria-hidden="true">
-            <div class="hm-cuboid-side-pill state-o">
-              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(95deg) saturate(1.45) brightness(1.08) drop-shadow(0 0 4px rgba(22,163,74,0.55));">🔥</span>
-              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">OFF GAS (O)</span>
-            </div>
-            <div class="hm-cuboid-side-pill state-n">
-              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(-8deg) saturate(1.2) brightness(1.05) drop-shadow(0 0 4px rgba(217,119,6,0.55));">🔥</span>
-              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">NG ONLY (N)</span>
-            </div>
-            <div class="hm-cuboid-side-pill state-b">
-              <span class="hm-cuboid-side-pill-icon" style="filter:hue-rotate(175deg) saturate(1.6) brightness(1.05) drop-shadow(0 0 4px rgba(37,99,235,0.55));">🔥</span>
-              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">BOTH (B)</span>
-            </div>
-            <div class="hm-cuboid-side-pill state-c">
-              <span class="hm-cuboid-side-pill-icon" style="font-size:14px;color:#94a3b8;">◼</span>
-              <span class="hm-cuboid-side-legend-vert hm-cuboid-side-pill-text">CLOSED (C)</span>
-            </div>
-          </div>
-          <div class="cb-title" style="color:#7ec8f0;background:rgba(126,200,240,0.1);border:1px solid rgba(126,200,240,0.35);">CD CHAMBER</div>
-          <div class="cb-subtitle">Wall C front · Wall D back · CD PH/TST feed</div>
-
-          <div class="cb-scene cb-float cb-scene-cd hm-reworked-scene" id="cd-scene" style="--cb-accent-rgb:126,200,240;">
-            <div class="cb-ground-grid" aria-hidden="true"></div>
-            <div class="cb-ground-pad" aria-hidden="true"></div>
-            <div class="cb-group hm-reworked-cube" id="cd-cube" style="transform:rotateX(-4deg) rotateY(-76deg);">
-
-              <!-- FRONT = Wall C -->
-              <div class="cb-face cb-fb" id="face-cd-front" style="transform:translateZ(80px);background:rgba(10,22,40,0.55);">
-                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#7ec8f0;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-cd-front-loading">⏳ RENDERING WALL C…</div>
-              </div>
-
-              <!-- BACK = Wall D -->
-              <div class="cb-face cb-fb" id="face-cd-back" style="transform:rotateY(180deg) translateZ(80px);background:rgba(10,22,40,0.55);">
-                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#60c8ff;font-size:11px;font-weight:700;letter-spacing:2px;" id="face-cd-back-loading">⏳ RENDERING WALL D…</div>
-              </div>
-
-              <!-- Internal tubes -->
-              <div class="cb-inner-tube-wrap" aria-hidden="true">
-                <div class="cb-inner-tube" style="--tube-x:-224px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-160px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-96px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:-32px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:32px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:96px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:160px;--cb-tube-rgb:136,153,170;"></div>
-                <div class="cb-inner-tube" style="--tube-x:224px;--cb-tube-rgb:136,153,170;"></div>
-              </div>
-
-              <!-- LEFT side cap -->
-              <div class="cb-face cb-lr" id="face-cd-left" style="transform:rotateY(-90deg) translateZ(360px);">
-                <div class="cb-side-face-panel" aria-hidden="true">
-                  <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
-                    <defs>
-                      <mask id="cb-mask-cd-l">
-                        <rect x="0" y="0" width="160" height="500" fill="#fff"></rect>
-                        <rect x="46" y="118" width="68" height="68" fill="#000"></rect>
-                        <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
-                      </mask>
-                    </defs>
-                    <rect x="0" y="0" width="160" height="500" fill="rgba(2,6,23,0.72)" mask="url(#cb-mask-cd-l)"></rect>
-                    <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
-                    <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- RIGHT side cap -->
-              <div class="cb-face cb-lr" id="face-cd-right" style="transform:rotateY(90deg) translateZ(360px);">
-                <div class="cb-side-face-panel" aria-hidden="true">
-                  <svg class="cb-side-cutout-svg" viewBox="0 0 160 500" preserveAspectRatio="none">
-                    <defs>
-                      <mask id="cb-mask-cd-r">
-                        <rect x="0" y="0" width="160" height="500" fill="#fff"></rect>
-                        <rect x="46" y="118" width="68" height="68" fill="#000"></rect>
-                        <rect x="46" y="314" width="68" height="68" fill="#000"></rect>
-                      </mask>
-                    </defs>
-                    <rect x="0" y="0" width="160" height="500" fill="rgba(2,6,23,0.72)" mask="url(#cb-mask-cd-r)"></rect>
-                    <rect x="46" y="118" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
-                    <rect x="46" y="314" width="68" height="68" fill="none" stroke="rgba(203,213,225,0.72)" stroke-width="2"></rect>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- TOP cap -->
-              <div class="cb-face cb-tb" id="face-cd-top" style="transform:rotateX(90deg) translateZ(250px);display:flex;align-items:center;justify-content:center;">
-                <div class="cb-top-cap-inner">
-                  <div class="cb-top-header-pipe"></div>
-                  <div class="cb-top-port-line">
-                    <span class="cb-top-port" style="--tube-x:-224px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:224px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-160px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:160px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-96px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:96px;"></span>
-                    <span class="cb-top-port" style="--tube-x:-32px;--tube-bridge-left:13px;--tube-bridge-right:auto;--tube-bridge-width:32px;"></span>
-                    <span class="cb-top-port" style="--tube-x:32px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:32px;"></span>
-                    <span class="cb-top-port" style="--tube-x:96px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:96px;"></span>
-                    <span class="cb-top-port" style="--tube-x:160px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:160px;"></span>
-                    <span class="cb-top-port" style="--tube-x:224px;--tube-bridge-left:auto;--tube-bridge-right:13px;--tube-bridge-width:224px;"></span>
-                  </div>
-                  <span class="cb-top-cap-label">CD CHAMBER · COMMON HEADER</span>
-                </div>
-              </div>
-
-              <!-- BOTTOM cap -->
-              <div class="cb-face cb-tb" id="face-cd-bottom" style="transform:rotateX(-90deg) translateZ(250px);display:flex;align-items:center;justify-content:center;">
-                <span style="font-size:9px;font-weight:700;letter-spacing:3px;">GROUND PAD</span>
-              </div>
-
-            </div>
-            <div class="cb-kpi-row" id="cb-kpi-cd">
-              <span class="cb-kpi-chip cb-kpi-O">🔥 O <b id="cb-cd-o">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-N">🔥 N <b id="cb-cd-n">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-B">🔥 B <b id="cb-cd-b">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-C">◼ C <b id="cb-cd-c">0</b></span>
-              <span class="cb-kpi-chip cb-kpi-temp" id="cb-cd-temp">PH Avg --</span>
-            </div>
-            <div class="cb-scene-note">Transparent shell · protruding tubes · separate ground</div>
-            <div class="cb-glow" style="background:radial-gradient(ellipse,rgba(126,200,240,0.24) 0%,transparent 70%);"></div>
-          </div>
-          <div class="cb-hint">← DRAG LEFT / RIGHT TO ROTATE · DOUBLE-CLICK TO ZOOM →</div>
-          <div id="cd-load-status" class="cb-loading" style="display:none;">Generating wall textures…</div>
-        </div>
-
-      </div><!-- end dual cuboid row -->
-      </div><!-- end dual cuboid shell -->
 
       <script>
-      /* ──────────────────────────────────────────────────────────────
-         CUBOID DRAG + WALL TEXTURE ENGINE
-         Renders each wall as a scaled-down canvas snapshot and applies
-         it as a background-image on the corresponding cuboid face.
-      ────────────────────────────────────────────────────────────── */
       (function(){
-        var _isMobileLite =
-          (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) ||
-          (window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches);
-        var _mobileCuboidEnabled = true;
-        if(_isMobileLite){
-          var _storedMobileCuboid = "";
-          try{ _storedMobileCuboid = String(localStorage.getItem("hm-mobile-cuboid") || "").trim(); }catch(e){}
-          _mobileCuboidEnabled = (_storedMobileCuboid === "1" || _storedMobileCuboid === "true");
-          if(!_mobileCuboidEnabled){
-            var _hmTabLite = document.getElementById("tab-heatmap");
-            if(_hmTabLite) _hmTabLite.classList.add("hm-mobile-cuboid-hidden");
-          }
-        }
-        var _disableCuboidMotion = false;
+        window.updateCuboidResponsiveScale = function(){};
+        window.applyLightThemeCuboidFaceBlack = function(){};
 
+        var hmUploadedViewers = {};
+        var hmUploadedInitialized = false;
+        var hmUploadedAnimating = false;
+        var ROTATION_X_MIN = -Math.PI / 2.2;
+        var ROTATION_X_MAX = -0.08;
 
-        /* ── 1. Drag interaction — smooth momentum, hard clamp, no bounce ──
-           DRAG    : direct 1:1 follow
-           RELEASE : velocity coasts with friction until it stops
-           LIMITS  : hard clamp — motion simply stops at 0° / 180°
-        ── */
-        function makeDraggable(sceneId, cubeId, initY, initX, minY, maxY){
-          var scene    = document.getElementById(sceneId);
-          var cube     = document.getElementById(cubeId);
-          if(!scene || !cube) return null;
-          var rY       = initY;
-          var rX       = initX;
-          var velY     = 0;
-          var dragging = false;
-          var lastX    = 0;
-          var lastTime = 0;
-          var rafId    = null;
-
-          var FRICTION  = 0.88;   /* per-frame speed decay (0–1) */
-          var DRAG_SENS = 0.48;   /* px → deg during drag        */
-          var MIN_VEL   = 0.05;   /* threshold to stop coasting  */
-
-          function clamp(v,lo,hi){ return v<lo?lo:v>hi?hi:v; }
-
-          function applyTransform(){
-            var scale = parseFloat(scene.getAttribute('data-cb-scale') || '1');
-            if(!isFinite(scale) || scale <= 0) scale = 1;
-            cube.style.transform = 'scale('+scale.toFixed(4)+') rotateX('+rX+'deg) rotateY('+rY+'deg)';
-          }
-
-          if(_disableCuboidMotion){
-            scene.style.cursor = "default";
-            scene.style.touchAction = "auto";
-            applyTransform();
-            return { scene:scene, cube:cube, applyTransform:applyTransform };
-          }
-
-          function stopRAF(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } }
-
-          function coastLoop(){
-            velY *= FRICTION;
-            rY   += velY;
-            /* hard clamp — kill velocity the instant we hit a wall */
-            if(rY <= minY){ rY = minY; velY = 0; }
-            if(rY >= maxY){ rY = maxY; velY = 0; }
-            applyTransform();
-            if(Math.abs(velY) < MIN_VEL){
-              rY = clamp(rY, minY, maxY);
-              applyTransform();
-              rafId = null;
-              scene.classList.add('cb-float');
-              return;
-            }
-            rafId = requestAnimationFrame(coastLoop);
-          }
-
-          function onDown(clientX){
-            stopRAF();
-            dragging = true;
-            lastX    = clientX;
-            lastTime = performance.now();
-            velY     = 0;
-            scene.classList.remove('cb-float');
-          }
-
-          function onMove(clientX){
-            if(!dragging) return;
-            var dx  = clientX - lastX;
-            var now = performance.now();
-            var dt  = Math.max(1, now - lastTime);
-            velY    = (dx * DRAG_SENS / dt) * 16;
-            rY      = clamp(rY + dx * DRAG_SENS, minY, maxY);
-            lastX   = clientX;
-            lastTime = now;
-            applyTransform();
-          }
-
-          function onUp(){
-            if(!dragging) return;
-            dragging = false;
-            if(Math.abs(velY) > MIN_VEL){
-              rafId = requestAnimationFrame(coastLoop);
-            } else {
-              rY = clamp(rY, minY, maxY);
-              applyTransform();
-              scene.classList.add('cb-float');
-            }
-          }
-
-          scene.addEventListener('mousedown',  function(e){ onDown(e.clientX); e.preventDefault(); });
-          window.addEventListener('mousemove', function(e){ onMove(e.clientX); });
-          window.addEventListener('mouseup',   onUp);
-          scene.addEventListener('touchstart', function(e){ onDown(e.touches[0].clientX); e.preventDefault(); },{passive:false});
-          window.addEventListener('touchmove', function(e){ if(dragging) onMove(e.touches[0].clientX); });
-          window.addEventListener('touchend',  onUp);
-
-          applyTransform();
-          return { scene:scene, cube:cube, applyTransform:applyTransform };
+        function hmUploadedClampRotationX(value){
+          return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
         }
 
-        var _abDragCtrl = makeDraggable('ab-scene','ab-cube', -76, -4, -180,   0);
-        var _cdDragCtrl = makeDraggable('cd-scene','cd-cube', -76, -4, -180,   0);
-
-        function updateCuboidResponsiveScale(){
-          var hmTab = document.getElementById("tab-heatmap");
-          var zoomMode = !!(hmTab && hmTab.classList.contains("hm-cuboid-zoom-active"));
-
-          var ctrls = [_abDragCtrl, _cdDragCtrl];
-          for(var i=0; i<ctrls.length; i++){
-            var ctrl = ctrls[i];
-            if(!ctrl || !ctrl.scene || !ctrl.cube) continue;
-            var w = ctrl.scene.clientWidth || 0;
-            if(w < 140) continue; /* hidden tab or not laid out yet */
-            var fbFace = ctrl.cube.querySelector(".cb-face.cb-fb");
-            var lrFace = ctrl.cube.querySelector(".cb-face.cb-lr");
-            var baseW = fbFace ? (fbFace.offsetWidth || fbFace.clientWidth) : 0;
-            var baseH = fbFace ? (fbFace.offsetHeight || fbFace.clientHeight) : 0;
-            var baseD = lrFace ? (lrFace.offsetWidth || lrFace.clientWidth) : 0;
-            if(!isFinite(baseW) || baseW <= 0) baseW = 760;
-            if(!isFinite(baseH) || baseH <= 0) baseH = 500;
-            if(!isFinite(baseD) || baseD <= 0) baseD = 110;
-
-            var sceneH = ctrl.scene.clientHeight || Math.max(baseH + baseD + 80, 620);
-            var wrap = (ctrl.scene.closest && ctrl.scene.closest(".cb-wrap[data-cuboid]")) || null;
-            var isZoomTarget = !!(zoomMode && wrap && wrap.classList.contains("hm-cuboid-zoom-target"));
-            var padW = isZoomTarget ? 24 : 14;
-            var padH = isZoomTarget ? 24 : 16;
-            var maxScale = isZoomTarget ? 4.5 : 0.95;
-            var minScale = isZoomTarget ? 0.58 : 0.56;
-            var fitScaleW = isZoomTarget
-              ? (w - padW) / (baseW * 1.01)
-              : (w - padW) / ((baseW + (baseD * 0.28)) * 1.02);
-            var fitScaleH = isZoomTarget
-              ? (sceneH - padH) / (baseH * 1.02)
-              : (sceneH - padH) / ((baseH + (baseD * 0.18)) * 1.02);
-            var scale = Math.min(fitScaleW, fitScaleH);
-            if(!isFinite(scale)) scale = 1;
-            scale = Math.max(minScale, Math.min(maxScale, scale));
-            ctrl.scene.setAttribute('data-cb-scale', scale.toFixed(4));
-            ctrl.applyTransform();
-          }
+        function hmUploadedGetCanvasSize(canvas){
+          var rect = canvas.parentElement.getBoundingClientRect();
+          return {
+            width:Math.max(320, Math.round(rect.width || 0)),
+            height:Math.max(320, Math.round(rect.height || 0))
+          };
         }
-        var _cbResizeTimer = null;
-        window.addEventListener('resize', function(){
-          if(_cbResizeTimer) clearTimeout(_cbResizeTimer);
-          _cbResizeTimer = setTimeout(updateCuboidResponsiveScale, 120);
-        });
-        window.updateCuboidResponsiveScale = updateCuboidResponsiveScale;
-        setTimeout(updateCuboidResponsiveScale, 0);
 
-        /* ── 2. Wall face renderer — direct HTML injection (no html2canvas) ──
-           Render content directly at face size (100% x 100%) so wall data
-           scales with responsive cuboid dimensions. This removes the old
-           fixed 720/900 scaler that caused undersized/distorted wall content
-           after cuboids were enlarged.
-        ── */
+        function hmUploadedMakeFace(fW, fH, h, y1, y2){
+          var shape = new THREE.Shape();
+          shape.moveTo(0, 0);
+          shape.lineTo(fW, 0);
+          shape.lineTo(fW, fH);
+          shape.lineTo(0, fH);
+          shape.lineTo(0, 0);
 
-        function applyLightThemeCuboidFaceBlack(){
-          var cuboidFaceIds = [
-            "face-ab-front","face-ab-back","face-cd-front","face-cd-back",
-            "face-ab-left","face-ab-right","face-cd-left","face-cd-right"
+          var cx = fW / 2;
+          var hole1 = new THREE.Path();
+          hole1.moveTo(cx - h / 2, y1 - h / 2);
+          hole1.lineTo(cx + h / 2, y1 - h / 2);
+          hole1.lineTo(cx + h / 2, y1 + h / 2);
+          hole1.lineTo(cx - h / 2, y1 + h / 2);
+          hole1.lineTo(cx - h / 2, y1 - h / 2);
+          shape.holes.push(hole1);
+
+          var hole2 = new THREE.Path();
+          hole2.moveTo(cx - h / 2, y2 - h / 2);
+          hole2.lineTo(cx + h / 2, y2 - h / 2);
+          hole2.lineTo(cx + h / 2, y2 + h / 2);
+          hole2.lineTo(cx - h / 2, y2 + h / 2);
+          hole2.lineTo(cx - h / 2, y2 - h / 2);
+          shape.holes.push(hole2);
+
+          return shape;
+        }
+
+        function hmUploadedAddFrame(parent, x, y, z, size){
+          var s = size / 2 + 0.04;
+          var pts = [
+            new THREE.Vector3(-s, -s, 0),
+            new THREE.Vector3(s, -s, 0),
+            new THREE.Vector3(s, s, 0),
+            new THREE.Vector3(-s, s, 0),
+            new THREE.Vector3(-s, -s, 0)
           ];
-          cuboidFaceIds.forEach(function(id){
-            var el = document.getElementById(id);
-            if(!el) return;
-            el.style.removeProperty("background");
-            el.style.removeProperty("border-color");
-            el.style.removeProperty("box-shadow");
-          });
-
-          var sidePanels = document.querySelectorAll(
-            "#face-ab-left .cb-side-face-panel,#face-ab-right .cb-side-face-panel,#face-cd-left .cb-side-face-panel,#face-cd-right .cb-side-face-panel"
+          var frame = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints(pts),
+            new THREE.LineBasicMaterial({color:0xCCBBAA, transparent:true, opacity:0.7})
           );
-          sidePanels.forEach(function(el){
-            el.style.removeProperty("background");
-          });
-
-          var sideMaskRects = document.querySelectorAll(
-            "#face-ab-left .cb-side-cutout-svg rect[mask],#face-ab-right .cb-side-cutout-svg rect[mask],#face-cd-left .cb-side-cutout-svg rect[mask],#face-cd-right .cb-side-cutout-svg rect[mask]"
-          );
-          sideMaskRects.forEach(function(el){
-            el.style.removeProperty("fill");
-          });
-
-          var wallCards = document.querySelectorAll(
-            "#face-ab-front .hm-wall-card,#face-ab-back .hm-wall-card,#face-cd-front .hm-wall-card,#face-cd-back .hm-wall-card"
-          );
-          wallCards.forEach(function(el){
-            el.style.removeProperty("background");
-            el.style.removeProperty("border-color");
-            el.style.removeProperty("box-shadow");
-          });
-
-          var wallHeaders = document.querySelectorAll(
-            "#face-ab-front .hm-wall-header,#face-ab-back .hm-wall-header,#face-cd-front .hm-wall-header,#face-cd-back .hm-wall-header"
-          );
-          wallHeaders.forEach(function(el){
-            el.style.removeProperty("background");
-            el.style.removeProperty("border-bottom");
-          });
-        }
-        window.applyLightThemeCuboidFaceBlack = applyLightThemeCuboidFaceBlack;
-
-        function renderWallFace(wallName, peepBotVals, peepTopVals, wallData, faceEl, loadingEl, accentColor){
-          /* Build the same wall-card HTML used by the flat bottom tables */
-          var html = buildWallHTML(wallName, peepBotVals, peepTopVals, wallData);
-
-          /* Remove the loading spinner */
-          if(loadingEl && loadingEl.parentNode) loadingEl.parentNode.removeChild(loadingEl);
-
-          /* Clear any stale background-image from previous renders */
-          faceEl.style.backgroundImage = '';
-          faceEl.style.backgroundSize  = '';
-
-          /* Fill entire face with wall content. */
-          faceEl.innerHTML =
-            '<div style="'
-            +   'position:absolute;top:0;left:0;'
-            +   'width:100%;'
-            +   'height:100%;'
-            +   'pointer-events:none;'
-            + '">'
-            + html
-            + '</div>';
-          applyLightThemeCuboidFaceBlack();
+          frame.position.set(x, y, z);
+          if(z < 0) frame.rotation.y = Math.PI;
+          parent.add(frame);
         }
 
-        /* ── 3. Hook into renderHeatMap so textures refresh with data ── */
-        var _origRenderHeatMap = window.renderHeatMap;
-        window.renderHeatMap = function(){
-          if(_origRenderHeatMap) _origRenderHeatMap.apply(this,arguments);
-          setTimeout(applyLightThemeCuboidFaceBlack, 0);
-          setTimeout(applyLightThemeCuboidFaceBlack, 180);
-          if(window._hmSkipCuboidRefresh){
-            window._hmSkipCuboidRefresh = false;
-            return;
+        function hmUploadedAddLabel(parent, text, x, y, z){
+          var c = document.createElement("canvas");
+          c.width = 450;
+          c.height = 64;
+          var ctx = c.getContext("2d");
+          ctx.font = "600 20px Outfit,sans-serif";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(text, 225, 32);
+          var tex = new THREE.CanvasTexture(c);
+          var mat = new THREE.SpriteMaterial({map:tex, transparent:true, opacity:0.6});
+          var sprite = new THREE.Sprite(mat);
+          sprite.position.set(x, y, z);
+          sprite.scale.set(3.2, 0.5, 1);
+          parent.add(sprite);
+        }
+
+        function hmUploadedBuildChamberScene(parent, label){
+          var sX = 1.8, sY = 3.5, sZ = 5.0, wallT = 0.15;
+          var hs = 0.5, hy1 = sY * 0.33, hy2 = sY * 0.68;
+          var tubeCount = 8;
+          var tubeR = 0.06;
+          var tubeZStart = -(sZ - 0.6) / 2;
+          var tubeSpacing = (sZ - 0.6) / (tubeCount - 1);
+          var tubeBottomY = wallT + 0.12;
+          var hdrH = 0.2;
+          var commonTubeY = sY + hdrH + 0.35;
+          var commonTubeR = 0.15;
+          var commonTubeLen = sZ + 0.4;
+          var tubeHeight = commonTubeY - tubeBottomY;
+
+          var shellMat = new THREE.MeshStandardMaterial({
+            color:0x9A8578,
+            metalness:0.58,
+            roughness:0.38,
+            side:THREE.DoubleSide,
+            transparent:true,
+            opacity:0.42,
+            depthWrite:false
+          });
+          var innerMat = new THREE.MeshStandardMaterial({
+            color:0x0A0A0A,
+            metalness:0.05,
+            roughness:0.82,
+            side:THREE.DoubleSide,
+            transparent:true,
+            opacity:0.08,
+            depthWrite:false
+          });
+          var tubeMat = new THREE.MeshStandardMaterial({color:0x8899AA, metalness:0.75, roughness:0.3});
+          var commonTubeMat = new THREE.MeshStandardMaterial({color:0x7090A8, metalness:0.7, roughness:0.25});
+          var baseMat = new THREE.MeshStandardMaterial({color:0x334155, metalness:0.2, roughness:0.7});
+          var edgeMat = new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.25});
+
+          var chamber = new THREE.Group();
+          parent.add(chamber);
+
+          var inner = new THREE.Mesh(
+            new THREE.BoxGeometry(sX - wallT * 2 - 0.02, sY - wallT * 2 - 0.02, sZ - wallT * 2 - 0.02),
+            innerMat
+          );
+          inner.position.set(0, sY / 2, 0);
+          chamber.add(inner);
+
+          var innerGlow = new THREE.PointLight(0xFF4422, 0.15, 3);
+          innerGlow.position.set(0, sY / 2, 0);
+          chamber.add(innerGlow);
+
+          var leftWall = new THREE.Mesh(new THREE.BoxGeometry(wallT, sY, sZ), shellMat);
+          leftWall.position.set(-sX / 2 + wallT / 2, sY / 2, 0);
+          leftWall.castShadow = true;
+          chamber.add(leftWall);
+
+          var rightWall = new THREE.Mesh(new THREE.BoxGeometry(wallT, sY, sZ), shellMat);
+          rightWall.position.set(sX / 2 - wallT / 2, sY / 2, 0);
+          rightWall.castShadow = true;
+          chamber.add(rightWall);
+
+          var topWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), shellMat);
+          topWall.position.set(0, sY - wallT / 2, 0);
+          chamber.add(topWall);
+
+          var bottomWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), shellMat);
+          bottomWall.position.set(0, wallT / 2, 0);
+          chamber.add(bottomWall);
+
+          var frontShape = hmUploadedMakeFace(sX, sY, hs, hy1, hy2);
+          var frontGeo = new THREE.ExtrudeGeometry(frontShape, {depth:wallT, bevelEnabled:false});
+          var frontWall = new THREE.Mesh(frontGeo, shellMat);
+          frontWall.position.set(-sX / 2, 0, sZ / 2 - wallT);
+          frontWall.castShadow = true;
+          chamber.add(frontWall);
+
+          var backShape = hmUploadedMakeFace(sX, sY, hs, hy1, hy2);
+          var backGeo = new THREE.ExtrudeGeometry(backShape, {depth:wallT, bevelEnabled:false});
+          var backWall = new THREE.Mesh(backGeo, shellMat);
+          backWall.position.set(-sX / 2, 0, -sZ / 2);
+          backWall.castShadow = true;
+          chamber.add(backWall);
+
+          for(var i = 0; i < tubeCount; i++){
+            var tz = tubeZStart + i * tubeSpacing;
+            var tube = new THREE.Mesh(new THREE.CylinderGeometry(tubeR, tubeR, tubeHeight, 12), tubeMat);
+            tube.position.set(0, tubeBottomY + tubeHeight / 2, tz);
+            tube.castShadow = true;
+            chamber.add(tube);
+
+            var joint = new THREE.Mesh(new THREE.SphereGeometry(tubeR * 1.25, 10, 10), commonTubeMat);
+            joint.position.set(0, commonTubeY, tz);
+            chamber.add(joint);
           }
-          scheduleCuboidTextures();
-        };
 
-        var _textureScheduled = false;
-        var _lastCuboidTextureSig = "";
-        function isHeatMapVisibleNow(){
-          var hmTab = document.getElementById('tab-heatmap');
-          return !!(hmTab && hmTab.classList.contains('tab-active') && document.visibilityState === 'visible');
+          var commonHeader = new THREE.Mesh(
+            new THREE.CylinderGeometry(commonTubeR, commonTubeR, commonTubeLen, 16),
+            commonTubeMat
+          );
+          commonHeader.rotation.x = Math.PI / 2;
+          commonHeader.position.set(0, commonTubeY, 0);
+          commonHeader.castShadow = true;
+          chamber.add(commonHeader);
+
+          var headerCapGeo = new THREE.SphereGeometry(commonTubeR, 12, 12);
+          var headerFrontCap = new THREE.Mesh(headerCapGeo, commonTubeMat);
+          headerFrontCap.position.set(0, commonTubeY, commonTubeLen / 2);
+          chamber.add(headerFrontCap);
+
+          var headerBackCap = new THREE.Mesh(headerCapGeo, commonTubeMat);
+          headerBackCap.position.set(0, commonTubeY, -commonTubeLen / 2);
+          chamber.add(headerBackCap);
+
+          hmUploadedAddFrame(chamber, 0, hy1, sZ / 2 + 0.01, hs);
+          hmUploadedAddFrame(chamber, 0, hy2, sZ / 2 + 0.01, hs);
+          hmUploadedAddFrame(chamber, 0, hy1, -sZ / 2 - 0.01, hs);
+          hmUploadedAddFrame(chamber, 0, hy2, -sZ / 2 - 0.01, hs);
+
+          var wire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(sX, sY, sZ)), edgeMat);
+          wire.position.set(0, sY / 2, 0);
+          chamber.add(wire);
+
+          var padGeo = new THREE.BoxGeometry(sX + 0.9, 0.12, sZ + 0.9);
+          var groundPad = new THREE.Mesh(padGeo, baseMat);
+          groundPad.position.set(0, -0.06, 0);
+          groundPad.receiveShadow = true;
+          parent.add(groundPad);
+
+          var padEdge = new THREE.LineSegments(new THREE.EdgesGeometry(padGeo), edgeMat);
+          padEdge.position.set(0, -0.06, 0);
+          parent.add(padEdge);
+
+          var grid = new THREE.GridHelper(14, 28, 0x1A2030, 0x1A2030);
+          grid.position.set(0, -0.07, 0);
+          parent.add(grid);
+
+          hmUploadedAddLabel(parent, label, 0, sY + 0.7, 0);
+          hmUploadedAddLabel(parent, "Front", 0, -0.6, sZ / 2 + 1.2);
+          hmUploadedAddLabel(parent, "Back", 0, -0.6, -sZ / 2 - 1.2);
         }
-        function scheduleCuboidTextures(){
-          if(!isHeatMapVisibleNow()) return;
-          if(_textureScheduled) return;
-          _textureScheduled = true;
-          /* Throttled refresh: avoid over-rendering while user changes filters */
-          setTimeout(buildCuboidTextures, 650);
+
+        function hmUploadedAttachControls(state){
+          var canvas = state.canvas;
+
+          canvas.addEventListener("mousedown", function(e){
+            state.isDragging = true;
+            state.autoRotate = false;
+            state.prevMouse = {x:e.clientX, y:e.clientY};
+          });
+
+          canvas.addEventListener("mousemove", function(e){
+            if(!state.isDragging) return;
+            state.rotation.y += (e.clientX - state.prevMouse.x) * 0.005;
+            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + (e.clientY - state.prevMouse.y) * 0.005);
+            state.prevMouse = {x:e.clientX, y:e.clientY};
+          });
+
+          canvas.addEventListener("mouseup", function(){ state.isDragging = false; });
+          canvas.addEventListener("mouseleave", function(){ state.isDragging = false; });
+
+          canvas.addEventListener("wheel", function(e){
+            e.preventDefault();
+            state.camDist += e.deltaY * 0.01;
+            state.camDist = Math.max(4, Math.min(35, state.camDist));
+          }, {passive:false});
+
+          canvas.addEventListener("touchstart", function(e){
+            if(e.touches.length !== 1) return;
+            state.isDragging = true;
+            state.autoRotate = false;
+            state.touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+          });
+
+          canvas.addEventListener("touchmove", function(e){
+            if(!state.isDragging || !state.touchStart) return;
+            e.preventDefault();
+            state.rotation.y += (e.touches[0].clientX - state.touchStart.x) * 0.005;
+            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + (e.touches[0].clientY - state.touchStart.y) * 0.005);
+            state.touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+          }, {passive:false});
+
+          canvas.addEventListener("touchend", function(){
+            state.isDragging = false;
+            state.touchStart = null;
+          });
         }
 
-        function buildCuboidTextures(){
-          _textureScheduled = false;
-          if(!isHeatMapVisibleNow()) return;
+        function hmUploadedCreateViewer(canvasId, label){
+          var canvas = document.getElementById(canvasId);
+          if(!canvas) return null;
 
-          /* Get burner data same way renderHeatMap does */
-          var hmData = null;
-          try{ var r=localStorage.getItem("burnerData"); if(r) hmData=JSON.parse(r); }catch(e){}
-          if(!hmData){
-            /* Use defaults */
-            var def=[
-              ["N","O","N","B","N","O","N","O","B","N","O","N","O","N","O"],
-              ["O","N","O","N","O","B","O","N","O","N","B","O","N","O","N"],
-              ["B","N","O","N","N","O","N","O","N","O","N","O","B","N","O"],
-              ["N","O","B","O","N","O","N","B","O","N","O","N","O","O","N"],
-              ["O","N","N","O","B","N","O","N","O","B","N","O","N","N","O"],
-              ["N","B","O","N","O","N","O","N","B","O","N","O","N","O","N"]
-            ];
-            hmData={};
-            ["A","B","C","D"].forEach(function(w,wi){
-              hmData[w]=[];
-              for(var ri=0;ri<6;ri++) hmData[w].push(def[(ri+wi)%def.length].slice());
+          var size = hmUploadedGetCanvasSize(canvas);
+          var scene = new THREE.Scene();
+          scene.background = new THREE.Color(0x0B0F14);
+
+          var camera = new THREE.PerspectiveCamera(45, size.width / size.height, 0.1, 1000);
+          var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+          renderer.setSize(size.width, size.height, false);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.shadowMap.enabled = true;
+
+          scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+          var keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+          keyLight.position.set(6, 12, 10);
+          keyLight.castShadow = true;
+          scene.add(keyLight);
+
+          var fillLight = new THREE.DirectionalLight(0x8899AA, 0.3);
+          fillLight.position.set(-6, 4, -6);
+          scene.add(fillLight);
+
+          var warmLight = new THREE.PointLight(0xFFAA66, 0.3, 20);
+          warmLight.position.set(0, 6, 8);
+          scene.add(warmLight);
+
+          var pivotGroup = new THREE.Group();
+          scene.add(pivotGroup);
+          hmUploadedBuildChamberScene(pivotGroup, label);
+
+          var state = {
+            canvas:canvas,
+            camera:camera,
+            renderer:renderer,
+            scene:scene,
+            pivotGroup:pivotGroup,
+            autoRotate:true,
+            isDragging:false,
+            prevMouse:{x:0, y:0},
+            rotation:{x:-0.3, y:0.5},
+            camDist:16,
+            touchStart:null
+          };
+
+          hmUploadedAttachControls(state);
+          return state;
+        }
+
+        function hmUploadedResizeAllViewers(){
+          Object.keys(hmUploadedViewers).forEach(function(key){
+            var state = hmUploadedViewers[key];
+            if(!state || !state.canvas || !state.canvas.parentElement) return;
+            var size = hmUploadedGetCanvasSize(state.canvas);
+            state.camera.aspect = size.width / size.height;
+            state.camera.updateProjectionMatrix();
+            state.renderer.setSize(size.width, size.height, false);
+            state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          });
+        }
+
+        function hmUploadedStartAnimation(){
+          if(hmUploadedAnimating) return;
+          hmUploadedAnimating = true;
+
+          function frame(){
+            requestAnimationFrame(frame);
+            Object.keys(hmUploadedViewers).forEach(function(key){
+              var state = hmUploadedViewers[key];
+              if(!state) return;
+              if(state.autoRotate) state.rotation.y += 0.003;
+              state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
+              state.pivotGroup.rotation.x = state.rotation.x;
+              state.pivotGroup.rotation.y = state.rotation.y;
+              state.camera.position.set(0, 5, state.camDist);
+              state.camera.lookAt(0, 1.5, 0);
+              state.renderer.render(state.scene, state.camera);
             });
           }
 
-          /* Peep hole data */
-          var shiftSel = document.getElementById("hm-shift-select");
-          var shift = shiftSel ? shiftSel.value : "All";
-          /* Use selected date from heatmap date picker, same logic as renderHeatMap */
-          var _allEnt = (typeof getAllTempEntries === 'function') ? getAllTempEntries() : [];
-          var _filtEnt = _allEnt;
-          if(shift && shift !== "All"){
-            _filtEnt = _allEnt.filter(function(e){ return e.shift === shift; });
-          }
-          var _dateInp = document.getElementById("hm-date-input");
-          var _dateVal = _dateInp ? String(_dateInp.value || "").trim() : "";
-          var entry = (typeof resolveHeatMapEntryByDateValue === "function")
-            ? resolveHeatMapEntryByDateValue(_filtEnt, _dateVal || "latest")
-            : (_filtEnt.length ? _filtEnt[0] : null);
-          function getPH(e,k){ return (e&&e.peepHoles&&e.peepHoles[k]) ? e.peepHoles[k] : Array(15).fill(""); }
-          var abBot=getPH(entry,"ab-bot"), abTop=getPH(entry,"ab-top");
-          var cdBot=getPH(entry,"cd-bot"), cdTop=getPH(entry,"cd-top");
-          var cleaningSig = null;
-          try{
-            cleaningSig = (typeof getMergedCleaningLog === "function")
-              ? getMergedCleaningLog()
-              : ((typeof loadCleaningLog === "function") ? loadCleaningLog() : null);
-          }catch(_cleanErr){
-            cleaningSig = null;
-          }
-
-          var nextSig = JSON.stringify({
-            shift:shift || "All",
-            dateVal:_dateVal || "latest",
-            entryTs:entry ? (entry.dt || entry.ts || "") : "",
-            iconSet:(typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "flame",
-            hmData:hmData,
-            abBot:abBot, abTop:abTop,
-            cdBot:cdBot, cdTop:cdTop,
-            cleaning:cleaningSig
-          });
-          if(nextSig === _lastCuboidTextureSig) return;
-          _lastCuboidTextureSig = nextSig;
-
-          /* Render all four faces */
-          renderWallFace("A", abBot, abTop, hmData["A"],
-            document.getElementById('face-ab-front'), document.getElementById('face-ab-front-loading'), '#F37022');
-
-          renderWallFace("B", abBot, abTop, hmData["B"],
-            document.getElementById('face-ab-back'),  document.getElementById('face-ab-back-loading'),  '#fb923c');
-
-          renderWallFace("C", cdBot, cdTop, hmData["C"],
-            document.getElementById('face-cd-front'), document.getElementById('face-cd-front-loading'), '#7ec8f0');
-
-          renderWallFace("D", cdBot, cdTop, hmData["D"],
-            document.getElementById('face-cd-back'),  document.getElementById('face-cd-back-loading'),  '#60c8ff');
-          setTimeout(applyLightThemeCuboidFaceBlack, 0);
-        }
-        if(document.readyState === 'loading'){
-          document.addEventListener('DOMContentLoaded', scheduleCuboidTextures);
-        } else {
-          /* Also trigger when heatmap tab becomes visible */
-          setTimeout(scheduleCuboidTextures, 600);
+          frame();
         }
 
-        document.addEventListener('visibilitychange', function(){
-          if(document.visibilityState === 'visible'){
-            scheduleCuboidTextures();
-          } else {
-            _textureScheduled = false;
-          }
-        });
+        function hmUploadedEnsureViewer(){
+          if(typeof THREE === "undefined") return;
+          var abCanvas = document.getElementById("hm-uploaded-ab-canvas");
+          var cdCanvas = document.getElementById("hm-uploaded-cd-canvas");
+          if(!abCanvas || !cdCanvas) return;
 
-        /* Re-render textures when tab becomes active */
-        var _origSwitchTab = window.switchTab;
-        window.switchTab = function(tab){
-          if(_origSwitchTab) _origSwitchTab.apply(this,arguments);
-          if(tab === 'heatmap'){
-            setTimeout(updateCuboidResponsiveScale, 80);
-            setTimeout(scheduleCuboidTextures, 400);
+          if(!hmUploadedInitialized){
+            hmUploadedViewers.ab = hmUploadedCreateViewer("hm-uploaded-ab-canvas", "AB");
+            hmUploadedViewers.cd = hmUploadedCreateViewer("hm-uploaded-cd-canvas", "CD");
+            hmUploadedInitialized = true;
+            hmUploadedStartAnimation();
           }
+          hmUploadedResizeAllViewers();
+        }
+
+        window.hmUploadedEnsureViewer = hmUploadedEnsureViewer;
+        window.hmUploadedResizeAllViewers = hmUploadedResizeAllViewers;
+
+        window.hmUploadedResetCam = function(name){
+          var viewer = hmUploadedViewers[name];
+          if(!viewer) return;
+          viewer.rotation = {x:hmUploadedClampRotationX(-0.3), y:0.5};
+          viewer.camDist = 16;
+          viewer.autoRotate = true;
         };
 
+        window.hmUploadedViewFront = function(name){
+          var viewer = hmUploadedViewers[name];
+          if(!viewer) return;
+          viewer.rotation = {x:hmUploadedClampRotationX(-0.08), y:0};
+          viewer.camDist = 14;
+          viewer.autoRotate = false;
+        };
+
+        window.hmUploadedViewSide = function(name){
+          var viewer = hmUploadedViewers[name];
+          if(!viewer) return;
+          viewer.rotation = {x:hmUploadedClampRotationX(-0.15), y:-Math.PI / 2};
+          viewer.camDist = 14;
+          viewer.autoRotate = false;
+        };
+
+        window.hmUploadedViewTop = function(name){
+          var viewer = hmUploadedViewers[name];
+          if(!viewer) return;
+          viewer.rotation = {x:hmUploadedClampRotationX(-Math.PI / 2.2), y:0};
+          viewer.camDist = 16;
+          viewer.autoRotate = false;
+        };
+
+        window.hmUploadedToggleAutoRotate = function(name){
+          var viewer = hmUploadedViewers[name];
+          if(!viewer) return;
+          viewer.autoRotate = !viewer.autoRotate;
+        };
+
+        if(document.readyState === "loading"){
+          document.addEventListener("DOMContentLoaded", function(){
+            setTimeout(hmUploadedEnsureViewer, 0);
+          });
+        }else{
+          setTimeout(hmUploadedEnsureViewer, 0);
+        }
+
+        window.addEventListener("resize", function(){
+          if(hmUploadedInitialized) hmUploadedResizeAllViewers();
+        });
       })();
       </script>
 
@@ -16733,7 +16460,15 @@ function switchTab(tab){
   setTabsRowHidden(false);
   syncHeatMapHeaderTools(tab);
   if(tab === 'alarms') refreshAlarmPanel();
-  if(tab === 'heatmap' && typeof requestHeatMapRender === 'function') requestHeatMapRender(40);
+  if(tab === 'heatmap'){
+    if(typeof requestHeatMapRender === 'function') requestHeatMapRender(40);
+    if(typeof window.hmUploadedEnsureViewer === 'function'){
+      setTimeout(window.hmUploadedEnsureViewer, 60);
+      if(typeof window.hmUploadedResizeAllViewers === 'function'){
+        setTimeout(window.hmUploadedResizeAllViewers, 180);
+      }
+    }
+  }
   if(tab === 'reformer3d'){
     setTimeout(function(){
       initReformer3DTab();
