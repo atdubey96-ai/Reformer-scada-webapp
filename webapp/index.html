@@ -11045,6 +11045,8 @@ html, body, body *, body *::before, body *::after, svg text{
           front:11.1,
           top:11.7
         };
+        var HM_UPLOADED_CAMERA_Y = 1.85;
+        var HM_UPLOADED_LOOKAT_Y = 1.85;
 
         function hmUploadedClampRotationX(value){
           return SIDE_VIEW_ROTATION_X;
@@ -11538,7 +11540,6 @@ html, body, body *, body *::before, body *::after, svg text{
           });
           var tubeMat = new THREE.MeshStandardMaterial({color:0x8899AA, metalness:0.75, roughness:0.3});
           var commonTubeMat = new THREE.MeshStandardMaterial({color:0x7090A8, metalness:0.7, roughness:0.25});
-          var baseMat = new THREE.MeshStandardMaterial({color:0x334155, metalness:0.2, roughness:0.7});
           var edgeMat = new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.25});
           var wallOverlays = {};
           var overlayDims = {sX:sX, sY:sY, sZ:sZ, wallT:wallT};
@@ -11648,20 +11649,6 @@ html, body, body *, body *::before, body *::after, svg text{
           var wire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(sX, sY, sZ)), edgeMat);
           wire.position.set(0, sY / 2, 0);
           chamber.add(wire);
-
-          var padGeo = new THREE.BoxGeometry(sX + 0.62, 0.1, sZ + 0.62);
-          var groundPad = new THREE.Mesh(padGeo, baseMat);
-          groundPad.position.set(0, -0.05, 0);
-          groundPad.receiveShadow = true;
-          parent.add(groundPad);
-
-          var padEdge = new THREE.LineSegments(new THREE.EdgesGeometry(padGeo), edgeMat);
-          padEdge.position.set(0, -0.05, 0);
-          parent.add(padEdge);
-
-          var grid = new THREE.GridHelper(10, 20, 0x1A2030, 0x1A2030);
-          grid.position.set(0, -0.07, 0);
-          parent.add(grid);
 
           hmUploadedAddTopFaceLabel(parent, "Chamber " + label, -0.12, sY + wallT / 2 + 0.02, -1.58);
           hmUploadedAddLabel(parent, "Front", 0, -0.6, sZ / 2 + 1.2);
@@ -11798,8 +11785,8 @@ html, body, body *, body *::before, body *::after, svg text{
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
               state.pivotGroup.rotation.x = SIDE_VIEW_ROTATION_X;
               state.pivotGroup.rotation.y = state.rotation.y;
-              state.camera.position.set(0, 4.9, state.camDist);
-              state.camera.lookAt(0, 1.15, 0);
+              state.camera.position.set(0, HM_UPLOADED_CAMERA_Y, state.camDist);
+              state.camera.lookAt(0, HM_UPLOADED_LOOKAT_Y, 0);
               state.renderer.render(state.scene, state.camera);
             });
           }
