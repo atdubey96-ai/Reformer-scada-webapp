@@ -11279,11 +11279,17 @@ html, body, body *, body *::before, body *::after, svg text{
             chamber.add(rightOverlay.innerMesh);
           }
 
-          var topWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), topShellMat);
+          var topWall = new THREE.Mesh(
+            new THREE.BoxGeometry(sX - wallT * 2 - 0.01, wallT, sZ - wallT * 2 - 0.01),
+            topShellMat
+          );
           topWall.position.set(0, sY - wallT / 2, 0);
           chamber.add(topWall);
 
-          var bottomWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), wallShellMat);
+          var bottomWall = new THREE.Mesh(
+            new THREE.BoxGeometry(sX - wallT * 2 - 0.01, wallT, sZ - wallT * 2 - 0.01),
+            wallShellMat
+          );
           bottomWall.position.set(0, wallT / 2, 0);
           chamber.add(bottomWall);
 
@@ -11354,7 +11360,7 @@ html, body, body *, body *::before, body *::after, svg text{
           grid.position.set(0, -0.07, 0);
           parent.add(grid);
 
-          hmUploadedAddTopFaceLabel(parent, "Chamber " + label, -0.12, sY + wallT / 2 + 0.006, -1.58);
+          hmUploadedAddTopFaceLabel(parent, "Chamber " + label, -0.12, sY + wallT / 2 + 0.02, -1.58);
           hmUploadedAddLabel(parent, "Front", 0, -0.6, sZ / 2 + 1.2);
           hmUploadedAddLabel(parent, "Back", 0, -0.6, -sZ / 2 - 1.2);
           return {wallOverlays:wallOverlays};
