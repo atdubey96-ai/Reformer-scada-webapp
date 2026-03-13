@@ -10800,25 +10800,52 @@ html, body, body *, body *::before, body *::after, svg text{
         var VIEW_TILT_LIMIT = Math.PI / 18;
         var ROTATION_X_MIN = SIDE_VIEW_ROTATION_X - VIEW_TILT_LIMIT;
         var ROTATION_X_MAX = SIDE_VIEW_ROTATION_X + VIEW_TILT_LIMIT;
+        var HM_UPLOADED_VIEW_BASE_DIST = {
+          side:10.4,
+          front:11.1,
+          top:11.7
+        };
 
         function hmUploadedClampRotationX(value){
           return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
         }
 
+        function hmUploadedGetResponsiveCamDistForView(canvas, viewName){
+          var size = canvas ? hmUploadedGetCanvasSize(canvas) : {width:1280, height:720};
+          var baseDist = HM_UPLOADED_VIEW_BASE_DIST[viewName] || HM_UPLOADED_VIEW_BASE_DIST.side;
+          var widthScale = Math.max(0, Math.min(1, (size.width - 720) / 780));
+          var heightScale = Math.max(0, Math.min(1, (size.height - 440) / 420));
+          var factor = 1 - (widthScale * 0.14) - (heightScale * 0.08);
+          if(viewName === "front") factor += 0.03;
+          if(viewName === "top") factor += 0.06;
+          factor = Math.max(0.78, Math.min(1.02, factor));
+          return Number((baseDist * factor).toFixed(2));
+        }
+
         function hmUploadedClampCamDist(state, value){
           if(!state) return value;
-          var baseDist = state.defaultCamDist || 10.4;
+          var baseDist = state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
           var minDist = Math.max(3.8, baseDist * 0.72);
           var maxDist = baseDist * 1.5;
           return Math.max(minDist, Math.min(maxDist, value));
         }
 
-        function hmUploadedSetViewState(state, rotation, camDist, autoRotate){
+        function hmUploadedSetViewState(state, viewName, rotation, autoRotate){
           if(!state) return;
           state.rotation = rotation;
-          state.defaultCamDist = camDist;
-          state.camDist = hmUploadedClampCamDist(state, camDist);
+          state.viewPreset = viewName || "side";
+          state.defaultCamDist = hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset);
+          state.camDist = hmUploadedClampCamDist(state, state.defaultCamDist);
           state.autoRotate = !!autoRotate;
+        }
+
+        function hmUploadedRefreshResponsiveCamDist(state){
+          if(!state || !state.canvas) return;
+          var nextDefault = hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
+          var prevDefault = state.defaultCamDist || nextDefault;
+          var zoomRatio = prevDefault ? (state.camDist / prevDefault) : 1;
+          state.defaultCamDist = nextDefault;
+          state.camDist = hmUploadedClampCamDist(state, nextDefault * zoomRatio);
         }
 
         function hmUploadedGetCanvasSize(canvas){
@@ -11434,6 +11461,7 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!canvas) return null;
 
           var size = hmUploadedGetCanvasSize(canvas);
+          var initialCamDist = hmUploadedGetResponsiveCamDistForView(canvas, "side");
           var scene = new THREE.Scene();
           scene.background = new THREE.Color(0x0B0F14);
 
@@ -11471,8 +11499,9 @@ html, body, body *, body *::before, body *::after, svg text{
             isDragging:false,
             prevMouse:{x:0, y:0},
             rotation:{x:SIDE_VIEW_ROTATION_X, y:-Math.PI / 2},
-            defaultCamDist:10.4,
-            camDist:10.4,
+            viewPreset:"side",
+            defaultCamDist:initialCamDist,
+            camDist:initialCamDist,
             touchStart:null,
             wallOverlays:buildResult.wallOverlays || {},
             latestSnapshot:null,
@@ -11493,6 +11522,7 @@ html, body, body *, body *::before, body *::after, svg text{
             state.camera.updateProjectionMatrix();
             state.renderer.setSize(size.width, size.height, false);
             state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+            hmUploadedRefreshResponsiveCamDist(state);
           });
         }
 
@@ -11549,8 +11579,8 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!viewer) return;
           hmUploadedSetViewState(
             viewer,
+            "side",
             {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:-Math.PI / 2},
-            10.4,
             true
           );
         };
@@ -11560,8 +11590,8 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!viewer) return;
           hmUploadedSetViewState(
             viewer,
+            "front",
             {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:0},
-            11.1,
             false
           );
         };
@@ -11571,8 +11601,8 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!viewer) return;
           hmUploadedSetViewState(
             viewer,
+            "side",
             {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:-Math.PI / 2},
-            10.4,
             false
           );
         };
@@ -11582,8 +11612,8 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!viewer) return;
           hmUploadedSetViewState(
             viewer,
+            "top",
             {x:ROTATION_X_MIN, y:0},
-            11.7,
             false
           );
         };
