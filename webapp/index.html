@@ -10796,8 +10796,8 @@ html, body, body *, body *::before, body *::after, svg text{
         var hmUploadedViewers = {};
         var hmUploadedInitialized = false;
         var hmUploadedAnimating = false;
-        var ROTATION_X_MIN = -Math.PI / 2.2;
-        var ROTATION_X_MAX = -0.08;
+        var ROTATION_X_MIN = -(Math.PI / 2 - Math.PI / 18);
+        var ROTATION_X_MAX = -Math.PI / 18;
 
         function hmUploadedClampRotationX(value){
           return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
@@ -11450,11 +11450,11 @@ html, body, body *, body *::before, body *::after, svg text{
             renderer:renderer,
             scene:scene,
             pivotGroup:pivotGroup,
-            autoRotate:false,
+            autoRotate:true,
             isDragging:false,
             prevMouse:{x:0, y:0},
-            rotation:{x:-0.15, y:-Math.PI / 2},
-            camDist:11.4,
+            rotation:{x:-0.22, y:-Math.PI / 2},
+            camDist:10.7,
             touchStart:null,
             wallOverlays:buildResult.wallOverlays || {},
             latestSnapshot:null,
@@ -11493,12 +11493,12 @@ html, body, body *, body *::before, body *::after, svg text{
                 state.lastOverlayPaintAt = now;
                 hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
               }
-              if(state.autoRotate) state.rotation.y += 0.003;
+              if(state.autoRotate) state.rotation.y += 0.0022;
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
               state.pivotGroup.rotation.x = state.rotation.x;
               state.pivotGroup.rotation.y = state.rotation.y;
-              state.camera.position.set(0, 4.45, state.camDist);
-              state.camera.lookAt(0, 2.15, 0);
+              state.camera.position.set(0, 4.1, state.camDist);
+              state.camera.lookAt(0, 1.82, 0);
               state.renderer.render(state.scene, state.camera);
             });
           }
@@ -11529,32 +11529,32 @@ html, body, body *, body *::before, body *::after, svg text{
         window.hmUploadedResetCam = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.rotation = {x:hmUploadedClampRotationX(-0.15), y:-Math.PI / 2};
-          viewer.camDist = 11.4;
-          viewer.autoRotate = false;
+          viewer.rotation = {x:hmUploadedClampRotationX(-0.22), y:-Math.PI / 2};
+          viewer.camDist = 10.7;
+          viewer.autoRotate = true;
         };
 
         window.hmUploadedViewFront = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.rotation = {x:hmUploadedClampRotationX(-0.08), y:0};
-          viewer.camDist = 12.4;
+          viewer.rotation = {x:hmUploadedClampRotationX(-Math.PI / 18), y:0};
+          viewer.camDist = 11.6;
           viewer.autoRotate = false;
         };
 
         window.hmUploadedViewSide = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.rotation = {x:hmUploadedClampRotationX(-0.15), y:-Math.PI / 2};
-          viewer.camDist = 11.4;
+          viewer.rotation = {x:hmUploadedClampRotationX(-0.22), y:-Math.PI / 2};
+          viewer.camDist = 10.7;
           viewer.autoRotate = false;
         };
 
         window.hmUploadedViewTop = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.rotation = {x:hmUploadedClampRotationX(-Math.PI / 2.2), y:0};
-          viewer.camDist = 13.6;
+          viewer.rotation = {x:hmUploadedClampRotationX(-(Math.PI / 2 - Math.PI / 18)), y:0};
+          viewer.camDist = 12.8;
           viewer.autoRotate = false;
         };
 
