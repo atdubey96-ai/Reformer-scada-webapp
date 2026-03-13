@@ -11037,9 +11037,9 @@ html, body, body *, body *::before, body *::after, svg text{
             wallOverlays[leftWallKey] = leftOverlay;
             wallOverlays[rightWallKey] = rightOverlay;
             chamber.add(leftOverlay.outerMesh);
-            chamber.add(leftOverlay.innerMesh);
             chamber.add(rightOverlay.outerMesh);
-            chamber.add(rightOverlay.innerMesh);
+            leftOverlay.innerMesh.visible = false;
+            rightOverlay.innerMesh.visible = false;
           }
 
           var topWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), shellMat);
