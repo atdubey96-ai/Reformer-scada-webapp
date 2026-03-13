@@ -10920,7 +10920,19 @@ html, body, body *, body *::before, body *::after, svg text{
           overlay.outerMaterial.polygonOffsetUnits = -2;
           overlay.outerMaterial.needsUpdate = true;
           if(overlay.outerMesh) overlay.outerMesh.renderOrder = 8;
-          if(overlay.innerMesh) overlay.innerMesh.visible = false;
+          if(overlay.innerMaterial){
+            overlay.innerMaterial.transparent = true;
+            overlay.innerMaterial.depthWrite = false;
+            overlay.innerMaterial.alphaTest = 0.06;
+            overlay.innerMaterial.polygonOffset = true;
+            overlay.innerMaterial.polygonOffsetFactor = -1;
+            overlay.innerMaterial.polygonOffsetUnits = -1;
+            overlay.innerMaterial.needsUpdate = true;
+          }
+          if(overlay.innerMesh){
+            overlay.innerMesh.visible = true;
+            overlay.innerMesh.renderOrder = 6;
+          }
         }
 
         function hmUploadedPaintWallOverlay(overlay, wallKey, snapshot, animPhaseBase){
@@ -11104,13 +11116,19 @@ html, body, body *, body *::before, body *::after, svg text{
           var commonTubeLen = sZ + 0.4;
           var tubeHeight = commonTubeY - tubeBottomY;
 
-          var shellMat = new THREE.MeshStandardMaterial({
+          var wallShellMat = new THREE.MeshStandardMaterial({
             color:0x9A8578,
-            metalness:0.58,
-            roughness:0.38,
+            metalness:0.46,
+            roughness:0.58,
+            side:THREE.DoubleSide
+          });
+          var topShellMat = new THREE.MeshStandardMaterial({
+            color:0x9A8578,
+            metalness:0.52,
+            roughness:0.42,
             side:THREE.DoubleSide,
             transparent:true,
-            opacity:0.42,
+            opacity:0.58,
             depthWrite:false
           });
           var innerMat = new THREE.MeshStandardMaterial({
@@ -11119,7 +11137,7 @@ html, body, body *, body *::before, body *::after, svg text{
             roughness:0.82,
             side:THREE.DoubleSide,
             transparent:true,
-            opacity:0.08,
+            opacity:0.12,
             depthWrite:false
           });
           var tubeMat = new THREE.MeshStandardMaterial({color:0x8899AA, metalness:0.75, roughness:0.3});
@@ -11145,12 +11163,12 @@ html, body, body *, body *::before, body *::after, svg text{
           innerGlow.position.set(0, sY / 2, 0);
           chamber.add(innerGlow);
 
-          var leftWall = new THREE.Mesh(new THREE.BoxGeometry(wallT, sY, sZ), shellMat);
+          var leftWall = new THREE.Mesh(new THREE.BoxGeometry(wallT, sY, sZ), wallShellMat);
           leftWall.position.set(-sX / 2 + wallT / 2, sY / 2, 0);
           leftWall.castShadow = true;
           chamber.add(leftWall);
 
-          var rightWall = new THREE.Mesh(new THREE.BoxGeometry(wallT, sY, sZ), shellMat);
+          var rightWall = new THREE.Mesh(new THREE.BoxGeometry(wallT, sY, sZ), wallShellMat);
           rightWall.position.set(sX / 2 - wallT / 2, sY / 2, 0);
           rightWall.castShadow = true;
           chamber.add(rightWall);
@@ -11163,27 +11181,29 @@ html, body, body *, body *::before, body *::after, svg text{
             wallOverlays[leftWallKey] = leftOverlay;
             wallOverlays[rightWallKey] = rightOverlay;
             chamber.add(leftOverlay.outerMesh);
+            chamber.add(leftOverlay.innerMesh);
             chamber.add(rightOverlay.outerMesh);
+            chamber.add(rightOverlay.innerMesh);
           }
 
-          var topWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), shellMat);
+          var topWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), topShellMat);
           topWall.position.set(0, sY - wallT / 2, 0);
           chamber.add(topWall);
 
-          var bottomWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), shellMat);
+          var bottomWall = new THREE.Mesh(new THREE.BoxGeometry(sX, wallT, sZ), wallShellMat);
           bottomWall.position.set(0, wallT / 2, 0);
           chamber.add(bottomWall);
 
           var frontShape = hmUploadedMakeFace(sX, sY, hs, hy1, hy2);
           var frontGeo = new THREE.ExtrudeGeometry(frontShape, {depth:wallT, bevelEnabled:false});
-          var frontWall = new THREE.Mesh(frontGeo, shellMat);
+          var frontWall = new THREE.Mesh(frontGeo, wallShellMat);
           frontWall.position.set(-sX / 2, 0, sZ / 2 - wallT);
           frontWall.castShadow = true;
           chamber.add(frontWall);
 
           var backShape = hmUploadedMakeFace(sX, sY, hs, hy1, hy2);
           var backGeo = new THREE.ExtrudeGeometry(backShape, {depth:wallT, bevelEnabled:false});
-          var backWall = new THREE.Mesh(backGeo, shellMat);
+          var backWall = new THREE.Mesh(backGeo, wallShellMat);
           backWall.position.set(-sX / 2, 0, -sZ / 2);
           backWall.castShadow = true;
           chamber.add(backWall);
