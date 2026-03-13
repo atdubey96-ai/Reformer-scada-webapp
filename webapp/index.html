@@ -11041,9 +11041,9 @@ html, body, body *, body *::before, body *::after, svg text{
         var ROTATION_X_MIN = SIDE_VIEW_ROTATION_X - VIEW_TILT_LIMIT;
         var ROTATION_X_MAX = SIDE_VIEW_ROTATION_X + VIEW_TILT_LIMIT;
         var HM_UPLOADED_VIEW_BASE_DIST = {
-          side:10.4,
-          front:11.1,
-          top:11.7
+          side:7.8,
+          front:8.4,
+          top:8.8
         };
         var HM_UPLOADED_CAMERA_Y = 1.85;
         var HM_UPLOADED_LOOKAT_Y = 1.85;
@@ -11540,6 +11540,13 @@ html, body, body *, body *::before, body *::after, svg text{
           });
           var tubeMat = new THREE.MeshStandardMaterial({color:0x8899AA, metalness:0.75, roughness:0.3});
           var commonTubeMat = new THREE.MeshStandardMaterial({color:0x7090A8, metalness:0.7, roughness:0.25});
+          var baseMat = new THREE.MeshStandardMaterial({
+            color:0x243246,
+            metalness:0.12,
+            roughness:0.82,
+            transparent:true,
+            opacity:0.18
+          });
           var edgeMat = new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.25});
           var wallOverlays = {};
           var overlayDims = {sX:sX, sY:sY, sZ:sZ, wallT:wallT};
@@ -11649,6 +11656,33 @@ html, body, body *, body *::before, body *::after, svg text{
           var wire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(sX, sY, sZ)), edgeMat);
           wire.position.set(0, sY / 2, 0);
           chamber.add(wire);
+
+          var padGeo = new THREE.BoxGeometry(sX + 0.16, 0.035, sZ + 0.16);
+          var groundPad = new THREE.Mesh(padGeo, baseMat);
+          groundPad.position.set(0, 0.015, 0);
+          groundPad.receiveShadow = true;
+          parent.add(groundPad);
+
+          var padEdge = new THREE.LineSegments(
+            new THREE.EdgesGeometry(padGeo),
+            new THREE.LineBasicMaterial({color:0x607089, transparent:true, opacity:0.24})
+          );
+          padEdge.position.copy(groundPad.position);
+          parent.add(padEdge);
+
+          var grid = new THREE.GridHelper(sZ + 0.2, 10, 0x233347, 0x233347);
+          grid.position.set(0, 0.03, 0);
+          if(Array.isArray(grid.material)){
+            grid.material.forEach(function(mat){
+              if(!mat) return;
+              mat.transparent = true;
+              mat.opacity = 0.12;
+            });
+          }else if(grid.material){
+            grid.material.transparent = true;
+            grid.material.opacity = 0.12;
+          }
+          parent.add(grid);
 
           hmUploadedAddTopFaceLabel(parent, "Chamber " + label, -0.12, sY + wallT / 2 + 0.02, -1.58);
           hmUploadedAddLabel(parent, "Front", 0, -0.6, sZ / 2 + 1.2);
