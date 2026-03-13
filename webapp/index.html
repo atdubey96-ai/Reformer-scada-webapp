@@ -10849,7 +10849,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="viewer-layout">
                 <div class="canvas-area fade-in">
                   <canvas id="hm-uploaded-ab-canvas" class="viewer-canvas"></canvas>
-                  <div class="canvas-hint">Drag left/right to rotate</div>
+                  <div class="canvas-hint">Drag left/right to rotate · up/down to tilt 10°</div>
                 </div>
 
                 <aside class="side-panel fade-in">
@@ -10942,7 +10942,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="viewer-layout">
                 <div class="canvas-area fade-in">
                   <canvas id="hm-uploaded-cd-canvas" class="viewer-canvas"></canvas>
-                  <div class="canvas-hint">Drag left/right to rotate</div>
+                  <div class="canvas-hint">Drag left/right to rotate · up/down to tilt 10°</div>
                 </div>
 
                 <aside class="side-panel fade-in">
@@ -11037,7 +11037,7 @@ html, body, body *, body *::before, body *::after, svg text{
         var hmUploadedInitialized = false;
         var hmUploadedAnimating = false;
         var SIDE_VIEW_ROTATION_X = 0;
-        var VIEW_TILT_LIMIT = 0;
+        var VIEW_TILT_LIMIT = Math.PI / 18;
         var ROTATION_X_MIN = SIDE_VIEW_ROTATION_X - VIEW_TILT_LIMIT;
         var ROTATION_X_MAX = SIDE_VIEW_ROTATION_X + VIEW_TILT_LIMIT;
         var HM_UPLOADED_VIEW_BASE_DIST = {
@@ -11049,7 +11049,7 @@ html, body, body *, body *::before, body *::after, svg text{
         var HM_UPLOADED_LOOKAT_Y = 1.85;
 
         function hmUploadedClampRotationX(value){
-          return SIDE_VIEW_ROTATION_X;
+          return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
         }
 
         function hmUploadedGetResponsiveCamDistForView(canvas, viewName){
@@ -11702,7 +11702,7 @@ html, body, body *, body *::before, body *::after, svg text{
           canvas.addEventListener("mousemove", function(e){
             if(!state.isDragging) return;
             state.rotation.y += (e.clientX - state.prevMouse.x) * 0.005;
-            state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
+            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + (e.clientY - state.prevMouse.y) * 0.005);
             state.prevMouse = {x:e.clientX, y:e.clientY};
           });
 
@@ -11720,7 +11720,7 @@ html, body, body *, body *::before, body *::after, svg text{
             if(!state.isDragging || !state.touchStart) return;
             e.preventDefault();
             state.rotation.y += (e.touches[0].clientX - state.touchStart.x) * 0.005;
-            state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
+            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + (e.touches[0].clientY - state.touchStart.y) * 0.005);
             state.touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
           }, {passive:false});
 
@@ -11817,7 +11817,7 @@ html, body, body *, body *::before, body *::after, svg text{
               }
               if(state.autoRotate) state.rotation.y += 0.0022;
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
-              state.pivotGroup.rotation.x = SIDE_VIEW_ROTATION_X;
+              state.pivotGroup.rotation.x = state.rotation.x;
               state.pivotGroup.rotation.y = state.rotation.y;
               state.camera.position.set(0, HM_UPLOADED_CAMERA_Y, state.camDist);
               state.camera.lookAt(0, HM_UPLOADED_LOOKAT_Y, 0);
