@@ -13078,6 +13078,35 @@ html, body, body *, body *::before, body *::after, svg text{
             }
           });
         }
+        var hmTab = document.getElementById("tab-heatmap");
+        if(hmTab){
+          var wraps = hmTab.querySelectorAll(".cb-dual-row .cb-wrap[data-cuboid]");
+          for(var wi=0; wi<wraps.length; wi++){
+            var wrap = wraps[wi];
+            if(wrap && !wrap._hmZoomDblclickBound){
+              wrap._hmZoomDblclickBound = true;
+              wrap.addEventListener("dblclick", function(ev){
+                if(ev){
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                }
+                var key = String((this && this.getAttribute("data-cuboid")) || "").toLowerCase();
+                if(key){
+                  setHeatMapCuboidZoom(key);
+                }
+              });
+            }
+          }
+        }
+        var backdrop = document.getElementById("hm-cuboid-zoom-backdrop");
+        if(backdrop && !backdrop._hmZoomBackdropBound){
+          backdrop._hmZoomBackdropBound = true;
+          backdrop.addEventListener("click", function(){
+            if(_hmCuboidZoomActive){
+              setHeatMapCuboidZoom(false);
+            }
+          });
+        }
       }
       function isMobileLiteViewport(){
         return (
