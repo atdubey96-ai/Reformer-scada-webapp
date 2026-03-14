@@ -1787,7 +1787,7 @@ td select option{background:#1e293b;color:#e2e8f0;}
 }
 @media (min-width:901px){
   .td-saved-scroll{
-    max-height:704px;
+    max-height:472px;
     scrollbar-gutter:stable both-edges;
   }
 }
@@ -4077,7 +4077,7 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
 #r3d-td-saved-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);color:#cbd5e1;vertical-align:top;}
 #td-saved-table .td-dt-wrap,
 #hm-td-saved-table .td-dt-wrap,
-#r3d-td-saved-table .td-dt-wrap{display:flex;flex-direction:column;gap:2px;line-height:1.15;min-width:132px;}
+#r3d-td-saved-table .td-dt-wrap{display:flex;flex-direction:row;align-items:center;gap:8px;line-height:1.1;min-width:168px;white-space:nowrap;flex-wrap:nowrap;}
 #td-saved-table .td-dt-date,
 #hm-td-saved-table .td-dt-date,
 #r3d-td-saved-table .td-dt-date{font-size:12px;font-weight:700;color:#e2e8f0;letter-spacing:0.2px;white-space:nowrap;}
@@ -11152,7 +11152,7 @@ html, body, body *, body *::before, body *::after, svg text{
           letter-spacing:0.4px;
         }
         .burner-history-scroll{
-          max-height:546px;
+          max-height:430px;
           overflow:auto;
           border-radius:14px;
           border:1px solid rgba(95,118,149,0.3);
@@ -13465,11 +13465,10 @@ html, body, body *, body *::before, body *::after, svg text{
               <th>Date/Time</th>
               <th style="text-align:center;">Shift</th>
               <th style="text-align:center;">HGU Load (%)</th>
-              <th style="text-align:center;">Action</th>
             </tr>
           </thead>
           <tbody id="burner-history-tbody">
-            <tr><td colspan="4" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>
+            <tr><td colspan="3" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>
           </tbody>
         </table>
       </div>
@@ -21661,11 +21660,11 @@ function renderBurnerHistoryTable(){
   }
 
   if(!totalCount){
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>';
     return;
   }
   if(!display.length){
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px;">No burner history matches the selected shift/date/load filter.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:20px;">No burner history matches the selected shift/date/load filter.</td></tr>';
     return;
   }
 
@@ -21677,14 +21676,13 @@ function renderBurnerHistoryTable(){
     var shiftLabel = ent.shift || "—";
     var shiftChipClass = getSavedEntryShiftChipClass(shiftLabel);
     var dtView = formatTempEntryDateTime(ent.dt);
-    var dtHtml = '<div class="td-dt-wrap"><div class="td-dt-date">' + dtView.date + '</div>'
-      + (dtView.time ? ('<div class="td-dt-time">' + dtView.time + '</div>') : '')
+    var dtHtml = '<div class="td-dt-wrap"><span class="td-dt-date">' + dtView.date + '</span>'
+      + (dtView.time ? ('<span class="td-dt-time">' + dtView.time + '</span>') : '')
       + '</div>';
     rowsHtml += '<tr onclick="openBurnerHistorySnapshot(' + originalIndex + ')" title="Open burner snapshot history" style="cursor:pointer;">'
       + '<td>' + dtHtml + '</td>'
       + '<td style="text-align:center;"><span class="' + shiftChipClass + '">' + shiftLabel + '</span></td>'
       + '<td style="text-align:center;">' + (ent.hguLoad || "—") + '</td>'
-      + '<td style="text-align:center;"><button class="burner-history-open-btn" onclick="event.stopPropagation();openBurnerHistorySnapshot(' + originalIndex + ')">👁 Open</button></td>'
       + '</tr>';
   }
 
@@ -21710,8 +21708,8 @@ function renderTempDataTableInto(tbodyId, display, totalCount){
     var shiftLabel = ent.shift || "—";
     var shiftChipClass = getSavedEntryShiftChipClass(shiftLabel);
     var dtView = formatTempEntryDateTime(ent.dt);
-    var dtHtml = '<div class="td-dt-wrap"><div class="td-dt-date">' + dtView.date + '</div>'
-      + (dtView.time ? ('<div class="td-dt-time">' + dtView.time + '</div>') : '')
+    var dtHtml = '<div class="td-dt-wrap"><span class="td-dt-date">' + dtView.date + '</span>'
+      + (dtView.time ? ('<span class="td-dt-time">' + dtView.time + '</span>') : '')
       + '</div>';
     rows += '<tr onclick="openAllPHModal(' + originalIndex + ')" title="Open peep-hole details" style="border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
       + '<td style="text-align:left;">' + dtHtml + '</td>'
