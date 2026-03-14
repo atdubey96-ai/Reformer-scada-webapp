@@ -16812,8 +16812,8 @@ function r3dSetInfo(id, text, cls){
 
 function r3dCreateWallOverlay(dims, wallKey, side){
   var canvas = document.createElement("canvas");
-  canvas.width = 1600;
-  canvas.height = 960;
+  canvas.width = 1200;
+  canvas.height = 720;
   var tex = new THREE.CanvasTexture(canvas);
   tex.minFilter = THREE.LinearFilter;
   tex.magFilter = THREE.LinearFilter;
@@ -17285,8 +17285,8 @@ function initReformer3DTab(){
     var camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.1, 1000);
     var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
     renderer.setSize(rect.width, rect.height, false);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+    renderer.shadowMap.enabled = false;
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.45));
     var dl = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -17468,7 +17468,7 @@ function initReformer3DTab(){
       if(reformer3DState.autoRotate) reformer3DState.rotation.y += 0.0012;
       reformer3DState.pivotGroup.rotation.x = reformer3DState.rotation.x;
       reformer3DState.pivotGroup.rotation.y = reformer3DState.rotation.y;
-      if(r3dIsActive() && reformer3DState.latestSnapshot && (now - reformer3DState.lastOverlayPaintAt) > 140){
+      if(r3dIsActive() && reformer3DState.latestSnapshot && (now - reformer3DState.lastOverlayPaintAt) > 240){
         reformer3DState.lastOverlayPaintAt = now;
         r3dRefreshWallOverlays(reformer3DState.latestSnapshot);
       }
@@ -17518,20 +17518,8 @@ function r3dToggleAutoRotate(){
 }
 
 function syncReformer3DTabPanels(){
-  if(!window._latestBurnerAnalysisPayload && typeof generateAnalysis === "function"){
-    try{ generateAnalysis(); }catch(e){}
-  }
-  if(typeof renderReformer3DAnalyticsMirror === "function"){
-    try{ renderReformer3DAnalyticsMirror(); }catch(e){}
-  }
-  if(typeof updateHeatMapAdjustmentLogic === "function"){
-    try{ updateHeatMapAdjustmentLogic(window._hmRenderSnapshot); }catch(e){}
-  }
-  if(typeof renderTempDataTableInto === "function"){
-    try{ renderTempDataTableInto("r3d-td-saved-tbody"); }catch(e){}
-  }
-  if(typeof updateCleaningStatus === "function"){
-    try{ updateCleaningStatus(loadCleaningLog()); }catch(e){}
+  if(typeof r3dSyncFromHeatMapSnapshot === "function"){
+    try{ r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot || null); }catch(e){}
   }
 }
 
@@ -17558,7 +17546,7 @@ function switchTab(tab){
   if(tab === 'reformer3d'){
     setTimeout(function(){
       initReformer3DTab();
-      if(typeof renderHeatMap === "function"){
+      if(!window._hmRenderSnapshot && typeof renderHeatMap === "function"){
         try{ renderHeatMap(); }catch(e){}
       }
       if(typeof r3dSyncFromHeatMapSnapshot === "function"){
