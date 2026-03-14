@@ -1785,6 +1785,12 @@ td select option{background:#1e293b;color:#e2e8f0;}
   -webkit-overflow-scrolling:touch;
   border-radius:10px;
 }
+@media (min-width:901px){
+  .td-saved-scroll{
+    max-height:704px;
+    scrollbar-gutter:stable both-edges;
+  }
+}
 .td-saved-entries-outline{
   border:1px solid rgba(126,200,240,0.28);
   box-shadow:
@@ -4206,13 +4212,47 @@ body.light-theme .hm-adjust-card{
   border-color:#9dc2e8;
   box-shadow:0 10px 24px rgba(30,58,90,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
 }
-body.light-theme .hm-adjust-sub{color:#476a90;}
-body.light-theme .hm-adjust-item{background:#ffffff;border-color:#9dc2e8;}
-body.light-theme .hm-adjust-rule{color:#1f3552;}
+body.light-theme .hm-adjust-title{
+  color:#7c3f10 !important;
+  text-shadow:none !important;
+}
+body.light-theme .hm-adjust-sub{color:#475569 !important;}
+body.light-theme .hm-adjust-item{
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+  border-color:#9dc2e8;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.95),0 8px 16px rgba(15,23,42,0.05);
+}
+body.light-theme .hm-adjust-item-high{
+  border-color:rgba(239,68,68,0.32);
+  background:linear-gradient(180deg,#ffffff 0%,#fff5f5 100%);
+}
+body.light-theme .hm-adjust-item-low{
+  border-color:rgba(16,185,129,0.32);
+  background:linear-gradient(180deg,#ffffff 0%,#f0fdf4 100%);
+}
+body.light-theme .hm-adjust-rule{color:#334155;}
 body.light-theme .hm-adjust-zone{color:#0f172a;}
-body.light-theme .hm-adjust-meta{color:#334e72;}
+body.light-theme .hm-adjust-meta{
+  color:#475569 !important;
+  font-weight:600;
+}
 body.light-theme .hm-adjust-suggest{
-  color:#0f172a;background:#f3f7fd;border-color:#c3d6ec;border-left-color:#3b82f6;
+  color:#0f172a !important;
+  background:linear-gradient(180deg,#ffffff 0%,#f7fbff 100%) !important;
+  border-color:#c3d6ec;
+  border-left-color:#3b82f6;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.95);
+}
+body.light-theme .hm-adjust-suggest b{color:#0f172a !important;}
+body.light-theme .hm-adjust-badge{
+  background:rgba(34,197,94,0.14);
+  border-color:rgba(34,197,94,0.34);
+  color:#15803d;
+}
+body.light-theme .hm-adjust-empty{
+  color:#475569;
+  border-color:rgba(148,163,184,0.36);
+  background:rgba(255,255,255,0.55);
 }
 
 
@@ -4728,7 +4768,7 @@ var HM_BURNER_ICON_PRESETS = {
 var _hmBurnerIconSet = (function(){
   var raw = "";
   try{ raw = String(localStorage.getItem("hm-burner-icon-set") || "").toLowerCase(); }catch(e){}
-  if(raw === "crystal" || raw === "flame"){
+  if(raw === "crystal"){
     raw = "inferno";
     try{ localStorage.setItem("hm-burner-icon-set", raw); }catch(e){}
   }
@@ -4736,7 +4776,7 @@ var _hmBurnerIconSet = (function(){
 })();
 
 function getHeatMapBurnerIconSet(){
-  if(!HM_BURNER_ICON_PRESETS[_hmBurnerIconSet] || _hmBurnerIconSet === "flame") _hmBurnerIconSet = "inferno";
+  if(!HM_BURNER_ICON_PRESETS[_hmBurnerIconSet]) _hmBurnerIconSet = "inferno";
   return _hmBurnerIconSet;
 }
 
@@ -6536,6 +6576,7 @@ html, body, body *, body *::before, body *::after, svg text{
                 <span class="hm-icon-picker-caret">▾</span>
               </button>
               <div class="hm-icon-menu" id="hm-icon-menu" role="menu" aria-label="Select burner icon style">
+                <button type="button" class="hm-icon-item" data-icon-set="flame" onclick="setHeatMapBurnerIconSet('flame', event)">🔥 Classic Flame</button>
                 <button type="button" class="hm-icon-item" data-icon-set="twin" onclick="setHeatMapBurnerIconSet('twin', event)">♨️ Twin Flame</button>
                 <button type="button" class="hm-icon-item" data-icon-set="jet" onclick="setHeatMapBurnerIconSet('jet', event)">⚡ Jet Cone</button>
                 <button type="button" class="hm-icon-item" data-icon-set="ring" onclick="setHeatMapBurnerIconSet('ring', event)">⭕ Halo Core</button>
@@ -10172,7 +10213,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         body.light-theme #hm-adjust-card .hm-adjust-title{
           color:#7c3f10 !important;
-          text-shadow:0 1px 0 rgba(255,255,255,0.88) !important;
+          text-shadow:none !important;
         }
         body.light-theme #hm-header-tools .hm-filter-chip{
           background:linear-gradient(180deg,#ffffff 0%,#eef4fb 100%) !important;
@@ -10506,7 +10547,7 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap .hm-uploaded-viewer .section-title-chip{
           display:inline-flex;
           align-items:center;
-          padding:10px 24px;
+          padding:8px 18px;
           border-radius:999px;
           border:1px solid rgba(244,177,131,0.38);
           background:linear-gradient(135deg,rgba(52,33,27,0.86),rgba(16,20,28,0.82));
@@ -10517,7 +10558,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         #tab-heatmap .hm-uploaded-viewer .section-title{
           font-family:'Rajdhani','Outfit',sans-serif;
-          font-size:clamp(22px,2.35vw,34px);
+          font-size:clamp(18px,1.9vw,28px);
           font-weight:700;
           line-height:1;
           letter-spacing:0.22px;
@@ -11030,7 +11071,29 @@ html, body, body *, body *::before, body *::after, svg text{
 
       <script>
       (function(){
-        window.updateCuboidResponsiveScale = function(){};
+        function hmUploadedGetResponsiveScale(canvas){
+          var size = canvas ? hmUploadedGetCanvasSize(canvas) : {width:1280, height:720};
+          var widthBoost = Math.max(0, Math.min(1, (size.width - 980) / 1160));
+          return {
+            x:Number((1 + (widthBoost * 0.05)).toFixed(3)),
+            y:1,
+            z:Number((1.04 + (widthBoost * 0.42)).toFixed(3))
+          };
+        }
+        function hmUploadedApplyResponsiveScale(state){
+          if(!state || !state.pivotGroup) return;
+          var scale = hmUploadedGetResponsiveScale(state.canvas);
+          state.sceneScale = scale;
+          state.pivotGroup.scale.set(scale.x, scale.y, scale.z);
+        }
+        window.updateCuboidResponsiveScale = function(){
+          Object.keys(hmUploadedViewers).forEach(function(key){
+            var state = hmUploadedViewers[key];
+            if(!state) return;
+            hmUploadedApplyResponsiveScale(state);
+            hmUploadedRefreshResponsiveCamDist(state);
+          });
+        };
         window.applyLightThemeCuboidFaceBlack = function(){};
 
         var hmUploadedViewers = {};
@@ -11057,10 +11120,10 @@ html, body, body *, body *::before, body *::after, svg text{
           var baseDist = HM_UPLOADED_VIEW_BASE_DIST[viewName] || HM_UPLOADED_VIEW_BASE_DIST.side;
           var widthScale = Math.max(0, Math.min(1, (size.width - 720) / 780));
           var heightScale = Math.max(0, Math.min(1, (size.height - 440) / 420));
-          var factor = 1 - (widthScale * 0.14) - (heightScale * 0.08);
+          var factor = 1 - (widthScale * 0.18) - (heightScale * 0.09);
           if(viewName === "front") factor += 0.03;
           if(viewName === "top") factor += 0.06;
-          factor = Math.max(0.78, Math.min(1.02, factor));
+          factor = Math.max(0.74, Math.min(1.02, factor));
           return Number((baseDist * factor).toFixed(2));
         }
 
@@ -11287,7 +11350,6 @@ html, body, body *, body *::before, body *::after, svg text{
           var s = String(state || "C").toUpperCase();
           if(s !== "O" && s !== "N" && s !== "B") s = "C";
           var iconSet = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "inferno";
-          if(iconSet === "flame") iconSet = "inferno";
           var img = hmUploadedGetBurnerImage(iconSet, s);
           var pulseLift = (s === "C") ? 0 : (0.8 + Math.sin(animPhase || 0) * 1.1);
           if(img && img.complete && img.naturalWidth > 0){
@@ -11783,6 +11845,7 @@ html, body, body *, body *::before, body *::after, svg text{
             overlayAnimPhase:0
           };
 
+          hmUploadedApplyResponsiveScale(state);
           hmUploadedAttachControls(state);
           return state;
         }
@@ -11796,6 +11859,7 @@ html, body, body *, body *::before, body *::after, svg text{
             state.camera.updateProjectionMatrix();
             state.renderer.setSize(size.width, size.height, false);
             state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+            hmUploadedApplyResponsiveScale(state);
             hmUploadedRefreshResponsiveCamDist(state);
           });
         }
@@ -12099,7 +12163,6 @@ html, body, body *, body *::before, body *::after, svg text{
           if(typeof ev.stopPropagation === "function") ev.stopPropagation();
         }
         var next = String(key || "").toLowerCase();
-        if(next === "flame") next = "inferno";
         if(!HM_BURNER_ICON_PRESETS[next]) next = "inferno";
         var prev = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "inferno";
         _hmBurnerIconSet = next;
