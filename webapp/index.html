@@ -11078,6 +11078,18 @@ html, body, body *, body *::before, body *::after, svg text{
           background:linear-gradient(145deg,#131b28 0%,#0f1722 100%);
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
         }
+        .burner-history-filter-row{
+          display:flex;
+          align-items:center;
+          gap:12px;
+          flex:1 1 820px;
+          flex-wrap:wrap;
+          min-width:0;
+        }
+        .burner-history-date-box,
+        .burner-history-load-box{
+          flex-wrap:wrap;
+        }
         .burner-history-shift-label{
           font-size:11px;
           font-weight:700;
@@ -11097,6 +11109,41 @@ html, body, body *, body *::before, body *::after, svg text{
           font-weight:700;
           font-family:'Rajdhani',sans-serif;
           outline:none;
+        }
+        .burner-history-date-input,
+        .burner-history-load-input{
+          padding:8px 12px;
+          border-radius:10px;
+          border:1px solid rgba(95,118,149,0.38);
+          background:linear-gradient(145deg,#0f1722 0%,#0b121b 100%);
+          color:#f8fafc;
+          font-size:13px;
+          font-weight:700;
+          font-family:'Rajdhani',sans-serif;
+          outline:none;
+        }
+        .burner-history-date-input{
+          min-width:176px;
+        }
+        .burner-history-load-input{
+          width:96px;
+        }
+        .burner-history-range-sep{
+          color:#8ea3bf;
+          font-size:12px;
+          font-weight:700;
+          letter-spacing:0.4px;
+        }
+        .burner-history-clear-btn{
+          padding:8px 14px;
+          border-radius:10px;
+          border:1px solid rgba(148,163,184,0.34);
+          background:linear-gradient(145deg,#475569 0%,#334155 100%);
+          color:#f8fafc;
+          font-size:12px;
+          font-weight:700;
+          font-family:'Rajdhani',sans-serif;
+          cursor:pointer;
         }
         .burner-history-count{
           font-size:12px;
@@ -11199,6 +11246,20 @@ html, body, body *, body *::before, body *::after, svg text{
           background:#ffffff;
           color:#172030;
         }
+        body.light-theme .burner-history-date-input,
+        body.light-theme .burner-history-load-input{
+          border-color:rgba(186,198,216,0.72);
+          background:#ffffff;
+          color:#172030;
+        }
+        body.light-theme .burner-history-range-sep{
+          color:#475569;
+        }
+        body.light-theme .burner-history-clear-btn{
+          border-color:rgba(186,198,216,0.72);
+          background:linear-gradient(145deg,#64748b 0%,#475569 100%);
+          color:#f8fafc;
+        }
         body.light-theme .burner-history-count{
           color:#2563eb;
         }
@@ -11228,6 +11289,9 @@ html, body, body *, body *::before, body *::after, svg text{
           .burner-history-toolbar{
             align-items:flex-start;
           }
+          .burner-history-filter-row{
+            width:100%;
+          }
           .burner-history-shift-box{
             width:100%;
             justify-content:space-between;
@@ -11236,6 +11300,14 @@ html, body, body *, body *::before, body *::after, svg text{
           .burner-history-shift-select{
             width:100%;
             min-width:0;
+          }
+          .burner-history-date-input{
+            width:100%;
+            min-width:0;
+          }
+          .burner-history-load-input{
+            flex:1 1 110px;
+            width:auto;
           }
         }
       </style>
@@ -11326,6 +11398,26 @@ html, body, body *, body *::before, body *::after, svg text{
           border-radius:24px;
           overflow:hidden;
           background:radial-gradient(circle at top,rgba(232,81,26,.14),transparent 42%),linear-gradient(180deg,#121924 0%,#0B0F14 100%);
+          cursor:grab;
+        }
+        #tab-heatmap .hm-uploaded-viewer .canvas-area:active{
+          cursor:grabbing;
+        }
+        #tab-heatmap .hm-uploaded-viewer .canvas-area:fullscreen,
+        #tab-heatmap .hm-uploaded-viewer .canvas-area:-webkit-full-screen{
+          width:100vw !important;
+          height:100vh !important;
+          min-height:100vh !important;
+          border:none !important;
+          border-radius:0 !important;
+          background:radial-gradient(circle at top,rgba(232,81,26,.12),transparent 44%),linear-gradient(180deg,#121924 0%,#0B0F14 100%) !important;
+        }
+        #tab-heatmap .hm-uploaded-viewer .canvas-area:fullscreen .canvas-hint,
+        #tab-heatmap .hm-uploaded-viewer .canvas-area:-webkit-full-screen .canvas-hint{
+          bottom:22px;
+          left:26px;
+          font-size:12px;
+          color:rgba(255,255,255,.56);
         }
         #tab-heatmap .hm-uploaded-viewer .viewer-canvas{
           width:100%;
@@ -11659,7 +11751,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="viewer-layout">
                 <div class="canvas-area fade-in">
                   <canvas id="hm-uploaded-ab-canvas" class="viewer-canvas"></canvas>
-                  <div class="canvas-hint">Drag left/right to rotate</div>
+                  <div class="canvas-hint">Drag left/right to rotate · Double-click to zoom</div>
                 </div>
 
                 <aside class="side-panel fade-in">
@@ -11756,7 +11848,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="viewer-layout">
                 <div class="canvas-area fade-in">
                   <canvas id="hm-uploaded-cd-canvas" class="viewer-canvas"></canvas>
-                  <div class="canvas-hint">Drag left/right to rotate</div>
+                  <div class="canvas-hint">Drag left/right to rotate · Double-click to zoom</div>
                 </div>
 
                 <aside class="side-panel fade-in">
@@ -12542,6 +12634,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
         function hmUploadedAttachControls(state){
           var canvas = state.canvas;
+          var host = canvas ? canvas.parentElement : null;
 
           canvas.addEventListener("mousedown", function(e){
             state.isDragging = true;
@@ -12578,6 +12671,14 @@ html, body, body *, body *::before, body *::after, svg text{
             state.isDragging = false;
             state.touchStart = null;
           });
+
+          if(host && !host._hmUploadedZoomBound){
+            host._hmUploadedZoomBound = true;
+            host.addEventListener("dblclick", function(e){
+              e.preventDefault();
+              hmUploadedToggleFullscreen(host);
+            });
+          }
         }
 
         function hmUploadedCreateViewer(canvasId, label){
@@ -12650,6 +12751,36 @@ html, body, body *, body *::before, body *::after, svg text{
             hmUploadedApplyResponsiveScale(state);
             hmUploadedRefreshResponsiveCamDist(state);
           });
+        }
+
+        function hmUploadedFullscreenEl(){
+          return document.fullscreenElement || document.webkitFullscreenElement || null;
+        }
+
+        function hmUploadedGetCanvasHost(source){
+          if(!source) return null;
+          if(typeof source === "string"){
+            var viewer = hmUploadedViewers[String(source).toLowerCase()];
+            return viewer && viewer.canvas ? viewer.canvas.parentElement : null;
+          }
+          if(source.closest) return source.closest(".canvas-area");
+          return null;
+        }
+
+        function hmUploadedToggleFullscreen(source){
+          var host = hmUploadedGetCanvasHost(source);
+          if(!host) return;
+          var activeFs = hmUploadedFullscreenEl();
+          if(activeFs === host){
+            if(document.exitFullscreen) document.exitFullscreen();
+            else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+            return;
+          }
+          if(host.requestFullscreen){
+            host.requestFullscreen().catch(function(){});
+          }else if(host.webkitRequestFullscreen){
+            host.webkitRequestFullscreen();
+          }
         }
 
         function hmUploadedStartAnimation(){
@@ -12760,6 +12891,12 @@ html, body, body *, body *::before, body *::after, svg text{
 
         window.addEventListener("resize", function(){
           if(hmUploadedInitialized) hmUploadedResizeAllViewers();
+        });
+        window.addEventListener("fullscreenchange", function(){
+          if(hmUploadedInitialized) setTimeout(hmUploadedResizeAllViewers, 80);
+        });
+        window.addEventListener("webkitfullscreenchange", function(){
+          if(hmUploadedInitialized) setTimeout(hmUploadedResizeAllViewers, 80);
         });
       })();
       </script>
@@ -13295,27 +13432,31 @@ html, body, body *, body *::before, body *::after, svg text{
     </div>
     <div class="burner-history-card">
       <div class="burner-history-title">📜 Historical Burner Data</div>
-      <div class="burner-history-subtitle">Saved burner snapshots captured with each TST entry. Filter by shift and open any row to inspect the historical burner state.</div>
+      <div class="burner-history-subtitle">Saved burner snapshots only. Filter by shift, date, and HGU load, then open any row to inspect the historical burner state.</div>
       <div class="burner-history-toolbar">
-        <div class="burner-history-shift-box">
-          <span class="burner-history-shift-label">Shift Filter</span>
-          <select id="burner-history-shift" class="burner-history-shift-select" onchange="setBurnerHistoryShiftFilter(this.value)">
-            <option value="All">🔁 All Shifts</option>
-            <option value="Morning">🌅 Morning</option>
-            <option value="Evening">🌆 Evening</option>
-            <option value="Night">🌙 Night</option>
-          </select>
+        <div class="burner-history-filter-row">
+          <div class="burner-history-shift-box">
+            <span class="burner-history-shift-label">Shift</span>
+            <select id="burner-history-shift" class="burner-history-shift-select" onchange="setBurnerHistoryShiftFilter(this.value)">
+              <option value="All">🔁 All Shifts</option>
+              <option value="Morning">🌅 Morning</option>
+              <option value="Evening">🌆 Evening</option>
+              <option value="Night">🌙 Night</option>
+            </select>
+          </div>
+          <div class="burner-history-shift-box burner-history-date-box">
+            <span class="burner-history-shift-label">Date</span>
+            <input type="date" id="burner-history-date" class="burner-history-date-input" onchange="setBurnerHistoryFilterFromControls(this)">
+          </div>
+          <div class="burner-history-shift-box burner-history-load-box" data-burner-history-filter-bar>
+            <span class="burner-history-shift-label">HGU Load (%)</span>
+            <input type="number" step="any" class="burner-history-load-input" data-burner-history-min oninput="setBurnerHistoryFilterFromControls(this)" placeholder="Min" aria-label="Burner history minimum HGU load">
+            <span class="burner-history-range-sep">to</span>
+            <input type="number" step="any" class="burner-history-load-input" data-burner-history-max oninput="setBurnerHistoryFilterFromControls(this)" placeholder="Max" aria-label="Burner history maximum HGU load">
+            <button type="button" class="burner-history-clear-btn" onclick="clearBurnerHistoryFilter()">Clear</button>
+          </div>
         </div>
         <div class="burner-history-count" id="burner-history-count">No snapshots</div>
-      </div>
-      <div class="td-saved-filter-bar" id="burner-history-filter-bar" data-saved-filter-bar>
-        <span class="td-saved-filter-label">Parameter</span>
-        <select class="td-saved-filter-select" data-saved-filter-field onchange="setSavedEntryFilterFromControls(this)" aria-label="Burner history filter parameter"></select>
-        <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-min oninput="setSavedEntryFilterFromControls(this)" placeholder="Min" aria-label="Burner history minimum value">
-        <span class="td-saved-filter-sep">to</span>
-        <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-max oninput="setSavedEntryFilterFromControls(this)" placeholder="Max" aria-label="Burner history maximum value">
-        <button type="button" class="td-saved-filter-clear" onclick="clearSavedEntryFilter()">Clear</button>
-        <span class="td-saved-filter-status" data-saved-filter-status></span>
       </div>
       <div class="burner-history-scroll">
         <table id="burner-history-table">
@@ -13323,15 +13464,12 @@ html, body, body *, body *::before, body *::after, svg text{
             <tr>
               <th>Date/Time</th>
               <th style="text-align:center;">Shift</th>
-              <th style="text-align:center;">AB COT (°C)</th>
-              <th style="text-align:center;">CD COT (°C)</th>
-              <th style="text-align:center;">Flue Gas (°C)</th>
-              <th style="text-align:center;">Snapshot</th>
+              <th style="text-align:center;">HGU Load (%)</th>
               <th style="text-align:center;">Action</th>
             </tr>
           </thead>
           <tbody id="burner-history-tbody">
-            <tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>
+            <tr><td colspan="4" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>
           </tbody>
         </table>
       </div>
@@ -21372,6 +21510,7 @@ function getFilteredTempDataEntries(){
 }
 
 var BURNER_HISTORY_SHIFT_STORAGE_KEY = "scadaBurnerHistoryShiftFilter";
+var BURNER_HISTORY_FILTER_STORAGE_KEY = "scadaBurnerHistoryFilter";
 
 function normalizeBurnerHistoryShift(raw){
   var s = String(raw || "All").trim();
@@ -21388,6 +21527,43 @@ function loadBurnerHistoryShiftFilter(){
 
 var burnerHistoryShiftFilter = loadBurnerHistoryShiftFilter();
 
+function sanitizeBurnerHistoryFilterState(raw){
+  if(!raw || typeof raw !== "object"){
+    return {date:"", min:"", max:""};
+  }
+  return {
+    date: normalizeImportedCleaningDate(raw.date || ""),
+    min: String(raw.min == null ? "" : raw.min).trim(),
+    max: String(raw.max == null ? "" : raw.max).trim()
+  };
+}
+
+function loadBurnerHistoryFilterState(){
+  try{
+    var saved = localStorage.getItem(BURNER_HISTORY_FILTER_STORAGE_KEY);
+    if(saved) return sanitizeBurnerHistoryFilterState(JSON.parse(saved));
+  }catch(e){}
+  return {date:"", min:"", max:""};
+}
+
+function persistBurnerHistoryFilterState(){
+  try{
+    localStorage.setItem(BURNER_HISTORY_FILTER_STORAGE_KEY, JSON.stringify(burnerHistoryFilterState));
+  }catch(e){}
+}
+
+function getTempEntryDateIso(rawDt){
+  var s = String(rawDt || "").trim();
+  if(!s) return "";
+  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return m[1] + "-" + m[2] + "-" + m[3];
+  var dt = new Date(s);
+  if(isFinite(dt.getTime())) return dt.toISOString().slice(0, 10);
+  return "";
+}
+
+var burnerHistoryFilterState = loadBurnerHistoryFilterState();
+
 function setBurnerHistoryShiftFilter(raw){
   burnerHistoryShiftFilter = normalizeBurnerHistoryShift(raw);
   try{
@@ -21396,12 +21572,66 @@ function setBurnerHistoryShiftFilter(raw){
   renderBurnerHistoryTable();
 }
 
-function getBurnerHistoryFilteredEntries(){
-  var rows = getFilteredTempDataEntries();
-  if(burnerHistoryShiftFilter === "All") return rows;
-  return rows.filter(function(row){
-    return String((row && row.ent && row.ent.shift) || "") === burnerHistoryShiftFilter;
+function setBurnerHistoryFilterFromControls(sourceEl){
+  var root = sourceEl && sourceEl.closest ? sourceEl.closest(".burner-history-toolbar") : document.querySelector(".burner-history-toolbar");
+  if(!root) return;
+  burnerHistoryFilterState = sanitizeBurnerHistoryFilterState({
+    date: ((root.querySelector("#burner-history-date") || {}).value || ""),
+    min: ((root.querySelector("[data-burner-history-min]") || {}).value || ""),
+    max: ((root.querySelector("[data-burner-history-max]") || {}).value || "")
   });
+  persistBurnerHistoryFilterState();
+  renderBurnerHistoryTable();
+}
+
+function clearBurnerHistoryFilter(){
+  burnerHistoryFilterState = {date:"", min:"", max:""};
+  persistBurnerHistoryFilterState();
+  renderBurnerHistoryTable();
+}
+
+function getBurnerHistoryFilteredEntries(){
+  var rows = tempDataEntries.map(function(ent, idx){
+    return {ent: ent, originalIndex: idx};
+  }).filter(function(row){
+    return !!getEntryBurnerSnapshot(row && row.ent);
+  });
+  if(burnerHistoryShiftFilter !== "All"){
+    rows = rows.filter(function(row){
+      return String((row && row.ent && row.ent.shift) || "") === burnerHistoryShiftFilter;
+    });
+  }
+
+  var dateIso = normalizeImportedCleaningDate(burnerHistoryFilterState.date || "");
+  if(dateIso){
+    rows = rows.filter(function(row){
+      return getTempEntryDateIso(row && row.ent ? row.ent.dt : "") === dateIso;
+    });
+  }
+
+  var min = parseSavedEntryFilterNumber(burnerHistoryFilterState.min);
+  var max = parseSavedEntryFilterNumber(burnerHistoryFilterState.max);
+  var hasMin = isFinite(min);
+  var hasMax = isFinite(max);
+  if(hasMin && hasMax && min > max){
+    var swap = min;
+    min = max;
+    max = swap;
+  }
+  if(hasMin || hasMax){
+    rows = rows.filter(function(row){
+      var value = parseSavedEntryFilterNumber(row && row.ent ? row.ent.hguLoad : "");
+      if(!isFinite(value)) return false;
+      if(hasMin && value < min) return false;
+      if(hasMax && value > max) return false;
+      return true;
+    });
+  }
+  return rows;
+}
+
+function openBurnerHistorySnapshot(entryIndex){
+  openAllPHModal(entryIndex, "snapshot");
 }
 
 function renderBurnerHistoryTable(){
@@ -21410,32 +21640,32 @@ function renderBurnerHistoryTable(){
 
   var shiftEl = document.getElementById("burner-history-shift");
   if(shiftEl) shiftEl.value = burnerHistoryShiftFilter;
-
-  var totalCount = tempDataEntries.length;
+  var dateEl = document.getElementById("burner-history-date");
+  if(dateEl) dateEl.value = burnerHistoryFilterState.date || "";
+  document.querySelectorAll("[data-burner-history-min]").forEach(function(el){
+    el.value = burnerHistoryFilterState.min || "";
+  });
+  document.querySelectorAll("[data-burner-history-max]").forEach(function(el){
+    el.value = burnerHistoryFilterState.max || "";
+  });
+  
+  var totalCount = tempDataEntries.filter(function(ent){
+    return !!getEntryBurnerSnapshot(ent);
+  }).length;
   var display = getBurnerHistoryFilteredEntries();
   var countEl = document.getElementById("burner-history-count");
   if(countEl){
     countEl.textContent = totalCount
-      ? (display.length + " / " + totalCount + " snapshots · " + (burnerHistoryShiftFilter === "All" ? "All shifts" : burnerHistoryShiftFilter))
+      ? (display.length + " / " + totalCount + " snapshots")
       : "No snapshots";
   }
 
-  var filterBar = document.getElementById("burner-history-filter-bar");
-  if(filterBar){
-    var statusEl = filterBar.querySelector("[data-saved-filter-status]");
-    if(statusEl){
-      statusEl.textContent = totalCount
-        ? (display.length + " / " + totalCount + " shown")
-        : "No snapshots";
-    }
-  }
-
   if(!totalCount){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>';
     return;
   }
   if(!display.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px;">No burner history matches the selected shift/filter.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px;">No burner history matches the selected shift/date/load filter.</td></tr>';
     return;
   }
 
@@ -21450,15 +21680,11 @@ function renderBurnerHistoryTable(){
     var dtHtml = '<div class="td-dt-wrap"><div class="td-dt-date">' + dtView.date + '</div>'
       + (dtView.time ? ('<div class="td-dt-time">' + dtView.time + '</div>') : '')
       + '</div>';
-    var hasSnapshot = !!getEntryBurnerSnapshot(ent);
-    rowsHtml += '<tr onclick="openAllPHModal(' + originalIndex + ')" title="Open burner snapshot and peep-hole data" style="cursor:pointer;">'
+    rowsHtml += '<tr onclick="openBurnerHistorySnapshot(' + originalIndex + ')" title="Open burner snapshot history" style="cursor:pointer;">'
       + '<td>' + dtHtml + '</td>'
       + '<td style="text-align:center;"><span class="' + shiftChipClass + '">' + shiftLabel + '</span></td>'
-      + '<td style="text-align:center;">' + (ent.abCot || "—") + '</td>'
-      + '<td style="text-align:center;">' + (ent.cdCot || "—") + '</td>'
-      + '<td style="text-align:center;">' + (ent.flueGas || "—") + '</td>'
-      + '<td style="text-align:center;"><span class="burner-history-snapshot-chip' + (hasSnapshot ? '' : ' is-missing') + '">' + (hasSnapshot ? 'Saved' : 'Missing') + '</span></td>'
-      + '<td style="text-align:center;"><button class="burner-history-open-btn" onclick="event.stopPropagation();openAllPHModal(' + originalIndex + ')">👁 Open</button></td>'
+      + '<td style="text-align:center;">' + (ent.hguLoad || "—") + '</td>'
+      + '<td style="text-align:center;"><button class="burner-history-open-btn" onclick="event.stopPropagation();openBurnerHistorySnapshot(' + originalIndex + ')">👁 Open</button></td>'
       + '</tr>';
   }
 
@@ -21527,15 +21753,18 @@ function renderTempDataTable(){
    ALL PEEP HOLE TST DATA MODAL
 ================================================== */
 var allPhFocusedEntryIndex = -1;
+var allPhViewMode = "full";
 
-function openAllPHModal(entryIndex){
+function openAllPHModal(entryIndex, mode){
   var idx = Number(entryIndex);
   allPhFocusedEntryIndex = (isFinite(idx) && idx >= 0) ? Math.floor(idx) : -1;
+  allPhViewMode = (String(mode || "").toLowerCase() === "snapshot") ? "snapshot" : "full";
   document.getElementById("all-ph-modal").style.display = "block";
   renderAllPHData();
 }
 function closeAllPHModal(){
   allPhFocusedEntryIndex = -1;
+  allPhViewMode = "full";
   document.getElementById("all-ph-modal").style.display = "none";
 }
 
@@ -21622,8 +21851,14 @@ function renderAllPHData(){
   var allEntries = getAllTempEntries();
   var entries = [];
   var singleMode = (allPhFocusedEntryIndex >= 0 && allPhFocusedEntryIndex < allEntries.length);
+  var snapshotOnlyMode = !!(singleMode && allPhViewMode === "snapshot");
 
-  if(singleMode){
+  if(snapshotOnlyMode){
+    entries = [allEntries[allPhFocusedEntryIndex]];
+    if(filterWrap) filterWrap.style.display = "none";
+    if(titleEl) titleEl.textContent = "🔥 BURNER SNAPSHOT HISTORY";
+    if(subtitleEl) subtitleEl.textContent = "Selected burner snapshot captured with this saved entry.";
+  }else if(singleMode){
     entries = [allEntries[allPhFocusedEntryIndex]];
     if(filterWrap) filterWrap.style.display = "none";
     if(titleEl) titleEl.textContent = "👁️ PEEP HOLE TST DATA";
@@ -21658,46 +21893,49 @@ function renderAllPHData(){
     html += '<div class="all-ph-entry-head">';
     html += '<span class="all-ph-entry-dt">'+ent.dt+'</span>';
     html += '<span class="all-ph-entry-shift" style="--shift-color:'+sc+';">'+ent.shift+'</span>';
-    if(ent.abCot) html += '<span class="all-ph-entry-meta">AB COT: <b>'+ent.abCot+'°C</b></span>';
-    if(ent.cdCot) html += '<span class="all-ph-entry-meta">CD COT: <b>'+ent.cdCot+'°C</b></span>';
-    if(ent.flueGas) html += '<span class="all-ph-entry-meta">Flue Gas: <b>'+ent.flueGas+'°C</b></span>';
-    html += '</div>';
-
-    // Peep hole data
-    html += '<div class="all-ph-entry-body">';
-    html += '<div class="td-ph-grid-scroll all-ph-grid-scroll">';
-    // Header row
-    html += '<div class="td-ph-grid-row all-ph-grid-row all-ph-grid-row-head">';
-    html += '<div class="all-ph-grid-head-label">PH No.</div>';
-    for(var ph=1;ph<=15;ph++){
-      html += '<div class="all-ph-grid-head-cell">'+ph+'</div>';
+    if(snapshotOnlyMode){
+      if(ent.hguLoad) html += '<span class="all-ph-entry-meta">HGU Load: <b>'+ent.hguLoad+'%</b></span>';
+    }else{
+      if(ent.abCot) html += '<span class="all-ph-entry-meta">AB COT: <b>'+ent.abCot+'°C</b></span>';
+      if(ent.cdCot) html += '<span class="all-ph-entry-meta">CD COT: <b>'+ent.cdCot+'°C</b></span>';
+      if(ent.flueGas) html += '<span class="all-ph-entry-meta">Flue Gas: <b>'+ent.flueGas+'°C</b></span>';
     }
     html += '</div>';
 
-    phRowKeys.forEach(function(rk){
-      var vals = (ent.peepHoles && ent.peepHoles[rk]) ? ent.peepHoles[rk] : [];
-      var nums = vals.filter(function(v){ return v!=='' && !isNaN(Number(v)); }).map(Number);
-      var minT = nums.length ? Math.min.apply(null,nums) : null;
-      var maxT = nums.length ? Math.max.apply(null,nums) : null;
-      var rowColor = phRowColors[rk];
-
-      html += '<div class="td-ph-grid-row all-ph-grid-row all-ph-grid-row-series">';
-      html += '<div class="all-ph-grid-series-label" style="--row-accent:'+rowColor+';">'+phRowLabels[rk]+'</div>';
-
-      for(var ph=0;ph<15;ph++){
-        var val = vals[ph];
-        var numVal = (val!=='' && val!==null && val!==undefined && !isNaN(Number(val))) ? Number(val) : null;
-        var cellBg = (numVal!==null && minT!==null && maxT!==null) ? tempToColorInline(numVal, minT, maxT) : "#1e293b";
-        var textColor = (numVal!==null) ? "#fff" : "#334155";
-        var dispVal = (numVal!==null) ? numVal+'°' : '—';
-        var glowStyle = (numVal!==null) ? 'box-shadow:0 0 6px 1px '+cellBg+'99;' : '';
-        html += '<div class="all-ph-grid-temp-cell" title="PH'+(ph+1)+': '+(numVal!==null?numVal+'°C':'No data')+'" style="--cell-text:'+textColor+';--cell-bg:'+cellBg+';--cell-glow:'+(numVal!==null?('0 0 6px 1px '+cellBg+'99'):'none')+';">'+dispVal+'</div>';
+    if(!snapshotOnlyMode){
+      html += '<div class="all-ph-entry-body">';
+      html += '<div class="td-ph-grid-scroll all-ph-grid-scroll">';
+      html += '<div class="td-ph-grid-row all-ph-grid-row all-ph-grid-row-head">';
+      html += '<div class="all-ph-grid-head-label">PH No.</div>';
+      for(var ph=1;ph<=15;ph++){
+        html += '<div class="all-ph-grid-head-cell">'+ph+'</div>';
       }
       html += '</div>';
-    });
 
-    html += '</div>';
-    html += '</div>';
+      phRowKeys.forEach(function(rk){
+        var vals = (ent.peepHoles && ent.peepHoles[rk]) ? ent.peepHoles[rk] : [];
+        var nums = vals.filter(function(v){ return v!=='' && !isNaN(Number(v)); }).map(Number);
+        var minT = nums.length ? Math.min.apply(null,nums) : null;
+        var maxT = nums.length ? Math.max.apply(null,nums) : null;
+        var rowColor = phRowColors[rk];
+
+        html += '<div class="td-ph-grid-row all-ph-grid-row all-ph-grid-row-series">';
+        html += '<div class="all-ph-grid-series-label" style="--row-accent:'+rowColor+';">'+phRowLabels[rk]+'</div>';
+
+        for(var ph=0;ph<15;ph++){
+          var val = vals[ph];
+          var numVal = (val!=='' && val!==null && val!==undefined && !isNaN(Number(val))) ? Number(val) : null;
+          var cellBg = (numVal!==null && minT!==null && maxT!==null) ? tempToColorInline(numVal, minT, maxT) : "#1e293b";
+          var textColor = (numVal!==null) ? "#fff" : "#334155";
+          var dispVal = (numVal!==null) ? numVal+'°' : '—';
+          html += '<div class="all-ph-grid-temp-cell" title="PH'+(ph+1)+': '+(numVal!==null?numVal+'°C':'No data')+'" style="--cell-text:'+textColor+';--cell-bg:'+cellBg+';--cell-glow:'+(numVal!==null?('0 0 6px 1px '+cellBg+'99'):'none')+';">'+dispVal+'</div>';
+        }
+        html += '</div>';
+      });
+
+      html += '</div>';
+      html += '</div>';
+    }
     html += buildEntryBurnerSnapshotHtml(ent);
     html += '</div>';
   });
