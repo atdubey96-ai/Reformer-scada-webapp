@@ -3174,16 +3174,6 @@ body.light-theme #btab-reformer3d.btab-active .btab-label{
   border-radius:3px;
   flex:0 0 auto;
 }
-.r3d-legend-swatch.r3d-dot{
-  border-radius:50%;
-  border:1.3px solid rgba(226,232,240,0.45);
-  background:rgba(148,163,184,0.12);
-}
-.r3d-legend-swatch.r3d-dot-clean{
-  background:#4ade80;
-  border-color:rgba(187,247,208,0.92);
-  box-shadow:0 0 6px rgba(74,222,128,0.35);
-}
 body.light-theme .r3d-stage-card{
   border-color:rgba(67,96,136,0.22);
   background:
@@ -11104,6 +11094,36 @@ html, body, body *, body *::before, body *::after, svg text{
           grid-template-columns:repeat(2,minmax(0,1fr));
           gap:10px;
         }
+        #tab-heatmap .hm-uploaded-viewer .clean-dot-legend{
+          display:flex;
+          flex-direction:column;
+          gap:8px;
+          margin-top:12px;
+          padding-top:10px;
+          border-top:1px solid rgba(148,163,184,0.14);
+        }
+        #tab-heatmap .hm-uploaded-viewer .clean-dot-item{
+          display:flex;
+          align-items:center;
+          gap:10px;
+          color:#cbd5e1;
+          font-size:11px;
+          font-weight:600;
+          line-height:1.2;
+        }
+        #tab-heatmap .hm-uploaded-viewer .clean-dot-bullet{
+          width:12px;
+          height:12px;
+          border-radius:999px;
+          flex:0 0 auto;
+          border:1.3px solid rgba(226,232,240,0.45);
+          background:rgba(148,163,184,0.12);
+        }
+        #tab-heatmap .hm-uploaded-viewer .clean-dot-bullet.yes{
+          background:#4ade80;
+          border-color:rgba(187,247,208,0.92);
+          box-shadow:0 0 6px rgba(74,222,128,0.35);
+        }
         #tab-heatmap .hm-uploaded-viewer .state-pill{
           display:grid;
           grid-template-columns:30px minmax(0,1fr) auto;
@@ -11410,6 +11430,10 @@ html, body, body *, body *::before, body *::after, svg text{
                         <div class="state-pill-count" id="hm-uploaded-ab-count-N">0</div>
                       </div>
                     </div>
+                    <div class="clean-dot-legend">
+                      <div class="clean-dot-item"><span class="clean-dot-bullet yes"></span>Green Dot = Burner Cleaned</div>
+                      <div class="clean-dot-item"><span class="clean-dot-bullet"></span>Empty Dot = Burner Not Cleaned</div>
+                    </div>
                   </div>
 
                   <div class="panel-section">
@@ -11502,6 +11526,10 @@ html, body, body *, body *::before, body *::after, svg text{
                         </div>
                         <div class="state-pill-count" id="hm-uploaded-cd-count-N">0</div>
                       </div>
+                    </div>
+                    <div class="clean-dot-legend">
+                      <div class="clean-dot-item"><span class="clean-dot-bullet yes"></span>Green Dot = Burner Cleaned</div>
+                      <div class="clean-dot-item"><span class="clean-dot-bullet"></span>Empty Dot = Burner Not Cleaned</div>
                     </div>
                   </div>
 
@@ -12920,8 +12948,6 @@ html, body, body *, body *::before, body *::after, svg text{
                 <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#8899AA"></div>Vertical Tubes</div>
                 <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#7090A8"></div>Common Header Tube</div>
                 <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#334155"></div>Base Platform</div>
-                <div class="r3d-legend-item"><div class="r3d-legend-swatch r3d-dot r3d-dot-clean"></div>Green Dot = Burner Cleaned</div>
-                <div class="r3d-legend-item"><div class="r3d-legend-swatch r3d-dot"></div>Empty Dot = Burner Not Cleaned</div>
               </div>
             </div>
             <div class="r3d-panel-section">
