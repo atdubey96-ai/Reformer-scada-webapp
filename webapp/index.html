@@ -3174,6 +3174,16 @@ body.light-theme #btab-reformer3d.btab-active .btab-label{
   border-radius:3px;
   flex:0 0 auto;
 }
+.r3d-legend-swatch.r3d-dot{
+  border-radius:50%;
+  border:1.3px solid rgba(226,232,240,0.45);
+  background:rgba(148,163,184,0.12);
+}
+.r3d-legend-swatch.r3d-dot-clean{
+  background:#4ade80;
+  border-color:rgba(187,247,208,0.92);
+  box-shadow:0 0 6px rgba(74,222,128,0.35);
+}
 body.light-theme .r3d-stage-card{
   border-color:rgba(67,96,136,0.22);
   background:
@@ -11901,15 +11911,17 @@ html, body, body *, body *::before, body *::after, svg text{
           headGrad.addColorStop(0, "rgba(6,8,16,0.98)");
           headGrad.addColorStop(0.55, "rgba(12,13,22,0.985)");
           headGrad.addColorStop(1, "rgba(8,9,16,0.98)");
+          var separatorY = Math.max(78, burnerNumY - 34);
+          var headerHeight = separatorY - 20;
           ctx.fillStyle = headGrad;
-          r3dRoundRectPath(ctx, 18, 20, w - 36, 82, 22);
+          r3dRoundRectPath(ctx, 18, 20, w - 36, headerHeight, 22);
           ctx.fill();
 
           ctx.strokeStyle = "rgba(243,112,34,0.78)";
           ctx.lineWidth = 4;
           ctx.beginPath();
-          ctx.moveTo(18, 102);
-          ctx.lineTo(w - 18, 102);
+          ctx.moveTo(18, separatorY);
+          ctx.lineTo(w - 18, separatorY);
           ctx.stroke();
 
           ctx.fillStyle = "#ffffff";
@@ -12908,6 +12920,8 @@ html, body, body *, body *::before, body *::after, svg text{
                 <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#8899AA"></div>Vertical Tubes</div>
                 <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#7090A8"></div>Common Header Tube</div>
                 <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#334155"></div>Base Platform</div>
+                <div class="r3d-legend-item"><div class="r3d-legend-swatch r3d-dot r3d-dot-clean"></div>Green Dot = Burner Cleaned</div>
+                <div class="r3d-legend-item"><div class="r3d-legend-swatch r3d-dot"></div>Empty Dot = Burner Not Cleaned</div>
               </div>
             </div>
             <div class="r3d-panel-section">
@@ -17116,13 +17130,14 @@ function r3dPaintWallOverlay(overlay, wallKey, snapshot){
   r3dRoundRectPath(ctx, 6, 8, w - 12, h - 16, 28);
   ctx.fill();
 
+  var separatorY = Math.max(76, burnerNumY - 34);
   ctx.fillStyle = "rgba(5,9,18,0.72)";
-  ctx.fillRect(0, 0, w, 92);
+  ctx.fillRect(0, 0, w, separatorY);
   ctx.strokeStyle = "rgba(243,112,34,0.72)";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(0, 92);
-  ctx.lineTo(w, 92);
+  ctx.moveTo(0, separatorY);
+  ctx.lineTo(w, separatorY);
   ctx.stroke();
 
   ctx.fillStyle = "#ffffff";
