@@ -11867,9 +11867,12 @@ html, body, body *, body *::before, body *::after, svg text{
           var gridRight = w - 22;
           var gridW = gridRight - gridLeft;
           var slotW = gridW / 15;
-          var burnerNumY = 116;
-          var itemCenters = [190, 290, 390, 495, 600, 700, 805, 900];
+          var burnerNumY = Math.round(h * 0.12);
           var rowOrder = [6, 5, 4, "PH_TOP", 3, 2, "PH_BOT", 1];
+          var overlayStartY = Math.round(h * 0.20);
+          var overlayEndY = Math.round(h * 0.90);
+          var overlayStepY = (overlayEndY - overlayStartY) / Math.max(1, rowOrder.length - 1);
+          var itemCenters = rowOrder.map(function(_, idx){ return Math.round(overlayStartY + overlayStepY * idx); });
 
           var outerGrad = ctx.createLinearGradient(0, 0, w, h);
           outerGrad.addColorStop(0, "rgba(16,13,20,0.99)");
@@ -16833,7 +16836,7 @@ function r3dSetInfo(id, text, cls){
 function r3dCreateWallOverlay(dims, wallKey, side){
   var canvas = document.createElement("canvas");
   canvas.width = 1200;
-  canvas.height = 720;
+  canvas.height = 960;
   var tex = new THREE.CanvasTexture(canvas);
   tex.minFilter = THREE.LinearFilter;
   tex.magFilter = THREE.LinearFilter;
@@ -17065,9 +17068,12 @@ function r3dPaintWallOverlay(overlay, wallKey, snapshot){
   var gridRight = w - 22;
   var gridW = gridRight - gridLeft;
   var slotW = gridW / 15;
-  var burnerNumY = 115;
-  var itemCenters = [190, 290, 390, 495, 600, 700, 805, 900];
+  var burnerNumY = Math.round(h * 0.12);
   var rowOrder = [6, 5, 4, "PH_TOP", 3, 2, "PH_BOT", 1];
+  var overlayStartY = Math.round(h * 0.20);
+  var overlayEndY = Math.round(h * 0.90);
+  var overlayStepY = (overlayEndY - overlayStartY) / Math.max(1, rowOrder.length - 1);
+  var itemCenters = rowOrder.map(function(_, idx){ return Math.round(overlayStartY + overlayStepY * idx); });
 
   ctx.fillStyle = "rgba(6,10,18,0.54)";
   r3dRoundRectPath(ctx, 6, 8, w - 12, h - 16, 28);
