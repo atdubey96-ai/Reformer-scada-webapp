@@ -1784,6 +1784,8 @@ td select option{background:#1e293b;color:#e2e8f0;}
   max-height:260px;
   -webkit-overflow-scrolling:touch;
   border-radius:10px;
+  overscroll-behavior:contain;
+  contain:layout paint style;
 }
 @media (min-width:901px){
   .td-saved-scroll{
@@ -1797,6 +1799,15 @@ td select option{background:#1e293b;color:#e2e8f0;}
     inset 0 1px 0 rgba(255,255,255,0.08),
     0 0 0 1px rgba(15,31,56,0.35),
     0 10px 26px rgba(2,6,23,0.34);
+  contain:layout paint style;
+}
+@supports (content-visibility:auto){
+  .td-entry-card,
+  .hm-saved-entries-card,
+  .burner-history-card{
+    content-visibility:auto;
+    contain-intrinsic-size:820px;
+  }
 }
 .td-saved-filter-bar{
   display:flex;
@@ -11157,6 +11168,9 @@ html, body, body *, body *::before, body *::after, svg text{
           border-radius:14px;
           border:1px solid rgba(95,118,149,0.3);
           background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015));
+          overscroll-behavior:contain;
+          contain:layout paint style;
+          scrollbar-gutter:stable both-edges;
         }
         #burner-history-table{
           width:100%;
@@ -11968,6 +11982,8 @@ html, body, body *, body *::before, body *::after, svg text{
         var hmUploadedViewers = {};
         var hmUploadedInitialized = false;
         var hmUploadedAnimating = false;
+        var hmUploadedResizeObserver = null;
+        var hmUploadedVisibilityObserver = null;
         var SIDE_VIEW_ROTATION_X = 0;
         var VIEW_TILT_LIMIT = 0;
         var ROTATION_X_MIN = SIDE_VIEW_ROTATION_X - VIEW_TILT_LIMIT;
@@ -12028,6 +12044,76 @@ html, body, body *, body *::before, body *::after, svg text{
             width:Math.max(320, Math.round(rect.width || 0)),
             height:Math.max(320, Math.round(rect.height || 0))
           };
+        }
+
+        function hmUploadedResizeViewer(state){
+          if(!state || !state.canvas || !state.canvas.parentElement || !state.renderer || !state.camera) return;
+          var size = hmUploadedGetCanvasSize(state.canvas);
+          if(size.width < 40 || size.height < 40) return;
+          state.camera.aspect = size.width / size.height;
+          state.camera.updateProjectionMatrix();
+          state.renderer.setSize(size.width, size.height, false);
+          state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+          hmUploadedApplyResponsiveScale(state);
+          hmUploadedRefreshResponsiveCamDist(state);
+          if(state.latestSnapshot){
+            hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
+          }
+        }
+
+        function hmUploadedSetViewerInViewByCanvasId(canvasId, inView){
+          var key = "";
+          if(canvasId === "hm-uploaded-ab-canvas") key = "ab";
+          else if(canvasId === "hm-uploaded-cd-canvas") key = "cd";
+          if(key && hmUploadedViewers[key]){
+            hmUploadedViewers[key].isInView = !!inView;
+          }
+        }
+
+        function hmUploadedBindHostObservers(state){
+          var host = state && state.canvas ? state.canvas.parentElement : null;
+          if(!host || host._hmUploadedObserversBound) return;
+          host._hmUploadedObserversBound = true;
+
+          if(typeof ResizeObserver === "function"){
+            if(!hmUploadedResizeObserver){
+              hmUploadedResizeObserver = new ResizeObserver(function(entries){
+                entries.forEach(function(entry){
+                  var canvas = entry.target ? entry.target.querySelector(".viewer-canvas") : null;
+                  if(!canvas) return;
+                  var key = (canvas.id === "hm-uploaded-ab-canvas") ? "ab" : ((canvas.id === "hm-uploaded-cd-canvas") ? "cd" : "");
+                  if(key && hmUploadedViewers[key]){
+                    hmUploadedResizeViewer(hmUploadedViewers[key]);
+                  }
+                });
+              });
+            }
+            hmUploadedResizeObserver.observe(host);
+          }
+
+          if(typeof IntersectionObserver === "function"){
+            if(!hmUploadedVisibilityObserver){
+              hmUploadedVisibilityObserver = new IntersectionObserver(function(entries){
+                entries.forEach(function(entry){
+                  var canvas = entry.target ? entry.target.querySelector(".viewer-canvas") : null;
+                  if(!canvas) return;
+                  hmUploadedSetViewerInViewByCanvasId(canvas.id, entry.isIntersecting && entry.intersectionRatio > 0.08);
+                });
+              }, {threshold:[0, 0.08, 0.2, 0.4]});
+            }
+            hmUploadedVisibilityObserver.observe(host);
+          }else{
+            state.isInView = true;
+          }
+        }
+
+        function hmUploadedScheduleNormalize(){
+          [0, 80, 180, 320].forEach(function(delay){
+            setTimeout(function(){
+              if(typeof hmUploadedEnsureViewer === "function") hmUploadedEnsureViewer();
+              hmUploadedResizeAllViewers();
+            }, delay);
+          });
         }
 
         function hmUploadedMakeFace(fW, fH, h, y1, y2){
@@ -12215,14 +12301,42 @@ html, body, body *, body *::before, body *::after, svg text{
           ctx.stroke();
         }
 
+        function hmUploadedDrawTipFlameGlow(ctx, x, y, state, animPhase){
+          var s = String(state || "C").toUpperCase();
+          if(s !== "O" && s !== "N" && s !== "B") return;
+          var palette = {
+            O:{outer:"rgba(34,197,94,0.34)", inner:"rgba(187,247,208,0.42)"},
+            N:{outer:"rgba(251,191,36,0.34)", inner:"rgba(254,249,195,0.4)"},
+            B:{outer:"rgba(96,165,250,0.34)", inner:"rgba(219,234,254,0.42)"}
+          }[s];
+          var phase = (typeof animPhase === "number") ? animPhase : 0;
+          var waveA = 0.5 + (Math.sin(phase) * 0.5);
+          var waveB = 0.5 + (Math.sin((phase * 1.43) + 1.2) * 0.5);
+
+          ctx.save();
+          ctx.globalCompositeOperation = "screen";
+          ctx.globalAlpha = 0.16 + (waveA * 0.12);
+          ctx.fillStyle = palette.outer;
+          ctx.beginPath();
+          ctx.ellipse(x, y - 20 - (waveA * 1.5), 5.3 + (waveB * 1.2), 8.4 + (waveA * 2.4), 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.globalAlpha = 0.28 + (waveB * 0.14);
+          ctx.fillStyle = palette.inner;
+          ctx.beginPath();
+          ctx.ellipse(x, y - 22 - (waveB * 1.7), 2.5 + (waveA * 0.7), 4.6 + (waveB * 1.1), 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
         function hmUploadedDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase){
           var s = String(state || "C").toUpperCase();
           if(s !== "O" && s !== "N" && s !== "B") s = "C";
           var iconSet = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "inferno";
           var img = hmUploadedGetBurnerImage(iconSet, s);
-          var pulseLift = (s === "C") ? 0 : (0.8 + Math.sin(animPhase || 0) * 1.1);
           if(img && img.complete && img.naturalWidth > 0){
-            ctx.drawImage(img, x - 16, y - 31 - pulseLift, 32, 45);
+            hmUploadedDrawTipFlameGlow(ctx, x, y, s, animPhase);
+            ctx.drawImage(img, x - 16, y - 31, 32, 45);
           }else if(typeof r3dDrawBurnerGlyph === "function"){
             r3dDrawBurnerGlyph(ctx, x, y, s, cleaned, animPhase);
             return;
@@ -12693,8 +12807,8 @@ html, body, body *, body *::before, body *::after, svg text{
           var camera = new THREE.PerspectiveCamera(45, size.width / size.height, 0.1, 1000);
           var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
           renderer.setSize(size.width, size.height, false);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-          renderer.shadowMap.enabled = true;
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+          renderer.shadowMap.enabled = false;
 
           scene.add(new THREE.AmbientLight(0xffffff, 0.45));
           var keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -12731,25 +12845,20 @@ html, body, body *, body *::before, body *::after, svg text{
             wallOverlays:buildResult.wallOverlays || {},
             latestSnapshot:null,
             lastOverlayPaintAt:0,
-            overlayAnimPhase:0
+            overlayAnimPhase:0,
+            isInView:true
           };
 
           hmUploadedApplyResponsiveScale(state);
           hmUploadedAttachControls(state);
+          hmUploadedBindHostObservers(state);
           return state;
         }
 
         function hmUploadedResizeAllViewers(){
           Object.keys(hmUploadedViewers).forEach(function(key){
             var state = hmUploadedViewers[key];
-            if(!state || !state.canvas || !state.canvas.parentElement) return;
-            var size = hmUploadedGetCanvasSize(state.canvas);
-            state.camera.aspect = size.width / size.height;
-            state.camera.updateProjectionMatrix();
-            state.renderer.setSize(size.width, size.height, false);
-            state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-            hmUploadedApplyResponsiveScale(state);
-            hmUploadedRefreshResponsiveCamDist(state);
+            hmUploadedResizeViewer(state);
           });
         }
 
@@ -12774,12 +12883,16 @@ html, body, body *, body *::before, body *::after, svg text{
           if(activeFs === host){
             if(document.exitFullscreen) document.exitFullscreen();
             else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+            hmUploadedScheduleNormalize();
             return;
           }
           if(host.requestFullscreen){
-            host.requestFullscreen().catch(function(){});
+            host.requestFullscreen().then(function(){
+              hmUploadedScheduleNormalize();
+            }).catch(function(){});
           }else if(host.webkitRequestFullscreen){
             host.webkitRequestFullscreen();
+            hmUploadedScheduleNormalize();
           }
         }
 
@@ -12790,15 +12903,21 @@ html, body, body *, body *::before, body *::after, svg text{
           function frame(){
             requestAnimationFrame(frame);
             var now = performance.now();
+            var heatMapTab = document.getElementById("tab-heatmap");
+            var heatMapActive = !!(heatMapTab && heatMapTab.classList.contains("tab-active"));
+            var fullscreenHost = hmUploadedFullscreenEl();
             Object.keys(hmUploadedViewers).forEach(function(key){
               var state = hmUploadedViewers[key];
               if(!state) return;
-              state.overlayAnimPhase = now * 0.0085;
-              if((now - state.lastOverlayPaintAt) > 140){
+              var host = state.canvas ? state.canvas.parentElement : null;
+              var shouldRender = !!(host && (host === fullscreenHost || (heatMapActive && state.isInView !== false)));
+              if(!shouldRender) return;
+              state.overlayAnimPhase = now * 0.0105;
+              if((now - state.lastOverlayPaintAt) > 220){
                 state.lastOverlayPaintAt = now;
                 hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
               }
-              if(state.autoRotate) state.rotation.y += 0.0022;
+              if(state.autoRotate) state.rotation.y += 0.0016;
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
               state.pivotGroup.rotation.x = state.rotation.x;
               state.pivotGroup.rotation.y = state.rotation.y;
@@ -12893,11 +13012,12 @@ html, body, body *, body *::before, body *::after, svg text{
           if(hmUploadedInitialized) hmUploadedResizeAllViewers();
         });
         window.addEventListener("fullscreenchange", function(){
-          if(hmUploadedInitialized) setTimeout(hmUploadedResizeAllViewers, 80);
+          hmUploadedScheduleNormalize();
         });
         window.addEventListener("webkitfullscreenchange", function(){
-          if(hmUploadedInitialized) setTimeout(hmUploadedResizeAllViewers, 80);
+          hmUploadedScheduleNormalize();
         });
+        window.hmUploadedScheduleNormalize = hmUploadedScheduleNormalize;
       })();
       </script>
 
@@ -17234,6 +17354,7 @@ var reformer3DState = {
   rotation:{x:-0.3,y:0.5},
   camDist:16
 };
+var r3dResizeObserver = null;
 
 function r3dCanvas(){
   return document.getElementById("reformer3d-canvas");
@@ -17297,6 +17418,24 @@ function r3dResize(){
   reformer3DState.renderer.setSize(rect.width, rect.height, false);
   reformer3DState.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   r3dUpdateCamera();
+}
+
+function r3dBindResizeObserver(){
+  var host = document.querySelector("#tab-reformer3d .r3d-canvas-area");
+  if(!host || host._r3dResizeObserverBound || typeof ResizeObserver !== "function") return;
+  host._r3dResizeObserverBound = true;
+  if(!r3dResizeObserver){
+    r3dResizeObserver = new ResizeObserver(function(){
+      r3dResize();
+    });
+  }
+  r3dResizeObserver.observe(host);
+}
+
+function r3dScheduleNormalize(){
+  [0, 80, 180, 320].forEach(function(delay){
+    setTimeout(r3dResize, delay);
+  });
 }
 
 function r3dMakeFace(fW, fH, h, y1, y2){
@@ -18044,11 +18183,12 @@ function initReformer3DTab(){
       touchState = null;
     });
 
-    window.addEventListener("fullscreenchange", function(){ setTimeout(r3dResize, 80); });
-    window.addEventListener("webkitfullscreenchange", function(){ setTimeout(r3dResize, 80); });
+    window.addEventListener("fullscreenchange", function(){ r3dScheduleNormalize(); });
+    window.addEventListener("webkitfullscreenchange", function(){ r3dScheduleNormalize(); });
 
     reformer3DState.initialized = true;
     reformer3DState.initRequested = false;
+    r3dBindResizeObserver();
     r3dUpdateCamera();
     r3dSetStatus("");
     if(!window._hmRenderSnapshot && typeof renderHeatMap === "function"){
@@ -18137,6 +18277,9 @@ function switchTab(tab){
       if(typeof window.hmUploadedResizeAllViewers === 'function'){
         setTimeout(window.hmUploadedResizeAllViewers, 180);
       }
+      if(typeof window.hmUploadedScheduleNormalize === 'function'){
+        setTimeout(window.hmUploadedScheduleNormalize, 30);
+      }
     }
   }
   if(tab === 'reformer3d'){
@@ -18149,7 +18292,7 @@ function switchTab(tab){
         r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
       }
       syncReformer3DTabPanels();
-      r3dResize();
+      r3dScheduleNormalize();
     }, 40);
   }
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
