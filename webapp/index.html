@@ -12041,13 +12041,26 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedGetCanvasSize(canvas){
           var rect = canvas.parentElement.getBoundingClientRect();
           return {
-            width:Math.max(320, Math.round(rect.width || 0)),
-            height:Math.max(320, Math.round(rect.height || 0))
+            width:Math.round(rect.width || 0),
+            height:Math.round(rect.height || 0)
           };
+        }
+
+        function hmUploadedIsHostVisible(host){
+          if(!host) return false;
+          var rect = host.getBoundingClientRect();
+          return !!(
+            rect &&
+            rect.width >= 80 &&
+            rect.height >= 80 &&
+            host.offsetParent !== null
+          );
         }
 
         function hmUploadedResizeViewer(state){
           if(!state || !state.canvas || !state.canvas.parentElement || !state.renderer || !state.camera) return;
+          var host = state.canvas.parentElement;
+          if(!hmUploadedIsHostVisible(host)) return;
           var size = hmUploadedGetCanvasSize(state.canvas);
           if(size.width < 40 || size.height < 40) return;
           state.camera.aspect = size.width / size.height;
@@ -12090,6 +12103,7 @@ html, body, body *, body *::before, body *::after, svg text{
             var host = state.canvas.parentElement;
             if(activeFs === host) return;
             var snap = state._fullscreenSnapshot;
+            if(!hmUploadedIsHostVisible(host)) return;
             hmUploadedResizeViewer(state);
             state.rotation.x = hmUploadedClampRotationX(snap.rotationX);
             state.rotation.y = snap.rotationY;
@@ -12100,6 +12114,12 @@ html, body, body *, body *::before, body *::after, svg text{
               hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
             }
             state._fullscreenSnapshot = null;
+          });
+        }
+
+        function hmUploadedHasPendingFullscreenRestore(){
+          return Object.keys(hmUploadedViewers).some(function(key){
+            return !!(hmUploadedViewers[key] && hmUploadedViewers[key]._fullscreenSnapshot);
           });
         }
 
@@ -12378,6 +12398,11 @@ html, body, body *, body *::before, body *::after, svg text{
           ctx.fillStyle = palette.body;
           ctx.beginPath();
           ctx.ellipse(x, y - 16.4, 10.4 + (waveB * 1.8), 15.2 + (waveA * 2.8), 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.globalAlpha = 0.16 + (waveC * 0.08);
+          ctx.beginPath();
+          ctx.ellipse(x, y - 10.2, 8.8 + (waveA * 1.2), 5.2 + (waveB * 0.9), 0, 0, Math.PI * 2);
           ctx.fill();
 
           ctx.globalAlpha = 0.11 + (waveB * 0.08);
@@ -13092,10 +13117,18 @@ html, body, body *, body *::before, body *::after, svg text{
           if(hmUploadedInitialized) hmUploadedResizeAllViewers();
         });
         window.addEventListener("fullscreenchange", function(){
-          hmUploadedScheduleNormalize();
+          var activeFs = hmUploadedFullscreenEl();
+          var heatMapFs = !!(activeFs && activeFs.closest && activeFs.closest("#tab-heatmap"));
+          if(heatMapFs || hmUploadedHasPendingFullscreenRestore()){
+            hmUploadedScheduleNormalize();
+          }
         });
         window.addEventListener("webkitfullscreenchange", function(){
-          hmUploadedScheduleNormalize();
+          var activeFs = hmUploadedFullscreenEl();
+          var heatMapFs = !!(activeFs && activeFs.closest && activeFs.closest("#tab-heatmap"));
+          if(heatMapFs || hmUploadedHasPendingFullscreenRestore()){
+            hmUploadedScheduleNormalize();
+          }
         });
         window.hmUploadedScheduleNormalize = hmUploadedScheduleNormalize;
       })();
