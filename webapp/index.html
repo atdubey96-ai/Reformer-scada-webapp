@@ -12061,6 +12061,48 @@ html, body, body *, body *::before, body *::after, svg text{
           }
         }
 
+        function hmUploadedStateFromHost(host){
+          if(!host || !host.querySelector) return null;
+          var canvas = host.querySelector(".viewer-canvas");
+          if(!canvas) return null;
+          if(canvas.id === "hm-uploaded-ab-canvas") return hmUploadedViewers.ab || null;
+          if(canvas.id === "hm-uploaded-cd-canvas") return hmUploadedViewers.cd || null;
+          return null;
+        }
+
+        function hmUploadedCaptureFullscreenState(state){
+          if(!state) return;
+          var baseDefault = state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
+          state._fullscreenSnapshot = {
+            zoomRatio: baseDefault ? (state.camDist / baseDefault) : 1,
+            rotationX: state.rotation ? state.rotation.x : SIDE_VIEW_ROTATION_X,
+            rotationY: state.rotation ? state.rotation.y : (-Math.PI / 2),
+            viewPreset: state.viewPreset || "side",
+            autoRotate: !!state.autoRotate
+          };
+        }
+
+        function hmUploadedRestorePendingFullscreenStates(){
+          var activeFs = hmUploadedFullscreenEl();
+          Object.keys(hmUploadedViewers).forEach(function(key){
+            var state = hmUploadedViewers[key];
+            if(!state || !state._fullscreenSnapshot || !state.canvas || !state.canvas.parentElement) return;
+            var host = state.canvas.parentElement;
+            if(activeFs === host) return;
+            var snap = state._fullscreenSnapshot;
+            hmUploadedResizeViewer(state);
+            state.rotation.x = hmUploadedClampRotationX(snap.rotationX);
+            state.rotation.y = snap.rotationY;
+            state.viewPreset = snap.viewPreset || "side";
+            state.autoRotate = !!snap.autoRotate;
+            state.camDist = hmUploadedClampCamDist(state, (state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset)) * (snap.zoomRatio || 1));
+            if(state.latestSnapshot){
+              hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
+            }
+            state._fullscreenSnapshot = null;
+          });
+        }
+
         function hmUploadedSetViewerInViewByCanvasId(canvasId, inView){
           var key = "";
           if(canvasId === "hm-uploaded-ab-canvas") key = "ab";
@@ -12108,10 +12150,11 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedScheduleNormalize(){
-          [0, 80, 180, 320].forEach(function(delay){
+          [0, 80, 180, 320, 520].forEach(function(delay){
             setTimeout(function(){
               if(typeof hmUploadedEnsureViewer === "function") hmUploadedEnsureViewer();
               hmUploadedResizeAllViewers();
+              hmUploadedRestorePendingFullscreenStates();
             }, delay);
           });
         }
@@ -12305,26 +12348,59 @@ html, body, body *, body *::before, body *::after, svg text{
           var s = String(state || "C").toUpperCase();
           if(s !== "O" && s !== "N" && s !== "B") return;
           var palette = {
-            O:{outer:"rgba(34,197,94,0.34)", inner:"rgba(187,247,208,0.42)"},
-            N:{outer:"rgba(251,191,36,0.34)", inner:"rgba(254,249,195,0.4)"},
-            B:{outer:"rgba(96,165,250,0.34)", inner:"rgba(219,234,254,0.42)"}
+            O:{
+              outer:"rgba(34,197,94,0.22)",
+              body:"rgba(74,222,128,0.22)",
+              core:"rgba(220,252,231,0.34)",
+              lick:"rgba(187,247,208,0.42)"
+            },
+            N:{
+              outer:"rgba(245,158,11,0.22)",
+              body:"rgba(251,191,36,0.24)",
+              core:"rgba(254,240,138,0.32)",
+              lick:"rgba(254,249,195,0.42)"
+            },
+            B:{
+              outer:"rgba(59,130,246,0.2)",
+              body:"rgba(96,165,250,0.22)",
+              core:"rgba(191,219,254,0.32)",
+              lick:"rgba(219,234,254,0.42)"
+            }
           }[s];
           var phase = (typeof animPhase === "number") ? animPhase : 0;
           var waveA = 0.5 + (Math.sin(phase) * 0.5);
-          var waveB = 0.5 + (Math.sin((phase * 1.43) + 1.2) * 0.5);
+          var waveB = 0.5 + (Math.sin((phase * 1.41) + 1.2) * 0.5);
+          var waveC = 0.5 + (Math.sin((phase * 1.92) + 2.6) * 0.5);
 
           ctx.save();
           ctx.globalCompositeOperation = "screen";
-          ctx.globalAlpha = 0.16 + (waveA * 0.12);
-          ctx.fillStyle = palette.outer;
+          ctx.globalAlpha = 0.16 + (waveA * 0.08);
+          ctx.fillStyle = palette.body;
           ctx.beginPath();
-          ctx.ellipse(x, y - 20 - (waveA * 1.5), 5.3 + (waveB * 1.2), 8.4 + (waveA * 2.4), 0, 0, Math.PI * 2);
+          ctx.ellipse(x, y - 16.4, 10.4 + (waveB * 1.8), 15.2 + (waveA * 2.8), 0, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.globalAlpha = 0.28 + (waveB * 0.14);
-          ctx.fillStyle = palette.inner;
+          ctx.globalAlpha = 0.11 + (waveB * 0.08);
+          ctx.fillStyle = palette.outer;
           ctx.beginPath();
-          ctx.ellipse(x, y - 22 - (waveB * 1.7), 2.5 + (waveA * 0.7), 4.6 + (waveB * 1.1), 0, 0, Math.PI * 2);
+          ctx.ellipse(x - 4.6, y - 17.6, 5.1 + (waveA * 0.8), 9.2 + (waveC * 1.6), -0.18, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.globalAlpha = 0.11 + (waveC * 0.08);
+          ctx.beginPath();
+          ctx.ellipse(x + 4.4, y - 17.1, 5 + (waveB * 0.8), 8.8 + (waveA * 1.5), 0.18, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.globalAlpha = 0.22 + (waveA * 0.1);
+          ctx.fillStyle = palette.core;
+          ctx.beginPath();
+          ctx.ellipse(x, y - 18.6, 4 + (waveC * 0.8), 7.2 + (waveB * 1.3), 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.globalAlpha = 0.26 + (waveB * 0.12);
+          ctx.fillStyle = palette.lick;
+          ctx.beginPath();
+          ctx.ellipse(x, y - 23.4 - (waveA * 1.7), 2.2 + (waveC * 0.5), 5.2 + (waveB * 1.2), 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
@@ -12879,12 +12955,16 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedToggleFullscreen(source){
           var host = hmUploadedGetCanvasHost(source);
           if(!host) return;
+          var viewerState = hmUploadedStateFromHost(host);
           var activeFs = hmUploadedFullscreenEl();
           if(activeFs === host){
             if(document.exitFullscreen) document.exitFullscreen();
             else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
             hmUploadedScheduleNormalize();
             return;
+          }
+          if(viewerState){
+            hmUploadedCaptureFullscreenState(viewerState);
           }
           if(host.requestFullscreen){
             host.requestFullscreen().then(function(){
@@ -17355,6 +17435,7 @@ var reformer3DState = {
   camDist:16
 };
 var r3dResizeObserver = null;
+var _pendingTabAfterViewerFullscreen = "";
 
 function r3dCanvas(){
   return document.getElementById("reformer3d-canvas");
@@ -17436,6 +17517,20 @@ function r3dScheduleNormalize(){
   [0, 80, 180, 320].forEach(function(delay){
     setTimeout(r3dResize, delay);
   });
+}
+
+function exitViewerFullscreenIfNeeded(nextTab){
+  var activeFs = document.fullscreenElement || document.webkitFullscreenElement || null;
+  if(!activeFs) return false;
+  var inHeatMap = !!(activeFs.closest && activeFs.closest("#tab-heatmap"));
+  var inReformer3D = !!(activeFs.closest && activeFs.closest("#tab-reformer3d"));
+  var keepCurrent = (nextTab === "heatmap" && inHeatMap) || (nextTab === "reformer3d" && inReformer3D);
+  if(keepCurrent) return false;
+  try{
+    if(document.exitFullscreen) document.exitFullscreen();
+    else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }catch(e){}
+  return true;
 }
 
 function r3dMakeFace(fW, fH, h, y1, y2){
@@ -18260,6 +18355,11 @@ function syncReformer3DTabPanels(){
 }
 
 function switchTab(tab){
+  if(exitViewerFullscreenIfNeeded(tab)){
+    _pendingTabAfterViewerFullscreen = tab;
+    return;
+  }
+  _pendingTabAfterViewerFullscreen = "";
   if(tab !== 'heatmap' && typeof setHeatMapCuboidZoom === 'function'){
     setHeatMapCuboidZoom(false);
   }
@@ -18301,6 +18401,16 @@ function switchTab(tab){
   updateDesktopPrimaryInterfacePickerUi();
 }
 
+function handlePendingViewerTabSwitch(){
+  if(_pendingTabAfterViewerFullscreen && !(document.fullscreenElement || document.webkitFullscreenElement)){
+    var nextTab = _pendingTabAfterViewerFullscreen;
+    _pendingTabAfterViewerFullscreen = "";
+    setTimeout(function(){
+      switchTab(nextTab);
+    }, 30);
+  }
+}
+
 (function initHeatMapHeaderTools(){
   var active = document.querySelector('.tab-panel.tab-active');
   var tab = active && active.id ? active.id.replace('tab-','') : 'heatmap';
@@ -18329,6 +18439,8 @@ window.addEventListener("orientationchange", function(){
     if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
   }, 120);
 });
+window.addEventListener("fullscreenchange", handlePendingViewerTabSwitch);
+window.addEventListener("webkitfullscreenchange", handlePendingViewerTabSwitch);
 
 function bindPeepHoleHorizontalDrag(el){
   if(!el || el._tdPhDragBound) return;
