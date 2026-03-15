@@ -1784,7 +1784,8 @@ td select option{background:#1e293b;color:#e2e8f0;}
   max-height:260px;
   -webkit-overflow-scrolling:touch;
   border-radius:10px;
-  overscroll-behavior:contain;
+  overscroll-behavior:auto;
+  overscroll-behavior-y:auto;
   contain:layout paint style;
 }
 @media (min-width:901px){
@@ -11169,7 +11170,8 @@ html, body, body *, body *::before, body *::after, svg text{
           border-radius:14px;
           border:1px solid rgba(95,118,149,0.3);
           background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015));
-          overscroll-behavior:contain;
+          overscroll-behavior:auto;
+          overscroll-behavior-y:auto;
           contain:layout paint style;
           scrollbar-gutter:stable both-edges;
         }
@@ -14332,6 +14334,7 @@ document.addEventListener("DOMContentLoaded",function(){
   document.addEventListener("keydown", function(e){
     if(e.key === "Escape") closeQuickMenu();
   });
+  initHistoryScrollHandoff();
   window.addEventListener("focus", function(){
     if(isUserLoggedIn()){
       subscribeCrossDeviceNotifications();
@@ -18648,6 +18651,41 @@ function bindPeepHoleHorizontalDrag(el){
   }
   el.addEventListener("touchend", endDrag, { passive:true });
   el.addEventListener("touchcancel", endDrag, { passive:true });
+}
+
+function bindVerticalScrollHandoff(el){
+  if(!el || el._verticalScrollHandoffBound) return;
+  el._verticalScrollHandoffBound = true;
+
+  el.addEventListener("wheel", function(ev){
+    if(!ev) return;
+    var dx = Number(ev.deltaX || 0);
+    var dy = Number(ev.deltaY || 0);
+    if(!dy) return;
+    if(Math.abs(dx) > Math.abs(dy)) return;
+
+    var maxScrollTop = Math.max(0, el.scrollHeight - el.clientHeight);
+    if(maxScrollTop <= 2){
+      ev.preventDefault();
+      window.scrollBy({ top: dy, left: 0, behavior: "auto" });
+      return;
+    }
+
+    var top = el.scrollTop;
+    var atTop = top <= 1;
+    var atBottom = top >= (maxScrollTop - 1);
+
+    if((dy < 0 && atTop) || (dy > 0 && atBottom)){
+      ev.preventDefault();
+      window.scrollBy({ top: dy, left: 0, behavior: "auto" });
+    }
+  }, { passive:false });
+}
+
+function initHistoryScrollHandoff(){
+  document.querySelectorAll(".td-saved-scroll, .burner-history-scroll").forEach(function(el){
+    bindVerticalScrollHandoff(el);
+  });
 }
 
 function ensurePeepHoleHorizontalDragBindings(){
