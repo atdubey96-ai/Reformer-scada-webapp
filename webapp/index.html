@@ -11424,32 +11424,37 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target{
           display:block;
           position:fixed;
-          inset:12px;
-          z-index:9600;
-          min-height:calc(100vh - 24px);
-          padding:12px;
-          border:1px solid rgba(148,163,184,0.28);
-          border-radius:28px;
-          background:radial-gradient(circle at top,rgba(232,81,26,.10),transparent 42%),linear-gradient(180deg,#121924 0%,#0B0F14 100%);
-          box-shadow:0 26px 80px rgba(0,0,0,0.72);
-          overflow:hidden;
+          inset:0;
+          z-index:9500;
+          min-height:100vh;
+          padding:0;
+          border:none;
+          border-radius:0;
+          background:transparent;
+          box-shadow:none;
+          overflow:visible;
         }
         #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .section-head,
         #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .side-panel{
           display:none;
         }
         #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .viewer-layout{
-          min-height:100%;
-          height:100%;
+          min-height:0;
+          height:0;
         }
-        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .canvas-area{
-          width:100%;
-          min-height:calc(100vh - 48px);
-          border-radius:22px;
+        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .canvas-area.hm-uploaded-zoom-target-canvas{
+          position:fixed;
+          inset:14px;
+          z-index:9600;
+          width:auto;
+          height:auto;
+          min-height:0;
+          border-radius:26px;
           border-color:rgba(148,163,184,0.22);
           background:radial-gradient(circle at top,rgba(232,81,26,.12),transparent 44%),linear-gradient(180deg,#121924 0%,#0B0F14 100%);
+          box-shadow:0 26px 80px rgba(0,0,0,0.72);
         }
-        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .canvas-hint{
+        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .canvas-area.hm-uploaded-zoom-target-canvas .canvas-hint{
           bottom:22px;
           left:26px;
           font-size:12px;
@@ -12090,7 +12095,7 @@ html, body, body *, body *::before, body *::after, svg text{
           state.camera.aspect = size.width / size.height;
           state.camera.updateProjectionMatrix();
           state.renderer.setSize(size.width, size.height, false);
-          state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+          state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
           hmUploadedApplyResponsiveScale(state);
           hmUploadedRefreshResponsiveCamDist(state);
           if(state.latestSnapshot){
@@ -12176,6 +12181,7 @@ html, body, body *, body *::before, body *::after, svg text{
           }
 
           var sections = hmTab.querySelectorAll(".hm-uploaded-viewer .viewer-section[data-viewer]");
+          var areas = hmTab.querySelectorAll(".hm-uploaded-viewer .canvas-area[data-viewer]");
           var targetKey = hmUploadedResolveViewerKey(forceState);
           var explicitClose = (forceState === false);
           var next = _hmUploadedZoomActive;
@@ -12206,6 +12212,11 @@ html, body, body *, body *::before, body *::after, svg text{
             var section = sections[si];
             var key = String(section.getAttribute("data-viewer") || "").toLowerCase();
             section.classList.toggle("hm-uploaded-zoom-target", !!(_hmUploadedZoomActive && key === _hmUploadedZoomTarget));
+          }
+          for(var ai=0; ai<areas.length; ai++){
+            var area = areas[ai];
+            var akey = String(area.getAttribute("data-viewer") || "").toLowerCase();
+            area.classList.toggle("hm-uploaded-zoom-target-canvas", !!(_hmUploadedZoomActive && akey === _hmUploadedZoomTarget));
           }
           hmUploadedUpdateBodyZoomLock();
 
@@ -13036,7 +13047,7 @@ html, body, body *, body *::before, body *::after, svg text{
           var camera = new THREE.PerspectiveCamera(45, size.width / size.height, 0.1, 1000);
           var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
           renderer.setSize(size.width, size.height, false);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
           renderer.shadowMap.enabled = false;
 
           scene.add(new THREE.AmbientLight(0xffffff, 0.45));
@@ -13118,12 +13129,16 @@ html, body, body *, body *::before, body *::after, svg text{
             var now = performance.now();
             var heatMapTab = document.getElementById("tab-heatmap");
             var heatMapActive = !!(heatMapTab && heatMapTab.classList.contains("tab-active"));
-            var fullscreenHost = hmUploadedFullscreenEl();
             Object.keys(hmUploadedViewers).forEach(function(key){
               var state = hmUploadedViewers[key];
               if(!state) return;
               var host = state.canvas ? state.canvas.parentElement : null;
-              var shouldRender = !!(host && (_hmUploadedZoomActive ? (key === _hmUploadedZoomTarget) : (host === fullscreenHost || (heatMapActive && state.isInView !== false))));
+              var shouldRender = !!(
+                host &&
+                (_hmUploadedZoomActive
+                  ? (key === _hmUploadedZoomTarget && hmUploadedIsHostVisible(host))
+                  : (heatMapActive && hmUploadedIsHostVisible(host)))
+              );
               if(!shouldRender) return;
               state.overlayAnimPhase = now * 0.0105;
               if((now - state.lastOverlayPaintAt) > 220){
