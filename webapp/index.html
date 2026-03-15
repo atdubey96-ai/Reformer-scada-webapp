@@ -7305,7 +7305,8 @@ html, body, body *, body *::before, body *::after, svg text{
           -webkit-backdrop-filter:blur(2px);
           display:none;
         }
-        #tab-heatmap.hm-cuboid-zoom-active #hm-cuboid-zoom-backdrop{
+        #tab-heatmap.hm-cuboid-zoom-active #hm-cuboid-zoom-backdrop,
+        #tab-heatmap.hm-uploaded-zoom-active #hm-cuboid-zoom-backdrop{
           display:block;
         }
         .cb-wrap[data-cuboid]{cursor:zoom-in;}
@@ -11417,17 +11418,38 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap .hm-uploaded-viewer .canvas-area:active{
           cursor:grabbing;
         }
-        #tab-heatmap .hm-uploaded-viewer .canvas-area:fullscreen,
-        #tab-heatmap .hm-uploaded-viewer .canvas-area:-webkit-full-screen{
-          width:100vw !important;
-          height:100vh !important;
-          min-height:100vh !important;
-          border:none !important;
-          border-radius:0 !important;
-          background:radial-gradient(circle at top,rgba(232,81,26,.12),transparent 44%),linear-gradient(180deg,#121924 0%,#0B0F14 100%) !important;
+        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section{
+          display:none;
         }
-        #tab-heatmap .hm-uploaded-viewer .canvas-area:fullscreen .canvas-hint,
-        #tab-heatmap .hm-uploaded-viewer .canvas-area:-webkit-full-screen .canvas-hint{
+        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target{
+          display:block;
+          position:fixed;
+          inset:12px;
+          z-index:9600;
+          min-height:calc(100vh - 24px);
+          padding:12px;
+          border:1px solid rgba(148,163,184,0.28);
+          border-radius:28px;
+          background:radial-gradient(circle at top,rgba(232,81,26,.10),transparent 42%),linear-gradient(180deg,#121924 0%,#0B0F14 100%);
+          box-shadow:0 26px 80px rgba(0,0,0,0.72);
+          overflow:hidden;
+        }
+        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .section-head,
+        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .side-panel{
+          display:none;
+        }
+        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .viewer-layout{
+          min-height:100%;
+          height:100%;
+        }
+        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .canvas-area{
+          width:100%;
+          min-height:calc(100vh - 48px);
+          border-radius:22px;
+          border-color:rgba(148,163,184,0.22);
+          background:radial-gradient(circle at top,rgba(232,81,26,.12),transparent 44%),linear-gradient(180deg,#121924 0%,#0B0F14 100%);
+        }
+        #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section.hm-uploaded-zoom-target .canvas-hint{
           bottom:22px;
           left:26px;
           font-size:12px;
@@ -11755,7 +11777,7 @@ html, body, body *, body *::before, body *::after, svg text{
       <div class="cb-dual-shell hm-uploaded-viewer-shell">
         <div class="hm-uploaded-viewer">
           <div class="viewer-stack">
-            <section class="viewer-section">
+            <section class="viewer-section" data-viewer="ab">
               <div class="section-head fade-in">
                 <div>
                   <div class="section-title-chip"><h1 class="section-title">AB Chamber</h1></div>
@@ -11763,7 +11785,7 @@ html, body, body *, body *::before, body *::after, svg text{
               </div>
 
               <div class="viewer-layout">
-                <div class="canvas-area fade-in">
+                <div class="canvas-area fade-in" data-viewer="ab">
                   <canvas id="hm-uploaded-ab-canvas" class="viewer-canvas"></canvas>
                   <div class="canvas-hint">Drag left/right to rotate · Double-click to zoom</div>
                 </div>
@@ -11852,7 +11874,7 @@ html, body, body *, body *::before, body *::after, svg text{
               </div>
             </section>
 
-            <section class="viewer-section">
+            <section class="viewer-section" data-viewer="cd">
               <div class="section-head fade-in">
                 <div>
                   <div class="section-title-chip"><h1 class="section-title">CD Chamber</h1></div>
@@ -11860,7 +11882,7 @@ html, body, body *, body *::before, body *::after, svg text{
               </div>
 
               <div class="viewer-layout">
-                <div class="canvas-area fade-in">
+                <div class="canvas-area fade-in" data-viewer="cd">
                   <canvas id="hm-uploaded-cd-canvas" class="viewer-canvas"></canvas>
                   <div class="canvas-hint">Drag left/right to rotate · Double-click to zoom</div>
                 </div>
@@ -11984,6 +12006,8 @@ html, body, body *, body *::before, body *::after, svg text{
         var hmUploadedAnimating = false;
         var hmUploadedResizeObserver = null;
         var hmUploadedVisibilityObserver = null;
+        var _hmUploadedZoomActive = false;
+        var _hmUploadedZoomTarget = "";
         var SIDE_VIEW_ROTATION_X = 0;
         var VIEW_TILT_LIMIT = 0;
         var ROTATION_X_MIN = SIDE_VIEW_ROTATION_X - VIEW_TILT_LIMIT;
@@ -12121,6 +12145,117 @@ html, body, body *, body *::before, body *::after, svg text{
           return Object.keys(hmUploadedViewers).some(function(key){
             return !!(hmUploadedViewers[key] && hmUploadedViewers[key]._fullscreenSnapshot);
           });
+        }
+
+        function hmUploadedResolveViewerKey(source){
+          if(!source) return "";
+          if(typeof source === "string"){
+            var direct = String(source).toLowerCase();
+            if(direct === "ab" || direct === "cd") return direct;
+          }
+          var host = hmUploadedGetCanvasHost(source);
+          if(!host) return "";
+          var key = String(host.getAttribute("data-viewer") || "").toLowerCase();
+          if(key === "ab" || key === "cd") return key;
+          var section = host.closest ? host.closest(".viewer-section[data-viewer]") : null;
+          key = String((section && section.getAttribute("data-viewer")) || "").toLowerCase();
+          return (key === "ab" || key === "cd") ? key : "";
+        }
+
+        function hmUploadedUpdateBodyZoomLock(){
+          document.body.classList.toggle("hm-cuboid-zoom-lock", !!(_hmCuboidZoomActive || _hmUploadedZoomActive));
+        }
+
+        function setHmUploadedViewerZoom(forceState){
+          var hmTab = document.getElementById("tab-heatmap");
+          if(!hmTab){
+            _hmUploadedZoomActive = false;
+            _hmUploadedZoomTarget = "";
+            hmUploadedUpdateBodyZoomLock();
+            return;
+          }
+
+          var sections = hmTab.querySelectorAll(".hm-uploaded-viewer .viewer-section[data-viewer]");
+          var targetKey = hmUploadedResolveViewerKey(forceState);
+          var explicitClose = (forceState === false);
+          var next = _hmUploadedZoomActive;
+
+          if(explicitClose){
+            next = false;
+          }else if(targetKey){
+            if(_hmUploadedZoomActive && _hmUploadedZoomTarget === targetKey){
+              next = false;
+            }else{
+              _hmUploadedZoomTarget = targetKey;
+              next = true;
+            }
+          }else{
+            next = !_hmUploadedZoomActive;
+            if(next && !_hmUploadedZoomTarget) _hmUploadedZoomTarget = "ab";
+          }
+
+          _hmUploadedZoomActive = !!next;
+          if(!_hmUploadedZoomActive){
+            _hmUploadedZoomTarget = "";
+          }else if(!_hmUploadedZoomTarget){
+            _hmUploadedZoomTarget = "ab";
+          }
+
+          hmTab.classList.toggle("hm-uploaded-zoom-active", _hmUploadedZoomActive);
+          for(var si=0; si<sections.length; si++){
+            var section = sections[si];
+            var key = String(section.getAttribute("data-viewer") || "").toLowerCase();
+            section.classList.toggle("hm-uploaded-zoom-target", !!(_hmUploadedZoomActive && key === _hmUploadedZoomTarget));
+          }
+          hmUploadedUpdateBodyZoomLock();
+
+          [0, 40, 140, 260].forEach(function(delay){
+            setTimeout(function(){
+              if(_hmUploadedZoomActive && _hmUploadedZoomTarget && hmUploadedViewers[_hmUploadedZoomTarget]){
+                hmUploadedResizeViewer(hmUploadedViewers[_hmUploadedZoomTarget]);
+              }else{
+                hmUploadedResizeAllViewers();
+              }
+            }, delay);
+          });
+        }
+
+        function initHmUploadedViewerZoom(){
+          if(!window._hmUploadedZoomKeyBound){
+            window._hmUploadedZoomKeyBound = true;
+            document.addEventListener("keydown", function(ev){
+              var key = String((ev && ev.key) || "").toLowerCase();
+              if(key === "escape" && _hmUploadedZoomActive){
+                setHmUploadedViewerZoom(false);
+              }
+            });
+          }
+          var hmTab = document.getElementById("tab-heatmap");
+          if(hmTab){
+            var areas = hmTab.querySelectorAll(".hm-uploaded-viewer .canvas-area[data-viewer]");
+            for(var ai=0; ai<areas.length; ai++){
+              var area = areas[ai];
+              if(area && !area._hmUploadedZoomDblclickBound){
+                area._hmUploadedZoomDblclickBound = true;
+                area.addEventListener("dblclick", function(ev){
+                  if(ev){
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                  }
+                  setHmUploadedViewerZoom(this);
+                });
+              }
+            }
+          }
+          var backdrop = document.getElementById("hm-cuboid-zoom-backdrop");
+          if(backdrop && !backdrop._hmUploadedZoomBackdropBound){
+            backdrop._hmUploadedZoomBackdropBound = true;
+            backdrop.addEventListener("click", function(){
+              if(_hmUploadedZoomActive){
+                setHmUploadedViewerZoom(false);
+              }
+            });
+          }
         }
 
         function hmUploadedSetViewerInViewByCanvasId(canvasId, inView){
@@ -12887,13 +13022,6 @@ html, body, body *, body *::before, body *::after, svg text{
             state.touchStart = null;
           });
 
-          if(host && !host._hmUploadedZoomBound){
-            host._hmUploadedZoomBound = true;
-            host.addEventListener("dblclick", function(e){
-              e.preventDefault();
-              hmUploadedToggleFullscreen(host);
-            });
-          }
         }
 
         function hmUploadedCreateViewer(canvasId, label){
@@ -12978,27 +13106,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedToggleFullscreen(source){
-          var host = hmUploadedGetCanvasHost(source);
-          if(!host) return;
-          var viewerState = hmUploadedStateFromHost(host);
-          var activeFs = hmUploadedFullscreenEl();
-          if(activeFs === host){
-            if(document.exitFullscreen) document.exitFullscreen();
-            else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
-            hmUploadedScheduleNormalize();
-            return;
-          }
-          if(viewerState){
-            hmUploadedCaptureFullscreenState(viewerState);
-          }
-          if(host.requestFullscreen){
-            host.requestFullscreen().then(function(){
-              hmUploadedScheduleNormalize();
-            }).catch(function(){});
-          }else if(host.webkitRequestFullscreen){
-            host.webkitRequestFullscreen();
-            hmUploadedScheduleNormalize();
-          }
+          setHmUploadedViewerZoom(source);
         }
 
         function hmUploadedStartAnimation(){
@@ -13015,7 +13123,7 @@ html, body, body *, body *::before, body *::after, svg text{
               var state = hmUploadedViewers[key];
               if(!state) return;
               var host = state.canvas ? state.canvas.parentElement : null;
-              var shouldRender = !!(host && (host === fullscreenHost || (heatMapActive && state.isInView !== false)));
+              var shouldRender = !!(host && (_hmUploadedZoomActive ? (key === _hmUploadedZoomTarget) : (host === fullscreenHost || (heatMapActive && state.isInView !== false))));
               if(!shouldRender) return;
               state.overlayAnimPhase = now * 0.0105;
               if((now - state.lastOverlayPaintAt) > 220){
@@ -13108,9 +13216,11 @@ html, body, body *, body *::before, body *::after, svg text{
         if(document.readyState === "loading"){
           document.addEventListener("DOMContentLoaded", function(){
             setTimeout(hmUploadedEnsureViewer, 0);
+            setTimeout(initHmUploadedViewerZoom, 0);
           });
         }else{
           setTimeout(hmUploadedEnsureViewer, 0);
+          setTimeout(initHmUploadedViewerZoom, 0);
         }
 
         window.addEventListener("resize", function(){
@@ -13428,7 +13538,8 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         hmTab.classList.toggle("hm-cuboid-zoom-active", _hmCuboidZoomActive);
-        document.body.classList.toggle("hm-cuboid-zoom-lock", _hmCuboidZoomActive);
+        if(typeof hmUploadedUpdateBodyZoomLock === "function") hmUploadedUpdateBodyZoomLock();
+        else document.body.classList.toggle("hm-cuboid-zoom-lock", _hmCuboidZoomActive);
         if(typeof window.updateCuboidResponsiveScale === "function"){
           setTimeout(window.updateCuboidResponsiveScale, 0);
           setTimeout(window.updateCuboidResponsiveScale, 90);
@@ -18395,6 +18506,9 @@ function switchTab(tab){
   _pendingTabAfterViewerFullscreen = "";
   if(tab !== 'heatmap' && typeof setHeatMapCuboidZoom === 'function'){
     setHeatMapCuboidZoom(false);
+  }
+  if(tab !== 'heatmap' && typeof setHmUploadedViewerZoom === 'function'){
+    setHmUploadedViewerZoom(false);
   }
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('tab-active'));
   document.querySelectorAll('.btab').forEach(b => b.classList.remove('btab-active'));
