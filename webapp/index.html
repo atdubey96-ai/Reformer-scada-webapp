@@ -1613,13 +1613,6 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
 #tab-burner .burner-hover-opening strong{
   color:#f8fafc;
 }
-#tab-burner .burner-hover-actions{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  gap:8px;
-  flex-wrap:wrap;
-}
 #tab-burner .burner-hover-state{
   display:inline-flex;
   align-items:center;
@@ -1633,27 +1626,6 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
   font-size:11px;
   font-weight:700;
   white-space:nowrap;
-}
-#tab-burner .burner-hover-edit-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  min-height:32px;
-  padding:6px 12px;
-  border-radius:999px;
-  border:1px solid rgba(243,112,34,0.36);
-  background:linear-gradient(180deg,rgba(243,112,34,0.18),rgba(243,112,34,0.08));
-  color:#ffe7d3;
-  font-size:11px;
-  font-weight:800;
-  font-family:'Rajdhani',sans-serif;
-  letter-spacing:0.45px;
-  cursor:pointer;
-  box-shadow:0 8px 18px rgba(2,6,23,0.18), inset 0 1px 0 rgba(255,255,255,0.08);
-}
-#tab-burner .burner-hover-edit-btn:hover{
-  filter:brightness(1.06);
 }
 #tab-burner .burner-hover-state.state-B{
   border-color:rgba(96,165,250,0.48);
@@ -1686,63 +1658,203 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 0 0 1px rgba(243,112,34,0.16);
 }
 #tab-burner .burner-grid-table td.burner-hover-focus{
-  transform:scale(1.1) !important;
-  z-index:14;
-  border-color:rgba(243,112,34,0.9) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),0 0 0 2px rgba(243,112,34,0.6),0 0 22px rgba(243,112,34,0.34) !important;
-}
-#tab-burner .burner-grid-table td.burner-hover-focus::after{
-  bottom:calc(100% + 9px);
-}
-#tab-burner .burner-grid-table td.burner-hover-focus::before{
-  bottom:calc(100% + 4px);
+  transform:none !important;
+  z-index:2;
+  border-color:rgba(243,112,34,0.78) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.26),0 0 0 2px rgba(243,112,34,0.32),0 10px 18px rgba(2,6,23,0.14) !important;
 }
 #tab-burner .burner-grid-table td.burner-cell{
   overflow:hidden;
+  transition:box-shadow .14s ease,border-color .14s ease,background .14s ease;
+  will-change:auto;
 }
 #tab-burner .burner-grid-table td .burner-opening-fill{
   position:absolute;
   left:0;
   bottom:0;
-  height:5px;
+  height:4px;
   width:0;
   border-radius:999px 999px 0 0;
-  background:linear-gradient(90deg,rgba(243,112,34,0.92),rgba(251,191,36,0.94));
-  box-shadow:0 0 10px rgba(243,112,34,0.3);
+  background:linear-gradient(90deg,rgba(251,146,60,0.88),rgba(251,191,36,0.9));
+  box-shadow:0 0 8px rgba(243,112,34,0.22);
   z-index:0;
   pointer-events:none;
-}
-#tab-burner .burner-grid-table td .burner-opening-chip{
-  position:absolute;
-  top:3px;
-  right:3px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:30px;
-  min-height:16px;
-  padding:0 5px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,0.24);
-  background:rgba(15,23,42,0.82);
-  color:#f8fafc;
-  font-size:9px;
-  font-weight:800;
-  line-height:1;
-  z-index:3;
-  box-shadow:0 6px 12px rgba(0,0,0,0.2);
-  cursor:pointer;
-}
-#tab-burner .burner-grid-table td .burner-opening-chip:hover{
-  filter:brightness(1.08);
-}
-#tab-burner .burner-grid-table td .burner-opening-chip.is-zero{
-  color:#cbd5e1;
-  background:rgba(30,41,59,0.85);
 }
 #tab-burner .burner-grid-table td select{
   position:relative;
   z-index:1;
+  width:100%;
+  height:100%;
+  padding:0 24px 6px 4px;
+  border:none;
+  outline:none;
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  border-radius:inherit;
+  background-color:transparent;
+  text-align:center;
+  text-align-last:center;
+  font-family:'Rajdhani',sans-serif;
+  font-size:17px;
+  font-weight:800;
+  letter-spacing:0.45px;
+  line-height:1;
+  cursor:pointer;
+  text-shadow:0 1px 0 rgba(15,23,42,0.32);
+  background-repeat:no-repeat;
+  background-position:right 7px center;
+  background-size:10px 6px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath fill='%23eef6ff' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+}
+#tab-burner .burner-grid-table td select:focus{
+  outline:none;
+  filter:brightness(1.03);
+}
+#tab-burner .burner-grid-table td.burner-has-opening select{
+  padding-bottom:10px;
+}
+#tab-burner .burner-grid-table td select::-ms-expand{
+  display:none;
+}
+#tab-burner .burner-grid-table td[data-tip]:hover::after,
+#tab-burner .burner-grid-table td[data-tip]:hover::before{
+  content:none !important;
+  display:none !important;
+}
+#tab-burner .burner-opening-popover{
+  position:fixed;
+  z-index:9700;
+  width:min(292px, calc(100vw - 24px));
+  display:none;
+  padding:14px;
+  border-radius:16px;
+  border:1px solid rgba(126,200,240,0.2);
+  background:linear-gradient(180deg,rgba(12,18,29,0.96),rgba(8,12,20,0.97));
+  box-shadow:0 24px 40px rgba(2,6,23,0.42), inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter:blur(12px) saturate(120%);
+  -webkit-backdrop-filter:blur(12px) saturate(120%);
+}
+#tab-burner .burner-opening-popover.is-active{
+  display:block;
+}
+#tab-burner .burner-opening-popover-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+#tab-burner .burner-opening-popover-kicker{
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:#7ec8f0;
+}
+#tab-burner .burner-opening-popover-title{
+  font-size:14px;
+  font-weight:800;
+  color:#f8fafc;
+  line-height:1.2;
+}
+#tab-burner .burner-opening-popover-close{
+  width:30px;
+  height:30px;
+  border:none;
+  border-radius:999px;
+  background:rgba(148,163,184,0.12);
+  color:#e2e8f0;
+  font-size:16px;
+  cursor:pointer;
+}
+#tab-burner .burner-opening-popover-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+#tab-burner .burner-opening-popover-state{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:110px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,0.34);
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+}
+#tab-burner .burner-opening-popover-state.state-B{
+  border-color:rgba(96,165,250,0.48);
+  background:rgba(37,99,235,0.16);
+  color:#dbeafe;
+}
+#tab-burner .burner-opening-popover-state.state-N{
+  border-color:rgba(251,191,36,0.48);
+  background:rgba(217,119,6,0.18);
+  color:#ffedd5;
+}
+#tab-burner .burner-opening-popover-state.state-O{
+  border-color:rgba(74,222,128,0.46);
+  background:rgba(22,163,74,0.18);
+  color:#dcfce7;
+}
+#tab-burner .burner-opening-popover-state.state-C{
+  border-color:rgba(148,163,184,0.42);
+  background:rgba(51,65,85,0.4);
+  color:#e2e8f0;
+}
+#tab-burner .burner-opening-popover-value{
+  font-size:28px;
+  font-weight:800;
+  line-height:1;
+  color:#f8fafc;
+}
+#tab-burner .burner-opening-popover-range{
+  width:100%;
+  margin:2px 0 10px;
+}
+#tab-burner .burner-opening-popover-range:disabled{
+  opacity:0.45;
+  cursor:not-allowed;
+}
+#tab-burner .burner-opening-popover-quick{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;
+  margin-bottom:10px;
+}
+#tab-burner .burner-opening-popover-quick button,
+#tab-burner .burner-opening-popover-actions button{
+  min-height:34px;
+  border-radius:10px;
+  border:1px solid rgba(148,163,184,0.28);
+  background:linear-gradient(180deg,rgba(30,41,59,0.92),rgba(15,23,42,0.96));
+  color:#e2e8f0;
+  font-size:11px;
+  font-weight:800;
+  font-family:'Rajdhani',sans-serif;
+  cursor:pointer;
+}
+#tab-burner .burner-opening-popover-quick button:disabled,
+#tab-burner .burner-opening-popover-actions button:disabled{
+  opacity:0.45;
+  cursor:not-allowed;
+  filter:saturate(0.35);
+}
+#tab-burner .burner-opening-popover-actions{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:10px;
+}
+#tab-burner .burner-opening-popover-note{
+  font-size:11px;
+  line-height:1.45;
+  color:#cbd5e1;
 }
 body.light-theme #tab-burner .burner-hover-readout{
   border-color:rgba(186,198,216,0.7);
@@ -1767,12 +1879,6 @@ body.light-theme #tab-burner .burner-hover-state{
   background:#ffffff;
   color:#1e293b;
 }
-body.light-theme #tab-burner .burner-hover-edit-btn{
-  border-color:rgba(243,112,34,0.34);
-  background:linear-gradient(180deg,#fff4ec 0%,#ffe9dd 100%);
-  color:#9a3412;
-  box-shadow:0 10px 18px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.96);
-}
 body.light-theme #tab-burner .burner-grid-table .burner-hover-head{
   color:#172030;
   border-color:rgba(243,112,34,0.42);
@@ -1780,21 +1886,43 @@ body.light-theme #tab-burner .burner-grid-table .burner-hover-head{
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.98),0 0 0 1px rgba(243,112,34,0.12);
 }
 body.light-theme #tab-burner .burner-grid-table td.burner-hover-focus{
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.48),0 0 0 2px rgba(243,112,34,0.52),0 0 18px rgba(243,112,34,0.2) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.48),0 0 0 2px rgba(243,112,34,0.28),0 10px 18px rgba(15,23,42,0.08) !important;
 }
-body.light-theme #tab-burner .burner-grid-table td .burner-opening-chip{
-  background:rgba(255,255,255,0.94);
+body.light-theme #tab-burner .burner-grid-table td select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath fill='%23172030' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+}
+body.light-theme #tab-burner .burner-opening-popover{
+  border-color:rgba(186,198,216,0.72);
+  background:linear-gradient(180deg,#ffffff 0%,#eef4fb 100%);
+  box-shadow:0 18px 30px rgba(15,23,42,0.12), inset 0 1px 0 rgba(255,255,255,0.98);
+}
+body.light-theme #tab-burner .burner-opening-popover-kicker{
+  color:#2563eb;
+}
+body.light-theme #tab-burner .burner-opening-popover-title,
+body.light-theme #tab-burner .burner-opening-popover-value{
+  color:#172030;
+}
+body.light-theme #tab-burner .burner-opening-popover-close{
+  background:rgba(148,163,184,0.12);
+  color:#334155;
+}
+body.light-theme #tab-burner .burner-opening-popover-quick button,
+body.light-theme #tab-burner .burner-opening-popover-actions button{
+  background:linear-gradient(180deg,#ffffff,#eef4fb);
   border-color:rgba(148,163,184,0.34);
   color:#1e293b;
-  box-shadow:0 6px 10px rgba(15,23,42,0.08);
+}
+body.light-theme #tab-burner .burner-opening-popover-note{
+  color:#475569;
 }
 @media (max-width:900px){
   #tab-burner .burner-hover-readout{
     flex-direction:column;
     align-items:stretch;
   }
-  #tab-burner .burner-hover-actions{
-    justify-content:space-between;
+  #tab-burner .burner-opening-popover{
+    width:auto;
   }
 }
 .burner-mobile-wall-switch{
@@ -9568,16 +9696,16 @@ html, body, body *, body *::before, body *::after, svg text{
         body #tab-burner td.N:not(.burner-pending):hover,
         body #tab-burner td.O:not(.burner-pending):hover,
         body #tab-burner td.C:not(.burner-pending):hover{
-          transform:scale(1.06) !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),0 0 14px rgba(0,0,0,0.28) !important;
+          transform:none !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),0 8px 14px rgba(0,0,0,0.12) !important;
         }
         body #tab-burner .burner-grid-table td.burner-hover-focus.B,
         body #tab-burner .burner-grid-table td.burner-hover-focus.N,
         body #tab-burner .burner-grid-table td.burner-hover-focus.O,
         body #tab-burner .burner-grid-table td.burner-hover-focus.C{
-          transform:scale(1.1) !important;
-          border-color:rgba(243,112,34,0.9) !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),0 0 0 2px rgba(243,112,34,0.6),0 0 22px rgba(243,112,34,0.34) !important;
+          transform:none !important;
+          border-color:rgba(243,112,34,0.82) !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),0 0 0 2px rgba(243,112,34,0.28),0 10px 18px rgba(0,0,0,0.12) !important;
         }
         body #tab-burner .legend .li-B,
         body #tab-burner .ab-both{
@@ -14226,9 +14354,6 @@ html, body, body *, body *::before, body *::after, svg text{
         <span id="burnerUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
           ⚠ Unsaved Changes — click <b>SAVE BURNER DATA</b> to confirm
         </span>
-        <button class="hd-btn hd-btn-secondary" type="button" onclick="openBurnerOpeningModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;">
-          🎚 BURNER OPENING
-        </button>
         <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">
           💾 SAVE BURNER DATA
         </button>
@@ -14288,6 +14413,32 @@ html, body, body *, body *::before, body *::after, svg text{
           </tbody>
         </table>
       </div>
+    </div>
+    <div id="burnerOpeningPopover" class="burner-opening-popover" style="display:none;" onclick="event.stopPropagation()">
+      <div class="burner-opening-popover-head">
+        <div>
+          <div class="burner-opening-popover-kicker">Burner Opening</div>
+          <div id="bop-title" class="burner-opening-popover-title">Wall A · Row 1 · Burner 1</div>
+        </div>
+        <button type="button" class="burner-opening-popover-close" onclick="closeBurnerOpeningPopover({ preserveHover:true })" aria-label="Close burner opening panel">✕</button>
+      </div>
+      <div class="burner-opening-popover-row">
+        <span id="bop-state" class="burner-opening-popover-state state-N">NG Only</span>
+        <span id="bop-value" class="burner-opening-popover-value">Not set</span>
+      </div>
+      <input id="bop-range" class="burner-opening-popover-range" type="range" min="0" max="100" step="1" value="0" oninput="handleBurnerOpeningPopoverSliderInput(this.value)">
+      <div class="burner-opening-popover-quick">
+        <button type="button" data-opening-quick onclick="setBurnerOpeningPopoverQuickValue(0)">0%</button>
+        <button type="button" data-opening-quick onclick="setBurnerOpeningPopoverQuickValue(25)">25%</button>
+        <button type="button" data-opening-quick onclick="setBurnerOpeningPopoverQuickValue(50)">50%</button>
+        <button type="button" data-opening-quick onclick="setBurnerOpeningPopoverQuickValue(75)">75%</button>
+        <button type="button" data-opening-quick onclick="setBurnerOpeningPopoverQuickValue(100)">100%</button>
+      </div>
+      <div class="burner-opening-popover-actions">
+        <button type="button" id="bop-clear" onclick="clearBurnerOpeningPopoverValue()">Clear</button>
+        <button type="button" onclick="closeBurnerOpeningPopover({ preserveHover:true })">Done</button>
+      </div>
+      <div id="bop-note" class="burner-opening-popover-note">Adjust opening here right after choosing the burner state. Changes stay local until SAVE BURNER DATA.</div>
     </div>
   </div>
 
@@ -15637,11 +15788,10 @@ function setBurnerCellTooltip(td, pendingSuffix){
   var burnerNum = td.getAttribute("data-burner") || "";
   var stateCode = td.getAttribute("data-state") || "";
   var openingLabel = getBurnerOpeningLabel(td.getAttribute("data-opening"));
-  td.setAttribute(
-    "data-tip",
+  td.removeAttribute("data-tip");
+  td.title =
     "Wall " + wall + " · R" + rowNum + " B" + burnerNum + " · " + getBurnerStateLabel(stateCode)
-      + " · Opening " + openingLabel + (pendingSuffix ? " " + pendingSuffix : "")
-  );
+      + " · Opening " + openingLabel + (pendingSuffix ? " " + pendingSuffix : "");
 }
 
 function applyBurnerCellOpeningVisuals(td, openingValue){
@@ -15657,34 +15807,194 @@ function applyBurnerCellOpeningVisuals(td, openingValue){
   }
   fill.style.width = normalized == null ? "0" : (Math.max(0, Math.min(100, normalized)) + "%");
   fill.style.opacity = normalized == null ? "0" : "1";
-
-  var chip = td.querySelector(".burner-opening-chip");
-  if(normalized == null){
-    if(chip) chip.remove();
-    setBurnerCellTooltip(td, td.classList.contains("burner-pending") ? "(unsaved)" : "");
-    return;
-  }
-  if(!chip){
-    chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "burner-opening-chip";
-    chip.addEventListener("click", function(ev){
-      ev.preventDefault();
-      ev.stopPropagation();
-      openBurnerOpeningModalFor(
-        td.getAttribute("data-wall"),
-        Number(td.getAttribute("data-row") || 0),
-        Number(td.getAttribute("data-burner") || 0)
-      );
-    });
-    td.appendChild(chip);
-  }
-  chip.textContent = normalized + "%";
-  chip.classList.toggle("is-zero", normalized === 0);
+  td.classList.toggle("burner-has-opening", normalized != null && normalized > 0);
   setBurnerCellTooltip(td, td.classList.contains("burner-pending") ? "(unsaved)" : "");
 }
 
+var burnerOpeningPopoverState = { cell:null, table:null };
+
+function getBurnerOpeningPopover(){
+  return document.getElementById("burnerOpeningPopover");
+}
+
+function findBurnerCellElement(wallName, rowNum, burnerNum){
+  var wall = normalizeBurnerWallKey(wallName);
+  if(!wall || !rowNum || !burnerNum) return null;
+  return document.querySelector(
+    '#walls .wall[data-wall="' + wall + '"] .burner-cell[data-row="' + rowNum + '"][data-burner="' + burnerNum + '"]'
+  );
+}
+
+function isBurnerOpeningPopoverTarget(target){
+  var pop = getBurnerOpeningPopover();
+  return !!(pop && target && pop.contains(target));
+}
+
+function positionBurnerOpeningPopover(){
+  var pop = getBurnerOpeningPopover();
+  var td = burnerOpeningPopoverState.cell;
+  if(!pop || !td || !pop.classList.contains("is-active")) return;
+
+  if(window.innerWidth <= 900){
+    pop.style.left = "12px";
+    pop.style.right = "12px";
+    pop.style.top = "auto";
+    pop.style.bottom = "calc(var(--bottom-floating-stack-height) + 16px)";
+    return;
+  }
+
+  pop.style.right = "auto";
+  pop.style.bottom = "auto";
+  pop.style.left = "0px";
+  pop.style.top = "0px";
+
+  var rect = td.getBoundingClientRect();
+  var popRect = pop.getBoundingClientRect();
+  var width = Math.round(popRect.width || 290);
+  var height = Math.round(popRect.height || 230);
+  var left = rect.right + 16;
+  var top = rect.top + Math.round((rect.height - height) / 2);
+
+  if((left + width) > (window.innerWidth - 12)){
+    left = rect.left - width - 16;
+  }
+  if(left < 12){
+    left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
+  }
+  if(top < 12) top = 12;
+  if((top + height) > (window.innerHeight - 12)){
+    top = Math.max(12, window.innerHeight - height - 12);
+  }
+
+  pop.style.left = Math.round(left) + "px";
+  pop.style.top = Math.round(top) + "px";
+}
+
+function syncBurnerOpeningPopover(){
+  var pop = getBurnerOpeningPopover();
+  var td = burnerOpeningPopoverState.cell;
+  if(!pop || !td) return;
+
+  var wall = td.getAttribute("data-wall") || "A";
+  var rowNum = Number(td.getAttribute("data-row") || 1);
+  var burnerNum = Number(td.getAttribute("data-burner") || 1);
+  var stateCode = String(td.getAttribute("data-state") || "C").toUpperCase();
+  var opening = getBurnerOpeningValue(wall, rowNum - 1, burnerNum - 1);
+  var title = document.getElementById("bop-title");
+  var stateEl = document.getElementById("bop-state");
+  var valueEl = document.getElementById("bop-value");
+  var note = document.getElementById("bop-note");
+  var range = document.getElementById("bop-range");
+
+  if(title) title.textContent = "Wall " + wall + " · Row " + rowNum + " · Burner " + burnerNum;
+  if(stateEl){
+    stateEl.className = "burner-opening-popover-state state-" + stateCode;
+    stateEl.textContent = getBurnerStateLabel(stateCode);
+  }
+  if(valueEl) valueEl.textContent = getBurnerOpeningLabel(opening);
+  if(range){
+    range.value = String(opening == null ? 0 : opening);
+    range.disabled = (stateCode === "C");
+  }
+  pop.querySelectorAll("[data-opening-quick]").forEach(function(btn){
+    btn.disabled = (stateCode === "C");
+  });
+  var clearBtn = document.getElementById("bop-clear");
+  if(clearBtn) clearBtn.disabled = (stateCode === "C");
+  if(note){
+    note.textContent = (stateCode === "C")
+      ? "Cold burners stay at 0%. Change the burner state first if this burner should fire."
+      : "Adjust opening here right after choosing the burner state. Changes stay local until SAVE BURNER DATA.";
+  }
+  positionBurnerOpeningPopover();
+}
+
+function openBurnerOpeningPopoverForCell(td){
+  if(!td) return;
+  var pop = getBurnerOpeningPopover();
+  if(!pop) return;
+  if(burnerOpeningPopoverState.cell === td && pop.classList.contains("is-active")){
+    syncBurnerOpeningPopover();
+    return;
+  }
+  burnerOpeningPopoverState.cell = td;
+  burnerOpeningPopoverState.table = td.closest ? td.closest("table") : null;
+  pop.style.display = "block";
+  pop.classList.add("is-active");
+  activateBurnerTableHover(burnerOpeningPopoverState.table, td);
+  syncBurnerOpeningPopover();
+}
+
+function closeBurnerOpeningPopover(options){
+  options = options || {};
+  var pop = getBurnerOpeningPopover();
+  var table = burnerOpeningPopoverState.table;
+  if(pop){
+    pop.classList.remove("is-active");
+    pop.style.display = "none";
+  }
+  burnerOpeningPopoverState.cell = null;
+  burnerOpeningPopoverState.table = null;
+  if(!options.preserveHover && table && !(table.matches && table.matches(":hover"))){
+    clearBurnerTableHover(table);
+  }
+}
+
+function stageBurnerOpeningFromPopover(rawValue, allowUnset){
+  var td = burnerOpeningPopoverState.cell;
+  if(!td) return;
+  var wall = td.getAttribute("data-wall") || "A";
+  var rowNum = Number(td.getAttribute("data-row") || 1);
+  var burnerNum = Number(td.getAttribute("data-burner") || 1);
+  var stateCode = String(td.getAttribute("data-state") || "C").toUpperCase();
+  var nextValue = (allowUnset && (rawValue === "" || rawValue == null))
+    ? null
+    : normalizeBurnerOpeningValue(rawValue);
+
+  if(stateCode === "C") nextValue = 0;
+
+  stageBurnerOpeningValueByIndex(wall, rowNum - 1, burnerNum - 1, nextValue);
+  applyBurnerCellOpeningVisuals(td, nextValue);
+  markBurnerUnsaved();
+  activateBurnerTableHover(burnerOpeningPopoverState.table, td);
+  syncBurnerOpeningPopover();
+}
+
+function handleBurnerOpeningPopoverSliderInput(value){
+  stageBurnerOpeningFromPopover(value, false);
+}
+
+function setBurnerOpeningPopoverQuickValue(value){
+  stageBurnerOpeningFromPopover(value, false);
+}
+
+function clearBurnerOpeningPopoverValue(){
+  stageBurnerOpeningFromPopover("", true);
+}
+
+document.addEventListener("click", function(ev){
+  if(!burnerOpeningPopoverState.cell) return;
+  if(isBurnerOpeningPopoverTarget(ev.target)) return;
+  if(burnerOpeningPopoverState.cell && burnerOpeningPopoverState.cell.contains(ev.target)) return;
+  closeBurnerOpeningPopover();
+});
+
+document.addEventListener("keydown", function(ev){
+  if(ev.key === "Escape" && burnerOpeningPopoverState.cell){
+    closeBurnerOpeningPopover();
+  }
+});
+
+window.addEventListener("scroll", function(){
+  if(burnerOpeningPopoverState.cell) positionBurnerOpeningPopover();
+}, { passive:true });
+
 function openBurnerOpeningModalFor(wallName, rowNum, burnerNum){
+  var td = findBurnerCellElement(wallName, rowNum, burnerNum);
+  if(td){
+    openBurnerOpeningPopoverForCell(td);
+    return;
+  }
   openBurnerOpeningModal({
     wall: wallName,
     row: rowNum,
@@ -15717,10 +16027,7 @@ function setBurnerHoverReadout(readout, wallName, rowNum, burnerNum, stateCode, 
     + '<span class="burner-hover-opening">Opening: <strong>' + openingLabel + '</strong></span>'
     + '</div>'
     + '</div>'
-    + '<div class="burner-hover-actions">'
-    + '<span class="burner-hover-state state-' + stateKey + '">' + label + '</span>'
-    + '<button type="button" class="burner-hover-edit-btn" onclick="openBurnerOpeningModalFor(\'' + wallName + '\',' + rowNum + ',' + burnerNum + ')">🎚 Opening</button>'
-    + '</div>';
+    + '<span class="burner-hover-state state-' + stateKey + '">' + label + '</span>';
 }
 
 function clearBurnerTableHover(table){
@@ -15738,10 +16045,13 @@ function clearBurnerTableHover(table){
 
 function activateBurnerTableHover(table, cell){
   if(!table || !cell) return;
-  clearBurnerTableHover(table);
-  cell.classList.add("burner-hover-focus");
   var rowNum = String(cell.getAttribute("data-row") || "");
   var burnerNum = String(cell.getAttribute("data-burner") || "");
+  var current = table.querySelector(".burner-hover-focus");
+  if(current !== cell){
+    clearBurnerTableHover(table);
+    cell.classList.add("burner-hover-focus");
+  }
   var rowHead = table.querySelector('.burner-row-head[data-row="' + rowNum + '"]');
   var colHead = table.querySelector('.burner-col-head[data-burner="' + burnerNum + '"]');
   if(rowHead) rowHead.classList.add("burner-hover-head");
@@ -15999,6 +16309,7 @@ function openAlarmFromBanner(alarmKey){
 ================================================== */
 function render(){
   const wallsDiv=document.getElementById("walls");
+  closeBurnerOpeningPopover({ preserveHover:true });
   wallsDiv.innerHTML="";
   Object.entries(data).forEach(([wallName,rows])=>{
     const wall=document.createElement("div");
@@ -16030,6 +16341,11 @@ function render(){
       hr.appendChild(th);
     }
     tbl.appendChild(hr);
+    tbl.addEventListener("mouseleave", function(ev){
+      if(burnerOpeningPopoverState.table === tbl && burnerOpeningPopoverState.cell) return;
+      if(isBurnerOpeningPopoverTarget(ev && ev.relatedTarget ? ev.relatedTarget : null)) return;
+      clearBurnerTableHover(tbl);
+    });
     rows.forEach((row,ri)=>{
       const tr=document.createElement("tr");
       const rowTh=document.createElement("th");
@@ -16077,22 +16393,29 @@ function render(){
           /* Show unsaved badge — do NOT saveData() yet */
           markBurnerUnsaved();
           activateBurnerTableHover(tbl, td);
+          openBurnerOpeningPopoverForCell(td);
           generateAnalysis();
         });
         td.addEventListener("mouseenter", function(){
           activateBurnerTableHover(tbl, td);
         });
-        td.addEventListener("mouseleave", function(){
-          clearBurnerTableHover(tbl);
+        sel.addEventListener("mousedown", function(){
+          openBurnerOpeningPopoverForCell(td);
+        });
+        sel.addEventListener("click", function(){
+          openBurnerOpeningPopoverForCell(td);
         });
         sel.addEventListener("focus", function(){
           activateBurnerTableHover(tbl, td);
+          openBurnerOpeningPopoverForCell(td);
         });
         sel.addEventListener("blur", function(){
           setTimeout(function(){
             if(document.activeElement === sel) return;
+            if(isBurnerOpeningPopoverTarget(document.activeElement)) return;
             if(td.matches && td.matches(":hover")) return;
-            clearBurnerTableHover(tbl);
+            if(tbl.matches && tbl.matches(":hover")) return;
+            if(!isBurnerOpeningPopoverTarget(document.activeElement)) clearBurnerTableHover(tbl);
           }, 0);
         });
         td.appendChild(sel);
@@ -19499,6 +19822,7 @@ window.addEventListener("resize", function(){
   burnerMobileResizeTimer = setTimeout(function(){
     applyBurnerMobileWallFilter();
     applyMobileHorizontalScrollFixes();
+    if(burnerOpeningPopoverState.cell) positionBurnerOpeningPopover();
     r3dResize();
     applyDesktopPrimaryInterfaceMode(true);
     if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
@@ -19509,6 +19833,7 @@ window.addEventListener("orientationchange", function(){
   setTimeout(function(){
     applyBurnerMobileWallFilter();
     applyMobileHorizontalScrollFixes();
+    if(burnerOpeningPopoverState.cell) positionBurnerOpeningPopover();
     r3dResize();
     applyDesktopPrimaryInterfaceMode(true);
     if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
@@ -23546,7 +23871,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-burneropening-1";
+      var swBuild = "20260317-burnerpopover-2";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
