@@ -11404,13 +11404,14 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         #tab-heatmap .hm-uploaded-viewer .viewer-layout{
           display:flex;
+          align-items:stretch;
           gap:24px;
-          min-height:calc(100vh - 188px);
+          min-height:clamp(520px,68vh,860px);
         }
         #tab-heatmap .hm-uploaded-viewer .canvas-area{
           flex:1;
           position:relative;
-          min-height:520px;
+          min-height:clamp(500px,64vh,820px);
           border:1px solid #1E2530;
           border-radius:24px;
           overflow:hidden;
@@ -12007,21 +12008,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedGetResponsiveScale(canvas){
-          var size = canvas ? hmUploadedGetCanvasSize(canvas) : {width:1280, height:720};
-          if(hmUploadedIsZoomCanvas(canvas)){
-            var zoomWidth = Math.max(0, Math.min(1.2, (size.width - 1280) / 960));
-            return {
-              x:Number((1.015 + (zoomWidth * 0.03)).toFixed(3)),
-              y:1,
-              z:Number((1.06 + (zoomWidth * 0.06)).toFixed(3))
-            };
-          }
-          var widthBoost = Math.max(0, Math.min(1, (size.width - 980) / 1160));
-          return {
-            x:Number((1 + (widthBoost * 0.05)).toFixed(3)),
-            y:1,
-            z:Number((1.04 + (widthBoost * 0.42)).toFixed(3))
-          };
+          return { x:1, y:1, z:1 };
         }
         function hmUploadedApplyResponsiveScale(state){
           if(!state || !state.pivotGroup) return;
@@ -12063,26 +12050,12 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedGetResponsiveCamDistForView(canvas, viewName){
-          var size = canvas ? hmUploadedGetCanvasSize(canvas) : {width:1280, height:720};
           var baseDist = HM_UPLOADED_VIEW_BASE_DIST[viewName] || HM_UPLOADED_VIEW_BASE_DIST.side;
-          if(hmUploadedIsZoomCanvas(canvas)){
-            var zoomWidthScale = Math.max(0, Math.min(1, (size.width - 1280) / 960));
-            var zoomHeightScale = Math.max(0, Math.min(1, (size.height - 720) / 420));
-            var zoomFactor = 1.08 + (zoomWidthScale * 0.12) + (zoomHeightScale * 0.08);
-            if(viewName === "front") zoomFactor += 0.03;
-            if(viewName === "top") zoomFactor += 0.06;
-            return Number((baseDist * zoomFactor).toFixed(2));
-          }
-          var widthScale = Math.max(0, Math.min(1, (size.width - 720) / 780));
-          var heightScale = Math.max(0, Math.min(1, (size.height - 440) / 420));
-          var factor = 1 - (widthScale * 0.18) - (heightScale * 0.09);
-          if(viewName === "front") factor += 0.03;
-          if(viewName === "top") factor += 0.06;
-          factor = Math.max(0.74, Math.min(1.02, factor));
-          return Number((baseDist * factor).toFixed(2));
+          if(hmUploadedIsZoomCanvas(canvas)) return Number((baseDist * 0.98).toFixed(2));
+          return baseDist;
         }
 
-        function hmUploadedGetZoomFitCamDist(state){
+        function hmUploadedGetFitCamDist(state, paddingMultiplier){
           if(
             !state ||
             !state.camera ||
@@ -12103,19 +12076,11 @@ html, body, body *, body *::before, body *::after, svg text{
           state.pivotGroup.rotation.y = state.rotation && typeof state.rotation.y === "number"
             ? state.rotation.y
             : (-Math.PI / 2);
-          state.pivotGroup.updateMatrixWorld(true);
+          var fitTarget = state.fitTarget || state.pivotGroup;
+          fitTarget.updateMatrixWorld(true);
 
-          var box = new THREE.Box3().setFromObject(state.pivotGroup);
+          var box = new THREE.Box3().setFromObject(fitTarget);
           if(box.isEmpty()) {
-            return hmUploadedGetResponsiveCamDistForView(
-              state.canvas,
-              state.viewPreset || "side"
-            );
-          }
-
-          var sphere = new THREE.Sphere();
-          box.getBoundingSphere(sphere);
-          if(!sphere || !isFinite(sphere.radius) || sphere.radius <= 0){
             return hmUploadedGetResponsiveCamDistForView(
               state.canvas,
               state.viewPreset || "side"
@@ -12124,12 +12089,25 @@ html, body, body *, body *::before, body *::after, svg text{
 
           var viewSize = new THREE.Vector3();
           box.getSize(viewSize);
+          if(
+            !isFinite(viewSize.x) || !isFinite(viewSize.y) || !isFinite(viewSize.z) ||
+            viewSize.x <= 0 || viewSize.y <= 0
+          ){
+            return hmUploadedGetResponsiveCamDistForView(
+              state.canvas,
+              state.viewPreset || "side"
+            );
+          }
+
           var vFov = (state.camera.fov || 45) * Math.PI / 180;
           var hFov = 2 * Math.atan(Math.tan(vFov / 2) * (state.camera.aspect || 1));
-          var limitingHalfAngle = Math.max(0.18, Math.min(vFov, hFov) / 2);
-          var fitDist = sphere.radius / Math.sin(limitingHalfAngle);
-          fitDist += (viewSize.z || 0) * 0.18;
-          fitDist += 0.35;
+          var halfW = viewSize.x * 0.5;
+          var halfH = viewSize.y * 0.5;
+          var distForWidth = halfW / Math.max(0.12, Math.tan(hFov / 2));
+          var distForHeight = halfH / Math.max(0.12, Math.tan(vFov / 2));
+          var fitDist = Math.max(distForWidth, distForHeight);
+          fitDist += (viewSize.z || 0) * 0.58;
+          fitDist *= (paddingMultiplier || 1.08);
 
           return Number(fitDist.toFixed(2));
         }
@@ -12146,38 +12124,38 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!state) return;
           state.rotation = rotation;
           state.viewPreset = viewName || "side";
-          state.defaultCamDist = hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset);
-          state.camDist = hmUploadedClampCamDist(state, state.defaultCamDist);
+          hmUploadedApplyResponsiveScale(state);
+          hmUploadedRefreshResponsiveCamDist(state);
           state.autoRotate = !!autoRotate;
         }
 
         function hmUploadedRefreshResponsiveCamDist(state){
           if(!state || !state.canvas) return;
-          var nextDefault = hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
-          if(hmUploadedIsZoomCanvas(state.canvas)){
-            var snap = state._fullscreenSnapshot || null;
-            if(snap && snap.baseDefaultCamDist){
-              var size = hmUploadedGetCanvasSize(state.canvas);
-              var widthBoost = Math.max(0, Math.min(1.2, (size.width - 1280) / 1280));
-              var heightBoost = Math.max(0, Math.min(1.0, (size.height - 720) / 720));
-              var zoomFactor = 0.79 - (widthBoost * 0.03) - (heightBoost * 0.02);
-              zoomFactor = Math.max(0.72, Math.min(0.82, zoomFactor));
-              var fitDist = hmUploadedGetZoomFitCamDist(state);
-              var proposedDist = Math.max(4.6, snap.baseDefaultCamDist * zoomFactor);
-              nextDefault = Math.max(proposedDist, fitDist * 0.95);
-            }
-          }
-          var prevDefault = state.defaultCamDist || nextDefault;
-          var zoomRatio = prevDefault ? (state.camDist / prevDefault) : 1;
+          var nextDefault = hmUploadedGetFitCamDist(
+            state,
+            hmUploadedIsZoomCanvas(state.canvas) ? 1.04 : 1.12
+          );
           state.defaultCamDist = nextDefault;
-          state.camDist = hmUploadedClampCamDist(state, nextDefault * zoomRatio);
+          state.camDist = nextDefault;
         }
 
         function hmUploadedGetCanvasSize(canvas){
-          var rect = canvas.parentElement.getBoundingClientRect();
+          var host = canvas && canvas.parentElement ? canvas.parentElement : null;
+          var rect = host ? host.getBoundingClientRect() : {width:0, height:0};
+          var width = Math.round(rect.width || 0);
+          var height = Math.round(rect.height || 0);
+          if((width < 40 || height < 40) && host){
+            width = Math.round(host.clientWidth || width || 0);
+            height = Math.round(host.clientHeight || height || 0);
+          }
+          if((width < 40 || height < 40) && host && window.getComputedStyle){
+            var cs = window.getComputedStyle(host);
+            width = Math.max(width, Math.round(parseFloat(cs.width) || 0));
+            height = Math.max(height, Math.round(parseFloat(cs.height) || 0));
+          }
           return {
-            width:Math.round(rect.width || 0),
-            height:Math.round(rect.height || 0)
+            width:Math.max(0, width),
+            height:Math.max(0, height)
           };
         }
 
@@ -12201,7 +12179,13 @@ html, body, body *, body *::before, body *::after, svg text{
           var host = state.canvas.parentElement;
           if(!hmUploadedIsHostVisible(host)) return;
           var size = hmUploadedGetCanvasSize(state.canvas);
-          if(size.width < 40 || size.height < 40) return;
+          if(size.width < 40 || size.height < 40){
+            state._needsResize = true;
+            return;
+          }
+          state._needsResize = false;
+          state._lastHostWidth = size.width;
+          state._lastHostHeight = size.height;
           state.camera.aspect = size.width / size.height;
           state.camera.updateProjectionMatrix();
           state.renderer.setSize(size.width, size.height, false);
@@ -12224,11 +12208,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
         function hmUploadedCaptureFullscreenState(state){
           if(!state) return;
-          var baseDefault = state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
           state._fullscreenSnapshot = {
-            baseDefaultCamDist: baseDefault,
-            currentCamDist: state.camDist,
-            zoomRatio: baseDefault ? (state.camDist / baseDefault) : 1,
             rotationX: state.rotation ? state.rotation.x : SIDE_VIEW_ROTATION_X,
             rotationY: state.rotation ? state.rotation.y : (-Math.PI / 2),
             viewPreset: state.viewPreset || "side",
@@ -12250,13 +12230,7 @@ html, body, body *, body *::before, body *::after, svg text{
             state.rotation.y = snap.rotationY;
             state.viewPreset = snap.viewPreset || "side";
             state.autoRotate = !!snap.autoRotate;
-            var restoreDefault = state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset);
-            state.camDist = hmUploadedClampCamDist(
-              state,
-              (typeof snap.currentCamDist === "number" && isFinite(snap.currentCamDist))
-                ? snap.currentCamDist
-                : (restoreDefault * (snap.zoomRatio || 1))
-            );
+            hmUploadedRefreshResponsiveCamDist(state);
             if(state.latestSnapshot){
               hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
             }
@@ -13127,7 +13101,10 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedAddTopFaceLabel(parent, "Chamber " + label, -0.12, sY + wallT / 2 + 0.02, -1.58);
           hmUploadedAddLabel(parent, "Front", 0, -0.6, sZ / 2 + 1.2);
           hmUploadedAddLabel(parent, "Back", 0, -0.6, -sZ / 2 - 1.2);
-          return {wallOverlays:wallOverlays};
+          return {
+            wallOverlays:wallOverlays,
+            fitTarget:chamber
+          };
         }
 
         function hmUploadedAttachControls(state){
@@ -13203,6 +13180,9 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!canvas) return null;
 
           var size = hmUploadedGetCanvasSize(canvas);
+          if(size.width < 40 || size.height < 40){
+            size = {width:1280, height:720};
+          }
           var initialCamDist = hmUploadedGetResponsiveCamDistForView(canvas, "side");
           var scene = new THREE.Scene();
           scene.background = new THREE.Color(0x0B0F14);
@@ -13237,6 +13217,7 @@ html, body, body *, body *::before, body *::after, svg text{
             renderer:renderer,
             scene:scene,
             pivotGroup:pivotGroup,
+            fitTarget:buildResult.fitTarget || pivotGroup,
             autoRotate:true,
             isDragging:false,
             prevMouse:{x:0, y:0},
@@ -13249,12 +13230,18 @@ html, body, body *, body *::before, body *::after, svg text{
             latestSnapshot:null,
             lastOverlayPaintAt:0,
             overlayAnimPhase:0,
-            isInView:true
+            isInView:true,
+            _needsResize:true,
+            _lastHostWidth:size.width,
+            _lastHostHeight:size.height
           };
 
           hmUploadedApplyResponsiveScale(state);
           hmUploadedAttachControls(state);
           hmUploadedBindHostObservers(state);
+          state.camera.position.set(0, HM_UPLOADED_CAMERA_Y, state.camDist);
+          state.camera.lookAt(0, HM_UPLOADED_LOOKAT_Y, 0);
+          renderer.render(scene, camera);
           return state;
         }
 
@@ -13296,12 +13283,26 @@ html, body, body *, body *::before, body *::after, svg text{
               var state = hmUploadedViewers[key];
               if(!state) return;
               var host = state.canvas ? state.canvas.parentElement : null;
-              var shouldRender = !!(
-                host &&
-                (_hmUploadedZoomActive
-                  ? (key === _hmUploadedZoomTarget && hmUploadedIsHostVisible(host))
-                  : (heatMapActive && hmUploadedIsHostVisible(host)))
-              );
+              var isTargeted = _hmUploadedZoomActive
+                ? (key === _hmUploadedZoomTarget)
+                : heatMapActive;
+              if(!host || !isTargeted) return;
+              if(host){
+                var hostSize = hmUploadedGetCanvasSize(state.canvas);
+                if(
+                  (hostSize.width >= 40 && hostSize.height >= 40) &&
+                  (
+                    state._needsResize ||
+                    state._lastHostWidth !== hostSize.width ||
+                    state._lastHostHeight !== hostSize.height ||
+                    state.renderer.domElement.width === 0 ||
+                    state.renderer.domElement.height === 0
+                  )
+                ){
+                  hmUploadedResizeViewer(state);
+                }
+              }
+              var shouldRender = !!(host && hmUploadedIsHostVisible(host));
               if(!shouldRender) return;
               state.overlayAnimPhase = now * 0.0105;
               if((now - state.lastOverlayPaintAt) > 220){
@@ -13337,9 +13338,27 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedSyncFromHeatMapSnapshot(window._hmRenderSnapshot || null);
         }
 
+        function hmUploadedStabilizeViewers(){
+          [0, 40, 120, 240, 420].forEach(function(delay){
+            setTimeout(function(){
+              if(typeof hmUploadedEnsureViewer === "function") hmUploadedEnsureViewer();
+              hmUploadedResizeAllViewers();
+            }, delay);
+          });
+          if(typeof requestAnimationFrame === "function"){
+            requestAnimationFrame(function(){
+              requestAnimationFrame(function(){
+                if(typeof hmUploadedEnsureViewer === "function") hmUploadedEnsureViewer();
+                hmUploadedResizeAllViewers();
+              });
+            });
+          }
+        }
+
         window.hmUploadedEnsureViewer = hmUploadedEnsureViewer;
         window.hmUploadedResizeAllViewers = hmUploadedResizeAllViewers;
         window.hmUploadedSyncFromHeatMapSnapshot = hmUploadedSyncFromHeatMapSnapshot;
+        window.hmUploadedStabilizeViewers = hmUploadedStabilizeViewers;
 
         window.hmUploadedResetCam = function(name){
           var viewer = hmUploadedViewers[name];
@@ -13857,6 +13876,9 @@ html, body, body *, body *::before, body *::after, svg text{
         _activeHeatMapWall = "A";
         _hmWallPanelsVisible = false;
         if(typeof requestHeatMapRender === "function") requestHeatMapRender(40);
+        if(typeof window.hmUploadedStabilizeViewers === "function"){
+          setTimeout(window.hmUploadedStabilizeViewers, 60);
+        }
         initHeatMapIconPicker();
         initMobileCuboidToggle();
         initHeatMapCuboidZoom();
@@ -22732,7 +22754,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260310-syncdebug-7";
+      var swBuild = "20260317-heatmapfit-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
