@@ -13105,42 +13105,68 @@ html, body, body *, body *::before, body *::after, svg text{
 
         function hmUploadedAttachControls(state){
           var canvas = state.canvas;
-          var host = canvas ? canvas.parentElement : null;
+          var DRAG_THRESHOLD = 4;
 
           canvas.addEventListener("mousedown", function(e){
             state.isDragging = true;
-            state.autoRotate = false;
             state.prevMouse = {x:e.clientX, y:e.clientY};
+            state.dragMoved = false;
           });
 
           canvas.addEventListener("mousemove", function(e){
             if(!state.isDragging) return;
-            state.rotation.y += (e.clientX - state.prevMouse.x) * 0.005;
-            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + (e.clientY - state.prevMouse.y) * 0.005);
+            var dx = e.clientX - state.prevMouse.x;
+            var dy = e.clientY - state.prevMouse.y;
+            if(!state.dragMoved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)){
+              state.dragMoved = true;
+              state.autoRotate = false;
+            }
+            if(!state.dragMoved){
+              state.prevMouse = {x:e.clientX, y:e.clientY};
+              return;
+            }
+            state.rotation.y += dx * 0.005;
+            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + dy * 0.005);
             state.prevMouse = {x:e.clientX, y:e.clientY};
           });
 
-          canvas.addEventListener("mouseup", function(){ state.isDragging = false; });
-          canvas.addEventListener("mouseleave", function(){ state.isDragging = false; });
+          canvas.addEventListener("mouseup", function(){
+            state.isDragging = false;
+            state.dragMoved = false;
+          });
+          canvas.addEventListener("mouseleave", function(){
+            state.isDragging = false;
+            state.dragMoved = false;
+          });
 
           canvas.addEventListener("touchstart", function(e){
             if(e.touches.length !== 1) return;
             state.isDragging = true;
-            state.autoRotate = false;
             state.touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+            state.touchMoved = false;
           });
 
           canvas.addEventListener("touchmove", function(e){
             if(!state.isDragging || !state.touchStart) return;
+            var dx = e.touches[0].clientX - state.touchStart.x;
+            var dy = e.touches[0].clientY - state.touchStart.y;
+            if(!state.touchMoved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)){
+              state.touchMoved = true;
+              state.autoRotate = false;
+            }
+            if(!state.touchMoved){
+              return;
+            }
             e.preventDefault();
-            state.rotation.y += (e.touches[0].clientX - state.touchStart.x) * 0.005;
-            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + (e.touches[0].clientY - state.touchStart.y) * 0.005);
+            state.rotation.y += dx * 0.005;
+            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + dy * 0.005);
             state.touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
           }, {passive:false});
 
           canvas.addEventListener("touchend", function(){
             state.isDragging = false;
             state.touchStart = null;
+            state.touchMoved = false;
           });
 
         }
