@@ -12009,11 +12009,11 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedGetResponsiveScale(canvas){
           var size = canvas ? hmUploadedGetCanvasSize(canvas) : {width:1280, height:720};
           if(hmUploadedIsZoomCanvas(canvas)){
-            var zoomWidth = Math.max(0, Math.min(1.25, (size.width - 1280) / 960));
+            var zoomWidth = Math.max(0, Math.min(1.2, (size.width - 1280) / 960));
             return {
-              x:Number((1.04 + (zoomWidth * 0.05)).toFixed(3)),
+              x:Number((1.015 + (zoomWidth * 0.03)).toFixed(3)),
               y:1,
-              z:Number((1.12 + (zoomWidth * 0.10)).toFixed(3))
+              z:Number((1.06 + (zoomWidth * 0.06)).toFixed(3))
             };
           }
           var widthBoost = Math.max(0, Math.min(1, (size.width - 980) / 1160));
@@ -12160,9 +12160,11 @@ html, body, body *, body *::before, body *::after, svg text{
               var size = hmUploadedGetCanvasSize(state.canvas);
               var widthBoost = Math.max(0, Math.min(1.2, (size.width - 1280) / 1280));
               var heightBoost = Math.max(0, Math.min(1.0, (size.height - 720) / 720));
-              var zoomFactor = 0.68 - (widthBoost * 0.05) - (heightBoost * 0.04);
-              zoomFactor = Math.max(0.56, Math.min(0.72, zoomFactor));
-              nextDefault = Math.max(4.35, snap.baseDefaultCamDist * zoomFactor);
+              var zoomFactor = 0.79 - (widthBoost * 0.03) - (heightBoost * 0.02);
+              zoomFactor = Math.max(0.72, Math.min(0.82, zoomFactor));
+              var fitDist = hmUploadedGetZoomFitCamDist(state);
+              var proposedDist = Math.max(4.6, snap.baseDefaultCamDist * zoomFactor);
+              nextDefault = Math.max(proposedDist, fitDist * 0.95);
             }
           }
           var prevDefault = state.defaultCamDist || nextDefault;
