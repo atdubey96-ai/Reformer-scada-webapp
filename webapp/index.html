@@ -11420,6 +11420,23 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap .hm-uploaded-viewer .canvas-area:active{
           cursor:grabbing;
         }
+        #tab-heatmap .hm-uploaded-viewer .canvas-area:fullscreen,
+        #tab-heatmap .hm-uploaded-viewer .canvas-area:-webkit-full-screen{
+          width:100vw;
+          height:100vh;
+          min-height:100vh;
+          border:none;
+          border-radius:0;
+          box-shadow:none;
+          background:radial-gradient(circle at top,rgba(232,81,26,.10),transparent 44%),linear-gradient(180deg,#121924 0%,#0B0F14 100%);
+        }
+        #tab-heatmap .hm-uploaded-viewer .canvas-area:fullscreen .canvas-hint,
+        #tab-heatmap .hm-uploaded-viewer .canvas-area:-webkit-full-screen .canvas-hint{
+          bottom:22px;
+          left:26px;
+          font-size:12px;
+          color:rgba(255,255,255,.58);
+        }
         #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .viewer-section{
           display:none;
         }
@@ -11985,11 +12002,8 @@ html, body, body *, body *::before, body *::after, svg text{
       (function(){
         function hmUploadedIsZoomCanvas(canvas){
           if(!canvas || !canvas.parentElement) return false;
-          return !!(
-            _hmUploadedZoomActive &&
-            canvas.parentElement.classList &&
-            canvas.parentElement.classList.contains("hm-uploaded-zoom-target-canvas")
-          );
+          var activeFs = hmUploadedFullscreenEl();
+          return !!(activeFs && activeFs === canvas.parentElement);
         }
 
         function hmUploadedGetResponsiveScale(canvas){
@@ -12249,68 +12263,82 @@ html, body, body *, body *::before, body *::after, svg text{
           return (key === "ab" || key === "cd") ? key : "";
         }
 
+        function hmUploadedClearZoomClasses(){
+          var hmTab = document.getElementById("tab-heatmap");
+          if(!hmTab) return;
+          hmTab.classList.remove("hm-uploaded-zoom-active");
+          var sections = hmTab.querySelectorAll(".hm-uploaded-viewer .viewer-section[data-viewer]");
+          var areas = hmTab.querySelectorAll(".hm-uploaded-viewer .canvas-area[data-viewer]");
+          for(var si=0; si<sections.length; si++){
+            sections[si].classList.remove("hm-uploaded-zoom-target");
+          }
+          for(var ai=0; ai<areas.length; ai++){
+            areas[ai].classList.remove("hm-uploaded-zoom-target-canvas");
+          }
+        }
+
+        function hmUploadedSyncFullscreenFlags(){
+          var activeFs = hmUploadedFullscreenEl();
+          var key = "";
+          if(activeFs && activeFs.classList && activeFs.classList.contains("canvas-area")){
+            key = hmUploadedResolveViewerKey(activeFs);
+          }
+          _hmUploadedZoomActive = !!key;
+          _hmUploadedZoomTarget = key || "";
+          hmUploadedClearZoomClasses();
+          hmUploadedUpdateBodyZoomLock();
+        }
+
         function hmUploadedUpdateBodyZoomLock(){
           document.body.classList.toggle("hm-cuboid-zoom-lock", !!(_hmCuboidZoomActive || _hmUploadedZoomActive));
         }
 
         function setHmUploadedViewerZoom(forceState){
-          var hmTab = document.getElementById("tab-heatmap");
-          if(!hmTab){
-            _hmUploadedZoomActive = false;
-            _hmUploadedZoomTarget = "";
-            hmUploadedUpdateBodyZoomLock();
+          var targetHost = hmUploadedGetCanvasHost(forceState);
+          var activeFs = hmUploadedFullscreenEl();
+          var activeHeatMapFs = !!(activeFs && activeFs.classList && activeFs.classList.contains("canvas-area") && activeFs.closest && activeFs.closest("#tab-heatmap"));
+
+          if(forceState === false){
+            if(activeHeatMapFs){
+              try{
+                if(document.exitFullscreen) document.exitFullscreen();
+                else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+              }catch(e){}
+            }else{
+              hmUploadedSyncFullscreenFlags();
+              hmUploadedResizeAllViewers();
+            }
             return;
           }
 
-          var sections = hmTab.querySelectorAll(".hm-uploaded-viewer .viewer-section[data-viewer]");
-          var areas = hmTab.querySelectorAll(".hm-uploaded-viewer .canvas-area[data-viewer]");
-          var targetKey = hmUploadedResolveViewerKey(forceState);
-          var explicitClose = (forceState === false);
-          var next = _hmUploadedZoomActive;
+          if(!targetHost) return;
 
-          if(explicitClose){
-            next = false;
-          }else if(targetKey){
-            if(_hmUploadedZoomActive && _hmUploadedZoomTarget === targetKey){
-              next = false;
-            }else{
-              _hmUploadedZoomTarget = targetKey;
-              next = true;
-            }
-          }else{
-            next = !_hmUploadedZoomActive;
-            if(next && !_hmUploadedZoomTarget) _hmUploadedZoomTarget = "ab";
+          if(activeHeatMapFs && activeFs === targetHost){
+            try{
+              if(document.exitFullscreen) document.exitFullscreen();
+              else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }catch(e){}
+            return;
           }
 
-          _hmUploadedZoomActive = !!next;
-          if(!_hmUploadedZoomActive){
-            _hmUploadedZoomTarget = "";
-          }else if(!_hmUploadedZoomTarget){
-            _hmUploadedZoomTarget = "ab";
-          }
-
-          hmTab.classList.toggle("hm-uploaded-zoom-active", _hmUploadedZoomActive);
-          for(var si=0; si<sections.length; si++){
-            var section = sections[si];
-            var key = String(section.getAttribute("data-viewer") || "").toLowerCase();
-            section.classList.toggle("hm-uploaded-zoom-target", !!(_hmUploadedZoomActive && key === _hmUploadedZoomTarget));
-          }
-          for(var ai=0; ai<areas.length; ai++){
-            var area = areas[ai];
-            var akey = String(area.getAttribute("data-viewer") || "").toLowerCase();
-            area.classList.toggle("hm-uploaded-zoom-target-canvas", !!(_hmUploadedZoomActive && akey === _hmUploadedZoomTarget));
-          }
-          hmUploadedUpdateBodyZoomLock();
-
-          [0, 40, 140, 260].forEach(function(delay){
+          if(activeHeatMapFs && activeFs !== targetHost){
+            try{
+              if(document.exitFullscreen) document.exitFullscreen();
+              else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }catch(e){}
             setTimeout(function(){
-              if(_hmUploadedZoomActive && _hmUploadedZoomTarget && hmUploadedViewers[_hmUploadedZoomTarget]){
-                hmUploadedResizeViewer(hmUploadedViewers[_hmUploadedZoomTarget]);
-              }else{
-                hmUploadedResizeAllViewers();
-              }
-            }, delay);
-          });
+              setHmUploadedViewerZoom(targetHost);
+            }, 80);
+            return;
+          }
+
+          try{
+            if(targetHost.requestFullscreen){
+              targetHost.requestFullscreen().catch(function(){});
+            }else if(targetHost.webkitRequestFullscreen){
+              targetHost.webkitRequestFullscreen();
+            }
+          }catch(e){}
         }
 
         function initHmUploadedViewerZoom(){
@@ -13326,6 +13354,7 @@ html, body, body *, body *::before, body *::after, svg text{
         window.addEventListener("fullscreenchange", function(){
           var activeFs = hmUploadedFullscreenEl();
           var heatMapFs = !!(activeFs && activeFs.closest && activeFs.closest("#tab-heatmap"));
+          hmUploadedSyncFullscreenFlags();
           if(heatMapFs || hmUploadedHasPendingFullscreenRestore()){
             hmUploadedScheduleNormalize();
           }
@@ -13333,6 +13362,7 @@ html, body, body *, body *::before, body *::after, svg text{
         window.addEventListener("webkitfullscreenchange", function(){
           var activeFs = hmUploadedFullscreenEl();
           var heatMapFs = !!(activeFs && activeFs.closest && activeFs.closest("#tab-heatmap"));
+          hmUploadedSyncFullscreenFlags();
           if(heatMapFs || hmUploadedHasPendingFullscreenRestore()){
             hmUploadedScheduleNormalize();
           }
