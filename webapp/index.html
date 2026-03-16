@@ -12009,11 +12009,11 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedGetResponsiveScale(canvas){
           var size = canvas ? hmUploadedGetCanvasSize(canvas) : {width:1280, height:720};
           if(hmUploadedIsZoomCanvas(canvas)){
-            var zoomWidth = Math.max(0, Math.min(1, (size.width - 1280) / 960));
+            var zoomWidth = Math.max(0, Math.min(1.25, (size.width - 1280) / 960));
             return {
-              x:Number((0.96 + (zoomWidth * 0.02)).toFixed(3)),
+              x:Number((1.04 + (zoomWidth * 0.05)).toFixed(3)),
               y:1,
-              z:Number((0.98 + (zoomWidth * 0.04)).toFixed(3))
+              z:Number((1.12 + (zoomWidth * 0.10)).toFixed(3))
             };
           }
           var widthBoost = Math.max(0, Math.min(1, (size.width - 980) / 1160));
@@ -12155,7 +12155,15 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!state || !state.canvas) return;
           var nextDefault = hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
           if(hmUploadedIsZoomCanvas(state.canvas)){
-            nextDefault = Math.max(nextDefault, hmUploadedGetZoomFitCamDist(state));
+            var snap = state._fullscreenSnapshot || null;
+            if(snap && snap.baseDefaultCamDist){
+              var size = hmUploadedGetCanvasSize(state.canvas);
+              var widthBoost = Math.max(0, Math.min(1.2, (size.width - 1280) / 1280));
+              var heightBoost = Math.max(0, Math.min(1.0, (size.height - 720) / 720));
+              var zoomFactor = 0.68 - (widthBoost * 0.05) - (heightBoost * 0.04);
+              zoomFactor = Math.max(0.56, Math.min(0.72, zoomFactor));
+              nextDefault = Math.max(4.35, snap.baseDefaultCamDist * zoomFactor);
+            }
           }
           var prevDefault = state.defaultCamDist || nextDefault;
           var zoomRatio = prevDefault ? (state.camDist / prevDefault) : 1;
@@ -12216,6 +12224,8 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!state) return;
           var baseDefault = state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
           state._fullscreenSnapshot = {
+            baseDefaultCamDist: baseDefault,
+            currentCamDist: state.camDist,
             zoomRatio: baseDefault ? (state.camDist / baseDefault) : 1,
             rotationX: state.rotation ? state.rotation.x : SIDE_VIEW_ROTATION_X,
             rotationY: state.rotation ? state.rotation.y : (-Math.PI / 2),
@@ -12238,7 +12248,13 @@ html, body, body *, body *::before, body *::after, svg text{
             state.rotation.y = snap.rotationY;
             state.viewPreset = snap.viewPreset || "side";
             state.autoRotate = !!snap.autoRotate;
-            state.camDist = hmUploadedClampCamDist(state, (state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset)) * (snap.zoomRatio || 1));
+            var restoreDefault = state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset);
+            state.camDist = hmUploadedClampCamDist(
+              state,
+              (typeof snap.currentCamDist === "number" && isFinite(snap.currentCamDist))
+                ? snap.currentCamDist
+                : (restoreDefault * (snap.zoomRatio || 1))
+            );
             if(state.latestSnapshot){
               hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
             }
@@ -12317,6 +12333,8 @@ html, body, body *, body *::before, body *::after, svg text{
 
           if(!targetHost) return;
 
+          var targetState = hmUploadedStateFromHost(targetHost);
+
           if(activeHeatMapFs && activeFs === targetHost){
             try{
               if(document.exitFullscreen) document.exitFullscreen();
@@ -12337,6 +12355,9 @@ html, body, body *, body *::before, body *::after, svg text{
           }
 
           try{
+            if(targetState){
+              hmUploadedCaptureFullscreenState(targetState);
+            }
             if(targetHost.requestFullscreen){
               targetHost.requestFullscreen().catch(function(){});
             }else if(targetHost.webkitRequestFullscreen){
