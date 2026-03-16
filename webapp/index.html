@@ -12174,6 +12174,10 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedIsHostVisible(host){
           if(!host) return false;
           var rect = host.getBoundingClientRect();
+          var activeFs = hmUploadedFullscreenEl();
+          if(activeFs === host){
+            return !!(rect && rect.width >= 80 && rect.height >= 80);
+          }
           return !!(
             rect &&
             rect.width >= 80 &&
