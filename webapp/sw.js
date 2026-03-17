@@ -1,4 +1,4 @@
-const CACHE_NAME = "scada-burner-v69";
+const CACHE_NAME = "scada-burner-v70";
 const CORE_ASSETS = [
   "./manifest.webmanifest",
   "./icon-192.svg",
