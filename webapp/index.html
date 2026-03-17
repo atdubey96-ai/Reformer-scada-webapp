@@ -1624,6 +1624,67 @@ body.light-theme .burner-mobile-wall-btn.burner-mobile-wall-btn-active{
   color:#F37022;
   background:rgba(243,112,34,0.14);
 }
+#tab-burner .burner-grid-wrap{
+  position:relative;
+}
+#tab-burner .burner-grid-table{
+  position:relative;
+  z-index:1;
+}
+#tab-burner .burner-grid-crosshair{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:2;
+  opacity:0;
+  transition:opacity .12s ease;
+}
+#tab-burner .burner-grid-crosshair.is-active{
+  opacity:1;
+}
+#tab-burner .burner-grid-line{
+  position:absolute;
+  border-radius:999px;
+  background:rgba(243,112,34,0.62);
+  box-shadow:0 0 0 1px rgba(243,112,34,0.16),0 0 12px rgba(243,112,34,0.2);
+}
+#tab-burner .burner-grid-line[data-burner-line="row"]{
+  left:0;
+  right:0;
+  height:2px;
+  transform:translateY(-50%);
+}
+#tab-burner .burner-grid-line[data-burner-line="col"]{
+  top:0;
+  bottom:0;
+  width:2px;
+  transform:translateX(-50%);
+}
+#tab-burner .burner-grid-table th{
+  transition:background .12s ease,border-color .12s ease,color .12s ease,box-shadow .12s ease;
+}
+#tab-burner .burner-grid-table th.burner-hover-head{
+  color:#f8fafc;
+  border-color:rgba(243,112,34,0.76);
+  background:linear-gradient(180deg,#2d1c12 0%,#1f1721 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 0 0 1px rgba(243,112,34,0.16);
+}
+#tab-burner .burner-grid-table td.burner-hover-cell{
+  transform:none !important;
+  z-index:3;
+  border-color:rgba(243,112,34,0.86) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 0 0 2px rgba(243,112,34,0.24) !important;
+}
+body.light-theme #tab-burner .burner-grid-line{
+  background:rgba(243,112,34,0.72);
+  box-shadow:0 0 0 1px rgba(243,112,34,0.14),0 0 10px rgba(243,112,34,0.14);
+}
+body.light-theme #tab-burner .burner-grid-table th.burner-hover-head{
+  color:#8f3f00;
+  border-color:rgba(243,112,34,0.6);
+  background:linear-gradient(180deg,#fff4ea 0%,#ffe2cc 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.95),0 0 0 1px rgba(243,112,34,0.1);
+}
 
 /* ====================================================
    TABLE
@@ -15403,6 +15464,61 @@ function setBurnerMobileWall(wall){
   applyBurnerMobileWallFilter();
 }
 
+function bindBurnerTableHover(gridWrap, tbl){
+  if(!gridWrap || !tbl) return;
+  var overlay = gridWrap.querySelector(".burner-grid-crosshair");
+  var rowLine = overlay ? overlay.querySelector('[data-burner-line="row"]') : null;
+  var colLine = overlay ? overlay.querySelector('[data-burner-line="col"]') : null;
+  var activeCell = null;
+  var activeRowHead = null;
+  var activeColHead = null;
+
+  function clearHover(){
+    if(activeCell) activeCell.classList.remove("burner-hover-cell");
+    if(activeRowHead) activeRowHead.classList.remove("burner-hover-head");
+    if(activeColHead) activeColHead.classList.remove("burner-hover-head");
+    activeCell = null;
+    activeRowHead = null;
+    activeColHead = null;
+    if(overlay) overlay.classList.remove("is-active");
+  }
+
+  function activateCell(cell){
+    if(!cell || cell === activeCell) return;
+    clearHover();
+    activeCell = cell;
+    activeCell.classList.add("burner-hover-cell");
+
+    var row = cell.getAttribute("data-row");
+    var col = cell.getAttribute("data-col");
+    activeRowHead = tbl.querySelector('th[data-row-head="' + row + '"]');
+    activeColHead = tbl.querySelector('th[data-col-head="' + col + '"]');
+    if(activeRowHead) activeRowHead.classList.add("burner-hover-head");
+    if(activeColHead) activeColHead.classList.add("burner-hover-head");
+
+    if(overlay && rowLine && colLine){
+      var wrapRect = gridWrap.getBoundingClientRect();
+      var cellRect = cell.getBoundingClientRect();
+      rowLine.style.top = (cellRect.top - wrapRect.top + (cellRect.height / 2)) + "px";
+      colLine.style.left = (cellRect.left - wrapRect.left + (cellRect.width / 2)) + "px";
+      overlay.classList.add("is-active");
+    }
+  }
+
+  tbl.addEventListener("mouseover", function(e){
+    var cell = e.target && e.target.closest ? e.target.closest("td[data-row][data-col]") : null;
+    if(cell && tbl.contains(cell)) activateCell(cell);
+  });
+  tbl.addEventListener("focusin", function(e){
+    var cell = e.target && e.target.closest ? e.target.closest("td[data-row][data-col]") : null;
+    if(cell && tbl.contains(cell)) activateCell(cell);
+  });
+  gridWrap.addEventListener("mouseleave", clearHover);
+  tbl.addEventListener("focusout", function(e){
+    if(!tbl.contains(e.relatedTarget)) clearHover();
+  });
+}
+
 /* ==================================================
    ALARM SOUND (Web Audio)
 ================================================== */
@@ -15573,18 +15689,31 @@ function render(){
     bar.dataset.wall=wallName;
     bar.innerText="Wall "+wallName+"  —  "+sev.toUpperCase();
     wall.appendChild(bar);
+    const gridWrap=document.createElement("div");
+    gridWrap.className="burner-grid-wrap";
     const tbl=document.createElement("table");
+    tbl.className="burner-grid-table";
     const hr=document.createElement("tr");
+    hr.setAttribute("data-header-row","1");
     hr.innerHTML="<th>R/B</th>";
     for(let i=1;i<=BURNERS;i++)hr.innerHTML+=`<th>B${i}</th>`;
+    Array.from(hr.children).forEach((th,idx)=>{
+      if(idx===0) return;
+      th.setAttribute("data-col-head", String(idx-1));
+    });
     tbl.appendChild(hr);
     rows.forEach((row,ri)=>{
       const tr=document.createElement("tr");
+      tr.setAttribute("data-row-index", String(ri));
       tr.innerHTML=`<th>R${ri+1}</th>`;
+      const rowHead=tr.querySelector("th");
+      if(rowHead) rowHead.setAttribute("data-row-head", String(ri));
       const STATE_LABEL={B:"Both (NG+FO)",N:"NG Only",O:"Off Gas",C:"Cold"};
       row.forEach((cell,ci)=>{
         const td=document.createElement("td");
         td.className=cell;
+        td.setAttribute("data-row", String(ri));
+        td.setAttribute("data-col", String(ci));
         td.setAttribute("data-tip","Wall "+wallName+" · R"+(ri+1)+" B"+(ci+1)+" · "+STATE_LABEL[cell]);
         const sel=document.createElement("select");
         sel.style.color=TEXT_MAP[cell]||"#fff";
@@ -15611,7 +15740,13 @@ function render(){
       });
       tbl.appendChild(tr);
     });
-    wall.appendChild(tbl);wallsDiv.appendChild(wall);
+    gridWrap.appendChild(tbl);
+    const crosshair=document.createElement("div");
+    crosshair.className="burner-grid-crosshair";
+    crosshair.innerHTML='<div class="burner-grid-line" data-burner-line="row"></div><div class="burner-grid-line" data-burner-line="col"></div>';
+    gridWrap.appendChild(crosshair);
+    bindBurnerTableHover(gridWrap, tbl);
+    wall.appendChild(gridWrap);wallsDiv.appendChild(wall);
   });
   applyBurnerMobileWallFilter();
 }
@@ -22822,7 +22957,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-burner-restore-0ac70f5-1";
+      var swBuild = "20260317-burner-grid-hover-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
