@@ -12027,17 +12027,20 @@ html, body, body *, body *::before, body *::after, svg text{
         var ROTATION_X_MIN = SIDE_VIEW_ROTATION_X - VIEW_TILT_LIMIT;
         var ROTATION_X_MAX = SIDE_VIEW_ROTATION_X + VIEW_TILT_LIMIT;
         var HM_UPLOADED_VIEW_BASE_DIST = {
-          side:7.8,
-          front:8.4,
-          top:8.8
+          hero:10.4,
+          side:9.8,
+          front:14.2,
+          top:11.4
         };
+        var HM_UPLOADED_DEFAULT_VIEW = "hero";
+        var HM_UPLOADED_HERO_ROTATION_Y = -1.34;
         var HM_UPLOADED_SHOW_FACE_DATA = true;
         var HM_UPLOADED_OVERLAY_AUTO_TICK_MS = 180;
         var HM_UPLOADED_OVERLAY_MANUAL_TICK_MS = 140;
         var HM_UPLOADED_OVERLAY_PHASE_STEP = 0.34;
         var HM_UPLOADED_SCENE_OFFSET_Y = -0.04;
-        var HM_UPLOADED_CAMERA_Y = 1.64;
-        var HM_UPLOADED_LOOKAT_Y = 1.44;
+        var HM_UPLOADED_CAMERA_Y_RATIO = 0.535;
+        var HM_UPLOADED_LOOKAT_Y_RATIO = 0.495;
 
         function hmUploadedClampRotationX(value){
           return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
@@ -12062,9 +12065,39 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedGetResponsiveCamDistForView(canvas, viewName){
-          var baseDist = HM_UPLOADED_VIEW_BASE_DIST[viewName] || HM_UPLOADED_VIEW_BASE_DIST.side;
+          var baseDist = HM_UPLOADED_VIEW_BASE_DIST[viewName] || HM_UPLOADED_VIEW_BASE_DIST[HM_UPLOADED_DEFAULT_VIEW];
           if(hmUploadedIsZoomCanvas(canvas)) return Number((baseDist * 0.98).toFixed(2));
           return baseDist;
+        }
+
+        function hmUploadedGetCameraFrame(state){
+          var frameInfo = state && state.frameInfo ? state.frameInfo : null;
+          var minY = frameInfo && typeof frameInfo.minY === "number" ? frameInfo.minY : 0;
+          var height = frameInfo && typeof frameInfo.height === "number" ? frameInfo.height : 3.5;
+          var offsetY = state && state.pivotGroup && state.pivotGroup.position
+            ? Number(state.pivotGroup.position.y || 0)
+            : 0;
+          var viewName = state && state.viewPreset ? state.viewPreset : HM_UPLOADED_DEFAULT_VIEW;
+          var cameraRatio = HM_UPLOADED_CAMERA_Y_RATIO;
+          var lookAtRatio = HM_UPLOADED_LOOKAT_Y_RATIO;
+          if(viewName === "hero"){
+            cameraRatio += 0.015;
+            lookAtRatio += 0.005;
+          }else if(viewName === "front"){
+            cameraRatio -= 0.01;
+            lookAtRatio += 0.005;
+          }
+          return {
+            cameraY:Number((offsetY + minY + (height * cameraRatio)).toFixed(3)),
+            lookAtY:Number((offsetY + minY + (height * lookAtRatio)).toFixed(3))
+          };
+        }
+
+        function hmUploadedApplyCameraFrame(state){
+          if(!state || !state.camera) return;
+          var frame = hmUploadedGetCameraFrame(state);
+          state.camera.position.set(0, frame.cameraY, state.camDist);
+          state.camera.lookAt(0, frame.lookAtY, 0);
         }
 
         function hmUploadedGetFitCamDist(state, paddingMultiplier){
@@ -12076,7 +12109,7 @@ html, body, body *, body *::before, body *::after, svg text{
           ){
             return hmUploadedGetResponsiveCamDistForView(
               state && state.canvas ? state.canvas : null,
-              state && state.viewPreset ? state.viewPreset : "side"
+              state && state.viewPreset ? state.viewPreset : HM_UPLOADED_DEFAULT_VIEW
             );
           }
 
@@ -12095,7 +12128,7 @@ html, body, body *, body *::before, body *::after, svg text{
           if(box.isEmpty()) {
             return hmUploadedGetResponsiveCamDistForView(
               state.canvas,
-              state.viewPreset || "side"
+              state.viewPreset || HM_UPLOADED_DEFAULT_VIEW
             );
           }
 
@@ -12107,7 +12140,7 @@ html, body, body *, body *::before, body *::after, svg text{
           ){
             return hmUploadedGetResponsiveCamDistForView(
               state.canvas,
-              state.viewPreset || "side"
+              state.viewPreset || HM_UPLOADED_DEFAULT_VIEW
             );
           }
 
@@ -12118,7 +12151,21 @@ html, body, body *, body *::before, body *::after, svg text{
           var distForWidth = halfW / Math.max(0.12, Math.tan(hFov / 2));
           var distForHeight = halfH / Math.max(0.12, Math.tan(vFov / 2));
           var fitDist = Math.max(distForWidth, distForHeight);
-          fitDist += (viewSize.z || 0) * 0.58;
+          var aspect = state.camera.aspect || 1.6;
+          var viewName = state.viewPreset || HM_UPLOADED_DEFAULT_VIEW;
+          var depthWeight = 0.58;
+          if(viewName === "hero"){
+            if(aspect >= 2.05) depthWeight = 0.38;
+            else if(aspect >= 1.75) depthWeight = 0.42;
+            else if(aspect >= 1.45) depthWeight = 0.48;
+            else depthWeight = 0.54;
+          }else if(viewName === "side"){
+            if(aspect >= 2.05) depthWeight = 0.44;
+            else if(aspect >= 1.75) depthWeight = 0.48;
+            else if(aspect >= 1.45) depthWeight = 0.52;
+            else depthWeight = 0.56;
+          }
+          fitDist += (viewSize.z || 0) * depthWeight;
           fitDist *= (paddingMultiplier || 1.08);
 
           return Number(fitDist.toFixed(2));
@@ -12126,7 +12173,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
         function hmUploadedClampCamDist(state, value){
           if(!state) return value;
-          var baseDist = state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || "side");
+          var baseDist = state.defaultCamDist || hmUploadedGetResponsiveCamDistForView(state.canvas, state.viewPreset || HM_UPLOADED_DEFAULT_VIEW);
           var minDist = Math.max(3.8, baseDist * 0.72);
           var maxDist = baseDist * 1.5;
           return Math.max(minDist, Math.min(maxDist, value));
@@ -12135,7 +12182,7 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedSetViewState(state, viewName, rotation, autoRotate){
           if(!state) return;
           state.rotation = rotation;
-          state.viewPreset = viewName || "side";
+          state.viewPreset = viewName || HM_UPLOADED_DEFAULT_VIEW;
           hmUploadedApplyResponsiveScale(state);
           hmUploadedRefreshResponsiveCamDist(state);
           hmUploadedUpdateChamberSceneVisibility(state);
@@ -12147,11 +12194,25 @@ html, body, body *, body *::before, body *::after, svg text{
           var size = hmUploadedGetCanvasSize(state.canvas);
           var aspect = (size.width > 0 && size.height > 0) ? (size.width / Math.max(1, size.height)) : 1.6;
           var isZoom = hmUploadedIsZoomCanvas(state.canvas);
+          var viewName = state.viewPreset || HM_UPLOADED_DEFAULT_VIEW;
           var padding = isZoom ? 1.03 : 1.05;
-          if(aspect >= 2.05) padding = isZoom ? 0.99 : 1.01;
-          else if(aspect >= 1.85) padding = isZoom ? 1.01 : 1.03;
-          else if(aspect >= 1.6) padding = isZoom ? 1.03 : 1.05;
-          else if(aspect <= 1.2) padding = isZoom ? 1.07 : 1.1;
+          if(viewName === "hero"){
+            if(aspect >= 2.05) padding = isZoom ? 0.95 : 0.98;
+            else if(aspect >= 1.85) padding = isZoom ? 0.97 : 1.00;
+            else if(aspect >= 1.6) padding = isZoom ? 0.99 : 1.02;
+            else if(aspect <= 1.2) padding = isZoom ? 1.06 : 1.09;
+            else padding = isZoom ? 1.01 : 1.04;
+          }else if(viewName === "side"){
+            if(aspect >= 2.05) padding = isZoom ? 0.97 : 1.00;
+            else if(aspect >= 1.85) padding = isZoom ? 0.99 : 1.02;
+            else if(aspect >= 1.6) padding = isZoom ? 1.01 : 1.03;
+            else if(aspect <= 1.2) padding = isZoom ? 1.07 : 1.10;
+          }else{
+            if(aspect >= 2.05) padding = isZoom ? 0.99 : 1.01;
+            else if(aspect >= 1.85) padding = isZoom ? 1.01 : 1.03;
+            else if(aspect >= 1.6) padding = isZoom ? 1.03 : 1.05;
+            else if(aspect <= 1.2) padding = isZoom ? 1.07 : 1.1;
+          }
           var nextDefault = hmUploadedGetFitCamDist(
             state,
             padding
@@ -12231,8 +12292,8 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!state) return;
           state._fullscreenSnapshot = {
             rotationX: state.rotation ? state.rotation.x : SIDE_VIEW_ROTATION_X,
-            rotationY: state.rotation ? state.rotation.y : (-Math.PI / 2),
-            viewPreset: state.viewPreset || "side",
+            rotationY: state.rotation ? state.rotation.y : HM_UPLOADED_HERO_ROTATION_Y,
+            viewPreset: state.viewPreset || HM_UPLOADED_DEFAULT_VIEW,
             autoRotate: !!state.autoRotate
           };
         }
@@ -12249,7 +12310,7 @@ html, body, body *, body *::before, body *::after, svg text{
             hmUploadedResizeViewer(state);
             state.rotation.x = hmUploadedClampRotationX(snap.rotationX);
             state.rotation.y = snap.rotationY;
-            state.viewPreset = snap.viewPreset || "side";
+            state.viewPreset = snap.viewPreset || HM_UPLOADED_DEFAULT_VIEW;
             state.autoRotate = !!snap.autoRotate;
             hmUploadedRefreshResponsiveCamDist(state);
             if(state.latestSnapshot){
@@ -13577,7 +13638,12 @@ html, body, body *, body *::before, body *::after, svg text{
           return {
             wallOverlays:wallOverlays,
             fitTarget:chamber,
-            chamberWire:wire
+            chamberWire:wire,
+            frameInfo:{
+              minY:0,
+              height:sY,
+              centerY:sY / 2
+            }
           };
         }
 
@@ -13657,7 +13723,7 @@ html, body, body *, body *::before, body *::after, svg text{
           if(size.width < 40 || size.height < 40){
             size = {width:1280, height:720};
           }
-          var initialCamDist = hmUploadedGetResponsiveCamDistForView(canvas, "side");
+          var initialCamDist = hmUploadedGetResponsiveCamDistForView(canvas, HM_UPLOADED_DEFAULT_VIEW);
           var scene = new THREE.Scene();
           scene.background = new THREE.Color(0x0B0F14);
 
@@ -13695,13 +13761,14 @@ html, body, body *, body *::before, body *::after, svg text{
             autoRotate:true,
             isDragging:false,
             prevMouse:{x:0, y:0},
-            rotation:{x:SIDE_VIEW_ROTATION_X, y:-Math.PI / 2},
-            viewPreset:"side",
+            rotation:{x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:HM_UPLOADED_HERO_ROTATION_Y},
+            viewPreset:HM_UPLOADED_DEFAULT_VIEW,
             defaultCamDist:initialCamDist,
             camDist:initialCamDist,
             touchStart:null,
             wallOverlays:buildResult.wallOverlays || {},
             chamberWire:buildResult.chamberWire || null,
+            frameInfo:buildResult.frameInfo || null,
             latestSnapshot:null,
             lastOverlayPaintAt:0,
             overlayAnimPhase:0,
@@ -13712,10 +13779,10 @@ html, body, body *, body *::before, body *::after, svg text{
           };
 
           hmUploadedApplyResponsiveScale(state);
+          hmUploadedRefreshResponsiveCamDist(state);
           hmUploadedAttachControls(state);
           hmUploadedBindHostObservers(state);
-          state.camera.position.set(0, HM_UPLOADED_CAMERA_Y, state.camDist);
-          state.camera.lookAt(0, HM_UPLOADED_LOOKAT_Y, 0);
+          hmUploadedApplyCameraFrame(state);
           hmUploadedUpdateChamberSceneVisibility(state);
           renderer.render(scene, camera);
           return state;
@@ -13785,8 +13852,7 @@ html, body, body *, body *::before, body *::after, svg text{
               state.pivotGroup.rotation.x = state.rotation.x;
               state.pivotGroup.rotation.y = state.rotation.y;
               hmUploadedUpdateChamberSceneVisibility(state);
-              state.camera.position.set(0, HM_UPLOADED_CAMERA_Y, state.camDist);
-              state.camera.lookAt(0, HM_UPLOADED_LOOKAT_Y, 0);
+              hmUploadedApplyCameraFrame(state);
               if(HM_UPLOADED_SHOW_FACE_DATA && state.latestSnapshot){
                 var overlayTickMs = state.autoRotate ? HM_UPLOADED_OVERLAY_AUTO_TICK_MS : HM_UPLOADED_OVERLAY_MANUAL_TICK_MS;
                 if((now - state.lastOverlayPaintAt) >= overlayTickMs){
@@ -13845,8 +13911,8 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!viewer) return;
           hmUploadedSetViewState(
             viewer,
-            "side",
-            {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:-Math.PI / 2},
+            HM_UPLOADED_DEFAULT_VIEW,
+            {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:HM_UPLOADED_HERO_ROTATION_Y},
             true
           );
         };
