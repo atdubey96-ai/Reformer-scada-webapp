@@ -2973,7 +2973,7 @@ body.light-theme .cw-nudge{
 .new-cuboids-frame{
   display:block;
   width:100%;
-  height:720px;
+  height:calc(100vh - 96px);
   min-height:0;
   border:0;
   background:#060708;
@@ -19562,9 +19562,9 @@ function switchTab(tab){
     }, 40);
   }
   if(tab === 'newcuboids'){
-    setTimeout(bindNewCuboidsFrameAutosize, 0);
-    setTimeout(syncNewCuboidsFrameHeight, 30);
-    setTimeout(syncNewCuboidsFrameHeight, 220);
+    setTimeout(bindNewCuboidsFrameLayout, 0);
+    setTimeout(layoutNewCuboidsFrame, 30);
+    setTimeout(layoutNewCuboidsFrame, 220);
   }
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
@@ -19585,50 +19585,50 @@ function getNewCuboidsFrameDocument(frame){
   }
 }
 
-function syncNewCuboidsFrameHeight(){
+function getNewCuboidsSectionHeight(){
+  var bar = document.querySelector(".bottom-tab-bar");
+  var barH = bar ? Math.ceil(bar.getBoundingClientRect().height || 0) : 82;
+  return Math.max(520, Math.floor(window.innerHeight - barH - 18));
+}
+
+function layoutNewCuboidsFrame(){
   var frame = getNewCuboidsFrame();
   var doc = getNewCuboidsFrameDocument(frame);
   if(!frame || !doc || !doc.documentElement || !doc.body) return;
   try{
-    doc.documentElement.style.overflowY = "hidden";
-    doc.documentElement.style.overflowX = "hidden";
-    doc.body.style.overflowY = "hidden";
-    doc.body.style.overflowX = "hidden";
+    doc.documentElement.style.overflow = "hidden";
+    doc.body.style.overflow = "hidden";
   }catch(e){}
-  var height = Math.max(
-    doc.documentElement.scrollHeight || 0,
-    doc.body.scrollHeight || 0,
-    doc.documentElement.offsetHeight || 0,
-    doc.body.offsetHeight || 0,
-    doc.documentElement.clientHeight || 0,
-    doc.body.clientHeight || 0
-  );
-  if(height > 0){
-    frame.style.height = height + "px";
+  var sectionHeight = getNewCuboidsSectionHeight();
+  var sections = Array.prototype.slice.call(doc.querySelectorAll(".viewer-section"));
+  sections.forEach(function(section){
+    section.style.height = sectionHeight + "px";
+  });
+  var dividers = Array.prototype.slice.call(doc.querySelectorAll(".section-divider"));
+  var dividerHeight = 0;
+  dividers.forEach(function(divider){
+    dividerHeight += Math.ceil(divider.getBoundingClientRect().height || divider.offsetHeight || 0);
+  });
+  var totalHeight = (sections.length ? sections.length : 1) * sectionHeight + dividerHeight;
+  if(totalHeight > 0){
+    frame.style.height = totalHeight + "px";
   }
+  try{
+    if(frame.contentWindow){
+      frame.contentWindow.dispatchEvent(new Event("resize"));
+    }
+  }catch(e){}
 }
 
-function bindNewCuboidsFrameAutosize(){
+function bindNewCuboidsFrameLayout(){
   var frame = getNewCuboidsFrame();
-  if(!frame || frame.dataset.autosizeBound === "1") return;
-  frame.dataset.autosizeBound = "1";
+  if(!frame || frame.dataset.layoutBound === "1") return;
+  frame.dataset.layoutBound = "1";
 
   function onFrameLoad(){
-    syncNewCuboidsFrameHeight();
-    setTimeout(syncNewCuboidsFrameHeight, 80);
-    setTimeout(syncNewCuboidsFrameHeight, 300);
-    var doc = getNewCuboidsFrameDocument(frame);
-    if(!doc || !window.ResizeObserver) return;
-    try{
-      if(frame._autosizeObserver){
-        frame._autosizeObserver.disconnect();
-      }
-      frame._autosizeObserver = new ResizeObserver(function(){
-        syncNewCuboidsFrameHeight();
-      });
-      frame._autosizeObserver.observe(doc.documentElement);
-      frame._autosizeObserver.observe(doc.body);
-    }catch(e){}
+    layoutNewCuboidsFrame();
+    setTimeout(layoutNewCuboidsFrame, 80);
+    setTimeout(layoutNewCuboidsFrame, 300);
   }
 
   frame.addEventListener("load", onFrameLoad);
@@ -19658,7 +19658,7 @@ function handlePendingViewerTabSwitch(){
 initTabsRowAutoHide();
 
 window.addEventListener("resize", function(){
-  syncNewCuboidsFrameHeight();
+  layoutNewCuboidsFrame();
   clearTimeout(burnerMobileResizeTimer);
   burnerMobileResizeTimer = setTimeout(function(){
     applyBurnerMobileWallFilter();
@@ -23642,7 +23642,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-new-cuboids-shared-scroll-1";
+      var swBuild = "20260317-new-cuboids-frame-layout-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
