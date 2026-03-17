@@ -12235,38 +12235,21 @@ html, body, body *, body *::before, body *::after, svg text{
           return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
         }
 
-        function hmUploadedNormalizeRotationY(value){
-          var angle = (typeof value === "number" && isFinite(value)) ? value : 0;
-          while(angle > Math.PI) angle -= Math.PI * 2;
-          while(angle < -Math.PI) angle += Math.PI * 2;
-          return angle;
-        }
-
-        function hmUploadedGetSideExposure(rotationY){
-          var sideStrength = Math.abs(Math.sin(hmUploadedNormalizeRotationY(rotationY)));
-          var outerOpacity = Math.pow(sideStrength, 3.2);
-          return outerOpacity < 0.14 ? 0 : Math.max(0, Math.min(1, outerOpacity));
-        }
-
         function hmUploadedUpdateChamberSceneVisibility(state){
           if(!state) return;
-          var sideExposure = hmUploadedGetSideExposure(
-            state.rotation && typeof state.rotation.y === "number"
-              ? state.rotation.y
-              : (-Math.PI / 2)
-          );
-
           if(state.wallOverlays){
             Object.keys(state.wallOverlays).forEach(function(wallKey){
               var overlay = state.wallOverlays[wallKey];
-              if(!overlay || !overlay.outerMesh || !overlay.outerMaterial) return;
-              overlay.outerMaterial.opacity = sideExposure;
-              overlay.outerMesh.visible = sideExposure > 0.02;
+              if(!overlay) return;
+              if(overlay.outerMaterial) overlay.outerMaterial.opacity = 1;
+              if(overlay.outerMesh) overlay.outerMesh.visible = true;
+              if(overlay.innerMaterial) overlay.innerMaterial.opacity = 1;
+              if(overlay.innerMesh) overlay.innerMesh.visible = true;
             });
           }
 
           if(state.chamberWire && state.chamberWire.material){
-            state.chamberWire.material.opacity = 0.025 + (sideExposure * 0.075);
+            state.chamberWire.material.opacity = 0.06;
           }
         }
 
@@ -12927,6 +12910,7 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedPrepareOverlay(overlay){
           if(!overlay || !overlay.outerMaterial) return;
           overlay.outerMaterial.transparent = true;
+          overlay.outerMaterial.opacity = 1;
           overlay.outerMaterial.depthWrite = true;
           overlay.outerMaterial.alphaTest = 0.06;
           overlay.outerMaterial.polygonOffset = true;
@@ -12936,6 +12920,8 @@ html, body, body *, body *::before, body *::after, svg text{
           if(overlay.outerMesh) overlay.outerMesh.renderOrder = 8;
           if(overlay.innerMaterial){
             overlay.innerMaterial.transparent = true;
+            overlay.innerMaterial.opacity = 1;
+            overlay.innerMaterial.side = THREE.DoubleSide;
             overlay.innerMaterial.depthWrite = false;
             overlay.innerMaterial.alphaTest = 0.06;
             overlay.innerMaterial.polygonOffset = true;
@@ -23221,7 +23207,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-burner-hoverperf-1";
+      var swBuild = "20260317-heatmap-overlay-2";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
