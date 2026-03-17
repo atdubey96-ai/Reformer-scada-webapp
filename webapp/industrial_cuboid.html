@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Industrial Process Vessel — Dual Viewer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;background:#060708;font-family:'Courier New',monospace;user-select:none;overflow-y:scroll;overflow-x:hidden;}
+.viewer-section{width:100%;height:100vh;position:relative;overflow:hidden;background:#060708;}
+.viewer-section canvas{display:block;width:100%;height:100%;}
+[id^="wrap"]{position:absolute;inset:0;cursor:grab;}
+[id^="wrap"].grabbing{cursor:grabbing;}
+.section-divider{height:3px;background:rgba(80,110,150,.45);width:100%;flex-shrink:0;}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+
+
+.v-screen-border{position:absolute;inset:10px;border:2px solid rgba(80,110,150,.45);pointer-events:none;z-index:9999;box-shadow:inset 0 0 12px rgba(40,70,100,.15);border-radius:6px;}
+
+
+
+/* HUD */
+#hud-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px 18px;pointer-events:none;z-index:10}
+.badge{background:rgba(6,8,12,.90);border:1px solid rgba(80,110,150,.50);backdrop-filter:blur(8px);padding:7px 16px;font-size:10px;letter-spacing:.2em;color:#7a9ab8;text-transform:uppercase}
+#fs-btn{background:rgba(6,8,12,.90);border:1px solid rgba(80,110,150,.50);backdrop-filter:blur(8px);color:#7a9ab8;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.15em;padding:7px 13px;cursor:pointer;pointer-events:all;transition:color .2s,border-color .2s;text-transform:uppercase}
+#fs-btn:hover{color:#aaccee;border-color:#aaccee}
+
+#hud-bot{position:absolute;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:7px;padding-bottom:20px;pointer-events:none;z-index:10}
+.v-face-lbl{background:rgba(6,8,12,.90);border:1px solid rgba(80,110,150,.50);backdrop-filter:blur(8px);padding:6px 18px;font-size:10px;letter-spacing:.2em;color:#aaccee;text-transform:uppercase}
+.v-hint-lbl{font-size:9px;letter-spacing:.16em;color:#1a2430;text-transform:uppercase;transition:opacity 1.4s}
+.v-hint-lbl.gone{opacity:0}
+
+.v-zoom-lbl{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(6,8,12,.90);border:1px solid rgba(80,110,150,.50);backdrop-filter:blur(8px);padding:5px 14px;font-size:9px;letter-spacing:.18em;color:#aaccee;text-transform:uppercase;opacity:0;transition:opacity .35s;pointer-events:none;z-index:10}
+.v-zoom-lbl.on{opacity:1}
+
+/* atmospheric overlays */
+.v-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,transparent 30%,rgba(0,0,0,.78) 100%);pointer-events:none;z-index:5}
+.v-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.055) 2px,rgba(0,0,0,.055) 4px);pointer-events:none;z-index:6}
+
+/* ── LEGEND PANEL — horizontal strip below cuboid ── */
+.v-legend-panel,
+#legend-panel1,
+#legend-panel2{
+  position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+  width:auto;max-width:98vw;
+  background:rgba(6,10,16,.92);
+  border:1px solid rgba(80,110,150,.35);
+  border-radius:8px;
+  padding:6px 14px;
+  z-index:20;
+  backdrop-filter:blur(12px);
+  overflow:visible;
+  display:flex;flex-direction:row;align-items:center;gap:12px;
+  font-family:'Courier New',monospace;
+  color:#ccd6e0;
+  font-size:10px;
+  transition:opacity .3s;
+}
+/* Hide panel when browser is in fullscreen */
+
+
+/* vertical divider between sections */
+.leg-vdivider{width:1px;height:36px;background:rgba(80,110,150,.25);flex-shrink:0;margin:0 2px}
+
+.leg-section-title{
+  font-size:8px;letter-spacing:.18em;color:#5a7a9a;
+  text-transform:uppercase;margin-bottom:4px;
+}
+
+/* Burner cards — 4×1 single row */
+.burner-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;width:auto}
+.burner-card{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 7px;border-radius:7px;
+  border:1px solid transparent;
+}
+.blue-card {background:rgba(20,40,90,.7); border-color:rgba(60,100,200,.4)}
+.cold-card {background:rgba(25,35,50,.7); border-color:rgba(80,100,130,.35)}
+.green-card{background:rgba(10,50,25,.7); border-color:rgba(30,140,60,.4)}
+.amber-card{background:rgba(60,35,5,.7);  border-color:rgba(180,100,10,.4)}
+
+.burner-icon{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:11px;flex-shrink:0;
+}
+.blue-icon {background:#2255cc;color:#fff}
+.cold-icon {background:#556677;color:#cdd}
+.green-icon{background:#1a9940;color:#fff}
+.amber-icon{background:#cc7700;color:#fff}
+
+.burner-info{flex:1;min-width:0}
+.burner-name{font-size:10px;font-weight:700;color:#dde8f0;white-space:nowrap}
+.burner-sub {font-size:8px;color:#7a9ab0;margin-top:1px;white-space:nowrap}
+.burner-count{font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* Dot legend — horizontal */
+.dot-legend{display:flex;flex-direction:row;gap:12px;align-items:center}
+.dot-row{display:flex;align-items:center;gap:6px;font-size:10px;color:#9ab0c0;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-green{background:#22cc55;box-shadow:0 0 4px #22cc5588}
+.dot-empty{background:transparent;border:2px solid #6688aa}
+
+/* Live params — horizontal */
+.param-rows{display:flex;flex-direction:row;align-items:center;gap:0}
+.param-row{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:0 12px}
+.param-row:not(:last-child){border-right:1px solid rgba(80,110,150,.2)}
+.param-row:first-child{padding-left:0}
+.param-label{color:#7a9ab0;font-size:8px;white-space:nowrap;text-transform:uppercase;letter-spacing:.1em}
+.param-value{font-size:11px;font-weight:700;white-space:nowrap}
+.green-val{color:#22cc88}
+
+/* TST gradient — horizontal */
+.tst-row{display:flex;flex-direction:column;gap:4px;align-items:stretch;min-width:160px}
+.tst-badge{
+  background:rgba(60,35,5,.8);border:1px solid rgba(180,100,10,.5);
+  border-radius:20px;padding:2px 8px;font-size:8px;align-self:center;
+  font-weight:700;color:#cc8822;letter-spacing:.08em;white-space:nowrap;
+}
+.tst-bar{
+  height:10px;width:100%;border-radius:5px;
+  background:linear-gradient(to right, #22cc55 0%, #aacc00 30%, #ffaa00 60%, #ff5500 80%, #ff1100 100%);
+  box-shadow:0 0 6px rgba(255,100,0,.3);
+}
+.tst-labels{display:flex;justify-content:space-between;align-items:center}
+.tst-cold-wrap,.tst-hot-wrap{display:flex;flex-direction:row;align-items:baseline;gap:4px}
+.cold-label{font-size:10px;font-weight:700;color:#22cc88}
+.hot-label {font-size:10px;font-weight:700;color:#ff5500}
+.tst-temp  {font-size:9px;color:#ccd6e0;font-weight:600}
+.tst-range-label{font-size:7px;letter-spacing:.12em;color:#5a7a9a;text-transform:uppercase;text-align:center}
+
+</style>
+</head>
+<body>
+
+<!-- ══ VIEWER 1 ══ -->
+<div class="viewer-section" id="viewer1">
+  <canvas id="c1"></canvas>
+  <div id="wrap1" style="position:absolute;inset:0;cursor:grab;"></div>
+  <div class="v-vignette"></div>
+  <div class="v-scanlines"></div>
+  <div class="v-screen-border"></div>
+  <div class="v-zoom-lbl" id="zoom-lbl1">● ZOOM MODE</div>
+  <div id="hud-bot1" style="position:absolute;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:7px;padding-bottom:20px;pointer-events:none;z-index:10">
+    <div class="v-face-lbl" id="face-lbl1">FACE 1 — FRONT PANEL</div>
+    <div class="v-hint-lbl" id="hint-lbl1">DRAG TO ROTATE · DOUBLE-CLICK FULLSCREEN</div>
+  </div>
+  <!-- ── LEGENDS PANEL ── -->
+<div id="legend-panel1">
+
+  <!-- Section 1: Burner Types -->
+  <div class="leg-section">
+    <div class="leg-section-title">BURNER TYPES</div>
+    <div class="burner-grid">
+      <div class="burner-card blue-card">
+        <div class="burner-icon blue-icon">B</div>
+        <div class="burner-info">
+          <div class="burner-name">Both</div>
+          <div class="burner-sub">Blue Burner</div>
+        </div>
+        <div class="burner-count" id="cnt-b1">39</div>
+      </div>
+      <div class="burner-card cold-card">
+        <div class="burner-icon cold-icon">C</div>
+        <div class="burner-info">
+          <div class="burner-name">Cold</div>
+          <div class="burner-sub">Closed / None</div>
+        </div>
+        <div class="burner-count" id="cnt-c1">9</div>
+      </div>
+      <div class="burner-card green-card">
+        <div class="burner-icon green-icon">O</div>
+        <div class="burner-info">
+          <div class="burner-name">Off Gas</div>
+          <div class="burner-sub">Green Burner</div>
+        </div>
+        <div class="burner-count" id="cnt-o1">69</div>
+      </div>
+      <div class="burner-card amber-card">
+        <div class="burner-icon amber-icon">N</div>
+        <div class="burner-info">
+          <div class="burner-name">NG Only</div>
+          <div class="burner-sub">Amber Burner</div>
+        </div>
+        <div class="burner-count" id="cnt-n1">63</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="leg-vdivider"></div>
+
+  <!-- Section 2: Dot Legend -->
+  <div class="leg-section" style="justify-content:center">
+    <div class="leg-section-title">CLEANING STATUS</div>
+    <div class="dot-legend">
+      <div class="dot-row"><span class="dot dot-green"></span><span>Green Dot = Burner Cleaned</span></div>
+      <div class="dot-row"><span class="dot dot-empty"></span><span>Empty Dot = Not Cleaned</span></div>
+    </div>
+  </div>
+
+  <div class="leg-vdivider"></div>
+
+  <!-- Section 3: Live Parameters -->
+  <div class="leg-section">
+    <div class="leg-section-title">LIVE PARAMETERS</div>
+    <div class="param-rows">
+      <div class="param-row">
+        <span class="param-label">Chamber Temp</span>
+        <span class="param-value green-val" id="param-temp1">931 °C</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="leg-vdivider"></div>
+
+  <!-- Section 4: TST Gradient -->
+  <div class="leg-section">
+    <div class="leg-section-title">TST GRADIENT</div>
+    <div class="tst-row">
+      <div class="tst-badge">PH TST</div>
+      <div class="tst-bar"></div>
+      <div class="tst-labels">
+        <div class="tst-cold-wrap">
+          <span class="cold-label">Cold</span>
+          <span class="tst-temp" id="tst-cold1">860°C</span>
+        </div>
+        <div class="tst-range-label">TST RANGE</div>
+        <div class="tst-hot-wrap">
+          <span class="hot-label">Hot</span>
+          <span class="tst-temp" id="tst-hot1">1000°C</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ══ VIEWER 2 ══ -->
+<div class="viewer-section" id="viewer2">
+  <canvas id="c2"></canvas>
+  <div id="wrap2" style="position:absolute;inset:0;cursor:grab;"></div>
+  <div class="v-vignette"></div>
+  <div class="v-scanlines"></div>
+  <div class="v-screen-border"></div>
+  <div class="v-zoom-lbl" id="zoom-lbl2">● ZOOM MODE</div>
+  <div id="hud-bot2" style="position:absolute;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:7px;padding-bottom:20px;pointer-events:none;z-index:10">
+    <div class="v-face-lbl" id="face-lbl2">FACE 1 — FRONT PANEL</div>
+    <div class="v-hint-lbl" id="hint-lbl2">DRAG TO ROTATE · DOUBLE-CLICK FULLSCREEN</div>
+  </div>
+  <!-- ── LEGENDS PANEL ── -->
+<div id="legend-panel2">
+
+  <!-- Section 1: Burner Types -->
+  <div class="leg-section">
+    <div class="leg-section-title">BURNER TYPES</div>
+    <div class="burner-grid">
+      <div class="burner-card blue-card">
+        <div class="burner-icon blue-icon">B</div>
+        <div class="burner-info">
+          <div class="burner-name">Both</div>
+          <div class="burner-sub">Blue Burner</div>
+        </div>
+        <div class="burner-count" id="cnt-b2">39</div>
+      </div>
+      <div class="burner-card cold-card">
+        <div class="burner-icon cold-icon">C</div>
+        <div class="burner-info">
+          <div class="burner-name">Cold</div>
+          <div class="burner-sub">Closed / None</div>
+        </div>
+        <div class="burner-count" id="cnt-c2">9</div>
+      </div>
+      <div class="burner-card green-card">
+        <div class="burner-icon green-icon">O</div>
+        <div class="burner-info">
+          <div class="burner-name">Off Gas</div>
+          <div class="burner-sub">Green Burner</div>
+        </div>
+        <div class="burner-count" id="cnt-o2">69</div>
+      </div>
+      <div class="burner-card amber-card">
+        <div class="burner-icon amber-icon">N</div>
+        <div class="burner-info">
+          <div class="burner-name">NG Only</div>
+          <div class="burner-sub">Amber Burner</div>
+        </div>
+        <div class="burner-count" id="cnt-n2">63</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="leg-vdivider"></div>
+
+  <!-- Section 2: Dot Legend -->
+  <div class="leg-section" style="justify-content:center">
+    <div class="leg-section-title">CLEANING STATUS</div>
+    <div class="dot-legend">
+      <div class="dot-row"><span class="dot dot-green"></span><span>Green Dot = Burner Cleaned</span></div>
+      <div class="dot-row"><span class="dot dot-empty"></span><span>Empty Dot = Not Cleaned</span></div>
+    </div>
+  </div>
+
+  <div class="leg-vdivider"></div>
+
+  <!-- Section 3: Live Parameters -->
+  <div class="leg-section">
+    <div class="leg-section-title">LIVE PARAMETERS</div>
+    <div class="param-rows">
+      <div class="param-row">
+        <span class="param-label">Chamber Temp</span>
+        <span class="param-value green-val" id="param-temp2">931 °C</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="leg-vdivider"></div>
+
+  <!-- Section 4: TST Gradient -->
+  <div class="leg-section">
+    <div class="leg-section-title">TST GRADIENT</div>
+    <div class="tst-row">
+      <div class="tst-badge">PH TST</div>
+      <div class="tst-bar"></div>
+      <div class="tst-labels">
+        <div class="tst-cold-wrap">
+          <span class="cold-label">Cold</span>
+          <span class="tst-temp" id="tst-cold2">860°C</span>
+        </div>
+        <div class="tst-range-label">TST RANGE</div>
+        <div class="tst-hot-wrap">
+          <span class="hot-label">Hot</span>
+          <span class="tst-temp" id="tst-hot2">1000°C</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script>
+function initViewer(sfx) {
+  (function boot() {
+    if (typeof THREE === 'undefined') { setTimeout(boot, 50); return; }
+    var container = document.getElementById('viewer'+sfx);
+    var wrap    = document.getElementById('wrap'+sfx);
+    var canvas  = document.getElementById('c'+sfx);
+    var faceLbl = document.getElementById('face-lbl'+sfx);
+    var hintLbl = document.getElementById('hint-lbl'+sfx);
+    
+  if (typeof THREE === 'undefined') { setTimeout(boot, 50); return; }
+
+  // ── DOM refs
+  
+  
+  
+  
+  
+
+  let W = container.offsetWidth, H = container.offsetHeight;
+
+  // ── Renderer
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+  renderer.toneMapping       = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+
+  // ── Scene
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060708);
+  scene.fog = new THREE.Fog(0x060708, 18, 40);
+
+  // ── Camera
+  const camera = new THREE.PerspectiveCamera(32, W / H, 0.05, 200);
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  CUBOID DIMENSIONS  — fixed world units, camera distance computed to fit
+  // ─────────────────────────────────────────────────────────────────────────
+  var FOV_DEG = 32;
+  var FOV_RAD = FOV_DEG * Math.PI / 180;
+
+  // Fixed proportions — rectangular slab, width > height > depth
+  var CW   = 7.0;    // Face 1 width
+  var CH   = 3.0;    // Face 1 height
+  var CD   = 1.4;    // depth (slab)
+  var WALL = 0.08;   // face thickness
+
+  // Tube protrusion (needed for fit calc — defined before use)
+  var TPROT = 0.20;
+
+  // Simple, reliable fit: camera pulls back far enough to see everything
+  // with a comfortable margin. Max() ensures the tightest constraint wins.
+  function calcCamZ() {
+    var fitW = CW + WALL * 2 + 0.3;
+    var fitH = CH + WALL * 2 + TPROT + 0.4;
+    var asp  = W / H;
+    var dW = (fitW / 2) / (Math.tan(FOV_RAD / 2) * asp);
+    var dH = (fitH / 2) /  Math.tan(FOV_RAD / 2);
+    return Math.max(dW, dH) * 1.25;  // 1.25 = 25% extra pullback = safe margin
+  }
+
+  var D_BASE = calcCamZ();
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  LIGHTING  (5-point industrial rig)
+  // ─────────────────────────────────────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0x1a1e22, 1.1));   // cool blue-gray ambient
+
+  var sun = new THREE.DirectionalLight(0xdde8f0, 3.0);  // cool white key light
+  sun.position.set(-5, 8, 6);
+  sun.castShadow = true;
+  sun.shadow.mapSize.width = sun.shadow.mapSize.height = 2048;
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -8;
+  sun.shadow.camera.right = sun.shadow.camera.top = 8;
+  sun.shadow.camera.near = 0.1;
+  sun.shadow.camera.far  = 50;
+  scene.add(sun);
+
+  var fill = new THREE.DirectionalLight(0x6688aa, 0.6);   // cool blue fill
+  fill.position.set(6, 1, -4);
+  scene.add(fill);
+
+  var rim = new THREE.DirectionalLight(0x8899bb, 0.5);    // cool silver rim
+  rim.position.set(0, -4, -7);
+  scene.add(rim);
+
+  var intLight = new THREE.PointLight(0xccddee, 1.8, 3.8);  // cool interior light
+  intLight.position.set(0, 0, 0);
+  scene.add(intLight);
+
+  var underLight = new THREE.PointLight(0x4466aa, 0.30, 5);  // cool under glow
+  underLight.position.set(0, -CH/2 - 1.2, 0);
+  scene.add(underLight);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  PROCEDURAL TEXTURES
+  // ─────────────────────────────────────────────────────────────────────────
+  function mkc(w, h) {
+    var c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    return [c, c.getContext('2d')];
+  }
+  function mkTex(cv, rs, rt) {
+    var t = new THREE.CanvasTexture(cv);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(rs || 2, rt || 2);
+    return t;
+  }
+
+  // Rust color map
+  function makeRustColor(w, h) {
+    w = w||512; h = h||512;
+    var ca = mkc(w, h), cv = ca[0], cx = ca[1];
+
+    // ── Base: silver-gray iron plate
+    cx.fillStyle = '#7a7f82'; cx.fillRect(0,0,w,h);
+
+    // Darker cold-steel variation bands (rolling mill lines)
+    for (var i=0; i<12; i++) {
+      var by2=Math.random()*h, bh2=4+Math.random()*18;
+      var bv=60+~~(Math.random()*40);
+      cx.fillStyle='rgba('+bv+','+bv+','+(bv+6)+',.18)';
+      cx.fillRect(0,by2,w,bh2);
+    }
+
+    // ── Brown-orange rust patches on the silver base (NOT dominant — accent only)
+    for (var i=0; i<18; i++) {
+      var px=Math.random()*w, py=Math.random()*h, rad=10+Math.random()*65;
+      var g = cx.createRadialGradient(px,py,0,px,py,rad);
+      var a  = 0.18+Math.random()*0.38;   // keep subtle — silver dominates
+      var rv = 130+~~(Math.random()*50), gv = 55+~~(Math.random()*30);
+      g.addColorStop(0,   'rgba('+rv+','+gv+',12,'+a+')');
+      g.addColorStop(0.6, 'rgba(90,38,8,'+(a*0.45)+')');
+      g.addColorStop(1,   'rgba(0,0,0,0)');
+      cx.fillStyle = g;
+      cx.beginPath();
+      cx.ellipse(px,py, rad*(0.4+Math.random()*0.9), rad*(0.35+Math.random()*0.75),
+                 Math.random()*Math.PI, 0, Math.PI*2);
+      cx.fill();
+    }
+
+    // ── Rust drip streaks (brown, subtle on silver)
+    for (var i=0; i<22; i++) {
+      var sx=Math.random()*w, sy=Math.random()*h*0.5, len=12+Math.random()*110;
+      var a2=0.10+Math.random()*0.32;
+      cx.strokeStyle='rgba('+(100+~~(Math.random()*60))+','+(38+~~(Math.random()*28))+',5,'+a2+')';
+      cx.lineWidth = 0.4+Math.random()*3.2; cx.lineCap='round';
+      cx.beginPath(); cx.moveTo(sx,sy);
+      cx.bezierCurveTo(sx+(Math.random()-0.5)*14, sy+len*0.3,
+                       sx+(Math.random()-0.5)*10, sy+len*0.7,
+                       sx+(Math.random()-0.5)*6,  sy+len);
+      cx.stroke();
+    }
+
+    // ── Metallic scrape / grind marks (bright silver lines)
+    for (var i=0; i<20; i++) {
+      var sv=165+~~(Math.random()*70);
+      cx.strokeStyle='rgba('+sv+','+sv+','+(sv+8)+',.22)';
+      cx.lineWidth=0.3+Math.random()*1.8;
+      cx.beginPath();
+      var sx2=Math.random()*w, sy2=Math.random()*h;
+      cx.moveTo(sx2,sy2); cx.lineTo(sx2+(Math.random()-0.5)*40, sy2+4+Math.random()*50);
+      cx.stroke();
+    }
+
+    // ── Dark oxidation patches (near-black pitting)
+    for (var i=0; i<14; i++) {
+      var px2=Math.random()*w, py2=Math.random()*h, pr=3+Math.random()*18;
+      var g2=cx.createRadialGradient(px2,py2,0,px2,py2,pr);
+      g2.addColorStop(0,'rgba(20,22,24,.55)');
+      g2.addColorStop(1,'rgba(0,0,0,0)');
+      cx.fillStyle=g2;
+      cx.beginPath(); cx.ellipse(px2,py2,pr,pr*(0.5+Math.random()*0.8),Math.random()*Math.PI,0,Math.PI*2); cx.fill();
+    }
+
+    // ── Weld seam (dark gray, not brown)
+    cx.strokeStyle='rgba(30,32,34,.80)'; cx.lineWidth=4.5;
+    cx.beginPath(); cx.moveTo(0,h*0.5); cx.lineTo(w,h*0.5); cx.stroke();
+
+    // ── Hex bolts (steel gray)
+    for (var i=0; i<18; i++) {
+      var bx=(0.07+Math.random()*0.86)*w, by=(0.07+Math.random()*0.86)*h;
+      var br = 3.5+Math.random()*4;
+      cx.fillStyle='rgba(38,42,46,.78)';
+      cx.strokeStyle='rgba(90,95,100,.6)'; cx.lineWidth=1.5;
+      cx.beginPath(); cx.arc(bx,by,br,0,Math.PI*2); cx.fill(); cx.stroke();
+      cx.strokeStyle='rgba(110,115,120,.55)'; cx.lineWidth=1;
+      cx.beginPath(); cx.moveTo(bx-br,by); cx.lineTo(bx+br,by);
+                      cx.moveTo(bx,by-br); cx.lineTo(bx,by+br); cx.stroke();
+    }
+
+    // ── Fine grain noise (uniform — keeps it looking like steel, not plastic)
+    var id=cx.getImageData(0,0,w,h), d=id.data;
+    for (var i=0; i<d.length; i+=4) {
+      var n=(Math.random()-0.5)*28;
+      d[i]  =Math.max(0,Math.min(255,d[i]+n));
+      d[i+1]=Math.max(0,Math.min(255,d[i+1]+n));      // equal R/G/B → stays gray
+      d[i+2]=Math.max(0,Math.min(255,d[i+2]+n*1.04)); // very slight blue-cool tint
+    }
+    cx.putImageData(id,0,0);
+    return cv;
+  }
+
+  function makeRoughMap(w,h) {
+    w=w||256; h=h||256;
+    var ca=mkc(w,h), id=ca[1].createImageData(w,h), d=id.data;
+    for (var i=0;i<d.length;i+=4){var v=108+~~(Math.random()*135);d[i]=d[i+1]=d[i+2]=v;d[i+3]=255;}
+    ca[1].putImageData(id,0,0); return ca[0];
+  }
+
+  function makeNormMap(w,h) {
+    w=w||256; h=h||256;
+    var ca=mkc(w,h), id=ca[1].createImageData(w,h), d=id.data;
+    for (var i=0;i<d.length;i+=4){
+      d[i]=128+~~((Math.random()-0.5)*52);
+      d[i+1]=128+~~((Math.random()-0.5)*52);
+      d[i+2]=236+~~(Math.random()*19);
+      d[i+3]=255;
+    }
+    ca[1].putImageData(id,0,0); return ca[0];
+  }
+
+  function makeSteelMap(w,h) {
+    w=w||128; h=h||256;
+    var ca=mkc(w,h), cx=ca[1];
+    for (var y=0;y<h;y++){var v=20+~~(Math.random()*26);cx.fillStyle='rgb('+v+','+(v+2)+','+(v+5)+')';cx.fillRect(0,y,w,1);}
+    var id=cx.getImageData(0,0,w,h), d=id.data;
+    for (var i=0;i<d.length;i+=4){var n=(Math.random()-0.5)*10;d[i]=Math.max(0,Math.min(255,d[i]+n));d[i+1]=Math.max(0,Math.min(255,d[i+1]+n));d[i+2]=Math.max(0,Math.min(255,d[i+2]+n));}
+    cx.putImageData(id,0,0); return ca[0];
+  }
+
+  function makeInnerMap(w,h) {
+    w=w||256; h=h||256;
+    var ca=mkc(w,h), cx=ca[1];
+    cx.fillStyle='#2a2d30'; cx.fillRect(0,0,w,h);  // cool dark steel base
+    for (var i=0;i<10;i++){
+      var px=Math.random()*w,py=Math.random()*h;
+      var g=cx.createRadialGradient(px,py,0,px,py,60);
+      // subtle rust patches inside too
+      g.addColorStop(0,'rgba(90,42,8,.35)'); g.addColorStop(1,'rgba(0,0,0,0)');
+      cx.fillStyle=g; cx.beginPath(); cx.arc(px,py,60,0,Math.PI*2); cx.fill();
+    }
+    var id=cx.getImageData(0,0,w,h),d=id.data;
+    for(var i=0;i<d.length;i+=4){var n=(Math.random()-0.5)*16;d[i]=Math.max(0,Math.min(255,d[i]+n));d[i+1]=Math.max(0,Math.min(255,d[i+1]+n));d[i+2]=Math.max(0,Math.min(255,d[i+2]+n*1.05));}
+    cx.putImageData(id,0,0); return ca[0];
+  }
+
+  // Build textures
+  var rustTex  = mkTex(makeRustColor(), 2, 1.5);
+  var roughTex = mkTex(makeRoughMap(),  2, 2);
+  var normTex  = mkTex(makeNormMap(),   2, 2);
+  var steelTex = mkTex(makeSteelMap(),  1, 3);
+  var innerTex = (function(){ var t=new THREE.CanvasTexture(makeInnerMap()); return t; })();
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  MATERIALS
+  // ─────────────────────────────────────────────────────────────────────────
+  var rustMat = new THREE.MeshStandardMaterial({
+    map: rustTex, roughnessMap: roughTex, normalMap: normTex,
+    normalScale: new THREE.Vector2(1.5,1.5),
+    metalness: 0.82, roughness: 0.72,   // more metallic, less rough → shinier silver
+    color: 0xb0b8bc                      // silver-gray tint over the texture
+  });
+  var innerMat = new THREE.MeshStandardMaterial({
+    map: innerTex, metalness:.55, roughness:.90,
+    color: 0x1e2225, side: THREE.BackSide   // cool dark steel interior
+  });
+  var tubeMat  = new THREE.MeshStandardMaterial({ map:steelTex, metalness:.94, roughness:.22, color:0x8899aa });  // bright brushed steel
+  var capMat   = new THREE.MeshStandardMaterial({ metalness:.96, roughness:.15, color:0xaabbcc });                // polished steel cap
+  var frameMat = new THREE.MeshStandardMaterial({ metalness:.92, roughness:.20, color:0x778899 });               // steel frame around holes
+  var edgeMat  = new THREE.MeshStandardMaterial({ metalness:.90, roughness:.55, color:0x3a3f44 });               // darker steel edges
+  var weldMat  = new THREE.MeshStandardMaterial({ metalness:.85, roughness:.60, color:0x2e3338 });               // dark weld
+  var boreMat  = new THREE.MeshStandardMaterial({ color:0x080a0c, metalness:.3, roughness:1, side:THREE.BackSide });
+  var tunnMat  = new THREE.MeshStandardMaterial({ color:0x080a0c, metalness:.3, roughness:1, side:THREE.BackSide });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  MASTER GROUP — everything rotates together
+  // ─────────────────────────────────────────────────────────────────────────
+  var G = new THREE.Group();
+  G.position.y = 0.3;
+  scene.add(G);
+
+  function addMesh(geo, mat, x, y, z, rx, ry) {
+    var m = new THREE.Mesh(geo, mat);
+    m.position.set(x !== undefined ? x : 0, y !== undefined ? y : 0, z !== undefined ? z : 0);
+    if (rx !== undefined) m.rotation.x = rx;
+    if (ry !== undefined) m.rotation.y = ry;
+    m.castShadow = m.receiveShadow = true;
+    G.add(m);
+    return m;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FACE 1 — FRONT  z = +CD/2 + WALL/2
+  // ─────────────────────────────────────────────────────────────────────────
+  addMesh(new THREE.BoxGeometry(CW, CH, WALL), rustMat, 0, 0, CD/2+WALL/2);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FACE 2 — BACK   z = -CD/2 - WALL/2
+  // ─────────────────────────────────────────────────────────────────────────
+  addMesh(new THREE.BoxGeometry(CW, CH, WALL), rustMat, 0, 0, -CD/2-WALL/2);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FACE 5 — TOP
+  // ─────────────────────────────────────────────────────────────────────────
+  addMesh(new THREE.BoxGeometry(CW, WALL, CD+WALL*2), rustMat, 0, CH/2+WALL/2, 0);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FACE 6 — BOTTOM
+  // ─────────────────────────────────────────────────────────────────────────
+  addMesh(new THREE.BoxGeometry(CW, WALL, CD+WALL*2), rustMat, 0, -CH/2-WALL/2, 0);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FACE 3 (left) & FACE 4 (right)  with PEEPHOLES
+  //
+  //  Each side face spans: width=CD (depth), height=CH
+  //  Two square holes (size HS) centered at z=0, y=±HY
+  //  Built as 5 solid panel segments surrounding the holes
+  //  + dark tunnel boxes behind holes
+  //  + metallic frame rings around holes
+  // ─────────────────────────────────────────────────────────────────────────
+  var HS  = 0.62;         // square hole size
+  var HY  = CH * 0.265;   // hole Y offset from center (top=+HY, bottom=-HY)
+
+  function buildSideFace(side) {
+    // side: -1=left(Face3), +1=right(Face4)
+    var xPos = side * (CW/2 + WALL/2);
+
+    // Panel helper: geometry width=panW (in world-Z), height=panH (world-Y)
+    // thickness=WALL (world-X direction, via rotation.y=90°)
+    function panel(panW, panH, wY, wZ) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(WALL, panH, panW), rustMat);
+      m.position.set(xPos, wY, wZ);
+      m.castShadow = m.receiveShadow = true;
+      G.add(m);
+    }
+
+    // Zone heights
+    var zA_h = CH/2 - HY - HS/2;              // top strip (above upper hole)
+    var zC_h = (HY-HS/2) - (-HY+HS/2);        // middle strip (between holes) = 2*HY - HS
+    var zE_h = (-HY - HS/2) - (-CH/2);         // bottom strip (below lower hole)
+    var zA_y = CH/2 - zA_h/2;
+    var zC_y = 0;                               // middle strip centered at y=0
+    var zE_y = -CH/2 + zE_h/2;
+
+    // Side segment width flanking the hole (hole is centered at z=0)
+    var seg_w  = (CD - HS) / 2;
+    var seg_zL = -(HS/2 + seg_w/2);            // left segment center-Z
+    var seg_zR =  (HS/2 + seg_w/2);            // right segment center-Z
+
+    // Zone A — top full-width strip
+    panel(CD, zA_h, zA_y, 0);
+
+    // Zone B — upper-hole row: left and right panels flanking the hole
+    if (seg_w > 0.005) {
+      panel(seg_w, HS, HY, seg_zL);
+      panel(seg_w, HS, HY, seg_zR);
+    }
+
+    // Zone C — middle full-width strip
+    panel(CD, zC_h, zC_y, 0);
+
+    // Zone D — lower-hole row
+    if (seg_w > 0.005) {
+      panel(seg_w, HS, -HY, seg_zL);
+      panel(seg_w, HS, -HY, seg_zR);
+    }
+
+    // Zone E — bottom full-width strip
+    panel(CD, zE_h, zE_y, 0);
+
+    // ── For each hole: tunnel + frame ────────────────────────────
+    [-HY, HY].forEach(function(hy) {
+
+      // Dark tunnel box running across the interior (visible through hole)
+      var tun = new THREE.Mesh(
+        new THREE.BoxGeometry(CW * 0.96, HS - 0.02, HS - 0.02),
+        tunnMat
+      );
+      tun.position.set(0, hy, 0);
+      G.add(tun);
+
+      // Metallic outer frame (extruded square ring)
+      var shape = new THREE.Shape();
+      var fo = HS/2 + 0.048, fi = HS/2;
+      shape.moveTo(-fo,-fo); shape.lineTo(fo,-fo); shape.lineTo(fo,fo); shape.lineTo(-fo,fo); shape.closePath();
+      var hole = new THREE.Path();
+      hole.moveTo(-fi,-fi); hole.lineTo(fi,-fi); hole.lineTo(fi,fi); hole.lineTo(-fi,fi); hole.closePath();
+      shape.holes.push(hole);
+
+      var frameGeo = new THREE.ExtrudeGeometry(shape, { depth: WALL*3, bevelEnabled: false });
+      frameGeo.translate(0, 0, -WALL*1.5);
+      var frm = new THREE.Mesh(frameGeo, frameMat);
+      frm.rotation.y = Math.PI/2;
+      frm.position.set(xPos, hy, 0);
+      G.add(frm);
+
+      // Inner step bevel
+      var bs = new THREE.Shape();
+      var bo=HS/2, bi=HS/2-0.032;
+      bs.moveTo(-bo,-bo); bs.lineTo(bo,-bo); bs.lineTo(bo,bo); bs.lineTo(-bo,bo); bs.closePath();
+      var bh=new THREE.Path();
+      bh.moveTo(-bi,-bi); bh.lineTo(bi,-bi); bh.lineTo(bi,bi); bh.lineTo(-bi,bi); bh.closePath();
+      bs.holes.push(bh);
+      var bGeo=new THREE.ExtrudeGeometry(bs,{depth:0.026,bevelEnabled:false});
+      bGeo.translate(0,0,-0.013);
+      var bm=new THREE.Mesh(bGeo,capMat);
+      bm.rotation.y=Math.PI/2;
+      bm.position.set(xPos+side*0.003,hy,0);
+      G.add(bm);
+    });
+  }
+
+  buildSideFace(-1);  // Face 3 — Left
+  buildSideFace(+1);  // Face 4 — Right
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  INNER SHELL  (dark interior visible through peepholes)
+  // ─────────────────────────────────────────────────────────────────────────
+  addMesh(new THREE.BoxGeometry(CW-0.001, CH-0.001, CD-0.001), innerMat, 0, 0, 0);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  8 VERTICAL TUBES  (inside cuboid, protrude above Face 5)
+  // ─────────────────────────────────────────────────────────────────────────
+  var TR    = 0.078;         // outer radius
+  var TRI   = 0.054;         // inner bore radius
+  var TBODY = CH * 0.96;     // length inside cuboid
+  // TPROT already defined above (0.20) — used in calcCamZ
+  var TTOT  = TBODY + TPROT; // total tube length
+
+  var TBOT_Y = -CH/2 + WALL + 0.01;          // tube bottom world-Y
+  var TCEN_Y = TBOT_Y + TTOT / 2;            // tube center world-Y
+  var TTOP_Y = TBOT_Y + TTOT;                // tube top world-Y
+
+  var MARGINX = CW * 0.09;
+  var SPANX   = CW - MARGINX * 2;            // usable width for tubes
+  var STEPX   = SPANX / 7;                   // 8 tubes → 7 gaps
+
+  for (var i=0; i<8; i++) {
+    var tx = -SPANX/2 + i * STEPX;
+
+    // Outer cylinder
+    addMesh(new THREE.CylinderGeometry(TR, TR, TTOT, 20, 1, false), tubeMat, tx, TCEN_Y, 0);
+
+    // Inner bore
+    var bore = new THREE.Mesh(new THREE.CylinderGeometry(TRI, TRI, TTOT+0.06, 14, 1, true), boreMat);
+    bore.position.set(tx, TCEN_Y, 0);
+    G.add(bore);
+
+    // Top annular cap (ring)
+    var cap = new THREE.Mesh(new THREE.RingGeometry(TRI, TR, 20), capMat);
+    cap.rotation.x = -Math.PI/2;
+    cap.position.set(tx, TTOP_Y, 0);
+    G.add(cap);
+
+    // Weld ring where tube exits top face
+    var wld = new THREE.Mesh(new THREE.TorusGeometry(TR+0.018, 0.016, 8, 20), weldMat);
+    wld.rotation.x = Math.PI/2;
+    wld.position.set(tx, CH/2 + WALL/2 + 0.013, 0);
+    wld.castShadow = true;
+    G.add(wld);
+
+    // Base flange collar
+    addMesh(new THREE.CylinderGeometry(TR+0.032, TR+0.032, 0.044, 16), weldMat, tx, CH/2 - 0.06, 0);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  CORNER & EDGE REINFORCEMENT BARS
+  // ─────────────────────────────────────────────────────────────────────────
+  var BW = 0.056, BH = CH + WALL*2 + 0.022;
+
+  // Vertical corner bars (4 corners)
+  [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(function(s) {
+    addMesh(new THREE.BoxGeometry(BW,BH,BW), edgeMat,
+      s[0]*(CW/2+WALL/2-BW/2), 0, s[1]*(CD/2+WALL/2-BW/2));
+  });
+
+  // Horizontal edge bars (top & bottom × front & back)
+  var hbW=CW+WALL*2, hbH=0.056, hbD=0.056;
+  [
+    [0,  CH/2+WALL/2-hbH/2,  CD/2+WALL/2-hbD/2],
+    [0, -CH/2-WALL/2+hbH/2,  CD/2+WALL/2-hbD/2],
+    [0,  CH/2+WALL/2-hbH/2, -CD/2-WALL/2+hbD/2],
+    [0, -CH/2-WALL/2+hbH/2, -CD/2-WALL/2+hbD/2]
+  ].forEach(function(p) {
+    addMesh(new THREE.BoxGeometry(hbW,hbH,hbD), edgeMat, p[0],p[1],p[2]);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  GROUND SHADOW CATCHER
+  // ─────────────────────────────────────────────────────────────────────────
+  var gnd = new THREE.Mesh(new THREE.PlaneGeometry(24,24), new THREE.ShadowMaterial({opacity:.45}));
+  gnd.rotation.x = -Math.PI/2;
+  gnd.position.y = -CH/2 - WALL - 0.015;
+  gnd.receiveShadow = true;
+  scene.add(gnd);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FLOATING DUST PARTICLES
+  // ─────────────────────────────────────────────────────────────────────────
+  var NP = 160;
+  var pPos = new Float32Array(NP*3), pVel = new Float32Array(NP*3);
+  for (var i=0; i<NP; i++) {
+    pPos[i*3]   = (Math.random()-0.5)*14;
+    pPos[i*3+1] = (Math.random()-0.5)*10;
+    pPos[i*3+2] = (Math.random()-0.5)*8;
+    pVel[i*3]   = (Math.random()-0.5)*0.0018;
+    pVel[i*3+1] = Math.random()*0.0026+0.0008;
+    pVel[i*3+2] = (Math.random()-0.5)*0.0018;
+  }
+  var pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos,3));
+  scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+    color:0xaabbcc, size:0.016, transparent:true, opacity:0.22, sizeAttenuation:true
+  })));
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  CAMERA — straight-on, no vertical offset (prevents tapering)
+  // ─────────────────────────────────────────────────────────────────────────
+  // Camera sits exactly on the Z-axis, looks directly at origin.
+  // This ensures Face 1 is a perfect rectangle with no perspective distortion.
+  var camZTgt = calcCamZ();
+  var camZCur = camZTgt;
+  // lookAtX: negative = cuboid shifts left (makes room for right panel)
+  // 0 = centered (fullscreen mode)
+  var lookAtX = 0;
+  var lookAtY = 0;
+  camera.position.set(0, 0, camZCur);
+  camera.lookAt(0, 0, 0);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  INTERACTION STATE
+  // ─────────────────────────────────────────────────────────────────────────
+  var rotY   = 0, velY = 0;
+  var isDrag = false, dragX0 = 0, rot0 = 0;
+
+  wrap.addEventListener('pointerdown', function(e) {
+    isDrag=true; dragX0=e.clientX; rot0=rotY; velY=0;
+    wrap.classList.add('grabbing');
+    if(wrap.setPointerCapture) wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener('pointermove', function(e) {
+    if (!isDrag) return;
+    var nr = rot0 + (e.clientX-dragX0)*0.0076;
+    velY = nr - rotY; rotY = nr;
+  });
+  wrap.addEventListener('pointerup', function() { isDrag=false; wrap.classList.remove('grabbing'); });
+  wrap.addEventListener('pointercancel', function() { isDrag=false; wrap.classList.remove('grabbing'); });
+
+  wrap.addEventListener('dblclick', function() { toggleFS(); });
+
+
+  window.addEventListener('resize', function() {
+    W = container.offsetWidth; H = container.offsetHeight;
+    camera.aspect = W / H; camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+    camZTgt = calcCamZ(); camZCur = camZTgt;
+  });
+  container.addEventListener('fullscreenchange', function() {
+    W = container.offsetWidth; H = container.offsetHeight;
+    camera.aspect = W / H; camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+    camZTgt = calcCamZ(); camZCur = camZTgt;
+    var panel = document.getElementById('legend-panel'+sfx);
+    if (document.fullscreenElement) {
+      // Fullscreen: hide panel, center cuboid
+      panel.style.display = 'none';
+      lookAtX = 0;
+    } else {
+      // Normal: show panel, shift cuboid left
+      panel.style.display = 'flex';
+      lookAtX = 0;
+    }
+  });
+
+  var toggleFS = function() {
+    if (!document.fullscreenElement)
+      container.requestFullscreen && container.requestFullscreen();
+    else
+      document.exitFullscreen && document.exitFullscreen();
+  };
+
+  // Face label logic
+  function getFaceLabel(r) {
+    var n = ((r % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+    if (n < Math.PI*0.25 || n >= Math.PI*1.75) return 'FACE 1 — FRONT PANEL';
+    if (n < Math.PI*0.75)                       return 'FACE 4 — RIGHT SIDE  [ ■ PEEPHOLES ■ ]';
+    if (n < Math.PI*1.25)                       return 'FACE 2 — REAR PANEL';
+    return 'FACE 3 — LEFT SIDE  [ ■ PEEPHOLES ■ ]';
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  RENDER LOOP
+  // ─────────────────────────────────────────────────────────────────────────
+  var clock = new THREE.Clock(), hintGone = false;
+  var t0 = 0;
+
+  function frame() {
+    requestAnimationFrame(frame);
+    var dt = clock.getDelta();
+    var t  = clock.getElapsedTime();
+
+    // Hint fade after 5 s
+    if (!hintGone && t > 5) { hintLbl.classList.add('gone'); hintGone=true; }
+
+    // Rotation inertia
+    if (!isDrag) { velY *= 0.912; rotY += velY; }
+    G.rotation.y = rotY;
+    faceLbl.textContent = getFaceLabel(rotY);
+
+    // Camera Z smooth follow — straight on, no Y offset (no trapezoid taper)
+    camZCur += (camZTgt - camZCur) * 0.065;
+    camera.position.set(0, 0, camZCur);
+    camera.lookAt(lookAtX, lookAtY, 0);
+
+    // Interior light flicker
+    intLight.intensity = 2.4
+      + Math.sin(t*7.4)*0.10
+      + Math.sin(t*13.7)*0.06
+      + Math.sin(t*3.1)*0.04;
+
+    // Particle drift
+    var pp = pGeo.attributes.position;
+    for (var i=0; i<NP; i++) {
+      pp.array[i*3]   += pVel[i*3];
+      pp.array[i*3+1] += pVel[i*3+1];
+      pp.array[i*3+2] += pVel[i*3+2];
+      if (pp.array[i*3+1] >  5) pp.array[i*3+1] = -5;
+      if (Math.abs(pp.array[i*3])   > 7) pVel[i*3]   *= -1;
+      if (Math.abs(pp.array[i*3+2]) > 4) pVel[i*3+2] *= -1;
+    }
+    pp.needsUpdate = true;
+
+    renderer.render(scene, camera);
+  }
+
+  frame();
+
+  })();
+}
+window.addEventListener('load', function() {
+  initViewer('1');
+  initViewer('2');
+});
+</script>
+</body>
+</html>

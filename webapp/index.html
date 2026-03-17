@@ -2965,6 +2965,19 @@ body.light-theme .cw-nudge{
 .tab-panels{ flex:1; }
 .tab-panel{ display:none; }
 .tab-panel.tab-active{ display:block; }
+.new-cuboids-shell{
+  min-height:100%;
+  padding:0;
+  background:#060708;
+}
+.new-cuboids-frame{
+  display:block;
+  width:100%;
+  height:calc(100vh - 86px);
+  min-height:720px;
+  border:0;
+  background:#060708;
+}
 
 /* Bottom tab bar */
 .bottom-tab-bar{
@@ -3520,6 +3533,7 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
   #btab-heatmap{order:3;}
   #btab-tempdata{order:4;}
   #btab-alarms{order:5;}
+  #btab-newcuboids{order:6;}
   #btab-heatmap .btab-icon{
     width:40px;
     height:40px;
@@ -14920,6 +14934,18 @@ html, body, body *, body *::before, body *::after, svg text{
       </div>
     </div>
   </div>
+
+  <div id="tab-newcuboids" class="tab-panel">
+    <div class="new-cuboids-shell">
+      <iframe
+        class="new-cuboids-frame"
+        src="./industrial_cuboid.html"
+        title="New Cuboids"
+        loading="eager"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </div>
 </div><!-- /tab-panels -->
 
 <!-- ====================================================
@@ -14950,6 +14976,10 @@ html, body, body *, body *::before, body *::after, svg text{
   <button class="btab" id="btab-reformer3d" onclick="switchTab('reformer3d')">
     <span class="btab-icon">🧱</span>
     <span class="btab-label">Reformer 3D</span>
+  </button>
+  <button class="btab" id="btab-newcuboids" onclick="switchTab('newcuboids')">
+    <span class="btab-icon">🧊</span>
+    <span class="btab-label">New Cuboids</span>
   </button>
 </div>
 
@@ -23538,7 +23568,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-heatmap-shell-silver-metallic-1";
+      var swBuild = "20260317-new-cuboids-tab-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
