@@ -13203,9 +13203,9 @@ html, body, body *, body *::before, body *::after, svg text{
           if(typeof THREE === "undefined" || !dims) return null;
           var group = new THREE.Group();
           var panels = [];
-          var panelW = Math.max(0.42, dims.windowSize * 0.84);
-          var panelH = Math.max(0.34, dims.windowSize * 0.66);
-          var panelX = side === "left" ? (dims.sX * 0.22) : (-dims.sX * 0.22);
+          var panelW = Math.max(0.34, dims.windowSize * 0.56);
+          var panelH = Math.max(0.42, dims.windowSize * 0.86);
+          var panelX = side === "left" ? (dims.sX * 0.34) : (-dims.sX * 0.34);
           var panelDefs = [
             {kind:"top", centerY:dims.windowTopY},
             {kind:"bot", centerY:dims.windowBottomY}
@@ -13313,110 +13313,64 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedDrawPeepWindowContent(ctx, rect, label, vals){
-          var avg = hmUploadedAverageTemp(vals || [], []);
           var x = rect.x;
           var y = rect.y;
           var w = rect.w;
           var h = rect.h;
-
-          var panelGrad = ctx.createLinearGradient(x, y, x + w, y + h);
-          panelGrad.addColorStop(0, "rgba(18,22,30,0.96)");
-          panelGrad.addColorStop(0.55, "rgba(9,13,20,0.98)");
-          panelGrad.addColorStop(1, "rgba(20,28,38,0.94)");
-          ctx.fillStyle = panelGrad;
-          hmUploadedRoundRectPath(ctx, x, y, w, h, Math.max(10, Math.round(w * 0.06)));
-          ctx.fill();
+          var hasData = Array.isArray(vals) && vals.some(function(v){ return isFinite(Number(v)); });
+          var innerGrad = ctx.createLinearGradient(x, y, x + w, y + h);
+          innerGrad.addColorStop(0, "rgba(2,4,8,0.98)");
+          innerGrad.addColorStop(0.58, "rgba(7,10,16,0.95)");
+          innerGrad.addColorStop(1, "rgba(18,22,28,0.92)");
+          ctx.fillStyle = innerGrad;
+          ctx.fillRect(x, y, w, h);
 
           ctx.save();
-          hmUploadedRoundRectPath(ctx, x, y, w, h, Math.max(10, Math.round(w * 0.06)));
-          ctx.clip();
-
-          var pipeCount = 4;
-          for(var pi = 0; pi < pipeCount; pi++){
-            var pipeX = x + (w * (0.18 + (pi * 0.16)));
-            var pipeW = Math.max(6, w * 0.065);
-            var pipeGrad = ctx.createLinearGradient(pipeX, y, pipeX + pipeW, y);
-            pipeGrad.addColorStop(0, "rgba(10,15,22,0.95)");
-            pipeGrad.addColorStop(0.5, "rgba(69,78,92,0.86)");
-            pipeGrad.addColorStop(1, "rgba(10,15,22,0.95)");
-            ctx.fillStyle = pipeGrad;
-            hmUploadedRoundRectPath(ctx, pipeX, y + (h * 0.08), pipeW, h * 0.84, Math.max(5, pipeW * 0.45));
-            ctx.fill();
-          }
-
-          ctx.fillStyle = "rgba(255,255,255,0.06)";
-          ctx.fillRect(x, y + (h * 0.48), w, Math.max(2, h * 0.01));
+          var vignette = ctx.createRadialGradient(
+            x + (w * 0.52), y + (h * 0.48), Math.max(8, w * 0.08),
+            x + (w * 0.52), y + (h * 0.48), Math.max(w, h) * 0.72
+          );
+          vignette.addColorStop(0, "rgba(0,0,0,0)");
+          vignette.addColorStop(1, "rgba(0,0,0,0.62)");
+          ctx.fillStyle = vignette;
+          ctx.fillRect(x, y, w, h);
           ctx.restore();
 
-          ctx.strokeStyle = "rgba(232,238,248,0.44)";
-          ctx.lineWidth = Math.max(2, w * 0.018);
-          hmUploadedRoundRectPath(ctx, x, y, w, h, Math.max(10, Math.round(w * 0.06)));
-          ctx.stroke();
+          for(var pi = 0; pi < 3; pi++){
+            var pipeX = x + (w * (0.18 + (pi * 0.20)));
+            var pipeW = Math.max(4, w * 0.055);
+            var pipeGrad = ctx.createLinearGradient(pipeX, y, pipeX + pipeW, y);
+            pipeGrad.addColorStop(0, "rgba(8,12,18,0.92)");
+            pipeGrad.addColorStop(0.45, "rgba(92,102,116,0.34)");
+            pipeGrad.addColorStop(1, "rgba(8,12,18,0.92)");
+            ctx.fillStyle = pipeGrad;
+            ctx.fillRect(pipeX, y + (h * 0.06), pipeW, h * 0.88);
+          }
 
-          ctx.fillStyle = "#f8fafc";
-          ctx.textAlign = "left";
-          ctx.textBaseline = "middle";
-          ctx.font = "700 " + Math.max(12, Math.round(h * 0.11)) + "px Rajdhani, sans-serif";
-          ctx.fillText(label, x + (w * 0.08), y + (h * 0.16));
-
-          ctx.textAlign = "right";
-          ctx.font = "700 " + Math.max(12, Math.round(h * 0.13)) + "px Rajdhani, sans-serif";
-          ctx.fillStyle = avg === null ? "rgba(226,232,240,0.72)" : "#fde68a";
-          ctx.fillText(avg === null ? "--" : (avg + "°"), x + (w * 0.92), y + (h * 0.16));
-
-          var barX = x + (w * 0.10);
-          var barY = y + (h * 0.68);
-          var barW = w * 0.80;
-          var barH = Math.max(10, h * 0.12);
-          var hasData = Array.isArray(vals) && vals.some(function(v){ return isFinite(Number(v)); });
-
-          ctx.save();
-          hmUploadedRoundRectPath(ctx, barX, barY, barW, barH, Math.max(6, Math.round(barH / 2)));
-          ctx.clip();
+          var farStripX = x + (w * 0.83);
+          var farStripW = Math.max(5, w * 0.075);
+          var farStripY = y + (h * 0.10);
+          var farStripH = h * 0.80;
           if(hasData){
-            var grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
-            var added = false;
+            var segH = farStripH / 15;
             for(var vi = 0; vi < 15; vi++){
               var temp = Number(vals[vi]);
-              if(!isFinite(temp)) continue;
-              var stop = Math.max(0, Math.min(1, (vi + 0.5) / 15));
-              grad.addColorStop(stop, hmUploadedTempToColor(temp, 860, 1000));
-              added = true;
+              ctx.fillStyle = isFinite(temp)
+                ? hmUploadedTempToColor(temp, 860, 1000)
+                : "rgba(51,65,85,0.24)";
+              ctx.fillRect(farStripX, farStripY + (segH * vi), farStripW, Math.ceil(segH) + 1);
             }
-            if(!added){
-              grad.addColorStop(0, "rgba(51,65,85,0.96)");
-              grad.addColorStop(1, "rgba(51,65,85,0.96)");
-            }else{
-              var firstVal = Number(vals.find(function(v){ return isFinite(Number(v)); }));
-              var lastVal = Number((vals.slice().reverse().find(function(v){ return isFinite(Number(v)); })));
-              grad.addColorStop(0, hmUploadedTempToColor(firstVal, 860, 1000));
-              grad.addColorStop(1, hmUploadedTempToColor(lastVal, 860, 1000));
-            }
-            ctx.fillStyle = grad;
           }else{
-            ctx.fillStyle = "rgba(51,65,85,0.96)";
+            ctx.fillStyle = "rgba(51,65,85,0.24)";
+            ctx.fillRect(farStripX, farStripY, farStripW, farStripH);
           }
-          ctx.fillRect(barX, barY, barW, barH);
-          ctx.restore();
 
-          ctx.strokeStyle = "rgba(255,255,255,0.28)";
-          ctx.lineWidth = Math.max(1.2, h * 0.01);
-          hmUploadedRoundRectPath(ctx, barX, barY, barW, barH, Math.max(6, Math.round(barH / 2)));
-          ctx.stroke();
-
-          for(var mi = 0; mi < 15; mi++){
-            var markerX = barX + (barW * ((mi + 0.5) / 15));
-            var tempVal = Number(Array.isArray(vals) ? vals[mi] : "");
-            ctx.beginPath();
-            ctx.arc(markerX, barY + (barH / 2), Math.max(2.2, barH * 0.18), 0, Math.PI * 2);
-            ctx.fillStyle = isFinite(tempVal)
-              ? hmUploadedTempToColor(tempVal, 860, 1000)
-              : "rgba(203,213,225,0.22)";
-            ctx.fill();
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = isFinite(tempVal) ? "rgba(255,255,255,0.88)" : "rgba(226,232,240,0.16)";
-            ctx.stroke();
-          }
+          var glowGrad = ctx.createLinearGradient(farStripX - (w * 0.12), 0, farStripX + farStripW, 0);
+          glowGrad.addColorStop(0, "rgba(0,0,0,0)");
+          glowGrad.addColorStop(0.55, "rgba(250,204,21,0.10)");
+          glowGrad.addColorStop(1, "rgba(255,255,255,0.04)");
+          ctx.fillStyle = glowGrad;
+          ctx.fillRect(x + (w * 0.46), y, w * 0.44, h);
         }
 
         function hmUploadedPaintPeepSideDisplay(display, snapshot){
