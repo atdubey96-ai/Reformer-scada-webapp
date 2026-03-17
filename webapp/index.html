@@ -11974,6 +11974,7 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!state || !state.pivotGroup) return;
           var scale = hmUploadedGetResponsiveScale(state.canvas);
           state.sceneScale = scale;
+          state.pivotGroup.position.y = HM_UPLOADED_SCENE_OFFSET_Y;
           state.pivotGroup.scale.set(scale.x, scale.y, scale.z);
         }
         window.updateCuboidResponsiveScale = function(){
@@ -12006,6 +12007,7 @@ html, body, body *, body *::before, body *::after, svg text{
         var HM_UPLOADED_OVERLAY_AUTO_TICK_MS = 180;
         var HM_UPLOADED_OVERLAY_MANUAL_TICK_MS = 140;
         var HM_UPLOADED_OVERLAY_PHASE_STEP = 0.34;
+        var HM_UPLOADED_SCENE_OFFSET_Y = 0.42;
         var HM_UPLOADED_CAMERA_Y = 1.85;
         var HM_UPLOADED_LOOKAT_Y = 1.85;
 
