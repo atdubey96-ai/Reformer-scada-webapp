@@ -12196,6 +12196,41 @@ html, body, body *, body *::before, body *::after, svg text{
           return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
         }
 
+        function hmUploadedNormalizeRotationY(value){
+          var angle = (typeof value === "number" && isFinite(value)) ? value : 0;
+          while(angle > Math.PI) angle -= Math.PI * 2;
+          while(angle < -Math.PI) angle += Math.PI * 2;
+          return angle;
+        }
+
+        function hmUploadedGetSideExposure(rotationY){
+          var sideStrength = Math.abs(Math.sin(hmUploadedNormalizeRotationY(rotationY)));
+          var outerOpacity = Math.pow(sideStrength, 3.2);
+          return outerOpacity < 0.14 ? 0 : Math.max(0, Math.min(1, outerOpacity));
+        }
+
+        function hmUploadedUpdateChamberSceneVisibility(state){
+          if(!state) return;
+          var sideExposure = hmUploadedGetSideExposure(
+            state.rotation && typeof state.rotation.y === "number"
+              ? state.rotation.y
+              : (-Math.PI / 2)
+          );
+
+          if(state.wallOverlays){
+            Object.keys(state.wallOverlays).forEach(function(wallKey){
+              var overlay = state.wallOverlays[wallKey];
+              if(!overlay || !overlay.outerMesh || !overlay.outerMaterial) return;
+              overlay.outerMaterial.opacity = sideExposure;
+              overlay.outerMesh.visible = sideExposure > 0.02;
+            });
+          }
+
+          if(state.chamberWire && state.chamberWire.material){
+            state.chamberWire.material.opacity = 0.025 + (sideExposure * 0.075);
+          }
+        }
+
         function hmUploadedGetResponsiveCamDistForView(canvas, viewName){
           var baseDist = HM_UPLOADED_VIEW_BASE_DIST[viewName] || HM_UPLOADED_VIEW_BASE_DIST.side;
           if(hmUploadedIsZoomCanvas(canvas)) return Number((baseDist * 0.98).toFixed(2));
@@ -12273,6 +12308,7 @@ html, body, body *, body *::before, body *::after, svg text{
           state.viewPreset = viewName || "side";
           hmUploadedApplyResponsiveScale(state);
           hmUploadedRefreshResponsiveCamDist(state);
+          hmUploadedUpdateChamberSceneVisibility(state);
           state.autoRotate = !!autoRotate;
         }
 
@@ -13108,7 +13144,7 @@ html, body, body *, body *::before, body *::after, svg text{
             transparent:true,
             opacity:0.18
           });
-          var edgeMat = new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.25});
+          var edgeMat = new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.1});
           var wallOverlays = {};
           var overlayDims = {sX:sX, sY:sY, sZ:sZ, wallT:wallT};
           var leftWallKey = label === "AB" ? "A" : "C";
@@ -13250,7 +13286,8 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedAddLabel(parent, "Back", 0, -0.6, -sZ / 2 - 1.2);
           return {
             wallOverlays:wallOverlays,
-            fitTarget:chamber
+            fitTarget:chamber,
+            chamberWire:wire
           };
         }
 
@@ -13374,6 +13411,7 @@ html, body, body *, body *::before, body *::after, svg text{
             camDist:initialCamDist,
             touchStart:null,
             wallOverlays:buildResult.wallOverlays || {},
+            chamberWire:buildResult.chamberWire || null,
             latestSnapshot:null,
             lastOverlayPaintAt:0,
             overlayAnimPhase:0,
@@ -13388,6 +13426,7 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedBindHostObservers(state);
           state.camera.position.set(0, HM_UPLOADED_CAMERA_Y, state.camDist);
           state.camera.lookAt(0, HM_UPLOADED_LOOKAT_Y, 0);
+          hmUploadedUpdateChamberSceneVisibility(state);
           renderer.render(scene, camera);
           return state;
         }
@@ -13460,6 +13499,7 @@ html, body, body *, body *::before, body *::after, svg text{
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
               state.pivotGroup.rotation.x = state.rotation.x;
               state.pivotGroup.rotation.y = state.rotation.y;
+              hmUploadedUpdateChamberSceneVisibility(state);
               state.camera.position.set(0, HM_UPLOADED_CAMERA_Y, state.camDist);
               state.camera.lookAt(0, HM_UPLOADED_LOOKAT_Y, 0);
               state.renderer.render(state.scene, state.camera);
@@ -18254,14 +18294,14 @@ function r3dCreateWallOverlay(dims, wallKey, side){
     depthWrite:false
   });
   var outerMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(dims.sZ - 0.38, dims.sY - 0.24),
+    new THREE.PlaneGeometry(dims.sZ - 0.44, dims.sY - 0.28),
     matOuter
   );
   var innerMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(dims.sZ - 0.38, dims.sY - 0.24),
+    new THREE.PlaneGeometry(dims.sZ - 0.44, dims.sY - 0.28),
     matInner
   );
-  outerMesh.position.set(side === "left" ? (-dims.sX/2 - 0.016) : (dims.sX/2 + 0.016), dims.sY/2, 0);
+  outerMesh.position.set(side === "left" ? (-dims.sX/2 - 0.006) : (dims.sX/2 + 0.006), dims.sY/2, 0);
   outerMesh.rotation.y = (side === "left") ? (-Math.PI / 2) : (Math.PI / 2);
   outerMesh.renderOrder = 5;
   innerMesh.position.set(side === "left" ? (-dims.sX/2 + dims.wallT + 0.018) : (dims.sX/2 - dims.wallT - 0.018), dims.sY/2, 0);
@@ -23018,7 +23058,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-burnerhover-2";
+      var swBuild = "20260317-heatmap-seam-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
