@@ -18809,7 +18809,7 @@ function r3dPaintWallOverlay(overlay, wallKey, snapshot, animPhaseOverride){
   var overlayEndY = 864;
   var overlayStepY = (overlayEndY - overlayStartY) / Math.max(1, rowOrder.length - 1);
   var itemCenters = rowOrder.map(function(_, idx){ return Math.round(overlayStartY + overlayStepY * idx); });
-  var iconScale = 3.15;
+  var iconScale = 2.52;
   var overlayAnimPhase = (typeof animPhaseOverride === "number")
     ? animPhaseOverride
     : (reformer3DState.overlayAnimPhase || 0);
@@ -23381,7 +23381,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-heatmap-face-data-r3d-match-1";
+      var swBuild = "20260317-heatmap-face-icons-80pct-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
