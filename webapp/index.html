@@ -11316,7 +11316,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         #tab-heatmap .hm-uploaded-viewer .viewer-section{
           min-height:0;
-          padding:20px 24px 10px;
+          padding:24px 24px 18px;
           border-bottom:1px solid #1E2530;
         }
         #tab-heatmap .hm-uploaded-viewer .section-head{
@@ -11364,19 +11364,22 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         #tab-heatmap .hm-uploaded-viewer .viewer-layout{
           display:flex;
-          align-items:stretch;
+          align-items:flex-start;
           gap:24px;
-          min-height:clamp(360px,46vh,560px);
+          min-height:clamp(520px,72vh,860px);
         }
         #tab-heatmap .hm-uploaded-viewer .canvas-area{
           flex:1;
           position:relative;
-          min-height:clamp(320px,40vh,480px);
+          min-height:clamp(520px,72vh,860px);
           border:1px solid #1E2530;
           border-radius:24px;
           overflow:hidden;
           background:radial-gradient(circle at top,rgba(232,81,26,.14),transparent 42%),linear-gradient(180deg,#121924 0%,#0B0F14 100%);
           cursor:grab;
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.06),
+            0 24px 48px rgba(0,0,0,0.28);
         }
         #tab-heatmap .hm-uploaded-viewer .canvas-area:active{
           cursor:grabbing;
@@ -11462,6 +11465,31 @@ html, body, body *, body *::before, body *::after, svg text{
           display:flex;
           flex-direction:column;
           gap:24px;
+        }
+        @media (min-width:961px){
+          #tab-heatmap .hm-uploaded-viewer .viewer-section{
+            min-height:calc(100dvh - 82px);
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+          }
+          #tab-heatmap .hm-uploaded-viewer .section-head{
+            margin-bottom:16px;
+          }
+          #tab-heatmap .hm-uploaded-viewer .viewer-layout{
+            min-height:min(76dvh, 860px);
+            height:min(76dvh, 860px);
+          }
+          #tab-heatmap .hm-uploaded-viewer .canvas-area{
+            min-height:0;
+            height:100%;
+          }
+          #tab-heatmap .hm-uploaded-viewer .side-panel{
+            width:320px;
+            max-height:100%;
+            overflow:auto;
+            scrollbar-width:thin;
+          }
         }
         #tab-heatmap .hm-uploaded-viewer .panel-section h3{
           font-size:10px;
@@ -12007,9 +12035,9 @@ html, body, body *, body *::before, body *::after, svg text{
         var HM_UPLOADED_OVERLAY_AUTO_TICK_MS = 180;
         var HM_UPLOADED_OVERLAY_MANUAL_TICK_MS = 140;
         var HM_UPLOADED_OVERLAY_PHASE_STEP = 0.34;
-        var HM_UPLOADED_SCENE_OFFSET_Y = -0.08;
-        var HM_UPLOADED_CAMERA_Y = 1.55;
-        var HM_UPLOADED_LOOKAT_Y = 1.35;
+        var HM_UPLOADED_SCENE_OFFSET_Y = 0.02;
+        var HM_UPLOADED_CAMERA_Y = 1.72;
+        var HM_UPLOADED_LOOKAT_Y = 1.54;
 
         function hmUploadedClampRotationX(value){
           return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
@@ -12116,9 +12144,15 @@ html, body, body *, body *::before, body *::after, svg text{
 
         function hmUploadedRefreshResponsiveCamDist(state){
           if(!state || !state.canvas) return;
+          var size = hmUploadedGetCanvasSize(state.canvas);
+          var aspect = (size.width > 0 && size.height > 0) ? (size.width / Math.max(1, size.height)) : 1.6;
+          var padding = hmUploadedIsZoomCanvas(state.canvas) ? 1.04 : 1.12;
+          if(aspect >= 1.85) padding = hmUploadedIsZoomCanvas(state.canvas) ? 1.02 : 1.18;
+          else if(aspect >= 1.55) padding = hmUploadedIsZoomCanvas(state.canvas) ? 1.03 : 1.15;
+          else if(aspect <= 1.2) padding = hmUploadedIsZoomCanvas(state.canvas) ? 1.05 : 1.08;
           var nextDefault = hmUploadedGetFitCamDist(
             state,
-            hmUploadedIsZoomCanvas(state.canvas) ? 1.02 : 0.94
+            padding
           );
           state.defaultCamDist = nextDefault;
           state.camDist = nextDefault;
