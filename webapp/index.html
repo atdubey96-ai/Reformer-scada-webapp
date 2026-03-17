@@ -13202,81 +13202,70 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedCreatePeepSideDisplay(dims, zoneKey, side, renderer){
           if(typeof THREE === "undefined" || !dims) return null;
           var group = new THREE.Group();
-          var panels = [];
-          var panelW = Math.max(0.34, dims.windowSize * 0.56);
-          var panelH = Math.max(0.42, dims.windowSize * 0.86);
-          var panelX = side === "left" ? (dims.sX * 0.34) : (-dims.sX * 0.34);
-          var panelDefs = [
-            {kind:"top", centerY:dims.windowTopY},
-            {kind:"bot", centerY:dims.windowBottomY}
+          var tunnelDepth = Math.max(0.68, Math.min(1.08, dims.sX * 0.07));
+          var tunnelInset = 0.12;
+          var tunnelH = Math.max(0.4, dims.windowSize - (tunnelInset * 2));
+          var tunnelW = Math.max(0.4, dims.windowSize - (tunnelInset * 2));
+          var wallT = 0.035;
+          var tunnelMat = new THREE.MeshStandardMaterial({
+            color:0x05080d,
+            metalness:0.08,
+            roughness:0.92,
+            side:THREE.DoubleSide
+          });
+          var tunnelBackMat = new THREE.MeshBasicMaterial({
+            color:0x03060a,
+            side:THREE.DoubleSide
+          });
+          var windows = [
+            dims.windowTopY,
+            dims.windowBottomY
           ];
 
-          panelDefs.forEach(function(def){
-            var canvas = document.createElement("canvas");
-            canvas.width = 720;
-            canvas.height = 360;
-            var texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.ClampToEdgeWrapping;
-            texture.wrapT = THREE.ClampToEdgeWrapping;
-            texture.minFilter = THREE.LinearMipmapLinearFilter;
-            texture.magFilter = THREE.LinearFilter;
-            texture.generateMipmaps = true;
-            texture.premultiplyAlpha = false;
-            if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
-              texture.colorSpace = THREE.SRGBColorSpace;
-            }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
-              texture.encoding = THREE.sRGBEncoding;
-            }
-            if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
-              try{
-                texture.anisotropy = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy() || 1));
-              }catch(e){}
-            }
-            var material = new THREE.MeshBasicMaterial({
-              map:texture,
-              transparent:true,
-              alphaTest:0.02,
-              side:THREE.DoubleSide,
-              depthWrite:false
-            });
-            var mesh = new THREE.Mesh(new THREE.PlaneGeometry(panelW, panelH), material);
-            mesh.position.set(panelX, def.centerY, 0);
-            mesh.rotation.y = side === "left" ? (Math.PI / 2) : (-Math.PI / 2);
-            mesh.renderOrder = 5;
-            group.add(mesh);
-            panels.push({
-              kind:def.kind,
-              centerY:def.centerY,
-              canvas:canvas,
-              texture:texture,
-              material:material,
-              mesh:mesh
-            });
-          });
+          windows.forEach(function(centerY){
+            var dir = side === "left" ? 1 : -1;
+            var xOuter = side === "left" ? (-dims.sX / 2) : (dims.sX / 2);
+            var xInner = xOuter + (dir * tunnelDepth);
+            var xMid = (xOuter + xInner) / 2;
 
-          var glassMaterial = new THREE.MeshBasicMaterial({
-            color:0xdbeafe,
-            transparent:true,
-            opacity:0.08,
-            side:THREE.DoubleSide,
-            depthWrite:false
-          });
-          var glassTop = new THREE.Mesh(
-            new THREE.PlaneGeometry(dims.windowSize - 0.06, dims.windowSize - 0.06),
-            glassMaterial.clone()
-          );
-          var glassBot = new THREE.Mesh(
-            new THREE.PlaneGeometry(dims.windowSize - 0.06, dims.windowSize - 0.06),
-            glassMaterial.clone()
-          );
-          [glassTop, glassBot].forEach(function(glass, idx){
-            glass.position.set(
-              side === "left" ? (-dims.sX / 2 + 0.008) : (dims.sX / 2 - 0.008),
-              idx === 0 ? dims.windowTopY : dims.windowBottomY,
-              0
+            var topWall = new THREE.Mesh(
+              new THREE.BoxGeometry(tunnelDepth, wallT, tunnelW),
+              tunnelMat
             );
-            glass.rotation.y = side === "left" ? (Math.PI / 2) : (-Math.PI / 2);
-            glass.renderOrder = 9;
+            topWall.position.set(xMid, centerY + (tunnelH / 2) - (wallT / 2), 0);
+            group.add(topWall);
+
+            var bottomWall = new THREE.Mesh(
+              new THREE.BoxGeometry(tunnelDepth, wallT, tunnelW),
+              tunnelMat
+            );
+            bottomWall.position.set(xMid, centerY - (tunnelH / 2) + (wallT / 2), 0);
+            group.add(bottomWall);
+
+            var nearZ = -(tunnelW / 2) + (wallT / 2);
+            var farZ = (tunnelW / 2) - (wallT / 2);
+            var leftWall = new THREE.Mesh(
+              new THREE.BoxGeometry(tunnelDepth, tunnelH, wallT),
+              tunnelMat
+            );
+            leftWall.position.set(xMid, centerY, nearZ);
+            group.add(leftWall);
+
+            var rightWall = new THREE.Mesh(
+              new THREE.BoxGeometry(tunnelDepth, tunnelH, wallT),
+              tunnelMat
+            );
+            rightWall.position.set(xMid, centerY, farZ);
+            group.add(rightWall);
+
+            var backPlate = new THREE.Mesh(
+              new THREE.PlaneGeometry(tunnelW - 0.04, tunnelH - 0.04),
+              tunnelBackMat
+            );
+            backPlate.position.set(xInner, centerY, 0);
+            backPlate.rotation.y = side === "left" ? (Math.PI / 2) : (-Math.PI / 2);
+            backPlate.renderOrder = 5;
+            group.add(backPlate);
           });
 
           return {
@@ -13284,8 +13273,8 @@ html, body, body *, body *::before, body *::after, svg text{
             side:String(side || "left"),
             dims:dims,
             mesh:group,
-            panels:panels,
-            glassPanes:[glassTop, glassBot]
+            panels:[],
+            glassPanes:[]
           };
         }
 
@@ -13374,21 +13363,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedPaintPeepSideDisplay(display, snapshot){
-          if(!display || !Array.isArray(display.panels)) return;
-          display.panels.forEach(function(panel){
-            if(!panel || !panel.canvas || !panel.texture) return;
-            var ctx = panel.canvas.getContext("2d");
-            var w = panel.canvas.width;
-            var h = panel.canvas.height;
-            ctx.clearRect(0, 0, w, h);
-            hmUploadedDrawPeepWindowContent(
-              ctx,
-              {x:36, y:36, w:w - 72, h:h - 72},
-              panel.kind === "top" ? "TOP PH" : "BOTTOM PH",
-              hmUploadedGetZonePeepValues(snapshot, display.zoneKey, panel.kind)
-            );
-            panel.texture.needsUpdate = true;
-          });
+          return;
         }
 
         function hmUploadedRefreshViewerPeepDisplays(state, snapshot){
