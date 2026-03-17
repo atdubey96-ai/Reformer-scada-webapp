@@ -12769,10 +12769,9 @@ html, body, body *, body *::before, body *::after, svg text{
               lick:"rgba(219,234,254,0.42)"
             }
           }[s];
-          var phase = (typeof animPhase === "number") ? animPhase : 0;
-          var waveA = 0.5 + (Math.sin(phase) * 0.5);
-          var waveB = 0.5 + (Math.sin((phase * 1.41) + 1.2) * 0.5);
-          var waveC = 0.5 + (Math.sin((phase * 1.92) + 2.6) * 0.5);
+          var waveA = 0.56;
+          var waveB = 0.48;
+          var waveC = 0.62;
 
           ctx.save();
           ctx.globalCompositeOperation = "screen";
@@ -13045,7 +13044,7 @@ html, body, body *, body *::before, body *::after, svg text{
           });
         }
 
-        function hmUploadedBuildChamberScene(parent, label){
+        function hmUploadedBuildChamberScene(parent, label, renderer){
           var sX = 1.22, sY = 3.5, sZ = 5.0, wallT = 0.15;
           var hs = 0.5, hy1 = sY * 0.33, hy2 = sY * 0.68;
           var tubeCount = 8;
@@ -13120,8 +13119,8 @@ html, body, body *, body *::before, body *::after, svg text{
           chamber.add(rightWall);
 
           if(typeof r3dCreateWallOverlay === "function"){
-            var leftOverlay = r3dCreateWallOverlay(overlayDims, leftWallKey, "left");
-            var rightOverlay = r3dCreateWallOverlay(overlayDims, rightWallKey, "right");
+            var leftOverlay = r3dCreateWallOverlay(overlayDims, leftWallKey, "left", renderer || null);
+            var rightOverlay = r3dCreateWallOverlay(overlayDims, rightWallKey, "right", renderer || null);
             hmUploadedPrepareOverlay(leftOverlay);
             hmUploadedPrepareOverlay(rightOverlay);
             wallOverlays[leftWallKey] = leftOverlay;
@@ -13338,7 +13337,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
           var pivotGroup = new THREE.Group();
           scene.add(pivotGroup);
-          var buildResult = hmUploadedBuildChamberScene(pivotGroup, label) || {};
+          var buildResult = hmUploadedBuildChamberScene(pivotGroup, label, renderer) || {};
 
           var state = {
             canvas:canvas,
@@ -13435,11 +13434,6 @@ html, body, body *, body *::before, body *::after, svg text{
               }
               var shouldRender = !!(host && hmUploadedIsHostVisible(host));
               if(!shouldRender) return;
-              state.overlayAnimPhase = now * 0.0105;
-              if((now - state.lastOverlayPaintAt) > 220){
-                state.lastOverlayPaintAt = now;
-                hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
-              }
               if(state.autoRotate) state.rotation.y += 0.0016;
               state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
               state.pivotGroup.rotation.x = state.rotation.x;
@@ -18172,14 +18166,26 @@ function r3dSetInfo(id, text, cls){
   if(cls) el.classList.add(cls);
 }
 
-function r3dCreateWallOverlay(dims, wallKey, side){
+function configureWallOverlayTexture(tex, renderer){
+  if(!tex || typeof THREE === "undefined") return;
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
+    try{
+      tex.anisotropy = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy() || 1));
+    }catch(e){}
+  }
+}
+
+function r3dCreateWallOverlay(dims, wallKey, side, renderer){
   var canvas = document.createElement("canvas");
   canvas.width = 1200;
   canvas.height = 960;
   var tex = new THREE.CanvasTexture(canvas);
-  tex.minFilter = THREE.LinearFilter;
-  tex.magFilter = THREE.LinearFilter;
-  tex.generateMipmaps = false;
+  configureWallOverlayTexture(tex, renderer || reformer3DState.renderer || null);
   var matOuter = new THREE.MeshBasicMaterial({
     map:tex,
     transparent:true,
@@ -18237,7 +18243,7 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase){
     B:{flame:"#2563eb", core:"#93c5fd", inner:"#dbeafe", stem:"#1d4ed8"},
     C:{flame:"#3a5068", core:"#556b85", inner:"#64748b", stem:"#233244"}
   }[s];
-  var pulse = (s === "C") ? 0 : (0.5 + 0.5 * Math.sin(animPhase || 0));
+  var pulse = (s === "C") ? 0 : 0.58;
   var lift = (s === "C") ? 0 : (2.5 + pulse * 2.5);
   var glow = (s === "C") ? 0 : (6 + pulse * 10);
 
@@ -18572,8 +18578,8 @@ function r3dBuildChamber(xCenter, dims, mats, chamberKey){
 
   var leftWallKey = chamberKey === "A" ? "A" : "C";
   var rightWallKey = chamberKey === "A" ? "B" : "D";
-  var leftOverlay = r3dCreateWallOverlay(dims, leftWallKey, "left");
-  var rightOverlay = r3dCreateWallOverlay(dims, rightWallKey, "right");
+  var leftOverlay = r3dCreateWallOverlay(dims, leftWallKey, "left", reformer3DState.renderer || null);
+  var rightOverlay = r3dCreateWallOverlay(dims, rightWallKey, "right", reformer3DState.renderer || null);
   reformer3DState.wallOverlays[leftWallKey] = leftOverlay;
   reformer3DState.wallOverlays[rightWallKey] = rightOverlay;
   g.add(leftOverlay.outerMesh);
@@ -18845,14 +18851,9 @@ function initReformer3DTab(){
       if(!reformer3DState.initialized || !reformer3DState.renderer || !reformer3DState.camera || !reformer3DState.pivotGroup) return;
       requestAnimationFrame(animate);
       var now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
-      reformer3DState.overlayAnimPhase = now * 0.0085;
       if(reformer3DState.autoRotate) reformer3DState.rotation.y += 0.0012;
       reformer3DState.pivotGroup.rotation.x = reformer3DState.rotation.x;
       reformer3DState.pivotGroup.rotation.y = reformer3DState.rotation.y;
-      if(r3dIsActive() && reformer3DState.latestSnapshot && (now - reformer3DState.lastOverlayPaintAt) > 240){
-        reformer3DState.lastOverlayPaintAt = now;
-        r3dRefreshWallOverlays(reformer3DState.latestSnapshot);
-      }
       r3dUpdateCamera();
       if(r3dIsActive()){
         reformer3DState.renderer.render(reformer3DState.scene, reformer3DState.camera);
@@ -22957,7 +22958,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-burner-grid-hover-1";
+      var swBuild = "20260317-cuboid-face-stability-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
