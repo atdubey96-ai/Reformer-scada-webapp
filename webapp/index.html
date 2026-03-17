@@ -11365,7 +11365,7 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap .hm-uploaded-viewer .viewer-layout{
           display:flex;
           align-items:flex-start;
-          gap:24px;
+          gap:18px;
           min-height:clamp(520px,72vh,860px);
         }
         #tab-heatmap .hm-uploaded-viewer .canvas-area{
@@ -11457,7 +11457,7 @@ html, body, body *, body *::before, body *::after, svg text{
           pointer-events:none;
         }
         #tab-heatmap .hm-uploaded-viewer .side-panel{
-          width:300px;
+          width:286px;
           background:#10151C;
           border:1px solid #1E2530;
           border-radius:24px;
@@ -11485,7 +11485,7 @@ html, body, body *, body *::before, body *::after, svg text{
             height:100%;
           }
           #tab-heatmap .hm-uploaded-viewer .side-panel{
-            width:320px;
+            width:292px;
             max-height:100%;
             overflow:auto;
             scrollbar-width:thin;
@@ -12146,10 +12146,12 @@ html, body, body *, body *::before, body *::after, svg text{
           if(!state || !state.canvas) return;
           var size = hmUploadedGetCanvasSize(state.canvas);
           var aspect = (size.width > 0 && size.height > 0) ? (size.width / Math.max(1, size.height)) : 1.6;
-          var padding = hmUploadedIsZoomCanvas(state.canvas) ? 1.04 : 1.12;
-          if(aspect >= 1.85) padding = hmUploadedIsZoomCanvas(state.canvas) ? 1.02 : 1.18;
-          else if(aspect >= 1.55) padding = hmUploadedIsZoomCanvas(state.canvas) ? 1.03 : 1.15;
-          else if(aspect <= 1.2) padding = hmUploadedIsZoomCanvas(state.canvas) ? 1.05 : 1.08;
+          var isZoom = hmUploadedIsZoomCanvas(state.canvas);
+          var padding = isZoom ? 1.02 : 1.02;
+          if(aspect >= 2.05) padding = isZoom ? 0.9 : 0.88;
+          else if(aspect >= 1.85) padding = isZoom ? 0.94 : 0.92;
+          else if(aspect >= 1.6) padding = isZoom ? 0.98 : 0.96;
+          else if(aspect <= 1.2) padding = isZoom ? 1.04 : 1.02;
           var nextDefault = hmUploadedGetFitCamDist(
             state,
             padding
