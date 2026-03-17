@@ -18372,24 +18372,30 @@ function r3dDrawTipFlameGlow(ctx, x, y, state, animPhase, iconScale){
   if(s !== "O" && s !== "N" && s !== "B") return;
   var palette = r3dGetBurnerPalette(s);
   var phase = Number(animPhase) || 0;
-  var scale = Math.max(1, Number(iconScale) || 1.8);
-  var waveA = 0.5 + 0.5 * Math.sin(phase * 1.55);
-  var waveB = 0.5 + 0.5 * Math.sin(phase * 2.1 + 1.3);
-  var waveC = 0.5 + 0.5 * Math.sin(phase * 1.75 + 2.5);
+  var scale = Math.max(1, Number(iconScale) || 2.3);
+  var waveA = 0.5 + 0.5 * Math.sin(phase * 1.8);
+  var waveB = 0.5 + 0.5 * Math.sin(phase * 2.45 + 1.3);
+  var waveC = 0.5 + 0.5 * Math.sin(phase * 2.05 + 2.5);
+  var waveD = 0.5 + 0.5 * Math.sin(phase * 3.15 + 0.4);
 
   ctx.save();
   ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = 0.16 + (waveA * 0.12);
+  ctx.globalAlpha = 0.18 + (waveA * 0.16);
   ctx.fillStyle = palette.glow;
   ctx.beginPath();
-  ctx.ellipse(x, y - (28 * scale), (11 * scale) + (waveB * 3.2), (16 * scale) + (waveA * 4.6), 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y - (25 * scale), (12.5 * scale) + (waveB * 3.8), (17.5 * scale) + (waveA * 5.2), 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.globalAlpha = 0.11 + (waveC * 0.08);
+  ctx.globalAlpha = 0.14 + (waveC * 0.11);
   ctx.beginPath();
-  ctx.ellipse(x - (6 * scale), y - (25 * scale), (5 * scale) + (waveA * 1.2), (9 * scale) + (waveB * 2), -0.22, 0, Math.PI * 2);
+  ctx.ellipse(x - (7 * scale), y - (23 * scale), (5.6 * scale) + (waveA * 1.6), (10 * scale) + (waveB * 2.3), -0.22, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(x + (6 * scale), y - (25 * scale), (5 * scale) + (waveB * 1.2), (9 * scale) + (waveA * 2), 0.22, 0, Math.PI * 2);
+  ctx.ellipse(x + (7 * scale), y - (23 * scale), (5.6 * scale) + (waveB * 1.6), (10 * scale) + (waveA * 2.3), 0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.12 + (waveD * 0.1);
+  ctx.fillStyle = palette.inner;
+  ctx.beginPath();
+  ctx.ellipse(x, y - (31 * scale) - (waveA * 2.4), (3.1 * scale) + (waveC * 0.7), (6.3 * scale) + (waveB * 1.5), 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -18398,18 +18404,19 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase, iconScale){
   var s = String(state || "C").toUpperCase();
   if(s !== "O" && s !== "N" && s !== "B") s = "C";
   var palette = r3dGetBurnerPalette(s);
-  var scale = Math.max(1, Number(iconScale) || 1.8);
+  var scale = Math.max(1, Number(iconScale) || 2.3);
   var phase = Number(animPhase) || 0;
-  var flicker = 0.92 + (Math.sin(phase * 1.65) * 0.08) + (Math.sin(phase * 2.35 + 0.9) * 0.05);
-  var lift = (s === "C") ? 0 : ((3.2 + (Math.sin(phase * 1.5) * 1.4)) * scale);
-  var stemW = 7.5 * scale;
-  var stemH = 13 * scale;
+  var flicker = 0.94 + (Math.sin(phase * 1.95) * 0.11) + (Math.sin(phase * 2.8 + 0.9) * 0.07);
+  var sidePulse = 0.94 + (Math.sin(phase * 2.35 + 0.4) * 0.12);
+  var lift = (s === "C") ? 0 : ((2.4 + (Math.sin(phase * 1.75) * 1.5)) * scale);
+  var stemW = 7 * scale;
+  var stemH = 11.5 * scale;
   var stemX = x - (stemW / 2);
-  var stemY = y + (7 * scale);
-  var baseW = 24 * scale;
+  var stemY = y + (5 * scale);
+  var baseW = 20 * scale;
   var baseH = 6 * scale;
   var baseX = x - (baseW / 2);
-  var baseY = y + (19 * scale);
+  var baseY = y + (14.5 * scale);
 
   ctx.fillStyle = "rgba(9,13,24,0.92)";
   r3dRoundRectPath(ctx, baseX, baseY, baseW, baseH, 3 * scale);
@@ -18417,10 +18424,10 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase, iconScale){
 
   if(s === "C"){
     ctx.fillStyle = palette.flame;
-    r3dRoundRectPath(ctx, x - (12 * scale), y - (4 * scale), 24 * scale, 8 * scale, 4 * scale);
+    r3dRoundRectPath(ctx, x - (10 * scale), y - (2.5 * scale), 20 * scale, 7 * scale, 3.4 * scale);
     ctx.fill();
     ctx.fillStyle = palette.core;
-    r3dRoundRectPath(ctx, stemX, y + (1 * scale), stemW, 14 * scale, 3 * scale);
+    r3dRoundRectPath(ctx, stemX, y + (1 * scale), stemW, 12.5 * scale, 3 * scale);
     ctx.fill();
   }else{
     r3dDrawTipFlameGlow(ctx, x, y, s, phase, scale);
@@ -18429,25 +18436,25 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase, iconScale){
     ctx.fill();
 
     ctx.save();
-    ctx.shadowBlur = 10 * scale;
+    ctx.shadowBlur = 11 * scale;
     ctx.shadowColor = palette.glow;
     ctx.beginPath();
-    ctx.moveTo(x, y - (26 * scale) - lift);
+    ctx.moveTo(x, y - (19 * scale) - lift);
     ctx.bezierCurveTo(
-      x + (16 * scale) * flicker,
-      y - (11 * scale) - (lift * 0.55),
-      x + (11 * scale) * flicker,
-      y + (5 * scale),
+      x + (13 * scale) * flicker,
+      y - (10 * scale) - (lift * 0.55),
+      x + (9.4 * scale) * sidePulse,
+      y + (1.8 * scale),
       x,
-      y + (8 * scale)
+      y + (4.2 * scale)
     );
     ctx.bezierCurveTo(
-      x - (11 * scale) * flicker,
-      y + (5 * scale),
-      x - (16 * scale) * flicker,
-      y - (11 * scale) - (lift * 0.55),
+      x - (9.4 * scale) * sidePulse,
+      y + (1.8 * scale),
+      x - (13 * scale) * flicker,
+      y - (10 * scale) - (lift * 0.55),
       x,
-      y - (26 * scale) - lift
+      y - (19 * scale) - lift
     );
     ctx.closePath();
     ctx.fillStyle = palette.flame;
@@ -18455,48 +18462,56 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase, iconScale){
     ctx.restore();
 
     ctx.beginPath();
-    ctx.moveTo(x, y - (17 * scale) - (lift * 0.5));
+    ctx.moveTo(x, y - (13 * scale) - (lift * 0.46));
     ctx.bezierCurveTo(
-      x + (8 * scale),
-      y - (8 * scale) - (lift * 0.28),
-      x + (6 * scale),
-      y + (1.5 * scale),
+      x + (6.6 * scale),
+      y - (6.2 * scale) - (lift * 0.24),
+      x + (5 * scale),
+      y + (0.6 * scale),
       x,
-      y + (3.5 * scale)
+      y + (2.4 * scale)
     );
     ctx.bezierCurveTo(
-      x - (6 * scale),
-      y + (1.5 * scale),
-      x - (8 * scale),
-      y - (8 * scale) - (lift * 0.28),
+      x - (5 * scale),
+      y + (0.6 * scale),
+      x - (6.6 * scale),
+      y - (6.2 * scale) - (lift * 0.24),
       x,
-      y - (17 * scale) - (lift * 0.5)
+      y - (13 * scale) - (lift * 0.46)
     );
     ctx.closePath();
     ctx.fillStyle = palette.core;
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(x, y - (10 * scale) - (lift * 0.25));
+    ctx.moveTo(x, y - (7 * scale) - (lift * 0.18));
     ctx.bezierCurveTo(
-      x + (3.5 * scale),
-      y - (5 * scale) - (lift * 0.16),
-      x + (2.5 * scale),
-      y - (0.6 * scale),
+      x + (3 * scale),
+      y - (3.8 * scale) - (lift * 0.12),
+      x + (2.2 * scale),
+      y - (0.1 * scale),
       x,
-      y + (1.2 * scale)
+      y + (0.8 * scale)
     );
     ctx.bezierCurveTo(
-      x - (2.5 * scale),
-      y - (0.6 * scale),
-      x - (3.5 * scale),
-      y - (5 * scale) - (lift * 0.16),
+      x - (2.2 * scale),
+      y - (0.1 * scale),
+      x - (3 * scale),
+      y - (3.8 * scale) - (lift * 0.12),
       x,
-      y - (10 * scale) - (lift * 0.25)
+      y - (7 * scale) - (lift * 0.18)
     );
     ctx.closePath();
     ctx.fillStyle = palette.inner;
     ctx.fill();
+
+    ctx.save();
+    ctx.globalAlpha = 0.78;
+    ctx.fillStyle = palette.inner;
+    ctx.beginPath();
+    ctx.arc(x + (Math.sin(phase * 3.4) * 1.2 * scale), y - (23 * scale) - lift - (Math.cos(phase * 2.6) * 0.8 * scale), 1.2 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   var dotScale = Math.min(1.4, 0.92 + (scale * 0.22));
@@ -18514,13 +18529,13 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase, iconScale){
 
 function r3dDrawPeepBar(ctx, label, vals, left, centerY, width, uiScale){
   var k = Math.max(1, Number(uiScale) || 1);
-  var barHeight = Math.round(42 * k);
+  var barHeight = Math.round(46 * k);
   var barTop = centerY - (barHeight / 2);
   var gridLeft = left;
   var slotW = width / 15;
   var labelLeft = Math.round(20 * k);
-  var labelW = Math.round(100 * k);
-  var labelH = Math.round(50 * k);
+  var labelW = Math.round(106 * k);
+  var labelH = Math.round(52 * k);
   var labelTop = centerY - Math.round(labelH / 2);
   var labelCenterX = labelLeft + Math.round(labelW / 2);
   var positions = [];
@@ -18542,7 +18557,7 @@ function r3dDrawPeepBar(ctx, label, vals, left, centerY, width, uiScale){
   ctx.lineWidth = 1.2 * k;
   ctx.stroke();
   ctx.fillStyle = "#f8fafc";
-  ctx.font = "700 " + Math.round(24 * k) + "px Times New Roman, serif";
+  ctx.font = "700 " + Math.round(26 * k) + "px Times New Roman, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(label, labelCenterX, centerY);
@@ -18582,7 +18597,7 @@ function r3dDrawPeepBar(ctx, label, vals, left, centerY, width, uiScale){
     if(positions.length){
       var tempVal = Number(Array.isArray(vals) ? vals[m] : "");
       if(isFinite(tempVal)){
-        var markerR = Math.max(5.2, 5.4 * k);
+        var markerR = Math.max(5.8, 6.2 * k);
         ctx.beginPath();
         ctx.arc(mx, centerY, markerR, 0, Math.PI * 2);
         ctx.fillStyle = tempToColor(tempVal, 860, 1000);
@@ -18591,9 +18606,9 @@ function r3dDrawPeepBar(ctx, label, vals, left, centerY, width, uiScale){
         ctx.strokeStyle = "rgba(255,255,255,0.95)";
         ctx.stroke();
 
-        var pillW = Math.round(62 * k);
-        var pillH = Math.round(24 * k);
-        var pillTop = barTop - Math.round(32 * k);
+        var pillW = Math.round(70 * k);
+        var pillH = Math.round(28 * k);
+        var pillTop = barTop - Math.round(38 * k);
         ctx.fillStyle = "rgba(52,44,34,0.92)";
         r3dRoundRectPath(ctx, mx - pillW/2, pillTop, pillW, pillH, Math.max(7, Math.round(7 * k)));
         ctx.fill();
@@ -18601,7 +18616,7 @@ function r3dDrawPeepBar(ctx, label, vals, left, centerY, width, uiScale){
         ctx.lineWidth = 1 * k;
         ctx.stroke();
         ctx.fillStyle = "#ffffff";
-        ctx.font = "700 " + Math.round(16 * k) + "px Times New Roman, serif";
+        ctx.font = "700 " + Math.round(20 * k) + "px Times New Roman, serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(tempVal + "°", mx, pillTop + (pillH / 2));
@@ -18640,7 +18655,7 @@ function r3dPaintWallOverlay(overlay, wallKey, snapshot){
   var overlayEndY = 864;
   var overlayStepY = (overlayEndY - overlayStartY) / Math.max(1, rowOrder.length - 1);
   var itemCenters = rowOrder.map(function(_, idx){ return Math.round(overlayStartY + overlayStepY * idx); });
-  var iconScale = 1.65;
+  var iconScale = 2.35;
 
   var outerGrad = ctx.createLinearGradient(0, 0, w, h);
   outerGrad.addColorStop(0, "rgba(14,12,18,0.99)");
@@ -18685,11 +18700,11 @@ function r3dPaintWallOverlay(overlay, wallKey, snapshot){
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "700 20px Times New Roman, serif";
+  ctx.font = "700 26px Times New Roman, serif";
   for(var bn=1; bn<=15; bn++){
     var bx = gridLeft + slotW * (bn - 0.5);
-    var bW = 60;
-    var bH = 38;
+    var bW = 72;
+    var bH = 44;
     ctx.fillStyle = "rgba(8,12,22,0.96)";
     r3dRoundRectPath(ctx, bx - (bW / 2), burnerNumY - (bH / 2), bW, bH, 10);
     ctx.fill();
@@ -19099,9 +19114,9 @@ function initReformer3DTab(){
       reformer3DState.pivotGroup.rotation.y = reformer3DState.rotation.y;
       r3dUpdateCamera();
       if(r3dIsActive() && reformer3DState.latestSnapshot){
-        var overlayTickMs = reformer3DState.autoRotate ? 220 : 150;
+        var overlayTickMs = reformer3DState.autoRotate ? 120 : 90;
         if((now - reformer3DState.lastOverlayPaintAt) >= overlayTickMs){
-          reformer3DState.overlayAnimPhase = (reformer3DState.overlayAnimPhase + 0.34) % (Math.PI * 2);
+          reformer3DState.overlayAnimPhase = (reformer3DState.overlayAnimPhase + 0.52) % (Math.PI * 2);
           r3dRefreshWallOverlays(reformer3DState.latestSnapshot);
           reformer3DState.lastOverlayPaintAt = now;
         }
@@ -23209,7 +23224,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-r3d-wall-clarity-2";
+      var swBuild = "20260317-r3d-wall-clarity-3";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
