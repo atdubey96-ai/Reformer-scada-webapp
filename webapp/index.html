@@ -10979,6 +10979,143 @@ html, body, body *, body *::before, body *::after, svg text{
           }
         }
       </style>
+      <style id="heatmap-cuboid-face-clarity-20260317">
+        #tab-heatmap .cb-face .hm-wall-card{
+          --hm-face-pad-left:clamp(16px,calc(18px * var(--cb-front-scale)),40px);
+          --hm-face-pad-right:clamp(22px,calc(22px * var(--cb-front-scale)),48px);
+          --hm-track-inset-left:clamp(10px,calc(12px * var(--cb-front-scale)),28px);
+          --hm-track-inset-right:clamp(14px,calc(14px * var(--cb-front-scale)),32px);
+        }
+        #tab-heatmap .cb-face .hm-wall-header{
+          padding:6px var(--hm-face-pad-right) 6px var(--hm-face-pad-left) !important;
+        }
+        #tab-heatmap .cb-face .hm-body{
+          padding:6px var(--hm-face-pad-right) 8px var(--hm-face-pad-left) !important;
+          gap:1px !important;
+        }
+        #tab-heatmap .cb-face .hm-row-wrap{
+          padding:3px 0 !important;
+          gap:5px !important;
+        }
+        #tab-heatmap .cb-face .hm-burners-line,
+        #tab-heatmap .cb-face .hm-burner-nums{
+          justify-content:space-evenly !important;
+          gap:0 !important;
+          padding-left:var(--hm-track-inset-left) !important;
+          padding-right:var(--hm-track-inset-right) !important;
+        }
+        #tab-heatmap .cb-face .hm-burner-wrap{
+          width:auto !important;
+          max-width:none !important;
+          min-width:0 !important;
+          flex:1 1 0 !important;
+          display:flex !important;
+          justify-content:center !important;
+        }
+        #tab-heatmap .cb-face .hm-burner-wrap svg{
+          width:clamp(32px,calc(34px * var(--cb-front-scale)),72px) !important;
+          height:clamp(48px,calc(54px * var(--cb-front-scale)),110px) !important;
+        }
+        #tab-heatmap .cb-face .hm-burner-wrap.hm-flame svg{
+          animation:hmFlameFlicker 1.8s ease-in-out infinite !important;
+          transform-origin:50% 100% !important;
+          opacity:0.98 !important;
+        }
+        #tab-heatmap .cb-face .hm-burner-wrap.hm-flame::after{
+          width:clamp(16px,calc(17px * var(--cb-front-scale)),28px) !important;
+          height:clamp(11px,calc(11px * var(--cb-front-scale)),18px) !important;
+          bottom:clamp(2px,calc(2px * var(--cb-front-scale)),6px) !important;
+          opacity:0.52 !important;
+          animation:none !important;
+          filter:none !important;
+        }
+        #tab-heatmap .cb-face .hm-flame-O::after{
+          background:radial-gradient(ellipse,rgba(34,197,94,0.82) 0%,transparent 74%) !important;
+          box-shadow:0 0 10px 4px rgba(22,163,74,0.34) !important;
+        }
+        #tab-heatmap .cb-face .hm-flame-N::after{
+          background:radial-gradient(ellipse,rgba(251,191,36,0.84) 0%,transparent 74%) !important;
+          box-shadow:0 0 10px 4px rgba(217,119,6,0.34) !important;
+        }
+        #tab-heatmap .cb-face .hm-flame-B::after{
+          background:radial-gradient(ellipse,rgba(147,197,253,0.84) 0%,transparent 74%) !important;
+          box-shadow:0 0 10px 4px rgba(37,99,235,0.34) !important;
+        }
+        #tab-heatmap .cb-face .hm-burner-nums .hm-bnum{
+          width:auto !important;
+          max-width:none !important;
+          min-width:0 !important;
+          flex:1 1 0 !important;
+          font-size:clamp(11px,calc(12px * var(--cb-front-scale)),20px) !important;
+          font-weight:800 !important;
+          text-align:center !important;
+        }
+        #tab-heatmap .cb-face .hm-row-label,
+        #tab-heatmap .cb-face .hm-peep-label{
+          min-width:clamp(40px,calc(42px * var(--cb-front-scale)),84px) !important;
+          font-size:clamp(11px,calc(11px * var(--cb-front-scale)),18px) !important;
+          padding:2px clamp(4px,calc(5px * var(--cb-front-scale)),10px) !important;
+          transform:translateX(clamp(2px,calc(2px * var(--cb-front-scale)),6px)) !important;
+        }
+        #tab-heatmap .cb-face .hm-peep-gradient-wrap{
+          padding:6px 0 5px !important;
+          gap:5px !important;
+        }
+        #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
+          height:clamp(28px,calc(30px * var(--cb-front-scale)),50px) !important;
+          margin-left:var(--hm-track-inset-left) !important;
+          margin-right:var(--hm-track-inset-right) !important;
+        }
+        #tab-heatmap .cb-face .hm-peep-marker{
+          height:clamp(32px,calc(35px * var(--cb-front-scale)),56px) !important;
+          top:clamp(-2px,calc(-1px * var(--cb-front-scale)),0px) !important;
+        }
+        #tab-heatmap .cb-face .hm-peep-dot{
+          width:clamp(10px,calc(11px * var(--cb-front-scale)),18px) !important;
+          height:clamp(10px,calc(11px * var(--cb-front-scale)),18px) !important;
+        }
+        #tab-heatmap .cb-face .hm-peep-temp-label{
+          font-size:clamp(10px,calc(11px * var(--cb-front-scale)),18px) !important;
+          top:clamp(-20px,calc(-19px * var(--cb-front-scale)),-12px) !important;
+          padding:1px 4px !important;
+          line-height:1.05 !important;
+        }
+        #tab-heatmap .cb-face .hm-wall-title{
+          font-size:clamp(13px,calc(14px * var(--cb-front-scale)),24px) !important;
+          letter-spacing:clamp(1px,calc(1.5px * var(--cb-front-scale)),2.8px) !important;
+        }
+        #tab-heatmap .cb-face .hm-wall-meta{
+          font-size:clamp(10px,calc(10px * var(--cb-front-scale)),16px) !important;
+          font-weight:700 !important;
+        }
+        @media (max-width:900px){
+          #tab-heatmap .cb-face .hm-wall-card{
+            --hm-face-pad-left:clamp(10px,calc(11px * var(--cb-front-scale)),22px);
+            --hm-face-pad-right:clamp(12px,calc(13px * var(--cb-front-scale)),24px);
+            --hm-track-inset-left:clamp(6px,calc(7px * var(--cb-front-scale)),14px);
+            --hm-track-inset-right:clamp(8px,calc(8px * var(--cb-front-scale)),16px);
+          }
+          #tab-heatmap .cb-face .hm-burner-wrap svg{
+            width:clamp(22px,calc(24px * var(--cb-front-scale)),44px) !important;
+            height:clamp(34px,calc(38px * var(--cb-front-scale)),68px) !important;
+          }
+          #tab-heatmap .cb-face .hm-burner-nums .hm-bnum{
+            font-size:clamp(8px,calc(8px * var(--cb-front-scale)),13px) !important;
+          }
+          #tab-heatmap .cb-face .hm-row-label,
+          #tab-heatmap .cb-face .hm-peep-label{
+            min-width:clamp(30px,calc(32px * var(--cb-front-scale)),58px) !important;
+            font-size:clamp(8px,calc(8px * var(--cb-front-scale)),13px) !important;
+          }
+          #tab-heatmap .cb-face .hm-peep-gradient-bar-wrap{
+            height:clamp(18px,calc(19px * var(--cb-front-scale)),30px) !important;
+          }
+          #tab-heatmap .cb-face .hm-peep-temp-label{
+            font-size:clamp(8px,calc(8px * var(--cb-front-scale)),12px) !important;
+            top:clamp(-14px,calc(-14px * var(--cb-front-scale)),-8px) !important;
+          }
+        }
+      </style>
       <style id="heatmap-cuboid-rail-grid-final-20260309">
         @media (min-width:901px){
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid]{
@@ -23228,7 +23365,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-r3d-wall-clarity-4";
+      var swBuild = "20260317-heatmap-cuboid-clarity-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
