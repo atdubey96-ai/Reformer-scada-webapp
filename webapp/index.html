@@ -18659,13 +18659,6 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase, iconScale){
     ctx.fillStyle = palette.inner;
     ctx.fill();
 
-    ctx.save();
-    ctx.globalAlpha = 0.78;
-    ctx.fillStyle = palette.inner;
-    ctx.beginPath();
-    ctx.arc(x + (Math.sin(phase * 3.4) * 1.1 * scaleX), y - (15 * scaleY) - lift - (Math.cos(phase * 2.6) * 0.7 * scale), 1.1 * scale, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
   }
 
   var dotScale = Math.min(1.4, 0.92 + (scale * 0.22));
@@ -23381,7 +23374,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-heatmap-face-icons-80pct-1";
+      var swBuild = "20260317-heatmap-face-flame-dot-removed-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
