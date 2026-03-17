@@ -12606,94 +12606,197 @@ html, body, body *, body *::before, body *::after, svg text{
           ctx.stroke();
         }
 
-        function hmUploadedDrawTipFlameGlow(ctx, x, y, state, animPhase){
+        function hmUploadedGetBurnerPalette(state){
+          return {
+            O:{flame:"#22c55e", core:"#86efac", inner:"#ecfdf5", stem:"#15803d", glow:"rgba(34,197,94,0.52)"},
+            N:{flame:"#f59e0b", core:"#fcd34d", inner:"#fef3c7", stem:"#b45309", glow:"rgba(245,158,11,0.54)"},
+            B:{flame:"#3b82f6", core:"#93c5fd", inner:"#dbeafe", stem:"#1d4ed8", glow:"rgba(59,130,246,0.54)"},
+            C:{flame:"#4f6b8f", core:"#9fb7d7", inner:"#dbeafe", stem:"#31455f", glow:"rgba(148,163,184,0.24)"}
+          }[state] || {flame:"#4f6b8f", core:"#9fb7d7", inner:"#dbeafe", stem:"#31455f", glow:"rgba(148,163,184,0.24)"};
+        }
+
+        function hmUploadedDrawTipFlameGlow(ctx, x, y, state, animPhase, iconScale){
           var s = String(state || "C").toUpperCase();
           if(s !== "O" && s !== "N" && s !== "B") return;
-          var palette = {
-            O:{
-              outer:"rgba(34,197,94,0.22)",
-              body:"rgba(74,222,128,0.22)",
-              core:"rgba(220,252,231,0.34)",
-              lick:"rgba(187,247,208,0.42)"
-            },
-            N:{
-              outer:"rgba(245,158,11,0.22)",
-              body:"rgba(251,191,36,0.24)",
-              core:"rgba(254,240,138,0.32)",
-              lick:"rgba(254,249,195,0.42)"
-            },
-            B:{
-              outer:"rgba(59,130,246,0.2)",
-              body:"rgba(96,165,250,0.22)",
-              core:"rgba(191,219,254,0.32)",
-              lick:"rgba(219,234,254,0.42)"
-            }
-          }[s];
-          var waveA = 0.56;
-          var waveB = 0.48;
-          var waveC = 0.62;
+          var palette = hmUploadedGetBurnerPalette(s);
+          var phase = Number(animPhase) || 0;
+          var scale = Math.max(1, Number(iconScale) || 2.6);
+          var scaleX = scale * 0.88;
+          var scaleY = scale * 1.52;
+          var waveA = 0.5 + 0.5 * Math.sin(phase * 1.8);
+          var waveB = 0.5 + 0.5 * Math.sin(phase * 2.45 + 1.3);
+          var waveC = 0.5 + 0.5 * Math.sin(phase * 2.05 + 2.5);
+          var waveD = 0.5 + 0.5 * Math.sin(phase * 3.15 + 0.4);
 
           ctx.save();
           ctx.globalCompositeOperation = "screen";
-          ctx.globalAlpha = 0.16 + (waveA * 0.08);
-          ctx.fillStyle = palette.body;
+          ctx.globalAlpha = 0.18 + (waveA * 0.16);
+          ctx.fillStyle = palette.glow;
           ctx.beginPath();
-          ctx.ellipse(x, y - 16.4, 10.4 + (waveB * 1.8), 15.2 + (waveA * 2.8), 0, 0, Math.PI * 2);
+          ctx.ellipse(x, y - (18 * scaleY), (13 * scaleX) + (waveB * 3.6), (16.5 * scaleY) + (waveA * 5.6), 0, 0, Math.PI * 2);
           ctx.fill();
-
-          ctx.globalAlpha = 0.16 + (waveC * 0.08);
+          ctx.globalAlpha = 0.14 + (waveC * 0.11);
           ctx.beginPath();
-          ctx.ellipse(x, y - 10.2, 8.8 + (waveA * 1.2), 5.2 + (waveB * 0.9), 0, 0, Math.PI * 2);
+          ctx.ellipse(x - (6 * scaleX), y - (16 * scaleY), (5.8 * scaleX) + (waveA * 1.5), (8.2 * scaleY) + (waveB * 2.1), -0.22, 0, Math.PI * 2);
           ctx.fill();
-
-          ctx.globalAlpha = 0.11 + (waveB * 0.08);
-          ctx.fillStyle = palette.outer;
           ctx.beginPath();
-          ctx.ellipse(x - 4.6, y - 17.6, 5.1 + (waveA * 0.8), 9.2 + (waveC * 1.6), -0.18, 0, Math.PI * 2);
+          ctx.ellipse(x + (6 * scaleX), y - (16 * scaleY), (5.8 * scaleX) + (waveB * 1.5), (8.2 * scaleY) + (waveA * 2.1), 0.22, 0, Math.PI * 2);
           ctx.fill();
-
-          ctx.globalAlpha = 0.11 + (waveC * 0.08);
+          ctx.globalAlpha = 0.12 + (waveD * 0.1);
+          ctx.fillStyle = palette.inner;
           ctx.beginPath();
-          ctx.ellipse(x + 4.4, y - 17.1, 5 + (waveB * 0.8), 8.8 + (waveA * 1.5), 0.18, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.globalAlpha = 0.22 + (waveA * 0.1);
-          ctx.fillStyle = palette.core;
-          ctx.beginPath();
-          ctx.ellipse(x, y - 18.6, 4 + (waveC * 0.8), 7.2 + (waveB * 1.3), 0, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.globalAlpha = 0.26 + (waveB * 0.12);
-          ctx.fillStyle = palette.lick;
-          ctx.beginPath();
-          ctx.ellipse(x, y - 23.4 - (waveA * 1.7), 2.2 + (waveC * 0.5), 5.2 + (waveB * 1.2), 0, 0, Math.PI * 2);
+          ctx.ellipse(x, y - (22 * scaleY) - (waveA * 2.6), (2.7 * scaleX) + (waveC * 0.7), (4.9 * scaleY) + (waveB * 1.3), 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
 
-        function hmUploadedDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase){
+        function hmUploadedDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase, iconScale){
           var s = String(state || "C").toUpperCase();
           if(s !== "O" && s !== "N" && s !== "B") s = "C";
-          var iconSet = (typeof getHeatMapBurnerIconSet === "function") ? getHeatMapBurnerIconSet() : "inferno";
-          var img = hmUploadedGetBurnerImage(iconSet, s);
-          if(img && img.complete && img.naturalWidth > 0){
-            hmUploadedDrawTipFlameGlow(ctx, x, y, s, animPhase);
-            ctx.drawImage(img, x - 16, y - 31, 32, 45);
-          }else if(typeof r3dDrawBurnerGlyph === "function"){
-            r3dDrawBurnerGlyph(ctx, x, y, s, cleaned, animPhase);
-            return;
+          var palette = hmUploadedGetBurnerPalette(s);
+          var scale = Math.max(1, Number(iconScale) || 2.6);
+          var scaleX = scale * 0.9;
+          var scaleY = scale * 1.55;
+          var phase = Number(animPhase) || 0;
+          var flicker = 0.94 + (Math.sin(phase * 1.95) * 0.11) + (Math.sin(phase * 2.8 + 0.9) * 0.07);
+          var sidePulse = 0.94 + (Math.sin(phase * 2.35 + 0.4) * 0.12);
+          var lift = (s === "C") ? 0 : ((2.2 + (Math.sin(phase * 1.75) * 1.35)) * scaleY);
+          var stemW = 6.6 * scaleX;
+          var stemH = 8.6 * scale;
+          var stemX = x - (stemW / 2);
+          var stemY = y + (0.4 * scale);
+          var baseW = 18 * scaleX;
+          var baseH = 4.8 * scale;
+          var baseX = x - (baseW / 2);
+          var baseY = y + (5.4 * scale);
+
+          ctx.fillStyle = "rgba(9,13,24,0.92)";
+          hmUploadedRoundRectPath(ctx, baseX, baseY, baseW, baseH, 3 * scale);
+          ctx.fill();
+
+          if(s === "C"){
+            ctx.save();
+            ctx.globalCompositeOperation = "screen";
+            ctx.globalAlpha = 0.16;
+            ctx.fillStyle = palette.glow;
+            ctx.beginPath();
+            ctx.ellipse(x, y + (2.2 * scale), 9.2 * scaleX, 4.2 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            ctx.fillStyle = palette.flame;
+            hmUploadedRoundRectPath(ctx, x - (8.5 * scaleX), y - (1.4 * scale), 17 * scaleX, 5.4 * scale, 3 * scale);
+            ctx.fill();
+            ctx.lineWidth = Math.max(1.1, 0.75 * scale);
+            ctx.strokeStyle = "rgba(191,219,254,0.42)";
+            ctx.stroke();
+            ctx.fillStyle = palette.core;
+            hmUploadedRoundRectPath(ctx, stemX, y + (0.4 * scale), stemW, 9.4 * scale, 3 * scale);
+            ctx.fill();
+            ctx.lineWidth = Math.max(1, 0.65 * scale);
+            ctx.strokeStyle = "rgba(226,232,240,0.28)";
+            ctx.stroke();
+          }else{
+            hmUploadedDrawTipFlameGlow(ctx, x, y, s, phase, scale);
+            ctx.fillStyle = palette.stem;
+            hmUploadedRoundRectPath(ctx, stemX, stemY, stemW, stemH, 3.2 * scale);
+            ctx.fill();
+
+            ctx.save();
+            ctx.shadowBlur = 11 * scale;
+            ctx.shadowColor = palette.glow;
+            ctx.beginPath();
+            ctx.moveTo(x, y - (12.8 * scaleY) - lift);
+            ctx.bezierCurveTo(
+              x + (11 * scaleX) * flicker,
+              y - (6.9 * scaleY) - (lift * 0.52),
+              x + (8.2 * scaleX) * sidePulse,
+              y + (0.9 * scale),
+              x,
+              y + (2.4 * scale)
+            );
+            ctx.bezierCurveTo(
+              x - (8.2 * scaleX) * sidePulse,
+              y + (0.9 * scale),
+              x - (11 * scaleX) * flicker,
+              y - (6.9 * scaleY) - (lift * 0.52),
+              x,
+              y - (12.8 * scaleY) - lift
+            );
+            ctx.closePath();
+            ctx.fillStyle = palette.flame;
+            ctx.fill();
+            ctx.restore();
+
+            ctx.beginPath();
+            ctx.moveTo(x, y - (8.5 * scaleY) - (lift * 0.46));
+            ctx.bezierCurveTo(
+              x + (6.5 * scaleX) * sidePulse,
+              y - (4.6 * scaleY) - (lift * 0.18),
+              x + (4.8 * scaleX) * flicker,
+              y + (0.15 * scale),
+              x,
+              y + (1.6 * scale)
+            );
+            ctx.bezierCurveTo(
+              x - (4.8 * scaleX) * flicker,
+              y + (0.15 * scale),
+              x - (6.5 * scaleX) * sidePulse,
+              y - (4.6 * scaleY) - (lift * 0.18),
+              x,
+              y - (8.5 * scaleY) - (lift * 0.46)
+            );
+            ctx.closePath();
+            ctx.fillStyle = palette.core;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(x, y - (5.6 * scaleY) - (lift * 0.22));
+            ctx.bezierCurveTo(
+              x + (3.2 * scaleX) * sidePulse,
+              y - (3.0 * scaleY) - (lift * 0.1),
+              x + (2.4 * scaleX) * flicker,
+              y - (0.2 * scale),
+              x,
+              y + (0.8 * scale)
+            );
+            ctx.bezierCurveTo(
+              x - (2.4 * scaleX) * flicker,
+              y - (0.2 * scale),
+              x - (3.2 * scaleX) * sidePulse,
+              y - (3.0 * scaleY) - (lift * 0.1),
+              x,
+              y - (5.6 * scaleY) - (lift * 0.22)
+            );
+            ctx.closePath();
+            ctx.fillStyle = palette.inner;
+            ctx.fill();
           }
-          hmUploadedDrawCleanDot(ctx, x + 18, y - 4, cleaned);
+
+          var dotScale = Math.min(1.4, 0.92 + (scale * 0.22));
+          var dotX = x + (13 * scaleX);
+          var dotY = y - (2 * scale);
+          var dotR = 3.8 * dotScale;
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+          ctx.fillStyle = cleaned ? "#4ade80" : "rgba(148,163,184,0.68)";
+          ctx.fill();
+          ctx.lineWidth = 1.4 * dotScale;
+          ctx.strokeStyle = cleaned ? "rgba(187,247,208,0.92)" : "rgba(226,232,240,0.45)";
+          ctx.stroke();
         }
 
         function hmUploadedRoundRectPath(ctx, x, y, w, h, r){
-          var radius = Math.max(0, Math.min(Number(r) || 0, Math.min(w, h) / 2));
+          var rad = Math.max(0, Math.min(Number(r) || 0, Math.min(w, h) / 2));
           ctx.beginPath();
-          ctx.moveTo(x + radius, y);
-          ctx.arcTo(x + w, y, x + w, y + h, radius);
-          ctx.arcTo(x + w, y + h, x, y + h, radius);
-          ctx.arcTo(x, y + h, x, y, radius);
-          ctx.arcTo(x, y, x + w, y, radius);
+          ctx.moveTo(x + rad, y);
+          ctx.lineTo(x + w - rad, y);
+          ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+          ctx.lineTo(x + w, y + h - rad);
+          ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+          ctx.lineTo(x + rad, y + h);
+          ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+          ctx.lineTo(x, y + rad);
+          ctx.quadraticCurveTo(x, y, x + rad, y);
           ctx.closePath();
         }
 
@@ -12714,52 +12817,95 @@ html, body, body *, body *::before, body *::after, svg text{
           return "rgb(251," + green + ",60)";
         }
 
-        function hmUploadedDrawPeepBar(ctx, label, vals, gridLeft, centerY, gridW){
-          var barHeight = 44;
-          var barY = centerY - (barHeight / 2);
-          var labelW = 92;
-          var rangeMin = 860;
-          var rangeMax = 1000;
+        function hmUploadedDrawPeepBar(ctx, label, vals, left, centerY, width, uiScale){
+          var k = Math.max(1, Number(uiScale) || 1);
+          var barHeight = Math.round(46 * k);
+          var barTop = centerY - (barHeight / 2);
+          var gridLeft = left;
+          var slotW = width / 15;
+          var labelLeft = Math.round(20 * k);
+          var labelW = Math.round(106 * k);
+          var labelH = Math.round(52 * k);
+          var labelTop = centerY - Math.round(labelH / 2);
+          var labelCenterX = labelLeft + Math.round(labelW / 2);
+          var positions = [];
+          for(var i=0; i<15; i++){
+            var n = Number(Array.isArray(vals) ? vals[i] : "");
+            if(isFinite(n)){
+              positions.push({ idx:i, val:n, x:gridLeft + slotW * (i + 0.5) });
+            }
+          }
 
-          ctx.fillStyle = "rgba(4,8,18,0.98)";
-          hmUploadedRoundRectPath(ctx, 20, centerY - 24, labelW, 48, 13);
+          ctx.fillStyle = "rgba(10,14,24,0.96)";
+          hmUploadedRoundRectPath(ctx, labelLeft, labelTop, labelW, labelH, Math.round(12 * k));
           ctx.fill();
-          ctx.strokeStyle = "rgba(120,143,175,0.28)";
-          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = "rgba(188,198,214,0.24)";
+          ctx.lineWidth = 1.2 * k;
           ctx.stroke();
-
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = "#f8fafc";
+          ctx.font = "700 " + Math.round(26 * k) + "px Times New Roman, serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.font = "700 22px Times New Roman, serif";
-          ctx.fillText(label, 66, centerY);
+          ctx.fillText(label, labelCenterX, centerY);
 
-          var grad = ctx.createLinearGradient(gridLeft, 0, gridLeft + gridW, 0);
-          grad.addColorStop(0, "#22c55e");
-          grad.addColorStop(0.5, "#facc15");
-          grad.addColorStop(1, "#ef4444");
-          ctx.fillStyle = grad;
-          hmUploadedRoundRectPath(ctx, gridLeft, barY, gridW, barHeight, 12);
-          ctx.fill();
-          ctx.strokeStyle = "rgba(255,255,255,0.14)";
-          ctx.lineWidth = 1;
+          ctx.save();
+          hmUploadedRoundRectPath(ctx, gridLeft, barTop, width, barHeight, Math.round(12 * k));
+          ctx.clip();
+          if(positions.length){
+            var grad = ctx.createLinearGradient(gridLeft, 0, gridLeft + width, 0);
+            for(var p=0; p<positions.length; p++){
+              var stop = (positions[p].idx + 0.5) / 15;
+              grad.addColorStop(Math.max(0, Math.min(1, stop)), hmUploadedTempToColor(positions[p].val, 860, 1000));
+            }
+            grad.addColorStop(0, hmUploadedTempToColor(positions[0].val, 860, 1000));
+            grad.addColorStop(1, hmUploadedTempToColor(positions[positions.length - 1].val, 860, 1000));
+            ctx.fillStyle = grad;
+          }else{
+            ctx.fillStyle = "rgba(31,41,55,0.88)";
+          }
+          ctx.fillRect(gridLeft, barTop, width, barHeight);
+          ctx.restore();
+
+          ctx.lineWidth = 1.2 * k;
+          ctx.strokeStyle = "rgba(255,255,255,0.30)";
+          hmUploadedRoundRectPath(ctx, gridLeft, barTop, width, barHeight, Math.round(12 * k));
           ctx.stroke();
 
-          var slotW = gridW / 15;
-          for(var i = 0; i < 15; i++){
-            var x = gridLeft + slotW * (i + 0.5);
-            var val = Array.isArray(vals) ? Number(vals[i]) : NaN;
+          for(var m=0; m<15; m++){
+            var mx = gridLeft + slotW * (m + 0.5);
+            ctx.strokeStyle = "rgba(255,255,255,0.50)";
+            ctx.lineWidth = 1.4 * k;
             ctx.beginPath();
-            ctx.arc(x, centerY, 6, 0, Math.PI * 2);
-            ctx.fillStyle = isFinite(val) ? hmUploadedTempToColor(val, rangeMin, rangeMax) : "rgba(255,255,255,0.18)";
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = "rgba(255,255,255,0.68)";
+            ctx.moveTo(mx, barTop - (3 * k));
+            ctx.lineTo(mx, barTop + barHeight + (3 * k));
             ctx.stroke();
-            if(isFinite(val)){
-              ctx.fillStyle = "rgba(255,255,255,0.95)";
-              ctx.font = "700 16px Times New Roman, serif";
-              ctx.fillText(Math.round(val) + "°", x, centerY - 34);
+            if(positions.length){
+              var tempVal = Number(Array.isArray(vals) ? vals[m] : "");
+              if(isFinite(tempVal)){
+                var markerR = Math.max(5.8, 6.2 * k);
+                ctx.beginPath();
+                ctx.arc(mx, centerY, markerR, 0, Math.PI * 2);
+                ctx.fillStyle = hmUploadedTempToColor(tempVal, 860, 1000);
+                ctx.fill();
+                ctx.lineWidth = 2 * k;
+                ctx.strokeStyle = "rgba(255,255,255,0.95)";
+                ctx.stroke();
+
+                var pillW = Math.round(70 * k);
+                var pillH = Math.round(28 * k);
+                var pillTop = barTop - Math.round(38 * k);
+                ctx.fillStyle = "rgba(52,44,34,0.92)";
+                hmUploadedRoundRectPath(ctx, mx - pillW/2, pillTop, pillW, pillH, Math.max(7, Math.round(7 * k)));
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,255,255,0.18)";
+                ctx.lineWidth = 1 * k;
+                ctx.stroke();
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "700 " + Math.round(20 * k) + "px Times New Roman, serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(tempVal + "°", mx, pillTop + (pillH / 2));
+              }
             }
           }
         }
@@ -12767,12 +12913,15 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedCreateWallOverlay(dims, wallKey, side, renderer){
           if(typeof THREE === "undefined" || !dims) return null;
           var canvas = document.createElement("canvas");
-          canvas.width = 1536;
+          canvas.width = 1200;
           canvas.height = 960;
           var texture = new THREE.CanvasTexture(canvas);
-          texture.minFilter = THREE.LinearFilter;
+          texture.wrapS = THREE.ClampToEdgeWrapping;
+          texture.wrapT = THREE.ClampToEdgeWrapping;
+          texture.minFilter = THREE.LinearMipmapLinearFilter;
           texture.magFilter = THREE.LinearFilter;
           texture.generateMipmaps = true;
+          texture.premultiplyAlpha = false;
           if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
             texture.colorSpace = THREE.SRGBColorSpace;
           }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
@@ -12780,44 +12929,37 @@ html, body, body *, body *::before, body *::after, svg text{
           }
           if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
             try{
-              texture.anisotropy = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy() || 1));
+              texture.anisotropy = Math.max(1, Math.min(16, renderer.capabilities.getMaxAnisotropy() || 1));
             }catch(e){}
           }
-
-          var planeW = Math.max(0.2, (Number(dims.sZ) || 5) - 0.28);
-          var planeH = Math.max(0.2, (Number(dims.sY) || 3.5) - 0.24);
-          var geo = new THREE.PlaneGeometry(planeW, planeH);
           var outerMaterial = new THREE.MeshBasicMaterial({
             map:texture,
             transparent:true,
-            side:THREE.DoubleSide
+            side:THREE.FrontSide,
+            depthWrite:true,
+            alphaTest:0.06,
+            polygonOffset:true,
+            polygonOffsetFactor:-1,
+            polygonOffsetUnits:-2
           });
           var innerMaterial = new THREE.MeshBasicMaterial({
             map:texture,
             transparent:true,
-            side:THREE.DoubleSide
+            side:THREE.DoubleSide,
+            depthWrite:false,
+            alphaTest:0.06,
+            polygonOffset:true,
+            polygonOffsetFactor:-1,
+            polygonOffsetUnits:-1
           });
-          var outerMesh = new THREE.Mesh(geo, outerMaterial);
-          var innerMesh = new THREE.Mesh(geo, innerMaterial);
-          var sX = Number(dims.sX) || 1.22;
-          var sY = Number(dims.sY) || 3.5;
-          var wallT = Number(dims.wallT) || 0.15;
-          var eps = 0.006;
-
-          outerMesh.position.y = sY / 2;
-          innerMesh.position.y = sY / 2;
-
-          if(String(side).toLowerCase() === "left"){
-            outerMesh.position.x = -sX / 2 - eps;
-            innerMesh.position.x = -sX / 2 + wallT + eps;
-            outerMesh.rotation.y = -Math.PI / 2;
-            innerMesh.rotation.y = Math.PI / 2;
-          }else{
-            outerMesh.position.x = sX / 2 + eps;
-            innerMesh.position.x = sX / 2 - wallT - eps;
-            outerMesh.rotation.y = Math.PI / 2;
-            innerMesh.rotation.y = -Math.PI / 2;
-          }
+          var outerMesh = new THREE.Mesh(new THREE.PlaneGeometry(dims.sZ - 0.44, dims.sY - 0.28), outerMaterial);
+          var innerMesh = new THREE.Mesh(new THREE.PlaneGeometry(dims.sZ - 0.44, dims.sY - 0.28), innerMaterial);
+          outerMesh.position.set(side === "left" ? (-dims.sX/2 - 0.006) : (dims.sX/2 + 0.006), dims.sY/2, 0);
+          outerMesh.rotation.y = (side === "left") ? (-Math.PI / 2) : (Math.PI / 2);
+          outerMesh.renderOrder = 8;
+          innerMesh.position.set(side === "left" ? (-dims.sX/2 + dims.wallT + 0.018) : (dims.sX/2 - dims.wallT - 0.018), dims.sY/2, 0);
+          innerMesh.rotation.y = (side === "left") ? (Math.PI / 2) : (-Math.PI / 2);
+          innerMesh.renderOrder = 6;
 
           return {
             wallKey:String(wallKey || ""),
@@ -12874,43 +13016,49 @@ html, body, body *, body *::before, body *::after, svg text{
           var botVals = (wallKey === "A" || wallKey === "B") ? (snapshot.abBot || []) : (snapshot.cdBot || []);
           var wallCleaning = (typeof r3dGetWallCleaningMap === "function") ? r3dGetWallCleaningMap(wallKey) : {};
 
-          var padX = 34;
-          var titleY = 46;
-          var gridLeft = 164;
-          var gridRight = w - 46;
+          var ui = 1;
+          var panelInset = 12;
+          var padX = 36;
+          var titleY = 48;
+          var gridLeft = 160;
+          var gridRight = w - 38;
           var gridW = gridRight - gridLeft;
           var slotW = gridW / 15;
-          var burnerNumY = Math.round(h * 0.12);
+          var burnerNumY = 120;
           var rowOrder = [6, 5, 4, "PH_TOP", 3, 2, "PH_BOT", 1];
-          var overlayStartY = Math.round(h * 0.20);
-          var overlayEndY = Math.round(h * 0.90);
+          var overlayStartY = 204;
+          var overlayEndY = 864;
           var overlayStepY = (overlayEndY - overlayStartY) / Math.max(1, rowOrder.length - 1);
           var itemCenters = rowOrder.map(function(_, idx){ return Math.round(overlayStartY + overlayStepY * idx); });
+          var iconScale = 2.52;
 
           var outerGrad = ctx.createLinearGradient(0, 0, w, h);
-          outerGrad.addColorStop(0, "rgba(16,13,20,0.99)");
-          outerGrad.addColorStop(0.45, "rgba(44,33,30,0.99)");
-          outerGrad.addColorStop(1, "rgba(18,15,22,0.99)");
+          outerGrad.addColorStop(0, "rgba(14,12,18,0.99)");
+          outerGrad.addColorStop(0.45, "rgba(34,25,25,0.99)");
+          outerGrad.addColorStop(1, "rgba(12,11,17,0.99)");
           ctx.fillStyle = outerGrad;
-          hmUploadedRoundRectPath(ctx, 12, 12, w - 24, h - 24, 30);
+          hmUploadedRoundRectPath(ctx, panelInset, panelInset, w - (panelInset * 2), h - (panelInset * 2), 30);
           ctx.fill();
 
           ctx.lineWidth = 2;
-          ctx.strokeStyle = "rgba(185,142,106,0.32)";
+          ctx.strokeStyle = "rgba(185,142,106,0.34)";
           ctx.stroke();
 
           var headGrad = ctx.createLinearGradient(0, 0, w, 0);
-          headGrad.addColorStop(0, "rgba(6,8,16,0.98)");
-          headGrad.addColorStop(0.55, "rgba(12,13,22,0.985)");
-          headGrad.addColorStop(1, "rgba(8,9,16,0.98)");
-          var separatorY = Math.max(82, burnerNumY - 34);
-          var headerHeight = separatorY - 20;
+          headGrad.addColorStop(0, "rgba(6,8,16,0.985)");
+          headGrad.addColorStop(0.55, "rgba(12,13,22,0.99)");
+          headGrad.addColorStop(1, "rgba(8,9,16,0.985)");
+          var separatorY = 92;
+          var headerTop = 20;
+          var headerLeft = 24;
+          var headerRight = w - 24;
+          var headerHeight = separatorY - headerTop;
           ctx.fillStyle = headGrad;
-          hmUploadedRoundRectPath(ctx, 24, 20, w - 48, headerHeight, 22);
+          hmUploadedRoundRectPath(ctx, headerLeft, headerTop, headerRight - headerLeft, headerHeight, 22);
           ctx.fill();
 
-          ctx.strokeStyle = "rgba(243,112,34,0.78)";
-          ctx.lineWidth = 4;
+          ctx.strokeStyle = "rgba(243,112,34,0.82)";
+          ctx.lineWidth = 3.5;
           ctx.beginPath();
           ctx.moveTo(28, separatorY);
           ctx.lineTo(w - 28, separatorY);
@@ -12919,24 +13067,26 @@ html, body, body *, body *::before, body *::after, svg text{
           ctx.fillStyle = "#ffffff";
           ctx.textAlign = "left";
           ctx.textBaseline = "middle";
-          ctx.font = "700 36px Times New Roman, serif";
-          ctx.fillText("WALL " + wallKey, padX + 2, titleY + 12);
+          ctx.font = "700 42px Times New Roman, serif";
+          ctx.fillText("WALL " + wallKey, padX, titleY + 8);
 
           ctx.textAlign = "right";
-          ctx.font = "700 20px Times New Roman, serif";
+          ctx.font = "700 22px Times New Roman, serif";
           ctx.fillStyle = "rgba(255,255,255,0.98)";
-          ctx.fillText("6 rows x 15 burners", w - padX, titleY + 10);
+          ctx.fillText("6 rows x 15 burners", w - padX, titleY + 6);
 
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.font = "700 18px Times New Roman, serif";
+          ctx.font = "700 26px Times New Roman, serif";
           for(var bn=1; bn<=15; bn++){
             var bx = gridLeft + slotW * (bn - 0.5);
-            ctx.fillStyle = "rgba(4,8,18,0.98)";
-            hmUploadedRoundRectPath(ctx, bx - 28, burnerNumY - 18, 56, 36, 10);
+            var bW = 72;
+            var bH = 44;
+            ctx.fillStyle = "rgba(8,12,22,0.96)";
+            hmUploadedRoundRectPath(ctx, bx - (bW / 2), burnerNumY - (bH / 2), bW, bH, 10);
             ctx.fill();
-            ctx.strokeStyle = "rgba(120,143,175,0.28)";
-            ctx.lineWidth = 1.1;
+            ctx.strokeStyle = "rgba(140,160,190,0.34)";
+            ctx.lineWidth = 1.2;
             ctx.stroke();
             ctx.fillStyle = "#ffffff";
             ctx.fillText("B" + bn, bx, burnerNumY + 1);
@@ -12945,9 +13095,9 @@ html, body, body *, body *::before, body *::after, svg text{
           for(var ii=0; ii<rowOrder.length; ii++){
             var item = rowOrder[ii];
             var centerY = itemCenters[ii];
-            var lineY = centerY + ((typeof item === "string") ? 26 : 38);
+            var lineY = centerY + ((typeof item === "string") ? 28 : 42);
 
-            ctx.strokeStyle = "rgba(120,127,160,0.24)";
+            ctx.strokeStyle = "rgba(120,127,160,0.18)";
             ctx.lineWidth = 1.2;
             ctx.beginPath();
             ctx.moveTo(28, lineY);
@@ -12963,25 +13113,27 @@ html, body, body *, body *::before, body *::after, svg text{
               continue;
             }
 
-            ctx.fillStyle = "rgba(4,8,18,0.98)";
-            hmUploadedRoundRectPath(ctx, 20, centerY - 24, 92, 48, 13);
+            var rowW = 104;
+            var rowH = 54;
+            ctx.fillStyle = "rgba(8,12,22,0.96)";
+            hmUploadedRoundRectPath(ctx, 20, centerY - Math.round(rowH / 2), rowW, rowH, 14);
             ctx.fill();
-            ctx.strokeStyle = "rgba(120,143,175,0.28)";
+            ctx.strokeStyle = "rgba(140,160,190,0.30)";
             ctx.lineWidth = 1.2;
             ctx.stroke();
 
             ctx.fillStyle = "#ffffff";
-            ctx.font = "700 22px Times New Roman, serif";
+            ctx.font = "700 24px Times New Roman, serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText("ROW " + item, 66, centerY);
+            ctx.fillText("ROW " + item, 20 + Math.round(rowW / 2), centerY);
 
             var rowData = Array.isArray(rows[item - 1]) ? rows[item - 1] : [];
             for(var ci=0; ci<15; ci++){
               var state = String(rowData[ci] || "C").toUpperCase();
               var burnerX = gridLeft + slotW * (ci + 0.5);
               var cleaned = !!String(wallCleaning["R" + item + "B" + (ci + 1)] || "").trim();
-              hmUploadedDrawBurnerGlyph(ctx, burnerX, centerY + 4, state, cleaned, (animPhaseBase || 0) + (ii * 0.55) + (ci * 0.28));
+              hmUploadedDrawBurnerGlyph(ctx, burnerX, centerY + 10, state, cleaned, (animPhaseBase || 0) + (ii * 0.55) + (ci * 0.28), iconScale);
             }
           }
 
