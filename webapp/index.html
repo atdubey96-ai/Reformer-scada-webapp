@@ -2973,10 +2973,11 @@ body.light-theme .cw-nudge{
 .new-cuboids-frame{
   display:block;
   width:100%;
-  height:calc(100vh - 86px);
-  min-height:720px;
+  height:720px;
+  min-height:0;
   border:0;
   background:#060708;
+  overflow:hidden;
 }
 
 /* Bottom tab bar */
@@ -14942,6 +14943,7 @@ html, body, body *, body *::before, body *::after, svg text{
         src="./industrial_cuboid.html"
         title="New Cuboids"
         loading="eager"
+        scrolling="no"
         allowfullscreen
       ></iframe>
     </div>
@@ -19559,10 +19561,81 @@ function switchTab(tab){
       r3dScheduleNormalize();
     }, 40);
   }
+  if(tab === 'newcuboids'){
+    setTimeout(bindNewCuboidsFrameAutosize, 0);
+    setTimeout(syncNewCuboidsFrameHeight, 30);
+    setTimeout(syncNewCuboidsFrameHeight, 220);
+  }
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
   updateGlobalRefreshButtonLabel(tab);
   updateDesktopPrimaryInterfacePickerUi();
+}
+
+function getNewCuboidsFrame(){
+  return document.querySelector('#tab-newcuboids .new-cuboids-frame');
+}
+
+function getNewCuboidsFrameDocument(frame){
+  try{
+    if(!frame) return null;
+    return frame.contentDocument || (frame.contentWindow && frame.contentWindow.document) || null;
+  }catch(e){
+    return null;
+  }
+}
+
+function syncNewCuboidsFrameHeight(){
+  var frame = getNewCuboidsFrame();
+  var doc = getNewCuboidsFrameDocument(frame);
+  if(!frame || !doc || !doc.documentElement || !doc.body) return;
+  try{
+    doc.documentElement.style.overflowY = "hidden";
+    doc.documentElement.style.overflowX = "hidden";
+    doc.body.style.overflowY = "hidden";
+    doc.body.style.overflowX = "hidden";
+  }catch(e){}
+  var height = Math.max(
+    doc.documentElement.scrollHeight || 0,
+    doc.body.scrollHeight || 0,
+    doc.documentElement.offsetHeight || 0,
+    doc.body.offsetHeight || 0,
+    doc.documentElement.clientHeight || 0,
+    doc.body.clientHeight || 0
+  );
+  if(height > 0){
+    frame.style.height = height + "px";
+  }
+}
+
+function bindNewCuboidsFrameAutosize(){
+  var frame = getNewCuboidsFrame();
+  if(!frame || frame.dataset.autosizeBound === "1") return;
+  frame.dataset.autosizeBound = "1";
+
+  function onFrameLoad(){
+    syncNewCuboidsFrameHeight();
+    setTimeout(syncNewCuboidsFrameHeight, 80);
+    setTimeout(syncNewCuboidsFrameHeight, 300);
+    var doc = getNewCuboidsFrameDocument(frame);
+    if(!doc || !window.ResizeObserver) return;
+    try{
+      if(frame._autosizeObserver){
+        frame._autosizeObserver.disconnect();
+      }
+      frame._autosizeObserver = new ResizeObserver(function(){
+        syncNewCuboidsFrameHeight();
+      });
+      frame._autosizeObserver.observe(doc.documentElement);
+      frame._autosizeObserver.observe(doc.body);
+    }catch(e){}
+  }
+
+  frame.addEventListener("load", onFrameLoad);
+
+  if(frame.contentDocument && frame.contentDocument.readyState === "complete"){
+    onFrameLoad();
+  }
 }
 
 function handlePendingViewerTabSwitch(){
@@ -19585,6 +19658,7 @@ function handlePendingViewerTabSwitch(){
 initTabsRowAutoHide();
 
 window.addEventListener("resize", function(){
+  syncNewCuboidsFrameHeight();
   clearTimeout(burnerMobileResizeTimer);
   burnerMobileResizeTimer = setTimeout(function(){
     applyBurnerMobileWallFilter();
@@ -23568,7 +23642,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-new-cuboids-tab-1";
+      var swBuild = "20260317-new-cuboids-shared-scroll-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
