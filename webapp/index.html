@@ -23642,7 +23642,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-new-cuboids-frame-layout-1";
+      var swBuild = "20260317-new-cuboids-live-wall-faces-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});

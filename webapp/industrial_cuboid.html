@@ -345,6 +345,304 @@ html,body{width:100%;background:#060708;font-family:'Courier New',monospace;user
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
 <script>
+function cuboidHostWindow() {
+  try {
+    if (window.parent && window.parent !== window) return window.parent;
+  } catch (e) {}
+  return window;
+}
+
+function cuboidHostFunction(name) {
+  var host = cuboidHostWindow();
+  try {
+    return host && typeof host[name] === 'function' ? host[name] : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function cuboidRoundRectPath(ctx, x, y, w, h, r) {
+  var fn = cuboidHostFunction('r3dRoundRectPath');
+  if (fn) return fn(ctx, x, y, w, h, r);
+  var rad = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.lineTo(x + w - rad, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+  ctx.lineTo(x + w, y + h - rad);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+  ctx.lineTo(x + rad, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+  ctx.lineTo(x, y + rad);
+  ctx.quadraticCurveTo(x, y, x + rad, y);
+  ctx.closePath();
+}
+
+function cuboidCountStates(hmData, wallKeys) {
+  var fn = cuboidHostFunction('hmCountStatesForWalls');
+  if (fn) {
+    try { return fn(hmData, wallKeys); } catch (e) {}
+  }
+  var counts = { B:0, N:0, O:0, C:0 };
+  (Array.isArray(wallKeys) ? wallKeys : []).forEach(function(wallKey) {
+    var rows = hmData && Array.isArray(hmData[wallKey]) ? hmData[wallKey] : [];
+    rows.forEach(function(row) {
+      (Array.isArray(row) ? row : []).forEach(function(cell) {
+        var key = String(cell || 'C').toUpperCase();
+        if (!(key in counts)) key = 'C';
+        counts[key] += 1;
+      });
+    });
+  });
+  return counts;
+}
+
+function cuboidAverageTemp(valsA, valsB) {
+  var fn = cuboidHostFunction('r3dAverageTemp');
+  if (fn) {
+    try { return fn(valsA, valsB); } catch (e) {}
+  }
+  var nums = [];
+  [valsA, valsB].forEach(function(vals) {
+    if (!Array.isArray(vals)) return;
+    vals.forEach(function(v) {
+      var n = Number(v);
+      if (isFinite(n)) nums.push(n);
+    });
+  });
+  if (!nums.length) return null;
+  var sum = 0;
+  nums.forEach(function(n) { sum += n; });
+  return Math.round(sum / nums.length);
+}
+
+function cuboidGetCleaningMap(wallKey) {
+  var host = cuboidHostWindow();
+  try {
+    var log = typeof host.getMergedCleaningLog === 'function'
+      ? (host.getMergedCleaningLog() || {})
+      : ((typeof host.loadCleaningLog === 'function' ? host.loadCleaningLog() : {}) || {});
+    return log[wallKey] || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function cuboidGetSnapshot() {
+  var host = cuboidHostWindow();
+  try {
+    if (host && !host._hmRenderSnapshot && typeof host.renderHeatMap === 'function') {
+      host.renderHeatMap();
+    }
+  } catch (e) {}
+  try {
+    return host && host._hmRenderSnapshot ? host._hmRenderSnapshot : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function cuboidConfigureOverlayTexture(tex, renderer) {
+  if (!tex || typeof THREE === 'undefined') return;
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = true;
+  if (typeof tex.colorSpace !== 'undefined' && THREE.SRGBColorSpace) {
+    tex.colorSpace = THREE.SRGBColorSpace;
+  } else if (typeof tex.encoding !== 'undefined' && THREE.sRGBEncoding) {
+    tex.encoding = THREE.sRGBEncoding;
+  }
+  if (renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === 'function') {
+    try {
+      tex.anisotropy = Math.max(1, Math.min(16, renderer.capabilities.getMaxAnisotropy() || 1));
+    } catch (e) {}
+  }
+}
+
+function cuboidCreateWallFaceOverlay(renderer, wallKey, faceSide, dims) {
+  var canvas = document.createElement('canvas');
+  canvas.width = 1680;
+  canvas.height = 720;
+  var texture = new THREE.CanvasTexture(canvas);
+  cuboidConfigureOverlayTexture(texture, renderer);
+  var material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    alphaTest: 0.05,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -2
+  });
+  var mesh = new THREE.Mesh(new THREE.PlaneGeometry(dims.faceW, dims.faceH), material);
+  mesh.position.set(0, 0, faceSide === 'front' ? dims.frontZ : dims.backZ);
+  if (faceSide === 'back') mesh.rotation.y = Math.PI;
+  mesh.renderOrder = 10;
+  return {
+    wallKey: wallKey,
+    faceSide: faceSide,
+    canvas: canvas,
+    texture: texture,
+    material: material,
+    mesh: mesh
+  };
+}
+
+function cuboidPaintWallFaceOverlay(overlay, snapshot, animPhase) {
+  if (!overlay || !overlay.canvas || !overlay.texture) return;
+  var host = cuboidHostWindow();
+  var drawBurner = host && host.r3dDrawBurnerGlyph;
+  var drawPeepBar = host && host.r3dDrawPeepBar;
+  var ctx = overlay.canvas.getContext('2d');
+  var w = overlay.canvas.width;
+  var h = overlay.canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  if (!snapshot || !snapshot.hmData || typeof drawBurner !== 'function' || typeof drawPeepBar !== 'function') {
+    overlay.texture.needsUpdate = true;
+    return;
+  }
+
+  var wallKey = overlay.wallKey;
+  var rows = snapshot.hmData && Array.isArray(snapshot.hmData[wallKey]) ? snapshot.hmData[wallKey] : [];
+  var topVals = (wallKey === 'A' || wallKey === 'B') ? (snapshot.abTop || []) : (snapshot.cdTop || []);
+  var botVals = (wallKey === 'A' || wallKey === 'B') ? (snapshot.abBot || []) : (snapshot.cdBot || []);
+  var wallCleaning = cuboidGetCleaningMap(wallKey);
+  var rowOrder = [6, 5, 4, 'PH_TOP', 3, 2, 'PH_BOT', 1];
+  var centers = [214, 276, 338, 400, 462, 524, 586, 648];
+  var gridLeft = 208;
+  var gridRight = w - 42;
+  var gridWidth = gridRight - gridLeft;
+  var slotW = gridWidth / 15;
+  var uiScale = 0.92;
+  var burnerNumY = 136;
+  var headerTop = 18;
+  var separatorY = 94;
+  var panelInset = 14;
+  var padX = 40;
+  var iconScale = 2.02;
+
+  var outerGrad = ctx.createLinearGradient(0, 0, w, h);
+  outerGrad.addColorStop(0, 'rgba(12,10,14,0.99)');
+  outerGrad.addColorStop(0.45, 'rgba(28,21,20,0.99)');
+  outerGrad.addColorStop(1, 'rgba(11,10,16,0.99)');
+  ctx.fillStyle = outerGrad;
+  cuboidRoundRectPath(ctx, panelInset, panelInset, w - panelInset * 2, h - panelInset * 2, 28);
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(185,142,106,0.30)';
+  ctx.stroke();
+
+  var headGrad = ctx.createLinearGradient(0, 0, w, 0);
+  headGrad.addColorStop(0, 'rgba(6,8,16,0.985)');
+  headGrad.addColorStop(0.55, 'rgba(12,13,22,0.99)');
+  headGrad.addColorStop(1, 'rgba(8,9,16,0.985)');
+  ctx.fillStyle = headGrad;
+  cuboidRoundRectPath(ctx, 24, headerTop, w - 48, separatorY - headerTop, 22);
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(243,112,34,0.82)';
+  ctx.lineWidth = 3.4;
+  ctx.beginPath();
+  ctx.moveTo(28, separatorY);
+  ctx.lineTo(w - 28, separatorY);
+  ctx.stroke();
+
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.font = '700 38px Times New Roman, serif';
+  ctx.fillText('WALL ' + wallKey, padX, 56);
+  ctx.font = '700 20px Times New Roman, serif';
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(255,255,255,0.98)';
+  ctx.fillText('6 rows x 15 burners', w - padX, 54);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '700 24px Times New Roman, serif';
+  for (var bn = 1; bn <= 15; bn++) {
+    var bx = gridLeft + slotW * (bn - 0.5);
+    var pillW = Math.min(slotW * 0.82, 82);
+    var pillH = 40;
+    ctx.fillStyle = 'rgba(8,12,22,0.96)';
+    cuboidRoundRectPath(ctx, bx - pillW / 2, burnerNumY - pillH / 2, pillW, pillH, 10);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(140,160,190,0.34)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('B' + bn, bx, burnerNumY + 1);
+  }
+
+  for (var ii = 0; ii < rowOrder.length; ii++) {
+    var item = rowOrder[ii];
+    var centerY = centers[ii];
+    var dividerY = centerY + (typeof item === 'string' ? 28 : 40);
+    ctx.strokeStyle = 'rgba(120,127,160,0.14)';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(28, dividerY);
+    ctx.lineTo(w - 28, dividerY);
+    ctx.stroke();
+
+    if (item === 'PH_TOP') {
+      drawPeepBar(ctx, 'PH TST', topVals, gridLeft, centerY, gridWidth, uiScale);
+      continue;
+    }
+    if (item === 'PH_BOT') {
+      drawPeepBar(ctx, 'PH TST', botVals, gridLeft, centerY, gridWidth, uiScale);
+      continue;
+    }
+
+    var rowW = 136;
+    var rowH = 50;
+    ctx.fillStyle = 'rgba(8,12,22,0.96)';
+    cuboidRoundRectPath(ctx, 24, centerY - rowH / 2, rowW, rowH, 14);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(140,160,190,0.28)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 24px Times New Roman, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('ROW ' + item, 24 + rowW / 2, centerY);
+
+    var rowData = Array.isArray(rows[item - 1]) ? rows[item - 1] : [];
+    for (var ci = 0; ci < 15; ci++) {
+      var state = String(rowData[ci] || 'C').toUpperCase();
+      var burnerX = gridLeft + slotW * (ci + 0.5);
+      var cleaned = !!String(wallCleaning['R' + item + 'B' + (ci + 1)] || '').trim();
+      drawBurner(ctx, burnerX, centerY + 8, state, cleaned, (animPhase || 0) + (ii * 0.52) + (ci * 0.26), iconScale);
+    }
+  }
+
+  overlay.texture.needsUpdate = true;
+}
+
+function cuboidUpdateLegendData(sfx, wallKeys, snapshot) {
+  if (!snapshot || !snapshot.hmData) return;
+  var counts = cuboidCountStates(snapshot.hmData, wallKeys);
+  var setText = function(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = String(value);
+  };
+  setText('cnt-b' + sfx, counts.B || 0);
+  setText('cnt-c' + sfx, counts.C || 0);
+  setText('cnt-o' + sfx, counts.O || 0);
+  setText('cnt-n' + sfx, counts.N || 0);
+
+  var avg = (wallKeys[0] === 'A' || wallKeys[0] === 'B')
+    ? cuboidAverageTemp(snapshot.abBot || [], snapshot.abTop || [])
+    : cuboidAverageTemp(snapshot.cdBot || [], snapshot.cdTop || []);
+  var tempEl = document.getElementById('param-temp' + sfx);
+  if (tempEl) tempEl.textContent = avg !== null ? (avg + ' °C') : '-- °C';
+}
+
 function initViewer(sfx) {
   (function boot() {
     if (typeof THREE === 'undefined') { setTimeout(boot, 50); return; }
@@ -353,6 +651,9 @@ function initViewer(sfx) {
     var canvas  = document.getElementById('c'+sfx);
     var faceLbl = document.getElementById('face-lbl'+sfx);
     var hintLbl = document.getElementById('hint-lbl'+sfx);
+    var wallMap = String(sfx) === '1'
+      ? { front:'A', back:'B', walls:['A','B'] }
+      : { front:'C', back:'D', walls:['C','D'] };
     
   if (typeof THREE === 'undefined') { setTimeout(boot, 50); return; }
 
@@ -650,6 +951,23 @@ function initViewer(sfx) {
   // ─────────────────────────────────────────────────────────────────────────
   addMesh(new THREE.BoxGeometry(CW, CH, WALL), rustMat, 0, 0, -CD/2-WALL/2);
 
+  var wallFaceOverlays = {
+    front: cuboidCreateWallFaceOverlay(renderer, wallMap.front, 'front', {
+      faceW: CW - 0.48,
+      faceH: CH - 0.22,
+      frontZ: CD/2 + WALL + 0.010,
+      backZ: -CD/2 - WALL - 0.010
+    }),
+    back: cuboidCreateWallFaceOverlay(renderer, wallMap.back, 'back', {
+      faceW: CW - 0.48,
+      faceH: CH - 0.22,
+      frontZ: CD/2 + WALL + 0.010,
+      backZ: -CD/2 - WALL - 0.010
+    })
+  };
+  G.add(wallFaceOverlays.front.mesh);
+  G.add(wallFaceOverlays.back.mesh);
+
   // ─────────────────────────────────────────────────────────────────────────
   //  FACE 5 — TOP
   // ─────────────────────────────────────────────────────────────────────────
@@ -933,9 +1251,9 @@ function initViewer(sfx) {
   // Face label logic
   function getFaceLabel(r) {
     var n = ((r % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
-    if (n < Math.PI*0.25 || n >= Math.PI*1.75) return 'FACE 1 — FRONT PANEL';
+    if (n < Math.PI*0.25 || n >= Math.PI*1.75) return 'FACE 1 — FRONT PANEL · WALL ' + wallMap.front;
     if (n < Math.PI*0.75)                       return 'FACE 4 — RIGHT SIDE  [ ■ PEEPHOLES ■ ]';
-    if (n < Math.PI*1.25)                       return 'FACE 2 — REAR PANEL';
+    if (n < Math.PI*1.25)                       return 'FACE 2 — REAR PANEL · WALL ' + wallMap.back;
     return 'FACE 3 — LEFT SIDE  [ ■ PEEPHOLES ■ ]';
   }
 
@@ -944,11 +1262,15 @@ function initViewer(sfx) {
   // ─────────────────────────────────────────────────────────────────────────
   var clock = new THREE.Clock(), hintGone = false;
   var t0 = 0;
+  var overlayPhase = 0;
+  var lastOverlayPaintAt = 0;
+  var overlayTickMs = 220;
 
   function frame() {
     requestAnimationFrame(frame);
     var dt = clock.getDelta();
     var t  = clock.getElapsedTime();
+    var now = performance.now();
 
     // Hint fade after 5 s
     if (!hintGone && t > 5) { hintLbl.classList.add('gone'); hintGone=true; }
@@ -981,8 +1303,24 @@ function initViewer(sfx) {
     }
     pp.needsUpdate = true;
 
+    if ((now - lastOverlayPaintAt) >= overlayTickMs) {
+      overlayPhase = (overlayPhase + 0.32) % (Math.PI * 2);
+      var snapshot = cuboidGetSnapshot();
+      cuboidPaintWallFaceOverlay(wallFaceOverlays.front, snapshot, overlayPhase + 0.18);
+      cuboidPaintWallFaceOverlay(wallFaceOverlays.back, snapshot, overlayPhase + 0.94);
+      cuboidUpdateLegendData(sfx, wallMap.walls, snapshot);
+      lastOverlayPaintAt = now;
+    }
+
     renderer.render(scene, camera);
   }
+
+  (function initWallFaceData() {
+    var snapshot = cuboidGetSnapshot();
+    cuboidPaintWallFaceOverlay(wallFaceOverlays.front, snapshot, 0.18);
+    cuboidPaintWallFaceOverlay(wallFaceOverlays.back, snapshot, 0.94);
+    cuboidUpdateLegendData(sfx, wallMap.walls, snapshot);
+  })();
 
   frame();
 
