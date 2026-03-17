@@ -12332,6 +12332,9 @@ html, body, body *, body *::before, body *::after, svg text{
           top:8.8
         };
         var HM_UPLOADED_SHOW_FACE_DATA = true;
+        var HM_UPLOADED_OVERLAY_AUTO_TICK_MS = 180;
+        var HM_UPLOADED_OVERLAY_MANUAL_TICK_MS = 140;
+        var HM_UPLOADED_OVERLAY_PHASE_STEP = 0.34;
         var HM_UPLOADED_CAMERA_Y = 1.85;
         var HM_UPLOADED_LOOKAT_Y = 1.85;
 
@@ -13630,9 +13633,9 @@ html, body, body *, body *::before, body *::after, svg text{
               state.camera.position.set(0, HM_UPLOADED_CAMERA_Y, state.camDist);
               state.camera.lookAt(0, HM_UPLOADED_LOOKAT_Y, 0);
               if(HM_UPLOADED_SHOW_FACE_DATA && state.latestSnapshot){
-                var overlayTickMs = state.autoRotate ? 120 : 90;
+                var overlayTickMs = state.autoRotate ? HM_UPLOADED_OVERLAY_AUTO_TICK_MS : HM_UPLOADED_OVERLAY_MANUAL_TICK_MS;
                 if((now - state.lastOverlayPaintAt) >= overlayTickMs){
-                  state.overlayAnimPhase = (state.overlayAnimPhase + 0.52) % (Math.PI * 2);
+                  state.overlayAnimPhase = (state.overlayAnimPhase + HM_UPLOADED_OVERLAY_PHASE_STEP) % (Math.PI * 2);
                   hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
                   state.lastOverlayPaintAt = now;
                 }
@@ -18502,18 +18505,18 @@ function r3dGetBurnerPalette(state){
       glow:"rgba(59,130,246,0.54)"
     },
     C:{
-      flame:"#334155",
-      core:"#475569",
-      inner:"#64748b",
-      stem:"#1f2937",
-      glow:"rgba(71,85,105,0.18)"
+      flame:"#4f6b8f",
+      core:"#9fb7d7",
+      inner:"#dbeafe",
+      stem:"#31455f",
+      glow:"rgba(148,163,184,0.24)"
     }
   }[state] || {
-    flame:"#334155",
-    core:"#475569",
-    inner:"#64748b",
-    stem:"#1f2937",
-    glow:"rgba(71,85,105,0.18)"
+    flame:"#4f6b8f",
+    core:"#9fb7d7",
+    inner:"#dbeafe",
+    stem:"#31455f",
+    glow:"rgba(148,163,184,0.24)"
   };
 }
 
@@ -18577,12 +18580,26 @@ function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase, iconScale){
   ctx.fill();
 
   if(s === "C"){
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = palette.glow;
+    ctx.beginPath();
+    ctx.ellipse(x, y + (2.2 * scale), 9.2 * scaleX, 4.2 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
     ctx.fillStyle = palette.flame;
     r3dRoundRectPath(ctx, x - (8.5 * scaleX), y - (1.4 * scale), 17 * scaleX, 5.4 * scale, 3 * scale);
     ctx.fill();
+    ctx.lineWidth = Math.max(1.1, 0.75 * scale);
+    ctx.strokeStyle = "rgba(191,219,254,0.42)";
+    ctx.stroke();
     ctx.fillStyle = palette.core;
     r3dRoundRectPath(ctx, stemX, y + (0.4 * scale), stemW, 9.4 * scale, 3 * scale);
     ctx.fill();
+    ctx.lineWidth = Math.max(1, 0.65 * scale);
+    ctx.strokeStyle = "rgba(226,232,240,0.28)";
+    ctx.stroke();
   }else{
     r3dDrawTipFlameGlow(ctx, x, y, s, phase, scale);
     ctx.fillStyle = palette.stem;
@@ -19264,9 +19281,9 @@ function initReformer3DTab(){
       reformer3DState.pivotGroup.rotation.y = reformer3DState.rotation.y;
       r3dUpdateCamera();
       if(r3dIsActive() && reformer3DState.latestSnapshot){
-        var overlayTickMs = reformer3DState.autoRotate ? 120 : 90;
+        var overlayTickMs = reformer3DState.autoRotate ? HM_UPLOADED_OVERLAY_AUTO_TICK_MS : HM_UPLOADED_OVERLAY_MANUAL_TICK_MS;
         if((now - reformer3DState.lastOverlayPaintAt) >= overlayTickMs){
-          reformer3DState.overlayAnimPhase = (reformer3DState.overlayAnimPhase + 0.52) % (Math.PI * 2);
+          reformer3DState.overlayAnimPhase = (reformer3DState.overlayAnimPhase + HM_UPLOADED_OVERLAY_PHASE_STEP) % (Math.PI * 2);
           r3dRefreshWallOverlays(reformer3DState.latestSnapshot);
           reformer3DState.lastOverlayPaintAt = now;
         }
@@ -23374,7 +23391,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-heatmap-face-flame-dot-removed-1";
+      var swBuild = "20260317-closed-burner-visible-less-flame-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
