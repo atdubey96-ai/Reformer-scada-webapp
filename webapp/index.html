@@ -1642,23 +1642,51 @@ body.light-theme .burner-mobile-wall-btn.burner-mobile-wall-btn-active{
 #tab-burner .burner-grid-crosshair.is-active{
   opacity:1;
 }
-#tab-burner .burner-grid-line{
+#tab-burner .burner-grid-guide{
+  position:absolute;
+  pointer-events:none;
+  display:none;
+}
+#tab-burner .burner-grid-guide::before,
+#tab-burner .burner-grid-guide::after{
+  content:"";
   position:absolute;
   border-radius:999px;
-  background:rgba(243,112,34,0.62);
-  box-shadow:0 0 0 1px rgba(243,112,34,0.16),0 0 12px rgba(243,112,34,0.2);
+  box-shadow:0 0 8px rgba(243,112,34,0.14);
 }
-#tab-burner .burner-grid-line[data-burner-line="row"]{
+#tab-burner .burner-grid-guide[data-burner-guide="row"]::before,
+#tab-burner .burner-grid-guide[data-burner-guide="row"]::after{
   left:0;
   right:0;
-  height:2px;
-  transform:translateY(-50%);
+  height:1px;
+  background:
+    linear-gradient(90deg,rgba(243,112,34,0) 0%,rgba(243,112,34,0.36) 14%,rgba(126,200,240,0.88) 52%,rgba(243,112,34,0.46) 86%,rgba(243,112,34,0) 100%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,0.42) 0 7px,rgba(255,255,255,0) 7px 14px);
 }
-#tab-burner .burner-grid-line[data-burner-line="col"]{
+#tab-burner .burner-grid-guide[data-burner-guide="row"]::before{
+  top:4px;
+  opacity:0.42;
+}
+#tab-burner .burner-grid-guide[data-burner-guide="row"]::after{
+  top:8px;
+  opacity:0.9;
+}
+#tab-burner .burner-grid-guide[data-burner-guide="col"]::before,
+#tab-burner .burner-grid-guide[data-burner-guide="col"]::after{
   top:0;
   bottom:0;
-  width:2px;
-  transform:translateX(-50%);
+  width:1px;
+  background:
+    linear-gradient(180deg,rgba(243,112,34,0) 0%,rgba(243,112,34,0.36) 14%,rgba(126,200,240,0.88) 52%,rgba(243,112,34,0.46) 86%,rgba(243,112,34,0) 100%),
+    repeating-linear-gradient(180deg,rgba(255,255,255,0.42) 0 7px,rgba(255,255,255,0) 7px 14px);
+}
+#tab-burner .burner-grid-guide[data-burner-guide="col"]::before{
+  left:4px;
+  opacity:0.42;
+}
+#tab-burner .burner-grid-guide[data-burner-guide="col"]::after{
+  left:8px;
+  opacity:0.9;
 }
 #tab-burner .burner-grid-table th{
   transition:background .12s ease,border-color .12s ease,color .12s ease,box-shadow .12s ease;
@@ -1675,9 +1703,9 @@ body.light-theme .burner-mobile-wall-btn.burner-mobile-wall-btn-active{
   border-color:rgba(243,112,34,0.86) !important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 0 0 2px rgba(243,112,34,0.24) !important;
 }
-body.light-theme #tab-burner .burner-grid-line{
-  background:rgba(243,112,34,0.72);
-  box-shadow:0 0 0 1px rgba(243,112,34,0.14),0 0 10px rgba(243,112,34,0.14);
+body.light-theme #tab-burner .burner-grid-guide::before,
+body.light-theme #tab-burner .burner-grid-guide::after{
+  box-shadow:0 0 6px rgba(243,112,34,0.1);
 }
 body.light-theme #tab-burner .burner-grid-table th.burner-hover-head{
   color:#8f3f00;
@@ -15461,8 +15489,8 @@ function setBurnerMobileWall(wall){
 function bindBurnerTableHover(gridWrap, tbl){
   if(!gridWrap || !tbl) return;
   var overlay = gridWrap.querySelector(".burner-grid-crosshair");
-  var rowLine = overlay ? overlay.querySelector('[data-burner-line="row"]') : null;
-  var colLine = overlay ? overlay.querySelector('[data-burner-line="col"]') : null;
+  var rowGuide = overlay ? overlay.querySelector('[data-burner-guide="row"]') : null;
+  var colGuide = overlay ? overlay.querySelector('[data-burner-guide="col"]') : null;
   var activeCell = null;
   var activeRowHead = null;
   var activeColHead = null;
@@ -15474,6 +15502,8 @@ function bindBurnerTableHover(gridWrap, tbl){
     activeCell = null;
     activeRowHead = null;
     activeColHead = null;
+    if(rowGuide) rowGuide.style.display = "none";
+    if(colGuide) colGuide.style.display = "none";
     if(overlay) overlay.classList.remove("is-active");
   }
 
@@ -15490,11 +15520,43 @@ function bindBurnerTableHover(gridWrap, tbl){
     if(activeRowHead) activeRowHead.classList.add("burner-hover-head");
     if(activeColHead) activeColHead.classList.add("burner-hover-head");
 
-    if(overlay && rowLine && colLine){
+    if(overlay && rowGuide && colGuide){
       var wrapRect = gridWrap.getBoundingClientRect();
       var cellRect = cell.getBoundingClientRect();
-      rowLine.style.top = (cellRect.top - wrapRect.top + (cellRect.height / 2)) + "px";
-      colLine.style.left = (cellRect.left - wrapRect.left + (cellRect.width / 2)) + "px";
+      var rowHeadRect = activeRowHead ? activeRowHead.getBoundingClientRect() : null;
+      var colHeadRect = activeColHead ? activeColHead.getBoundingClientRect() : null;
+      if(rowHeadRect){
+        var rowStart = rowHeadRect.right - wrapRect.left + 6;
+        var rowEnd = cellRect.left - wrapRect.left - 8;
+        var rowWidth = Math.max(0, rowEnd - rowStart);
+        if(rowWidth > 10){
+          rowGuide.style.display = "";
+          rowGuide.style.left = rowStart + "px";
+          rowGuide.style.top = (cellRect.top - wrapRect.top + (cellRect.height / 2) - 7) + "px";
+          rowGuide.style.width = rowWidth + "px";
+          rowGuide.style.height = "14px";
+        }else{
+          rowGuide.style.display = "none";
+        }
+      }else{
+        rowGuide.style.display = "none";
+      }
+      if(colHeadRect){
+        var colStart = colHeadRect.bottom - wrapRect.top + 6;
+        var colEnd = cellRect.top - wrapRect.top - 8;
+        var colHeight = Math.max(0, colEnd - colStart);
+        if(colHeight > 10){
+          colGuide.style.display = "";
+          colGuide.style.left = (cellRect.left - wrapRect.left + (cellRect.width / 2) - 7) + "px";
+          colGuide.style.top = colStart + "px";
+          colGuide.style.width = "14px";
+          colGuide.style.height = colHeight + "px";
+        }else{
+          colGuide.style.display = "none";
+        }
+      }else{
+        colGuide.style.display = "none";
+      }
       overlay.classList.add("is-active");
     }
   }
@@ -15737,7 +15799,7 @@ function render(){
     gridWrap.appendChild(tbl);
     const crosshair=document.createElement("div");
     crosshair.className="burner-grid-crosshair";
-    crosshair.innerHTML='<div class="burner-grid-line" data-burner-line="row"></div><div class="burner-grid-line" data-burner-line="col"></div>';
+    crosshair.innerHTML='<div class="burner-grid-guide" data-burner-guide="row"></div><div class="burner-grid-guide" data-burner-guide="col"></div>';
     gridWrap.appendChild(crosshair);
     bindBurnerTableHover(gridWrap, tbl);
     wall.appendChild(gridWrap);wallsDiv.appendChild(wall);
@@ -22958,7 +23020,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-cuboid-face-stability-1";
+      var swBuild = "20260317-burner-hover-guides-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
