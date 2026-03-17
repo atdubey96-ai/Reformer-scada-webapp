@@ -11316,7 +11316,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         #tab-heatmap .hm-uploaded-viewer .viewer-section{
           min-height:0;
-          padding:24px 24px 18px;
+          padding:20px 18px 18px;
           border-bottom:1px solid #1E2530;
         }
         #tab-heatmap .hm-uploaded-viewer .section-head{
@@ -11365,13 +11365,13 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap .hm-uploaded-viewer .viewer-layout{
           display:flex;
           align-items:flex-start;
-          gap:18px;
-          min-height:clamp(520px,72vh,860px);
+          gap:14px;
+          min-height:clamp(560px,76vh,900px);
         }
         #tab-heatmap .hm-uploaded-viewer .canvas-area{
           flex:1;
           position:relative;
-          min-height:clamp(520px,72vh,860px);
+          min-height:clamp(560px,76vh,900px);
           border:1px solid #1E2530;
           border-radius:24px;
           overflow:hidden;
@@ -11457,7 +11457,7 @@ html, body, body *, body *::before, body *::after, svg text{
           pointer-events:none;
         }
         #tab-heatmap .hm-uploaded-viewer .side-panel{
-          width:286px;
+          width:270px;
           background:#10151C;
           border:1px solid #1E2530;
           border-radius:24px;
@@ -11474,18 +11474,18 @@ html, body, body *, body *::before, body *::after, svg text{
             justify-content:center;
           }
           #tab-heatmap .hm-uploaded-viewer .section-head{
-            margin-bottom:16px;
+            margin-bottom:12px;
           }
           #tab-heatmap .hm-uploaded-viewer .viewer-layout{
-            min-height:min(76dvh, 860px);
-            height:min(76dvh, 860px);
+            min-height:min(80dvh, 920px);
+            height:min(80dvh, 920px);
           }
           #tab-heatmap .hm-uploaded-viewer .canvas-area{
             min-height:0;
             height:100%;
           }
           #tab-heatmap .hm-uploaded-viewer .side-panel{
-            width:292px;
+            width:276px;
             max-height:100%;
             overflow:auto;
             scrollbar-width:thin;
@@ -12035,9 +12035,9 @@ html, body, body *, body *::before, body *::after, svg text{
         var HM_UPLOADED_OVERLAY_AUTO_TICK_MS = 180;
         var HM_UPLOADED_OVERLAY_MANUAL_TICK_MS = 140;
         var HM_UPLOADED_OVERLAY_PHASE_STEP = 0.34;
-        var HM_UPLOADED_SCENE_OFFSET_Y = 0.02;
-        var HM_UPLOADED_CAMERA_Y = 1.72;
-        var HM_UPLOADED_LOOKAT_Y = 1.54;
+        var HM_UPLOADED_SCENE_OFFSET_Y = -0.04;
+        var HM_UPLOADED_CAMERA_Y = 1.64;
+        var HM_UPLOADED_LOOKAT_Y = 1.44;
 
         function hmUploadedClampRotationX(value){
           return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
@@ -12147,11 +12147,11 @@ html, body, body *, body *::before, body *::after, svg text{
           var size = hmUploadedGetCanvasSize(state.canvas);
           var aspect = (size.width > 0 && size.height > 0) ? (size.width / Math.max(1, size.height)) : 1.6;
           var isZoom = hmUploadedIsZoomCanvas(state.canvas);
-          var padding = isZoom ? 1.02 : 1.02;
-          if(aspect >= 2.05) padding = isZoom ? 0.9 : 0.88;
-          else if(aspect >= 1.85) padding = isZoom ? 0.94 : 0.92;
-          else if(aspect >= 1.6) padding = isZoom ? 0.98 : 0.96;
-          else if(aspect <= 1.2) padding = isZoom ? 1.04 : 1.02;
+          var padding = isZoom ? 1.03 : 1.05;
+          if(aspect >= 2.05) padding = isZoom ? 0.99 : 1.01;
+          else if(aspect >= 1.85) padding = isZoom ? 1.01 : 1.03;
+          else if(aspect >= 1.6) padding = isZoom ? 1.03 : 1.05;
+          else if(aspect <= 1.2) padding = isZoom ? 1.07 : 1.1;
           var nextDefault = hmUploadedGetFitCamDist(
             state,
             padding
