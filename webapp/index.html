@@ -1563,13 +1563,13 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
   font-weight:700;text-align:center;border-radius:4px;font-size:13px;
 }
 #tab-burner .burner-hover-readout{
-  display:flex;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
   align-items:center;
-  justify-content:space-between;
-  gap:10px;
+  gap:14px;
   margin:0 0 12px;
-  padding:10px 12px;
-  min-height:46px;
+  padding:12px 16px;
+  min-height:74px;
   border-radius:10px;
   border:1px solid rgba(126,200,240,0.18);
   background:linear-gradient(180deg,rgba(15,23,42,0.78),rgba(15,23,42,0.52));
@@ -1583,11 +1583,19 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
   border-color:rgba(243,112,34,0.42);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 0 0 1px rgba(243,112,34,0.14),0 12px 28px rgba(2,6,23,0.22);
 }
+#tab-burner .burner-hover-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:5px;
+}
 #tab-burner .burner-hover-meta{
   display:flex;
   align-items:center;
   gap:8px;
   flex-wrap:wrap;
+  min-width:0;
 }
 #tab-burner .burner-hover-hint{
   color:#7ec8f0;
@@ -1598,20 +1606,35 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
 #tab-burner .burner-hover-pos{
   color:#f8fafc;
   font-size:13px;
+  line-height:1.35;
+}
+#tab-burner .burner-hover-note{
+  min-height:15px;
+  color:rgba(169,189,214,0.78);
+  font-size:11px;
+  font-weight:600;
+  line-height:1.35;
 }
 #tab-burner .burner-hover-state{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-width:112px;
-  padding:5px 10px;
+  align-self:center;
+  min-width:132px;
+  min-height:42px;
+  padding:7px 12px;
   border-radius:999px;
   border:1px solid rgba(148,163,184,0.34);
   background:rgba(15,23,42,0.5);
   color:#e2e8f0;
-  font-size:11px;
+  font-size:12px;
   font-weight:700;
   white-space:nowrap;
+}
+#tab-burner .burner-hover-state.state-idle{
+  border-color:rgba(126,200,240,0.34);
+  background:rgba(15,23,42,0.42);
+  color:#dbeafe;
 }
 #tab-burner .burner-hover-state.state-B{
   border-color:rgba(96,165,250,0.48);
@@ -1647,7 +1670,7 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
   transform:none !important;
   z-index:2;
   border-color:rgba(243,112,34,0.78) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.26),0 0 0 2px rgba(243,112,34,0.32),0 10px 18px rgba(2,6,23,0.14) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 0 0 2px rgba(243,112,34,0.26) !important;
 }
 #tab-burner .burner-grid-table td.burner-hover-focus::after{
   bottom:calc(100% + 9px);
@@ -1656,7 +1679,7 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
   bottom:calc(100% + 4px);
 }
 #tab-burner .burner-grid-table td.burner-cell{
-  transition:box-shadow .14s ease,border-color .14s ease,background .14s ease;
+  transition:border-color .12s ease,box-shadow .12s ease,background .12s ease;
   will-change:auto;
 }
 #tab-burner .burner-grid-table td.B:hover,
@@ -1665,7 +1688,7 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
 #tab-burner .burner-grid-table td.C:hover{
   transform:none;
   z-index:2;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.3),0 8px 14px rgba(2,6,23,0.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.24),0 0 0 1px rgba(148,163,184,0.12);
 }
 #tab-burner .burner-grid-table td[data-tip]:hover::after,
 #tab-burner .burner-grid-table td[data-tip]:hover::before{
@@ -1688,9 +1711,17 @@ body.light-theme #tab-burner .burner-hover-hint{
 body.light-theme #tab-burner .burner-hover-pos{
   color:#172030;
 }
+body.light-theme #tab-burner .burner-hover-note{
+  color:#617389;
+}
 body.light-theme #tab-burner .burner-hover-state{
   background:#ffffff;
   color:#1e293b;
+}
+body.light-theme #tab-burner .burner-hover-state.state-idle{
+  border-color:rgba(96,165,250,0.36);
+  background:linear-gradient(180deg,#f8fbff 0%,#edf4ff 100%);
+  color:#1d4ed8;
 }
 body.light-theme #tab-burner .burner-grid-table .burner-hover-head{
   color:#172030;
@@ -1699,7 +1730,15 @@ body.light-theme #tab-burner .burner-grid-table .burner-hover-head{
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.98),0 0 0 1px rgba(243,112,34,0.12);
 }
 body.light-theme #tab-burner .burner-grid-table td.burner-hover-focus{
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.48),0 0 0 2px rgba(243,112,34,0.28),0 10px 18px rgba(15,23,42,0.08) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.48),0 0 0 2px rgba(243,112,34,0.24) !important;
+}
+@media(max-width:980px){
+  #tab-burner .burner-hover-readout{
+    grid-template-columns:1fr;
+  }
+  #tab-burner .burner-hover-state{
+    justify-self:start;
+  }
 }
 .burner-mobile-wall-switch{
   display:none;
@@ -9449,7 +9488,7 @@ html, body, body *, body *::before, body *::after, svg text{
         body #tab-burner td.O:not(.burner-pending):hover,
         body #tab-burner td.C:not(.burner-pending):hover{
           transform:none !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),0 8px 14px rgba(0,0,0,0.12) !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.26),0 0 0 1px rgba(148,163,184,0.12) !important;
         }
         body #tab-burner .burner-grid-table td.burner-hover-focus.B,
         body #tab-burner .burner-grid-table td.burner-hover-focus.N,
@@ -9457,7 +9496,7 @@ html, body, body *, body *::before, body *::after, svg text{
         body #tab-burner .burner-grid-table td.burner-hover-focus.C{
           transform:none !important;
           border-color:rgba(243,112,34,0.82) !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.34),0 0 0 2px rgba(243,112,34,0.28),0 10px 18px rgba(0,0,0,0.12) !important;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 0 0 2px rgba(243,112,34,0.24) !important;
         }
         body #tab-burner .legend .li-B,
         body #tab-burner .ab-both{
@@ -15446,38 +15485,108 @@ function getBurnerStateLabel(code){
   })[String(code || "").toUpperCase()] || "Unknown";
 }
 
+function ensureBurnerHoverReadoutStructure(readout){
+  if(!readout) return null;
+  if(readout._burnerHoverRefs) return readout._burnerHoverRefs;
+
+  readout.textContent = "";
+
+  var copy = document.createElement("div");
+  copy.className = "burner-hover-copy";
+
+  var meta = document.createElement("div");
+  meta.className = "burner-hover-meta";
+
+  var hint = document.createElement("span");
+  hint.className = "burner-hover-hint";
+
+  var pos = document.createElement("span");
+  pos.className = "burner-hover-pos";
+
+  var note = document.createElement("div");
+  note.className = "burner-hover-note";
+
+  var state = document.createElement("span");
+  state.className = "burner-hover-state state-idle";
+
+  meta.appendChild(hint);
+  meta.appendChild(pos);
+  copy.appendChild(meta);
+  copy.appendChild(note);
+  readout.appendChild(copy);
+  readout.appendChild(state);
+
+  readout._burnerHoverRefs = {hint:hint, pos:pos, note:note, state:state};
+  return readout._burnerHoverRefs;
+}
+
+function getBurnerHoverStore(table){
+  if(!table) return null;
+  if(table._burnerHoverStore) return table._burnerHoverStore;
+  table._burnerHoverStore = {
+    activeCell:null,
+    activeRowHead:null,
+    activeColHead:null,
+    activeKey:"",
+    pendingCell:null,
+    frameId:0,
+    frameType:""
+  };
+  return table._burnerHoverStore;
+}
+
+function cancelBurnerHoverFrame(store){
+  if(!store || !store.frameId) return;
+  if(store.frameType === "timeout"){
+    clearTimeout(store.frameId);
+  }else if(typeof cancelAnimationFrame === "function"){
+    cancelAnimationFrame(store.frameId);
+  }else{
+    clearTimeout(store.frameId);
+  }
+  store.frameId = 0;
+  store.frameType = "";
+}
+
 function setBurnerHoverReadout(readout, wallName, rowNum, burnerNum, stateCode, isPending){
   if(!readout) return;
+  var refs = ensureBurnerHoverReadoutStructure(readout);
+  if(!refs) return;
   if(!wallName || !rowNum || !burnerNum || !stateCode){
     readout.classList.remove("is-active");
-    readout.innerHTML =
-      '<div class="burner-hover-meta">'
-      + '<span class="burner-hover-hint">Hover</span>'
-      + '<span>Move over any burner cell to inspect wall, row, burner, and live fuel mode.</span>'
-      + '</div>';
+    refs.hint.textContent = "Burner Focus";
+    refs.pos.textContent = "No burner selected";
+    refs.note.textContent = "Hover a burner cell to inspect wall, row, burner, and live fuel mode.";
+    refs.state.className = "burner-hover-state state-idle";
+    refs.state.textContent = "Ready";
     return;
   }
   var stateKey = String(stateCode || "").toUpperCase();
   var label = getBurnerStateLabel(stateKey);
   readout.classList.add("is-active");
-  readout.innerHTML =
-    '<div class="burner-hover-meta">'
-    + '<span class="burner-hover-hint">Burner Focus</span>'
-    + '<span class="burner-hover-pos">Wall ' + wallName + ' · R' + rowNum + ' · B' + burnerNum + (isPending ? ' · Unsaved' : '') + '</span>'
-    + '</div>'
-    + '<span class="burner-hover-state state-' + stateKey + '">' + label + '</span>';
+  refs.hint.textContent = "Burner Focus";
+  refs.pos.textContent = "Wall " + wallName + " · R" + rowNum + " · B" + burnerNum;
+  refs.note.textContent = isPending ? "Pending change not saved yet." : "Live fuel mode shown at right.";
+  refs.state.className = "burner-hover-state state-" + stateKey;
+  refs.state.textContent = label;
 }
 
 function clearBurnerTableHover(table){
-  if(!table || !table.querySelectorAll) return;
-  table.querySelectorAll(".burner-hover-focus").forEach(function(node){
-    node.classList.remove("burner-hover-focus");
-  });
-  table.querySelectorAll(".burner-hover-head").forEach(function(node){
-    node.classList.remove("burner-hover-head");
-  });
+  if(!table) return;
+  var store = getBurnerHoverStore(table);
+  cancelBurnerHoverFrame(store);
+  if(store){
+    store.pendingCell = null;
+    if(store.activeCell) store.activeCell.classList.remove("burner-hover-focus");
+    if(store.activeRowHead) store.activeRowHead.classList.remove("burner-hover-head");
+    if(store.activeColHead) store.activeColHead.classList.remove("burner-hover-head");
+    store.activeCell = null;
+    store.activeRowHead = null;
+    store.activeColHead = null;
+    store.activeKey = "";
+  }
   var wallCard = table.closest ? table.closest(".wall") : null;
-  var readout = wallCard ? wallCard.querySelector(".burner-hover-readout") : null;
+  var readout = table._burnerReadout || (wallCard ? wallCard.querySelector(".burner-hover-readout") : null);
   setBurnerHoverReadout(readout);
 }
 
@@ -15487,29 +15596,77 @@ function clearBurnerWallHover(wallCard){
   if(table) clearBurnerTableHover(table);
 }
 
-function activateBurnerTableHover(table, cell){
+function applyBurnerTableHover(table, cell){
   if(!table || !cell) return;
+  var store = getBurnerHoverStore(table);
   var rowNum = String(cell.getAttribute("data-row") || "");
   var burnerNum = String(cell.getAttribute("data-burner") || "");
-  var current = table.querySelector(".burner-hover-focus");
-  if(current !== cell){
-    clearBurnerTableHover(table);
+  var stateCode = String(cell.getAttribute("data-state") || "");
+  var isPending = cell.classList.contains("burner-pending");
+  var nextKey = [
+    String(cell.getAttribute("data-wall") || ""),
+    rowNum,
+    burnerNum,
+    stateCode,
+    isPending ? "1" : "0"
+  ].join("|");
+
+  if(store.activeCell !== cell){
+    if(store.activeCell) store.activeCell.classList.remove("burner-hover-focus");
     cell.classList.add("burner-hover-focus");
+    store.activeCell = cell;
   }
-  var rowHead = table.querySelector('.burner-row-head[data-row="' + rowNum + '"]');
-  var colHead = table.querySelector('.burner-col-head[data-burner="' + burnerNum + '"]');
-  if(rowHead) rowHead.classList.add("burner-hover-head");
-  if(colHead) colHead.classList.add("burner-hover-head");
+
+  var rowHead = table._burnerRowHeads ? table._burnerRowHeads[rowNum] : null;
+  var colHead = table._burnerColHeads ? table._burnerColHeads[burnerNum] : null;
+
+  if(store.activeRowHead !== rowHead){
+    if(store.activeRowHead) store.activeRowHead.classList.remove("burner-hover-head");
+    if(rowHead) rowHead.classList.add("burner-hover-head");
+    store.activeRowHead = rowHead || null;
+  }
+  if(store.activeColHead !== colHead){
+    if(store.activeColHead) store.activeColHead.classList.remove("burner-hover-head");
+    if(colHead) colHead.classList.add("burner-hover-head");
+    store.activeColHead = colHead || null;
+  }
+
   var wallCard = table.closest ? table.closest(".wall") : null;
-  var readout = wallCard ? wallCard.querySelector(".burner-hover-readout") : null;
+  var readout = table._burnerReadout || (wallCard ? wallCard.querySelector(".burner-hover-readout") : null);
+  if(store.activeKey === nextKey && readout && readout.classList.contains("is-active")) return;
+  store.activeKey = nextKey;
   setBurnerHoverReadout(
     readout,
     cell.getAttribute("data-wall"),
     rowNum,
     burnerNum,
-    cell.getAttribute("data-state"),
-    cell.classList.contains("burner-pending")
+    stateCode,
+    isPending
   );
+}
+
+function activateBurnerTableHover(table, cell){
+  if(!table || !cell) return;
+  var store = getBurnerHoverStore(table);
+  if(!store) return;
+  store.pendingCell = cell;
+  if(store.frameId) return;
+
+  var flush = function(){
+    store.frameId = 0;
+    store.frameType = "";
+    var nextCell = store.pendingCell;
+    store.pendingCell = null;
+    if(nextCell && nextCell.isConnected) applyBurnerTableHover(table, nextCell);
+  };
+
+  if(typeof requestAnimationFrame === "function"){
+    store.frameType = "raf";
+    store.frameId = requestAnimationFrame(flush);
+  }else{
+    store.frameType = "timeout";
+    store.frameId = setTimeout(flush, 16);
+  }
 }
 
 function isBurnerSingleWallMode(){
@@ -15766,7 +15923,7 @@ function render(){
     wall.appendChild(bar);
     const hoverReadout=document.createElement("div");
     hoverReadout.className="burner-hover-readout";
-    hoverReadout.setAttribute("aria-live","polite");
+    hoverReadout.setAttribute("aria-live","off");
     setBurnerHoverReadout(hoverReadout);
     wall.appendChild(hoverReadout);
     wall.addEventListener("mouseleave", function(){
@@ -15774,6 +15931,10 @@ function render(){
     });
     const tbl=document.createElement("table");
     tbl.className="burner-grid-table";
+    tbl._burnerReadout = hoverReadout;
+    tbl._burnerRowHeads = Object.create(null);
+    tbl._burnerColHeads = Object.create(null);
+    getBurnerHoverStore(tbl);
     const hr=document.createElement("tr");
     const cornerTh=document.createElement("th");
     cornerTh.textContent="R/B";
@@ -15783,6 +15944,7 @@ function render(){
       th.textContent="B"+i;
       th.className="burner-col-head";
       th.setAttribute("data-burner", String(i));
+      tbl._burnerColHeads[String(i)] = th;
       hr.appendChild(th);
     }
     tbl.appendChild(hr);
@@ -15792,6 +15954,7 @@ function render(){
       rowTh.textContent="R"+(ri+1);
       rowTh.className="burner-row-head";
       rowTh.setAttribute("data-row", String(ri+1));
+      tbl._burnerRowHeads[String(ri+1)] = rowTh;
       tr.appendChild(rowTh);
       row.forEach((cell,ci)=>{
         const td=document.createElement("td");
@@ -23058,7 +23221,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-heatmap-seam-1";
+      var swBuild = "20260317-burner-hoverperf-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
