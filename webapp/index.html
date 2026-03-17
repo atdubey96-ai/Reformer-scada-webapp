@@ -11800,7 +11800,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="viewer-layout">
                 <div class="canvas-area fade-in" data-viewer="ab">
                   <canvas id="hm-uploaded-ab-canvas" class="viewer-canvas"></canvas>
-                  <div class="canvas-hint">Drag left/right to rotate · Double-click to zoom</div>
+                  <div class="canvas-hint">Drag left/right to rotate</div>
                 </div>
 
                 <aside class="side-panel fade-in">
@@ -11877,10 +11877,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="panel-section">
                     <h3>Controls</h3>
                     <div class="control-group">
-                      <button class="control-btn secondary" onclick="hmUploadedResetCam('ab')">⟲ Reset View</button>
-                      <button class="control-btn secondary" onclick="hmUploadedViewFront('ab')">◉ Front View</button>
-                      <button class="control-btn secondary" onclick="hmUploadedViewSide('ab')">◉ Side View</button>
-                      <button class="control-btn secondary" onclick="hmUploadedToggleAutoRotate('ab')">↻ Auto Rotate</button>
+                      <button class="control-btn secondary" onclick="hmUploadedResetCam('ab')">⟲ Reset Front View</button>
                     </div>
                   </div>
                 </aside>
@@ -11897,7 +11894,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="viewer-layout">
                 <div class="canvas-area fade-in" data-viewer="cd">
                   <canvas id="hm-uploaded-cd-canvas" class="viewer-canvas"></canvas>
-                  <div class="canvas-hint">Drag left/right to rotate · Double-click to zoom</div>
+                  <div class="canvas-hint">Drag left/right to rotate</div>
                 </div>
 
                 <aside class="side-panel fade-in">
@@ -11974,10 +11971,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="panel-section">
                     <h3>Controls</h3>
                     <div class="control-group">
-                      <button class="control-btn secondary" onclick="hmUploadedResetCam('cd')">⟲ Reset View</button>
-                      <button class="control-btn secondary" onclick="hmUploadedViewFront('cd')">◉ Front View</button>
-                      <button class="control-btn secondary" onclick="hmUploadedViewSide('cd')">◉ Side View</button>
-                      <button class="control-btn secondary" onclick="hmUploadedToggleAutoRotate('cd')">↻ Auto Rotate</button>
+                      <button class="control-btn secondary" onclick="hmUploadedResetCam('cd')">⟲ Reset Front View</button>
                     </div>
                   </div>
                 </aside>
@@ -12027,23 +12021,22 @@ html, body, body *, body *::before, body *::after, svg text{
         var ROTATION_X_MIN = SIDE_VIEW_ROTATION_X - VIEW_TILT_LIMIT;
         var ROTATION_X_MAX = SIDE_VIEW_ROTATION_X + VIEW_TILT_LIMIT;
         var HM_UPLOADED_VIEW_BASE_DIST = {
-          hero:10.4,
-          side:9.8,
-          front:14.2,
-          top:11.4
+          front:14.5
         };
-        var HM_UPLOADED_DEFAULT_VIEW = "hero";
-        var HM_UPLOADED_HERO_ROTATION_Y = -1.34;
+        var HM_UPLOADED_DEFAULT_VIEW = "front";
+        var HM_UPLOADED_HERO_ROTATION_Y = 0;
         var HM_UPLOADED_SHOW_FACE_DATA = true;
         var HM_UPLOADED_OVERLAY_AUTO_TICK_MS = 180;
         var HM_UPLOADED_OVERLAY_MANUAL_TICK_MS = 140;
         var HM_UPLOADED_OVERLAY_PHASE_STEP = 0.34;
-        var HM_UPLOADED_SCENE_OFFSET_Y = -0.04;
-        var HM_UPLOADED_CAMERA_Y_RATIO = 0.535;
-        var HM_UPLOADED_LOOKAT_Y_RATIO = 0.495;
+        var HM_UPLOADED_SCENE_OFFSET_Y = 0;
+        var HM_UPLOADED_CAMERA_Y_RATIO = 0.5;
+        var HM_UPLOADED_LOOKAT_Y_RATIO = 0.5;
+        var HM_UPLOADED_ORTHO_PADDING = 1.04;
+        var HM_UPLOADED_ORTHO_PADDING_ZOOM = 0.92;
 
-        function hmUploadedClampRotationX(value){
-          return Math.max(ROTATION_X_MIN, Math.min(ROTATION_X_MAX, value));
+        function hmUploadedClampRotationX(){
+          return 0;
         }
 
         function hmUploadedUpdateChamberSceneVisibility(state){
@@ -12065,110 +12058,34 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedGetResponsiveCamDistForView(canvas, viewName){
-          var baseDist = HM_UPLOADED_VIEW_BASE_DIST[viewName] || HM_UPLOADED_VIEW_BASE_DIST[HM_UPLOADED_DEFAULT_VIEW];
+          var baseDist = HM_UPLOADED_VIEW_BASE_DIST[viewName] || HM_UPLOADED_VIEW_BASE_DIST[HM_UPLOADED_DEFAULT_VIEW] || 14.5;
           if(hmUploadedIsZoomCanvas(canvas)) return Number((baseDist * 0.98).toFixed(2));
           return baseDist;
         }
 
         function hmUploadedGetCameraFrame(state){
           var frameInfo = state && state.frameInfo ? state.frameInfo : null;
-          var minY = frameInfo && typeof frameInfo.minY === "number" ? frameInfo.minY : 0;
-          var height = frameInfo && typeof frameInfo.height === "number" ? frameInfo.height : 3.5;
-          var offsetY = state && state.pivotGroup && state.pivotGroup.position
-            ? Number(state.pivotGroup.position.y || 0)
-            : 0;
-          var viewName = state && state.viewPreset ? state.viewPreset : HM_UPLOADED_DEFAULT_VIEW;
-          var cameraRatio = HM_UPLOADED_CAMERA_Y_RATIO;
-          var lookAtRatio = HM_UPLOADED_LOOKAT_Y_RATIO;
-          if(viewName === "hero"){
-            cameraRatio += 0.015;
-            lookAtRatio += 0.005;
-          }else if(viewName === "front"){
-            cameraRatio -= 0.01;
-            lookAtRatio += 0.005;
-          }
+          var centerY = frameInfo && typeof frameInfo.centerY === "number"
+            ? frameInfo.centerY
+            : ((frameInfo && typeof frameInfo.height === "number" ? frameInfo.height : 0) / 2);
           return {
-            cameraY:Number((offsetY + minY + (height * cameraRatio)).toFixed(3)),
-            lookAtY:Number((offsetY + minY + (height * lookAtRatio)).toFixed(3))
+            cameraY:Number(centerY.toFixed(3)),
+            lookAtY:Number(centerY.toFixed(3))
           };
         }
 
         function hmUploadedApplyCameraFrame(state){
           if(!state || !state.camera) return;
           var frame = hmUploadedGetCameraFrame(state);
-          state.camera.position.set(0, frame.cameraY, state.camDist);
+          state.camera.position.set(0, frame.cameraY, state.camDist || 14.5);
           state.camera.lookAt(0, frame.lookAtY, 0);
         }
 
         function hmUploadedGetFitCamDist(state, paddingMultiplier){
-          if(
-            !state ||
-            !state.camera ||
-            !state.pivotGroup ||
-            typeof THREE === "undefined"
-          ){
-            return hmUploadedGetResponsiveCamDistForView(
-              state && state.canvas ? state.canvas : null,
-              state && state.viewPreset ? state.viewPreset : HM_UPLOADED_DEFAULT_VIEW
-            );
-          }
-
-          state.pivotGroup.rotation.x = hmUploadedClampRotationX(
-            state.rotation && typeof state.rotation.x === "number"
-              ? state.rotation.x
-              : SIDE_VIEW_ROTATION_X
+          return hmUploadedGetResponsiveCamDistForView(
+            state && state.canvas ? state.canvas : null,
+            state && state.viewPreset ? state.viewPreset : HM_UPLOADED_DEFAULT_VIEW
           );
-          state.pivotGroup.rotation.y = state.rotation && typeof state.rotation.y === "number"
-            ? state.rotation.y
-            : (-Math.PI / 2);
-          var fitTarget = state.fitTarget || state.pivotGroup;
-          fitTarget.updateMatrixWorld(true);
-
-          var box = new THREE.Box3().setFromObject(fitTarget);
-          if(box.isEmpty()) {
-            return hmUploadedGetResponsiveCamDistForView(
-              state.canvas,
-              state.viewPreset || HM_UPLOADED_DEFAULT_VIEW
-            );
-          }
-
-          var viewSize = new THREE.Vector3();
-          box.getSize(viewSize);
-          if(
-            !isFinite(viewSize.x) || !isFinite(viewSize.y) || !isFinite(viewSize.z) ||
-            viewSize.x <= 0 || viewSize.y <= 0
-          ){
-            return hmUploadedGetResponsiveCamDistForView(
-              state.canvas,
-              state.viewPreset || HM_UPLOADED_DEFAULT_VIEW
-            );
-          }
-
-          var vFov = (state.camera.fov || 45) * Math.PI / 180;
-          var hFov = 2 * Math.atan(Math.tan(vFov / 2) * (state.camera.aspect || 1));
-          var halfW = viewSize.x * 0.5;
-          var halfH = viewSize.y * 0.5;
-          var distForWidth = halfW / Math.max(0.12, Math.tan(hFov / 2));
-          var distForHeight = halfH / Math.max(0.12, Math.tan(vFov / 2));
-          var fitDist = Math.max(distForWidth, distForHeight);
-          var aspect = state.camera.aspect || 1.6;
-          var viewName = state.viewPreset || HM_UPLOADED_DEFAULT_VIEW;
-          var depthWeight = 0.58;
-          if(viewName === "hero"){
-            if(aspect >= 2.05) depthWeight = 0.38;
-            else if(aspect >= 1.75) depthWeight = 0.42;
-            else if(aspect >= 1.45) depthWeight = 0.48;
-            else depthWeight = 0.54;
-          }else if(viewName === "side"){
-            if(aspect >= 2.05) depthWeight = 0.44;
-            else if(aspect >= 1.75) depthWeight = 0.48;
-            else if(aspect >= 1.45) depthWeight = 0.52;
-            else depthWeight = 0.56;
-          }
-          fitDist += (viewSize.z || 0) * depthWeight;
-          fitDist *= (paddingMultiplier || 1.08);
-
-          return Number(fitDist.toFixed(2));
         }
 
         function hmUploadedClampCamDist(state, value){
@@ -12181,44 +12098,49 @@ html, body, body *, body *::before, body *::after, svg text{
 
         function hmUploadedSetViewState(state, viewName, rotation, autoRotate){
           if(!state) return;
-          state.rotation = rotation;
+          state.rotation = {
+            x:0,
+            y:(rotation && typeof rotation.y === "number") ? rotation.y : 0
+          };
           state.viewPreset = viewName || HM_UPLOADED_DEFAULT_VIEW;
           hmUploadedApplyResponsiveScale(state);
           hmUploadedRefreshResponsiveCamDist(state);
           hmUploadedUpdateChamberSceneVisibility(state);
-          state.autoRotate = !!autoRotate;
+          state.autoRotate = false;
+        }
+
+        function hmUploadedFitOrthographicCamera(state){
+          if(!state || !state.camera || !state.canvas) return;
+          var size = hmUploadedGetCanvasSize(state.canvas);
+          var aspect = (size.width > 0 && size.height > 0) ? (size.width / Math.max(1, size.height)) : 1.6;
+          var dims = state.modelDims || {};
+          var faceW = Number(dims.faceW || dims.sX || 10);
+          var faceH = Number(dims.faceH || dims.sY || 7);
+          var padding = hmUploadedIsZoomCanvas(state.canvas)
+            ? HM_UPLOADED_ORTHO_PADDING_ZOOM
+            : HM_UPLOADED_ORTHO_PADDING;
+          var paddedFaceW = faceW * padding;
+          var paddedFaceH = faceH * padding;
+          var frustumH = Math.max(paddedFaceH, paddedFaceW / Math.max(0.001, aspect));
+          var frustumW = frustumH * aspect;
+
+          state.camera.left = -frustumW / 2;
+          state.camera.right = frustumW / 2;
+          state.camera.top = frustumH / 2;
+          state.camera.bottom = -frustumH / 2;
+          state.camera.near = 0.1;
+          state.camera.far = 100;
+          state.camera.zoom = 1;
+          state.camera.updateProjectionMatrix();
         }
 
         function hmUploadedRefreshResponsiveCamDist(state){
           if(!state || !state.canvas) return;
-          var size = hmUploadedGetCanvasSize(state.canvas);
-          var aspect = (size.width > 0 && size.height > 0) ? (size.width / Math.max(1, size.height)) : 1.6;
-          var isZoom = hmUploadedIsZoomCanvas(state.canvas);
-          var viewName = state.viewPreset || HM_UPLOADED_DEFAULT_VIEW;
-          var padding = isZoom ? 1.03 : 1.05;
-          if(viewName === "hero"){
-            if(aspect >= 2.05) padding = isZoom ? 0.95 : 0.98;
-            else if(aspect >= 1.85) padding = isZoom ? 0.97 : 1.00;
-            else if(aspect >= 1.6) padding = isZoom ? 0.99 : 1.02;
-            else if(aspect <= 1.2) padding = isZoom ? 1.06 : 1.09;
-            else padding = isZoom ? 1.01 : 1.04;
-          }else if(viewName === "side"){
-            if(aspect >= 2.05) padding = isZoom ? 0.97 : 1.00;
-            else if(aspect >= 1.85) padding = isZoom ? 0.99 : 1.02;
-            else if(aspect >= 1.6) padding = isZoom ? 1.01 : 1.03;
-            else if(aspect <= 1.2) padding = isZoom ? 1.07 : 1.10;
-          }else{
-            if(aspect >= 2.05) padding = isZoom ? 0.99 : 1.01;
-            else if(aspect >= 1.85) padding = isZoom ? 1.01 : 1.03;
-            else if(aspect >= 1.6) padding = isZoom ? 1.03 : 1.05;
-            else if(aspect <= 1.2) padding = isZoom ? 1.07 : 1.1;
-          }
-          var nextDefault = hmUploadedGetFitCamDist(
-            state,
-            padding
-          );
+          var nextDefault = hmUploadedGetFitCamDist(state, HM_UPLOADED_ORTHO_PADDING);
           state.defaultCamDist = nextDefault;
           state.camDist = nextDefault;
+          hmUploadedFitOrthographicCamera(state);
+          hmUploadedApplyCameraFrame(state);
         }
 
         function hmUploadedGetCanvasSize(canvas){
@@ -12276,6 +12198,7 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedRefreshResponsiveCamDist(state);
           if(state.latestSnapshot){
             hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
+            hmUploadedRefreshViewerPeepDisplays(state, state.latestSnapshot);
           }
         }
 
@@ -12315,6 +12238,7 @@ html, body, body *, body *::before, body *::after, svg text{
             hmUploadedRefreshResponsiveCamDist(state);
             if(state.latestSnapshot){
               hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
+              hmUploadedRefreshViewerPeepDisplays(state, state.latestSnapshot);
             }
             state._fullscreenSnapshot = null;
           });
@@ -12561,6 +12485,23 @@ html, body, body *, body *::before, body *::after, svg text{
           );
           frame.position.set(x, y, z);
           if(z < 0) frame.rotation.y = Math.PI;
+          parent.add(frame);
+        }
+
+        function hmUploadedAddSideWindowFrame(parent, sideX, centerY, centerZ, size){
+          var s = (size / 2) + 0.04;
+          var pts = [
+            new THREE.Vector3(sideX, centerY - s, centerZ - s),
+            new THREE.Vector3(sideX, centerY - s, centerZ + s),
+            new THREE.Vector3(sideX, centerY + s, centerZ + s),
+            new THREE.Vector3(sideX, centerY + s, centerZ - s),
+            new THREE.Vector3(sideX, centerY - s, centerZ - s)
+          ];
+          var frame = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints(pts),
+            new THREE.LineBasicMaterial({color:0xCCBBAA, transparent:true, opacity:0.72})
+          );
+          frame.renderOrder = 10;
           parent.add(frame);
         }
 
@@ -13007,7 +12948,7 @@ html, body, body *, body *::before, body *::after, svg text{
           }
         }
 
-        function hmUploadedCreateWallOverlay(dims, wallKey, side, renderer){
+        function hmUploadedCreateWallOverlay(dims, wallKey, face, renderer){
           if(typeof THREE === "undefined" || !dims) return null;
           var canvas = document.createElement("canvas");
           canvas.width = 1200;
@@ -13049,13 +12990,20 @@ html, body, body *, body *::before, body *::after, svg text{
             polygonOffsetFactor:-1,
             polygonOffsetUnits:-1
           });
-          var outerMesh = new THREE.Mesh(new THREE.PlaneGeometry(dims.sZ - 0.44, dims.sY - 0.28), outerMaterial);
-          var innerMesh = new THREE.Mesh(new THREE.PlaneGeometry(dims.sZ - 0.44, dims.sY - 0.28), innerMaterial);
-          outerMesh.position.set(side === "left" ? (-dims.sX/2 - 0.006) : (dims.sX/2 + 0.006), dims.sY/2, 0);
-          outerMesh.rotation.y = (side === "left") ? (-Math.PI / 2) : (Math.PI / 2);
+          var planeW = Math.max(0.8, dims.sX - 0.12);
+          var planeH = Math.max(0.8, dims.sY - 0.12);
+          var outerMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), outerMaterial);
+          var innerMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), innerMaterial);
+          if(face === "back"){
+            outerMesh.position.set(0, dims.sY/2, -dims.sZ/2 - 0.006);
+            outerMesh.rotation.y = Math.PI;
+            innerMesh.position.set(0, dims.sY/2, -dims.sZ/2 + dims.wallT + 0.02);
+            innerMesh.rotation.y = Math.PI;
+          }else{
+            outerMesh.position.set(0, dims.sY/2, dims.sZ/2 + 0.006);
+            innerMesh.position.set(0, dims.sY/2, dims.sZ/2 - dims.wallT - 0.02);
+          }
           outerMesh.renderOrder = 8;
-          innerMesh.position.set(side === "left" ? (-dims.sX/2 + dims.wallT + 0.018) : (dims.sX/2 - dims.wallT - 0.018), dims.sY/2, 0);
-          innerMesh.rotation.y = (side === "left") ? (Math.PI / 2) : (-Math.PI / 2);
           innerMesh.renderOrder = 6;
 
           return {
@@ -13240,11 +13188,252 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedRefreshViewerOverlays(state, snapshot){
           if(!HM_UPLOADED_SHOW_FACE_DATA || !state || !state.wallOverlays) return;
           Object.keys(state.wallOverlays).forEach(function(wallKey){
-            if(typeof r3dPaintWallOverlay === "function"){
-              r3dPaintWallOverlay(state.wallOverlays[wallKey], wallKey, snapshot, state.overlayAnimPhase || 0);
-            }else{
-              hmUploadedPaintWallOverlay(state.wallOverlays[wallKey], wallKey, snapshot, state.overlayAnimPhase || 0);
+            hmUploadedPaintWallOverlay(state.wallOverlays[wallKey], wallKey, snapshot, state.overlayAnimPhase || 0);
+          });
+        }
+
+        function hmUploadedCreatePeepSideDisplay(dims, zoneKey, side, renderer){
+          if(typeof THREE === "undefined" || !dims) return null;
+          var canvas = document.createElement("canvas");
+          canvas.width = 840;
+          canvas.height = 1560;
+          var texture = new THREE.CanvasTexture(canvas);
+          texture.wrapS = THREE.ClampToEdgeWrapping;
+          texture.wrapT = THREE.ClampToEdgeWrapping;
+          texture.minFilter = THREE.LinearMipmapLinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.generateMipmaps = true;
+          texture.premultiplyAlpha = false;
+          if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
+            texture.colorSpace = THREE.SRGBColorSpace;
+          }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
+            texture.encoding = THREE.sRGBEncoding;
+          }
+          if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
+            try{
+              texture.anisotropy = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy() || 1));
+            }catch(e){}
+          }
+          var material = new THREE.MeshBasicMaterial({
+            map:texture,
+            transparent:false,
+            side:THREE.DoubleSide
+          });
+          var planeW = Math.max(0.24, dims.sZ - 0.04);
+          var planeH = Math.max(0.8, dims.sY - 0.04);
+          var mesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), material);
+          mesh.position.set(
+            side === "left" ? (-dims.sX / 2 + dims.wallT + 0.03) : (dims.sX / 2 - dims.wallT - 0.03),
+            dims.sY / 2,
+            0
+          );
+          mesh.rotation.y = side === "left" ? (Math.PI / 2) : (-Math.PI / 2);
+          mesh.renderOrder = 4;
+
+          var glassMaterial = new THREE.MeshBasicMaterial({
+            color:0xdbeafe,
+            transparent:true,
+            opacity:0.08,
+            side:THREE.DoubleSide,
+            depthWrite:false
+          });
+          var glassTop = new THREE.Mesh(
+            new THREE.PlaneGeometry(dims.windowSize - 0.06, dims.windowSize - 0.06),
+            glassMaterial.clone()
+          );
+          var glassBot = new THREE.Mesh(
+            new THREE.PlaneGeometry(dims.windowSize - 0.06, dims.windowSize - 0.06),
+            glassMaterial.clone()
+          );
+          [glassTop, glassBot].forEach(function(glass, idx){
+            glass.position.set(
+              side === "left" ? (-dims.sX / 2 + 0.008) : (dims.sX / 2 - 0.008),
+              idx === 0 ? dims.windowTopY : dims.windowBottomY,
+              0
+            );
+            glass.rotation.y = side === "left" ? (Math.PI / 2) : (-Math.PI / 2);
+            glass.renderOrder = 9;
+          });
+
+          return {
+            zoneKey:String(zoneKey || ""),
+            side:String(side || "left"),
+            dims:dims,
+            canvas:canvas,
+            texture:texture,
+            material:material,
+            mesh:mesh,
+            glassPanes:[glassTop, glassBot]
+          };
+        }
+
+        function hmUploadedGetPeepWindowRect(display, centerY){
+          var dims = display && display.dims ? display.dims : {};
+          var w = display && display.canvas ? display.canvas.width : 0;
+          var h = display && display.canvas ? display.canvas.height : 0;
+          var holeW = Math.max(60, (Number(dims.windowSize || 0.8) / Math.max(0.1, Number(dims.sZ || 1))) * w * 0.92);
+          var holeH = Math.max(60, (Number(dims.windowSize || 0.8) / Math.max(0.1, Number(dims.sY || 1))) * h * 0.92);
+          var centerPxY = h - ((Number(centerY || 0) / Math.max(0.1, Number(dims.sY || 1))) * h);
+          return {
+            x:Math.round((w - holeW) / 2),
+            y:Math.round(centerPxY - (holeH / 2)),
+            w:Math.round(holeW),
+            h:Math.round(holeH)
+          };
+        }
+
+        function hmUploadedGetZonePeepValues(snapshot, zoneKey, which){
+          var key = String(zoneKey || "").toUpperCase();
+          var part = String(which || "top").toLowerCase();
+          if(!snapshot) return [];
+          if(key === "AB") return part === "top" ? (snapshot.abTop || []) : (snapshot.abBot || []);
+          return part === "top" ? (snapshot.cdTop || []) : (snapshot.cdBot || []);
+        }
+
+        function hmUploadedDrawPeepWindowContent(ctx, rect, label, vals){
+          var avg = hmUploadedAverageTemp(vals || [], []);
+          var x = rect.x;
+          var y = rect.y;
+          var w = rect.w;
+          var h = rect.h;
+
+          var panelGrad = ctx.createLinearGradient(x, y, x + w, y + h);
+          panelGrad.addColorStop(0, "rgba(18,22,30,0.96)");
+          panelGrad.addColorStop(0.55, "rgba(9,13,20,0.98)");
+          panelGrad.addColorStop(1, "rgba(20,28,38,0.94)");
+          ctx.fillStyle = panelGrad;
+          hmUploadedRoundRectPath(ctx, x, y, w, h, Math.max(10, Math.round(w * 0.06)));
+          ctx.fill();
+
+          ctx.save();
+          hmUploadedRoundRectPath(ctx, x, y, w, h, Math.max(10, Math.round(w * 0.06)));
+          ctx.clip();
+
+          var pipeCount = 4;
+          for(var pi = 0; pi < pipeCount; pi++){
+            var pipeX = x + (w * (0.18 + (pi * 0.16)));
+            var pipeW = Math.max(6, w * 0.065);
+            var pipeGrad = ctx.createLinearGradient(pipeX, y, pipeX + pipeW, y);
+            pipeGrad.addColorStop(0, "rgba(10,15,22,0.95)");
+            pipeGrad.addColorStop(0.5, "rgba(69,78,92,0.86)");
+            pipeGrad.addColorStop(1, "rgba(10,15,22,0.95)");
+            ctx.fillStyle = pipeGrad;
+            hmUploadedRoundRectPath(ctx, pipeX, y + (h * 0.08), pipeW, h * 0.84, Math.max(5, pipeW * 0.45));
+            ctx.fill();
+          }
+
+          ctx.fillStyle = "rgba(255,255,255,0.06)";
+          ctx.fillRect(x, y + (h * 0.48), w, Math.max(2, h * 0.01));
+          ctx.restore();
+
+          ctx.strokeStyle = "rgba(232,238,248,0.44)";
+          ctx.lineWidth = Math.max(2, w * 0.018);
+          hmUploadedRoundRectPath(ctx, x, y, w, h, Math.max(10, Math.round(w * 0.06)));
+          ctx.stroke();
+
+          ctx.fillStyle = "#f8fafc";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.font = "700 " + Math.max(12, Math.round(h * 0.11)) + "px Rajdhani, sans-serif";
+          ctx.fillText(label, x + (w * 0.08), y + (h * 0.16));
+
+          ctx.textAlign = "right";
+          ctx.font = "700 " + Math.max(12, Math.round(h * 0.13)) + "px Rajdhani, sans-serif";
+          ctx.fillStyle = avg === null ? "rgba(226,232,240,0.72)" : "#fde68a";
+          ctx.fillText(avg === null ? "--" : (avg + "°"), x + (w * 0.92), y + (h * 0.16));
+
+          var barX = x + (w * 0.10);
+          var barY = y + (h * 0.68);
+          var barW = w * 0.80;
+          var barH = Math.max(10, h * 0.12);
+          var hasData = Array.isArray(vals) && vals.some(function(v){ return isFinite(Number(v)); });
+
+          ctx.save();
+          hmUploadedRoundRectPath(ctx, barX, barY, barW, barH, Math.max(6, Math.round(barH / 2)));
+          ctx.clip();
+          if(hasData){
+            var grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+            var added = false;
+            for(var vi = 0; vi < 15; vi++){
+              var temp = Number(vals[vi]);
+              if(!isFinite(temp)) continue;
+              var stop = Math.max(0, Math.min(1, (vi + 0.5) / 15));
+              grad.addColorStop(stop, hmUploadedTempToColor(temp, 860, 1000));
+              added = true;
             }
+            if(!added){
+              grad.addColorStop(0, "rgba(51,65,85,0.96)");
+              grad.addColorStop(1, "rgba(51,65,85,0.96)");
+            }else{
+              var firstVal = Number(vals.find(function(v){ return isFinite(Number(v)); }));
+              var lastVal = Number((vals.slice().reverse().find(function(v){ return isFinite(Number(v)); })));
+              grad.addColorStop(0, hmUploadedTempToColor(firstVal, 860, 1000));
+              grad.addColorStop(1, hmUploadedTempToColor(lastVal, 860, 1000));
+            }
+            ctx.fillStyle = grad;
+          }else{
+            ctx.fillStyle = "rgba(51,65,85,0.96)";
+          }
+          ctx.fillRect(barX, barY, barW, barH);
+          ctx.restore();
+
+          ctx.strokeStyle = "rgba(255,255,255,0.28)";
+          ctx.lineWidth = Math.max(1.2, h * 0.01);
+          hmUploadedRoundRectPath(ctx, barX, barY, barW, barH, Math.max(6, Math.round(barH / 2)));
+          ctx.stroke();
+
+          for(var mi = 0; mi < 15; mi++){
+            var markerX = barX + (barW * ((mi + 0.5) / 15));
+            var tempVal = Number(Array.isArray(vals) ? vals[mi] : "");
+            ctx.beginPath();
+            ctx.arc(markerX, barY + (barH / 2), Math.max(2.2, barH * 0.18), 0, Math.PI * 2);
+            ctx.fillStyle = isFinite(tempVal)
+              ? hmUploadedTempToColor(tempVal, 860, 1000)
+              : "rgba(203,213,225,0.22)";
+            ctx.fill();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = isFinite(tempVal) ? "rgba(255,255,255,0.88)" : "rgba(226,232,240,0.16)";
+            ctx.stroke();
+          }
+        }
+
+        function hmUploadedPaintPeepSideDisplay(display, snapshot){
+          if(!display || !display.canvas || !display.texture) return;
+          var ctx = display.canvas.getContext("2d");
+          var w = display.canvas.width;
+          var h = display.canvas.height;
+          ctx.clearRect(0, 0, w, h);
+
+          var bgGrad = ctx.createLinearGradient(0, 0, w, h);
+          bgGrad.addColorStop(0, "#0f131b");
+          bgGrad.addColorStop(0.45, "#151b25");
+          bgGrad.addColorStop(1, "#0c1117");
+          ctx.fillStyle = bgGrad;
+          ctx.fillRect(0, 0, w, h);
+
+          for(var stripe = 0; stripe < 7; stripe++){
+            var sx = (w * 0.08) + (stripe * w * 0.12);
+            var sw = Math.max(8, w * 0.05);
+            var stripeGrad = ctx.createLinearGradient(sx, 0, sx + sw, 0);
+            stripeGrad.addColorStop(0, "rgba(255,255,255,0.02)");
+            stripeGrad.addColorStop(0.5, "rgba(255,255,255,0.08)");
+            stripeGrad.addColorStop(1, "rgba(255,255,255,0.02)");
+            ctx.fillStyle = stripeGrad;
+            ctx.fillRect(sx, 0, sw, h);
+          }
+
+          var topRect = hmUploadedGetPeepWindowRect(display, display.dims.windowTopY);
+          var botRect = hmUploadedGetPeepWindowRect(display, display.dims.windowBottomY);
+          hmUploadedDrawPeepWindowContent(ctx, topRect, "TOP PH", hmUploadedGetZonePeepValues(snapshot, display.zoneKey, "top"));
+          hmUploadedDrawPeepWindowContent(ctx, botRect, "BOTTOM PH", hmUploadedGetZonePeepValues(snapshot, display.zoneKey, "bot"));
+
+          display.texture.needsUpdate = true;
+        }
+
+        function hmUploadedRefreshViewerPeepDisplays(state, snapshot){
+          if(!state || !Array.isArray(state.peepDisplays)) return;
+          state.peepDisplays.forEach(function(display){
+            hmUploadedPaintPeepSideDisplay(display, snapshot || null);
           });
         }
 
@@ -13298,6 +13487,7 @@ html, body, body *, body *::before, body *::after, svg text{
             state.latestSnapshot = snapshot || null;
             state.lastOverlayPaintAt = 0;
             hmUploadedRefreshViewerOverlays(state, snapshot || null);
+            hmUploadedRefreshViewerPeepDisplays(state, snapshot || null);
           });
         }
 
@@ -13447,144 +13637,148 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedBuildChamberScene(parent, label, renderer){
-          var sX = 2.0, sY = 7.0, sZ = 10.0, wallT = 0.15;
-          var hs = 0.5, hy1 = sY * 0.33, hy2 = sY * 0.68;
-          var tubeCount = 8;
+          var sX = 10.8, sY = 7.8, sZ = 1.42, wallT = 0.08;
+          var windowSize = Math.max(0.72, Math.min(0.92, sZ - 0.36));
+          var windowTopY = sY * 0.72;
+          var windowBottomY = sY * 0.31;
+          var tubeCount = 5;
           var tubeR = 0.06;
-          var tubeZStart = -(sZ - 0.6) / 2;
-          var tubeSpacing = (sZ - 0.6) / (tubeCount - 1);
-          var tubeBottomY = wallT + 0.12;
-          var hdrH = 0.14;
-          var commonTubeY = sY + hdrH + 0.22;
+          var tubeZStart = -(sZ - 0.26) / 2;
+          var tubeSpacing = tubeCount > 1 ? ((sZ - 0.26) / (tubeCount - 1)) : 0;
+          var tubeBottomY = 0.18;
+          var commonTubeY = sY - 0.42;
           var commonTubeR = 0.11;
-          var commonTubeLen = sZ + 0.4;
-          var tubeHeight = commonTubeY - tubeBottomY;
+          var commonTubeLen = sZ - 0.12;
+          var tubeHeight = commonTubeY - tubeBottomY + 0.12;
+          var zoneKey = label === "AB" ? "AB" : "CD";
+          var frontWallKey = label === "AB" ? "A" : "C";
+          var backWallKey = label === "AB" ? "B" : "D";
+          var dims = {
+            sX:sX,
+            sY:sY,
+            sZ:sZ,
+            wallT:wallT,
+            faceW:sX,
+            faceH:sY,
+            faceD:sZ,
+            windowSize:windowSize,
+            windowTopY:windowTopY,
+            windowBottomY:windowBottomY
+          };
 
           var wallShellMat = new THREE.MeshStandardMaterial({
             color:0xffffff,
             map:hmUploadedGetShellTexture(renderer || null, "wall"),
-            metalness:0.62,
-            roughness:0.46,
+            metalness:0.46,
+            roughness:0.68,
             side:THREE.DoubleSide
           });
           var topShellMat = new THREE.MeshStandardMaterial({
             color:0xffffff,
             map:hmUploadedGetShellTexture(renderer || null, "top"),
-            metalness:0.58,
-            roughness:0.4,
+            metalness:0.42,
+            roughness:0.7,
             side:THREE.DoubleSide
           });
           var innerMat = new THREE.MeshStandardMaterial({
-            color:0x0A0A0A,
+            color:0x0c1017,
             metalness:0.05,
-            roughness:0.82,
+            roughness:0.88,
             side:THREE.DoubleSide,
             transparent:true,
-            opacity:0.12,
+            opacity:0.16,
             depthWrite:false
           });
-          var tubeMat = new THREE.MeshStandardMaterial({color:0x8899AA, metalness:0.75, roughness:0.3});
-          var commonTubeMat = new THREE.MeshStandardMaterial({color:0x7090A8, metalness:0.7, roughness:0.25});
-          var baseMat = new THREE.MeshStandardMaterial({
-            color:0x243246,
-            metalness:0.12,
-            roughness:0.82,
-            transparent:true,
-            opacity:0.18
-          });
-          var edgeMat = new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.1});
+          var tubeMat = new THREE.MeshStandardMaterial({color:0x6f8092, metalness:0.76, roughness:0.34});
+          var commonTubeMat = new THREE.MeshStandardMaterial({color:0x7d8ea2, metalness:0.72, roughness:0.3});
           var wallOverlays = {};
-          var overlayDims = {sX:sX, sY:sY, sZ:sZ, wallT:wallT};
-          var leftWallKey = label === "AB" ? "A" : "C";
-          var rightWallKey = label === "AB" ? "B" : "D";
+          var peepDisplays = [];
 
           var chamber = new THREE.Group();
           parent.add(chamber);
 
           var inner = new THREE.Mesh(
-            new THREE.BoxGeometry(sX - wallT * 2 - 0.02, sY - wallT * 2 - 0.02, sZ - wallT * 2 - 0.02),
+            new THREE.BoxGeometry(sX - 0.14, sY - 0.14, sZ - 0.14),
             innerMat
           );
           inner.position.set(0, sY / 2, 0);
           chamber.add(inner);
 
-          var innerGlow = new THREE.PointLight(0xFF4422, 0.15, 3);
-          innerGlow.position.set(0, sY / 2, 0);
-          chamber.add(innerGlow);
+          var frontOverlay = hmUploadedCreateWallOverlay(dims, frontWallKey, "front", renderer || null);
+          var backOverlay = hmUploadedCreateWallOverlay(dims, backWallKey, "back", renderer || null);
+          hmUploadedPrepareOverlay(frontOverlay);
+          hmUploadedPrepareOverlay(backOverlay);
+          wallOverlays[frontWallKey] = frontOverlay;
+          wallOverlays[backWallKey] = backOverlay;
+          chamber.add(frontOverlay.outerMesh);
+          chamber.add(frontOverlay.innerMesh);
+          chamber.add(backOverlay.outerMesh);
+          chamber.add(backOverlay.innerMesh);
 
-          var leftWall = new THREE.Mesh(new THREE.BoxGeometry(wallT, sY, sZ), wallShellMat);
-          leftWall.position.set(-sX / 2 + wallT / 2, sY / 2, 0);
-          leftWall.castShadow = true;
+          var sideShape = hmUploadedMakeFace(sZ, sY, windowSize, windowTopY, windowBottomY);
+          var leftWallGeo = new THREE.ShapeGeometry(sideShape);
+          leftWallGeo.translate(-sZ / 2, 0, 0);
+          var rightWallGeo = leftWallGeo.clone();
+
+          var leftWall = new THREE.Mesh(leftWallGeo, wallShellMat);
+          leftWall.position.set(-sX / 2, 0, 0);
+          leftWall.rotation.y = Math.PI / 2;
           chamber.add(leftWall);
 
-          var rightWall = new THREE.Mesh(new THREE.BoxGeometry(wallT, sY, sZ), wallShellMat);
-          rightWall.position.set(sX / 2 - wallT / 2, sY / 2, 0);
-          rightWall.castShadow = true;
+          var rightWall = new THREE.Mesh(rightWallGeo, wallShellMat);
+          rightWall.position.set(sX / 2, 0, 0);
+          rightWall.rotation.y = -Math.PI / 2;
           chamber.add(rightWall);
 
-          var uploadedOverlayFactory = (typeof r3dCreateWallOverlay === "function")
-            ? r3dCreateWallOverlay
-            : hmUploadedCreateWallOverlay;
-          if(HM_UPLOADED_SHOW_FACE_DATA && typeof uploadedOverlayFactory === "function"){
-            var leftOverlay = uploadedOverlayFactory(overlayDims, leftWallKey, "left", renderer || null);
-            var rightOverlay = uploadedOverlayFactory(overlayDims, rightWallKey, "right", renderer || null);
-            hmUploadedPrepareOverlay(leftOverlay);
-            hmUploadedPrepareOverlay(rightOverlay);
-            wallOverlays[leftWallKey] = leftOverlay;
-            wallOverlays[rightWallKey] = rightOverlay;
-            chamber.add(leftOverlay.outerMesh);
-            chamber.add(leftOverlay.innerMesh);
-            chamber.add(rightOverlay.outerMesh);
-            chamber.add(rightOverlay.innerMesh);
-          }
-
           var topWall = new THREE.Mesh(
-            new THREE.BoxGeometry(sX - wallT * 2 - 0.01, wallT, sZ - wallT * 2 - 0.01),
+            new THREE.BoxGeometry(sX + 0.02, wallT, sZ + 0.02),
             topShellMat
           );
-          topWall.position.set(0, sY - wallT / 2, 0);
+          topWall.position.set(0, sY - (wallT / 2), 0);
           chamber.add(topWall);
 
           var bottomWall = new THREE.Mesh(
-            new THREE.BoxGeometry(sX - wallT * 2 - 0.01, wallT, sZ - wallT * 2 - 0.01),
+            new THREE.BoxGeometry(sX + 0.02, wallT, sZ + 0.02),
             wallShellMat
           );
           bottomWall.position.set(0, wallT / 2, 0);
           chamber.add(bottomWall);
 
-          var frontShape = hmUploadedMakeFace(sX, sY, hs, hy1, hy2);
-          var frontGeo = new THREE.ExtrudeGeometry(frontShape, {depth:wallT, bevelEnabled:false});
-          var frontWall = new THREE.Mesh(frontGeo, wallShellMat);
-          frontWall.position.set(-sX / 2, 0, sZ / 2 - wallT);
-          frontWall.castShadow = true;
-          chamber.add(frontWall);
+          var leftPeep = hmUploadedCreatePeepSideDisplay(dims, zoneKey, "left", renderer || null);
+          var rightPeep = hmUploadedCreatePeepSideDisplay(dims, zoneKey, "right", renderer || null);
+          peepDisplays.push(leftPeep, rightPeep);
+          [leftPeep, rightPeep].forEach(function(display){
+            if(!display) return;
+            chamber.add(display.mesh);
+            if(Array.isArray(display.glassPanes)){
+              display.glassPanes.forEach(function(glass){
+                chamber.add(glass);
+              });
+            }
+          });
 
-          var backShape = hmUploadedMakeFace(sX, sY, hs, hy1, hy2);
-          var backGeo = new THREE.ExtrudeGeometry(backShape, {depth:wallT, bevelEnabled:false});
-          var backWall = new THREE.Mesh(backGeo, wallShellMat);
-          backWall.position.set(-sX / 2, 0, -sZ / 2);
-          backWall.castShadow = true;
-          chamber.add(backWall);
+          hmUploadedAddSideWindowFrame(chamber, -sX / 2 - 0.001, windowTopY, 0, windowSize);
+          hmUploadedAddSideWindowFrame(chamber, -sX / 2 - 0.001, windowBottomY, 0, windowSize);
+          hmUploadedAddSideWindowFrame(chamber, sX / 2 + 0.001, windowTopY, 0, windowSize);
+          hmUploadedAddSideWindowFrame(chamber, sX / 2 + 0.001, windowBottomY, 0, windowSize);
 
           for(var i = 0; i < tubeCount; i++){
-            var tz = tubeZStart + i * tubeSpacing;
-            var tube = new THREE.Mesh(new THREE.CylinderGeometry(tubeR, tubeR, tubeHeight, 12), tubeMat);
-            tube.position.set(0, tubeBottomY + tubeHeight / 2, tz);
-            tube.castShadow = true;
+            var tz = tubeZStart + (i * tubeSpacing);
+            var tube = new THREE.Mesh(new THREE.CylinderGeometry(tubeR, tubeR, tubeHeight, 14), tubeMat);
+            tube.position.set(0, tubeBottomY + (tubeHeight / 2), tz);
             chamber.add(tube);
 
-            var joint = new THREE.Mesh(new THREE.SphereGeometry(tubeR * 1.25, 10, 10), commonTubeMat);
+            var joint = new THREE.Mesh(new THREE.SphereGeometry(tubeR * 1.24, 12, 12), commonTubeMat);
             joint.position.set(0, commonTubeY, tz);
             chamber.add(joint);
           }
 
           var commonHeader = new THREE.Mesh(
-            new THREE.CylinderGeometry(commonTubeR, commonTubeR, commonTubeLen, 16),
+            new THREE.CylinderGeometry(commonTubeR, commonTubeR, commonTubeLen, 18),
             commonTubeMat
           );
           commonHeader.rotation.x = Math.PI / 2;
           commonHeader.position.set(0, commonTubeY, 0);
-          commonHeader.castShadow = true;
           chamber.add(commonHeader);
 
           var headerCapGeo = new THREE.SphereGeometry(commonTubeR, 12, 12);
@@ -13596,54 +13790,17 @@ html, body, body *, body *::before, body *::after, svg text{
           headerBackCap.position.set(0, commonTubeY, -commonTubeLen / 2);
           chamber.add(headerBackCap);
 
-          hmUploadedAddFrame(chamber, 0, hy1, sZ / 2 + 0.01, hs);
-          hmUploadedAddFrame(chamber, 0, hy2, sZ / 2 + 0.01, hs);
-          hmUploadedAddFrame(chamber, 0, hy1, -sZ / 2 - 0.01, hs);
-          hmUploadedAddFrame(chamber, 0, hy2, -sZ / 2 - 0.01, hs);
-
-          var wire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(sX, sY, sZ)), edgeMat);
-          wire.position.set(0, sY / 2, 0);
-          chamber.add(wire);
-
-          var padGeo = new THREE.BoxGeometry(sX + 0.42, 0.035, sZ + 0.42);
-          var groundPad = new THREE.Mesh(padGeo, baseMat);
-          groundPad.position.set(0, 0.015, 0);
-          groundPad.receiveShadow = true;
-          parent.add(groundPad);
-
-          var padEdge = new THREE.LineSegments(
-            new THREE.EdgesGeometry(padGeo),
-            new THREE.LineBasicMaterial({color:0x607089, transparent:true, opacity:0.24})
-          );
-          padEdge.position.copy(groundPad.position);
-          parent.add(padEdge);
-
-          var grid = new THREE.GridHelper(sZ + 0.48, 12, 0x233347, 0x233347);
-          grid.position.set(0, 0.03, 0);
-          if(Array.isArray(grid.material)){
-            grid.material.forEach(function(mat){
-              if(!mat) return;
-              mat.transparent = true;
-              mat.opacity = 0.12;
-            });
-          }else if(grid.material){
-            grid.material.transparent = true;
-            grid.material.opacity = 0.12;
-          }
-          parent.add(grid);
-
-          hmUploadedAddTopFaceLabel(parent, "Chamber " + label, -0.12, sY + wallT / 2 + 0.02, -1.58);
-          hmUploadedAddLabel(parent, "Front", 0, -0.6, sZ / 2 + 1.2);
-          hmUploadedAddLabel(parent, "Back", 0, -0.6, -sZ / 2 - 1.2);
           return {
             wallOverlays:wallOverlays,
+            peepDisplays:peepDisplays,
             fitTarget:chamber,
-            chamberWire:wire,
+            chamberWire:null,
             frameInfo:{
               minY:0,
               height:sY,
               centerY:sY / 2
-            }
+            },
+            modelDims:dims
           };
         }
 
@@ -13660,17 +13817,14 @@ html, body, body *, body *::before, body *::after, svg text{
           canvas.addEventListener("mousemove", function(e){
             if(!state.isDragging) return;
             var dx = e.clientX - state.prevMouse.x;
-            var dy = e.clientY - state.prevMouse.y;
-            if(!state.dragMoved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)){
+            if(!state.dragMoved && Math.abs(dx) > DRAG_THRESHOLD){
               state.dragMoved = true;
-              state.autoRotate = false;
             }
             if(!state.dragMoved){
               state.prevMouse = {x:e.clientX, y:e.clientY};
               return;
             }
             state.rotation.y += dx * 0.005;
-            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + dy * 0.005);
             state.prevMouse = {x:e.clientX, y:e.clientY};
           });
 
@@ -13693,17 +13847,14 @@ html, body, body *, body *::before, body *::after, svg text{
           canvas.addEventListener("touchmove", function(e){
             if(!state.isDragging || !state.touchStart) return;
             var dx = e.touches[0].clientX - state.touchStart.x;
-            var dy = e.touches[0].clientY - state.touchStart.y;
-            if(!state.touchMoved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)){
+            if(!state.touchMoved && Math.abs(dx) > DRAG_THRESHOLD){
               state.touchMoved = true;
-              state.autoRotate = false;
             }
             if(!state.touchMoved){
               return;
             }
             e.preventDefault();
             state.rotation.y += dx * 0.005;
-            state.rotation.x = hmUploadedClampRotationX(state.rotation.x + dy * 0.005);
             state.touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
           }, {passive:false});
 
@@ -13727,7 +13878,14 @@ html, body, body *, body *::before, body *::after, svg text{
           var scene = new THREE.Scene();
           scene.background = new THREE.Color(0x0B0F14);
 
-          var camera = new THREE.PerspectiveCamera(45, size.width / size.height, 0.1, 1000);
+          var camera = new THREE.OrthographicCamera(
+            -size.width / 2,
+            size.width / 2,
+            size.height / 2,
+            -size.height / 2,
+            0.1,
+            100
+          );
           var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
           renderer.setSize(size.width, size.height, false);
           renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
@@ -13758,10 +13916,12 @@ html, body, body *, body *::before, body *::after, svg text{
             scene:scene,
             pivotGroup:pivotGroup,
             fitTarget:buildResult.fitTarget || pivotGroup,
-            autoRotate:true,
+            modelDims:buildResult.modelDims || null,
+            peepDisplays:buildResult.peepDisplays || [],
+            autoRotate:false,
             isDragging:false,
             prevMouse:{x:0, y:0},
-            rotation:{x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:HM_UPLOADED_HERO_ROTATION_Y},
+            rotation:{x:0, y:HM_UPLOADED_HERO_ROTATION_Y},
             viewPreset:HM_UPLOADED_DEFAULT_VIEW,
             defaultCamDist:initialCamDist,
             camDist:initialCamDist,
@@ -13847,14 +14007,13 @@ html, body, body *, body *::before, body *::after, svg text{
               }
               var shouldRender = !!(host && hmUploadedIsHostVisible(host));
               if(!shouldRender) return;
-              if(state.autoRotate) state.rotation.y += 0.0016;
-              state.rotation.x = hmUploadedClampRotationX(state.rotation.x);
-              state.pivotGroup.rotation.x = state.rotation.x;
+              state.rotation.x = 0;
+              state.pivotGroup.rotation.x = 0;
               state.pivotGroup.rotation.y = state.rotation.y;
               hmUploadedUpdateChamberSceneVisibility(state);
               hmUploadedApplyCameraFrame(state);
               if(HM_UPLOADED_SHOW_FACE_DATA && state.latestSnapshot){
-                var overlayTickMs = state.autoRotate ? HM_UPLOADED_OVERLAY_AUTO_TICK_MS : HM_UPLOADED_OVERLAY_MANUAL_TICK_MS;
+                var overlayTickMs = HM_UPLOADED_OVERLAY_MANUAL_TICK_MS;
                 if((now - state.lastOverlayPaintAt) >= overlayTickMs){
                   state.overlayAnimPhase = (state.overlayAnimPhase + HM_UPLOADED_OVERLAY_PHASE_STEP) % (Math.PI * 2);
                   hmUploadedRefreshViewerOverlays(state, state.latestSnapshot);
@@ -13912,8 +14071,8 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedSetViewState(
             viewer,
             HM_UPLOADED_DEFAULT_VIEW,
-            {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:HM_UPLOADED_HERO_ROTATION_Y},
-            true
+            {x:0, y:0},
+            false
           );
         };
 
@@ -13923,7 +14082,7 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedSetViewState(
             viewer,
             "front",
-            {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:0},
+            {x:0, y:0},
             false
           );
         };
@@ -13934,7 +14093,7 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedSetViewState(
             viewer,
             "side",
-            {x:hmUploadedClampRotationX(SIDE_VIEW_ROTATION_X), y:-Math.PI / 2},
+            {x:0, y:-Math.PI / 2},
             false
           );
         };
@@ -13945,7 +14104,7 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedSetViewState(
             viewer,
             "top",
-            {x:ROTATION_X_MIN, y:0},
+            {x:0, y:0},
             false
           );
         };
@@ -13953,7 +14112,7 @@ html, body, body *, body *::before, body *::after, svg text{
         window.hmUploadedToggleAutoRotate = function(name){
           var viewer = hmUploadedViewers[name];
           if(!viewer) return;
-          viewer.autoRotate = !viewer.autoRotate;
+          viewer.autoRotate = false;
         };
 
         if(document.readyState === "loading"){
