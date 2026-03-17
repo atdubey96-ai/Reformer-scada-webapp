@@ -13346,7 +13346,7 @@ html, body, body *, body *::before, body *::after, svg text{
           var camera = new THREE.PerspectiveCamera(45, size.width / size.height, 0.1, 1000);
           var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
           renderer.setSize(size.width, size.height, false);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
           renderer.shadowMap.enabled = false;
 
           scene.add(new THREE.AmbientLight(0xffffff, 0.45));
@@ -18232,12 +18232,12 @@ function configureWallOverlayTexture(tex, renderer){
   if(!tex || typeof THREE === "undefined") return;
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
-  tex.minFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
   tex.magFilter = THREE.LinearFilter;
-  tex.generateMipmaps = false;
+  tex.generateMipmaps = true;
   if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
     try{
-      tex.anisotropy = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy() || 1));
+      tex.anisotropy = Math.max(1, Math.min(16, renderer.capabilities.getMaxAnisotropy() || 1));
     }catch(e){}
   }
 }
@@ -23020,7 +23020,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-burner-hover-guides-1";
+      var swBuild = "20260317-cuboid-mipmaps-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
