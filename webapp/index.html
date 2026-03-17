@@ -13202,7 +13202,7 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedCreatePeepSideDisplay(dims, zoneKey, side, renderer){
           if(typeof THREE === "undefined" || !dims) return null;
           var group = new THREE.Group();
-          var tunnelDepth = Math.max(0.68, Math.min(1.08, dims.sX * 0.07));
+          var tunnelDepth = Math.max(0.92, Math.min(1.26, dims.sX * 0.078));
           var tunnelInset = 0.12;
           var tunnelH = Math.max(0.4, dims.windowSize - (tunnelInset * 2));
           var tunnelW = Math.max(0.4, dims.windowSize - (tunnelInset * 2));
@@ -13211,10 +13211,6 @@ html, body, body *, body *::before, body *::after, svg text{
             color:0x05080d,
             metalness:0.08,
             roughness:0.92,
-            side:THREE.DoubleSide
-          });
-          var tunnelBackMat = new THREE.MeshBasicMaterial({
-            color:0x03060a,
             side:THREE.DoubleSide
           });
           var windows = [
@@ -13257,15 +13253,6 @@ html, body, body *, body *::before, body *::after, svg text{
             );
             rightWall.position.set(xMid, centerY, farZ);
             group.add(rightWall);
-
-            var backPlate = new THREE.Mesh(
-              new THREE.PlaneGeometry(tunnelW - 0.04, tunnelH - 0.04),
-              tunnelBackMat
-            );
-            backPlate.position.set(xInner, centerY, 0);
-            backPlate.rotation.y = side === "left" ? (Math.PI / 2) : (-Math.PI / 2);
-            backPlate.renderOrder = 5;
-            group.add(backPlate);
           });
 
           return {
@@ -13618,15 +13605,6 @@ html, body, body *, body *::before, body *::after, svg text{
             roughness:0.7,
             side:THREE.DoubleSide
           });
-          var innerMat = new THREE.MeshStandardMaterial({
-            color:0x0c1017,
-            metalness:0.05,
-            roughness:0.88,
-            side:THREE.DoubleSide,
-            transparent:true,
-            opacity:0.16,
-            depthWrite:false
-          });
           var tubeMat = new THREE.MeshStandardMaterial({color:0x6f8092, metalness:0.76, roughness:0.34});
           var commonTubeMat = new THREE.MeshStandardMaterial({color:0x7d8ea2, metalness:0.72, roughness:0.3});
           var wallOverlays = {};
@@ -13634,13 +13612,6 @@ html, body, body *, body *::before, body *::after, svg text{
 
           var chamber = new THREE.Group();
           parent.add(chamber);
-
-          var inner = new THREE.Mesh(
-            new THREE.BoxGeometry(sX - 0.14, sY - 0.14, sZ - 0.14),
-            innerMat
-          );
-          inner.position.set(0, sY / 2, 0);
-          chamber.add(inner);
 
           var frontOverlay = hmUploadedCreateWallOverlay(dims, frontWallKey, "front", renderer || null);
           var backOverlay = hmUploadedCreateWallOverlay(dims, backWallKey, "back", renderer || null);
