@@ -12686,6 +12686,150 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedDrawCleanDot(ctx, x + 18, y - 4, cleaned);
         }
 
+        function hmUploadedRoundRectPath(ctx, x, y, w, h, r){
+          var radius = Math.max(0, Math.min(Number(r) || 0, Math.min(w, h) / 2));
+          ctx.beginPath();
+          ctx.moveTo(x + radius, y);
+          ctx.arcTo(x + w, y, x + w, y + h, radius);
+          ctx.arcTo(x + w, y + h, x, y + h, radius);
+          ctx.arcTo(x, y + h, x, y, radius);
+          ctx.arcTo(x, y, x + w, y, radius);
+          ctx.closePath();
+        }
+
+        function hmUploadedTempToColor(value, min, max){
+          var n = Number(value);
+          var lo = isFinite(Number(min)) ? Number(min) : 860;
+          var hi = isFinite(Number(max)) ? Number(max) : 1000;
+          if(typeof tempToColor === "function") return tempToColor(n, lo, hi);
+          if(!isFinite(n)) return "#64748b";
+          var ratio = (n - lo) / Math.max(1, hi - lo);
+          ratio = Math.max(0, Math.min(1, ratio));
+          if(ratio < 0.5){
+            var g = Math.round(197 + (58 * (ratio / 0.5)));
+            return "rgb(34," + g + ",94)";
+          }
+          var hotRatio = (ratio - 0.5) / 0.5;
+          var green = Math.round(215 - (131 * hotRatio));
+          return "rgb(251," + green + ",60)";
+        }
+
+        function hmUploadedDrawPeepBar(ctx, label, vals, gridLeft, centerY, gridW){
+          var barHeight = 44;
+          var barY = centerY - (barHeight / 2);
+          var labelW = 92;
+          var rangeMin = 860;
+          var rangeMax = 1000;
+
+          ctx.fillStyle = "rgba(4,8,18,0.98)";
+          hmUploadedRoundRectPath(ctx, 20, centerY - 24, labelW, 48, 13);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(120,143,175,0.28)";
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = "700 22px Times New Roman, serif";
+          ctx.fillText(label, 66, centerY);
+
+          var grad = ctx.createLinearGradient(gridLeft, 0, gridLeft + gridW, 0);
+          grad.addColorStop(0, "#22c55e");
+          grad.addColorStop(0.5, "#facc15");
+          grad.addColorStop(1, "#ef4444");
+          ctx.fillStyle = grad;
+          hmUploadedRoundRectPath(ctx, gridLeft, barY, gridW, barHeight, 12);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,0.14)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          var slotW = gridW / 15;
+          for(var i = 0; i < 15; i++){
+            var x = gridLeft + slotW * (i + 0.5);
+            var val = Array.isArray(vals) ? Number(vals[i]) : NaN;
+            ctx.beginPath();
+            ctx.arc(x, centerY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = isFinite(val) ? hmUploadedTempToColor(val, rangeMin, rangeMax) : "rgba(255,255,255,0.18)";
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "rgba(255,255,255,0.68)";
+            ctx.stroke();
+            if(isFinite(val)){
+              ctx.fillStyle = "rgba(255,255,255,0.95)";
+              ctx.font = "700 16px Times New Roman, serif";
+              ctx.fillText(Math.round(val) + "°", x, centerY - 34);
+            }
+          }
+        }
+
+        function hmUploadedCreateWallOverlay(dims, wallKey, side, renderer){
+          if(typeof THREE === "undefined" || !dims) return null;
+          var canvas = document.createElement("canvas");
+          canvas.width = 1536;
+          canvas.height = 960;
+          var texture = new THREE.CanvasTexture(canvas);
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.generateMipmaps = true;
+          if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
+            texture.colorSpace = THREE.SRGBColorSpace;
+          }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
+            texture.encoding = THREE.sRGBEncoding;
+          }
+          if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
+            try{
+              texture.anisotropy = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy() || 1));
+            }catch(e){}
+          }
+
+          var planeW = Math.max(0.2, (Number(dims.sZ) || 5) - 0.28);
+          var planeH = Math.max(0.2, (Number(dims.sY) || 3.5) - 0.24);
+          var geo = new THREE.PlaneGeometry(planeW, planeH);
+          var outerMaterial = new THREE.MeshBasicMaterial({
+            map:texture,
+            transparent:true,
+            side:THREE.DoubleSide
+          });
+          var innerMaterial = new THREE.MeshBasicMaterial({
+            map:texture,
+            transparent:true,
+            side:THREE.DoubleSide
+          });
+          var outerMesh = new THREE.Mesh(geo, outerMaterial);
+          var innerMesh = new THREE.Mesh(geo, innerMaterial);
+          var sX = Number(dims.sX) || 1.22;
+          var sY = Number(dims.sY) || 3.5;
+          var wallT = Number(dims.wallT) || 0.15;
+          var eps = 0.006;
+
+          outerMesh.position.y = sY / 2;
+          innerMesh.position.y = sY / 2;
+
+          if(String(side).toLowerCase() === "left"){
+            outerMesh.position.x = -sX / 2 - eps;
+            innerMesh.position.x = -sX / 2 + wallT + eps;
+            outerMesh.rotation.y = -Math.PI / 2;
+            innerMesh.rotation.y = Math.PI / 2;
+          }else{
+            outerMesh.position.x = sX / 2 + eps;
+            innerMesh.position.x = sX / 2 - wallT - eps;
+            outerMesh.rotation.y = Math.PI / 2;
+            innerMesh.rotation.y = -Math.PI / 2;
+          }
+
+          return {
+            wallKey:String(wallKey || ""),
+            canvas:canvas,
+            texture:texture,
+            outerMaterial:outerMaterial,
+            innerMaterial:innerMaterial,
+            outerMesh:outerMesh,
+            innerMesh:innerMesh
+          };
+        }
+
         function hmUploadedPrepareOverlay(overlay){
           if(!overlay || !overlay.outerMaterial) return;
           overlay.outerMaterial.transparent = true;
@@ -12748,7 +12892,7 @@ html, body, body *, body *::before, body *::after, svg text{
           outerGrad.addColorStop(0.45, "rgba(44,33,30,0.99)");
           outerGrad.addColorStop(1, "rgba(18,15,22,0.99)");
           ctx.fillStyle = outerGrad;
-          r3dRoundRectPath(ctx, 12, 12, w - 24, h - 24, 30);
+          hmUploadedRoundRectPath(ctx, 12, 12, w - 24, h - 24, 30);
           ctx.fill();
 
           ctx.lineWidth = 2;
@@ -12762,7 +12906,7 @@ html, body, body *, body *::before, body *::after, svg text{
           var separatorY = Math.max(82, burnerNumY - 34);
           var headerHeight = separatorY - 20;
           ctx.fillStyle = headGrad;
-          r3dRoundRectPath(ctx, 24, 20, w - 48, headerHeight, 22);
+          hmUploadedRoundRectPath(ctx, 24, 20, w - 48, headerHeight, 22);
           ctx.fill();
 
           ctx.strokeStyle = "rgba(243,112,34,0.78)";
@@ -12789,7 +12933,7 @@ html, body, body *, body *::before, body *::after, svg text{
           for(var bn=1; bn<=15; bn++){
             var bx = gridLeft + slotW * (bn - 0.5);
             ctx.fillStyle = "rgba(4,8,18,0.98)";
-            r3dRoundRectPath(ctx, bx - 28, burnerNumY - 18, 56, 36, 10);
+            hmUploadedRoundRectPath(ctx, bx - 28, burnerNumY - 18, 56, 36, 10);
             ctx.fill();
             ctx.strokeStyle = "rgba(120,143,175,0.28)";
             ctx.lineWidth = 1.1;
@@ -12811,16 +12955,16 @@ html, body, body *, body *::before, body *::after, svg text{
             ctx.stroke();
 
             if(item === "PH_TOP"){
-              r3dDrawPeepBar(ctx, "PH TST", topVals, gridLeft, centerY, gridW);
+              hmUploadedDrawPeepBar(ctx, "PH TST", topVals, gridLeft, centerY, gridW);
               continue;
             }
             if(item === "PH_BOT"){
-              r3dDrawPeepBar(ctx, "PH TST", botVals, gridLeft, centerY, gridW);
+              hmUploadedDrawPeepBar(ctx, "PH TST", botVals, gridLeft, centerY, gridW);
               continue;
             }
 
             ctx.fillStyle = "rgba(4,8,18,0.98)";
-            r3dRoundRectPath(ctx, 20, centerY - 24, 92, 48, 13);
+            hmUploadedRoundRectPath(ctx, 20, centerY - 24, 92, 48, 13);
             ctx.fill();
             ctx.strokeStyle = "rgba(120,143,175,0.28)";
             ctx.lineWidth = 1.2;
@@ -13129,9 +13273,12 @@ html, body, body *, body *::before, body *::after, svg text{
           rightWall.castShadow = true;
           chamber.add(rightWall);
 
-          if(HM_UPLOADED_SHOW_FACE_DATA && typeof r3dCreateWallOverlay === "function"){
-            var leftOverlay = r3dCreateWallOverlay(overlayDims, leftWallKey, "left", renderer || null);
-            var rightOverlay = r3dCreateWallOverlay(overlayDims, rightWallKey, "right", renderer || null);
+          var uploadedOverlayFactory = (typeof r3dCreateWallOverlay === "function")
+            ? r3dCreateWallOverlay
+            : hmUploadedCreateWallOverlay;
+          if(HM_UPLOADED_SHOW_FACE_DATA && typeof uploadedOverlayFactory === "function"){
+            var leftOverlay = uploadedOverlayFactory(overlayDims, leftWallKey, "left", renderer || null);
+            var rightOverlay = uploadedOverlayFactory(overlayDims, rightWallKey, "right", renderer || null);
             hmUploadedPrepareOverlay(leftOverlay);
             hmUploadedPrepareOverlay(rightOverlay);
             wallOverlays[leftWallKey] = leftOverlay;
