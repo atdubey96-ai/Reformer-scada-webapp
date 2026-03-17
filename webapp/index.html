@@ -12990,8 +12990,8 @@ html, body, body *, body *::before, body *::after, svg text{
             polygonOffsetFactor:-1,
             polygonOffsetUnits:-1
           });
-          var planeW = Math.max(0.8, dims.sX - 0.12);
-          var planeH = Math.max(0.8, dims.sY - 0.12);
+          var planeW = Math.max(0.8, dims.sX + 0.04);
+          var planeH = Math.max(0.8, dims.sY + 0.04);
           var outerMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), outerMaterial);
           var innerMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), innerMaterial);
           if(face === "back"){
@@ -13055,6 +13055,13 @@ html, body, body *, body *::before, body *::after, svg text{
             overlay.texture.needsUpdate = true;
             return;
           }
+
+          var baseFill = ctx.createLinearGradient(0, 0, 0, h);
+          baseFill.addColorStop(0, "#03070d");
+          baseFill.addColorStop(0.5, "#05090f");
+          baseFill.addColorStop(1, "#02060b");
+          ctx.fillStyle = baseFill;
+          ctx.fillRect(0, 0, w, h);
 
           var rows = (snapshot.hmData && snapshot.hmData[wallKey] && Array.isArray(snapshot.hmData[wallKey])) ? snapshot.hmData[wallKey] : [];
           var topVals = (wallKey === "A" || wallKey === "B") ? (snapshot.abTop || []) : (snapshot.cdTop || []);
@@ -13637,18 +13644,20 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedBuildChamberScene(parent, label, renderer){
-          var sX = 14.6, sY = 7.8, sZ = 1.82, wallT = 0.08;
-          var windowSize = Math.max(1.02, Math.min(1.34, sZ - 0.20));
+          var sX = 16.2, sY = 7.8, sZ = 1.96, wallT = 0.08;
+          var windowSize = Math.max(1.18, Math.min(1.52, sZ - 0.18));
           var windowTopY = sY * 0.72;
           var windowBottomY = sY * 0.31;
           var tubeCount = 8;
           var tubeR = 0.06;
-          var tubeZStart = -(sZ - 0.26) / 2;
-          var tubeSpacing = tubeCount > 1 ? ((sZ - 0.26) / (tubeCount - 1)) : 0;
+          var tubeSpanX = sX - 2.2;
+          var tubeXStart = -(tubeSpanX / 2);
+          var tubeSpacing = tubeCount > 1 ? (tubeSpanX / (tubeCount - 1)) : 0;
+          var tubeZ = 0;
           var tubeBottomY = 0.18;
           var commonTubeY = sY - 0.42;
           var commonTubeR = 0.11;
-          var commonTubeLen = sZ - 0.12;
+          var commonTubeLen = tubeSpanX + 0.45;
           var tubeHeight = commonTubeY - tubeBottomY + 0.12;
           var zoneKey = label === "AB" ? "AB" : "CD";
           var frontWallKey = label === "AB" ? "A" : "C";
@@ -13763,13 +13772,13 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedAddSideWindowFrame(chamber, sX / 2 + 0.001, windowBottomY, 0, windowSize);
 
           for(var i = 0; i < tubeCount; i++){
-            var tz = tubeZStart + (i * tubeSpacing);
+            var tx = tubeXStart + (i * tubeSpacing);
             var tube = new THREE.Mesh(new THREE.CylinderGeometry(tubeR, tubeR, tubeHeight, 14), tubeMat);
-            tube.position.set(0, tubeBottomY + (tubeHeight / 2), tz);
+            tube.position.set(tx, tubeBottomY + (tubeHeight / 2), tubeZ);
             chamber.add(tube);
 
             var joint = new THREE.Mesh(new THREE.SphereGeometry(tubeR * 1.24, 12, 12), commonTubeMat);
-            joint.position.set(0, commonTubeY, tz);
+            joint.position.set(tx, commonTubeY, tubeZ);
             chamber.add(joint);
           }
 
@@ -13777,17 +13786,17 @@ html, body, body *, body *::before, body *::after, svg text{
             new THREE.CylinderGeometry(commonTubeR, commonTubeR, commonTubeLen, 18),
             commonTubeMat
           );
-          commonHeader.rotation.x = Math.PI / 2;
+          commonHeader.rotation.z = Math.PI / 2;
           commonHeader.position.set(0, commonTubeY, 0);
           chamber.add(commonHeader);
 
           var headerCapGeo = new THREE.SphereGeometry(commonTubeR, 12, 12);
           var headerFrontCap = new THREE.Mesh(headerCapGeo, commonTubeMat);
-          headerFrontCap.position.set(0, commonTubeY, commonTubeLen / 2);
+          headerFrontCap.position.set(commonTubeLen / 2, commonTubeY, 0);
           chamber.add(headerFrontCap);
 
           var headerBackCap = new THREE.Mesh(headerCapGeo, commonTubeMat);
-          headerBackCap.position.set(0, commonTubeY, -commonTubeLen / 2);
+          headerBackCap.position.set(-commonTubeLen / 2, commonTubeY, 0);
           chamber.add(headerBackCap);
 
           return {
