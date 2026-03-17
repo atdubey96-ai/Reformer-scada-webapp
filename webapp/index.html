@@ -13260,13 +13260,13 @@ html, body, body *, body *::before, body *::after, svg text{
 
           var baseGrad = ctx.createLinearGradient(0, 0, size, size);
           if(mode === "top"){
-            baseGrad.addColorStop(0, "#52575d");
-            baseGrad.addColorStop(0.52, "#383d42");
-            baseGrad.addColorStop(1, "#2c3136");
+            baseGrad.addColorStop(0, "#dde3e8");
+            baseGrad.addColorStop(0.42, "#aeb7c1");
+            baseGrad.addColorStop(1, "#727b85");
           }else{
-            baseGrad.addColorStop(0, "#50555b");
-            baseGrad.addColorStop(0.48, "#393f45");
-            baseGrad.addColorStop(1, "#2c3136");
+            baseGrad.addColorStop(0, "#d8dee4");
+            baseGrad.addColorStop(0.48, "#a3acb6");
+            baseGrad.addColorStop(1, "#6e7882");
           }
           ctx.fillStyle = baseGrad;
           ctx.fillRect(0, 0, size, size);
@@ -13276,14 +13276,14 @@ html, body, body *, body *::before, body *::after, svg text{
           for(var y = 0; y < size; y++){
             for(var x = 0; x < size; x++){
               var idx = (y * size + x) * 4;
-              var grain = 74 + (rand() * 46) + ((rand() - 0.5) * 52);
+              var grain = 150 + (rand() * 42) + ((rand() - 0.5) * 34);
               var fleck = rand();
-              if(fleck > 0.985) grain += 34;
-              if(fleck < 0.02) grain -= 28;
-              var warm = rand() < 0.016 ? (18 + rand() * 34) : 0;
-              data[idx] = hmUploadedClampByte(grain + warm);
-              data[idx + 1] = hmUploadedClampByte(grain + 6 + (warm * 0.38));
-              data[idx + 2] = hmUploadedClampByte(grain + 12 - (warm * 0.22));
+              if(fleck > 0.988) grain += 28;
+              if(fleck < 0.018) grain -= 22;
+              var coolShift = rand() < 0.018 ? (8 + rand() * 18) : 0;
+              data[idx] = hmUploadedClampByte(grain - 5);
+              data[idx + 1] = hmUploadedClampByte(grain + 1 + (coolShift * 0.25));
+              data[idx + 2] = hmUploadedClampByte(grain + 10 + coolShift);
               data[idx + 3] = 255;
             }
           }
@@ -13293,8 +13293,8 @@ html, body, body *, body *::before, body *::after, svg text{
           ctx.globalCompositeOperation = "multiply";
           for(var seam = 0; seam < 4; seam++){
             var sx = Math.round((size * 0.18) + rand() * (size * 0.64));
-            ctx.strokeStyle = "rgba(24,26,30,0.22)";
-            ctx.lineWidth = 2 + rand() * 2;
+            ctx.strokeStyle = "rgba(56,62,70,0.16)";
+            ctx.lineWidth = 1.5 + rand() * 1.6;
             ctx.beginPath();
             ctx.moveTo(sx, 0);
             ctx.lineTo(sx + (rand() - 0.5) * 12, size);
@@ -13302,29 +13302,42 @@ html, body, body *, body *::before, body *::after, svg text{
           }
           ctx.restore();
 
-          for(var rust = 0; rust < 18; rust++){
+          for(var sheen = 0; sheen < 14; sheen++){
             var rx = rand() * size;
             var ry = rand() * size;
-            var rr = 18 + rand() * 54;
-            var rustGrad = ctx.createRadialGradient(rx, ry, rr * 0.12, rx, ry, rr);
-            rustGrad.addColorStop(0, "rgba(190,112,62,0.26)");
-            rustGrad.addColorStop(0.48, "rgba(128,76,42,0.18)");
-            rustGrad.addColorStop(1, "rgba(0,0,0,0)");
-            ctx.fillStyle = rustGrad;
+            var rr = 28 + rand() * 96;
+            var sheenGrad = ctx.createRadialGradient(rx, ry, rr * 0.1, rx, ry, rr);
+            sheenGrad.addColorStop(0, "rgba(255,255,255,0.16)");
+            sheenGrad.addColorStop(0.42, "rgba(214,226,238,0.08)");
+            sheenGrad.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = sheenGrad;
             ctx.beginPath();
             ctx.arc(rx, ry, rr, 0, Math.PI * 2);
             ctx.fill();
           }
 
           ctx.save();
-          ctx.globalAlpha = 0.08;
-          for(var scratch = 0; scratch < 26; scratch++){
+          ctx.globalAlpha = 0.14;
+          var brushGrad = ctx.createLinearGradient(0, 0, size, size * 0.18);
+          brushGrad.addColorStop(0, "rgba(255,255,255,0.55)");
+          brushGrad.addColorStop(0.5, "rgba(255,255,255,0)");
+          brushGrad.addColorStop(1, "rgba(0,0,0,0.2)");
+          ctx.fillStyle = brushGrad;
+          for(var band = -2; band < 8; band++){
+            var by = band * 82 + (rand() * 18);
+            ctx.fillRect(0, by, size, 18 + rand() * 18);
+          }
+          ctx.restore();
+
+          ctx.save();
+          ctx.globalAlpha = 0.09;
+          for(var scratch = 0; scratch < 22; scratch++){
             var x1 = rand() * size;
             var y1 = rand() * size;
             var len = 30 + rand() * 120;
             var angle = (-0.45 + rand() * 0.9);
-            ctx.strokeStyle = rand() > 0.6 ? "rgba(255,255,255,0.58)" : "rgba(24,24,28,0.68)";
-            ctx.lineWidth = 1 + rand() * 1.4;
+            ctx.strokeStyle = rand() > 0.58 ? "rgba(255,255,255,0.46)" : "rgba(58,64,72,0.4)";
+            ctx.lineWidth = 0.8 + rand() * 1.1;
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x1 + Math.cos(angle) * len, y1 + Math.sin(angle) * len);
@@ -13384,15 +13397,15 @@ html, body, body *, body *::before, body *::after, svg text{
           var wallShellMat = new THREE.MeshStandardMaterial({
             color:0xffffff,
             map:hmUploadedGetShellTexture(renderer || null, "wall"),
-            metalness:0.18,
-            roughness:0.92,
+            metalness:0.62,
+            roughness:0.46,
             side:THREE.DoubleSide
           });
           var topShellMat = new THREE.MeshStandardMaterial({
             color:0xffffff,
             map:hmUploadedGetShellTexture(renderer || null, "top"),
-            metalness:0.14,
-            roughness:0.94,
+            metalness:0.58,
+            roughness:0.4,
             side:THREE.DoubleSide
           });
           var innerMat = new THREE.MeshStandardMaterial({
@@ -23525,7 +23538,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-heatmap-shell-texture-1";
+      var swBuild = "20260317-heatmap-shell-silver-metallic-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
