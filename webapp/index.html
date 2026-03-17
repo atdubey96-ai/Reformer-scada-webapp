@@ -1834,8 +1834,7 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .analytics{background:#1e293b;margin:20px;padding:20px;border-radius:8px;border:1px solid #334155;}
 .analytics h2{margin:0 0 16px;color:#f97316;font-size:17px;}
 #analysisContainer,
-#hm-analysisContainer,
-#r3d-analysisContainer{
+#hm-analysisContainer{
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
   gap:20px;
@@ -2965,20 +2964,6 @@ body.light-theme .cw-nudge{
 .tab-panels{ flex:1; }
 .tab-panel{ display:none; }
 .tab-panel.tab-active{ display:block; }
-.new-cuboids-shell{
-  min-height:100%;
-  padding:0;
-  background:#060708;
-}
-.new-cuboids-frame{
-  display:block;
-  width:100%;
-  height:calc(100vh - 96px);
-  min-height:0;
-  border:0;
-  background:#060708;
-  overflow:hidden;
-}
 
 /* Bottom tab bar */
 .bottom-tab-bar{
@@ -3077,294 +3062,6 @@ body.light-theme .cw-nudge{
 .btab-label{
   font-size:12px;font-weight:700;letter-spacing:0.4px;
   max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-#btab-reformer3d{
-  flex:1.08;
-  border-radius:999px;
-  background:linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04));
-  border-color:rgba(148,163,184,0.22);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08);
-}
-#btab-reformer3d .btab-icon{
-  width:34px;
-  height:34px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:50%;
-  background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.22),rgba(255,255,255,0.04) 60%,rgba(255,255,255,0) 100%);
-  border:1px solid rgba(148,163,184,0.26);
-  box-shadow:0 0 0 1px rgba(15,23,42,0.18) inset;
-}
-#btab-reformer3d.btab-active{
-  background:linear-gradient(180deg,rgba(243,112,34,0.3),rgba(243,112,34,0.14)) !important;
-  border-color:rgba(243,112,34,0.55) !important;
-  box-shadow:0 10px 20px rgba(243,112,34,0.18), inset 0 1px 0 rgba(255,214,185,0.38);
-}
-#btab-reformer3d.btab-active .btab-icon{
-  background:radial-gradient(circle at 35% 30%,rgba(255,226,194,0.42),rgba(243,112,34,0.18) 58%,rgba(243,112,34,0.04) 100%);
-  border-color:rgba(243,112,34,0.45);
-}
-body.light-theme #btab-reformer3d{
-  background:linear-gradient(180deg,#f3f4f6 0%,#e5e7eb 100%) !important;
-  border-color:rgba(15,23,42,0.22) !important;
-  color:#111827 !important;
-  box-shadow:0 10px 18px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.92) !important;
-}
-body.light-theme #btab-reformer3d .btab-label{
-  color:#111827 !important;
-  text-shadow:none !important;
-}
-body.light-theme #btab-reformer3d .btab-icon{
-  color:#111827 !important;
-  border-color:rgba(15,23,42,0.18) !important;
-  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.95),rgba(203,213,225,0.4) 60%,rgba(255,255,255,0) 100%) !important;
-}
-body.light-theme #btab-reformer3d.btab-active{
-  background:linear-gradient(180deg,rgba(243,112,34,0.26),rgba(243,112,34,0.12)) !important;
-  border-color:rgba(243,112,34,0.56) !important;
-  color:#7c2d12 !important;
-}
-body.light-theme #btab-reformer3d.btab-active .btab-label{
-  color:#7c2d12 !important;
-}
-
-/* Reformer 3D tab */
-.r3d-shell{
-  padding:24px 28px;
-  max-width:1680px;
-  margin:0 auto;
-}
-.r3d-stage-card{
-  border-radius:24px;
-  border:1px solid rgba(148,163,184,0.24);
-  background:
-    radial-gradient(120% 100% at 50% -12%,rgba(232,81,26,0.08) 0%,rgba(232,81,26,0) 52%),
-    linear-gradient(180deg,rgba(12,18,28,0.98) 0%,rgba(9,14,22,0.98) 100%);
-  box-shadow:0 20px 50px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.05);
-  overflow:hidden;
-}
-.r3d-stage-header{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:16px;
-  padding:18px 22px;
-  border-bottom:1px solid rgba(148,163,184,0.16);
-  background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0));
-}
-.r3d-stage-title{
-  font-size:22px;
-  font-weight:700;
-  color:#f8fafc;
-  letter-spacing:0.4px;
-}
-.r3d-stage-subtitle{
-  margin-top:4px;
-  font-size:12px;
-  color:#94a3b8;
-}
-.r3d-stage-badge{
-  flex:0 0 auto;
-  padding:8px 14px;
-  border-radius:999px;
-  border:1px solid rgba(232,81,26,0.38);
-  background:linear-gradient(180deg,rgba(232,81,26,0.2),rgba(232,81,26,0.08));
-  color:#ffd7c8;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:0.7px;
-  text-transform:uppercase;
-}
-.r3d-main{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 300px;
-  min-height:min(74vh,860px);
-}
-.r3d-canvas-area{
-  position:relative;
-  min-height:620px;
-  background:#0b0f14;
-}
-.r3d-canvas-area:fullscreen,
-.r3d-canvas-area:-webkit-full-screen{
-  width:100vw;
-  height:100vh;
-  min-height:100vh;
-  background:#05080d;
-}
-#reformer3d-canvas{
-  width:100%;
-  height:100%;
-  display:block;
-  cursor:grab;
-}
-#reformer3d-canvas:active{
-  cursor:grabbing;
-}
-.r3d-canvas-hint{
-  position:absolute;
-  left:50%;
-  bottom:18px;
-  transform:translateX(-50%);
-  color:rgba(255,255,255,0.34);
-  font-size:11px;
-  letter-spacing:0.3px;
-  pointer-events:none;
-  white-space:nowrap;
-}
-.r3d-status{
-  position:absolute;
-  top:16px;
-  left:16px;
-  z-index:2;
-  display:none;
-  padding:8px 12px;
-  border-radius:12px;
-  background:rgba(127,29,29,0.92);
-  border:1px solid rgba(248,113,113,0.36);
-  color:#fee2e2;
-  font-size:12px;
-  font-weight:700;
-}
-.r3d-side-panel{
-  width:100%;
-  background:#10151c;
-  border-left:1px solid #1e2530;
-  padding:22px 18px;
-  display:flex;
-  flex-direction:column;
-  gap:22px;
-  overflow-y:auto;
-}
-.r3d-panel-section h3{
-  font-size:10px;
-  font-weight:700;
-  color:#94a3b8;
-  text-transform:uppercase;
-  letter-spacing:1.5px;
-  margin-bottom:14px;
-}
-.r3d-info-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  padding:8px 0;
-  border-bottom:1px solid #1a2030;
-}
-.r3d-info-row:last-child{border-bottom:none;}
-.r3d-info-label{
-  font-size:12px;
-  color:#94a3b8;
-}
-.r3d-info-value{
-  font-size:13px;
-  font-weight:600;
-  color:#ffffff;
-  text-align:right;
-}
-.r3d-info-value.ok{color:#6ee7b7;}
-.r3d-info-value.warn{color:#fbbf24;}
-.r3d-info-value.hot{color:#ff9d73;}
-.r3d-control-group{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.r3d-control-btn{
-  font-size:12px;
-  font-weight:700;
-  padding:10px 14px;
-  border-radius:10px;
-  border:1px solid #2a3140;
-  background:linear-gradient(180deg,#1a2030,#151c29);
-  color:#d7deea;
-  cursor:pointer;
-  transition:all .2s ease;
-  text-align:left;
-}
-.r3d-control-btn:hover{
-  background:linear-gradient(180deg,#222a3a,#192334);
-  color:#ffffff;
-  border-color:#3a4355;
-}
-.r3d-legend{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.r3d-legend-item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:12px;
-  color:#aab4c4;
-}
-.r3d-legend-swatch{
-  width:12px;
-  height:12px;
-  border-radius:3px;
-  flex:0 0 auto;
-}
-body.light-theme .r3d-stage-card{
-  border-color:rgba(67,96,136,0.22);
-  background:
-    radial-gradient(120% 100% at 50% -12%,rgba(232,81,26,0.08) 0%,rgba(232,81,26,0) 52%),
-    linear-gradient(180deg,#f8fbff 0%,#ecf2f8 100%);
-  box-shadow:0 16px 38px rgba(14,24,42,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
-}
-body.light-theme .r3d-stage-title{color:#0f172a;}
-body.light-theme .r3d-stage-subtitle{color:#64748b;}
-body.light-theme .r3d-stage-badge{
-  background:linear-gradient(180deg,#f3f4f6 0%,#e5e7eb 100%) !important;
-  border-color:rgba(15,23,42,0.24) !important;
-  color:#111827 !important;
-  box-shadow:0 10px 18px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.95);
-}
-body.light-theme .r3d-canvas-area{background:#0b0f14;}
-body.light-theme .r3d-side-panel{
-  background:linear-gradient(180deg,#eef4fa,#e7eef7);
-  border-left-color:rgba(67,96,136,0.18);
-}
-body.light-theme .r3d-panel-section h3,
-body.light-theme .r3d-info-label{color:#64748b;}
-body.light-theme .r3d-info-value{color:#0f172a;}
-body.light-theme .r3d-info-row{border-bottom-color:rgba(67,96,136,0.12);}
-body.light-theme .r3d-control-btn{
-  background:linear-gradient(180deg,#ffffff,#edf3fa);
-  border-color:rgba(67,96,136,0.22);
-  color:#24364d;
-}
-body.light-theme .r3d-control-btn:hover{
-  background:linear-gradient(180deg,#ffffff,#e7eef8);
-  color:#0f172a;
-  border-color:rgba(67,96,136,0.3);
-}
-body.light-theme .r3d-legend-item{color:#4b5f78;}
-body.light-theme #tab-reformer3d .r3d-section-title,
-body.light-theme #tab-reformer3d #r3d-adjust-card .hm-adjust-title,
-body.light-theme #tab-reformer3d .r3d-saved-title{
-  color:#111827 !important;
-  text-shadow:none !important;
-}
-.r3d-bottom-series{
-  margin-top:24px;
-}
-.r3d-bottom-series .analytics,
-.r3d-bottom-series .cleaning-section,
-.r3d-bottom-series .hm-saved-entries-card,
-.r3d-bottom-series .hm-adjust-card{
-  margin:0;
-}
-@media (max-width:1180px){
-  .r3d-main{
-    grid-template-columns:1fr;
-  }
-  .r3d-side-panel{
-    border-left:none;
-    border-top:1px solid #1e2530;
-  }
 }
 
 /* Add bottom padding to body so content isn't hidden under tab bar */
@@ -3528,13 +3225,11 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
     margin:4px 2px;
     border-radius:10px;
   }
-  #btab-reformer3d{display:none !important;}
   #btab-burner{order:1;}
   #btab-cleaning{order:2;}
   #btab-heatmap{order:3;}
   #btab-tempdata{order:4;}
   #btab-alarms{order:5;}
-  #btab-newcuboids{order:6;}
   #btab-heatmap .btab-icon{
     width:40px;
     height:40px;
@@ -4198,41 +3893,31 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   border:1px solid;padding:6px 3px;
 }
 #td-saved-table,
-#hm-td-saved-table,
-#r3d-td-saved-table{
+#hm-td-saved-table{
   table-layout:auto;
 }
 #td-saved-table thead th,
-#hm-td-saved-table thead th,
-#r3d-td-saved-table thead th{position:sticky;top:0;z-index:2;background:rgba(255,255,255,0.06);}
+#hm-td-saved-table thead th{position:sticky;top:0;z-index:2;background:rgba(255,255,255,0.06);}
 #td-saved-table th:first-child,
 #hm-td-saved-table th:first-child,
-#r3d-td-saved-table th:first-child,
 #td-saved-table td:first-child,
-#hm-td-saved-table td:first-child,
-#r3d-td-saved-table td:first-child{
+#hm-td-saved-table td:first-child{
   min-width:132px;
 }
 #td-saved-table th:nth-child(2),
 #hm-td-saved-table th:nth-child(2),
-#r3d-td-saved-table th:nth-child(2),
 #td-saved-table td:nth-child(2),
-#hm-td-saved-table td:nth-child(2),
-#r3d-td-saved-table td:nth-child(2){
+#hm-td-saved-table td:nth-child(2){
   min-width:108px;
 }
 #td-saved-table tbody tr:nth-child(even),
-#hm-td-saved-table tbody tr:nth-child(even),
-#r3d-td-saved-table tbody tr:nth-child(even){background:rgba(255,255,255,0.025);}
+#hm-td-saved-table tbody tr:nth-child(even){background:rgba(255,255,255,0.025);}
 #td-saved-table tbody tr:hover,
-#hm-td-saved-table tbody tr:hover,
-#r3d-td-saved-table tbody tr:hover{background:rgba(255,255,255,0.05);}
+#hm-td-saved-table tbody tr:hover{background:rgba(255,255,255,0.05);}
 #td-saved-table td,
-#hm-td-saved-table td,
-#r3d-td-saved-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);color:#cbd5e1;vertical-align:top;}
+#hm-td-saved-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);color:#cbd5e1;vertical-align:top;}
 #td-saved-table .td-dt-wrap,
-#hm-td-saved-table .td-dt-wrap,
-#r3d-td-saved-table .td-dt-wrap{
+#hm-td-saved-table .td-dt-wrap{
   display:grid;
   grid-template-columns:minmax(0,1fr);
   justify-items:start;
@@ -4243,8 +3928,7 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   white-space:normal;
 }
 #td-saved-table .td-dt-date,
-#hm-td-saved-table .td-dt-date,
-#r3d-td-saved-table .td-dt-date{
+#hm-td-saved-table .td-dt-date{
   display:block;
   max-width:100%;
   font-size:12px;
@@ -4254,8 +3938,7 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   white-space:nowrap;
 }
 #td-saved-table .td-dt-time,
-#hm-td-saved-table .td-dt-time,
-#r3d-td-saved-table .td-dt-time{
+#hm-td-saved-table .td-dt-time{
   display:block;
   max-width:100%;
   font-size:11px;
@@ -4264,8 +3947,7 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   white-space:nowrap;
 }
 #td-saved-table .td-shift-chip,
-#hm-td-saved-table .td-shift-chip,
-#r3d-td-saved-table .td-shift-chip{
+#hm-td-saved-table .td-shift-chip{
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -4278,76 +3960,63 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   line-height:1.2;
 }
 #td-saved-table .td-shift-morning,
-#hm-td-saved-table .td-shift-morning,
-#r3d-td-saved-table .td-shift-morning{
+#hm-td-saved-table .td-shift-morning{
   color:#34d399;
   background:rgba(16,185,129,0.18);
   border-color:rgba(16,185,129,0.45);
 }
 #td-saved-table .td-shift-evening,
-#hm-td-saved-table .td-shift-evening,
-#r3d-td-saved-table .td-shift-evening{
+#hm-td-saved-table .td-shift-evening{
   color:#fb923c;
   background:rgba(249,115,22,0.18);
   border-color:rgba(249,115,22,0.45);
 }
 #td-saved-table .td-shift-night,
-#hm-td-saved-table .td-shift-night,
-#r3d-td-saved-table .td-shift-night{
+#hm-td-saved-table .td-shift-night{
   color:#818cf8;
   background:rgba(99,102,241,0.18);
   border-color:rgba(99,102,241,0.5);
 }
 #td-saved-table .td-shift-generic,
-#hm-td-saved-table .td-shift-generic,
-#r3d-td-saved-table .td-shift-generic{
+#hm-td-saved-table .td-shift-generic{
   color:#cbd5e1;
   background:rgba(148,163,184,0.14);
   border-color:rgba(148,163,184,0.42);
 }
 #td-saved-table .td-del-btn,
-#hm-td-saved-table .td-del-btn,
-#r3d-td-saved-table .td-del-btn{
+#hm-td-saved-table .td-del-btn{
   background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);
   color:#f87171;padding:4px 10px;border-radius:5px;
   font-size:11px;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;
 }
 #td-saved-table .td-del-btn:hover,
-#hm-td-saved-table .td-del-btn:hover,
-#r3d-td-saved-table .td-del-btn:hover{background:rgba(239,68,68,0.25);}
+#hm-td-saved-table .td-del-btn:hover{background:rgba(239,68,68,0.25);}
 body.light-theme #td-saved-table .td-dt-date,
-body.light-theme #hm-td-saved-table .td-dt-date,
-body.light-theme #r3d-td-saved-table .td-dt-date{color:#1e293b;}
+body.light-theme #hm-td-saved-table .td-dt-date{color:#1e293b;}
 body.light-theme #td-saved-table .td-dt-time,
-body.light-theme #hm-td-saved-table .td-dt-time,
-body.light-theme #r3d-td-saved-table .td-dt-time{color:#2563eb;}
+body.light-theme #hm-td-saved-table .td-dt-time{color:#2563eb;}
 body.light-theme #td-saved-table td,
-body.light-theme #hm-td-saved-table td,
-body.light-theme #r3d-td-saved-table td{color:#111827 !important;}
+body.light-theme #hm-td-saved-table td{color:#111827 !important;}
 body.light-theme #td-saved-table .td-shift-morning,
-body.light-theme #hm-td-saved-table .td-shift-morning,
-body.light-theme #r3d-td-saved-table .td-shift-morning{
+body.light-theme #hm-td-saved-table .td-shift-morning{
   color:#065f46 !important;
   background:rgba(16,185,129,0.24) !important;
   border-color:rgba(5,150,105,0.52) !important;
 }
 body.light-theme #td-saved-table .td-shift-evening,
-body.light-theme #hm-td-saved-table .td-shift-evening,
-body.light-theme #r3d-td-saved-table .td-shift-evening{
+body.light-theme #hm-td-saved-table .td-shift-evening{
   color:#9a3412 !important;
   background:rgba(249,115,22,0.24) !important;
   border-color:rgba(234,88,12,0.54) !important;
 }
 body.light-theme #td-saved-table .td-shift-night,
-body.light-theme #hm-td-saved-table .td-shift-night,
-body.light-theme #r3d-td-saved-table .td-shift-night{
+body.light-theme #hm-td-saved-table .td-shift-night{
   color:#312e81 !important;
   background:rgba(99,102,241,0.25) !important;
   border-color:rgba(79,70,229,0.58) !important;
 }
 body.light-theme #td-saved-table .td-shift-generic,
-body.light-theme #hm-td-saved-table .td-shift-generic,
-body.light-theme #r3d-td-saved-table .td-shift-generic{
+body.light-theme #hm-td-saved-table .td-shift-generic{
   color:#334155 !important;
   background:rgba(148,163,184,0.2) !important;
   border-color:rgba(100,116,139,0.5) !important;
@@ -6233,7 +5902,7 @@ function hmBuildAdjustmentForZone(zoneLabel, vals, hmData, priorityRows, log, hi
 }
 
 function updateHeatMapAdjustmentLogic(snapshot){
-  var targetIds = ["hm-adjustment-list", "r3d-adjustment-list"];
+  var targetIds = ["hm-adjustment-list"];
   var hasTarget = targetIds.some(function(id){ return !!document.getElementById(id); });
   if(!hasTarget) return;
   function setTargets(html){
@@ -8596,7 +8265,6 @@ html, body, body *, body *::before, body *::after, svg text{
         body:not(.light-theme) .tab-panels{background:linear-gradient(180deg,#050608 0%,#0a0d11 100%) !important;}
         body:not(.light-theme) .tab-panel{background:transparent !important;}
         body:not(.light-theme) #tab-heatmap{background:linear-gradient(180deg,#06070a 0%,#0b0e13 100%) !important;}
-        body:not(.light-theme) #tab-reformer3d{background:linear-gradient(180deg,#06070a 0%,#0b0e13 100%) !important;}
         body:not(.light-theme) #tab-burner{background:linear-gradient(180deg,#060709 0%,#0d1014 100%) !important;}
         body:not(.light-theme) #tab-cleaning{background:linear-gradient(180deg,#060806 0%,#0d110e 100%) !important;}
         body:not(.light-theme) #tab-tempdata{background:linear-gradient(180deg,#06070a 0%,#0d1014 100%) !important;}
@@ -9156,7 +8824,6 @@ html, body, body *, body *::before, body *::after, svg text{
         body .tab-panel{
           background:transparent !important;
         }
-        body #tab-reformer3d,
         body #tab-burner,
         body #tab-cleaning,
         body #tab-tempdata,
@@ -10216,7 +9883,6 @@ html, body, body *, body *::before, body *::after, svg text{
         body.light-theme .tab-panel,
         body.light-theme .wall-container,
         body.light-theme #tab-heatmap,
-        body.light-theme #tab-reformer3d,
         body.light-theme #tab-burner,
         body.light-theme #tab-cleaning,
         body.light-theme #tab-tempdata,
@@ -11218,28 +10884,18 @@ html, body, body *, body *::before, body *::after, svg text{
       </style>
       <style id="light-theme-cleaning-visibility-hotfix-20260310">
         body.light-theme #tab-heatmap .cleaning-section h2,
-        body.light-theme #tab-cleaning .cleaning-section h2,
-        body.light-theme #tab-reformer3d .cleaning-section h2{
+        body.light-theme #tab-cleaning .cleaning-section h2{
           color:#1e293b !important;
           text-shadow:none !important;
         }
         body.light-theme #tab-heatmap .cleaning-subtitle,
-        body.light-theme #tab-cleaning .cleaning-subtitle,
-        body.light-theme #tab-reformer3d .cleaning-subtitle{
+        body.light-theme #tab-cleaning .cleaning-subtitle{
           color:#334155 !important;
-        }
-        body.light-theme #tab-reformer3d .analytics h2,
-        body.light-theme #tab-reformer3d #r3d-adjust-card .hm-adjust-title,
-        body.light-theme #tab-reformer3d .hm-saved-entries-card > div:first-child > div:first-child{
-          color:#111827 !important;
-          text-shadow:none !important;
         }
         body.light-theme #tab-heatmap .cdash-period-card,
         body.light-theme #tab-cleaning .cdash-period-card,
-        body.light-theme #tab-reformer3d .cdash-period-card,
         body.light-theme #tab-heatmap .cdash-breakdown-block,
-        body.light-theme #tab-cleaning .cdash-breakdown-block,
-        body.light-theme #tab-reformer3d .cdash-breakdown-block{
+        body.light-theme #tab-cleaning .cdash-breakdown-block{
           background:linear-gradient(180deg,#ffffff 0%,#f7fafc 100%) !important;
           border-color:rgba(100,116,139,0.30) !important;
           box-shadow:0 8px 18px rgba(15,23,42,0.08),inset 0 1px 0 rgba(255,255,255,0.9) !important;
@@ -14375,66 +14031,6 @@ html, body, body *, body *::before, body *::after, svg text{
     </div>
   </div>
 
-  <div id="tab-reformer3d" class="tab-panel">
-    <div class="r3d-shell">
-      <div class="r3d-stage-card">
-        <div class="r3d-stage-header">
-          <div>
-            <div class="r3d-stage-title">Reformer 3D Viewer</div>
-            <div class="r3d-stage-subtitle">Dual-chamber furnace model with peep-hole faces, vertical tubes, and common header tube.</div>
-          </div>
-          <div class="r3d-stage-badge">Desktop 3D</div>
-        </div>
-        <div class="r3d-main">
-          <div class="r3d-canvas-area">
-            <div id="reformer3d-status" class="r3d-status"></div>
-            <canvas id="reformer3d-canvas"></canvas>
-            <div class="r3d-canvas-hint">Click and drag to rotate · Double-click to fullscreen · Scroll to zoom</div>
-          </div>
-          <div class="r3d-side-panel">
-            <div class="r3d-panel-section">
-              <h3>Burner Unit Info</h3>
-              <div class="r3d-info-row"><span class="r3d-info-label">Unit Type</span><span class="r3d-info-value">Dual-Chamber Furnace</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Unit ID</span><span class="r3d-info-value">GR-BU-017</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Status</span><span class="r3d-info-value ok">Operational</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Tubes/Chamber</span><span class="r3d-info-value">8</span></div>
-            </div>
-            <div class="r3d-panel-section">
-              <h3>Live Parameters</h3>
-              <div class="r3d-info-row"><span class="r3d-info-label">Chamber A PH Avg</span><span class="r3d-info-value hot" id="r3d-live-ab-temp">-- °C</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Chamber B PH Avg</span><span class="r3d-info-value hot" id="r3d-live-cd-temp">-- °C</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Shift Filter</span><span class="r3d-info-value warn" id="r3d-live-shift">Latest</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Entry Time</span><span class="r3d-info-value ok" id="r3d-live-dt">--</span></div>
-              <div class="r3d-info-row"><span class="r3d-info-label">Flame Status</span><span class="r3d-info-value" id="r3d-live-flame">Waiting for data</span></div>
-            </div>
-            <div class="r3d-panel-section">
-              <h3>Legend</h3>
-              <div class="r3d-legend">
-                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#A0887A"></div>Chamber Walls (Silver-Rust)</div>
-                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#B0A090"></div>Header Slab</div>
-                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#1a1a1a"></div>Interior (Black)</div>
-                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#8899AA"></div>Vertical Tubes</div>
-                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#7090A8"></div>Common Header Tube</div>
-                <div class="r3d-legend-item"><div class="r3d-legend-swatch" style="background:#334155"></div>Base Platform</div>
-              </div>
-            </div>
-            <div class="r3d-panel-section">
-              <h3>Controls</h3>
-              <div class="r3d-control-group">
-                <button class="r3d-control-btn" type="button" onclick="r3dResetCam()">⟲ Reset View</button>
-                <button class="r3d-control-btn" type="button" onclick="r3dViewFront()">◉ Front View (Peep Holes)</button>
-                <button class="r3d-control-btn" type="button" onclick="r3dViewSide()">◉ Side View (Large Face)</button>
-                <button class="r3d-control-btn" type="button" onclick="r3dViewTop()">◉ Top View</button>
-                <button class="r3d-control-btn" type="button" onclick="r3dToggleAutoRotate()">↻ Auto Rotate</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
   <!-- TAB 1: Burner Data & Analysis -->
   <div id="tab-burner" class="tab-panel">
     <div class="legend">
@@ -14936,18 +14532,6 @@ html, body, body *, body *::before, body *::after, svg text{
     </div>
   </div>
 
-  <div id="tab-newcuboids" class="tab-panel">
-    <div class="new-cuboids-shell">
-      <iframe
-        class="new-cuboids-frame"
-        src="./industrial_cuboid.html"
-        title="New Cuboids"
-        loading="eager"
-        scrolling="no"
-        allowfullscreen
-      ></iframe>
-    </div>
-  </div>
 </div><!-- /tab-panels -->
 
 <!-- ====================================================
@@ -14975,14 +14559,6 @@ html, body, body *, body *::before, body *::after, svg text{
     <span class="btab-label">Alarms</span>
     <span class="btab-alarm-count" id="btab-alarm-count" style="display:none">0</span>
   </button>
-  <button class="btab" id="btab-reformer3d" onclick="switchTab('reformer3d')">
-    <span class="btab-icon">🧱</span>
-    <span class="btab-label">Reformer 3D</span>
-  </button>
-  <button class="btab" id="btab-newcuboids" onclick="switchTab('newcuboids')">
-    <span class="btab-icon">🧊</span>
-    <span class="btab-label">New Cuboids</span>
-  </button>
 </div>
 
 <script>
@@ -14999,7 +14575,6 @@ const BURNERS        = 15;
 const TEXT_MAP       = {B:"#000",N:"#000",O:"#000",C:"#fff"};
 const chartInstances = {};
 const hmChartInstances = {};
-const r3dChartInstances = {};
 
 /* ==================================================
    LOGIN / LOGOUT
@@ -15403,8 +14978,6 @@ function toggleQuickMenu(){
   }
 }
 
-var desktopPrimaryInterfaceMode = "heatmap";
-
 function isDesktopPrimaryInterfaceViewport(){
   return !(window.matchMedia && window.matchMedia("(max-width: 900px)").matches);
 }
@@ -15416,43 +14989,24 @@ function getDesktopPrimaryInterfaceMode(){
 function updateDesktopPrimaryInterfacePickerUi(){
   var wrap = document.getElementById("interfaceModeWrap");
   if(wrap) wrap.style.display = "none";
-  var mode = "heatmap";
   var heatBtn = document.getElementById("interfaceModeHeatBtn");
-  var r3dBtn = document.getElementById("interfaceMode3DBtn");
   if(heatBtn){
-    heatBtn.classList.toggle("active", mode === "heatmap");
-    heatBtn.setAttribute("aria-pressed", mode === "heatmap" ? "true" : "false");
-  }
-  if(r3dBtn){
-    r3dBtn.classList.toggle("active", mode === "reformer3d");
-    r3dBtn.setAttribute("aria-pressed", mode === "reformer3d" ? "true" : "false");
+    heatBtn.classList.add("active");
+    heatBtn.setAttribute("aria-pressed", "true");
   }
 }
 
 function applyDesktopPrimaryInterfaceMode(forceSwitch){
-  var isDesktop = isDesktopPrimaryInterfaceViewport();
   var heatBtn = document.getElementById("btab-heatmap");
-  var r3dBtn = document.getElementById("btab-reformer3d");
   if(heatBtn) heatBtn.style.display = "";
-  if(r3dBtn) r3dBtn.style.display = "";
 
   updateDesktopPrimaryInterfacePickerUi();
 
   if(!forceSwitch) return;
   if(typeof isUserLoggedIn === "function" && !isUserLoggedIn()) return;
-  if(typeof switchTab !== "function") return;
-
-  var activePanel = document.querySelector(".tab-panel.tab-active");
-  var activeTab = activePanel && activePanel.id ? activePanel.id.replace("tab-","") : "heatmap";
-  if(!isDesktop){
-    if(activeTab === "reformer3d") switchTab("heatmap");
-    return;
-  }
 }
 
 function setDesktopPrimaryInterfaceMode(mode){
-  desktopPrimaryInterfaceMode = "heatmap";
-  try{ localStorage.removeItem("desktopPrimaryInterfaceMode"); }catch(e){}
   applyDesktopPrimaryInterfaceMode(true);
   closeQuickMenu();
 }
@@ -16430,23 +15984,12 @@ function mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, 
   renderBurnerAnalysisMirror("hm-analysisContainer", hmChartInstances, "hm", wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
 }
 
-function mirrorBurnerAnalysisToReformer3D(wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold){
-  renderBurnerAnalysisMirror("r3d-analysisContainer", r3dChartInstances, "r3d", wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
-}
-
-function renderReformer3DAnalyticsMirror(){
-  if(!window._latestBurnerAnalysisPayload) return;
-  var p = window._latestBurnerAnalysisPayload;
-  mirrorBurnerAnalysisToReformer3D(p.wallEntries, p.wallLabels, p.cntBoth, p.cntNG, p.cntOG, p.cntCold);
-}
-
 function generateAnalysis(){
   wallSeverity={};
   const container=document.getElementById("analysisContainer");
   container.innerHTML="";
   destroyChartStore(chartInstances);
   destroyChartStore(hmChartInstances);
-  destroyChartStore(r3dChartInstances);
   var wallLabels = [];
   var cntBoth = [];
   var cntNG = [];
@@ -16529,9 +16072,6 @@ function generateAnalysis(){
     cntCold: cntCold
   };
   mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
-  if(document.getElementById("tab-reformer3d") && document.getElementById("tab-reformer3d").classList.contains("tab-active")){
-    renderReformer3DAnalyticsMirror();
-  }
 }
 
 function refreshThemeSensitivePanels(){
@@ -17693,7 +17233,7 @@ function buildCleaningTable(){
 }
 
 function getCleaningMonthSelectIds(){
-  return ["cleaningMonthSelect","hm-cleaningMonthSelect","r3d-cleaningMonthSelect"];
+  return ["cleaningMonthSelect","hm-cleaningMonthSelect"];
 }
 function getActiveCleaningMonthValue(){
   var ids = getCleaningMonthSelectIds();
@@ -17775,7 +17315,7 @@ function updateCleaningStatus(log){
   syncCleaningMonthSelectors(monthStr);
   var freqLbl=document.getElementById("freqAlarmMonthLabel"); if(freqLbl) freqLbl.textContent="Burners cleaned more than 3 times in "+mLabel;
 
-  ["","hm-","r3d-"].forEach(function(prefix){
+  ["","hm-"].forEach(function(prefix){
     function setEl(id,v){ var el=document.getElementById(prefix + id); if(el) el.textContent=v; }
     setEl("cdash-val-today",  todayC);
     setEl("cdash-val-week",   weekC);
@@ -18373,1148 +17913,18 @@ function handleGlobalRefreshClick(){
   smartRefresh();
 }
 
-var reformer3DState = {
-  initialized:false,
-  initRequested:false,
-  renderer:null,
-  camera:null,
-  scene:null,
-  pivotGroup:null,
-  wallOverlays:{},
-  latestSnapshot:null,
-  overlayAnimPhase:0,
-  lastOverlayPaintAt:0,
-  autoRotate:true,
-  isDragging:false,
-  prevMouse:{x:0,y:0},
-  rotation:{x:-0.3,y:0.5},
-  camDist:16
-};
-var r3dResizeObserver = null;
 var _pendingTabAfterViewerFullscreen = "";
-
-function r3dCanvas(){
-  return document.getElementById("reformer3d-canvas");
-}
-
-function r3dStatusEl(){
-  return document.getElementById("reformer3d-status");
-}
-
-function r3dFullscreenEl(){
-  return document.fullscreenElement || document.webkitFullscreenElement || null;
-}
-
-function r3dToggleFullscreen(){
-  var host = document.querySelector("#tab-reformer3d .r3d-canvas-area");
-  if(!host) return;
-  var activeFs = r3dFullscreenEl();
-  if(activeFs === host){
-    if(document.exitFullscreen) document.exitFullscreen();
-    else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
-    return;
-  }
-  if(host.requestFullscreen){
-    host.requestFullscreen().catch(function(){});
-  }else if(host.webkitRequestFullscreen){
-    host.webkitRequestFullscreen();
-  }
-}
-
-function r3dSetStatus(msg){
-  var el = r3dStatusEl();
-  if(!el) return;
-  if(msg){
-    el.textContent = String(msg);
-    el.style.display = "block";
-  }else{
-    el.textContent = "";
-    el.style.display = "none";
-  }
-}
-
-function r3dIsActive(){
-  var tab = document.getElementById("tab-reformer3d");
-  return !!(tab && tab.classList.contains("tab-active"));
-}
-
-function r3dUpdateCamera(){
-  if(!reformer3DState.camera) return;
-  reformer3DState.camera.position.set(0, 5, reformer3DState.camDist);
-  reformer3DState.camera.lookAt(0, 1.5, 0);
-}
-
-function r3dResize(){
-  if(!reformer3DState.initialized || !reformer3DState.renderer || !reformer3DState.camera) return;
-  var canvas = r3dCanvas();
-  if(!canvas || !canvas.parentElement) return;
-  var rect = canvas.parentElement.getBoundingClientRect();
-  if(rect.width < 40 || rect.height < 40) return;
-  reformer3DState.camera.aspect = rect.width / rect.height;
-  reformer3DState.camera.updateProjectionMatrix();
-  reformer3DState.renderer.setSize(rect.width, rect.height, false);
-  reformer3DState.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  r3dUpdateCamera();
-}
-
-function r3dBindResizeObserver(){
-  var host = document.querySelector("#tab-reformer3d .r3d-canvas-area");
-  if(!host || host._r3dResizeObserverBound || typeof ResizeObserver !== "function") return;
-  host._r3dResizeObserverBound = true;
-  if(!r3dResizeObserver){
-    r3dResizeObserver = new ResizeObserver(function(){
-      r3dResize();
-    });
-  }
-  r3dResizeObserver.observe(host);
-}
-
-function r3dScheduleNormalize(){
-  [0, 80, 180, 320].forEach(function(delay){
-    setTimeout(r3dResize, delay);
-  });
-}
 
 function exitViewerFullscreenIfNeeded(nextTab){
   var activeFs = document.fullscreenElement || document.webkitFullscreenElement || null;
   if(!activeFs) return false;
   var inHeatMap = !!(activeFs.closest && activeFs.closest("#tab-heatmap"));
-  var inReformer3D = !!(activeFs.closest && activeFs.closest("#tab-reformer3d"));
-  var keepCurrent = (nextTab === "heatmap" && inHeatMap) || (nextTab === "reformer3d" && inReformer3D);
-  if(keepCurrent) return false;
+  if(nextTab === "heatmap" && inHeatMap) return false;
   try{
     if(document.exitFullscreen) document.exitFullscreen();
     else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
   }catch(e){}
   return true;
-}
-
-function r3dMakeFace(fW, fH, h, y1, y2){
-  var s = new THREE.Shape();
-  s.moveTo(0,0); s.lineTo(fW,0); s.lineTo(fW,fH); s.lineTo(0,fH); s.lineTo(0,0);
-  var cx = fW / 2;
-  var h1 = new THREE.Path();
-  h1.moveTo(cx-h/2,y1-h/2); h1.lineTo(cx+h/2,y1-h/2); h1.lineTo(cx+h/2,y1+h/2); h1.lineTo(cx-h/2,y1+h/2); h1.lineTo(cx-h/2,y1-h/2);
-  s.holes.push(h1);
-  var h2 = new THREE.Path();
-  h2.moveTo(cx-h/2,y2-h/2); h2.lineTo(cx+h/2,y2-h/2); h2.lineTo(cx+h/2,y2+h/2); h2.lineTo(cx-h/2,y2+h/2); h2.lineTo(cx-h/2,y2-h/2);
-  s.holes.push(h2);
-  return s;
-}
-
-function r3dAddFrame(parent, x, y, z, size){
-  var s = size / 2 + 0.04;
-  var pts = [
-    new THREE.Vector3(-s,-s,0),
-    new THREE.Vector3(s,-s,0),
-    new THREE.Vector3(s,s,0),
-    new THREE.Vector3(-s,s,0),
-    new THREE.Vector3(-s,-s,0)
-  ];
-  var fr = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints(pts),
-    new THREE.LineBasicMaterial({color:0xCCBBAA, transparent:true, opacity:0.7})
-  );
-  fr.position.set(x, y, z);
-  if(z < 0) fr.rotation.y = Math.PI;
-  parent.add(fr);
-}
-
-function r3dAddLabel(text, x, y, z){
-  var c = document.createElement("canvas");
-  c.width = 450;
-  c.height = 64;
-  var ctx = c.getContext("2d");
-  ctx.font = "600 20px Times New Roman, serif";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, 225, 32);
-  var tex = new THREE.CanvasTexture(c);
-  var mat = new THREE.SpriteMaterial({map:tex, transparent:true, opacity:0.6});
-  var sp = new THREE.Sprite(mat);
-  sp.position.set(x, y, z);
-  sp.scale.set(3.2, 0.5, 1);
-  reformer3DState.pivotGroup.add(sp);
-}
-
-function r3dRoundRectPath(ctx, x, y, w, h, r){
-  var rad = Math.max(0, Math.min(r, Math.min(w, h) / 2));
-  ctx.beginPath();
-  ctx.moveTo(x + rad, y);
-  ctx.lineTo(x + w - rad, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
-  ctx.lineTo(x + w, y + h - rad);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
-  ctx.lineTo(x + rad, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
-  ctx.lineTo(x, y + rad);
-  ctx.quadraticCurveTo(x, y, x + rad, y);
-  ctx.closePath();
-}
-
-function r3dAverageTemp(valsA, valsB){
-  var nums = [];
-  var addVals = function(vals){
-    if(!Array.isArray(vals)) return;
-    for(var i=0; i<vals.length; i++){
-      var n = Number(vals[i]);
-      if(isFinite(n)) nums.push(n);
-    }
-  };
-  addVals(valsA);
-  addVals(valsB);
-  if(!nums.length) return null;
-  var sum = 0;
-  for(var j=0; j<nums.length; j++) sum += nums[j];
-  return Math.round(sum / nums.length);
-}
-
-function r3dSetInfo(id, text, cls){
-  var el = document.getElementById(id);
-  if(!el) return;
-  el.textContent = String(text);
-  el.classList.remove("hot", "warn", "ok");
-  if(cls) el.classList.add(cls);
-}
-
-function configureWallOverlayTexture(tex, renderer){
-  if(!tex || typeof THREE === "undefined") return;
-  tex.wrapS = THREE.ClampToEdgeWrapping;
-  tex.wrapT = THREE.ClampToEdgeWrapping;
-  tex.minFilter = THREE.LinearMipmapLinearFilter;
-  tex.magFilter = THREE.LinearFilter;
-  tex.generateMipmaps = true;
-  tex.premultiplyAlpha = false;
-  if(typeof tex.colorSpace !== "undefined" && THREE.SRGBColorSpace){
-    tex.colorSpace = THREE.SRGBColorSpace;
-  }else if(typeof tex.encoding !== "undefined" && THREE.sRGBEncoding){
-    tex.encoding = THREE.sRGBEncoding;
-  }
-  if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
-    try{
-      tex.anisotropy = Math.max(1, Math.min(16, renderer.capabilities.getMaxAnisotropy() || 1));
-    }catch(e){}
-  }
-}
-
-function r3dCreateWallOverlay(dims, wallKey, side, renderer){
-  var canvas = document.createElement("canvas");
-  canvas.width = 1200;
-  canvas.height = 960;
-  var tex = new THREE.CanvasTexture(canvas);
-  configureWallOverlayTexture(tex, renderer || reformer3DState.renderer || null);
-  var matOuter = new THREE.MeshBasicMaterial({
-    map:tex,
-    transparent:true,
-    side:THREE.FrontSide,
-    depthWrite:true,
-    alphaTest:0.06,
-    polygonOffset:true,
-    polygonOffsetFactor:-1,
-    polygonOffsetUnits:-2
-  });
-  var matInner = new THREE.MeshBasicMaterial({
-    map:tex,
-    transparent:true,
-    side:THREE.DoubleSide,
-    depthWrite:false,
-    alphaTest:0.06,
-    polygonOffset:true,
-    polygonOffsetFactor:-1,
-    polygonOffsetUnits:-1
-  });
-  var outerMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(dims.sZ - 0.44, dims.sY - 0.28),
-    matOuter
-  );
-  var innerMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(dims.sZ - 0.44, dims.sY - 0.28),
-    matInner
-  );
-  outerMesh.position.set(side === "left" ? (-dims.sX/2 - 0.006) : (dims.sX/2 + 0.006), dims.sY/2, 0);
-  outerMesh.rotation.y = (side === "left") ? (-Math.PI / 2) : (Math.PI / 2);
-  outerMesh.renderOrder = 8;
-  innerMesh.position.set(side === "left" ? (-dims.sX/2 + dims.wallT + 0.018) : (dims.sX/2 - dims.wallT - 0.018), dims.sY/2, 0);
-  innerMesh.rotation.y = (side === "left") ? (Math.PI / 2) : (-Math.PI / 2);
-  innerMesh.renderOrder = 6;
-  return {
-    wallKey:wallKey,
-    side:side,
-    canvas:canvas,
-    texture:tex,
-    outerMaterial:matOuter,
-    innerMaterial:matInner,
-    outerMesh:outerMesh,
-    innerMesh:innerMesh
-  };
-}
-
-function r3dGetWallCleaningMap(wallKey){
-  var view = {};
-  try{
-    view = (typeof getMergedCleaningLog === "function") ? (getMergedCleaningLog() || {}) : ((typeof loadCleaningLog === "function" ? loadCleaningLog() : {}) || {});
-  }catch(e){
-    view = {};
-  }
-  return view[wallKey] || {};
-}
-
-function r3dGetBurnerPalette(state){
-  return {
-    O:{
-      flame:"#22c55e",
-      core:"#86efac",
-      inner:"#ecfdf5",
-      stem:"#15803d",
-      glow:"rgba(34,197,94,0.52)"
-    },
-    N:{
-      flame:"#f59e0b",
-      core:"#fcd34d",
-      inner:"#fef3c7",
-      stem:"#b45309",
-      glow:"rgba(245,158,11,0.54)"
-    },
-    B:{
-      flame:"#3b82f6",
-      core:"#93c5fd",
-      inner:"#dbeafe",
-      stem:"#1d4ed8",
-      glow:"rgba(59,130,246,0.54)"
-    },
-    C:{
-      flame:"#4f6b8f",
-      core:"#9fb7d7",
-      inner:"#dbeafe",
-      stem:"#31455f",
-      glow:"rgba(148,163,184,0.24)"
-    }
-  }[state] || {
-    flame:"#4f6b8f",
-    core:"#9fb7d7",
-    inner:"#dbeafe",
-    stem:"#31455f",
-    glow:"rgba(148,163,184,0.24)"
-  };
-}
-
-function r3dDrawTipFlameGlow(ctx, x, y, state, animPhase, iconScale){
-  var s = String(state || "C").toUpperCase();
-  if(s !== "O" && s !== "N" && s !== "B") return;
-  var palette = r3dGetBurnerPalette(s);
-  var phase = Number(animPhase) || 0;
-  var scale = Math.max(1, Number(iconScale) || 2.6);
-  var scaleX = scale * 0.88;
-  var scaleY = scale * 1.52;
-  var waveA = 0.5 + 0.5 * Math.sin(phase * 1.8);
-  var waveB = 0.5 + 0.5 * Math.sin(phase * 2.45 + 1.3);
-  var waveC = 0.5 + 0.5 * Math.sin(phase * 2.05 + 2.5);
-  var waveD = 0.5 + 0.5 * Math.sin(phase * 3.15 + 0.4);
-
-  ctx.save();
-  ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = 0.18 + (waveA * 0.16);
-  ctx.fillStyle = palette.glow;
-  ctx.beginPath();
-  ctx.ellipse(x, y - (18 * scaleY), (13 * scaleX) + (waveB * 3.6), (16.5 * scaleY) + (waveA * 5.6), 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 0.14 + (waveC * 0.11);
-  ctx.beginPath();
-  ctx.ellipse(x - (6 * scaleX), y - (16 * scaleY), (5.8 * scaleX) + (waveA * 1.5), (8.2 * scaleY) + (waveB * 2.1), -0.22, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(x + (6 * scaleX), y - (16 * scaleY), (5.8 * scaleX) + (waveB * 1.5), (8.2 * scaleY) + (waveA * 2.1), 0.22, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 0.12 + (waveD * 0.1);
-  ctx.fillStyle = palette.inner;
-  ctx.beginPath();
-  ctx.ellipse(x, y - (22 * scaleY) - (waveA * 2.6), (2.7 * scaleX) + (waveC * 0.7), (4.9 * scaleY) + (waveB * 1.3), 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-function r3dDrawBurnerGlyph(ctx, x, y, state, cleaned, animPhase, iconScale){
-  var s = String(state || "C").toUpperCase();
-  if(s !== "O" && s !== "N" && s !== "B") s = "C";
-  var palette = r3dGetBurnerPalette(s);
-  var scale = Math.max(1, Number(iconScale) || 2.6);
-  var scaleX = scale * 0.9;
-  var scaleY = scale * 1.55;
-  var phase = Number(animPhase) || 0;
-  var flicker = 0.94 + (Math.sin(phase * 1.95) * 0.11) + (Math.sin(phase * 2.8 + 0.9) * 0.07);
-  var sidePulse = 0.94 + (Math.sin(phase * 2.35 + 0.4) * 0.12);
-  var lift = (s === "C") ? 0 : ((2.2 + (Math.sin(phase * 1.75) * 1.35)) * scaleY);
-  var stemW = 6.6 * scaleX;
-  var stemH = 8.6 * scale;
-  var stemX = x - (stemW / 2);
-  var stemY = y + (0.4 * scale);
-  var baseW = 18 * scaleX;
-  var baseH = 4.8 * scale;
-  var baseX = x - (baseW / 2);
-  var baseY = y + (5.4 * scale);
-
-  ctx.fillStyle = "rgba(9,13,24,0.92)";
-  r3dRoundRectPath(ctx, baseX, baseY, baseW, baseH, 3 * scale);
-  ctx.fill();
-
-  if(s === "C"){
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = 0.16;
-    ctx.fillStyle = palette.glow;
-    ctx.beginPath();
-    ctx.ellipse(x, y + (2.2 * scale), 9.2 * scaleX, 4.2 * scale, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    ctx.fillStyle = palette.flame;
-    r3dRoundRectPath(ctx, x - (8.5 * scaleX), y - (1.4 * scale), 17 * scaleX, 5.4 * scale, 3 * scale);
-    ctx.fill();
-    ctx.lineWidth = Math.max(1.1, 0.75 * scale);
-    ctx.strokeStyle = "rgba(191,219,254,0.42)";
-    ctx.stroke();
-    ctx.fillStyle = palette.core;
-    r3dRoundRectPath(ctx, stemX, y + (0.4 * scale), stemW, 9.4 * scale, 3 * scale);
-    ctx.fill();
-    ctx.lineWidth = Math.max(1, 0.65 * scale);
-    ctx.strokeStyle = "rgba(226,232,240,0.28)";
-    ctx.stroke();
-  }else{
-    r3dDrawTipFlameGlow(ctx, x, y, s, phase, scale);
-    ctx.fillStyle = palette.stem;
-    r3dRoundRectPath(ctx, stemX, stemY, stemW, stemH, 3.2 * scale);
-    ctx.fill();
-
-    ctx.save();
-    ctx.shadowBlur = 11 * scale;
-    ctx.shadowColor = palette.glow;
-    ctx.beginPath();
-    ctx.moveTo(x, y - (12.8 * scaleY) - lift);
-    ctx.bezierCurveTo(
-      x + (11 * scaleX) * flicker,
-      y - (6.9 * scaleY) - (lift * 0.52),
-      x + (8.2 * scaleX) * sidePulse,
-      y + (0.9 * scale),
-      x,
-      y + (2.4 * scale)
-    );
-    ctx.bezierCurveTo(
-      x - (8.2 * scaleX) * sidePulse,
-      y + (0.9 * scale),
-      x - (11 * scaleX) * flicker,
-      y - (6.9 * scaleY) - (lift * 0.52),
-      x,
-      y - (12.8 * scaleY) - lift
-    );
-    ctx.closePath();
-    ctx.fillStyle = palette.flame;
-    ctx.fill();
-    ctx.restore();
-
-    ctx.beginPath();
-    ctx.moveTo(x, y - (8.9 * scaleY) - (lift * 0.42));
-    ctx.bezierCurveTo(
-      x + (5.8 * scaleX),
-      y - (4.8 * scaleY) - (lift * 0.22),
-      x + (4.2 * scaleX),
-      y + (0.3 * scale),
-      x,
-      y + (1.3 * scale)
-    );
-    ctx.bezierCurveTo(
-      x - (4.2 * scaleX),
-      y + (0.3 * scale),
-      x - (5.8 * scaleX),
-      y - (4.8 * scaleY) - (lift * 0.22),
-      x,
-      y - (8.9 * scaleY) - (lift * 0.42)
-    );
-    ctx.closePath();
-    ctx.fillStyle = palette.core;
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(x, y - (4.4 * scaleY) - (lift * 0.15));
-    ctx.bezierCurveTo(
-      x + (2.6 * scaleX),
-      y - (2.6 * scaleY) - (lift * 0.10),
-      x + (2.1 * scaleX),
-      y - (0.1 * scale),
-      x,
-      y + (0.4 * scale)
-    );
-    ctx.bezierCurveTo(
-      x - (2.1 * scaleX),
-      y - (0.1 * scale),
-      x - (2.6 * scaleX),
-      y - (2.6 * scaleY) - (lift * 0.10),
-      x,
-      y - (4.4 * scaleY) - (lift * 0.15)
-    );
-    ctx.closePath();
-    ctx.fillStyle = palette.inner;
-    ctx.fill();
-
-  }
-
-  var dotScale = Math.min(1.4, 0.92 + (scale * 0.22));
-  var dotX = x + (13 * scaleX);
-  var dotY = y - (2 * scale);
-  var dotR = 3.8 * dotScale;
-  ctx.beginPath();
-  ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
-  ctx.fillStyle = cleaned ? "#4ade80" : "rgba(148,163,184,0.68)";
-  ctx.fill();
-  ctx.lineWidth = 1.4 * dotScale;
-  ctx.strokeStyle = cleaned ? "rgba(187,247,208,0.92)" : "rgba(226,232,240,0.45)";
-  ctx.stroke();
-}
-
-function r3dDrawPeepBar(ctx, label, vals, left, centerY, width, uiScale){
-  var k = Math.max(1, Number(uiScale) || 1);
-  var barHeight = Math.round(46 * k);
-  var barTop = centerY - (barHeight / 2);
-  var gridLeft = left;
-  var slotW = width / 15;
-  var labelLeft = Math.round(20 * k);
-  var labelW = Math.round(106 * k);
-  var labelH = Math.round(52 * k);
-  var labelTop = centerY - Math.round(labelH / 2);
-  var labelCenterX = labelLeft + Math.round(labelW / 2);
-  var positions = [];
-  for(var i=0; i<15; i++){
-    var n = Number(Array.isArray(vals) ? vals[i] : "");
-    if(isFinite(n)){
-      positions.push({
-        idx:i,
-        val:n,
-        x:gridLeft + slotW * (i + 0.5)
-      });
-    }
-  }
-
-  ctx.fillStyle = "rgba(10,14,24,0.96)";
-  r3dRoundRectPath(ctx, labelLeft, labelTop, labelW, labelH, Math.round(12 * k));
-  ctx.fill();
-  ctx.strokeStyle = "rgba(188,198,214,0.24)";
-  ctx.lineWidth = 1.2 * k;
-  ctx.stroke();
-  ctx.fillStyle = "#f8fafc";
-  ctx.font = "700 " + Math.round(26 * k) + "px Times New Roman, serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, labelCenterX, centerY);
-
-  ctx.save();
-  r3dRoundRectPath(ctx, gridLeft, barTop, width, barHeight, Math.round(12 * k));
-  ctx.clip();
-
-  if(positions.length){
-    var grad = ctx.createLinearGradient(gridLeft, 0, gridLeft + width, 0);
-    for(var p=0; p<positions.length; p++){
-      var stop = (positions[p].idx + 0.5) / 15;
-      grad.addColorStop(Math.max(0, Math.min(1, stop)), tempToColor(positions[p].val, 860, 1000));
-    }
-    grad.addColorStop(0, tempToColor(positions[0].val, 860, 1000));
-    grad.addColorStop(1, tempToColor(positions[positions.length - 1].val, 860, 1000));
-    ctx.fillStyle = grad;
-  }else{
-    ctx.fillStyle = "rgba(31,41,55,0.88)";
-  }
-  ctx.fillRect(gridLeft, barTop, width, barHeight);
-  ctx.restore();
-
-  ctx.lineWidth = 1.2 * k;
-  ctx.strokeStyle = "rgba(255,255,255,0.30)";
-  r3dRoundRectPath(ctx, gridLeft, barTop, width, barHeight, Math.round(12 * k));
-  ctx.stroke();
-
-  for(var m=0; m<15; m++){
-    var mx = gridLeft + slotW * (m + 0.5);
-    ctx.strokeStyle = "rgba(255,255,255,0.50)";
-    ctx.lineWidth = 1.4 * k;
-    ctx.beginPath();
-    ctx.moveTo(mx, barTop - (3 * k));
-    ctx.lineTo(mx, barTop + barHeight + (3 * k));
-    ctx.stroke();
-    if(positions.length){
-      var tempVal = Number(Array.isArray(vals) ? vals[m] : "");
-      if(isFinite(tempVal)){
-        var markerR = Math.max(5.8, 6.2 * k);
-        ctx.beginPath();
-        ctx.arc(mx, centerY, markerR, 0, Math.PI * 2);
-        ctx.fillStyle = tempToColor(tempVal, 860, 1000);
-        ctx.fill();
-        ctx.lineWidth = 2 * k;
-        ctx.strokeStyle = "rgba(255,255,255,0.95)";
-        ctx.stroke();
-
-        var pillW = Math.round(70 * k);
-        var pillH = Math.round(28 * k);
-        var pillTop = barTop - Math.round(38 * k);
-        ctx.fillStyle = "rgba(52,44,34,0.92)";
-        r3dRoundRectPath(ctx, mx - pillW/2, pillTop, pillW, pillH, Math.max(7, Math.round(7 * k)));
-        ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,0.18)";
-        ctx.lineWidth = 1 * k;
-        ctx.stroke();
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "700 " + Math.round(20 * k) + "px Times New Roman, serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(tempVal + "°", mx, pillTop + (pillH / 2));
-      }
-    }
-  }
-}
-
-function r3dPaintWallOverlay(overlay, wallKey, snapshot, animPhaseOverride){
-  if(!overlay || !overlay.canvas || !overlay.texture) return;
-  var ctx = overlay.canvas.getContext("2d");
-  var w = overlay.canvas.width;
-  var h = overlay.canvas.height;
-  ctx.clearRect(0, 0, w, h);
-  if(!snapshot || !snapshot.hmData){
-    overlay.texture.needsUpdate = true;
-    return;
-  }
-
-  var rows = (snapshot.hmData && snapshot.hmData[wallKey] && Array.isArray(snapshot.hmData[wallKey])) ? snapshot.hmData[wallKey] : [];
-  var topVals = (wallKey === "A" || wallKey === "B") ? (snapshot.abTop || []) : (snapshot.cdTop || []);
-  var botVals = (wallKey === "A" || wallKey === "B") ? (snapshot.abBot || []) : (snapshot.cdBot || []);
-  var wallCleaning = r3dGetWallCleaningMap(wallKey);
-
-  var ui = 1;
-  var panelInset = 12;
-  var padX = 36;
-  var titleY = 48;
-  var gridLeft = 160;
-  var gridRight = w - 38;
-  var gridW = gridRight - gridLeft;
-  var slotW = gridW / 15;
-  var burnerNumY = 120;
-  var rowOrder = [6, 5, 4, "PH_TOP", 3, 2, "PH_BOT", 1];
-  var overlayStartY = 204;
-  var overlayEndY = 864;
-  var overlayStepY = (overlayEndY - overlayStartY) / Math.max(1, rowOrder.length - 1);
-  var itemCenters = rowOrder.map(function(_, idx){ return Math.round(overlayStartY + overlayStepY * idx); });
-  var iconScale = 2.52;
-  var overlayAnimPhase = (typeof animPhaseOverride === "number")
-    ? animPhaseOverride
-    : (reformer3DState.overlayAnimPhase || 0);
-
-  var outerGrad = ctx.createLinearGradient(0, 0, w, h);
-  outerGrad.addColorStop(0, "rgba(14,12,18,0.99)");
-  outerGrad.addColorStop(0.45, "rgba(34,25,25,0.99)");
-  outerGrad.addColorStop(1, "rgba(12,11,17,0.99)");
-  ctx.fillStyle = outerGrad;
-  r3dRoundRectPath(ctx, panelInset, panelInset, w - (panelInset * 2), h - (panelInset * 2), 30);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = "rgba(185,142,106,0.34)";
-  ctx.stroke();
-
-  var headGrad = ctx.createLinearGradient(0, 0, w, 0);
-  headGrad.addColorStop(0, "rgba(6,8,16,0.985)");
-  headGrad.addColorStop(0.55, "rgba(12,13,22,0.99)");
-  headGrad.addColorStop(1, "rgba(8,9,16,0.985)");
-  var separatorY = 92;
-  var headerTop = 20;
-  var headerLeft = 24;
-  var headerRight = w - 24;
-  var headerHeight = separatorY - headerTop;
-  ctx.fillStyle = headGrad;
-  r3dRoundRectPath(ctx, headerLeft, headerTop, headerRight - headerLeft, headerHeight, 22);
-  ctx.fill();
-
-  ctx.strokeStyle = "rgba(243,112,34,0.82)";
-  ctx.lineWidth = 3.5;
-  ctx.beginPath();
-  ctx.moveTo(28, separatorY);
-  ctx.lineTo(w - 28, separatorY);
-  ctx.stroke();
-
-  ctx.fillStyle = "#ffffff";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.font = "700 42px Times New Roman, serif";
-  ctx.fillText("WALL " + wallKey, padX, titleY + 8);
-  ctx.font = "700 22px Times New Roman, serif";
-  ctx.textAlign = "right";
-  ctx.fillStyle = "rgba(255,255,255,0.98)";
-  ctx.fillText("6 rows x 15 burners", w - padX, titleY + 6);
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "700 26px Times New Roman, serif";
-  for(var bn=1; bn<=15; bn++){
-    var bx = gridLeft + slotW * (bn - 0.5);
-    var bW = 72;
-    var bH = 44;
-    ctx.fillStyle = "rgba(8,12,22,0.96)";
-    r3dRoundRectPath(ctx, bx - (bW / 2), burnerNumY - (bH / 2), bW, bH, 10);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(140,160,190,0.34)";
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText("B" + bn, bx, burnerNumY + 1);
-  }
-
-  for(var ii=0; ii<rowOrder.length; ii++){
-    var item = rowOrder[ii];
-    var centerY = itemCenters[ii];
-    var lineY = centerY + ((typeof item === "string") ? 28 : 42);
-    ctx.strokeStyle = "rgba(120,127,160,0.18)";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(28, lineY);
-    ctx.lineTo(w - 28, lineY);
-    ctx.stroke();
-
-    if(item === "PH_TOP"){
-      r3dDrawPeepBar(ctx, "PH TST", topVals, gridLeft, centerY, gridW, ui);
-      continue;
-    }
-    if(item === "PH_BOT"){
-      r3dDrawPeepBar(ctx, "PH TST", botVals, gridLeft, centerY, gridW, ui);
-      continue;
-    }
-
-    var rowW = 104;
-    var rowH = 54;
-    ctx.fillStyle = "rgba(8,12,22,0.96)";
-    r3dRoundRectPath(ctx, 20, centerY - Math.round(rowH / 2), rowW, rowH, 14);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(140,160,190,0.30)";
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "700 24px Times New Roman, serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("ROW " + item, 20 + Math.round(rowW / 2), centerY);
-
-    var rowData = Array.isArray(rows[item - 1]) ? rows[item - 1] : [];
-    for(var ci=0; ci<15; ci++){
-      var state = String(rowData[ci] || "C").toUpperCase();
-      var burnerX = gridLeft + slotW * (ci + 0.5);
-      var cleaned = !!String(wallCleaning["R" + item + "B" + (ci + 1)] || "").trim();
-      r3dDrawBurnerGlyph(
-        ctx,
-        burnerX,
-        centerY + 10,
-        state,
-        cleaned,
-        overlayAnimPhase + (ii * 0.55) + (ci * 0.28),
-        iconScale
-      );
-    }
-  }
-
-  overlay.texture.needsUpdate = true;
-}
-
-function r3dRefreshWallOverlays(snapshot){
-  if(!snapshot || !reformer3DState.wallOverlays) return;
-  ["A","B","C","D"].forEach(function(wallKey){
-    r3dPaintWallOverlay(reformer3DState.wallOverlays[wallKey], wallKey, snapshot);
-  });
-}
-
-function r3dSyncFromHeatMapSnapshot(snapshot){
-  reformer3DState.latestSnapshot = snapshot || null;
-  if(!snapshot || !snapshot.hmData){
-    r3dSetInfo("r3d-live-ab-temp", "-- °C");
-    r3dSetInfo("r3d-live-cd-temp", "-- °C");
-    r3dSetInfo("r3d-live-shift", "Latest");
-    r3dSetInfo("r3d-live-dt", "--");
-    r3dSetInfo("r3d-live-flame", "Waiting for data");
-    reformer3DState.lastOverlayPaintAt = 0;
-    return;
-  }
-
-  var abAvg = r3dAverageTemp(snapshot.abBot || [], snapshot.abTop || []);
-  var cdAvg = r3dAverageTemp(snapshot.cdBot || [], snapshot.cdTop || []);
-  var counts = hmCountStatesForWalls(snapshot.hmData, ["A","B","C","D"]);
-  var activeBurners = counts.O + counts.N + counts.B;
-  var shiftText = (snapshot.selectedShift && snapshot.selectedShift !== "All") ? snapshot.selectedShift : "All / Latest";
-  var flameText = activeBurners > 0 ? (activeBurners + " active burners") : "No active burners";
-
-  r3dSetInfo("r3d-live-ab-temp", abAvg !== null ? (abAvg + " °C") : "-- °C", abAvg === null ? "" : (abAvg > 970 ? "hot" : (abAvg < 910 ? "warn" : "ok")));
-  r3dSetInfo("r3d-live-cd-temp", cdAvg !== null ? (cdAvg + " °C") : "-- °C", cdAvg === null ? "" : (cdAvg > 970 ? "hot" : (cdAvg < 910 ? "warn" : "ok")));
-  r3dSetInfo("r3d-live-shift", shiftText, "warn");
-  r3dSetInfo("r3d-live-dt", snapshot.entryDt || "Latest", "ok");
-  r3dSetInfo("r3d-live-flame", flameText, activeBurners > 0 ? "ok" : "warn");
-
-  if(!reformer3DState.initialized || !reformer3DState.wallOverlays) return;
-  reformer3DState.lastOverlayPaintAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
-  r3dRefreshWallOverlays(snapshot);
-}
-
-function r3dBuildChamber(xCenter, dims, mats, chamberKey){
-  var g = new THREE.Group();
-  g.position.set(xCenter, 0, 0);
-
-  var inner = new THREE.Mesh(
-    new THREE.BoxGeometry(dims.sX-dims.wallT*2-0.02, dims.sY-dims.wallT*2-0.02, dims.sZ-dims.wallT*2-0.02),
-    mats.blackMat
-  );
-  inner.position.set(0, dims.sY/2, 0);
-  g.add(inner);
-
-  var pL = new THREE.PointLight(0xFFAA66, 0.58, 7);
-  pL.position.set(0, dims.sY/2, 0);
-  g.add(pL);
-  var pL2 = new THREE.PointLight(0xBFD7FF, 0.24, 7);
-  pL2.position.set(0, dims.sY * 0.72, 0);
-  g.add(pL2);
-
-  var lw = new THREE.Mesh(new THREE.BoxGeometry(dims.wallT, dims.sY, dims.sZ), mats.rustMat);
-  lw.position.set(-dims.sX/2+dims.wallT/2, dims.sY/2, 0);
-  lw.castShadow = true;
-  g.add(lw);
-
-  var rw = new THREE.Mesh(new THREE.BoxGeometry(dims.wallT, dims.sY, dims.sZ), mats.rustMat);
-  rw.position.set(dims.sX/2-dims.wallT/2, dims.sY/2, 0);
-  rw.castShadow = true;
-  g.add(rw);
-
-  var leftWallKey = chamberKey === "A" ? "A" : "C";
-  var rightWallKey = chamberKey === "A" ? "B" : "D";
-  var leftOverlay = r3dCreateWallOverlay(dims, leftWallKey, "left", reformer3DState.renderer || null);
-  var rightOverlay = r3dCreateWallOverlay(dims, rightWallKey, "right", reformer3DState.renderer || null);
-  reformer3DState.wallOverlays[leftWallKey] = leftOverlay;
-  reformer3DState.wallOverlays[rightWallKey] = rightOverlay;
-  g.add(leftOverlay.outerMesh);
-  g.add(leftOverlay.innerMesh);
-  g.add(rightOverlay.outerMesh);
-  g.add(rightOverlay.innerMesh);
-
-  var tw = new THREE.Mesh(new THREE.BoxGeometry(dims.sX, dims.wallT, dims.sZ), mats.rustMat);
-  tw.position.set(0, dims.sY-dims.wallT/2, 0);
-  g.add(tw);
-
-  var bw = new THREE.Mesh(new THREE.BoxGeometry(dims.sX, dims.wallT, dims.sZ), mats.rustMat);
-  bw.position.set(0, dims.wallT/2, 0);
-  g.add(bw);
-
-  var frontShape = r3dMakeFace(dims.sX, dims.sY, dims.hs, dims.hy1, dims.hy2);
-  var frontGeo = new THREE.ExtrudeGeometry(frontShape, {depth:dims.wallT, bevelEnabled:false});
-  var frontW = new THREE.Mesh(frontGeo, mats.rustMat);
-  frontW.position.set(-dims.sX/2, 0, dims.sZ/2-dims.wallT);
-  frontW.castShadow = true;
-  g.add(frontW);
-
-  var backShape = r3dMakeFace(dims.sX, dims.sY, dims.hs, dims.hy1, dims.hy2);
-  var backGeo = new THREE.ExtrudeGeometry(backShape, {depth:dims.wallT, bevelEnabled:false});
-  var backW = new THREE.Mesh(backGeo, mats.rustMat);
-  backW.position.set(-dims.sX/2, 0, -dims.sZ/2);
-  backW.castShadow = true;
-  g.add(backW);
-
-  r3dAddFrame(g, 0, dims.hy1, dims.sZ/2+0.01, dims.hs);
-  r3dAddFrame(g, 0, dims.hy2, dims.sZ/2+0.01, dims.hs);
-  r3dAddFrame(g, 0, dims.hy1, -dims.sZ/2-0.01, dims.hs);
-  r3dAddFrame(g, 0, dims.hy2, -dims.sZ/2-0.01, dims.hs);
-
-  var wire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(dims.sX, dims.sY, dims.sZ)), mats.edgeMat);
-  wire.position.set(0, dims.sY/2, 0);
-  g.add(wire);
-
-  var vertTop = dims.sY + dims.hdrH + 0.1;
-  for(var i=0; i<dims.tubeCount; i++){
-    var tz = dims.tubeZStart + i * dims.tubeSpacing;
-    var vGeo = new THREE.CylinderGeometry(dims.tubeR, dims.tubeR, vertTop, 12);
-    var vt = new THREE.Mesh(vGeo, mats.tubeMat);
-    vt.position.set(0, vertTop/2, tz);
-    vt.castShadow = true;
-    g.add(vt);
-  }
-
-  return g;
-}
-
-function initReformer3DTab(){
-  if(reformer3DState.initialized || reformer3DState.initRequested) return;
-  reformer3DState.initRequested = true;
-
-  if(typeof THREE === "undefined"){
-    r3dSetStatus("3D library failed to load.");
-    reformer3DState.initRequested = false;
-    return;
-  }
-
-  var canvas = r3dCanvas();
-  if(!canvas || !canvas.parentElement){
-    reformer3DState.initRequested = false;
-    return;
-  }
-
-  var rect = canvas.parentElement.getBoundingClientRect();
-  if(rect.width < 40 || rect.height < 40){
-    reformer3DState.initRequested = false;
-    setTimeout(function(){
-      if(r3dIsActive()) initReformer3DTab();
-    }, 120);
-    return;
-  }
-
-  try{
-    var scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0B0F14);
-
-    var camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.1, 1000);
-    var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
-    renderer.setSize(rect.width, rect.height, false);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
-    renderer.shadowMap.enabled = false;
-
-    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-    var dl = new THREE.DirectionalLight(0xffffff, 0.9);
-    dl.position.set(6, 12, 10);
-    dl.castShadow = true;
-    scene.add(dl);
-    var fl = new THREE.DirectionalLight(0x8899AA, 0.3);
-    fl.position.set(-6, 4, -6);
-    scene.add(fl);
-    var wl = new THREE.PointLight(0xFFAA66, 0.45, 24);
-    wl.position.set(0, 6, 8);
-    scene.add(wl);
-
-    var pivotGroup = new THREE.Group();
-    scene.add(pivotGroup);
-
-    reformer3DState.scene = scene;
-    reformer3DState.camera = camera;
-    reformer3DState.renderer = renderer;
-    reformer3DState.pivotGroup = pivotGroup;
-
-    var dims = {
-      sX:1.8, sY:3.5, sZ:5.0, wallT:0.15, gap:3.5,
-      hs:0.5, hdrH:0.2, tubeCount:8, tubeR:0.06, commonTubeR:0.15
-    };
-    dims.hy1 = dims.sY * 0.33;
-    dims.hy2 = dims.sY * 0.68;
-    dims.tubeZStart = -(dims.sZ - 0.6) / 2;
-    dims.tubeSpacing = (dims.sZ - 0.6) / (dims.tubeCount - 1);
-    dims.commonTubeY = dims.sY + dims.hdrH + 0.35;
-    dims.chamberAx = -dims.gap/2 - dims.sX/2;
-    dims.chamberBx = dims.gap/2 + dims.sX/2;
-
-    var mats = {
-      rustMat:new THREE.MeshStandardMaterial({color:0x9A8578, metalness:0.65, roughness:0.45, side:THREE.DoubleSide}),
-      headerMat:new THREE.MeshStandardMaterial({color:0xB0A090, metalness:0.6, roughness:0.4}),
-      blackMat:new THREE.MeshStandardMaterial({
-        color:0x2a3440,
-        emissive:0x10151d,
-        metalness:0.08,
-        roughness:0.88,
-        transparent:true,
-        opacity:0.18,
-        depthWrite:false,
-        side:THREE.DoubleSide
-      }),
-      tubeMat:new THREE.MeshStandardMaterial({color:0x8899AA, metalness:0.75, roughness:0.3}),
-      commonTubeMat:new THREE.MeshStandardMaterial({color:0x7090A8, metalness:0.7, roughness:0.25}),
-      baseMat:new THREE.MeshStandardMaterial({color:0x334155, metalness:0.2, roughness:0.7}),
-      edgeMat:new THREE.LineBasicMaterial({color:0x6A6A6A, transparent:true, opacity:0.25})
-    };
-
-    reformer3DState.wallOverlays = {};
-    pivotGroup.add(r3dBuildChamber(dims.chamberAx, dims, mats, "A"));
-    pivotGroup.add(r3dBuildChamber(dims.chamberBx, dims, mats, "B"));
-
-    var commonTubeLen = dims.sZ + 0.4;
-    var ctGeo = new THREE.CylinderGeometry(dims.commonTubeR, dims.commonTubeR, commonTubeLen, 16);
-    var ctTube = new THREE.Mesh(ctGeo, mats.commonTubeMat);
-    ctTube.rotation.x = Math.PI / 2;
-    ctTube.position.set(0, dims.commonTubeY, 0);
-    ctTube.castShadow = true;
-    pivotGroup.add(ctTube);
-
-    var capGeo = new THREE.SphereGeometry(dims.commonTubeR, 12, 12);
-    var capF = new THREE.Mesh(capGeo, mats.commonTubeMat);
-    capF.position.set(0, dims.commonTubeY, commonTubeLen/2);
-    pivotGroup.add(capF);
-    var capB = new THREE.Mesh(capGeo, mats.commonTubeMat);
-    capB.position.set(0, dims.commonTubeY, -commonTubeLen/2);
-    pivotGroup.add(capB);
-
-    function addConnectors(chamberX){
-      for(var i=0; i<dims.tubeCount; i++){
-        var tz = dims.tubeZStart + i * dims.tubeSpacing;
-        var ax = chamberX, ay = dims.sY + dims.hdrH + 0.1, az = tz;
-        var bx = 0, by = dims.commonTubeY, bz = tz;
-        var dx = bx - ax, dy = by - ay, dz = bz - az;
-        var lenAB = Math.sqrt(dx*dx + dy*dy + dz*dz);
-        var connGeo = new THREE.CylinderGeometry(dims.tubeR, dims.tubeR, lenAB, 8);
-        var conn = new THREE.Mesh(connGeo, mats.tubeMat);
-        conn.position.set((ax+bx)/2, (ay+by)/2, (az+bz)/2);
-        var dir = new THREE.Vector3(dx,dy,dz).normalize();
-        var up = new THREE.Vector3(0,1,0);
-        var quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
-        conn.setRotationFromQuaternion(quat);
-        conn.castShadow = true;
-        pivotGroup.add(conn);
-      }
-    }
-
-    addConnectors(dims.chamberAx);
-    addConnectors(dims.chamberBx);
-
-    var hdrW = dims.gap + dims.sX * 2;
-    var hdrGeo = new THREE.BoxGeometry(hdrW, dims.hdrH, dims.sZ);
-    var hdr = new THREE.Mesh(hdrGeo, mats.headerMat);
-    hdr.position.set(0, dims.sY + dims.hdrH/2, 0);
-    hdr.castShadow = true;
-    pivotGroup.add(hdr);
-    var hdrEdge = new THREE.LineSegments(new THREE.EdgesGeometry(hdrGeo), mats.edgeMat);
-    hdrEdge.position.set(0, dims.sY + dims.hdrH/2, 0);
-    pivotGroup.add(hdrEdge);
-
-    var bGeo = new THREE.BoxGeometry(hdrW + 1.5, 0.12, dims.sZ + 1.5);
-    var base = new THREE.Mesh(bGeo, mats.baseMat);
-    base.position.set(0, -0.06, 0);
-    base.receiveShadow = true;
-    pivotGroup.add(base);
-    var bEdge = new THREE.LineSegments(new THREE.EdgesGeometry(bGeo), mats.edgeMat);
-    bEdge.position.set(0, -0.06, 0);
-    pivotGroup.add(bEdge);
-
-    var grid = new THREE.GridHelper(24, 48, 0x1A2030, 0x1A2030);
-    grid.position.set(0, -0.07, 0);
-    pivotGroup.add(grid);
-
-    r3dAddLabel("Chamber A", dims.chamberAx, dims.commonTubeY+0.7, 0);
-    r3dAddLabel("Chamber B", dims.chamberBx, dims.commonTubeY+0.7, 0);
-    r3dAddLabel("Common Header Tube", 0, dims.commonTubeY+0.5, dims.sZ/2+1.2);
-    r3dAddLabel("← Front", 0, -0.6, dims.sZ/2+1.2);
-    r3dAddLabel("Back →", 0, -0.6, -dims.sZ/2-1.2);
-
-    canvas.addEventListener("mousedown", function(e){
-      reformer3DState.isDragging = true;
-      reformer3DState.autoRotate = false;
-      reformer3DState.prevMouse = {x:e.clientX, y:e.clientY};
-    });
-    canvas.addEventListener("mousemove", function(e){
-      if(!reformer3DState.isDragging) return;
-      reformer3DState.rotation.y += (e.clientX - reformer3DState.prevMouse.x) * 0.005;
-      reformer3DState.rotation.x += (e.clientY - reformer3DState.prevMouse.y) * 0.005;
-      reformer3DState.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, reformer3DState.rotation.x));
-      reformer3DState.prevMouse = {x:e.clientX, y:e.clientY};
-    });
-    canvas.addEventListener("mouseup", function(){ reformer3DState.isDragging = false; });
-    canvas.addEventListener("mouseleave", function(){ reformer3DState.isDragging = false; });
-    canvas.addEventListener("dblclick", function(e){
-      e.preventDefault();
-      r3dToggleFullscreen();
-      setTimeout(r3dResize, 80);
-    });
-    canvas.addEventListener("wheel", function(e){
-      e.preventDefault();
-      reformer3DState.camDist += e.deltaY * 0.01;
-      reformer3DState.camDist = Math.max(4, Math.min(35, reformer3DState.camDist));
-    }, { passive:false });
-
-    var touchState = null;
-    canvas.addEventListener("touchstart", function(e){
-      if(e.touches.length === 1){
-        reformer3DState.isDragging = true;
-        reformer3DState.autoRotate = false;
-        touchState = {x:e.touches[0].clientX, y:e.touches[0].clientY};
-      }
-    }, { passive:true });
-    canvas.addEventListener("touchmove", function(e){
-      if(!reformer3DState.isDragging || !touchState) return;
-      e.preventDefault();
-      reformer3DState.rotation.y += (e.touches[0].clientX - touchState.x) * 0.005;
-      reformer3DState.rotation.x += (e.touches[0].clientY - touchState.y) * 0.005;
-      reformer3DState.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, reformer3DState.rotation.x));
-      touchState = {x:e.touches[0].clientX, y:e.touches[0].clientY};
-    }, { passive:false });
-    canvas.addEventListener("touchend", function(){
-      reformer3DState.isDragging = false;
-      touchState = null;
-    });
-
-    window.addEventListener("fullscreenchange", function(){ r3dScheduleNormalize(); });
-    window.addEventListener("webkitfullscreenchange", function(){ r3dScheduleNormalize(); });
-
-    reformer3DState.initialized = true;
-    reformer3DState.initRequested = false;
-    r3dBindResizeObserver();
-    r3dUpdateCamera();
-    r3dSetStatus("");
-    if(!window._hmRenderSnapshot && typeof renderHeatMap === "function"){
-      try{ renderHeatMap(); }catch(e){}
-    }
-    r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
-
-    (function animate(){
-      if(!reformer3DState.initialized || !reformer3DState.renderer || !reformer3DState.camera || !reformer3DState.pivotGroup) return;
-      requestAnimationFrame(animate);
-      var now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
-      if(reformer3DState.autoRotate) reformer3DState.rotation.y += 0.0012;
-      reformer3DState.pivotGroup.rotation.x = reformer3DState.rotation.x;
-      reformer3DState.pivotGroup.rotation.y = reformer3DState.rotation.y;
-      r3dUpdateCamera();
-      if(r3dIsActive() && reformer3DState.latestSnapshot){
-        var overlayTickMs = reformer3DState.autoRotate ? HM_UPLOADED_OVERLAY_AUTO_TICK_MS : HM_UPLOADED_OVERLAY_MANUAL_TICK_MS;
-        if((now - reformer3DState.lastOverlayPaintAt) >= overlayTickMs){
-          reformer3DState.overlayAnimPhase = (reformer3DState.overlayAnimPhase + HM_UPLOADED_OVERLAY_PHASE_STEP) % (Math.PI * 2);
-          r3dRefreshWallOverlays(reformer3DState.latestSnapshot);
-          reformer3DState.lastOverlayPaintAt = now;
-        }
-      }
-      if(r3dIsActive()){
-        reformer3DState.renderer.render(reformer3DState.scene, reformer3DState.camera);
-      }
-    })();
-
-    if(r3dIsActive()){
-      reformer3DState.renderer.render(reformer3DState.scene, reformer3DState.camera);
-    }
-  }catch(err){
-    reformer3DState.initRequested = false;
-    reformer3DState.initialized = false;
-    console.warn("initReformer3DTab failed:", err);
-    r3dSetStatus("Unable to load 3D reformer viewer.");
-  }
-}
-
-function r3dResetCam(){
-  reformer3DState.rotation = {x:-0.3, y:0.5};
-  reformer3DState.camDist = 16;
-  reformer3DState.autoRotate = true;
-}
-
-function r3dViewFront(){
-  reformer3DState.rotation = {x:-0.08, y:0};
-  reformer3DState.camDist = 14;
-  reformer3DState.autoRotate = false;
-}
-
-function r3dViewSide(){
-  reformer3DState.rotation = {x:-0.15, y:-Math.PI/2};
-  reformer3DState.camDist = 14;
-  reformer3DState.autoRotate = false;
-}
-
-function r3dViewTop(){
-  reformer3DState.rotation = {x:-Math.PI/2.2, y:0};
-  reformer3DState.camDist = 16;
-  reformer3DState.autoRotate = false;
-}
-
-function r3dToggleAutoRotate(){
-  reformer3DState.autoRotate = !reformer3DState.autoRotate;
-}
-
-function syncReformer3DTabPanels(){
-  if(typeof r3dSyncFromHeatMapSnapshot === "function"){
-    try{ r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot || null); }catch(e){}
-  }
 }
 
 function switchTab(tab){
@@ -19548,94 +17958,10 @@ function switchTab(tab){
       }
     }
   }
-  if(tab === 'reformer3d'){
-    setTimeout(function(){
-      initReformer3DTab();
-      if(!window._hmRenderSnapshot && typeof renderHeatMap === "function"){
-        try{ renderHeatMap(); }catch(e){}
-      }
-      if(typeof r3dSyncFromHeatMapSnapshot === "function"){
-        r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
-      }
-      syncReformer3DTabPanels();
-      r3dScheduleNormalize();
-    }, 40);
-  }
-  if(tab === 'newcuboids'){
-    setTimeout(bindNewCuboidsFrameLayout, 0);
-    setTimeout(layoutNewCuboidsFrame, 30);
-    setTimeout(layoutNewCuboidsFrame, 220);
-  }
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
   updateGlobalRefreshButtonLabel(tab);
   updateDesktopPrimaryInterfacePickerUi();
-}
-
-function getNewCuboidsFrame(){
-  return document.querySelector('#tab-newcuboids .new-cuboids-frame');
-}
-
-function getNewCuboidsFrameDocument(frame){
-  try{
-    if(!frame) return null;
-    return frame.contentDocument || (frame.contentWindow && frame.contentWindow.document) || null;
-  }catch(e){
-    return null;
-  }
-}
-
-function getNewCuboidsSectionHeight(){
-  var bar = document.querySelector(".bottom-tab-bar");
-  var barH = bar ? Math.ceil(bar.getBoundingClientRect().height || 0) : 82;
-  return Math.max(520, Math.floor(window.innerHeight - barH - 18));
-}
-
-function layoutNewCuboidsFrame(){
-  var frame = getNewCuboidsFrame();
-  var doc = getNewCuboidsFrameDocument(frame);
-  if(!frame || !doc || !doc.documentElement || !doc.body) return;
-  try{
-    doc.documentElement.style.overflow = "hidden";
-    doc.body.style.overflow = "hidden";
-  }catch(e){}
-  var sectionHeight = getNewCuboidsSectionHeight();
-  var sections = Array.prototype.slice.call(doc.querySelectorAll(".viewer-section"));
-  sections.forEach(function(section){
-    section.style.height = sectionHeight + "px";
-  });
-  var dividers = Array.prototype.slice.call(doc.querySelectorAll(".section-divider"));
-  var dividerHeight = 0;
-  dividers.forEach(function(divider){
-    dividerHeight += Math.ceil(divider.getBoundingClientRect().height || divider.offsetHeight || 0);
-  });
-  var totalHeight = (sections.length ? sections.length : 1) * sectionHeight + dividerHeight;
-  if(totalHeight > 0){
-    frame.style.height = totalHeight + "px";
-  }
-  try{
-    if(frame.contentWindow){
-      frame.contentWindow.dispatchEvent(new Event("resize"));
-    }
-  }catch(e){}
-}
-
-function bindNewCuboidsFrameLayout(){
-  var frame = getNewCuboidsFrame();
-  if(!frame || frame.dataset.layoutBound === "1") return;
-  frame.dataset.layoutBound = "1";
-
-  function onFrameLoad(){
-    layoutNewCuboidsFrame();
-    setTimeout(layoutNewCuboidsFrame, 80);
-    setTimeout(layoutNewCuboidsFrame, 300);
-  }
-
-  frame.addEventListener("load", onFrameLoad);
-
-  if(frame.contentDocument && frame.contentDocument.readyState === "complete"){
-    onFrameLoad();
-  }
 }
 
 function handlePendingViewerTabSwitch(){
@@ -19658,12 +17984,10 @@ function handlePendingViewerTabSwitch(){
 initTabsRowAutoHide();
 
 window.addEventListener("resize", function(){
-  layoutNewCuboidsFrame();
   clearTimeout(burnerMobileResizeTimer);
   burnerMobileResizeTimer = setTimeout(function(){
     applyBurnerMobileWallFilter();
     applyMobileHorizontalScrollFixes();
-    r3dResize();
     applyDesktopPrimaryInterfaceMode(true);
     if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
   }, 120);
@@ -19672,7 +17996,6 @@ window.addEventListener("orientationchange", function(){
   setTimeout(function(){
     applyBurnerMobileWallFilter();
     applyMobileHorizontalScrollFixes();
-    r3dResize();
     applyDesktopPrimaryInterfaceMode(true);
     if(typeof initMobileCuboidToggle === "function") initMobileCuboidToggle();
   }, 120);
@@ -23270,7 +21593,6 @@ function renderTempDataTable(){
   syncSavedEntryFilterUi({displayCount: display.length, totalCount: tempDataEntries.length});
   renderTempDataTableInto("td-saved-tbody", display, tempDataEntries.length);
   renderTempDataTableInto("hm-td-saved-tbody", display, tempDataEntries.length);
-  renderTempDataTableInto("r3d-td-saved-tbody", display, tempDataEntries.length);
   renderBurnerHistoryTable();
 }
 
@@ -23642,7 +21964,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-new-cuboids-live-wall-faces-1";
+      var swBuild = "20260317-remove-3d-cuboids-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
