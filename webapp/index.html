@@ -1557,365 +1557,10 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
   #hm-analysisContainer{grid-template-columns:1fr;}
   .analytics{margin:12px;padding:14px;}
 }
-.wall{
-  background:#1e293b;
-  padding:14px;
-  border-radius:8px;
-  border:1px solid #334155;
-  overflow:hidden;
-  contain:layout paint style;
-}
+.wall{background:#1e293b;padding:14px;border-radius:8px;border:1px solid #334155;overflow:hidden;}
 .wall-alarm{
   padding:6px 10px;margin-bottom:8px;
   font-weight:700;text-align:center;border-radius:4px;font-size:13px;
-}
-#tab-burner .burner-hover-readout{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  align-items:center;
-  gap:10px;
-  margin:0 0 10px;
-  padding:9px 14px;
-  min-height:54px;
-  border-radius:10px;
-  border:1px solid rgba(126,200,240,0.18);
-  background:linear-gradient(180deg,rgba(15,23,42,0.78),rgba(15,23,42,0.52));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
-  color:#a9bdd6;
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:0.2px;
-}
-#tab-burner .burner-hover-readout.is-active{
-  border-color:rgba(243,112,34,0.42);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 0 0 1px rgba(243,112,34,0.14),0 12px 28px rgba(2,6,23,0.22);
-}
-#tab-burner .burner-hover-copy{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:2px;
-}
-#tab-burner .burner-hover-meta{
-  display:flex;
-  align-items:center;
-  gap:0;
-  flex-wrap:wrap;
-  min-width:0;
-}
-#tab-burner .burner-hover-hint{
-  display:none;
-}
-#tab-burner .burner-hover-pos{
-  color:#f8fafc;
-  font-size:13px;
-  font-weight:700;
-  line-height:1.35;
-}
-#tab-burner .burner-hover-note{
-  min-height:0;
-  color:rgba(169,189,214,0.78);
-  font-size:11px;
-  font-weight:600;
-  line-height:1.35;
-}
-#tab-burner .burner-hover-state{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  align-self:center;
-  min-width:114px;
-  min-height:34px;
-  padding:5px 10px;
-  border-radius:999px;
-  border:1px solid rgba(148,163,184,0.34);
-  background:rgba(15,23,42,0.5);
-  color:#e2e8f0;
-  font-size:11px;
-  font-weight:700;
-  white-space:nowrap;
-}
-#tab-burner .burner-hover-state.is-hidden{
-  display:none;
-}
-#tab-burner .burner-hover-state.state-idle{
-  border-color:rgba(126,200,240,0.34);
-  background:rgba(15,23,42,0.42);
-  color:#dbeafe;
-}
-#tab-burner .burner-hover-state.state-B{
-  border-color:rgba(96,165,250,0.48);
-  background:rgba(37,99,235,0.18);
-  color:#dbeafe;
-}
-#tab-burner .burner-hover-state.state-N{
-  border-color:rgba(251,191,36,0.48);
-  background:rgba(217,119,6,0.2);
-  color:#ffedd5;
-}
-#tab-burner .burner-hover-state.state-O{
-  border-color:rgba(74,222,128,0.46);
-  background:rgba(22,163,74,0.2);
-  color:#dcfce7;
-}
-#tab-burner .burner-hover-state.state-C{
-  border-color:rgba(148,163,184,0.42);
-  background:rgba(51,65,85,0.46);
-  color:#e2e8f0;
-}
-#tab-burner .burner-grid-table .burner-row-head,
-#tab-burner .burner-grid-table .burner-col-head{
-  transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease,transform .15s ease;
-}
-#tab-burner .burner-grid-table .burner-hover-head{
-  color:#f8fafc;
-  border-color:rgba(243,112,34,0.48);
-  background:linear-gradient(180deg,#2d1c12 0%,#1f1721 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 0 0 1px rgba(243,112,34,0.16);
-}
-#tab-burner .burner-grid-table td.burner-hover-focus{
-  transform:none !important;
-  z-index:2;
-  border-color:rgba(243,112,34,0.78) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 0 0 2px rgba(243,112,34,0.26) !important;
-}
-#tab-burner .burner-grid-table td.burner-hover-focus::after{
-  bottom:calc(100% + 9px);
-}
-#tab-burner .burner-grid-table td.burner-hover-focus::before{
-  bottom:calc(100% + 4px);
-}
-#tab-burner .burner-grid-table td.burner-cell{
-  padding:0;
-  transition:border-color .12s ease,box-shadow .12s ease,background .12s ease;
-  will-change:auto;
-}
-#tab-burner .burner-grid-table td.B{
-  border-color:rgba(96,165,250,0.32);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.18),inset 0 -1px 0 rgba(15,23,42,0.16);
-}
-#tab-burner .burner-grid-table td.N{
-  border-color:rgba(251,191,36,0.34);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.18),inset 0 -1px 0 rgba(120,53,15,0.2);
-}
-#tab-burner .burner-grid-table td.O{
-  border-color:rgba(74,222,128,0.3);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.16),inset 0 -1px 0 rgba(20,83,45,0.18);
-}
-#tab-burner .burner-grid-table td.C{
-  border-color:rgba(100,116,139,0.42);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08);
-}
-#tab-burner .burner-grid-table td.B:hover,
-#tab-burner .burner-grid-table td.N:hover,
-#tab-burner .burner-grid-table td.O:hover,
-#tab-burner .burner-grid-table td.C:hover{
-  transform:none;
-  z-index:2;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.24),0 0 0 1px rgba(148,163,184,0.12);
-}
-#tab-burner .burner-grid-table td.burner-menu-open{
-  border-color:rgba(243,112,34,0.84) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 0 0 2px rgba(243,112,34,0.22) !important;
-}
-#tab-burner .burner-state-btn{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  width:100%;
-  min-height:28px;
-  padding:0 10px;
-  border:none;
-  background:transparent;
-  color:inherit;
-  font-family:'Rajdhani',sans-serif;
-  font-size:13px;
-  font-weight:700;
-  letter-spacing:0.2px;
-  cursor:pointer;
-}
-#tab-burner .burner-state-btn-code{
-  display:inline-flex;
-  align-items:center;
-  line-height:1;
-}
-#tab-burner .burner-state-btn-caret{
-  width:8px;
-  height:8px;
-  flex:0 0 auto;
-  border-right:2px solid currentColor;
-  border-bottom:2px solid currentColor;
-  transform:rotate(45deg) translateY(-1px);
-  opacity:0.8;
-}
-#tab-burner .burner-state-btn:focus-visible{
-  outline:none;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.24);
-}
-#tab-burner .burner-state-menu{
-  position:fixed;
-  top:0;
-  left:0;
-  display:none;
-  min-width:190px;
-  z-index:2200;
-}
-#tab-burner .burner-state-menu.is-open{
-  display:block;
-}
-#tab-burner .burner-state-menu-shell{
-  padding:8px;
-  border-radius:14px;
-  border:1px solid rgba(95,118,149,0.42);
-  background:linear-gradient(180deg,rgba(15,23,42,0.98),rgba(9,14,21,0.98));
-  box-shadow:0 22px 52px rgba(2,6,23,0.5),inset 0 1px 0 rgba(255,255,255,0.08);
-  backdrop-filter:blur(14px);
-}
-#tab-burner .burner-state-option{
-  display:grid;
-  grid-template-columns:28px minmax(0,1fr);
-  align-items:center;
-  gap:10px;
-  width:100%;
-  padding:10px 12px;
-  border:none;
-  border-radius:10px;
-  background:transparent;
-  color:#e2e8f0;
-  font-family:'Rajdhani',sans-serif;
-  font-size:13px;
-  font-weight:700;
-  text-align:left;
-  cursor:pointer;
-}
-#tab-burner .burner-state-option + .burner-state-option{
-  margin-top:4px;
-}
-#tab-burner .burner-state-option:hover,
-#tab-burner .burner-state-option:focus-visible{
-  outline:none;
-  background:rgba(148,163,184,0.14);
-}
-#tab-burner .burner-state-option-code{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:28px;
-  height:28px;
-  border-radius:8px;
-  border:1px solid rgba(148,163,184,0.28);
-  background:rgba(15,23,42,0.5);
-  color:#f8fafc;
-  font-size:14px;
-  font-weight:800;
-}
-#tab-burner .burner-state-option.state-B .burner-state-option-code{
-  border-color:rgba(96,165,250,0.42);
-  background:rgba(37,99,235,0.24);
-}
-#tab-burner .burner-state-option.state-N .burner-state-option-code{
-  border-color:rgba(251,191,36,0.42);
-  background:rgba(217,119,6,0.24);
-}
-#tab-burner .burner-state-option.state-O .burner-state-option-code{
-  border-color:rgba(74,222,128,0.4);
-  background:rgba(22,163,74,0.24);
-}
-#tab-burner .burner-state-option.state-C .burner-state-option-code{
-  border-color:rgba(148,163,184,0.36);
-  background:rgba(51,65,85,0.42);
-}
-#tab-burner .burner-state-option-label{
-  min-width:0;
-  line-height:1.15;
-}
-#tab-burner.burner-scroll-active .burner-grid-table td.burner-cell,
-#tab-burner.burner-scroll-active .burner-grid-table .burner-row-head,
-#tab-burner.burner-scroll-active .burner-grid-table .burner-col-head,
-#tab-burner.burner-scroll-active .burner-hover-readout,
-#tab-burner.burner-scroll-active .burner-state-btn{
-  transition:none !important;
-}
-#tab-burner.burner-scroll-active .burner-grid-table td.B,
-#tab-burner.burner-scroll-active .burner-grid-table td.N,
-#tab-burner.burner-scroll-active .burner-grid-table td.O,
-#tab-burner.burner-scroll-active .burner-grid-table td.C,
-#tab-burner.burner-scroll-active .burner-grid-table td.burner-hover-focus{
-  box-shadow:none !important;
-}
-#tab-burner .burner-grid-table td[data-tip]:hover::after,
-#tab-burner .burner-grid-table td[data-tip]:hover::before{
-  content:none !important;
-  display:none !important;
-}
-body.light-theme #tab-burner .burner-hover-readout{
-  border-color:rgba(186,198,216,0.7);
-  background:linear-gradient(180deg,#ffffff 0%,#eef4fb 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.98);
-  color:#4b5f78;
-}
-body.light-theme #tab-burner .burner-hover-readout.is-active{
-  border-color:rgba(243,112,34,0.42);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.98),0 0 0 1px rgba(243,112,34,0.12),0 12px 24px rgba(15,23,42,0.08);
-}
-body.light-theme #tab-burner .burner-hover-hint{
-  color:#2563eb;
-}
-body.light-theme #tab-burner .burner-hover-pos{
-  color:#172030;
-}
-body.light-theme #tab-burner .burner-hover-note{
-  color:#617389;
-}
-body.light-theme #tab-burner .burner-hover-state{
-  background:#ffffff;
-  color:#1e293b;
-}
-body.light-theme #tab-burner .burner-hover-state.state-idle{
-  border-color:rgba(96,165,250,0.36);
-  background:linear-gradient(180deg,#f8fbff 0%,#edf4ff 100%);
-  color:#1d4ed8;
-}
-body.light-theme #tab-burner .burner-grid-table .burner-hover-head{
-  color:#172030;
-  border-color:rgba(243,112,34,0.42);
-  background:linear-gradient(180deg,#fff1e8 0%,#fde7d8 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.98),0 0 0 1px rgba(243,112,34,0.12);
-}
-body.light-theme #tab-burner .burner-grid-table td.burner-hover-focus{
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.48),0 0 0 2px rgba(243,112,34,0.24) !important;
-}
-body.light-theme #tab-burner .burner-state-btn:focus-visible{
-  box-shadow:inset 0 0 0 1px rgba(30,64,175,0.22);
-}
-body.light-theme #tab-burner .burner-state-menu-shell{
-  border-color:rgba(186,198,216,0.82);
-  background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(241,245,249,0.98));
-  box-shadow:0 18px 40px rgba(15,23,42,0.14),inset 0 1px 0 rgba(255,255,255,0.98);
-}
-body.light-theme #tab-burner .burner-state-option{
-  color:#172030;
-}
-body.light-theme #tab-burner .burner-state-option:hover,
-body.light-theme #tab-burner .burner-state-option:focus-visible{
-  background:rgba(148,163,184,0.12);
-}
-body.light-theme #tab-burner .burner-state-option-code{
-  background:#ffffff;
-  color:#172030;
-}
-@media(max-width:980px){
-  #tab-burner .burner-hover-readout{
-    grid-template-columns:1fr;
-  }
-  #tab-burner .burner-hover-state{
-    justify-self:start;
-  }
-  #tab-burner .burner-state-menu{
-    min-width:176px;
-  }
 }
 .burner-mobile-wall-switch{
   display:none;
@@ -2069,9 +1714,12 @@ td[data-tip]:hover::before{
   pointer-events:none;
 }
 
-#tab-burner .burner-grid-table td select{
-  display:none;
+td select{
+  width:100%;height:100%;border:none;background:transparent;
+  font-weight:700;font-size:13px;cursor:pointer;outline:none;
+  border-radius:5px;
 }
+td select option{background:#1e293b;color:#e2e8f0;}
 
 /* ====================================================
    ANALYTICS
@@ -2157,18 +1805,9 @@ td[data-tip]:hover::before{
 @supports (content-visibility:auto){
   .td-entry-card,
   .hm-saved-entries-card,
-  #tab-burner .wall,
-  #tab-burner .analytics,
-  #tab-burner .analysis-block,
   .burner-history-card{
     content-visibility:auto;
     contain-intrinsic-size:820px;
-  }
-  #tab-burner .wall{
-    contain-intrinsic-size:540px;
-  }
-  #tab-burner .analysis-block{
-    contain-intrinsic-size:640px;
   }
 }
 .td-saved-filter-bar{
@@ -9718,14 +9357,6 @@ html, body, body *, body *::before, body *::after, svg text{
           transform:none !important;
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.26),0 0 0 1px rgba(148,163,184,0.12) !important;
         }
-        body #tab-burner .burner-grid-table td.burner-hover-focus.B,
-        body #tab-burner .burner-grid-table td.burner-hover-focus.N,
-        body #tab-burner .burner-grid-table td.burner-hover-focus.O,
-        body #tab-burner .burner-grid-table td.burner-hover-focus.C{
-          transform:none !important;
-          border-color:rgba(243,112,34,0.82) !important;
-          box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 0 0 2px rgba(243,112,34,0.24) !important;
-        }
         body #tab-burner .legend .li-B,
         body #tab-burner .ab-both{
           background:
@@ -14412,26 +14043,6 @@ html, body, body *, body *::before, body *::after, svg text{
       <button type="button" class="burner-mobile-wall-btn" data-wall="D" onclick="setBurnerMobileWall('D')">Wall D</button>
     </div>
     <div class="wall-container" id="walls"></div>
-    <div id="burner-state-menu" class="burner-state-menu" aria-hidden="true">
-      <div class="burner-state-menu-shell">
-        <button type="button" class="burner-state-option state-B" data-burner-state-option="B">
-          <span class="burner-state-option-code">B</span>
-          <span class="burner-state-option-label">Both (NG + FO)</span>
-        </button>
-        <button type="button" class="burner-state-option state-N" data-burner-state-option="N">
-          <span class="burner-state-option-code">N</span>
-          <span class="burner-state-option-label">NG Only</span>
-        </button>
-        <button type="button" class="burner-state-option state-O" data-burner-state-option="O">
-          <span class="burner-state-option-code">O</span>
-          <span class="burner-state-option-label">Off Gas</span>
-        </button>
-        <button type="button" class="burner-state-option state-C" data-burner-state-option="C">
-          <span class="burner-state-option-code">C</span>
-          <span class="burner-state-option-label">Cold</span>
-        </button>
-      </div>
-    </div>
     <div class="analytics">
       <h2 class="scada-panel-title">📊 Burner Distribution Analytics</h2>
       <div id="analysisContainer"></div>
@@ -15684,11 +15295,6 @@ function markBurnerUnsaved(){
   var badge = document.getElementById("burnerUnsavedBadge");
   if(badge) badge.style.display = "inline-flex";
 }
-function syncBurnerUnsavedBadge(){
-  var badge = document.getElementById("burnerUnsavedBadge");
-  if(!badge) return;
-  badge.style.display = Object.keys(burnerPending).length ? "inline-flex" : "none";
-}
 function clearBurnerUnsaved(){
   var badge = document.getElementById("burnerUnsavedBadge");
   if(badge) badge.style.display = "none";
@@ -15714,499 +15320,6 @@ var burnerMobileActiveWall = (function(){
   }catch(e){}
   return fallback;
 })();
-
-function getBurnerStateLabel(code){
-  return ({
-    B:"Both (NG+FO)",
-    N:"NG Only",
-    O:"Off Gas",
-    C:"Cold"
-  })[String(code || "").toUpperCase()] || "Unknown";
-}
-
-var BURNER_SELECT_OPTIONS_HTML = '<option value="B">B</option><option value="N">N</option><option value="O">O</option><option value="C">C</option>';
-var burnerAnalysisRefreshTimer = 0;
-var burnerScrollModeTimer = 0;
-var burnerScrollModeActive = false;
-var burnerPointerClientX = -1;
-var burnerPointerClientY = -1;
-var burnerAnalyticsViewportObserver = null;
-var burnerAnalyticsDirty = true;
-var burnerStateMenuContext = {
-  menu:null,
-  table:null,
-  cell:null,
-  button:null
-};
-
-function ensureBurnerHoverReadoutStructure(readout){
-  if(!readout) return null;
-  if(readout._burnerHoverRefs) return readout._burnerHoverRefs;
-
-  readout.textContent = "";
-
-  var copy = document.createElement("div");
-  copy.className = "burner-hover-copy";
-
-  var meta = document.createElement("div");
-  meta.className = "burner-hover-meta";
-
-  var pos = document.createElement("span");
-  pos.className = "burner-hover-pos";
-
-  var note = document.createElement("div");
-  note.className = "burner-hover-note";
-
-  var state = document.createElement("span");
-  state.className = "burner-hover-state is-hidden";
-
-  meta.appendChild(pos);
-  copy.appendChild(meta);
-  copy.appendChild(note);
-  readout.appendChild(copy);
-  readout.appendChild(state);
-
-  readout._burnerHoverRefs = {pos:pos, note:note, state:state};
-  return readout._burnerHoverRefs;
-}
-
-function getBurnerHoverStore(table){
-  if(!table) return null;
-  if(table._burnerHoverStore) return table._burnerHoverStore;
-  table._burnerHoverStore = {
-    activeCell:null,
-    activeRowHead:null,
-    activeColHead:null,
-    activeKey:"",
-    pendingCell:null,
-    frameId:0,
-    frameType:""
-  };
-  return table._burnerHoverStore;
-}
-
-function cancelBurnerHoverFrame(store){
-  if(!store || !store.frameId) return;
-  if(store.frameType === "timeout"){
-    clearTimeout(store.frameId);
-  }else if(typeof cancelAnimationFrame === "function"){
-    cancelAnimationFrame(store.frameId);
-  }else{
-    clearTimeout(store.frameId);
-  }
-  store.frameId = 0;
-  store.frameType = "";
-}
-
-function setBurnerHoverReadout(readout, wallName, rowNum, burnerNum, stateCode, isPending){
-  if(!readout) return;
-  var refs = ensureBurnerHoverReadoutStructure(readout);
-  if(!refs) return;
-  if(!wallName || !rowNum || !burnerNum || !stateCode){
-    readout.classList.remove("is-active");
-    refs.pos.textContent = "Hover a burner cell to inspect wall, row, burner, and live fuel mode.";
-    refs.note.textContent = "";
-    refs.state.className = "burner-hover-state is-hidden";
-    refs.state.textContent = "";
-    return;
-  }
-  var stateKey = String(stateCode || "").toUpperCase();
-  var label = getBurnerStateLabel(stateKey);
-  readout.classList.add("is-active");
-  refs.pos.textContent = "Wall " + wallName + " · R" + rowNum + " · B" + burnerNum;
-  refs.note.textContent = isPending ? "Unsaved change pending." : "";
-  refs.state.className = "burner-hover-state state-" + stateKey;
-  refs.state.textContent = label;
-}
-
-function flushBurnerAnalysisRefresh(){
-  if(!burnerAnalysisRefreshTimer) return;
-  clearTimeout(burnerAnalysisRefreshTimer);
-  burnerAnalysisRefreshTimer = 0;
-  generateAnalysis();
-}
-
-function scheduleBurnerAnalysisRefresh(delay){
-  var waitMs = (typeof delay === "number" && delay >= 0) ? delay : 90;
-  if(burnerAnalysisRefreshTimer) clearTimeout(burnerAnalysisRefreshTimer);
-  burnerAnalysisRefreshTimer = setTimeout(function(){
-    burnerAnalysisRefreshTimer = 0;
-    generateAnalysis();
-  }, waitMs);
-}
-
-function isBurnerTabVisible(){
-  var tab = document.getElementById("tab-burner");
-  return !!(tab && tab.classList.contains("tab-active"));
-}
-
-function noteBurnerPointerPosition(evt){
-  if(!evt) return;
-  if(typeof evt.clientX === "number") burnerPointerClientX = evt.clientX;
-  if(typeof evt.clientY === "number") burnerPointerClientY = evt.clientY;
-}
-
-function getBurnerPendingOriginalState(wallName, rowIndex, burnerIndex){
-  var key = rowIndex + "_" + burnerIndex;
-  var pendingWall = burnerPending[wallName];
-  if(pendingWall && pendingWall[key]) return String(pendingWall[key].prev || "C").toUpperCase();
-  return (data[wallName] && data[wallName][rowIndex] && data[wallName][rowIndex][burnerIndex])
-    ? String(data[wallName][rowIndex][burnerIndex]).toUpperCase()
-    : "C";
-}
-
-function syncBurnerCellButton(td, stateCode){
-  if(!td) return;
-  var key = String(stateCode || td.getAttribute("data-state") || "C").toUpperCase();
-  var btn = td.querySelector ? td.querySelector(".burner-state-btn") : null;
-  if(!btn) return;
-  var codeEl = btn.querySelector(".burner-state-btn-code");
-  if(codeEl) codeEl.textContent = key;
-  btn.className = "burner-state-btn state-" + key;
-  btn.setAttribute("data-state", key);
-  btn.setAttribute("aria-label", "Set burner state to " + getBurnerStateLabel(key));
-}
-
-function applyBurnerCellStateChange(table, td, nextValue){
-  if(!table || !td) return;
-  var wallName = String(td.getAttribute("data-wall") || "");
-  var rowIndex = Math.max(0, parseInt(td.getAttribute("data-row") || "1", 10) - 1);
-  var burnerIndex = Math.max(0, parseInt(td.getAttribute("data-burner") || "1", 10) - 1);
-  var nv = String(nextValue || "C").toUpperCase();
-  if(["B","N","O","C"].indexOf(nv) === -1) nv = "C";
-  if(String(td.getAttribute("data-state") || "C").toUpperCase() === nv){
-    syncBurnerCellButton(td, nv);
-    return;
-  }
-
-  var pendingKey = rowIndex + "_" + burnerIndex;
-  var pendingWall = burnerPending[wallName] || null;
-  var original = pendingWall && pendingWall[pendingKey]
-    ? String(pendingWall[pendingKey].prev || "C").toUpperCase()
-    : getBurnerPendingOriginalState(wallName, rowIndex, burnerIndex);
-
-  if(data[wallName] && data[wallName][rowIndex]){
-    data[wallName][rowIndex][burnerIndex] = nv;
-  }
-
-  if(nv === original){
-    if(pendingWall && pendingWall[pendingKey]) delete pendingWall[pendingKey];
-    if(pendingWall && !Object.keys(pendingWall).length) delete burnerPending[wallName];
-    td.classList.remove("burner-pending");
-  }else{
-    if(!burnerPending[wallName]) burnerPending[wallName] = {};
-    burnerPending[wallName][pendingKey] = {nv:nv, prev:original};
-    td.classList.add("burner-pending");
-  }
-
-  td.className = nv + " burner-cell" + (td.classList.contains("burner-pending") ? " burner-pending" : "");
-  td.setAttribute("data-state", nv);
-  if(burnerStateMenuContext.cell === td) td.classList.add("burner-menu-open");
-  syncBurnerCellButton(td, nv);
-  syncBurnerUnsavedBadge();
-  activateBurnerTableHover(table, td);
-  scheduleBurnerAnalysisRefresh(110);
-}
-
-function positionBurnerStateMenu(menu, button){
-  if(!menu || !button || typeof button.getBoundingClientRect !== "function") return;
-  var rect = button.getBoundingClientRect();
-  var shell = menu.querySelector(".burner-state-menu-shell");
-  var menuWidth = shell ? Math.max(shell.offsetWidth || 0, 190) : 190;
-  var menuHeight = shell ? Math.max(shell.offsetHeight || 0, 208) : 208;
-  var left = rect.left + (rect.width / 2) - (menuWidth / 2);
-  var top = rect.bottom + 10;
-  var pad = 12;
-  var viewWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-  var viewHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-
-  if(left + menuWidth > viewWidth - pad) left = viewWidth - menuWidth - pad;
-  if(left < pad) left = pad;
-  if(top + menuHeight > viewHeight - pad) top = rect.top - menuHeight - 10;
-  if(top < pad) top = pad;
-
-  menu.style.left = Math.round(left) + "px";
-  menu.style.top = Math.round(top) + "px";
-}
-
-function closeBurnerStateMenu(keepFocus){
-  var menu = burnerStateMenuContext.menu || document.getElementById("burner-state-menu");
-  if(menu){
-    menu.classList.remove("is-open");
-    menu.setAttribute("aria-hidden", "true");
-  }
-  if(burnerStateMenuContext.button){
-    burnerStateMenuContext.button.setAttribute("aria-expanded", "false");
-  }
-  if(burnerStateMenuContext.cell){
-    burnerStateMenuContext.cell.classList.remove("burner-menu-open");
-  }
-  if(keepFocus && burnerStateMenuContext.button && burnerStateMenuContext.button.focus){
-    burnerStateMenuContext.button.focus({preventScroll:true});
-  }
-  burnerStateMenuContext.table = null;
-  burnerStateMenuContext.cell = null;
-  burnerStateMenuContext.button = null;
-  burnerStateMenuContext.menu = menu || null;
-}
-
-function openBurnerStateMenu(table, td, button){
-  if(!table || !td || !button) return;
-  var menu = document.getElementById("burner-state-menu");
-  if(!menu) return;
-  if(burnerScrollModeActive) return;
-  closeBurnerStateMenu(false);
-  burnerStateMenuContext.menu = menu;
-  burnerStateMenuContext.table = table;
-  burnerStateMenuContext.cell = td;
-  burnerStateMenuContext.button = button;
-  td.classList.add("burner-menu-open");
-  button.setAttribute("aria-expanded", "true");
-  menu.classList.add("is-open");
-  menu.setAttribute("aria-hidden", "false");
-  positionBurnerStateMenu(menu, button);
-}
-
-function restoreBurnerHoverFromPointer(){
-  if(!isBurnerTabVisible()) return;
-  if(burnerPointerClientX < 0 || burnerPointerClientY < 0 || !document.elementFromPoint) return;
-  var el = document.elementFromPoint(burnerPointerClientX, burnerPointerClientY);
-  var cell = el && el.closest ? el.closest("#tab-burner td.burner-cell") : null;
-  if(!cell) return;
-  var table = cell.closest ? cell.closest(".burner-grid-table") : null;
-  if(table) activateBurnerTableHover(table, cell);
-}
-
-function setBurnerScrollMode(active){
-  var tab = document.getElementById("tab-burner");
-  if(!tab || burnerScrollModeActive === !!active) return;
-  burnerScrollModeActive = !!active;
-  tab.classList.toggle("burner-scroll-active", burnerScrollModeActive);
-  if(burnerScrollModeActive){
-    closeBurnerStateMenu(false);
-  }else{
-    restoreBurnerHoverFromPointer();
-  }
-}
-
-function scheduleBurnerScrollModeRelease(){
-  if(burnerScrollModeTimer) clearTimeout(burnerScrollModeTimer);
-  burnerScrollModeTimer = setTimeout(function(){
-    burnerScrollModeTimer = 0;
-    setBurnerScrollMode(false);
-  }, 120);
-}
-
-function handleBurnerScrollActivity(){
-  if(!isBurnerTabVisible()) return;
-  setBurnerScrollMode(true);
-  scheduleBurnerScrollModeRelease();
-}
-
-function bindBurnerStateMenu(){
-  var menu = document.getElementById("burner-state-menu");
-  if(!menu || menu._burnerMenuBound) return;
-  menu._burnerMenuBound = true;
-  burnerStateMenuContext.menu = menu;
-
-  menu.addEventListener("click", function(e){
-    var option = e.target && e.target.closest ? e.target.closest("[data-burner-state-option]") : null;
-    if(!option || !burnerStateMenuContext.table || !burnerStateMenuContext.cell) return;
-    applyBurnerCellStateChange(
-      burnerStateMenuContext.table,
-      burnerStateMenuContext.cell,
-      option.getAttribute("data-burner-state-option")
-    );
-    closeBurnerStateMenu(true);
-  });
-
-  document.addEventListener("click", function(e){
-    if(menu.getAttribute("aria-hidden") !== "false") return;
-    if(menu.contains(e.target)) return;
-    if(burnerStateMenuContext.button && burnerStateMenuContext.button.contains(e.target)) return;
-    closeBurnerStateMenu(false);
-  });
-
-  document.addEventListener("keydown", function(e){
-    if(e.key === "Escape" && menu.getAttribute("aria-hidden") === "false"){
-      e.preventDefault();
-      closeBurnerStateMenu(true);
-    }
-  });
-
-  window.addEventListener("resize", function(){
-    if(menu.getAttribute("aria-hidden") !== "false") return;
-    if(!burnerStateMenuContext.button || !burnerStateMenuContext.button.isConnected){
-      closeBurnerStateMenu(false);
-      return;
-    }
-    positionBurnerStateMenu(menu, burnerStateMenuContext.button);
-  });
-
-  window.addEventListener("scroll", handleBurnerScrollActivity, {passive:true});
-  window.addEventListener("wheel", handleBurnerScrollActivity, {passive:true});
-  window.addEventListener("touchmove", handleBurnerScrollActivity, {passive:true});
-}
-
-function bindBurnerWallInteractions(wall, table){
-  if(!wall || !table || table._burnerEventsBound) return;
-  table._burnerEventsBound = true;
-  bindBurnerStateMenu();
-
-  table.addEventListener("mouseover", function(e){
-    noteBurnerPointerPosition(e);
-    var cell = e.target && e.target.closest ? e.target.closest("td.burner-cell") : null;
-    if(!cell || !table.contains(cell)) return;
-    if(burnerScrollModeActive) return;
-    var store = getBurnerHoverStore(table);
-    if(store && store.activeCell === cell && !store.frameId) return;
-    activateBurnerTableHover(table, cell);
-  });
-
-  table.addEventListener("focusin", function(e){
-    var cell = e.target && e.target.closest ? e.target.closest("td.burner-cell") : null;
-    if(!cell || !table.contains(cell)) return;
-    activateBurnerTableHover(table, cell);
-  });
-
-  table.addEventListener("mousemove", function(e){
-    noteBurnerPointerPosition(e);
-  });
-
-  table.addEventListener("focusout", function(){
-    setTimeout(function(){
-      if(!table.isConnected) return;
-      if(table.contains(document.activeElement)) return;
-      if(wall.matches && wall.matches(":hover")) return;
-      clearBurnerTableHover(table);
-    }, 0);
-  });
-
-  table.addEventListener("click", function(e){
-    noteBurnerPointerPosition(e);
-    var btn = e.target && e.target.closest ? e.target.closest(".burner-state-btn") : null;
-    if(!btn || !table.contains(btn)) return;
-    var td = btn.closest ? btn.closest("td.burner-cell") : null;
-    if(!td || !table.contains(td)) return;
-    activateBurnerTableHover(table, td);
-    openBurnerStateMenu(table, td, btn);
-  });
-
-  table.addEventListener("keydown", function(e){
-    var btn = e.target && e.target.closest ? e.target.closest(".burner-state-btn") : null;
-    if(!btn || !table.contains(btn)) return;
-    var td = btn.closest ? btn.closest("td.burner-cell") : null;
-    if(!td || !table.contains(td)) return;
-    var key = String(e.key || "").toUpperCase();
-    if(key === " " || key === "ENTER" || key === "ARROWDOWN"){
-      e.preventDefault();
-      openBurnerStateMenu(table, td, btn);
-      return;
-    }
-    if(["B","N","O","C"].indexOf(key) >= 0){
-      e.preventDefault();
-      applyBurnerCellStateChange(table, td, key);
-    }
-  });
-}
-
-function clearBurnerTableHover(table){
-  if(!table) return;
-  var store = getBurnerHoverStore(table);
-  cancelBurnerHoverFrame(store);
-  if(store){
-    store.pendingCell = null;
-    if(store.activeCell) store.activeCell.classList.remove("burner-hover-focus");
-    if(store.activeRowHead) store.activeRowHead.classList.remove("burner-hover-head");
-    if(store.activeColHead) store.activeColHead.classList.remove("burner-hover-head");
-    store.activeCell = null;
-    store.activeRowHead = null;
-    store.activeColHead = null;
-    store.activeKey = "";
-  }
-  var wallCard = table.closest ? table.closest(".wall") : null;
-  var readout = table._burnerReadout || (wallCard ? wallCard.querySelector(".burner-hover-readout") : null);
-  setBurnerHoverReadout(readout);
-}
-
-function clearBurnerWallHover(wallCard){
-  if(!wallCard || !wallCard.querySelector) return;
-  var table = wallCard.querySelector(".burner-grid-table");
-  if(table) clearBurnerTableHover(table);
-}
-
-function applyBurnerTableHover(table, cell){
-  if(!table || !cell) return;
-  var store = getBurnerHoverStore(table);
-  var rowNum = String(cell.getAttribute("data-row") || "");
-  var burnerNum = String(cell.getAttribute("data-burner") || "");
-  var stateCode = String(cell.getAttribute("data-state") || "");
-  var isPending = cell.classList.contains("burner-pending");
-  var nextKey = [
-    String(cell.getAttribute("data-wall") || ""),
-    rowNum,
-    burnerNum,
-    stateCode,
-    isPending ? "1" : "0"
-  ].join("|");
-
-  if(store.activeCell !== cell || !cell.classList.contains("burner-hover-focus")){
-    if(store.activeCell && store.activeCell !== cell) store.activeCell.classList.remove("burner-hover-focus");
-    cell.classList.add("burner-hover-focus");
-    store.activeCell = cell;
-  }
-
-  var rowHead = table._burnerRowHeads ? table._burnerRowHeads[rowNum] : null;
-  var colHead = table._burnerColHeads ? table._burnerColHeads[burnerNum] : null;
-
-  if(store.activeRowHead !== rowHead){
-    if(store.activeRowHead) store.activeRowHead.classList.remove("burner-hover-head");
-    if(rowHead) rowHead.classList.add("burner-hover-head");
-    store.activeRowHead = rowHead || null;
-  }
-  if(store.activeColHead !== colHead){
-    if(store.activeColHead) store.activeColHead.classList.remove("burner-hover-head");
-    if(colHead) colHead.classList.add("burner-hover-head");
-    store.activeColHead = colHead || null;
-  }
-
-  var wallCard = table.closest ? table.closest(".wall") : null;
-  var readout = table._burnerReadout || (wallCard ? wallCard.querySelector(".burner-hover-readout") : null);
-  if(store.activeKey === nextKey && readout && readout.classList.contains("is-active")) return;
-  store.activeKey = nextKey;
-  setBurnerHoverReadout(
-    readout,
-    cell.getAttribute("data-wall"),
-    rowNum,
-    burnerNum,
-    stateCode,
-    isPending
-  );
-}
-
-function activateBurnerTableHover(table, cell){
-  if(!table || !cell) return;
-  var store = getBurnerHoverStore(table);
-  if(!store) return;
-  store.pendingCell = cell;
-  if(store.frameId) return;
-
-  var flush = function(){
-    store.frameId = 0;
-    store.frameType = "";
-    var nextCell = store.pendingCell;
-    store.pendingCell = null;
-    if(nextCell && nextCell.isConnected) applyBurnerTableHover(table, nextCell);
-  };
-
-  if(typeof requestAnimationFrame === "function"){
-    store.frameType = "raf";
-    store.frameId = requestAnimationFrame(flush);
-  }else{
-    store.frameType = "timeout";
-    store.frameId = setTimeout(flush, 16);
-  }
-}
 
 function isBurnerSingleWallMode(){
   return (
@@ -16448,9 +15561,7 @@ function openAlarmFromBanner(alarmKey){
 ================================================== */
 function render(){
   const wallsDiv=document.getElementById("walls");
-  closeBurnerStateMenu(false);
   wallsDiv.innerHTML="";
-  const wallsFrag=document.createDocumentFragment();
   Object.entries(data).forEach(([wallName,rows])=>{
     const wall=document.createElement("div");
     wall.className="wall";
@@ -16462,70 +15573,46 @@ function render(){
     bar.dataset.wall=wallName;
     bar.innerText="Wall "+wallName+"  —  "+sev.toUpperCase();
     wall.appendChild(bar);
-    const hoverReadout=document.createElement("div");
-    hoverReadout.className="burner-hover-readout";
-    hoverReadout.setAttribute("aria-live","off");
-    setBurnerHoverReadout(hoverReadout);
-    wall.appendChild(hoverReadout);
     const tbl=document.createElement("table");
-    tbl.className="burner-grid-table";
-    tbl._burnerReadout = hoverReadout;
-    tbl._burnerRowHeads = Object.create(null);
-    tbl._burnerColHeads = Object.create(null);
-    getBurnerHoverStore(tbl);
     const hr=document.createElement("tr");
-    const cornerTh=document.createElement("th");
-    cornerTh.textContent="R/B";
-    hr.appendChild(cornerTh);
-    for(let i=1;i<=BURNERS;i++){
-      const th=document.createElement("th");
-      th.textContent="B"+i;
-      th.className="burner-col-head";
-      th.setAttribute("data-burner", String(i));
-      tbl._burnerColHeads[String(i)] = th;
-      hr.appendChild(th);
-    }
+    hr.innerHTML="<th>R/B</th>";
+    for(let i=1;i<=BURNERS;i++)hr.innerHTML+=`<th>B${i}</th>`;
     tbl.appendChild(hr);
     rows.forEach((row,ri)=>{
       const tr=document.createElement("tr");
-      const rowTh=document.createElement("th");
-      rowTh.textContent="R"+(ri+1);
-      rowTh.className="burner-row-head";
-      rowTh.setAttribute("data-row", String(ri+1));
-      tbl._burnerRowHeads[String(ri+1)] = rowTh;
-      tr.appendChild(rowTh);
+      tr.innerHTML=`<th>R${ri+1}</th>`;
+      const STATE_LABEL={B:"Both (NG+FO)",N:"NG Only",O:"Off Gas",C:"Cold"};
       row.forEach((cell,ci)=>{
         const td=document.createElement("td");
-        td.className=cell+" burner-cell";
-        td.setAttribute("data-wall", wallName);
-        td.setAttribute("data-row", String(ri+1));
-        td.setAttribute("data-burner", String(ci+1));
-        td.setAttribute("data-state", cell);
-        if(burnerPending[wallName] && burnerPending[wallName][ri + "_" + ci]){
+        td.className=cell;
+        td.setAttribute("data-tip","Wall "+wallName+" · R"+(ri+1)+" B"+(ci+1)+" · "+STATE_LABEL[cell]);
+        const sel=document.createElement("select");
+        sel.style.color=TEXT_MAP[cell]||"#fff";
+        ["B","N","O","C"].forEach(v=>{
+          const o=document.createElement("option");
+          o.value=v;o.text=v;
+          if(v===cell)o.selected=true;
+          sel.appendChild(o);
+        });
+        sel.addEventListener("change",e=>{
+          const nv=e.target.value;
+          const prev=data[wallName][ri][ci];
+          if(!burnerPending[wallName]) burnerPending[wallName]={};
+          burnerPending[wallName][ri+"_"+ci]={nv,prev};
+          data[wallName][ri][ci]=nv;
+          td.className=nv;
           td.classList.add("burner-pending");
-        }
-        const btn=document.createElement("button");
-        btn.type="button";
-        btn.className="burner-state-btn state-" + cell;
-        btn.setAttribute("data-state", cell);
-        btn.setAttribute("data-burner-trigger", "1");
-        btn.setAttribute("aria-haspopup", "menu");
-        btn.setAttribute("aria-expanded", "false");
-        btn.setAttribute("aria-label", "Set burner state to " + getBurnerStateLabel(cell));
-        btn.innerHTML='<span class="burner-state-btn-code">' + cell + '</span><span class="burner-state-btn-caret" aria-hidden="true"></span>';
-        td.appendChild(btn);
-        tr.appendChild(td);
+          td.setAttribute("data-tip","Wall "+wallName+" · R"+(ri+1)+" B"+(ci+1)+" · "+STATE_LABEL[nv]+" (unsaved)");
+          sel.style.color=TEXT_MAP[nv]||"#fff";
+          markBurnerUnsaved();
+          generateAnalysis();
+        });
+        td.appendChild(sel);tr.appendChild(td);
       });
       tbl.appendChild(tr);
     });
-    bindBurnerWallInteractions(wall, tbl);
-    wall.addEventListener("mouseleave", function(){
-      clearBurnerWallHover(wall);
-    });
-    wall.appendChild(tbl);
-    wallsFrag.appendChild(wall);
+    wall.appendChild(tbl);wallsDiv.appendChild(wall);
   });
-  wallsDiv.appendChild(wallsFrag);
   applyBurnerMobileWallFilter();
 }
 
@@ -16708,7 +15795,7 @@ function createAnalyticsPieChart(canvas, B, N, O, C){
     options:{
       responsive:true,
       maintainAspectRatio:false,
-      animation:{duration:260,easing:"easeOutCubic"},
+      animation:{duration:900,easing:"easeOutQuart"},
       layout:{padding:{top:34,right:6,bottom:4,left:6}},
       plugins:{
         tooltip:{
@@ -16743,7 +15830,6 @@ function createAnalyticsSummaryChart(canvas, wallLabels, cntBoth, cntNG, cntOG, 
     options:{
       responsive:true,
       maintainAspectRatio:false,
-      animation:{duration:220,easing:"easeOutCubic"},
       layout:{padding:{top:4,right:6,bottom:2,left:6}},
       interaction:{mode:"index", intersect:false},
       scales:{
@@ -16799,50 +15885,6 @@ function renderBurnerAnalysisMirror(targetId, chartStore, canvasPrefix, wallEntr
   chartStore["_wallSummary"] = createAnalyticsSummaryChart(document.getElementById(summaryCanvasId), wallLabels, cntBoth, cntNG, cntOG, cntCold);
 }
 
-function isElementNearViewport(el, extra){
-  if(!el || typeof el.getBoundingClientRect !== "function") return true;
-  var pad = Math.max(0, Number(extra || 0));
-  var rect = el.getBoundingClientRect();
-  var viewH = window.innerHeight || document.documentElement.clientHeight || 0;
-  return rect.bottom >= -pad && rect.top <= (viewH + pad);
-}
-
-function ensureBurnerAnalyticsViewportObserver(){
-  if(burnerAnalyticsViewportObserver || typeof IntersectionObserver !== "function") return;
-  var host = document.querySelector("#tab-burner .analytics");
-  if(!host) return;
-  burnerAnalyticsViewportObserver = new IntersectionObserver(function(entries){
-    var shouldRender = entries.some(function(entry){
-      return entry && (entry.isIntersecting || entry.intersectionRatio > 0);
-    });
-    if(!shouldRender) return;
-    if(typeof requestAnimationFrame === "function"){
-      requestAnimationFrame(function(){ renderBurnerAnalyticsFromLatest(true); });
-    }else{
-      setTimeout(function(){ renderBurnerAnalyticsFromLatest(true); }, 0);
-    }
-  }, {
-    root:null,
-    rootMargin:"320px 0px 320px 0px",
-    threshold:0.01
-  });
-  burnerAnalyticsViewportObserver.observe(host);
-}
-
-function renderBurnerAnalyticsFromLatest(force){
-  var container = document.getElementById("analysisContainer");
-  if(!container || !window._latestBurnerAnalysisPayload) return;
-  var host = container.closest ? container.closest(".analytics") : null;
-  var canDefer = (typeof IntersectionObserver === "function");
-  ensureBurnerAnalyticsViewportObserver();
-  if(!force && !burnerAnalyticsDirty) return;
-  if(!force && canDefer && host && !isElementNearViewport(host, 320)) return;
-  var p = window._latestBurnerAnalysisPayload;
-  renderBurnerAnalysisMirror("analysisContainer", chartInstances, "main", p.wallEntries, p.wallLabels, p.cntBoth, p.cntNG, p.cntOG, p.cntCold);
-  burnerAnalyticsDirty = false;
-  applyBurnerMobileWallFilter();
-}
-
 function mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold){
   renderBurnerAnalysisMirror("hm-analysisContainer", hmChartInstances, "hm", wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
 }
@@ -16858,17 +15900,10 @@ function renderReformer3DAnalyticsMirror(){
 }
 
 function generateAnalysis(){
-  burnerAnalysisRefreshTimer = 0;
   wallSeverity={};
   const container=document.getElementById("analysisContainer");
-  ensureBurnerAnalyticsViewportObserver();
+  container.innerHTML="";
   destroyChartStore(chartInstances);
-  if(container){
-    var host = container.closest ? container.closest(".analytics") : null;
-    if(typeof IntersectionObserver === "function" && (!host || !isElementNearViewport(host, 320))){
-      container.innerHTML="";
-    }
-  }
   destroyChartStore(hmChartInstances);
   destroyChartStore(r3dChartInstances);
   var wallLabels = [];
@@ -16914,7 +15949,26 @@ function generateAnalysis(){
       desc: desc,
       action: action
     });
+
+    const block=document.createElement("div");
+    block.className="analysis-block analysis-wall-card";
+    block.setAttribute("data-wall-analysis", wallName);
+    block.innerHTML = buildAnalyticsBlockHtml(displayName, B, N, O, C, imb, sc, direction, dirColor, sev, desc, action, "ch_" + wallName.replace(/\s/g,'_'));
+    container.appendChild(block);
+
+    const cv=document.getElementById("ch_"+wallName.replace(/\s/g,'_'));
+    chartInstances[wallName] = createAnalyticsPieChart(cv, B, N, O, C);
   });
+
+  var summaryBlock = document.createElement("div");
+  summaryBlock.className = "analysis-block analysis-summary-card";
+  summaryBlock.setAttribute("data-wall-analysis", "SUMMARY");
+  summaryBlock.innerHTML = '<h3>Wall-Wise Burner Mix Summary</h3><div class="chart-wrap"><canvas id="analysisWallSummaryChart"></canvas></div>';
+  container.appendChild(summaryBlock);
+  const summaryCanvas=document.getElementById("analysisWallSummaryChart");
+  if(summaryCanvas){
+    chartInstances["_wallSummary"] = createAnalyticsSummaryChart(summaryCanvas, wallLabels, cntBoth, cntNG, cntOG, cntCold);
+  }
 
   /* Unified bottom banner + sound for imbalance and high-frequency cleaning alarms */
   syncMasterAlarmBanner();
@@ -16933,12 +15987,7 @@ function generateAnalysis(){
     cntOG: cntOG,
     cntCold: cntCold
   };
-  burnerAnalyticsDirty = true;
-  renderBurnerAnalyticsFromLatest(false);
-  var heatMapTab = document.getElementById("tab-heatmap");
-  if(heatMapTab && heatMapTab.classList.contains("tab-active")){
-    mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
-  }
+  mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
   if(document.getElementById("tab-reformer3d") && document.getElementById("tab-reformer3d").classList.contains("tab-active")){
     renderReformer3DAnalyticsMirror();
   }
@@ -16948,10 +15997,6 @@ function refreshThemeSensitivePanels(){
   if(typeof isUserLoggedIn === "function" && !isUserLoggedIn()) return;
   if(typeof generateAnalysis !== "function") return;
   if(!document.getElementById("analysisContainer")) return;
-  if(burnerAnalysisRefreshTimer){
-    clearTimeout(burnerAnalysisRefreshTimer);
-    burnerAnalysisRefreshTimer = 0;
-  }
   setTimeout(generateAnalysis, 0);
 }
 
@@ -16971,7 +16016,6 @@ function showPostCleaningBurnerDataNudge(){
 async function exportToExcel(options){
   options = options || {};
   var silent = !!options.silent;
-  flushBurnerAnalysisRefresh();
   /* Commit pending burner changes */
   const hadBurnerPending = Object.keys(burnerPending).length > 0;
   commitBurnerPending();
@@ -19745,18 +18789,6 @@ function switchTab(tab){
   syncHeatMapHeaderTools(tab);
   if(tab === 'alarms') refreshAlarmPanel();
   if(tab === 'heatmap'){
-    var hadPendingBurnerRefresh = !!burnerAnalysisRefreshTimer;
-    if(hadPendingBurnerRefresh) flushBurnerAnalysisRefresh();
-    if(!hadPendingBurnerRefresh && window._latestBurnerAnalysisPayload){
-      mirrorBurnerAnalysisToHeatMap(
-        window._latestBurnerAnalysisPayload.wallEntries,
-        window._latestBurnerAnalysisPayload.wallLabels,
-        window._latestBurnerAnalysisPayload.cntBoth,
-        window._latestBurnerAnalysisPayload.cntNG,
-        window._latestBurnerAnalysisPayload.cntOG,
-        window._latestBurnerAnalysisPayload.cntCold
-      );
-    }
     if(typeof requestHeatMapRender === 'function') requestHeatMapRender(40);
     if(typeof window.hmUploadedEnsureViewer === 'function'){
       setTimeout(window.hmUploadedEnsureViewer, 60);
@@ -19769,7 +18801,6 @@ function switchTab(tab){
     }
   }
   if(tab === 'reformer3d'){
-    flushBurnerAnalysisRefresh();
     setTimeout(function(){
       initReformer3DTab();
       if(!window._hmRenderSnapshot && typeof renderHeatMap === "function"){
@@ -19782,10 +18813,7 @@ function switchTab(tab){
       r3dScheduleNormalize();
     }, 40);
   }
-  if(tab === 'burner') setTimeout(function(){
-    applyBurnerMobileWallFilter();
-    renderBurnerAnalyticsFromLatest(false);
-  }, 0);
+  if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
   updateGlobalRefreshButtonLabel(tab);
   updateDesktopPrimaryInterfacePickerUi();
@@ -23794,7 +22822,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-past-tst-overflow-1";
+      var swBuild = "20260317-burner-restore-0ac70f5-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
