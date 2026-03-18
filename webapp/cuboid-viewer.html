@@ -1136,6 +1136,48 @@ function cuboidSyncFaceOverlays(force){
   );
   cuboidFaceOverlays.front.texture.needsUpdate = true;
   cuboidFaceOverlays.back.texture.needsUpdate = true;
+  if(cuboidSideDisplays){
+    if(cuboidSideDisplays.left){
+      cuboidPaintSideZoneCanvas(
+        cuboidSideDisplays.left.top.canvas,
+        chamberWalls[0],
+        snapshot,
+        cleaningLog[chamberWalls[0]] || {},
+        "top",
+        0
+      );
+      cuboidPaintSideZoneCanvas(
+        cuboidSideDisplays.left.bottom.canvas,
+        chamberWalls[0],
+        snapshot,
+        cleaningLog[chamberWalls[0]] || {},
+        "bottom",
+        0.55
+      );
+      cuboidSideDisplays.left.top.texture.needsUpdate = true;
+      cuboidSideDisplays.left.bottom.texture.needsUpdate = true;
+    }
+    if(cuboidSideDisplays.right){
+      cuboidPaintSideZoneCanvas(
+        cuboidSideDisplays.right.top.canvas,
+        chamberWalls[1],
+        snapshot,
+        cleaningLog[chamberWalls[1]] || {},
+        "top",
+        0.25
+      );
+      cuboidPaintSideZoneCanvas(
+        cuboidSideDisplays.right.bottom.canvas,
+        chamberWalls[1],
+        snapshot,
+        cleaningLog[chamberWalls[1]] || {},
+        "bottom",
+        0.8
+      );
+      cuboidSideDisplays.right.top.texture.needsUpdate = true;
+      cuboidSideDisplays.right.bottom.texture.needsUpdate = true;
+    }
+  }
   cuboidFaceDigest = nextDigest;
 }
 
@@ -1157,6 +1199,182 @@ var HOLE_GAP=CH*0.06;   // gap between holes
 // Upper hole center Y, lower hole center Y
 var HOLE_Y1= CH*0.19;
 var HOLE_Y2=-CH*0.19;
+
+var cuboidSideDisplays = null;
+
+function cuboidPaintSideZoneCanvas(canvas, wallKey, snapshot, cleaningMap, zoneKind, phaseBase){
+  if(!canvas || !snapshot || !snapshot.hmData) return;
+  var ctx = canvas.getContext("2d");
+  var w = canvas.width;
+  var h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  var rows = Array.isArray(snapshot.hmData[wallKey]) ? snapshot.hmData[wallKey] : [];
+  var tstVals = (wallKey === "A" || wallKey === "B")
+    ? (zoneKind === "top" ? (snapshot.abTop || []) : (snapshot.abBot || []))
+    : (zoneKind === "top" ? (snapshot.cdTop || []) : (snapshot.cdBot || []));
+  var rowOrder = zoneKind === "top" ? [6, 5, 4, "PH_TOP"] : [3, 2, "PH_BOT", 1];
+  var panelInset = 16;
+  var gridLeft = 118;
+  var gridRight = w - 22;
+  var gridW = gridRight - gridLeft;
+  var slotW = gridW / 15;
+  var headerTop = 18;
+  var headerH = 54;
+  var burnerNumY = 98;
+  var itemTop = 158;
+  var itemBottom = h - 54;
+  var stepY = (itemBottom - itemTop) / Math.max(1, rowOrder.length - 1);
+  var centers = rowOrder.map(function(_, idx){ return Math.round(itemTop + (stepY * idx)); });
+  var iconScale = 1.18;
+
+  var panelGrad = ctx.createLinearGradient(0, 0, 0, h);
+  panelGrad.addColorStop(0, "rgba(6,10,17,0.96)");
+  panelGrad.addColorStop(0.58, "rgba(5,8,14,0.94)");
+  panelGrad.addColorStop(1, "rgba(3,5,10,0.96)");
+  ctx.fillStyle = panelGrad;
+  cuboidRoundRectPath(ctx, panelInset, panelInset, w - (panelInset * 2), h - (panelInset * 2), 26);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(160,194,232,0.22)";
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  var gloss = ctx.createLinearGradient(0, headerTop, 0, headerTop + 120);
+  gloss.addColorStop(0, "rgba(255,255,255,0.13)");
+  gloss.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gloss;
+  cuboidRoundRectPath(ctx, panelInset + 2, panelInset + 2, w - (panelInset * 2) - 4, 96, 22);
+  ctx.fill();
+
+  var headGrad = ctx.createLinearGradient(0, 0, w, 0);
+  headGrad.addColorStop(0, "rgba(8,12,20,0.98)");
+  headGrad.addColorStop(1, "rgba(13,18,28,0.98)");
+  ctx.fillStyle = headGrad;
+  cuboidRoundRectPath(ctx, 20, headerTop, w - 40, headerH, 18);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(243,112,34,0.72)";
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(24, headerTop + headerH + 8);
+  ctx.lineTo(w - 24, headerTop + headerH + 8);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 28px Times New Roman, serif";
+  ctx.fillText("WALL " + wallKey, 34, headerTop + Math.round(headerH / 2) + 2);
+
+  ctx.textAlign = "right";
+  ctx.font = "700 15px Times New Roman, serif";
+  ctx.fillStyle = "rgba(255,255,255,0.96)";
+  ctx.fillText(zoneKind === "top" ? "Rows 6-4" : "Rows 3-1", w - 34, headerTop + Math.round(headerH / 2) + 1);
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 14px Times New Roman, serif";
+  for(var bn=1; bn<=15; bn++){
+    var bx = gridLeft + slotW * (bn - 0.5);
+    ctx.fillStyle = "rgba(8,12,22,0.95)";
+    cuboidRoundRectPath(ctx, bx - 14, burnerNumY - 11, 28, 22, 7);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(140,160,190,0.30)";
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("B" + bn, bx, burnerNumY + 1);
+  }
+
+  for(var ii=0; ii<rowOrder.length; ii++){
+    var item = rowOrder[ii];
+    var centerY = centers[ii];
+    var lineY = centerY + ((typeof item === "string") ? 20 : 28);
+    ctx.strokeStyle = "rgba(120,127,160,0.16)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(24, lineY);
+    ctx.lineTo(w - 24, lineY);
+    ctx.stroke();
+
+    if(item === "PH_TOP" || item === "PH_BOT"){
+      cuboidDrawPeepBar(ctx, "PH TST", tstVals, gridLeft, centerY, gridW, 0.62);
+      continue;
+    }
+
+    ctx.fillStyle = "rgba(8,12,22,0.95)";
+    cuboidRoundRectPath(ctx, 22, centerY - 14, 74, 28, 10);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(140,160,190,0.28)";
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 16px Times New Roman, serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("R" + item, 59, centerY);
+
+    var rowData = Array.isArray(rows[item - 1]) ? rows[item - 1] : [];
+    for(var ci=0; ci<15; ci++){
+      var burnerX = gridLeft + slotW * (ci + 0.5);
+      var state = cuboidNormalizeBurnerState(rowData[ci]);
+      var cleaned = !!String(cleaningMap["R" + item + "B" + (ci + 1)] || "").trim();
+      cuboidDrawBurnerGlyph(ctx, burnerX, centerY + 6, state, cleaned, (phaseBase || 0) + (ii * 0.55) + (ci * 0.26), iconScale);
+    }
+  }
+}
+
+function cuboidCreateSideDisplay(side, wallKey){
+  function makePanel(zoneKind, centerY){
+    var canvas = document.createElement("canvas");
+    canvas.width = 840;
+    canvas.height = 840;
+    var texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
+      texture.colorSpace = THREE.SRGBColorSpace;
+    }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
+      texture.encoding = THREE.sRGBEncoding;
+    }
+    var material = new THREE.MeshBasicMaterial({
+      map:texture,
+      transparent:true,
+      side:THREE.FrontSide,
+      depthWrite:false,
+      alphaTest:0.02
+    });
+    var mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(HOLE_W * 0.94, HOLE_H * 0.92),
+      material
+    );
+    var insetX = Math.max(0.08, CW * 0.04);
+    if(side === "left"){
+      mesh.position.set(-CW/2 + insetX, centerY, 0);
+      mesh.rotation.y = -Math.PI / 2;
+    }else{
+      mesh.position.set(CW/2 - insetX, centerY, 0);
+      mesh.rotation.y = Math.PI / 2;
+    }
+    mesh.renderOrder = 5;
+    group.add(mesh);
+    return {
+      zoneKind:zoneKind,
+      canvas:canvas,
+      texture:texture,
+      material:material,
+      mesh:mesh
+    };
+  }
+
+  return {
+    side:side,
+    wallKey:wallKey,
+    top:makePanel("top", HOLE_Y1),
+    bottom:makePanel("bottom", HOLE_Y2)
+  };
+}
 
 function buildSideShape(){
   var s=new THREE.Shape();
@@ -1254,6 +1472,12 @@ addPeepholeFrames(rFrameG,1); group.add(rFrameG);
 var lFrameG=new THREE.Group();
 lFrameG.rotation.y=-Math.PI/2; lFrameG.position.x=-CW/2;
 addPeepholeFrames(lFrameG,-1); group.add(lFrameG);
+
+cuboidSideDisplays = {
+  left: cuboidCreateSideDisplay("left", chamberWalls[0]),
+  right: cuboidCreateSideDisplay("right", chamberWalls[1])
+};
+cuboidSyncFaceOverlays(true);
 
 /* ── EDGE REINFORCEMENT BARS ── */
 var edgeMat=new THREE.MeshStandardMaterial({color:0x3a3e42,metalness:0.95,roughness:0.2});
