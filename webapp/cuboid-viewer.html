@@ -888,16 +888,17 @@ var rimLight=new THREE.DirectionalLight(0x2255aa,0.35);
 rimLight.position.set(0,0,-10);
 scene.add(rimLight);
 
+var cuboidScaleToPrevious = 6 / 3.5;
 var chamberDims = {
-  sX:1.22,
-  sY:3.5,
-  sZ:5.0,
-  wallT:0.15,
-  hs:0.5,
-  hdrH:0.14,
+  sX:1.22 * cuboidScaleToPrevious,
+  sY:3.5 * cuboidScaleToPrevious,
+  sZ:5.0 * cuboidScaleToPrevious,
+  wallT:0.15 * cuboidScaleToPrevious,
+  hs:0.5 * cuboidScaleToPrevious,
+  hdrH:0.14 * cuboidScaleToPrevious,
   tubeCount:8,
-  tubeR:0.06,
-  commonTubeR:0.11
+  tubeR:0.06 * cuboidScaleToPrevious,
+  commonTubeR:0.11 * cuboidScaleToPrevious
 };
 chamberDims.hy1 = chamberDims.sY * 0.33;
 chamberDims.hy2 = chamberDims.sY * 0.68;
@@ -1227,8 +1228,8 @@ var fitBounds = new THREE.Box3().setFromObject(group);
 var fitCenter = fitBounds.getCenter(new THREE.Vector3());
 var fitSize = fitBounds.getSize(new THREE.Vector3());
 var fitMaxWidth = Math.sqrt((fitSize.x * fitSize.x) + (fitSize.z * fitSize.z));
-var NORMAL_PAD = 1.34;
-var EXPANDED_PAD = 1.1;
+var NORMAL_PAD = 0.8;
+var EXPANDED_PAD = 0.72;
 
 function applyFrame(nw, nh, pad){
   var safeW = Math.max(1, nw);
@@ -1239,7 +1240,7 @@ function applyFrame(nw, nh, pad){
   var fitWidth = fitMaxWidth * pad;
   var distV = (fitHeight / 2) / Math.tan(FOV_RAD / 2);
   var distH = (fitWidth / 2) / Math.tan(hFov / 2);
-  var dist = Math.max(distV, distH) + fitSize.z * 0.18;
+  var dist = Math.max(distV, distH) + fitSize.z * 0.08;
 
   camera.aspect = aspect;
   camera.position.set(fitCenter.x, fitCenter.y, dist);
