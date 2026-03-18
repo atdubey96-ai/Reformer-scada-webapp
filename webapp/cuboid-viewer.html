@@ -1213,130 +1213,124 @@ function cuboidPaintSideZoneCanvas(canvas, wallKey, snapshot, cleaningMap, zoneK
   var tstVals = (wallKey === "A" || wallKey === "B")
     ? (zoneKind === "top" ? (snapshot.abTop || []) : (snapshot.abBot || []))
     : (zoneKind === "top" ? (snapshot.cdTop || []) : (snapshot.cdBot || []));
-  var rowOrder = zoneKind === "top" ? [6, 5, 4, "PH_TOP"] : [3, 2, "PH_BOT", 1];
-  var panelInset = 16;
-  var gridLeft = 118;
-  var gridRight = w - 22;
-  var gridW = gridRight - gridLeft;
-  var slotW = gridW / 15;
-  var headerTop = 18;
-  var headerH = 54;
-  var burnerNumY = 98;
-  var itemTop = 158;
-  var itemBottom = h - 54;
-  var stepY = (itemBottom - itemTop) / Math.max(1, rowOrder.length - 1);
-  var centers = rowOrder.map(function(_, idx){ return Math.round(itemTop + (stepY * idx)); });
-  var iconScale = 1.18;
+  var rowOrder = zoneKind === "top" ? [6, 5, 4] : [3, 2, 1];
+  var sampleCols = [1, 5, 9, 13];
+  var pad = 12;
+  var pipeXs = [0.18, 0.39, 0.61, 0.82].map(function(stop){ return Math.round(w * stop); });
+  var rowYs = [h * 0.24, h * 0.50, h * 0.76];
+  var stripX = Math.round(w * 0.875);
+  var stripW = Math.max(18, Math.round(w * 0.062));
+  var stripY = Math.round(h * 0.12);
+  var stripH = Math.round(h * 0.76);
+  var iconScale = 1.78;
 
-  var panelGrad = ctx.createLinearGradient(0, 0, 0, h);
-  panelGrad.addColorStop(0, "rgba(6,10,17,0.96)");
-  panelGrad.addColorStop(0.58, "rgba(5,8,14,0.94)");
-  panelGrad.addColorStop(1, "rgba(3,5,10,0.96)");
-  ctx.fillStyle = panelGrad;
-  cuboidRoundRectPath(ctx, panelInset, panelInset, w - (panelInset * 2), h - (panelInset * 2), 26);
+  var bg = ctx.createLinearGradient(0, 0, w, h);
+  bg.addColorStop(0, "rgba(2,4,8,0.98)");
+  bg.addColorStop(0.56, "rgba(7,10,16,0.96)");
+  bg.addColorStop(1, "rgba(16,20,27,0.94)");
+  ctx.fillStyle = bg;
+  cuboidRoundRectPath(ctx, pad, pad, w - (pad * 2), h - (pad * 2), 22);
   ctx.fill();
-  ctx.strokeStyle = "rgba(160,194,232,0.22)";
-  ctx.lineWidth = 1.8;
+
+  var innerGlow = ctx.createRadialGradient(
+    Math.round(w * 0.48), Math.round(h * 0.48), Math.max(10, w * 0.05),
+    Math.round(w * 0.48), Math.round(h * 0.48), Math.max(w, h) * 0.66
+  );
+  innerGlow.addColorStop(0, "rgba(255,192,80,0.06)");
+  innerGlow.addColorStop(0.45, "rgba(44,74,118,0.10)");
+  innerGlow.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = innerGlow;
+  ctx.fillRect(pad, pad, w - (pad * 2), h - (pad * 2));
+
+  ctx.strokeStyle = "rgba(160,194,232,0.20)";
+  ctx.lineWidth = 1.6;
   ctx.stroke();
 
-  var gloss = ctx.createLinearGradient(0, headerTop, 0, headerTop + 120);
-  gloss.addColorStop(0, "rgba(255,255,255,0.13)");
-  gloss.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = gloss;
-  cuboidRoundRectPath(ctx, panelInset + 2, panelInset + 2, w - (panelInset * 2) - 4, 96, 22);
+  for(var pi = 0; pi < pipeXs.length; pi++){
+    var pipeX = pipeXs[pi];
+    var pipeW = Math.max(12, w * 0.052);
+    var pipeGrad = ctx.createLinearGradient(pipeX - (pipeW / 2), 0, pipeX + (pipeW / 2), 0);
+    pipeGrad.addColorStop(0, "rgba(6,10,16,0.94)");
+    pipeGrad.addColorStop(0.45, "rgba(190,206,224,0.58)");
+    pipeGrad.addColorStop(1, "rgba(6,10,16,0.94)");
+    ctx.fillStyle = pipeGrad;
+    ctx.fillRect(pipeX - (pipeW / 2), h * 0.08, pipeW, h * 0.84);
+  }
+
+  for(var ri = 0; ri < rowOrder.length; ri++){
+    var rowNumber = rowOrder[ri];
+    var rowData = Array.isArray(rows[rowNumber - 1]) ? rows[rowNumber - 1] : [];
+    for(var ci = 0; ci < sampleCols.length; ci++){
+      var burnerIdx = sampleCols[ci];
+      var burnerX = pipeXs[ci];
+      var centerY = rowYs[ri];
+      var state = cuboidNormalizeBurnerState(rowData[burnerIdx]);
+      var cleaned = !!String(cleaningMap["R" + rowNumber + "B" + (burnerIdx + 1)] || "").trim();
+      cuboidDrawBurnerGlyph(ctx, burnerX, centerY, state, cleaned, (phaseBase || 0) + (ri * 0.55) + (ci * 0.28), iconScale);
+    }
+  }
+
+  var hasTemps = Array.isArray(tstVals) && tstVals.some(function(v){ return isFinite(Number(v)); });
+  if(hasTemps){
+    var segH = stripH / 15;
+    for(var ti = 0; ti < 15; ti++){
+      var tVal = Number(tstVals[ti]);
+      ctx.fillStyle = isFinite(tVal) ? cuboidTempToColor(tVal) : "rgba(71,85,105,0.28)";
+      ctx.fillRect(stripX, stripY + (segH * ti), stripW, Math.ceil(segH) + 1);
+    }
+    var stripGlow = ctx.createLinearGradient(stripX - Math.round(w * 0.12), 0, stripX + stripW, 0);
+    stripGlow.addColorStop(0, "rgba(0,0,0,0)");
+    stripGlow.addColorStop(0.58, "rgba(250,204,21,0.16)");
+    stripGlow.addColorStop(1, "rgba(255,255,255,0.06)");
+    ctx.fillStyle = stripGlow;
+    ctx.fillRect(Math.round(w * 0.44), stripY, Math.round(w * 0.46), stripH);
+  }else{
+    ctx.fillStyle = "rgba(71,85,105,0.24)";
+    ctx.fillRect(stripX, stripY, stripW, stripH);
+  }
+
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = 1.1;
+  ctx.strokeRect(stripX, stripY, stripW, stripH);
+
+  var titleGrad = ctx.createLinearGradient(0, 0, w, 0);
+  titleGrad.addColorStop(0, "rgba(255,255,255,0.14)");
+  titleGrad.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = titleGrad;
+  cuboidRoundRectPath(ctx, pad + 4, pad + 4, w - (pad * 2) - 8, Math.round(h * 0.14), 18);
   ctx.fill();
 
-  var headGrad = ctx.createLinearGradient(0, 0, w, 0);
-  headGrad.addColorStop(0, "rgba(8,12,20,0.98)");
-  headGrad.addColorStop(1, "rgba(13,18,28,0.98)");
-  ctx.fillStyle = headGrad;
-  cuboidRoundRectPath(ctx, 20, headerTop, w - 40, headerH, 18);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(243,112,34,0.72)";
-  ctx.lineWidth = 2.2;
-  ctx.beginPath();
-  ctx.moveTo(24, headerTop + headerH + 8);
-  ctx.lineTo(w - 24, headerTop + headerH + 8);
-  ctx.stroke();
-
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "#f8fafc";
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.font = "700 28px Times New Roman, serif";
-  ctx.fillText("WALL " + wallKey, 34, headerTop + Math.round(headerH / 2) + 2);
-
-  ctx.textAlign = "right";
-  ctx.font = "700 15px Times New Roman, serif";
-  ctx.fillStyle = "rgba(255,255,255,0.96)";
-  ctx.fillText(zoneKind === "top" ? "Rows 6-4" : "Rows 3-1", w - 34, headerTop + Math.round(headerH / 2) + 1);
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+  ctx.font = "700 26px Times New Roman, serif";
+  ctx.fillText("WALL " + wallKey, 28, 34);
   ctx.font = "700 14px Times New Roman, serif";
-  for(var bn=1; bn<=15; bn++){
-    var bx = gridLeft + slotW * (bn - 0.5);
-    ctx.fillStyle = "rgba(8,12,22,0.95)";
-    cuboidRoundRectPath(ctx, bx - 14, burnerNumY - 11, 28, 22, 7);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(140,160,190,0.30)";
-    ctx.lineWidth = 0.9;
-    ctx.stroke();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText("B" + bn, bx, burnerNumY + 1);
-  }
-
-  for(var ii=0; ii<rowOrder.length; ii++){
-    var item = rowOrder[ii];
-    var centerY = centers[ii];
-    var lineY = centerY + ((typeof item === "string") ? 20 : 28);
-    ctx.strokeStyle = "rgba(120,127,160,0.16)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(24, lineY);
-    ctx.lineTo(w - 24, lineY);
-    ctx.stroke();
-
-    if(item === "PH_TOP" || item === "PH_BOT"){
-      cuboidDrawPeepBar(ctx, "PH TST", tstVals, gridLeft, centerY, gridW, 0.62);
-      continue;
-    }
-
-    ctx.fillStyle = "rgba(8,12,22,0.95)";
-    cuboidRoundRectPath(ctx, 22, centerY - 14, 74, 28, 10);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(140,160,190,0.28)";
-    ctx.lineWidth = 0.9;
-    ctx.stroke();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "700 16px Times New Roman, serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("R" + item, 59, centerY);
-
-    var rowData = Array.isArray(rows[item - 1]) ? rows[item - 1] : [];
-    for(var ci=0; ci<15; ci++){
-      var burnerX = gridLeft + slotW * (ci + 0.5);
-      var state = cuboidNormalizeBurnerState(rowData[ci]);
-      var cleaned = !!String(cleaningMap["R" + item + "B" + (ci + 1)] || "").trim();
-      cuboidDrawBurnerGlyph(ctx, burnerX, centerY + 6, state, cleaned, (phaseBase || 0) + (ii * 0.55) + (ci * 0.26), iconScale);
-    }
-  }
+  ctx.fillStyle = "rgba(226,232,240,0.88)";
+  ctx.fillText(zoneKind === "top" ? "Rows 6-4" : "Rows 3-1", 30, 58);
 }
 
 function cuboidCreateSideDisplay(side, wallKey){
   function makePanel(zoneKind, centerY){
     var canvas = document.createElement("canvas");
-    canvas.width = 960;
-    canvas.height = 960;
+    canvas.width = 860;
+    canvas.height = 520;
     var texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.ClampToEdgeWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
-    texture.minFilter = THREE.LinearFilter;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = true;
+    texture.premultiplyAlpha = false;
     if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
       texture.colorSpace = THREE.SRGBColorSpace;
     }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
       texture.encoding = THREE.sRGBEncoding;
+    }
+    if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
+      try{
+        texture.anisotropy = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy() || 1));
+      }catch(e){}
     }
     var material = new THREE.MeshBasicMaterial({
       map:texture,
@@ -1346,18 +1340,18 @@ function cuboidCreateSideDisplay(side, wallKey){
       alphaTest:0.02
     });
     var mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(HOLE_W * 0.985, HOLE_H * 0.975),
+      new THREE.PlaneGeometry(HOLE_W * 0.88, HOLE_H * 0.82),
       material
     );
-    var insetX = Math.max(0.016, CD * 0.035);
+    var insetX = Math.max(0.24, Math.min(0.32, CW * 0.03));
     if(side === "left"){
       mesh.position.set(-CW/2 + insetX, centerY, 0);
-      mesh.rotation.y = -Math.PI / 2;
+      mesh.rotation.y = Math.PI / 2;
     }else{
       mesh.position.set(CW/2 - insetX, centerY, 0);
-      mesh.rotation.y = Math.PI / 2;
+      mesh.rotation.y = -Math.PI / 2;
     }
-    mesh.renderOrder = 8;
+    mesh.renderOrder = 11;
     group.add(mesh);
     return {
       zoneKind:zoneKind,
