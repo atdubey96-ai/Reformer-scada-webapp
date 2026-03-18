@@ -3063,6 +3063,28 @@ body.light-theme .cw-nudge{
   font-size:12px;font-weight:700;letter-spacing:0.4px;
   max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+#tab-cuboid{
+  padding:14px 18px 18px;
+  background:#07090d;
+}
+#tab-cuboid .cuboid-tab-shell{
+  width:100%;
+  border:1px solid rgba(60,100,150,0.4);
+  border-radius:8px;
+  overflow:hidden;
+  background:#07090d;
+  box-shadow:0 16px 40px rgba(0,0,0,0.34);
+}
+#tab-cuboid .cuboid-tab-frame{
+  display:block;
+  width:100%;
+  height:clamp(480px,calc(100svh - 220px),920px);
+  border:0;
+  background:#07090d;
+}
+body.light-theme #tab-cuboid{
+  background:#07090d;
+}
 
 /* Add bottom padding to body so content isn't hidden under tab bar */
 body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
@@ -3230,6 +3252,7 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
   #btab-heatmap{order:3;}
   #btab-tempdata{order:4;}
   #btab-alarms{order:5;}
+  #btab-cuboid{order:6;}
   #btab-heatmap .btab-icon{
     width:40px;
     height:40px;
@@ -6348,13 +6371,31 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-burner,
   #tab-cleaning .cleaning-section,
   #tab-tempdata > div,
+  #tab-cuboid,
   #tab-alarms .alarms-section{
     margin:0 !important;
     padding:12px !important;
     border-radius:18px !important;
+    box-shadow:0 14px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+  }
+  #tab-heatmap > div,
+  #tab-burner,
+  #tab-cleaning .cleaning-section,
+  #tab-tempdata > div,
+  #tab-alarms .alarms-section{
     border:1px solid var(--m-border) !important;
     background:linear-gradient(165deg, var(--m-surface) 0%, var(--m-surface-2) 100%) !important;
-    box-shadow:0 14px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+  }
+  #tab-cuboid{
+    border:1px solid rgba(60,100,150,0.34) !important;
+    background:#07090d !important;
+  }
+  #tab-cuboid .cuboid-tab-shell{
+    border-color:rgba(60,100,150,0.4) !important;
+    border-radius:14px !important;
+  }
+  #tab-cuboid .cuboid-tab-frame{
+    height:clamp(420px,calc(100svh - 240px),760px);
   }
   body.light-theme #tab-heatmap > div,
   body.light-theme #tab-burner,
@@ -15159,7 +15200,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
 
   <!-- TAB 4: Alarms -->
-    <div id="tab-alarms" class="tab-panel">
+  <div id="tab-alarms" class="tab-panel">
     <div class="alarms-section">
       <div class="alarms-header">
         <div class="alarms-header-left">
@@ -15184,6 +15225,20 @@ html, body, body *, body *::before, body *::after, svg text{
       <div id="alarmList" class="alarm-list">
         <div class="alarm-empty">No active alarms. All walls are within normal parameters.</div>
       </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: Cuboid -->
+  <div id="tab-cuboid" class="tab-panel">
+    <div class="cuboid-tab-shell">
+      <iframe
+        id="cuboid-tab-frame"
+        class="cuboid-tab-frame"
+        title="Cuboid Viewer"
+        src="about:blank"
+        data-src="./cuboid-viewer.html"
+        loading="lazy"
+      ></iframe>
     </div>
   </div>
 
@@ -15213,6 +15268,10 @@ html, body, body *, body *::before, body *::after, svg text{
     <span class="btab-icon">🚨</span>
     <span class="btab-label">Alarms</span>
     <span class="btab-alarm-count" id="btab-alarm-count" style="display:none">0</span>
+  </button>
+  <button class="btab" id="btab-cuboid" onclick="switchTab('cuboid')">
+    <span class="btab-icon">🧊</span>
+    <span class="btab-label">Cuboid</span>
   </button>
 </div>
 
@@ -18545,7 +18604,10 @@ function updateGlobalRefreshButtonLabel(tab){
   var btn = document.getElementById("refreshDataBtn");
   if(!btn) return;
   var key = String(tab || "").toLowerCase();
-  btn.textContent = (key === "alarms") ? "↻ Refresh Alarms" : "🔄 Refresh Data";
+  btn.textContent =
+    key === "alarms" ? "↻ Refresh Alarms" :
+    key === "cuboid" ? "↻ Refresh Cuboid" :
+    "🔄 Refresh Data";
 }
 
 function initMobileMetaLogo(){
@@ -18557,12 +18619,32 @@ function initMobileMetaLogo(){
   if(src) mobileLogo.setAttribute("src", src);
 }
 
+function ensureCuboidViewerLoaded(forceReload){
+  var frame = document.getElementById("cuboid-tab-frame");
+  if(!frame) return;
+  var baseSrc = String(frame.getAttribute("data-src") || "./cuboid-viewer.html").trim();
+  if(!baseSrc) return;
+  if(forceReload){
+    frame.setAttribute("src", baseSrc + "?ts=" + Date.now());
+    return;
+  }
+  var current = String(frame.getAttribute("src") || "").trim();
+  if(!current || current === "about:blank"){
+    frame.setAttribute("src", baseSrc);
+  }
+}
+
 function handleGlobalRefreshClick(){
   var active = document.querySelector('.tab-panel.tab-active');
   var tab = active && active.id ? active.id.replace('tab-','') : '';
   if(tab === 'alarms'){
     refreshAlarmPanel();
     showToast("↻ Alarm panel refreshed");
+    return;
+  }
+  if(tab === 'cuboid'){
+    ensureCuboidViewerLoaded(true);
+    showToast("↻ Cuboid viewer refreshed");
     return;
   }
   smartRefresh();
@@ -18615,6 +18697,7 @@ function switchTab(tab){
   }
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
+  if(tab === 'cuboid') setTimeout(ensureCuboidViewerLoaded, 0);
   updateGlobalRefreshButtonLabel(tab);
   updateDesktopPrimaryInterfacePickerUi();
 }

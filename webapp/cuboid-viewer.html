@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>BMS Reformer — Cuboid Viewer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#07090d;overflow:hidden;
+  font-family:'Courier New',Courier,monospace;}
+
+#wrap{
+  width:100vw;height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:10px;
+}
+
+#canvas-area{
+  position:relative;
+  width:92vw;height:84vh;
+  border:1.5px solid rgba(60,100,150,0.4);
+  border-radius:4px;
+  background:#07090d;
+  overflow:hidden;
+  cursor:grab;
+}
+#canvas-area:active{cursor:grabbing;}
+#canvas-area canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+
+#chamber-label{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  font-size:10px;letter-spacing:4px;color:rgba(100,160,220,0.5);
+  pointer-events:none;text-transform:uppercase;
+}
+
+#hint-bar{
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  font-size:9px;letter-spacing:2px;color:rgba(120,150,180,0.45);
+  pointer-events:none;white-space:nowrap;
+}
+
+#ctrl-row{
+  display:flex;gap:10px;align-items:center;
+}
+.cbtn{
+  background:rgba(15,25,40,0.9);
+  border:1px solid rgba(60,100,150,0.45);
+  color:rgba(140,180,220,0.85);
+  padding:4px 18px;border-radius:3px;
+  font-family:'Courier New',monospace;font-size:10px;
+  letter-spacing:2px;cursor:pointer;
+  transition:all .18s;
+}
+.cbtn:hover{background:rgba(30,55,90,0.9);color:#cde;border-color:rgba(100,160,220,0.7);}
+.sep{color:rgba(80,110,140,0.4);font-size:10px;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="canvas-area">
+    <div id="chamber-label">AB CHAMBER — REFORMER</div>
+    <div id="hint-bar">DRAG ← → TO ROTATE &nbsp;·&nbsp; DOUBLE-CLICK TO RESET</div>
+  </div>
+  <div id="ctrl-row">
+    <button class="cbtn" id="btn-front">◀ FRONT (A)</button>
+    <span class="sep">|</span>
+    <button class="cbtn" id="btn-back">BACK (B) ▶</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════
+   BURNER DATA
+═══════════════════════════════════════════════════════════ */
+var COLS=15, ROWS=6;
+// Flame type per cell: 1=NG amber, 2=OG green, 3=blue/both, 0=off
+var FLAMES=[
+  [1,3,2,1,2,1,3,1,2,1,1,3,1,2,3],  // row6 top
+  [2,1,3,2,1,2,1,2,1,3,2,1,3,1,2],  // row5
+  [1,2,1,1,2,3,1,2,2,1,2,1,1,2,1],  // row4
+  [3,1,2,1,3,1,2,1,3,2,1,2,1,1,3],  // row3
+  [2,3,1,2,1,2,3,1,2,1,3,1,2,3,1],  // row2
+  [0,0,0,0,0,3,3,3,3,0,0,0,0,3,3],  // row1 bottom (cold/off — like screenshot)
+];
+var TEMPS=[930,930,930,982,930,930,930,930,930,900,930,930,930,930,930];
+var TST_A=[1,1,0,1,1,1,1,0,1,1,0,1,1,1,1]; // 0=hotspot
+var TST_B=[1,0,1,1,1,1,1,1,0,0,1,1,1,1,0];
+
+/* ═══════════════════════════════════════════════════════════
+   BUILD BURNER WALL CANVAS TEXTURE
+   Layout matches screenshot exactly:
+   - Two burners (top+bottom) per row per column
+   - Grey oval pip beside each burner
+   - ROW6,5,4 in upper chamber → temp row → PH TST bar
+   - ROW3,2 in lower chamber  → temp row → PH TST bar
+   - ROW1 at very bottom
+═══════════════════════════════════════════════════════════ */
+function buildBurnerCanvas(label, tstRow1, tstRow2){
+  var TW=2048, TH=1280;
+  var cv=document.createElement('canvas');
+  cv.width=TW; cv.height=TH;
+  var g=cv.getContext('2d');
+
+  /* ── BACKGROUND: deep black with subtle warm gradient (furnace interior) */
+  var bgGrad=g.createLinearGradient(0,0,0,TH);
+  bgGrad.addColorStop(0,'#0c0e13');
+  bgGrad.addColorStop(0.5,'#090b0f');
+  bgGrad.addColorStop(1,'#060709');
+  g.fillStyle=bgGrad; g.fillRect(0,0,TW,TH);
+
+  /* subtle refractory brick texture */
+  g.strokeStyle='rgba(35,48,62,0.3)'; g.lineWidth=0.8;
+  var bW=80, bH=36;
+  for(var brow=0;brow*bH<TH;brow++){
+    var boff=(brow%2)*bW/2;
+    for(var bcol=0;bcol*bW<TW+bW;bcol++){
+      g.strokeRect(bcol*bW-boff, brow*bH, bW, bH);
+    }
+  }
+
+  /* ── LAYOUT CONSTANTS */
+  var PL=140;  // left padding for row labels
+  var PR=18;   // right padding
+  var PT=64;   // top padding for col headers
+  var cw=(TW-PL-PR)/COLS;
+
+  /* vertical layout (pixels from top):
+     PT=64: col headers
+     Zone A (ROW6,5,4): PT → tst1Top
+     temp strip 1      : tempH1
+     TST bar 1         : tstH
+     Zone B (ROW3,2)   : → tst2Top
+     temp strip 2      : tempH
+     TST bar 2         : tstH
+     Zone C (ROW1)     : → TH
+  */
+  var tstH=34;
+  var tempH=28;
+  var tst1Top = Math.round(TH*0.505);
+  var tst1TempY = tst1Top - tempH - 4;
+  var tst2Top = Math.round(TH*0.745);
+  var tst2TempY = tst2Top - tempH - 4;
+  var zoneAH = tst1TempY - PT - 4;   // height for ROW6,5,4
+  var zoneBH = tst2TempY - (tst1Top+tstH+6) - 4; // height for ROW3,2
+  var zoneCtop = tst2Top + tstH + 8;
+  var zoneCH = TH - zoneCtop - 8;
+
+  /* Each row slot height */
+  var rowAH = Math.round(zoneAH/3); // 3 rows in upper chamber
+  var rowBH = Math.round(zoneBH/2); // 2 rows in lower chamber
+
+  /* ── LEFT LABEL PANEL */
+  g.fillStyle='rgba(8,14,22,0.75)';
+  g.fillRect(0,0,PL,TH);
+  /* header area top */
+  g.fillStyle='rgba(10,18,30,0.7)';
+  g.fillRect(PL,0,TW-PL-PR,PT);
+
+  /* ── COLUMN HEADERS B1..B15 */
+  g.font='bold 28px "Courier New"';
+  g.textAlign='center'; g.textBaseline='middle';
+  for(var c=0;c<COLS;c++){
+    var colX=PL+c*cw+cw/2;
+    g.fillStyle='#ccdff0';
+    g.fillText('B'+(c+1), colX, PT/2);
+    /* column divider */
+    g.strokeStyle='rgba(45,65,90,0.22)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(PL+c*cw+cw,PT); g.lineTo(PL+c*cw+cw,TH); g.stroke();
+  }
+
+  /* ── FLAME + PIP RENDERER */
+  function drawBurner(cx, cy, type, sz){
+    sz = sz || 24;
+    var C = {
+      1: {core:'#fffaaa', mid:'#ffaa00', tip:'#cc5500', glow:'rgba(255,150,0,0.55)'},
+      2: {core:'#ccffaa', mid:'#22dd22', tip:'#005500', glow:'rgba(20,210,20,0.5)'},
+      3: {core:'#bbddff', mid:'#1166ff', tip:'#000faa', glow:'rgba(30,100,255,0.5)'},
+      0: {core:'#2a3040', mid:'#1a2030', tip:'#0f1520', glow:'rgba(0,0,0,0)'},
+    }[type] || {core:'#222',mid:'#111',tip:'#000',glow:'rgba(0,0,0,0)'};
+
+    /* glow halo */
+    if(type !== 0){
+      var halo = g.createRadialGradient(cx, cy, 0, cx, cy, sz*1.8);
+      halo.addColorStop(0, C.glow);
+      halo.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = halo;
+      g.beginPath();
+      g.ellipse(cx, cy, sz*1.5, sz*2.2, 0, 0, Math.PI*2);
+      g.fill();
+    }
+
+    /* flame teardrop body */
+    var fg = g.createRadialGradient(cx, cy+sz*0.1, sz*0.04, cx, cy-sz*0.25, sz*0.85);
+    fg.addColorStop(0, C.core);
+    fg.addColorStop(0.4, C.mid);
+    fg.addColorStop(1, C.tip);
+    g.fillStyle = fg;
+    g.beginPath();
+    g.moveTo(cx, cy - sz);
+    g.bezierCurveTo(cx+sz*0.58, cy-sz*0.25, cx+sz*0.52, cy+sz*0.5, cx, cy+sz*0.68);
+    g.bezierCurveTo(cx-sz*0.52, cy+sz*0.5, cx-sz*0.58, cy-sz*0.25, cx, cy-sz);
+    g.fill();
+
+    /* stem / pip dot — grey oval to the right like screenshot */
+    var pipX = cx + sz*0.85;
+    var pipY = cy + sz*0.3;
+    g.fillStyle = 'rgba(140,158,175,0.82)';
+    g.beginPath();
+    g.ellipse(pipX, pipY, sz*0.28, sz*0.2, 0, 0, Math.PI*2);
+    g.fill();
+    /* pip inner highlight */
+    g.fillStyle = 'rgba(200,215,228,0.4)';
+    g.beginPath();
+    g.ellipse(pipX-sz*0.06, pipY-sz*0.06, sz*0.12, sz*0.08, 0, 0, Math.PI*2);
+    g.fill();
+  }
+
+  /* ── DRAW TWO BURNERS PER COLUMN PER ROW (top + bottom) */
+  function drawRowZone(rowIdx, zoneTop, zoneH, rowLabel){
+    var topBurnerY = zoneTop + zoneH * 0.3;
+    var botBurnerY = zoneTop + zoneH * 0.72;
+    var labelY     = zoneTop + zoneH * 0.5;
+
+    /* row label */
+    g.font = 'bold 24px "Courier New"';
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    g.fillStyle = 'rgba(110,165,210,0.92)';
+    g.fillText(rowLabel, PL-10, labelY);
+
+    /* row separator line */
+    g.strokeStyle = 'rgba(35,55,78,0.35)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(PL, zoneTop); g.lineTo(TW-PR, zoneTop); g.stroke();
+
+    /* burners */
+    for(var c=0; c<COLS; c++){
+      var fx = PL + c*cw + cw*0.38; // flame slightly left of center so pip fits
+      var ftype = FLAMES[rowIdx][c];
+      drawBurner(fx, topBurnerY, ftype, 22);
+      drawBurner(fx, botBurnerY, ftype, 22);
+    }
+
+    /* temp reading below the zone */
+    // (drawn separately at tst temp strip)
+  }
+
+  /* ── UPPER CHAMBER: ROW 6, 5, 4 */
+  drawRowZone(5, PT+2,           rowAH,   'ROW 6');
+  drawRowZone(4, PT+2+rowAH,     rowAH,   'ROW 5');
+  drawRowZone(3, PT+2+rowAH*2,   rowAH,   'ROW 4');
+
+  /* temp strip 1 */
+  g.font = 'bold 21px "Courier New"';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  for(var c=0;c<COLS;c++){
+    var tx=PL+c*cw+cw/2;
+    var t=TEMPS[c];
+    g.fillStyle = (t!==930) ? '#ffcc44' : 'rgba(175,205,230,0.7)';
+    g.fillText(t+'°', tx, tst1TempY + tempH/2);
+  }
+
+  /* ── TST BAR 1 */
+  function drawTST(y, tstArr){
+    var bw = TW-PL-PR;
+    /* amber gradient bar */
+    var gr = g.createLinearGradient(PL,0,PL+bw,0);
+    gr.addColorStop(0,    '#7a3000');
+    gr.addColorStop(0.18, '#c45c00');
+    gr.addColorStop(0.42, '#ffa800');
+    gr.addColorStop(0.65, '#ffcc00');
+    gr.addColorStop(0.85, '#ff9800');
+    gr.addColorStop(1,    '#cc5500');
+    g.fillStyle=gr;
+    g.beginPath(); g.roundRect(PL,y,bw,tstH,6); g.fill();
+    /* top gloss */
+    var gl=g.createLinearGradient(0,y,0,y+tstH*0.45);
+    gl.addColorStop(0,'rgba(255,255,255,0.18)');
+    gl.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=gl; g.beginPath(); g.roundRect(PL,y,bw,tstH,6); g.fill();
+    /* bottom shadow */
+    var sh=g.createLinearGradient(0,y+tstH*0.6,0,y+tstH);
+    sh.addColorStop(0,'rgba(0,0,0,0)');
+    sh.addColorStop(1,'rgba(0,0,0,0.28)');
+    g.fillStyle=sh; g.beginPath(); g.roundRect(PL,y,bw,tstH,6); g.fill();
+    /* PH TST label */
+    g.font='bold 22px "Courier New"';
+    g.textAlign='right'; g.textBaseline='middle';
+    g.fillStyle='rgba(255,255,255,0.95)';
+    g.fillText('PH TST', PL-8, y+tstH/2);
+    /* sensor circles */
+    for(var c=0;c<COLS;c++){
+      var ox=PL+c*cw+cw/2;
+      var hot=(tstArr[c]===0);
+      var cy2=y+tstH/2;
+      var rad=hot?9:7;
+      /* outer ring */
+      g.lineWidth=2.5;
+      g.strokeStyle=hot?'rgba(255,50,0,1)':'rgba(255,248,200,0.85)';
+      g.beginPath(); g.arc(ox,cy2,rad,0,Math.PI*2); g.stroke();
+      if(hot){
+        /* fill glow */
+        var hg=g.createRadialGradient(ox,cy2,0,ox,cy2,rad);
+        hg.addColorStop(0,'rgba(255,120,0,0.85)');
+        hg.addColorStop(0.6,'rgba(255,60,0,0.4)');
+        hg.addColorStop(1,'rgba(255,30,0,0)');
+        g.fillStyle=hg; g.fill();
+      } else {
+        /* open centre — matches screenshot hollow circle */
+        g.fillStyle='rgba(255,220,80,0.12)';
+        g.beginPath(); g.arc(ox,cy2,rad-3,0,Math.PI*2); g.fill();
+      }
+    }
+  }
+  drawTST(tst1Top, tstRow1);
+
+  /* ── LOWER CHAMBER: ROW 3, 2 */
+  var zBtop = tst1Top+tstH+8;
+  drawRowZone(2, zBtop,          rowBH, 'ROW 3');
+  drawRowZone(1, zBtop+rowBH,    rowBH, 'ROW 2');
+
+  /* temp strip 2 */
+  g.font = 'bold 21px "Courier New"';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  for(var c=0;c<COLS;c++){
+    var tx2=PL+c*cw+cw/2;
+    var t2=TEMPS[c];
+    g.fillStyle = (t2!==930) ? '#ffcc44' : 'rgba(175,205,230,0.7)';
+    g.fillText(t2+'°', tx2, tst2TempY+tempH/2);
+  }
+  drawTST(tst2Top, tstRow2);
+
+  /* ── BOTTOM ZONE: ROW 1 */
+  drawRowZone(0, zoneCtop, zoneCH, 'ROW 1');
+
+  /* ── FACE LABEL WATERMARK */
+  g.save();
+  g.globalAlpha=0.055;
+  g.font='bold 280px "Courier New"';
+  g.fillStyle='#88aacc';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText(label, TW/2, TH/2);
+  g.restore();
+
+  return cv;
+}
+
+var cvA=buildBurnerCanvas('A',TST_A,TST_B);
+var cvB=buildBurnerCanvas('B',TST_B,TST_A);
+
+/* ═══════════════════════════════════════════════════════════
+   THREE.JS SCENE
+═══════════════════════════════════════════════════════════ */
+var container=document.getElementById('canvas-area');
+var W=container.clientWidth, H=container.clientHeight;
+
+var renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(W,H);
+renderer.shadowMap.enabled=false;
+renderer.outputEncoding=THREE.sRGBEncoding;
+container.appendChild(renderer.domElement);
+
+var scene=new THREE.Scene();
+scene.background=new THREE.Color(0x07090d);
+
+/* ── PERSPECTIVE CAMERA — dynamic, fits canvas on every resize ── */
+var FOV = 22;
+// Compute cuboid dims from current canvas size
+// CH is derived so the total height (cuboid + tubes above) fits viewport
+// TUBE_OUT is CH*0.12, so total height = CH + CH*0.12 = CH*1.12
+// We want CH*1.12 to fill ~88% of viewport height in world units
+// CH is set in world units; camera distance auto-calculated to fit both W and H.
+// We fix CH=6 as baseline world unit and let camera do the fitting.
+// On resize we just update camera aspect — cuboid world size stays constant,
+// BUT we also scale the group to fill the canvas.
+
+var FOV_RAD = FOV * Math.PI / 180;
+
+function calcDims(vw, vh){
+  var asp = vw / vh;
+  var MARGIN = 0.97; // 3% safety margin so nothing clips
+  // TUBE_OUT = CH*0.12, so total visual height = CH*1.12
+  // Strategy: maximise CW (horizontal length) subject to:
+  //   1) total visual height (CH*1.12) fits viewport height
+  //   2) CW fits viewport width
+  // Both constraints give a max CW — take the minimum of the two.
+
+  // From camera geometry at distance D with FOV:
+  //   visible half-height in world = D * tan(FOV/2)
+  //   visible half-width  in world = D * tan(hFOV/2) = D * tan(FOV/2) * asp
+
+  // Constraint 1 — height: CH*1.12 <= 2 * D * tan(FOV/2)
+  //   Fix D independently — we derive CW from a single camDist.
+  //   Let CH drive camDist, then see max CW that fits width at that camDist.
+  //   But we want to maximise CW, so start from width constraint instead.
+
+  // Approach: pick camDist so that width fills 97% of viewport.
+  // CW = 2 * camDist * tan(hFOV/2) * MARGIN
+  // Then derive CH from height constraint:
+  // CH = 2 * camDist * tan(FOV/2) * MARGIN / 1.12  (divide by 1.12 for tube headroom)
+  // CW / CH = asp  (we want cuboid aspect = viewport aspect for max fill)
+  // So: CW = CH * asp, no fixed ratio needed — camera controls fill.
+
+  // Solve: choose camDist so that the taller of (height-constraint, width-constraint)
+  // is exactly at MARGIN fill. We want WIDTH to be the binding constraint (maximise CW).
+  // camDist from width: CW = 2*D*tan(hFOV/2)*MARGIN → D = CW/(2*tan(hFOV/2)*MARGIN)
+  // But CW depends on D — need to fix aspect ratio CW/CH = asp
+  // and total_H = CH*1.12.
+  // Let CH be free. Then CW = CH*asp.
+  // camDist to fit width:  D_w = (CH*asp/2) / (tan(hFOV/2)*MARGIN)
+  // camDist to fit height: D_h = (CH*1.12/2) / (tan(FOV/2)*MARGIN)
+  // We want D_w <= D_h so width is binding (cuboid as wide as possible).
+  // D_w = D_h when: (asp)/(tan(hFOV/2)) = (1.12)/(tan(FOV/2))
+  // At wide screens (asp large) D_w > D_h → height becomes binding, width clips.
+  // At narrow screens width is binding.
+  // Solution: use max(D_w, D_h) — the larger distance ensures BOTH fit.
+  // CW is then back-calculated from camDist so it fills width at MARGIN.
+
+  var hFov = 2 * Math.atan(Math.tan(FOV_RAD / 2) * asp);
+
+  // Start with CH=6 (world units), compute both distances
+  var CH = 6;
+  var CW_try = CH * asp;
+  var D_h = (CH * 1.12 / 2) / (Math.tan(FOV_RAD / 2) * MARGIN);
+  var D_w = (CW_try / 2) / (Math.tan(hFov / 2) * MARGIN);
+  var camDist = Math.max(D_h, D_w);
+
+  // Now back-calculate max CW that fits at this camDist (width binding)
+  var maxCW = 2 * camDist * Math.tan(hFov / 2) * MARGIN;
+  // And max CH that fits at this camDist (height binding, accounting for tubes)
+  var maxCH = 2 * camDist * Math.tan(FOV_RAD / 2) * MARGIN / 1.12;
+
+  // Use actual CH and CW = min(maxCW, maxCH*asp) to guarantee no clipping
+  CH = Math.min(CH, maxCH);
+  var CW = Math.min(maxCW, CH * asp);
+  var CD = CW * 0.18;
+
+  return { CH: CH, CW: CW, CD: CD, camDist: camDist, asp: asp };
+}
+
+var dims = calcDims(W, H);
+var CH = dims.CH, CW = dims.CW, CD = dims.CD;
+var camera = new THREE.PerspectiveCamera(FOV, dims.asp, 0.1, 500);
+camera.position.set(0, 0, dims.camDist);
+camera.lookAt(0, 0, 0);
+
+/* ── TEXTURES ── */
+var texA=new THREE.CanvasTexture(cvA);
+var texB=new THREE.CanvasTexture(cvB);
+texA.encoding=THREE.sRGBEncoding;
+texB.encoding=THREE.sRGBEncoding;
+
+/* ── METALLIC CANVAS TEXTURE (procedural) ── */
+function makeMetalCanvas(w,h){
+  var mc=document.createElement('canvas');
+  mc.width=w; mc.height=h;
+  var g=mc.getContext('2d');
+
+  /* ── BASE: silver-steel gradient ── */
+  var base=g.createLinearGradient(0,0,w,h);
+  base.addColorStop(0.00,'#8a9099');
+  base.addColorStop(0.15,'#b8bec6');
+  base.addColorStop(0.30,'#d4d9df');
+  base.addColorStop(0.45,'#c0c6cc');
+  base.addColorStop(0.55,'#a8adb4');
+  base.addColorStop(0.70,'#bfc5cc');
+  base.addColorStop(0.85,'#d0d5da');
+  base.addColorStop(1.00,'#909498');
+  g.fillStyle=base; g.fillRect(0,0,w,h);
+
+  /* ── BRUSHED HORIZONTAL STREAKS (steel mill finish) ── */
+  for(var s=0;s<180;s++){
+    var sy=Math.random()*h;
+    var sw=40+Math.random()*(w-40);
+    var sx=Math.random()*(w-sw);
+    var bright=Math.random()<0.5;
+    var alpha=0.03+Math.random()*0.09;
+    var streak=g.createLinearGradient(sx,0,sx+sw,0);
+    var col=bright?'255,255,255':'30,30,40';
+    streak.addColorStop(0,'rgba('+col+',0)');
+    streak.addColorStop(0.4,'rgba('+col+','+alpha+')');
+    streak.addColorStop(0.6,'rgba('+col+','+alpha+')');
+    streak.addColorStop(1,'rgba('+col+',0)');
+    g.fillStyle=streak;
+    var th=0.5+Math.random()*1.5;
+    g.fillRect(sx,sy,sw,th);
+  }
+
+  /* ── PLATE WELD SEAMS ── */
+  var seamCols=['rgba(60,55,50,0.55)','rgba(180,175,170,0.3)','rgba(40,38,36,0.4)'];
+  // horizontal seams
+  var hSeams=[Math.round(h*0.33),Math.round(h*0.66)];
+  hSeams.forEach(function(sy){
+    // dark groove
+    g.strokeStyle='rgba(50,48,45,0.7)'; g.lineWidth=2.5;
+    g.beginPath(); g.moveTo(0,sy); g.lineTo(w,sy); g.stroke();
+    // weld bead highlight above
+    var wg=g.createLinearGradient(0,sy-4,0,sy);
+    wg.addColorStop(0,'rgba(220,215,210,0)');
+    wg.addColorStop(1,'rgba(220,215,210,0.4)');
+    g.fillStyle=wg; g.fillRect(0,sy-4,w,4);
+    // shadow below
+    var sg=g.createLinearGradient(0,sy,0,sy+5);
+    sg.addColorStop(0,'rgba(30,28,25,0.35)');
+    sg.addColorStop(1,'rgba(30,28,25,0)');
+    g.fillStyle=sg; g.fillRect(0,sy,w,5);
+  });
+  // vertical seams
+  var vSeams=[Math.round(w*0.25),Math.round(w*0.5),Math.round(w*0.75)];
+  vSeams.forEach(function(sx){
+    g.strokeStyle='rgba(50,48,45,0.6)'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(sx,0); g.lineTo(sx,h); g.stroke();
+    var wg=g.createLinearGradient(sx,0,sx+4,0);
+    wg.addColorStop(0,'rgba(210,205,200,0.3)');
+    wg.addColorStop(1,'rgba(210,205,200,0)');
+    g.fillStyle=wg; g.fillRect(sx,0,4,h);
+  });
+
+  /* ── BOLT HEADS on plate intersections ── */
+  var boltPositions=[];
+  hSeams.forEach(function(sy){
+    vSeams.forEach(function(sx){
+      boltPositions.push([sx,sy]);
+    });
+    // extra bolts along seam
+    for(var b=0;b<5;b++){
+      boltPositions.push([Math.round(w*(0.1+b*0.18)),sy]);
+    }
+  });
+  boltPositions.forEach(function(bp){
+    var bx=bp[0], by=bp[1], br=7;
+    // bolt shadow
+    g.fillStyle='rgba(20,18,16,0.5)';
+    g.beginPath(); g.arc(bx+1,by+1,br,0,Math.PI*2); g.fill();
+    // bolt body gradient
+    var bg=g.createRadialGradient(bx-2,by-2,1,bx,by,br);
+    bg.addColorStop(0,'#e8eaec');
+    bg.addColorStop(0.4,'#b0b4b8');
+    bg.addColorStop(0.8,'#7a7e82');
+    bg.addColorStop(1,'#555860');
+    g.fillStyle=bg;
+    g.beginPath(); g.arc(bx,by,br,0,Math.PI*2); g.fill();
+    // hex nut shape
+    g.strokeStyle='rgba(40,38,36,0.6)'; g.lineWidth=1.2;
+    g.beginPath();
+    for(var i6=0;i6<6;i6++){
+      var a6=i6*Math.PI/3-Math.PI/6;
+      if(i6===0) g.moveTo(bx+Math.cos(a6)*br*0.72,by+Math.sin(a6)*br*0.72);
+      else g.lineTo(bx+Math.cos(a6)*br*0.72,by+Math.sin(a6)*br*0.72);
+    }
+    g.closePath(); g.stroke();
+    // center dot
+    g.fillStyle='rgba(30,28,26,0.7)';
+    g.beginPath(); g.arc(bx,by,1.5,0,Math.PI*2); g.fill();
+  });
+
+  /* ── RUST & AGING SPOTS ── */
+  var rustColors=['rgba(120,65,20,0.18)','rgba(95,50,15,0.14)','rgba(140,80,30,0.12)','rgba(80,40,10,0.1)'];
+  for(var r=0;r<22;r++){
+    var rx=Math.random()*w, ry=Math.random()*h;
+    var rsz=4+Math.random()*20;
+    var rg=g.createRadialGradient(rx,ry,0,rx,ry,rsz);
+    var rc=rustColors[Math.floor(Math.random()*rustColors.length)];
+    rg.addColorStop(0,rc);
+    rg.addColorStop(0.5,rc.replace(/[\d.]+\)$/,'0.06)'));
+    rg.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=rg;
+    g.beginPath(); g.ellipse(rx,ry,rsz,rsz*0.6,Math.random()*Math.PI,0,Math.PI*2); g.fill();
+  }
+
+  /* ── OIL/GRIME STREAKS (vertical, dripping down) ── */
+  for(var og=0;og<8;og++){
+    var ox=Math.random()*w;
+    var oLen=30+Math.random()*120;
+    var oy=Math.random()*(h-oLen);
+    var oGrad=g.createLinearGradient(0,oy,0,oy+oLen);
+    oGrad.addColorStop(0,'rgba(20,18,14,0)');
+    oGrad.addColorStop(0.3,'rgba(20,18,14,0.12)');
+    oGrad.addColorStop(1,'rgba(20,18,14,0)');
+    g.fillStyle=oGrad;
+    g.fillRect(ox-1,oy,2+Math.random()*3,oLen);
+  }
+
+  /* ── SURFACE DENTS/SCRATCHES ── */
+  g.strokeStyle='rgba(40,38,36,0.25)'; g.lineWidth=1;
+  for(var sc=0;sc<15;sc++){
+    var scx=Math.random()*w, scy=Math.random()*h;
+    var scLen=10+Math.random()*60;
+    var scAngle=Math.random()*Math.PI;
+    g.beginPath();
+    g.moveTo(scx,scy);
+    g.lineTo(scx+Math.cos(scAngle)*scLen, scy+Math.sin(scAngle)*scLen);
+    g.stroke();
+    // scratch highlight
+    g.strokeStyle='rgba(240,238,235,0.15)'; g.lineWidth=0.5;
+    g.beginPath();
+    g.moveTo(scx+0.5,scy+0.5);
+    g.lineTo(scx+Math.cos(scAngle)*scLen+0.5, scy+Math.sin(scAngle)*scLen+0.5);
+    g.stroke();
+    g.strokeStyle='rgba(40,38,36,0.25)'; g.lineWidth=1;
+  }
+
+  /* ── OVERALL VIGNETTE (darker at edges) ── */
+  var vgH=g.createLinearGradient(0,0,w,0);
+  vgH.addColorStop(0,'rgba(0,0,0,0.22)');
+  vgH.addColorStop(0.1,'rgba(0,0,0,0)');
+  vgH.addColorStop(0.9,'rgba(0,0,0,0)');
+  vgH.addColorStop(1,'rgba(0,0,0,0.22)');
+  g.fillStyle=vgH; g.fillRect(0,0,w,h);
+  var vgV=g.createLinearGradient(0,0,0,h);
+  vgV.addColorStop(0,'rgba(0,0,0,0.15)');
+  vgV.addColorStop(0.08,'rgba(0,0,0,0)');
+  vgV.addColorStop(0.92,'rgba(0,0,0,0)');
+  vgV.addColorStop(1,'rgba(0,0,0,0.25)');
+  g.fillStyle=vgV; g.fillRect(0,0,w,h);
+
+  return mc;
+}
+
+function metalTex(){
+  var mc=makeMetalCanvas(1024,1024);
+  var t=new THREE.CanvasTexture(mc);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.repeat.set(1,1);
+  return t;
+}
+
+var sideTexMain=metalTex();
+var topTexMain =metalTex();
+var botTexMain =metalTex();
+var frontTexMain=metalTex();
+
+/* ── MAIN GROUP ── */
+var group=new THREE.Group();
+scene.add(group);
+
+/* ── LIGHTING ── */
+scene.add(new THREE.AmbientLight(0xffffff,0.3));
+
+var keyLight=new THREE.DirectionalLight(0xffeedd,1.1);
+keyLight.position.set(8,10,20); scene.add(keyLight);
+
+var fillLight=new THREE.DirectionalLight(0x4466aa,0.5);
+fillLight.position.set(-8,-5,10); scene.add(fillLight);
+
+var rimLight=new THREE.DirectionalLight(0x2255aa,0.35);
+rimLight.position.set(0,0,-10); scene.add(rimLight);
+
+/* Interior warm point light — visible through peepholes */
+var intLight=new THREE.PointLight(0xff8833,2.5,CW*1.2);
+intLight.position.set(0,0,0);
+group.add(intLight);
+
+/* ═══════════════════════════════════════════════════════════
+   CUBOID — single BoxGeometry, multi-material
+   face order: px(right), nx(left), py(top), ny(bot), pz(front), nz(back)
+   We use a 1×1×1 box scaled to CW×CH×CD so UVs are clean.
+═══════════════════════════════════════════════════════════ */
+
+/* Fix UV so texture fills each face correctly */
+function fixUV(geo, faceIdx, scaleU, scaleV){
+  // BoxGeometry has 6 faces × 2 triangles = 12 tris, 4 verts each group
+  // Three.js r134 BoxGeometry uses groups; UV is set at build time — no fixup needed
+}
+
+var boxGeo = new THREE.BoxGeometry(CW, CH, CD);
+
+/* Materials indexed: 0=+X(right), 1=-X(left), 2=+Y(top), 3=-Y(bot), 4=+Z(front-A), 5=-Z(back-B) */
+/* Box sides are invisible — ShapeGeometry peephole panels render on top */
+var matRight  = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.0});
+var matLeft   = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.0});
+var matTop    = new THREE.MeshBasicMaterial({color:0xaab0b8, map:topTexMain});
+var matBot    = new THREE.MeshBasicMaterial({color:0x858a90, map:botTexMain});
+var matFront  = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain});
+var matBack   = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain});
+
+var boxMesh = new THREE.Mesh(boxGeo, [matRight, matLeft, matTop, matBot, matFront, matBack]);
+group.add(boxMesh);
+
+/* inner faces removed */
+
+/* ── SIDE FACES WITH SQUARE PEEPHOLES ── */
+// Hole size: ~28% of face height, 70% of face width
+var HOLE_H=CH*0.16;
+var HOLE_W=CD*0.55;
+var HOLE_GAP=CH*0.06;   // gap between holes
+// Upper hole center Y, lower hole center Y
+var HOLE_Y1= CH*0.19;
+var HOLE_Y2=-CH*0.19;
+
+function buildSideShape(){
+  var s=new THREE.Shape();
+  // outer rectangle
+  s.moveTo(-CD/2,-CH/2);
+  s.lineTo( CD/2,-CH/2);
+  s.lineTo( CD/2, CH/2);
+  s.lineTo(-CD/2, CH/2);
+  s.closePath();
+  // hole puncher
+  function punchHole(cx,cy,hw,hh){
+    var hole=new THREE.Path();
+    var r=hw*0.08; // slight corner radius approximated with bezier
+    hole.moveTo(cx-hw/2+r, cy-hh/2);
+    hole.lineTo(cx+hw/2-r, cy-hh/2);
+    hole.quadraticCurveTo(cx+hw/2,cy-hh/2, cx+hw/2,cy-hh/2+r);
+    hole.lineTo(cx+hw/2, cy+hh/2-r);
+    hole.quadraticCurveTo(cx+hw/2,cy+hh/2, cx+hw/2-r,cy+hh/2);
+    hole.lineTo(cx-hw/2+r, cy+hh/2);
+    hole.quadraticCurveTo(cx-hw/2,cy+hh/2, cx-hw/2,cy+hh/2-r);
+    hole.lineTo(cx-hw/2, cy-hh/2+r);
+    hole.quadraticCurveTo(cx-hw/2,cy-hh/2, cx-hw/2+r,cy-hh/2);
+    s.holes.push(hole);
+  }
+  punchHole(0, HOLE_Y1, HOLE_W, HOLE_H);
+  punchHole(0, HOLE_Y2, HOLE_W, HOLE_H);
+  return s;
+}
+
+var sideShape=buildSideShape();
+var sideGeo=new THREE.ShapeGeometry(sideShape,6);
+
+var sideMat=new THREE.MeshBasicMaterial({
+  color:0xa8aeb6,map:sideTexMain,side:THREE.FrontSide,
+});
+var sideInnerMat=new THREE.MeshBasicMaterial({
+  color:0x000000,side:THREE.FrontSide,
+});
+
+/* Right side outer */
+var rMesh=new THREE.Mesh(sideGeo,sideMat);
+rMesh.rotation.y=Math.PI/2;
+rMesh.position.x=CW/2;
+group.add(rMesh);
+/* Right side inner — black */
+var rInner=new THREE.Mesh(sideGeo.clone(),sideInnerMat);
+rInner.rotation.y=-Math.PI/2;
+rInner.position.x=CW/2-0.01;
+group.add(rInner);
+
+/* Left side outer */
+var lMesh=new THREE.Mesh(sideGeo.clone(),sideMat);
+lMesh.rotation.y=-Math.PI/2;
+lMesh.position.x=-CW/2;
+group.add(lMesh);
+/* Left side inner — black */
+var lInner=new THREE.Mesh(sideGeo.clone(),sideInnerMat);
+lInner.rotation.y=Math.PI/2;
+lInner.position.x=-CW/2+0.01;
+group.add(lInner);
+
+/* ── PEEPHOLE FRAME EDGES (bright steel) ── */
+function addPeepholeFrames(parentGroup, signX){
+  var mat=new THREE.LineBasicMaterial({color:0xb0b8c0,linewidth:1});
+  [HOLE_Y1,HOLE_Y2].forEach(function(py){
+    var hw=HOLE_W/2,hh=HOLE_H/2,z=0.015*signX;
+    var pts=[
+      new THREE.Vector3(-hw,-hh,z),new THREE.Vector3(hw,-hh,z),
+      new THREE.Vector3(hw,hh,z),new THREE.Vector3(-hw,hh,z),
+      new THREE.Vector3(-hw,-hh,z),
+    ];
+    var line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);
+    line.position.y=py;
+    parentGroup.add(line);
+    /* inner frame bevel line */
+    var mat2=new THREE.LineBasicMaterial({color:0x707880,linewidth:1});
+    var bevel=0.04;
+    var pts2=[
+      new THREE.Vector3(-hw+bevel,-hh+bevel,z*0.5),
+      new THREE.Vector3(hw-bevel,-hh+bevel,z*0.5),
+      new THREE.Vector3(hw-bevel,hh-bevel,z*0.5),
+      new THREE.Vector3(-hw+bevel,hh-bevel,z*0.5),
+      new THREE.Vector3(-hw+bevel,-hh+bevel,z*0.5),
+    ];
+    var line2=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts2),mat2);
+    line2.position.y=py;
+    parentGroup.add(line2);
+  });
+}
+
+var rFrameG=new THREE.Group();
+rFrameG.rotation.y=Math.PI/2; rFrameG.position.x=CW/2;
+addPeepholeFrames(rFrameG,1); group.add(rFrameG);
+
+var lFrameG=new THREE.Group();
+lFrameG.rotation.y=-Math.PI/2; lFrameG.position.x=-CW/2;
+addPeepholeFrames(lFrameG,-1); group.add(lFrameG);
+
+/* ── EDGE REINFORCEMENT BARS ── */
+var edgeMat=new THREE.MeshStandardMaterial({color:0x3a3e42,metalness:0.95,roughness:0.2});
+
+function edgeH(len,x,y,z){
+  var m=new THREE.Mesh(new THREE.BoxGeometry(len,0.07,0.07),edgeMat);
+  m.position.set(x,y,z); return m;
+}
+function edgeV(len,x,y,z){
+  var m=new THREE.Mesh(new THREE.BoxGeometry(0.07,len,0.07),edgeMat);
+  m.position.set(x,y,z); return m;
+}
+function edgeD(len,x,y,z){ // depth edge
+  var m=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.07,len),edgeMat);
+  m.position.set(x,y,z); return m;
+}
+
+// Front face edges
+group.add(edgeH(CW+0.07,0,CH/2,CD/2));
+group.add(edgeH(CW+0.07,0,-CH/2,CD/2));
+group.add(edgeV(CH,CW/2,0,CD/2));
+group.add(edgeV(CH,-CW/2,0,CD/2));
+// Back face edges
+group.add(edgeH(CW+0.07,0,CH/2,-CD/2));
+group.add(edgeH(CW+0.07,0,-CH/2,-CD/2));
+group.add(edgeV(CH,CW/2,0,-CD/2));
+group.add(edgeV(CH,-CW/2,0,-CD/2));
+// Depth edges (corners)
+group.add(edgeD(CD,CW/2,CH/2,0));
+group.add(edgeD(CD,-CW/2,CH/2,0));
+group.add(edgeD(CD,CW/2,-CH/2,0));
+group.add(edgeD(CD,-CW/2,-CH/2,0));
+
+/* ── TUBES + HEADER ── */
+var NUM_TUBES=8;
+var TUBE_OUT=CH*0.12;           // tubes poke above top face, header outside
+var TUBE_IN =CH*1.0;           // run full interior height to bottom face
+var TUBE_TOTAL=TUBE_OUT+TUBE_IN;
+var TUBE_R=0.13;               // larger circumference
+var tubeGeo=new THREE.CylinderGeometry(TUBE_R,TUBE_R,TUBE_TOTAL,16);
+var tubeMat=new THREE.MeshStandardMaterial({color:0x6a7078,metalness:0.9,roughness:0.25});
+var flangeGeo=new THREE.CylinderGeometry(TUBE_R*1.8,TUBE_R*1.8,0.07,16);
+var flangeMat=new THREE.MeshStandardMaterial({color:0x4a5058,metalness:0.95,roughness:0.18});
+
+var spacing=CW*0.8/(NUM_TUBES-1);
+var startX=-CW*0.4;
+for(var t=0;t<NUM_TUBES;t++){
+  var tx=startX+t*spacing;
+  var tubeCenterY = CH/2 + TUBE_OUT - TUBE_TOTAL/2;
+  var tube=new THREE.Mesh(tubeGeo,tubeMat);
+  tube.position.set(tx, tubeCenterY, 0);
+  group.add(tube);
+  var flange=new THREE.Mesh(flangeGeo,flangeMat);
+  flange.position.set(tx, CH/2, 0);
+  group.add(flange);
+  var cap=new THREE.Mesh(new THREE.CylinderGeometry(TUBE_R*1.2,TUBE_R*1.2,0.05,16),flangeMat);
+  cap.position.set(tx, CH/2+TUBE_OUT, 0);
+  group.add(cap);
+  var noz=new THREE.Mesh(new THREE.CylinderGeometry(TUBE_R*0.8,TUBE_R*1.2,0.10,16),tubeMat);
+  noz.position.set(tx, -CH/2+0.05, 0);
+  group.add(noz);
+}
+
+/* Header pipe above roof */
+var hdrGeo=new THREE.CylinderGeometry(TUBE_R*2.4,TUBE_R*2.4,CW*0.85,16);
+var hdrMat=new THREE.MeshStandardMaterial({color:0x58606a,metalness:0.93,roughness:0.2});
+var hdr=new THREE.Mesh(hdrGeo,hdrMat);
+hdr.rotation.z=Math.PI/2;
+hdr.position.set(0, CH/2+TUBE_OUT, 0);
+group.add(hdr);
+
+/* Header end caps */
+[-CW*0.425,CW*0.425].forEach(function(ex){
+  var ec=new THREE.Mesh(new THREE.CylinderGeometry(TUBE_R*2.8,TUBE_R*2.8,0.07,16),flangeMat);
+  ec.rotation.z=Math.PI/2;
+  ec.position.set(ex, CH/2+TUBE_OUT, 0);
+  group.add(ec);
+});
+
+/* ═══════════════════════════════════════════════════════════
+   INTERACTION
+═══════════════════════════════════════════════════════════ */
+var targetRotY=0, currentRotY=0;
+var dragging=false, lastX=0;
+var autoSpin=true;
+var SPIN_SPEED=0.004;
+
+var cvEl=renderer.domElement;
+
+function startDrag(x){dragging=true;lastX=x;autoSpin=false;}
+function moveDrag(x){if(!dragging)return;targetRotY+=(x-lastX)*0.009;lastX=x;}
+function endDrag(){dragging=false;}
+
+cvEl.addEventListener('mousedown',function(e){startDrag(e.clientX);});
+window.addEventListener('mousemove',function(e){moveDrag(e.clientX);});
+window.addEventListener('mouseup',endDrag);
+
+cvEl.addEventListener('touchstart',function(e){startDrag(e.touches[0].clientX);e.preventDefault();},{passive:false});
+window.addEventListener('touchmove',function(e){moveDrag(e.touches[0].clientX);},{passive:true});
+window.addEventListener('touchend',endDrag);
+
+cvEl.addEventListener('dblclick',function(){
+  targetRotY=Math.round(currentRotY/(Math.PI))*Math.PI;
+  autoSpin=true;
+});
+
+document.getElementById('btn-front').addEventListener('click',function(){
+  targetRotY=Math.round(currentRotY/(2*Math.PI))*2*Math.PI;
+  autoSpin=false;
+});
+document.getElementById('btn-back').addEventListener('click',function(){
+  targetRotY=Math.round(currentRotY/(2*Math.PI))*2*Math.PI+Math.PI;
+  autoSpin=false;
+});
+
+/* ═══════════════════════════════════════════════════════════
+   RESIZE — recalculate camera to always fit cuboid in canvas
+═══════════════════════════════════════════════════════════ */
+window.addEventListener('resize', function(){
+  var nw = container.clientWidth, nh = container.clientHeight;
+  renderer.setSize(nw, nh);
+  var d = calcDims(nw, nh);
+  camera.aspect = d.asp;
+  camera.position.z = d.camDist;
+  camera.updateProjectionMatrix();
+});
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER LOOP
+═══════════════════════════════════════════════════════════ */
+function tick(){
+  requestAnimationFrame(tick);
+  if(autoSpin) targetRotY+=SPIN_SPEED;
+  currentRotY+=(targetRotY-currentRotY)*0.075;
+  group.rotation.y=currentRotY;
+  renderer.render(scene,camera);
+}
+tick();
+
+})();
+</script>
+</body>
+</html>
