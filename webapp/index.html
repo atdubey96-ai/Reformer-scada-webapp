@@ -15290,7 +15290,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           title="Cuboid Viewer"
           src="about:blank"
-          data-src="./cuboid-viewer.html?chamber=ab"
+          data-src="./cuboid-viewer.html?chamber=ab&build=20260318-1"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -15302,7 +15302,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           title="Cuboid Viewer"
           src="about:blank"
-          data-src="./cuboid-viewer.html?chamber=cd"
+          data-src="./cuboid-viewer.html?chamber=cd&build=20260318-1"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -22850,7 +22850,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260317-remove-3d-cuboids-1";
+      var swBuild = "20260318-cuboid-face-upgrade-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
