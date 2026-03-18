@@ -55,15 +55,6 @@ html,body{width:100%;height:100%;background:#07090d;overflow:hidden;
 (function(){
 'use strict';
 
-var query = (function(){
-  try{ return new URLSearchParams(window.location.search || ""); }catch(e){ return { get:function(){ return ""; } }; }
-})();
-var chamberKey = String((query.get("chamber") || "ab")).toLowerCase() === "cd" ? "cd" : "ab";
-var chamberWalls = chamberKey === "cd" ? ["C","D"] : ["A","B"];
-var chamberTitle = chamberKey === "cd" ? "CD CHAMBER — REFORMER" : "AB CHAMBER — REFORMER";
-var chamberLabelEl = document.getElementById('chamber-label');
-if(chamberLabelEl) chamberLabelEl.textContent = chamberTitle;
-
 /* ═══════════════════════════════════════════════════════════
    BURNER DATA
 ═══════════════════════════════════════════════════════════ */
@@ -81,52 +72,6 @@ var TEMPS=[930,930,930,982,930,930,930,930,930,900,930,930,930,930,930];
 var TST_A=[1,1,0,1,1,1,1,0,1,1,0,1,1,1,1]; // 0=hotspot
 var TST_B=[1,0,1,1,1,1,1,1,0,0,1,1,1,1,0];
 
-function flameTypeFromState(state){
-  var s = String(state || "C").toUpperCase().trim();
-  if(s === "N") return 1;
-  if(s === "O") return 2;
-  if(s === "B") return 3;
-  return 0;
-}
-
-function stateFromFallbackType(type){
-  return ({1:"N",2:"O",3:"B",0:"C"})[Number(type)] || "C";
-}
-
-function buildFallbackWallRows(){
-  return FLAMES.map(function(row){
-    return row.map(function(type){ return stateFromFallbackType(type); });
-  });
-}
-
-function normalizeStoredWallRows(rawRows){
-  if(!Array.isArray(rawRows) || rawRows.length < ROWS) return null;
-  var out = [];
-  for(var ri=0; ri<ROWS; ri++){
-    var row = Array.isArray(rawRows[ri]) ? rawRows[ri] : [];
-    var cells = [];
-    for(var ci=0; ci<COLS; ci++){
-      var val = String(row[ci] || "C").toUpperCase().trim();
-      if(val !== "O" && val !== "N" && val !== "B" && val !== "C") val = "C";
-      cells.push(val);
-    }
-    out.push(cells);
-  }
-  return out;
-}
-
-function loadWallRowsForKey(wallKey){
-  try{
-    var raw = localStorage.getItem("burnerData");
-    if(!raw) return null;
-    var parsed = JSON.parse(raw);
-    if(!parsed || typeof parsed !== "object") return null;
-    return normalizeStoredWallRows(parsed[wallKey]);
-  }catch(e){
-    return null;
-  }
-}
-
 /* ═══════════════════════════════════════════════════════════
    BUILD BURNER WALL CANVAS TEXTURE
    Layout matches screenshot exactly:
@@ -136,22 +81,22 @@ function loadWallRowsForKey(wallKey){
    - ROW3,2 in lower chamber  → temp row → PH TST bar
    - ROW1 at very bottom
 ═══════════════════════════════════════════════════════════ */
-function buildBurnerCanvas(label, wallRows, tstRow1, tstRow2){
-  var TW=2304, TH=1408;
+function buildBurnerCanvas(label, tstRow1, tstRow2){
+  var TW=2048, TH=1280;
   var cv=document.createElement('canvas');
   cv.width=TW; cv.height=TH;
   var g=cv.getContext('2d');
 
-  /* ── BACKGROUND: deep black-blue furnace field */
+  /* ── BACKGROUND: deep black with subtle warm gradient (furnace interior) */
   var bgGrad=g.createLinearGradient(0,0,0,TH);
-  bgGrad.addColorStop(0,'#06090f');
-  bgGrad.addColorStop(0.55,'#09101a');
-  bgGrad.addColorStop(1,'#04070c');
+  bgGrad.addColorStop(0,'#0c0e13');
+  bgGrad.addColorStop(0.5,'#090b0f');
+  bgGrad.addColorStop(1,'#060709');
   g.fillStyle=bgGrad; g.fillRect(0,0,TW,TH);
 
   /* subtle refractory brick texture */
-  g.strokeStyle='rgba(46,64,86,0.26)'; g.lineWidth=0.8;
-  var bW=82, bH=38;
+  g.strokeStyle='rgba(35,48,62,0.3)'; g.lineWidth=0.8;
+  var bW=80, bH=36;
   for(var brow=0;brow*bH<TH;brow++){
     var boff=(brow%2)*bW/2;
     for(var bcol=0;bcol*bW<TW+bW;bcol++){
@@ -159,113 +104,64 @@ function buildBurnerCanvas(label, wallRows, tstRow1, tstRow2){
     }
   }
 
-  var faceInsetX = 58;
-  var faceInsetY = 44;
-  var faceW = TW - faceInsetX*2;
-  var faceH = TH - faceInsetY*2;
-  g.fillStyle='rgba(0,0,0,0.34)';
-  g.beginPath(); g.roundRect(faceInsetX-10, faceInsetY-10, faceW+20, faceH+20, 36); g.fill();
-  var shellGrad = g.createLinearGradient(faceInsetX, faceInsetY, faceInsetX, faceInsetY + faceH);
-  shellGrad.addColorStop(0,'rgba(46,65,96,0.28)');
-  shellGrad.addColorStop(0.35,'rgba(20,30,44,0.16)');
-  shellGrad.addColorStop(1,'rgba(10,15,22,0.24)');
-  g.fillStyle = shellGrad;
-  g.beginPath(); g.roundRect(faceInsetX, faceInsetY, faceW, faceH, 34); g.fill();
-  g.strokeStyle='rgba(146,184,228,0.22)';
-  g.lineWidth=2.2;
-  g.beginPath(); g.roundRect(faceInsetX, faceInsetY, faceW, faceH, 34); g.stroke();
-  g.strokeStyle='rgba(255,255,255,0.06)';
-  g.lineWidth=1.2;
-  g.beginPath(); g.roundRect(faceInsetX+10, faceInsetY+10, faceW-20, faceH-20, 26); g.stroke();
-
-  var bodyX = faceInsetX + 24;
-  var bodyY = faceInsetY + 24;
-  var bodyW = faceW - 48;
-  var bodyH = faceH - 48;
-  var bodyGrad = g.createLinearGradient(bodyX, bodyY, bodyX, bodyY + bodyH);
-  bodyGrad.addColorStop(0,'rgba(28,40,58,0.84)');
-  bodyGrad.addColorStop(0.48,'rgba(18,28,42,0.78)');
-  bodyGrad.addColorStop(1,'rgba(9,15,24,0.88)');
-  g.fillStyle = bodyGrad;
-  g.beginPath(); g.roundRect(bodyX, bodyY, bodyW, bodyH, 30); g.fill();
-  g.strokeStyle='rgba(178,208,240,0.12)';
-  g.lineWidth=1.5;
-  g.beginPath(); g.roundRect(bodyX, bodyY, bodyW, bodyH, 30); g.stroke();
-  var glassWash = g.createLinearGradient(0, bodyY, 0, bodyY + bodyH*0.4);
-  glassWash.addColorStop(0,'rgba(255,255,255,0.11)');
-  glassWash.addColorStop(1,'rgba(255,255,255,0)');
-  g.fillStyle = glassWash;
-  g.beginPath(); g.roundRect(bodyX+2, bodyY+2, bodyW-4, bodyH*0.28, 26); g.fill();
-
   /* ── LAYOUT CONSTANTS */
-  var railW = 250;
-  var PL = bodyX + railW + 34;
-  var PR = bodyX + 28;
-  var PT = bodyY + 100;
+  var PL=140;  // left padding for row labels
+  var PR=18;   // right padding
+  var PT=64;   // top padding for col headers
   var cw=(TW-PL-PR)/COLS;
 
-  var contentBottom = bodyY + bodyH - 48;
-  var tstH=38;
-  var tempH=30;
-  var zoneAH = 356;
-  var zoneBH = 246;
-  var zoneATop = PT + 34;
-  var tst1TempY = zoneATop + zoneAH + 4;
-  var tst1Top = tst1TempY + tempH + 10;
-  var zoneBTop = tst1Top + tstH + 20;
-  var tst2TempY = zoneBTop + zoneBH + 4;
-  var tst2Top = tst2TempY + tempH + 10;
-  var zoneCtop = tst2Top + tstH + 26;
-  var zoneCH = contentBottom - zoneCtop;
+  /* vertical layout (pixels from top):
+     PT=64: col headers
+     Zone A (ROW6,5,4): PT → tst1Top
+     temp strip 1      : tempH1
+     TST bar 1         : tstH
+     Zone B (ROW3,2)   : → tst2Top
+     temp strip 2      : tempH
+     TST bar 2         : tstH
+     Zone C (ROW1)     : → TH
+  */
+  var tstH=34;
+  var tempH=28;
+  var tst1Top = Math.round(TH*0.505);
+  var tst1TempY = tst1Top - tempH - 4;
+  var tst2Top = Math.round(TH*0.745);
+  var tst2TempY = tst2Top - tempH - 4;
+  var zoneAH = tst1TempY - PT - 4;   // height for ROW6,5,4
+  var zoneBH = tst2TempY - (tst1Top+tstH+6) - 4; // height for ROW3,2
+  var zoneCtop = tst2Top + tstH + 8;
+  var zoneCH = TH - zoneCtop - 8;
 
   /* Each row slot height */
   var rowAH = Math.round(zoneAH/3); // 3 rows in upper chamber
   var rowBH = Math.round(zoneBH/2); // 2 rows in lower chamber
 
-  /* ── LEFT RAIL + HEADER GLASS */
-  g.fillStyle='rgba(6,12,22,0.58)';
-  g.beginPath(); g.roundRect(bodyX+10, bodyY+10, railW-18, bodyH-20, 24); g.fill();
-  var headerGrad = g.createLinearGradient(bodyX, bodyY, bodyX, PT);
-  headerGrad.addColorStop(0,'rgba(78,104,148,0.44)');
-  headerGrad.addColorStop(1,'rgba(26,40,62,0.26)');
-  g.fillStyle=headerGrad;
-  g.beginPath(); g.roundRect(bodyX+12, bodyY+10, bodyW-24, 58, 22); g.fill();
-  g.strokeStyle='rgba(172,205,238,0.12)';
-  g.lineWidth=1.3;
-  g.beginPath(); g.roundRect(bodyX+12, bodyY+10, bodyW-24, 58, 22); g.stroke();
+  /* ── LEFT LABEL PANEL */
+  g.fillStyle='rgba(8,14,22,0.75)';
+  g.fillRect(0,0,PL,TH);
+  /* header area top */
+  g.fillStyle='rgba(10,18,30,0.7)';
+  g.fillRect(PL,0,TW-PL-PR,PT);
 
   /* ── COLUMN HEADERS B1..B15 */
-  g.fillStyle='rgba(12,24,40,0.84)';
-  g.beginPath(); g.roundRect(bodyX+42, bodyY+18, 188, 44, 14); g.fill();
-  g.strokeStyle='rgba(118,170,222,0.22)';
-  g.lineWidth=1.4;
-  g.beginPath(); g.roundRect(bodyX+42, bodyY+18, 188, 44, 14); g.stroke();
-  g.font='700 32px "Trebuchet MS","Segoe UI",Arial,sans-serif';
-  g.textAlign='center'; g.textBaseline='middle';
-  g.fillStyle='#f4f8ff';
-  g.fillText('WALL ' + label, bodyX+136, bodyY+40);
-
-  g.font='700 28px "Trebuchet MS","Segoe UI",Arial,sans-serif';
+  g.font='bold 28px "Courier New"';
   g.textAlign='center'; g.textBaseline='middle';
   for(var c=0;c<COLS;c++){
     var colX=PL+c*cw+cw/2;
-    g.fillStyle='rgba(13,28,47,0.88)';
-    g.beginPath(); g.roundRect(colX-52, bodyY+22, 104, 34, 10); g.fill();
-    g.strokeStyle='rgba(129,176,228,0.14)'; g.lineWidth=1;
-    g.beginPath(); g.roundRect(colX-52, bodyY+22, 104, 34, 10); g.stroke();
-    g.fillStyle='#f6fbff';
-    g.fillText('B'+(c+1), colX, bodyY+39);
-    g.shadowBlur=0;
+    g.fillStyle='#ccdff0';
+    g.fillText('B'+(c+1), colX, PT/2);
+    /* column divider */
+    g.strokeStyle='rgba(45,65,90,0.22)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(PL+c*cw+cw,PT); g.lineTo(PL+c*cw+cw,TH); g.stroke();
   }
 
   /* ── FLAME + PIP RENDERER */
   function drawBurner(cx, cy, type, sz){
-    sz = sz || 20;
+    sz = sz || 24;
     var C = {
-      1: {core:'#fff3bf', mid:'#ffb11c', tip:'#d56400', glow:'rgba(255,158,24,0.42)'},
-      2: {core:'#d8ffd8', mid:'#3ae33f', tip:'#0e8118', glow:'rgba(50,230,72,0.40)'},
-      3: {core:'#d2e7ff', mid:'#2f79ff', tip:'#1144dc', glow:'rgba(49,112,255,0.42)'},
-      0: {core:'#344258', mid:'#263349', tip:'#182436', glow:'rgba(0,0,0,0)'},
+      1: {core:'#fffaaa', mid:'#ffaa00', tip:'#cc5500', glow:'rgba(255,150,0,0.55)'},
+      2: {core:'#ccffaa', mid:'#22dd22', tip:'#005500', glow:'rgba(20,210,20,0.5)'},
+      3: {core:'#bbddff', mid:'#1166ff', tip:'#000faa', glow:'rgba(30,100,255,0.5)'},
+      0: {core:'#2a3040', mid:'#1a2030', tip:'#0f1520', glow:'rgba(0,0,0,0)'},
     }[type] || {core:'#222',mid:'#111',tip:'#000',glow:'rgba(0,0,0,0)'};
 
     /* glow halo */
@@ -292,47 +188,41 @@ function buildBurnerCanvas(label, wallRows, tstRow1, tstRow2){
     g.fill();
 
     /* stem / pip dot — grey oval to the right like screenshot */
-    var pipX = cx + sz*0.92;
-    var pipY = cy + sz*0.22;
+    var pipX = cx + sz*0.85;
+    var pipY = cy + sz*0.3;
     g.fillStyle = 'rgba(140,158,175,0.82)';
     g.beginPath();
-    g.ellipse(pipX, pipY, sz*0.24, sz*0.16, 0, 0, Math.PI*2);
+    g.ellipse(pipX, pipY, sz*0.28, sz*0.2, 0, 0, Math.PI*2);
     g.fill();
     /* pip inner highlight */
     g.fillStyle = 'rgba(200,215,228,0.4)';
     g.beginPath();
-    g.ellipse(pipX-sz*0.05, pipY-sz*0.04, sz*0.10, sz*0.06, 0, 0, Math.PI*2);
+    g.ellipse(pipX-sz*0.06, pipY-sz*0.06, sz*0.12, sz*0.08, 0, 0, Math.PI*2);
     g.fill();
   }
 
   /* ── DRAW TWO BURNERS PER COLUMN PER ROW (top + bottom) */
   function drawRowZone(rowIdx, zoneTop, zoneH, rowLabel){
-    var topBurnerY = zoneTop + zoneH * 0.28;
-    var botBurnerY = zoneTop + zoneH * 0.70;
+    var topBurnerY = zoneTop + zoneH * 0.3;
+    var botBurnerY = zoneTop + zoneH * 0.72;
     var labelY     = zoneTop + zoneH * 0.5;
 
     /* row label */
-    g.fillStyle = 'rgba(93,57,34,0.82)';
-    g.beginPath(); g.roundRect(bodyX+56, labelY-20, 176, 42, 16); g.fill();
-    g.strokeStyle='rgba(175,96,38,0.58)';
-    g.lineWidth=1.2;
-    g.beginPath(); g.roundRect(bodyX+56, labelY-20, 176, 42, 16); g.stroke();
-    g.font = '700 26px "Trebuchet MS","Segoe UI",Arial,sans-serif';
-    g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillStyle = '#f6fbff';
-    g.fillText(rowLabel, bodyX+144, labelY+1);
-    g.shadowBlur=0;
+    g.font = 'bold 24px "Courier New"';
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    g.fillStyle = 'rgba(110,165,210,0.92)';
+    g.fillText(rowLabel, PL-10, labelY);
 
-    g.strokeStyle = 'rgba(60,80,106,0.16)'; g.lineWidth = 1;
-    g.beginPath(); g.moveTo(PL-10, zoneTop); g.lineTo(TW-PR, zoneTop); g.stroke();
+    /* row separator line */
+    g.strokeStyle = 'rgba(35,55,78,0.35)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(PL, zoneTop); g.lineTo(TW-PR, zoneTop); g.stroke();
 
     /* burners */
     for(var c=0; c<COLS; c++){
-      var fx = PL + c*cw + cw*0.42; // flame slightly left of center so pip fits
-      var state = wallRows && wallRows[rowIdx] ? wallRows[rowIdx][c] : "C";
-      var ftype = flameTypeFromState(state);
-      drawBurner(fx, topBurnerY, ftype, 20);
-      drawBurner(fx, botBurnerY, ftype, 20);
+      var fx = PL + c*cw + cw*0.38; // flame slightly left of center so pip fits
+      var ftype = FLAMES[rowIdx][c];
+      drawBurner(fx, topBurnerY, ftype, 22);
+      drawBurner(fx, botBurnerY, ftype, 22);
     }
 
     /* temp reading below the zone */
@@ -340,17 +230,17 @@ function buildBurnerCanvas(label, wallRows, tstRow1, tstRow2){
   }
 
   /* ── UPPER CHAMBER: ROW 6, 5, 4 */
-  drawRowZone(5, zoneATop,           rowAH,   'ROW 6');
-  drawRowZone(4, zoneATop+rowAH,     rowAH,   'ROW 5');
-  drawRowZone(3, zoneATop+rowAH*2,   rowAH,   'ROW 4');
+  drawRowZone(5, PT+2,           rowAH,   'ROW 6');
+  drawRowZone(4, PT+2+rowAH,     rowAH,   'ROW 5');
+  drawRowZone(3, PT+2+rowAH*2,   rowAH,   'ROW 4');
 
   /* temp strip 1 */
-  g.font = '700 24px "Trebuchet MS","Segoe UI",Arial,sans-serif';
+  g.font = 'bold 21px "Courier New"';
   g.textAlign = 'center'; g.textBaseline = 'middle';
   for(var c=0;c<COLS;c++){
     var tx=PL+c*cw+cw/2;
     var t=TEMPS[c];
-    g.fillStyle = (t!==930) ? '#ffcc44' : 'rgba(170,188,208,0.86)';
+    g.fillStyle = (t!==930) ? '#ffcc44' : 'rgba(175,205,230,0.7)';
     g.fillText(t+'°', tx, tst1TempY + tempH/2);
   }
 
@@ -359,53 +249,67 @@ function buildBurnerCanvas(label, wallRows, tstRow1, tstRow2){
     var bw = TW-PL-PR;
     /* amber gradient bar */
     var gr = g.createLinearGradient(PL,0,PL+bw,0);
-    gr.addColorStop(0,    '#8e4308');
-    gr.addColorStop(0.16, '#d9780a');
-    gr.addColorStop(0.55, '#ffb314');
-    gr.addColorStop(0.78, '#ffc61d');
-    gr.addColorStop(1,    '#ffb20f');
+    gr.addColorStop(0,    '#7a3000');
+    gr.addColorStop(0.18, '#c45c00');
+    gr.addColorStop(0.42, '#ffa800');
+    gr.addColorStop(0.65, '#ffcc00');
+    gr.addColorStop(0.85, '#ff9800');
+    gr.addColorStop(1,    '#cc5500');
     g.fillStyle=gr;
-    g.beginPath(); g.roundRect(PL,y,bw,tstH,10); g.fill();
+    g.beginPath(); g.roundRect(PL,y,bw,tstH,6); g.fill();
     /* top gloss */
     var gl=g.createLinearGradient(0,y,0,y+tstH*0.45);
-    gl.addColorStop(0,'rgba(255,255,255,0.14)');
+    gl.addColorStop(0,'rgba(255,255,255,0.18)');
     gl.addColorStop(1,'rgba(255,255,255,0)');
-    g.fillStyle=gl; g.beginPath(); g.roundRect(PL,y,bw,tstH,10); g.fill();
+    g.fillStyle=gl; g.beginPath(); g.roundRect(PL,y,bw,tstH,6); g.fill();
     /* bottom shadow */
     var sh=g.createLinearGradient(0,y+tstH*0.6,0,y+tstH);
     sh.addColorStop(0,'rgba(0,0,0,0)');
-    sh.addColorStop(1,'rgba(86,36,0,0.30)');
-    g.fillStyle=sh; g.beginPath(); g.roundRect(PL,y,bw,tstH,10); g.fill();
+    sh.addColorStop(1,'rgba(0,0,0,0.28)');
+    g.fillStyle=sh; g.beginPath(); g.roundRect(PL,y,bw,tstH,6); g.fill();
     /* PH TST label */
-    g.font='700 24px "Trebuchet MS","Segoe UI",Arial,sans-serif';
-    g.textAlign='left'; g.textBaseline='middle';
+    g.font='bold 22px "Courier New"';
+    g.textAlign='right'; g.textBaseline='middle';
     g.fillStyle='rgba(255,255,255,0.95)';
-    g.fillText('PH TST', bodyX+118, y+tstH/2);
+    g.fillText('PH TST', PL-8, y+tstH/2);
     /* sensor circles */
     for(var c=0;c<COLS;c++){
       var ox=PL+c*cw+cw/2;
       var hot=(tstArr[c]===0);
       var cy2=y+tstH/2;
-      var rad=hot?10:8;
+      var rad=hot?9:7;
       /* outer ring */
-      g.lineWidth=2.6;
-      g.strokeStyle=hot?'rgba(255,78,0,1)':'rgba(255,240,214,0.95)';
+      g.lineWidth=2.5;
+      g.strokeStyle=hot?'rgba(255,50,0,1)':'rgba(255,248,200,0.85)';
       g.beginPath(); g.arc(ox,cy2,rad,0,Math.PI*2); g.stroke();
+      if(hot){
+        /* fill glow */
+        var hg=g.createRadialGradient(ox,cy2,0,ox,cy2,rad);
+        hg.addColorStop(0,'rgba(255,120,0,0.85)');
+        hg.addColorStop(0.6,'rgba(255,60,0,0.4)');
+        hg.addColorStop(1,'rgba(255,30,0,0)');
+        g.fillStyle=hg; g.fill();
+      } else {
+        /* open centre — matches screenshot hollow circle */
+        g.fillStyle='rgba(255,220,80,0.12)';
+        g.beginPath(); g.arc(ox,cy2,rad-3,0,Math.PI*2); g.fill();
+      }
     }
   }
   drawTST(tst1Top, tstRow1);
 
   /* ── LOWER CHAMBER: ROW 3, 2 */
-  drawRowZone(2, zoneBTop,          rowBH, 'ROW 3');
-  drawRowZone(1, zoneBTop+rowBH,    rowBH, 'ROW 2');
+  var zBtop = tst1Top+tstH+8;
+  drawRowZone(2, zBtop,          rowBH, 'ROW 3');
+  drawRowZone(1, zBtop+rowBH,    rowBH, 'ROW 2');
 
   /* temp strip 2 */
-  g.font = '700 24px "Trebuchet MS","Segoe UI",Arial,sans-serif';
+  g.font = 'bold 21px "Courier New"';
   g.textAlign = 'center'; g.textBaseline = 'middle';
   for(var c=0;c<COLS;c++){
     var tx2=PL+c*cw+cw/2;
     var t2=TEMPS[c];
-    g.fillStyle = (t2!==930) ? '#ffcc44' : 'rgba(170,188,208,0.86)';
+    g.fillStyle = (t2!==930) ? '#ffcc44' : 'rgba(175,205,230,0.7)';
     g.fillText(t2+'°', tx2, tst2TempY+tempH/2);
   }
   drawTST(tst2Top, tstRow2);
@@ -415,21 +319,18 @@ function buildBurnerCanvas(label, wallRows, tstRow1, tstRow2){
 
   /* ── FACE LABEL WATERMARK */
   g.save();
-  g.globalAlpha=0.07;
-  g.font='700 340px "Trebuchet MS","Segoe UI",Arial,sans-serif';
-  g.fillStyle='rgba(120,150,198,0.52)';
+  g.globalAlpha=0.055;
+  g.font='bold 280px "Courier New"';
+  g.fillStyle='#88aacc';
   g.textAlign='center'; g.textBaseline='middle';
-  g.fillText(label, bodyX + bodyW*0.78, bodyY + bodyH*0.55);
+  g.fillText(label, TW/2, TH/2);
   g.restore();
 
   return cv;
 }
 
-var fallbackWallRows = buildFallbackWallRows();
-var wallRowsFront = loadWallRowsForKey(chamberWalls[0]) || fallbackWallRows;
-var wallRowsBack  = loadWallRowsForKey(chamberWalls[1]) || fallbackWallRows;
-var cvA=buildBurnerCanvas(chamberWalls[0], wallRowsFront, TST_A, TST_B);
-var cvB=buildBurnerCanvas(chamberWalls[1], wallRowsBack,  TST_B, TST_A);
+var cvA=buildBurnerCanvas('A',TST_A,TST_B);
+var cvB=buildBurnerCanvas('B',TST_B,TST_A);
 
 /* ═══════════════════════════════════════════════════════════
    THREE.JS SCENE
@@ -533,10 +434,6 @@ var texA=new THREE.CanvasTexture(cvA);
 var texB=new THREE.CanvasTexture(cvB);
 texA.encoding=THREE.sRGBEncoding;
 texB.encoding=THREE.sRGBEncoding;
-texA.minFilter=THREE.LinearFilter;
-texA.magFilter=THREE.LinearFilter;
-texB.minFilter=THREE.LinearFilter;
-texB.magFilter=THREE.LinearFilter;
 
 /* ── METALLIC CANVAS TEXTURE (procedural) ── */
 function makeMetalCanvas(w,h){
@@ -759,8 +656,8 @@ var matRight  = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, o
 var matLeft   = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.0});
 var matTop    = new THREE.MeshBasicMaterial({color:0xaab0b8, map:topTexMain});
 var matBot    = new THREE.MeshBasicMaterial({color:0x858a90, map:botTexMain});
-var matFront  = new THREE.MeshBasicMaterial({color:0xffffff, map:texA});
-var matBack   = new THREE.MeshBasicMaterial({color:0xffffff, map:texB});
+var matFront  = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain});
+var matBack   = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain});
 
 var boxMesh = new THREE.Mesh(boxGeo, [matRight, matLeft, matTop, matBot, matFront, matBack]);
 group.add(boxMesh);
