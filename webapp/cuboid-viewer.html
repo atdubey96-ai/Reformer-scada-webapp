@@ -1228,8 +1228,8 @@ var fitBounds = new THREE.Box3().setFromObject(group);
 var fitCenter = fitBounds.getCenter(new THREE.Vector3());
 var fitSize = fitBounds.getSize(new THREE.Vector3());
 var fitMaxWidth = Math.sqrt((fitSize.x * fitSize.x) + (fitSize.z * fitSize.z));
-var NORMAL_PAD = 0.8;
-var EXPANDED_PAD = 0.72;
+var NORMAL_PAD = 0.94;
+var EXPANDED_PAD = 0.86;
 
 function applyFrame(nw, nh, pad){
   var safeW = Math.max(1, nw);
@@ -1240,7 +1240,7 @@ function applyFrame(nw, nh, pad){
   var fitWidth = fitMaxWidth * pad;
   var distV = (fitHeight / 2) / Math.tan(FOV_RAD / 2);
   var distH = (fitWidth / 2) / Math.tan(hFov / 2);
-  var dist = Math.max(distV, distH) + fitSize.z * 0.08;
+  var dist = Math.max(distV, distH) + fitSize.z * 0.12;
 
   camera.aspect = aspect;
   camera.position.set(fitCenter.x, fitCenter.y, dist);
