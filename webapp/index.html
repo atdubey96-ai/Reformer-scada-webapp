@@ -12058,8 +12058,8 @@ html, body, body *, body *::before, body *::after, svg text{
               var facing = overlay.face === "back"
                 ? (-cosY)
                 : cosY;
-              var opacity = Math.max(0, (facing - 0.58) / 0.42);
-              opacity = opacity > 0 ? (opacity * opacity) : 0;
+              var opacity = facing > 0 ? Math.pow(facing, 1.3) : 0;
+              if(opacity < 0.06) opacity = 0;
               if(overlay.outerMaterial) overlay.outerMaterial.opacity = opacity;
               if(overlay.outerMesh) overlay.outerMesh.visible = opacity > 0.01;
               if(overlay.innerMaterial) overlay.innerMaterial.opacity = opacity;
@@ -13244,107 +13244,137 @@ html, body, body *, body *::before, body *::after, svg text{
           });
         }
 
-        function hmUploadedSetPeepBurnerState(burner, state){
-          if(!burner) return;
+        function hmUploadedDrawPeepBurnerGlyph(ctx, x, y, state, scale){
           var s = String(state || "C").toUpperCase();
-          var active = s === "O" || s === "N" || s === "B";
+          if(s !== "O" && s !== "N" && s !== "B") s = "C";
           var palette = hmUploadedGetBurnerPalette(s);
-          if(burner.coreMaterial){
-            burner.coreMaterial.color.set(active ? palette.flame : "#1f2937");
-            burner.coreMaterial.emissive.set(active ? palette.flame : "#0b1016");
-            burner.coreMaterial.emissiveIntensity = active ? 0.82 : 0.05;
-            burner.coreMaterial.opacity = active ? 0.96 : 0.32;
-          }
-          if(burner.glowMaterial){
-            burner.glowMaterial.color.set(active ? palette.flame : "#1f2937");
-            burner.glowMaterial.opacity = active ? (s === "B" ? 0.26 : 0.2) : 0.04;
-          }
-          if(burner.glowMesh){
-            var sx = active ? 1.38 : 0.8;
-            var sy = active ? 1.72 : 0.86;
-            burner.glowMesh.scale.set(sx, sy, sx);
+          var active = s !== "C";
+          var stemW = 5.2 * scale;
+          var stemH = 8.4 * scale;
+          var stemX = x - (stemW / 2);
+          var stemY = y + (5.2 * scale);
+
+          if(active){
+            ctx.save();
+            ctx.globalCompositeOperation = "screen";
+            ctx.globalAlpha = s === "B" ? 0.32 : 0.24;
+            ctx.fillStyle = palette.glow;
+            ctx.beginPath();
+            ctx.ellipse(x, y - (4.8 * scale), 9.6 * scale, 12.8 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.fillStyle = palette.stem;
+            hmUploadedRoundRectPath(ctx, stemX, stemY, stemW, stemH, 2.4 * scale);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(x, y - (14.6 * scale));
+            ctx.bezierCurveTo(
+              x + (8.2 * scale), y - (7.4 * scale),
+              x + (5.2 * scale), y + (0.8 * scale),
+              x, y + (3.2 * scale)
+            );
+            ctx.bezierCurveTo(
+              x - (5.2 * scale), y + (0.8 * scale),
+              x - (8.2 * scale), y - (7.4 * scale),
+              x, y - (14.6 * scale)
+            );
+            ctx.closePath();
+            ctx.fillStyle = palette.flame;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(x, y - (9.6 * scale));
+            ctx.bezierCurveTo(
+              x + (4.3 * scale), y - (4.6 * scale),
+              x + (2.7 * scale), y + (0.4 * scale),
+              x, y + (1.6 * scale)
+            );
+            ctx.bezierCurveTo(
+              x - (2.7 * scale), y + (0.4 * scale),
+              x - (4.3 * scale), y - (4.6 * scale),
+              x, y - (9.6 * scale)
+            );
+            ctx.closePath();
+            ctx.fillStyle = palette.core;
+            ctx.fill();
+          }else{
+            ctx.fillStyle = "rgba(82,101,126,0.86)";
+            hmUploadedRoundRectPath(ctx, x - (7.8 * scale), y + (1.8 * scale), 15.6 * scale, 5.2 * scale, 2.6 * scale);
+            ctx.fill();
+            ctx.fillStyle = "rgba(124,145,173,0.68)";
+            hmUploadedRoundRectPath(ctx, stemX, stemY, stemW, 7 * scale, 2.2 * scale);
+            ctx.fill();
           }
         }
 
         function hmUploadedCreatePeepSideDisplay(dims, wallKey, side, renderer){
           if(typeof THREE === "undefined" || !dims) return null;
           var group = new THREE.Group();
-          var pipeCount = 4;
-          var sampleCols = [1, 5, 9, 13];
-          var pipeSpanZ = Math.min(0.9, dims.windowSize * 0.72);
-          var pipeStepZ = pipeCount > 1 ? (pipeSpanZ / (pipeCount - 1)) : 0;
-          var pipeStartZ = -(pipeSpanZ / 2);
-          var pipeX = side === "left" ? (-dims.sX / 2 + 0.34) : (dims.sX / 2 - 0.34);
-          var pipeTopY = Math.max(0.9, dims.sY - 1.42);
-          var pipeBottomY = 0.72;
-          var rowStepY = (pipeTopY - pipeBottomY) / 5;
-          var pipeHeight = pipeTopY - pipeBottomY + 0.2;
-          var pipeMat = new THREE.MeshStandardMaterial({
-            color:0x5f6977,
-            metalness:0.8,
-            roughness:0.28
-          });
-          var burners = [];
+          var panels = [];
+          var panelSize = Math.max(0.42, dims.windowSize * 0.74);
+          var panelDepth = side === "left" ? (-dims.sX / 2 + 0.28) : (dims.sX / 2 - 0.28);
+          var panelDefs = [
+            {kind:"top", centerY:dims.windowTopY, rows:[6, 5, 4]},
+            {kind:"bottom", centerY:dims.windowBottomY, rows:[3, 2, 1]}
+          ];
 
-          for(var pi = 0; pi < pipeCount; pi++){
-            var pz = pipeStartZ + (pi * pipeStepZ);
-            var pipe = new THREE.Mesh(
-              new THREE.CylinderGeometry(0.028, 0.028, pipeHeight, 12),
-              pipeMat
-            );
-            pipe.position.set(pipeX, pipeBottomY + (pipeHeight / 2), pz);
-            group.add(pipe);
-
-            for(var ri = 0; ri < 6; ri++){
-              var rowNumber = 6 - ri;
-              var burnerY = pipeTopY - (ri * rowStepY);
-              var glow = new THREE.Mesh(
-                new THREE.SphereGeometry(0.078, 12, 12),
-                new THREE.MeshBasicMaterial({
-                  color:0x1f2937,
-                  transparent:true,
-                  opacity:0.04
-                })
-              );
-              glow.position.set(pipeX, burnerY, pz);
-              group.add(glow);
-
-              var core = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.026, 0.042, 0.14, 10),
-                new THREE.MeshStandardMaterial({
-                  color:0x1f2937,
-                  emissive:0x0b1016,
-                  emissiveIntensity:0.05,
-                  metalness:0.12,
-                  roughness:0.24,
-                  transparent:true,
-                  opacity:0.32
-                })
-              );
-              core.position.set(pipeX, burnerY, pz);
-              group.add(core);
-
-              var burner = {
-                wallKey:String(wallKey || ""),
-                rowNumber:rowNumber,
-                colIndex:sampleCols[pi],
-                glowMesh:glow,
-                glowMaterial:glow.material,
-                coreMesh:core,
-                coreMaterial:core.material
-              };
-              hmUploadedSetPeepBurnerState(burner, "C");
-              burners.push(burner);
+          panelDefs.forEach(function(def){
+            var canvas = document.createElement("canvas");
+            canvas.width = 720;
+            canvas.height = 720;
+            var texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.ClampToEdgeWrapping;
+            texture.wrapT = THREE.ClampToEdgeWrapping;
+            texture.minFilter = THREE.LinearMipmapLinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.generateMipmaps = true;
+            texture.premultiplyAlpha = false;
+            if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
+              texture.colorSpace = THREE.SRGBColorSpace;
+            }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
+              texture.encoding = THREE.sRGBEncoding;
             }
-          }
+            if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
+              try{
+                texture.anisotropy = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy() || 1));
+              }catch(e){}
+            }
+
+            var material = new THREE.MeshBasicMaterial({
+              map:texture,
+              transparent:true,
+              alphaTest:0.02,
+              side:THREE.DoubleSide,
+              depthWrite:false
+            });
+            var mesh = new THREE.Mesh(
+              new THREE.PlaneGeometry(panelSize, panelSize),
+              material
+            );
+            mesh.position.set(panelDepth, def.centerY, 0);
+            mesh.rotation.y = side === "left" ? (Math.PI / 2) : (-Math.PI / 2);
+            mesh.renderOrder = 5;
+            group.add(mesh);
+
+            panels.push({
+              kind:def.kind,
+              rows:def.rows,
+              wallKey:String(wallKey || ""),
+              canvas:canvas,
+              texture:texture,
+              material:material,
+              mesh:mesh
+            });
+          });
 
           return {
             wallKey:String(wallKey || ""),
             side:String(side || "left"),
             dims:dims,
             mesh:group,
-            burners:burners,
-            panels:[],
+            panels:panels,
             glassPanes:[]
           };
         }
@@ -13434,15 +13464,43 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedPaintPeepSideDisplay(display, snapshot){
-          if(!display || !Array.isArray(display.burners)) return;
+          if(!display || !Array.isArray(display.panels)) return;
           var rows = snapshot && snapshot.hmData && Array.isArray(snapshot.hmData[display.wallKey])
             ? snapshot.hmData[display.wallKey]
             : [];
-          display.burners.forEach(function(burner){
-            var rowIdx = Math.max(0, Math.min(rows.length - 1, burner.rowNumber - 1));
-            var row = Array.isArray(rows[rowIdx]) ? rows[rowIdx] : [];
-            var state = String(row[burner.colIndex] || "C").toUpperCase();
-            hmUploadedSetPeepBurnerState(burner, state);
+          var sampleCols = [1, 5, 9, 13];
+
+          display.panels.forEach(function(panel){
+            if(!panel || !panel.canvas || !panel.texture) return;
+            var ctx = panel.canvas.getContext("2d");
+            var w = panel.canvas.width;
+            var h = panel.canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            var pipeXs = [0.18, 0.39, 0.61, 0.82].map(function(stop){ return w * stop; });
+            var pipeTop = h * 0.05;
+            var pipeBottom = h * 0.95;
+            pipeXs.forEach(function(px){
+              var pipeW = w * 0.038;
+              var grad = ctx.createLinearGradient(px - (pipeW / 2), 0, px + (pipeW / 2), 0);
+              grad.addColorStop(0, "rgba(55,65,81,0.20)");
+              grad.addColorStop(0.5, "rgba(203,213,225,0.62)");
+              grad.addColorStop(1, "rgba(55,65,81,0.20)");
+              ctx.fillStyle = grad;
+              ctx.fillRect(px - (pipeW / 2), pipeTop, pipeW, pipeBottom - pipeTop);
+            });
+
+            var rowYs = [h * 0.22, h * 0.5, h * 0.78];
+            for(var ri = 0; ri < panel.rows.length; ri++){
+              var rowNumber = panel.rows[ri];
+              var rowData = Array.isArray(rows[rowNumber - 1]) ? rows[rowNumber - 1] : [];
+              for(var ci = 0; ci < sampleCols.length; ci++){
+                var state = String(rowData[sampleCols[ci]] || "C").toUpperCase();
+                hmUploadedDrawPeepBurnerGlyph(ctx, pipeXs[ci], rowYs[ri], state, 1.34);
+              }
+            }
+
+            panel.texture.needsUpdate = true;
           });
         }
 
