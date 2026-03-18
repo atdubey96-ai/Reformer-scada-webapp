@@ -118,13 +118,21 @@ function cuboidSanitizeTstRow(vals){
   return out;
 }
 
-function cuboidBuildEmptyBurnerData(){
+function cuboidBuildDefaultBurnerData(){
+  var defaultPatterns = [
+    ["N","O","N","B","N","O","N","O","B","N","O","N","O","N","O"],
+    ["O","N","O","N","O","B","O","N","O","N","B","O","N","O","N"],
+    ["B","N","O","N","N","O","N","O","N","O","N","O","B","N","O"],
+    ["N","O","B","O","N","O","N","B","O","N","O","N","O","O","N"],
+    ["O","N","N","O","B","N","O","N","O","B","N","O","N","N","O"],
+    ["N","B","O","N","O","N","O","N","B","O","N","O","N","O","N"]
+  ];
   var walls = ["A", "B", "C", "D"];
   var hmData = {};
   for(var wi=0; wi<walls.length; wi++){
     hmData[walls[wi]] = [];
     for(var ri=0; ri<6; ri++){
-      hmData[walls[wi]].push(Array(15).fill("C"));
+      hmData[walls[wi]].push(defaultPatterns[(ri + wi) % defaultPatterns.length].slice());
     }
   }
   return hmData;
@@ -157,10 +165,11 @@ function cuboidLoadBurnerData(){
     var raw = localStorage.getItem("burnerData");
     if(raw){
       var parsed = JSON.parse(raw);
-      return cuboidSanitizeBurnerSnapshot(parsed);
+      var sanitized = cuboidSanitizeBurnerSnapshot(parsed);
+      if(cuboidHasActiveBurners(sanitized)) return sanitized;
     }
   }catch(e){}
-  return cuboidBuildEmptyBurnerData();
+  return cuboidBuildDefaultBurnerData();
 }
 
 function cuboidGetLocalTempEntries(){
@@ -704,10 +713,86 @@ container.appendChild(renderer.domElement);
 var scene=new THREE.Scene();
 scene.background=new THREE.Color(0x07090d);
 
-/* ── PERSPECTIVE CAMERA — fit the working chamber geometry from the old heat map / 3D reformer tabs ── */
+/* ── PERSPECTIVE CAMERA — dynamic, fits canvas on every resize ── */
 var FOV = 22;
+// Compute cuboid dims from current canvas size
+// CH is derived so the total height (cuboid + tubes above) fits viewport
+// TUBE_OUT is CH*0.12, so total height = CH + CH*0.12 = CH*1.12
+// We want CH*1.12 to fill ~88% of viewport height in world units
+// CH is set in world units; camera distance auto-calculated to fit both W and H.
+// We fix CH=6 as baseline world unit and let camera do the fitting.
+// On resize we just update camera aspect — cuboid world size stays constant,
+// BUT we also scale the group to fill the canvas.
+
 var FOV_RAD = FOV * Math.PI / 180;
-var camera = new THREE.PerspectiveCamera(FOV, Math.max(1, W) / Math.max(1, H), 0.1, 500);
+
+function calcDims(vw, vh){
+  var asp = vw / vh;
+  var MARGIN = 0.97; // 3% safety margin so nothing clips
+  // TUBE_OUT = CH*0.12, so total visual height = CH*1.12
+  // Strategy: maximise CW (horizontal length) subject to:
+  //   1) total visual height (CH*1.12) fits viewport height
+  //   2) CW fits viewport width
+  // Both constraints give a max CW — take the minimum of the two.
+
+  // From camera geometry at distance D with FOV:
+  //   visible half-height in world = D * tan(FOV/2)
+  //   visible half-width  in world = D * tan(hFOV/2) = D * tan(FOV/2) * asp
+
+  // Constraint 1 — height: CH*1.12 <= 2 * D * tan(FOV/2)
+  //   Fix D independently — we derive CW from a single camDist.
+  //   Let CH drive camDist, then see max CW that fits width at that camDist.
+  //   But we want to maximise CW, so start from width constraint instead.
+
+  // Approach: pick camDist so that width fills 97% of viewport.
+  // CW = 2 * camDist * tan(hFOV/2) * MARGIN
+  // Then derive CH from height constraint:
+  // CH = 2 * camDist * tan(FOV/2) * MARGIN / 1.12  (divide by 1.12 for tube headroom)
+  // CW / CH = asp  (we want cuboid aspect = viewport aspect for max fill)
+  // So: CW = CH * asp, no fixed ratio needed — camera controls fill.
+
+  // Solve: choose camDist so that the taller of (height-constraint, width-constraint)
+  // is exactly at MARGIN fill. We want WIDTH to be the binding constraint (maximise CW).
+  // camDist from width: CW = 2*D*tan(hFOV/2)*MARGIN → D = CW/(2*tan(hFOV/2)*MARGIN)
+  // But CW depends on D — need to fix aspect ratio CW/CH = asp
+  // and total_H = CH*1.12.
+  // Let CH be free. Then CW = CH*asp.
+  // camDist to fit width:  D_w = (CH*asp/2) / (tan(hFOV/2)*MARGIN)
+  // camDist to fit height: D_h = (CH*1.12/2) / (tan(FOV/2)*MARGIN)
+  // We want D_w <= D_h so width is binding (cuboid as wide as possible).
+  // D_w = D_h when: (asp)/(tan(hFOV/2)) = (1.12)/(tan(FOV/2))
+  // At wide screens (asp large) D_w > D_h → height becomes binding, width clips.
+  // At narrow screens width is binding.
+  // Solution: use max(D_w, D_h) — the larger distance ensures BOTH fit.
+  // CW is then back-calculated from camDist so it fills width at MARGIN.
+
+  var hFov = 2 * Math.atan(Math.tan(FOV_RAD / 2) * asp);
+
+  // Start with CH=6 (world units), compute both distances
+  var CH = 6;
+  var CW_try = CH * asp;
+  var D_h = (CH * 1.12 / 2) / (Math.tan(FOV_RAD / 2) * MARGIN);
+  var D_w = (CW_try / 2) / (Math.tan(hFov / 2) * MARGIN);
+  var camDist = Math.max(D_h, D_w);
+
+  // Now back-calculate max CW that fits at this camDist (width binding)
+  var maxCW = 2 * camDist * Math.tan(hFov / 2) * MARGIN;
+  // And max CH that fits at this camDist (height binding, accounting for tubes)
+  var maxCH = 2 * camDist * Math.tan(FOV_RAD / 2) * MARGIN / 1.12;
+
+  // Use actual CH and CW = min(maxCW, maxCH*asp) to guarantee no clipping
+  CH = Math.min(CH, maxCH);
+  var CW = Math.min(maxCW, CH * asp);
+  var CD = CW * 0.18;
+
+  return { CH: CH, CW: CW, CD: CD, camDist: camDist, asp: asp };
+}
+
+var dims = calcDims(W, H);
+var CH = dims.CH, CW = dims.CW, CD = dims.CD;
+var camera = new THREE.PerspectiveCamera(FOV, dims.asp, 0.1, 500);
+camera.position.set(0, 0, dims.camDist);
+camera.lookAt(0, 0, 0);
 
 /* ── METALLIC CANVAS TEXTURE (procedural) ── */
 function makeMetalCanvas(w,h){
@@ -715,6 +800,7 @@ function makeMetalCanvas(w,h){
   mc.width=w; mc.height=h;
   var g=mc.getContext('2d');
 
+  /* ── BASE: silver-steel gradient ── */
   var base=g.createLinearGradient(0,0,w,h);
   base.addColorStop(0.00,'#8a9099');
   base.addColorStop(0.15,'#b8bec6');
@@ -726,52 +812,71 @@ function makeMetalCanvas(w,h){
   base.addColorStop(1.00,'#909498');
   g.fillStyle=base; g.fillRect(0,0,w,h);
 
+  /* ── BRUSHED HORIZONTAL STREAKS (steel mill finish) ── */
+  for(var s=0;s<180;s++){
+    var sy=Math.random()*h;
+    var sw=40+Math.random()*(w-40);
+    var sx=Math.random()*(w-sw);
+    var bright=Math.random()<0.5;
+    var alpha=0.03+Math.random()*0.09;
+    var streak=g.createLinearGradient(sx,0,sx+sw,0);
+    var col=bright?'255,255,255':'30,30,40';
+    streak.addColorStop(0,'rgba('+col+',0)');
+    streak.addColorStop(0.4,'rgba('+col+','+alpha+')');
+    streak.addColorStop(0.6,'rgba('+col+','+alpha+')');
+    streak.addColorStop(1,'rgba('+col+',0)');
+    g.fillStyle=streak;
+    var th=0.5+Math.random()*1.5;
+    g.fillRect(sx,sy,sw,th);
+  }
+
+  /* ── PLATE WELD SEAMS ── */
+  var seamCols=['rgba(60,55,50,0.55)','rgba(180,175,170,0.3)','rgba(40,38,36,0.4)'];
+  // horizontal seams
   var hSeams=[Math.round(h*0.33),Math.round(h*0.66)];
   hSeams.forEach(function(sy){
-    g.strokeStyle='rgba(50,48,45,0.7)';
-    g.lineWidth=2.5;
-    g.beginPath();
-    g.moveTo(0,sy);
-    g.lineTo(w,sy);
-    g.stroke();
+    // dark groove
+    g.strokeStyle='rgba(50,48,45,0.7)'; g.lineWidth=2.5;
+    g.beginPath(); g.moveTo(0,sy); g.lineTo(w,sy); g.stroke();
+    // weld bead highlight above
     var wg=g.createLinearGradient(0,sy-4,0,sy);
     wg.addColorStop(0,'rgba(220,215,210,0)');
     wg.addColorStop(1,'rgba(220,215,210,0.4)');
-    g.fillStyle=wg;
-    g.fillRect(0,sy-4,w,4);
+    g.fillStyle=wg; g.fillRect(0,sy-4,w,4);
+    // shadow below
     var sg=g.createLinearGradient(0,sy,0,sy+5);
     sg.addColorStop(0,'rgba(30,28,25,0.35)');
     sg.addColorStop(1,'rgba(30,28,25,0)');
-    g.fillStyle=sg;
-    g.fillRect(0,sy,w,5);
+    g.fillStyle=sg; g.fillRect(0,sy,w,5);
   });
-
+  // vertical seams
   var vSeams=[Math.round(w*0.25),Math.round(w*0.5),Math.round(w*0.75)];
   vSeams.forEach(function(sx){
-    g.strokeStyle='rgba(50,48,45,0.6)';
-    g.lineWidth=2;
-    g.beginPath();
-    g.moveTo(sx,0);
-    g.lineTo(sx,h);
-    g.stroke();
-    var vg=g.createLinearGradient(sx,0,sx+4,0);
-    vg.addColorStop(0,'rgba(210,205,200,0.3)');
-    vg.addColorStop(1,'rgba(210,205,200,0)');
-    g.fillStyle=vg;
-    g.fillRect(sx,0,4,h);
+    g.strokeStyle='rgba(50,48,45,0.6)'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(sx,0); g.lineTo(sx,h); g.stroke();
+    var wg=g.createLinearGradient(sx,0,sx+4,0);
+    wg.addColorStop(0,'rgba(210,205,200,0.3)');
+    wg.addColorStop(1,'rgba(210,205,200,0)');
+    g.fillStyle=wg; g.fillRect(sx,0,4,h);
   });
 
+  /* ── BOLT HEADS on plate intersections ── */
   var boltPositions=[];
   hSeams.forEach(function(sy){
-    vSeams.forEach(function(sx){ boltPositions.push([sx,sy]); });
+    vSeams.forEach(function(sx){
+      boltPositions.push([sx,sy]);
+    });
+    // extra bolts along seam
     for(var b=0;b<5;b++){
       boltPositions.push([Math.round(w*(0.1+b*0.18)),sy]);
     }
   });
   boltPositions.forEach(function(bp){
     var bx=bp[0], by=bp[1], br=7;
+    // bolt shadow
     g.fillStyle='rgba(20,18,16,0.5)';
     g.beginPath(); g.arc(bx+1,by+1,br,0,Math.PI*2); g.fill();
+    // bolt body gradient
     var bg=g.createRadialGradient(bx-2,by-2,1,bx,by,br);
     bg.addColorStop(0,'#e8eaec');
     bg.addColorStop(0.4,'#b0b4b8');
@@ -779,20 +884,21 @@ function makeMetalCanvas(w,h){
     bg.addColorStop(1,'#555860');
     g.fillStyle=bg;
     g.beginPath(); g.arc(bx,by,br,0,Math.PI*2); g.fill();
-    g.strokeStyle='rgba(40,38,36,0.6)';
-    g.lineWidth=1.2;
+    // hex nut shape
+    g.strokeStyle='rgba(40,38,36,0.6)'; g.lineWidth=1.2;
     g.beginPath();
     for(var i6=0;i6<6;i6++){
       var a6=i6*Math.PI/3-Math.PI/6;
       if(i6===0) g.moveTo(bx+Math.cos(a6)*br*0.72,by+Math.sin(a6)*br*0.72);
       else g.lineTo(bx+Math.cos(a6)*br*0.72,by+Math.sin(a6)*br*0.72);
     }
-    g.closePath();
-    g.stroke();
+    g.closePath(); g.stroke();
+    // center dot
     g.fillStyle='rgba(30,28,26,0.7)';
     g.beginPath(); g.arc(bx,by,1.5,0,Math.PI*2); g.fill();
   });
 
+  /* ── RUST & AGING SPOTS ── */
   var rustColors=['rgba(120,65,20,0.18)','rgba(95,50,15,0.14)','rgba(140,80,30,0.12)','rgba(80,40,10,0.1)'];
   for(var r=0;r<22;r++){
     var rx=Math.random()*w, ry=Math.random()*h;
@@ -803,11 +909,10 @@ function makeMetalCanvas(w,h){
     rg.addColorStop(0.5,rc.replace(/[\d.]+\)$/,'0.06)'));
     rg.addColorStop(1,'rgba(0,0,0,0)');
     g.fillStyle=rg;
-    g.beginPath();
-    g.ellipse(rx,ry,rsz,rsz*0.6,Math.random()*Math.PI,0,Math.PI*2);
-    g.fill();
+    g.beginPath(); g.ellipse(rx,ry,rsz,rsz*0.6,Math.random()*Math.PI,0,Math.PI*2); g.fill();
   }
 
+  /* ── OIL/GRIME STREAKS (vertical, dripping down) ── */
   for(var og=0;og<8;og++){
     var ox=Math.random()*w;
     var oLen=30+Math.random()*120;
@@ -820,8 +925,8 @@ function makeMetalCanvas(w,h){
     g.fillRect(ox-1,oy,2+Math.random()*3,oLen);
   }
 
-  g.strokeStyle='rgba(40,38,36,0.25)';
-  g.lineWidth=1;
+  /* ── SURFACE DENTS/SCRATCHES ── */
+  g.strokeStyle='rgba(40,38,36,0.25)'; g.lineWidth=1;
   for(var sc=0;sc<15;sc++){
     var scx=Math.random()*w, scy=Math.random()*h;
     var scLen=10+Math.random()*60;
@@ -830,30 +935,28 @@ function makeMetalCanvas(w,h){
     g.moveTo(scx,scy);
     g.lineTo(scx+Math.cos(scAngle)*scLen, scy+Math.sin(scAngle)*scLen);
     g.stroke();
-    g.strokeStyle='rgba(240,238,235,0.15)';
-    g.lineWidth=0.5;
+    // scratch highlight
+    g.strokeStyle='rgba(240,238,235,0.15)'; g.lineWidth=0.5;
     g.beginPath();
     g.moveTo(scx+0.5,scy+0.5);
     g.lineTo(scx+Math.cos(scAngle)*scLen+0.5, scy+Math.sin(scAngle)*scLen+0.5);
     g.stroke();
-    g.strokeStyle='rgba(40,38,36,0.25)';
-    g.lineWidth=1;
+    g.strokeStyle='rgba(40,38,36,0.25)'; g.lineWidth=1;
   }
 
+  /* ── OVERALL VIGNETTE (darker at edges) ── */
   var vgH=g.createLinearGradient(0,0,w,0);
   vgH.addColorStop(0,'rgba(0,0,0,0.22)');
   vgH.addColorStop(0.1,'rgba(0,0,0,0)');
   vgH.addColorStop(0.9,'rgba(0,0,0,0)');
   vgH.addColorStop(1,'rgba(0,0,0,0.22)');
-  g.fillStyle=vgH;
-  g.fillRect(0,0,w,h);
+  g.fillStyle=vgH; g.fillRect(0,0,w,h);
   var vgV=g.createLinearGradient(0,0,0,h);
   vgV.addColorStop(0,'rgba(0,0,0,0.15)');
   vgV.addColorStop(0.08,'rgba(0,0,0,0)');
   vgV.addColorStop(0.92,'rgba(0,0,0,0)');
   vgV.addColorStop(1,'rgba(0,0,0,0.25)');
-  g.fillStyle=vgV;
-  g.fillRect(0,0,w,h);
+  g.fillStyle=vgV; g.fillRect(0,0,w,h);
 
   return mc;
 }
@@ -866,111 +969,77 @@ function metalTex(){
   return t;
 }
 
-var shellTexMain=metalTex();
-var topTexMain=metalTex();
-var botTexMain=metalTex();
+var sideTexMain=metalTex();
+var topTexMain =metalTex();
+var botTexMain =metalTex();
+var frontTexMain=metalTex();
 
 /* ── MAIN GROUP ── */
 var group=new THREE.Group();
 scene.add(group);
-var modelGroup=new THREE.Group();
-group.add(modelGroup);
 
 /* ── LIGHTING ── */
 scene.add(new THREE.AmbientLight(0xffffff,0.3));
-var keyLight=new THREE.DirectionalLight(0xffeedd,1.08);
-keyLight.position.set(8,10,20);
-scene.add(keyLight);
+
+var keyLight=new THREE.DirectionalLight(0xffeedd,1.1);
+keyLight.position.set(8,10,20); scene.add(keyLight);
+
 var fillLight=new THREE.DirectionalLight(0x4466aa,0.5);
-fillLight.position.set(-8,-5,10);
-scene.add(fillLight);
+fillLight.position.set(-8,-5,10); scene.add(fillLight);
+
 var rimLight=new THREE.DirectionalLight(0x2255aa,0.35);
-rimLight.position.set(0,0,-10);
-scene.add(rimLight);
+rimLight.position.set(0,0,-10); scene.add(rimLight);
 
-var cuboidScaleToPrevious = 6 / 3.5;
-var chamberDims = {
-  sX:1.22 * cuboidScaleToPrevious,
-  sY:3.5 * cuboidScaleToPrevious,
-  sZ:5.0 * cuboidScaleToPrevious,
-  wallT:0.15 * cuboidScaleToPrevious,
-  hs:0.5 * cuboidScaleToPrevious,
-  hdrH:0.14 * cuboidScaleToPrevious,
-  tubeCount:8,
-  tubeR:0.06 * cuboidScaleToPrevious,
-  commonTubeR:0.11 * cuboidScaleToPrevious
-};
-chamberDims.hy1 = chamberDims.sY * 0.33;
-chamberDims.hy2 = chamberDims.sY * 0.68;
-chamberDims.tubeZStart = -(chamberDims.sZ - 0.6) / 2;
-chamberDims.tubeSpacing = (chamberDims.sZ - 0.6) / (chamberDims.tubeCount - 1);
-chamberDims.commonTubeY = chamberDims.sY + chamberDims.hdrH + 0.22;
+/* Interior warm point light — visible through peepholes */
+var intLight=new THREE.PointLight(0xff8833,2.5,CW*1.2);
+intLight.position.set(0,0,0);
+group.add(intLight);
 
-var shellMat = new THREE.MeshStandardMaterial({
-  color:0xffffff,
-  map:shellTexMain,
-  metalness:0.62,
-  roughness:0.46,
-  side:THREE.DoubleSide
-});
-var topShellMat = new THREE.MeshStandardMaterial({
-  color:0xffffff,
-  map:topTexMain,
-  metalness:0.58,
-  roughness:0.4,
-  side:THREE.DoubleSide
-});
-var bottomShellMat = new THREE.MeshStandardMaterial({
-  color:0xffffff,
-  map:botTexMain,
-  metalness:0.62,
-  roughness:0.48,
-  side:THREE.DoubleSide
-});
-var innerMat = new THREE.MeshStandardMaterial({
-  color:0x0a0a0a,
-  metalness:0.05,
-  roughness:0.82,
-  side:THREE.DoubleSide,
-  transparent:true,
-  opacity:0.12,
-  depthWrite:false
-});
-var tubeMat = new THREE.MeshStandardMaterial({color:0x8899aa, metalness:0.75, roughness:0.3});
-var headerMat = new THREE.MeshStandardMaterial({color:0x7090a8, metalness:0.7, roughness:0.25});
-var edgeLineMat = new THREE.LineBasicMaterial({color:0x6a6a6a, transparent:true, opacity:0.24});
+/* ═══════════════════════════════════════════════════════════
+   CUBOID — single BoxGeometry, multi-material
+   face order: px(right), nx(left), py(top), ny(bot), pz(front), nz(back)
+   We use a 1×1×1 box scaled to CW×CH×CD so UVs are clean.
+═══════════════════════════════════════════════════════════ */
 
-function cuboidConfigureOverlayTexture(texture){
-  if(!texture || typeof THREE === "undefined") return;
+/* Fix UV so texture fills each face correctly */
+function fixUV(geo, faceIdx, scaleU, scaleV){
+  // BoxGeometry has 6 faces × 2 triangles = 12 tris, 4 verts each group
+  // Three.js r134 BoxGeometry uses groups; UV is set at build time — no fixup needed
+}
+
+var boxGeo = new THREE.BoxGeometry(CW, CH, CD);
+
+/* Materials indexed: 0=+X(right), 1=-X(left), 2=+Y(top), 3=-Y(bot), 4=+Z(front-A), 5=-Z(back-B) */
+/* Box sides are invisible — ShapeGeometry peephole panels render on top */
+var matRight  = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.0});
+var matLeft   = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.0});
+var matTop    = new THREE.MeshBasicMaterial({color:0xaab0b8, map:topTexMain});
+var matBot    = new THREE.MeshBasicMaterial({color:0x858a90, map:botTexMain});
+var matFront  = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain});
+var matBack   = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain});
+
+var boxMesh = new THREE.Mesh(boxGeo, [matRight, matLeft, matTop, matBot, matFront, matBack]);
+group.add(boxMesh);
+
+function cuboidCreateFaceOverlay(face, wallKey){
+  var canvas = document.createElement("canvas");
+  canvas.width = 1440;
+  canvas.height = 1080;
+  var texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = true;
-  texture.premultiplyAlpha = false;
   if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
     texture.colorSpace = THREE.SRGBColorSpace;
   }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
     texture.encoding = THREE.sRGBEncoding;
   }
-  if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
-    try{
-      texture.anisotropy = Math.max(1, Math.min(16, renderer.capabilities.getMaxAnisotropy() || 1));
-    }catch(e){}
-  }
-}
-
-function cuboidCreateWallOverlay(dims, wallKey, side){
-  var canvas = document.createElement("canvas");
-  canvas.width = 1440;
-  canvas.height = 1080;
-  var texture = new THREE.CanvasTexture(canvas);
-  cuboidConfigureOverlayTexture(texture);
   var outerMaterial = new THREE.MeshBasicMaterial({
     map:texture,
     transparent:true,
     side:THREE.FrontSide,
-    depthWrite:true,
+    depthWrite:false,
     alphaTest:0.02,
     polygonOffset:true,
     polygonOffsetFactor:-1,
@@ -986,261 +1055,299 @@ function cuboidCreateWallOverlay(dims, wallKey, side){
     polygonOffsetFactor:-1,
     polygonOffsetUnits:-1
   });
-  var planeW = dims.sZ - 0.44;
-  var planeH = dims.sY - 0.28;
-  var outerMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), outerMaterial);
-  var innerMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), innerMaterial);
-
-  if(side === "left"){
-    outerMesh.position.set(-dims.sX/2 - 0.006, dims.sY/2, 0);
-    outerMesh.rotation.y = -Math.PI / 2;
-    innerMesh.position.set(-dims.sX/2 + dims.wallT + 0.018, dims.sY/2, 0);
-    innerMesh.rotation.y = Math.PI / 2;
+  var planeW = Math.max(0.8, CW - 0.42);
+  var planeH = Math.max(0.8, CH - 0.34);
+  var outerPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(planeW, planeH),
+    outerMaterial
+  );
+  var innerPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(Math.max(0.8, CW - 0.42), Math.max(0.8, CH - 0.34)),
+    innerMaterial
+  );
+  var innerInset = Math.max(0.02, CD * 0.12);
+  if(face === "back"){
+    outerPlane.position.set(0, 0, -CD/2 - 0.009);
+    outerPlane.rotation.y = Math.PI;
+    innerPlane.position.set(0, 0, -CD/2 + innerInset);
+    innerPlane.rotation.y = Math.PI;
   }else{
-    outerMesh.position.set(dims.sX/2 + 0.006, dims.sY/2, 0);
-    outerMesh.rotation.y = Math.PI / 2;
-    innerMesh.position.set(dims.sX/2 - dims.wallT - 0.018, dims.sY/2, 0);
-    innerMesh.rotation.y = -Math.PI / 2;
+    outerPlane.position.set(0, 0, CD/2 + 0.009);
+    innerPlane.position.set(0, 0, CD/2 - innerInset);
   }
-
-  outerMesh.renderOrder = 8;
-  innerMesh.renderOrder = 6;
+  outerPlane.renderOrder = 9;
+  innerPlane.renderOrder = 7;
+  group.add(outerPlane);
+  group.add(innerPlane);
   return {
+    face:face,
     wallKey:wallKey,
-    side:side,
     canvas:canvas,
     texture:texture,
     outerMaterial:outerMaterial,
     innerMaterial:innerMaterial,
-    outerMesh:outerMesh,
-    innerMesh:innerMesh
+    outerMesh:outerPlane,
+    innerMesh:innerPlane
   };
 }
 
-function cuboidMakeFace(fW, fH, holeSize, y1, y2){
-  var shape = new THREE.Shape();
-  shape.moveTo(0, 0);
-  shape.lineTo(fW, 0);
-  shape.lineTo(fW, fH);
-  shape.lineTo(0, fH);
-  shape.lineTo(0, 0);
+var cuboidFaceOverlays = {
+  front: cuboidCreateFaceOverlay("front", chamberWalls[0]),
+  back: cuboidCreateFaceOverlay("back", chamberWalls[1])
+};
+var cuboidFaceDigest = "";
 
-  var cx = fW / 2;
-  function punch(centerY){
-    var hole = new THREE.Path();
-    hole.moveTo(cx - holeSize / 2, centerY - holeSize / 2);
-    hole.lineTo(cx + holeSize / 2, centerY - holeSize / 2);
-    hole.lineTo(cx + holeSize / 2, centerY + holeSize / 2);
-    hole.lineTo(cx - holeSize / 2, centerY + holeSize / 2);
-    hole.lineTo(cx - holeSize / 2, centerY - holeSize / 2);
-    shape.holes.push(hole);
-  }
-  punch(y1);
-  punch(y2);
-  return shape;
-}
-
-function cuboidAddFrame(parent, dims, y, z){
-  var size = dims.hs / 2 + 0.04;
-  var pts = [
-    new THREE.Vector3(-size, -size, 0),
-    new THREE.Vector3(size, -size, 0),
-    new THREE.Vector3(size, size, 0),
-    new THREE.Vector3(-size, size, 0),
-    new THREE.Vector3(-size, -size, 0)
-  ];
-  var frame = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints(pts),
-    new THREE.LineBasicMaterial({color:0xccbbaa, transparent:true, opacity:0.7})
-  );
-  frame.position.set(0, y, z);
-  if(z < 0) frame.rotation.y = Math.PI;
-  parent.add(frame);
-}
-
-var cuboidWallOverlays = {};
-var cuboidOverlayDigest = "";
-
-function cuboidBuildOverlayDigest(snapshot, cleaningLog){
+function cuboidBuildFaceDigest(snapshot, cleaningLog){
+  var cleanA = cleaningLog && cleaningLog[chamberWalls[0]] ? cleaningLog[chamberWalls[0]] : {};
+  var cleanB = cleaningLog && cleaningLog[chamberWalls[1]] ? cleaningLog[chamberWalls[1]] : {};
   return JSON.stringify({
     chamber: chamberParam,
     entryDt: snapshot && snapshot.entryDt ? snapshot.entryDt : "",
     selectedShift: snapshot && snapshot.selectedShift ? snapshot.selectedShift : "",
-    leftRows: snapshot && snapshot.hmData ? snapshot.hmData[chamberWalls[0]] : [],
-    rightRows: snapshot && snapshot.hmData ? snapshot.hmData[chamberWalls[1]] : [],
+    frontRows: snapshot && snapshot.hmData ? snapshot.hmData[chamberWalls[0]] : [],
+    backRows: snapshot && snapshot.hmData ? snapshot.hmData[chamberWalls[1]] : [],
     abBot: snapshot ? snapshot.abBot : [],
     abTop: snapshot ? snapshot.abTop : [],
     cdBot: snapshot ? snapshot.cdBot : [],
     cdTop: snapshot ? snapshot.cdTop : [],
-    cleanLeft: cleaningLog && cleaningLog[chamberWalls[0]] ? cleaningLog[chamberWalls[0]] : {},
-    cleanRight: cleaningLog && cleaningLog[chamberWalls[1]] ? cleaningLog[chamberWalls[1]] : {}
+    cleanFront: cleanA,
+    cleanBack: cleanB
   });
 }
 
-function cuboidSyncWallOverlays(force){
+function cuboidSyncFaceOverlays(force){
   var snapshot = cuboidBuildSnapshot();
   var cleaningLog = cuboidLoadCleaningLog();
-  var nextDigest = cuboidBuildOverlayDigest(snapshot, cleaningLog);
-  if(!force && nextDigest === cuboidOverlayDigest) return;
-
-  if(cuboidWallOverlays[chamberWalls[0]]){
-    cuboidPaintWallCanvas(
-      cuboidWallOverlays[chamberWalls[0]].canvas,
-      chamberWalls[0],
-      snapshot,
-      cleaningLog[chamberWalls[0]] || {},
-      0
-    );
-    cuboidWallOverlays[chamberWalls[0]].texture.needsUpdate = true;
-  }
-  if(cuboidWallOverlays[chamberWalls[1]]){
-    cuboidPaintWallCanvas(
-      cuboidWallOverlays[chamberWalls[1]].canvas,
-      chamberWalls[1],
-      snapshot,
-      cleaningLog[chamberWalls[1]] || {},
-      0.85
-    );
-    cuboidWallOverlays[chamberWalls[1]].texture.needsUpdate = true;
-  }
-
-  cuboidOverlayDigest = nextDigest;
+  var nextDigest = cuboidBuildFaceDigest(snapshot, cleaningLog);
+  if(!force && nextDigest === cuboidFaceDigest) return;
+  cuboidPaintWallCanvas(
+    cuboidFaceOverlays.front.canvas,
+    chamberWalls[0],
+    snapshot,
+    cleaningLog[chamberWalls[0]] || {},
+    0
+  );
+  cuboidPaintWallCanvas(
+    cuboidFaceOverlays.back.canvas,
+    chamberWalls[1],
+    snapshot,
+    cleaningLog[chamberWalls[1]] || {},
+    0.85
+  );
+  cuboidFaceOverlays.front.texture.needsUpdate = true;
+  cuboidFaceOverlays.back.texture.needsUpdate = true;
+  cuboidFaceDigest = nextDigest;
 }
 
-function cuboidBuildChamber(parent, dims){
-  var chamber = new THREE.Group();
-  parent.add(chamber);
-
-  var inner = new THREE.Mesh(
-    new THREE.BoxGeometry(dims.sX - dims.wallT * 2 - 0.02, dims.sY - dims.wallT * 2 - 0.02, dims.sZ - dims.wallT * 2 - 0.02),
-    innerMat
-  );
-  inner.position.set(0, dims.sY / 2, 0);
-  chamber.add(inner);
-
-  var innerGlow = new THREE.PointLight(0xff4422, 0.16, 3.4);
-  innerGlow.position.set(0, dims.sY / 2, 0);
-  chamber.add(innerGlow);
-
-  var leftWall = new THREE.Mesh(new THREE.BoxGeometry(dims.wallT, dims.sY, dims.sZ), shellMat);
-  leftWall.position.set(-dims.sX / 2 + dims.wallT / 2, dims.sY / 2, 0);
-  chamber.add(leftWall);
-
-  var rightWall = new THREE.Mesh(new THREE.BoxGeometry(dims.wallT, dims.sY, dims.sZ), shellMat);
-  rightWall.position.set(dims.sX / 2 - dims.wallT / 2, dims.sY / 2, 0);
-  chamber.add(rightWall);
-
-  var leftOverlay = cuboidCreateWallOverlay(dims, chamberWalls[0], "left");
-  var rightOverlay = cuboidCreateWallOverlay(dims, chamberWalls[1], "right");
-  cuboidWallOverlays[chamberWalls[0]] = leftOverlay;
-  cuboidWallOverlays[chamberWalls[1]] = rightOverlay;
-  chamber.add(leftOverlay.outerMesh);
-  chamber.add(leftOverlay.innerMesh);
-  chamber.add(rightOverlay.outerMesh);
-  chamber.add(rightOverlay.innerMesh);
-
-  var topWall = new THREE.Mesh(
-    new THREE.BoxGeometry(dims.sX - dims.wallT * 2 - 0.01, dims.wallT, dims.sZ - dims.wallT * 2 - 0.01),
-    topShellMat
-  );
-  topWall.position.set(0, dims.sY - dims.wallT / 2, 0);
-  chamber.add(topWall);
-
-  var bottomWall = new THREE.Mesh(
-    new THREE.BoxGeometry(dims.sX - dims.wallT * 2 - 0.01, dims.wallT, dims.sZ - dims.wallT * 2 - 0.01),
-    bottomShellMat
-  );
-  bottomWall.position.set(0, dims.wallT / 2, 0);
-  chamber.add(bottomWall);
-
-  var frontShape = cuboidMakeFace(dims.sX, dims.sY, dims.hs, dims.hy1, dims.hy2);
-  var frontGeo = new THREE.ExtrudeGeometry(frontShape, {depth:dims.wallT, bevelEnabled:false});
-  var frontWall = new THREE.Mesh(frontGeo, shellMat);
-  frontWall.position.set(-dims.sX / 2, 0, dims.sZ / 2 - dims.wallT);
-  chamber.add(frontWall);
-
-  var backShape = cuboidMakeFace(dims.sX, dims.sY, dims.hs, dims.hy1, dims.hy2);
-  var backGeo = new THREE.ExtrudeGeometry(backShape, {depth:dims.wallT, bevelEnabled:false});
-  var backWall = new THREE.Mesh(backGeo, shellMat);
-  backWall.position.set(-dims.sX / 2, 0, -dims.sZ / 2);
-  chamber.add(backWall);
-
-  cuboidAddFrame(chamber, dims, dims.hy1, dims.sZ / 2 + 0.01);
-  cuboidAddFrame(chamber, dims, dims.hy2, dims.sZ / 2 + 0.01);
-  cuboidAddFrame(chamber, dims, dims.hy1, -dims.sZ / 2 - 0.01);
-  cuboidAddFrame(chamber, dims, dims.hy2, -dims.sZ / 2 - 0.01);
-
-  var wire = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(dims.sX, dims.sY, dims.sZ)),
-    edgeLineMat
-  );
-  wire.position.set(0, dims.sY / 2, 0);
-  chamber.add(wire);
-
-  var tubeBottomY = dims.wallT + 0.12;
-  var tubeHeight = dims.commonTubeY - tubeBottomY;
-  for(var i = 0; i < dims.tubeCount; i++){
-    var tz = dims.tubeZStart + i * dims.tubeSpacing;
-    var tube = new THREE.Mesh(new THREE.CylinderGeometry(dims.tubeR, dims.tubeR, tubeHeight, 12), tubeMat);
-    tube.position.set(0, tubeBottomY + tubeHeight / 2, tz);
-    chamber.add(tube);
-
-    var joint = new THREE.Mesh(new THREE.SphereGeometry(dims.tubeR * 1.25, 10, 10), headerMat);
-    joint.position.set(0, dims.commonTubeY, tz);
-    chamber.add(joint);
-  }
-
-  var commonTubeLen = dims.sZ + 0.4;
-  var commonHeader = new THREE.Mesh(
-    new THREE.CylinderGeometry(dims.commonTubeR, dims.commonTubeR, commonTubeLen, 16),
-    headerMat
-  );
-  commonHeader.rotation.x = Math.PI / 2;
-  commonHeader.position.set(0, dims.commonTubeY, 0);
-  chamber.add(commonHeader);
-
-  var capGeo = new THREE.SphereGeometry(dims.commonTubeR, 12, 12);
-  var frontCap = new THREE.Mesh(capGeo, headerMat);
-  frontCap.position.set(0, dims.commonTubeY, commonTubeLen / 2);
-  chamber.add(frontCap);
-  var backCap = new THREE.Mesh(capGeo, headerMat);
-  backCap.position.set(0, dims.commonTubeY, -commonTubeLen / 2);
-  chamber.add(backCap);
-
-  return chamber;
-}
-
-cuboidBuildChamber(modelGroup, chamberDims);
-
-var initialBounds = new THREE.Box3().setFromObject(modelGroup);
-var initialCenter = initialBounds.getCenter(new THREE.Vector3());
-modelGroup.position.sub(initialCenter);
-
-cuboidSyncWallOverlays(true);
+cuboidSyncFaceOverlays(true);
 window.addEventListener("storage", function(){
-  setTimeout(function(){ cuboidSyncWallOverlays(true); }, 0);
+  setTimeout(function(){ cuboidSyncFaceOverlays(true); }, 0);
 });
 window.setInterval(function(){
-  cuboidSyncWallOverlays(false);
+  cuboidSyncFaceOverlays(false);
 }, 1200);
 
+/* inner faces removed */
+
+/* ── SIDE FACES WITH SQUARE PEEPHOLES ── */
+// Hole size: ~28% of face height, 70% of face width
+var HOLE_H=CH*0.16;
+var HOLE_W=CD*0.55;
+var HOLE_GAP=CH*0.06;   // gap between holes
+// Upper hole center Y, lower hole center Y
+var HOLE_Y1= CH*0.19;
+var HOLE_Y2=-CH*0.19;
+
+function buildSideShape(){
+  var s=new THREE.Shape();
+  // outer rectangle
+  s.moveTo(-CD/2,-CH/2);
+  s.lineTo( CD/2,-CH/2);
+  s.lineTo( CD/2, CH/2);
+  s.lineTo(-CD/2, CH/2);
+  s.closePath();
+  // hole puncher
+  function punchHole(cx,cy,hw,hh){
+    var hole=new THREE.Path();
+    var r=hw*0.08; // slight corner radius approximated with bezier
+    hole.moveTo(cx-hw/2+r, cy-hh/2);
+    hole.lineTo(cx+hw/2-r, cy-hh/2);
+    hole.quadraticCurveTo(cx+hw/2,cy-hh/2, cx+hw/2,cy-hh/2+r);
+    hole.lineTo(cx+hw/2, cy+hh/2-r);
+    hole.quadraticCurveTo(cx+hw/2,cy+hh/2, cx+hw/2-r,cy+hh/2);
+    hole.lineTo(cx-hw/2+r, cy+hh/2);
+    hole.quadraticCurveTo(cx-hw/2,cy+hh/2, cx-hw/2,cy+hh/2-r);
+    hole.lineTo(cx-hw/2, cy-hh/2+r);
+    hole.quadraticCurveTo(cx-hw/2,cy-hh/2, cx-hw/2+r,cy-hh/2);
+    s.holes.push(hole);
+  }
+  punchHole(0, HOLE_Y1, HOLE_W, HOLE_H);
+  punchHole(0, HOLE_Y2, HOLE_W, HOLE_H);
+  return s;
+}
+
+var sideShape=buildSideShape();
+var sideGeo=new THREE.ShapeGeometry(sideShape,6);
+
+var sideMat=new THREE.MeshBasicMaterial({
+  color:0xa8aeb6,map:sideTexMain,side:THREE.FrontSide,
+});
+var sideInnerMat=new THREE.MeshBasicMaterial({
+  color:0x000000,side:THREE.FrontSide,
+});
+
+/* Right side outer */
+var rMesh=new THREE.Mesh(sideGeo,sideMat);
+rMesh.rotation.y=Math.PI/2;
+rMesh.position.x=CW/2;
+group.add(rMesh);
+/* Right side inner — black */
+var rInner=new THREE.Mesh(sideGeo.clone(),sideInnerMat);
+rInner.rotation.y=-Math.PI/2;
+rInner.position.x=CW/2-0.01;
+group.add(rInner);
+
+/* Left side outer */
+var lMesh=new THREE.Mesh(sideGeo.clone(),sideMat);
+lMesh.rotation.y=-Math.PI/2;
+lMesh.position.x=-CW/2;
+group.add(lMesh);
+/* Left side inner — black */
+var lInner=new THREE.Mesh(sideGeo.clone(),sideInnerMat);
+lInner.rotation.y=Math.PI/2;
+lInner.position.x=-CW/2+0.01;
+group.add(lInner);
+
+/* ── PEEPHOLE FRAME EDGES (bright steel) ── */
+function addPeepholeFrames(parentGroup, signX){
+  var mat=new THREE.LineBasicMaterial({color:0xb0b8c0,linewidth:1});
+  [HOLE_Y1,HOLE_Y2].forEach(function(py){
+    var hw=HOLE_W/2,hh=HOLE_H/2,z=0.015*signX;
+    var pts=[
+      new THREE.Vector3(-hw,-hh,z),new THREE.Vector3(hw,-hh,z),
+      new THREE.Vector3(hw,hh,z),new THREE.Vector3(-hw,hh,z),
+      new THREE.Vector3(-hw,-hh,z),
+    ];
+    var line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);
+    line.position.y=py;
+    parentGroup.add(line);
+    /* inner frame bevel line */
+    var mat2=new THREE.LineBasicMaterial({color:0x707880,linewidth:1});
+    var bevel=0.04;
+    var pts2=[
+      new THREE.Vector3(-hw+bevel,-hh+bevel,z*0.5),
+      new THREE.Vector3(hw-bevel,-hh+bevel,z*0.5),
+      new THREE.Vector3(hw-bevel,hh-bevel,z*0.5),
+      new THREE.Vector3(-hw+bevel,hh-bevel,z*0.5),
+      new THREE.Vector3(-hw+bevel,-hh+bevel,z*0.5),
+    ];
+    var line2=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts2),mat2);
+    line2.position.y=py;
+    parentGroup.add(line2);
+  });
+}
+
+var rFrameG=new THREE.Group();
+rFrameG.rotation.y=Math.PI/2; rFrameG.position.x=CW/2;
+addPeepholeFrames(rFrameG,1); group.add(rFrameG);
+
+var lFrameG=new THREE.Group();
+lFrameG.rotation.y=-Math.PI/2; lFrameG.position.x=-CW/2;
+addPeepholeFrames(lFrameG,-1); group.add(lFrameG);
+
+/* ── EDGE REINFORCEMENT BARS ── */
+var edgeMat=new THREE.MeshStandardMaterial({color:0x3a3e42,metalness:0.95,roughness:0.2});
+
+function edgeH(len,x,y,z){
+  var m=new THREE.Mesh(new THREE.BoxGeometry(len,0.07,0.07),edgeMat);
+  m.position.set(x,y,z); return m;
+}
+function edgeV(len,x,y,z){
+  var m=new THREE.Mesh(new THREE.BoxGeometry(0.07,len,0.07),edgeMat);
+  m.position.set(x,y,z); return m;
+}
+function edgeD(len,x,y,z){ // depth edge
+  var m=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.07,len),edgeMat);
+  m.position.set(x,y,z); return m;
+}
+
+// Front face edges
+group.add(edgeH(CW+0.07,0,CH/2,CD/2));
+group.add(edgeH(CW+0.07,0,-CH/2,CD/2));
+group.add(edgeV(CH,CW/2,0,CD/2));
+group.add(edgeV(CH,-CW/2,0,CD/2));
+// Back face edges
+group.add(edgeH(CW+0.07,0,CH/2,-CD/2));
+group.add(edgeH(CW+0.07,0,-CH/2,-CD/2));
+group.add(edgeV(CH,CW/2,0,-CD/2));
+group.add(edgeV(CH,-CW/2,0,-CD/2));
+// Depth edges (corners)
+group.add(edgeD(CD,CW/2,CH/2,0));
+group.add(edgeD(CD,-CW/2,CH/2,0));
+group.add(edgeD(CD,CW/2,-CH/2,0));
+group.add(edgeD(CD,-CW/2,-CH/2,0));
+
+/* ── TUBES + HEADER ── */
+var NUM_TUBES=8;
+var TUBE_OUT=CH*0.12;           // tubes poke above top face, header outside
+var TUBE_IN =CH*1.0;           // run full interior height to bottom face
+var TUBE_TOTAL=TUBE_OUT+TUBE_IN;
+var TUBE_R=0.13;               // larger circumference
+var tubeGeo=new THREE.CylinderGeometry(TUBE_R,TUBE_R,TUBE_TOTAL,16);
+var tubeMat=new THREE.MeshStandardMaterial({color:0x6a7078,metalness:0.9,roughness:0.25});
+var flangeGeo=new THREE.CylinderGeometry(TUBE_R*1.8,TUBE_R*1.8,0.07,16);
+var flangeMat=new THREE.MeshStandardMaterial({color:0x4a5058,metalness:0.95,roughness:0.18});
+
+var spacing=CW*0.8/(NUM_TUBES-1);
+var startX=-CW*0.4;
+for(var t=0;t<NUM_TUBES;t++){
+  var tx=startX+t*spacing;
+  var tubeCenterY = CH/2 + TUBE_OUT - TUBE_TOTAL/2;
+  var tube=new THREE.Mesh(tubeGeo,tubeMat);
+  tube.position.set(tx, tubeCenterY, 0);
+  group.add(tube);
+  var flange=new THREE.Mesh(flangeGeo,flangeMat);
+  flange.position.set(tx, CH/2, 0);
+  group.add(flange);
+  var cap=new THREE.Mesh(new THREE.CylinderGeometry(TUBE_R*1.2,TUBE_R*1.2,0.05,16),flangeMat);
+  cap.position.set(tx, CH/2+TUBE_OUT, 0);
+  group.add(cap);
+  var noz=new THREE.Mesh(new THREE.CylinderGeometry(TUBE_R*0.8,TUBE_R*1.2,0.10,16),tubeMat);
+  noz.position.set(tx, -CH/2+0.05, 0);
+  group.add(noz);
+}
+
+/* Header pipe above roof */
+var hdrGeo=new THREE.CylinderGeometry(TUBE_R*2.4,TUBE_R*2.4,CW*0.85,16);
+var hdrMat=new THREE.MeshStandardMaterial({color:0x58606a,metalness:0.93,roughness:0.2});
+var hdr=new THREE.Mesh(hdrGeo,hdrMat);
+hdr.rotation.z=Math.PI/2;
+hdr.position.set(0, CH/2+TUBE_OUT, 0);
+group.add(hdr);
+
+/* Header end caps */
+[-CW*0.425,CW*0.425].forEach(function(ex){
+  var ec=new THREE.Mesh(new THREE.CylinderGeometry(TUBE_R*2.8,TUBE_R*2.8,0.07,16),flangeMat);
+  ec.rotation.z=Math.PI/2;
+  ec.position.set(ex, CH/2+TUBE_OUT, 0);
+  group.add(ec);
+});
+
+/* Expanded-view framing: use the tighter inside-canvas fit only in zoomed mode. */
 var fitBounds = new THREE.Box3().setFromObject(group);
 var fitCenter = fitBounds.getCenter(new THREE.Vector3());
 var fitSize = fitBounds.getSize(new THREE.Vector3());
-var fitMaxWidth = Math.sqrt((fitSize.x * fitSize.x) + (fitSize.z * fitSize.z));
-var NORMAL_PAD = 0.94;
-var EXPANDED_PAD = 0.86;
+var fitMaxWidth = Math.sqrt(fitSize.x*fitSize.x + fitSize.z*fitSize.z);
+var FIT_PAD = 1.08;
 
-function applyFrame(nw, nh, pad){
-  var safeW = Math.max(1, nw);
-  var safeH = Math.max(1, nh);
-  var aspect = safeW / safeH;
+function applyExpandedFrame(nw, nh){
+  var aspect = nw / nh;
   var hFov = 2 * Math.atan(Math.tan(FOV_RAD / 2) * aspect);
-  var fitHeight = fitSize.y * pad;
-  var fitWidth = fitMaxWidth * pad;
+  var fitHeight = fitSize.y * FIT_PAD;
+  var fitWidth = fitMaxWidth * FIT_PAD;
   var distV = (fitHeight / 2) / Math.tan(FOV_RAD / 2);
   var distH = (fitWidth / 2) / Math.tan(hFov / 2);
-  var dist = Math.max(distV, distH) + fitSize.z * 0.12;
+  var dist = Math.max(distV, distH) + fitSize.z * 0.55;
 
   camera.aspect = aspect;
   camera.position.set(fitCenter.x, fitCenter.y, dist);
@@ -1248,17 +1355,13 @@ function applyFrame(nw, nh, pad){
   camera.updateProjectionMatrix();
 }
 
-function applyExpandedFrame(nw, nh){
-  applyFrame(nw, nh, EXPANDED_PAD);
-}
-
 /* ═══════════════════════════════════════════════════════════
    INTERACTION
 ═══════════════════════════════════════════════════════════ */
-var targetRotY=-1.38, currentRotY=-1.38;
+var targetRotY=0, currentRotY=0;
 var dragging=false, lastX=0;
-var autoSpin=false;
-var SPIN_SPEED=0.0028;
+var autoSpin=true;
+var SPIN_SPEED=0.004;
 var lastTapAt=0;
 var touchMoved=false;
 var overlayExpanded=false;
@@ -1327,10 +1430,17 @@ updateHintBar();
    RESIZE — recalculate camera to always fit cuboid in canvas
 ═══════════════════════════════════════════════════════════ */
 function resizeViewer(){
-  var nw = Math.max(1, container.clientWidth);
-  var nh = Math.max(1, container.clientHeight);
+  var nw = container.clientWidth, nh = container.clientHeight;
   renderer.setSize(nw, nh);
-  applyFrame(nw, nh, overlayExpanded ? EXPANDED_PAD : NORMAL_PAD);
+  if(overlayExpanded){
+    applyExpandedFrame(nw, nh);
+    return;
+  }
+  var d = calcDims(nw, nh);
+  camera.aspect = d.asp;
+  camera.position.set(0, 0, d.camDist);
+  camera.lookAt(0, 0, 0);
+  camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resizeViewer);
 document.addEventListener('fullscreenchange', resizeViewer);
@@ -1346,7 +1456,6 @@ function tick(){
   group.rotation.y=currentRotY;
   renderer.render(scene,camera);
 }
-resizeViewer();
 tick();
 
 })();
