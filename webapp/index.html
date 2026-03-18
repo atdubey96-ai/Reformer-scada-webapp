@@ -15290,7 +15290,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           title="Cuboid Viewer"
           src="about:blank"
-          data-src="./cuboid-viewer.html"
+          data-src="./cuboid-viewer.html?chamber=ab"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -15302,7 +15302,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           title="Cuboid Viewer"
           src="about:blank"
-          data-src="./cuboid-viewer.html"
+          data-src="./cuboid-viewer.html?chamber=cd"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -18715,7 +18715,7 @@ function ensureCuboidViewerLoaded(forceReload){
     var baseSrc = String(frame.getAttribute("data-src") || "./cuboid-viewer.html").trim();
     if(!baseSrc) return;
     if(forceReload){
-      frame.setAttribute("src", baseSrc + "?ts=" + stamp + "-" + idx);
+      frame.setAttribute("src", baseSrc + (baseSrc.indexOf("?") >= 0 ? "&" : "?") + "ts=" + stamp + "-" + idx);
       return;
     }
     var current = String(frame.getAttribute("src") || "").trim();

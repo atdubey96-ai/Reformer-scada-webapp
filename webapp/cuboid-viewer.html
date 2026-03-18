@@ -55,6 +55,15 @@ html,body{width:100%;height:100%;background:#07090d;overflow:hidden;
 (function(){
 'use strict';
 
+var query = (function(){
+  try{ return new URLSearchParams(window.location.search || ""); }catch(e){ return { get:function(){ return ""; } }; }
+})();
+var chamberKey = String((query.get("chamber") || "ab")).toLowerCase() === "cd" ? "cd" : "ab";
+var chamberWalls = chamberKey === "cd" ? ["C","D"] : ["A","B"];
+var chamberTitle = chamberKey === "cd" ? "CD CHAMBER — REFORMER" : "AB CHAMBER — REFORMER";
+var chamberLabelEl = document.getElementById('chamber-label');
+if(chamberLabelEl) chamberLabelEl.textContent = chamberTitle;
+
 /* ═══════════════════════════════════════════════════════════
    BURNER DATA
 ═══════════════════════════════════════════════════════════ */
@@ -72,6 +81,52 @@ var TEMPS=[930,930,930,982,930,930,930,930,930,900,930,930,930,930,930];
 var TST_A=[1,1,0,1,1,1,1,0,1,1,0,1,1,1,1]; // 0=hotspot
 var TST_B=[1,0,1,1,1,1,1,1,0,0,1,1,1,1,0];
 
+function flameTypeFromState(state){
+  var s = String(state || "C").toUpperCase().trim();
+  if(s === "N") return 1;
+  if(s === "O") return 2;
+  if(s === "B") return 3;
+  return 0;
+}
+
+function stateFromFallbackType(type){
+  return ({1:"N",2:"O",3:"B",0:"C"})[Number(type)] || "C";
+}
+
+function buildFallbackWallRows(){
+  return FLAMES.map(function(row){
+    return row.map(function(type){ return stateFromFallbackType(type); });
+  });
+}
+
+function normalizeStoredWallRows(rawRows){
+  if(!Array.isArray(rawRows) || rawRows.length < ROWS) return null;
+  var out = [];
+  for(var ri=0; ri<ROWS; ri++){
+    var row = Array.isArray(rawRows[ri]) ? rawRows[ri] : [];
+    var cells = [];
+    for(var ci=0; ci<COLS; ci++){
+      var val = String(row[ci] || "C").toUpperCase().trim();
+      if(val !== "O" && val !== "N" && val !== "B" && val !== "C") val = "C";
+      cells.push(val);
+    }
+    out.push(cells);
+  }
+  return out;
+}
+
+function loadWallRowsForKey(wallKey){
+  try{
+    var raw = localStorage.getItem("burnerData");
+    if(!raw) return null;
+    var parsed = JSON.parse(raw);
+    if(!parsed || typeof parsed !== "object") return null;
+    return normalizeStoredWallRows(parsed[wallKey]);
+  }catch(e){
+    return null;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════
    BUILD BURNER WALL CANVAS TEXTURE
    Layout matches screenshot exactly:
@@ -81,8 +136,8 @@ var TST_B=[1,0,1,1,1,1,1,1,0,0,1,1,1,1,0];
    - ROW3,2 in lower chamber  → temp row → PH TST bar
    - ROW1 at very bottom
 ═══════════════════════════════════════════════════════════ */
-function buildBurnerCanvas(label, tstRow1, tstRow2){
-  var TW=2048, TH=1280;
+function buildBurnerCanvas(label, wallRows, tstRow1, tstRow2){
+  var TW=2304, TH=1408;
   var cv=document.createElement('canvas');
   cv.width=TW; cv.height=TH;
   var g=cv.getContext('2d');
@@ -104,10 +159,31 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
     }
   }
 
+  var faceInsetX = 42;
+  var faceInsetY = 34;
+  var faceW = TW - faceInsetX*2;
+  var faceH = TH - faceInsetY*2;
+  g.fillStyle='rgba(9,18,30,0.26)';
+  g.beginPath(); g.roundRect(faceInsetX, faceInsetY, faceW, faceH, 28); g.fill();
+  var shellGrad = g.createLinearGradient(faceInsetX, faceInsetY, faceInsetX, faceInsetY + faceH);
+  shellGrad.addColorStop(0,'rgba(188,220,255,0.09)');
+  shellGrad.addColorStop(0.28,'rgba(95,145,210,0.04)');
+  shellGrad.addColorStop(1,'rgba(5,10,18,0.18)');
+  g.fillStyle = shellGrad;
+  g.beginPath(); g.roundRect(faceInsetX, faceInsetY, faceW, faceH, 28); g.fill();
+  g.strokeStyle='rgba(176,210,240,0.18)';
+  g.lineWidth=2;
+  g.beginPath(); g.roundRect(faceInsetX, faceInsetY, faceW, faceH, 28); g.stroke();
+  var topGloss = g.createLinearGradient(0, faceInsetY, 0, faceInsetY + faceH*0.3);
+  topGloss.addColorStop(0,'rgba(255,255,255,0.12)');
+  topGloss.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle = topGloss;
+  g.beginPath(); g.roundRect(faceInsetX+2, faceInsetY+2, faceW-4, faceH*0.28, 24); g.fill();
+
   /* ── LAYOUT CONSTANTS */
-  var PL=140;  // left padding for row labels
-  var PR=18;   // right padding
-  var PT=64;   // top padding for col headers
+  var PL=210;  // left padding for row labels
+  var PR=72;   // right padding
+  var PT=120;  // top padding for col headers
   var cw=(TW-PL-PR)/COLS;
 
   /* vertical layout (pixels from top):
@@ -135,20 +211,49 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
   var rowAH = Math.round(zoneAH/3); // 3 rows in upper chamber
   var rowBH = Math.round(zoneBH/2); // 2 rows in lower chamber
 
-  /* ── LEFT LABEL PANEL */
-  g.fillStyle='rgba(8,14,22,0.75)';
-  g.fillRect(0,0,PL,TH);
-  /* header area top */
-  g.fillStyle='rgba(10,18,30,0.7)';
-  g.fillRect(PL,0,TW-PL-PR,PT);
+  /* ── LEFT LABEL PANEL + GLASS HEADER */
+  g.fillStyle='rgba(8,14,22,0.72)';
+  g.fillRect(faceInsetX+8, faceInsetY+8, (PL-faceInsetX)-26, faceH-16);
+  var headerGrad = g.createLinearGradient(PL, faceInsetY, TW-PR, PT);
+  headerGrad.addColorStop(0,'rgba(22,40,65,0.70)');
+  headerGrad.addColorStop(0.55,'rgba(16,30,52,0.54)');
+  headerGrad.addColorStop(1,'rgba(9,16,28,0.72)');
+  g.fillStyle=headerGrad;
+  g.beginPath(); g.roundRect(PL, faceInsetY+8, TW-PL-PR, PT-faceInsetY-14, 18); g.fill();
+  g.strokeStyle='rgba(170,205,238,0.14)';
+  g.lineWidth=1.5;
+  g.beginPath(); g.roundRect(PL, faceInsetY+8, TW-PL-PR, PT-faceInsetY-14, 18); g.stroke();
+  g.fillStyle='rgba(255,255,255,0.07)';
+  g.beginPath(); g.roundRect(PL+2, faceInsetY+10, TW-PL-PR-4, Math.max(20, (PT-faceInsetY-14)*0.36), 16); g.fill();
+
+  g.fillStyle='rgba(8,18,30,0.72)';
+  g.beginPath(); g.roundRect(faceInsetX+24, faceInsetY+18, 170, 50, 16); g.fill();
+  g.strokeStyle='rgba(120,190,240,0.22)';
+  g.lineWidth=1.4;
+  g.beginPath(); g.roundRect(faceInsetX+24, faceInsetY+18, 170, 50, 16); g.stroke();
+  g.font='700 30px "Trebuchet MS","Segoe UI",Arial,sans-serif';
+  g.textAlign='left'; g.textBaseline='middle';
+  g.fillStyle='#edf6ff';
+  g.fillText('WALL ' + label, faceInsetX+44, faceInsetY+43);
+  g.font='600 22px "Trebuchet MS","Segoe UI",Arial,sans-serif';
+  g.textAlign='right';
+  g.fillStyle='rgba(189,214,236,0.92)';
+  g.fillText('6 Rows × 15 Burners', TW-PR-24, faceInsetY+43);
 
   /* ── COLUMN HEADERS B1..B15 */
-  g.font='bold 28px "Courier New"';
+  g.font='700 30px "Trebuchet MS","Segoe UI",Arial,sans-serif';
   g.textAlign='center'; g.textBaseline='middle';
   for(var c=0;c<COLS;c++){
     var colX=PL+c*cw+cw/2;
-    g.fillStyle='#ccdff0';
-    g.fillText('B'+(c+1), colX, PT/2);
+    g.fillStyle='rgba(7,17,30,0.72)';
+    g.beginPath(); g.roundRect(colX-42, faceInsetY+22, 84, 36, 10); g.fill();
+    g.strokeStyle='rgba(146,195,234,0.16)'; g.lineWidth=1;
+    g.beginPath(); g.roundRect(colX-42, faceInsetY+22, 84, 36, 10); g.stroke();
+    g.fillStyle='#f6fbff';
+    g.shadowColor='rgba(126,200,240,0.22)';
+    g.shadowBlur=6;
+    g.fillText('B'+(c+1), colX, faceInsetY+40);
+    g.shadowBlur=0;
     /* column divider */
     g.strokeStyle='rgba(45,65,90,0.22)'; g.lineWidth=1;
     g.beginPath(); g.moveTo(PL+c*cw+cw,PT); g.lineTo(PL+c*cw+cw,TH); g.stroke();
@@ -208,10 +313,18 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
     var labelY     = zoneTop + zoneH * 0.5;
 
     /* row label */
-    g.font = 'bold 24px "Courier New"';
+    g.fillStyle = 'rgba(243,112,34,0.18)';
+    g.beginPath(); g.roundRect(faceInsetX+34, labelY-20, 138, 40, 14); g.fill();
+    g.strokeStyle='rgba(243,112,34,0.34)';
+    g.lineWidth=1.2;
+    g.beginPath(); g.roundRect(faceInsetX+34, labelY-20, 138, 40, 14); g.stroke();
+    g.font = '700 26px "Trebuchet MS","Segoe UI",Arial,sans-serif';
     g.textAlign = 'right'; g.textBaseline = 'middle';
-    g.fillStyle = 'rgba(110,165,210,0.92)';
-    g.fillText(rowLabel, PL-10, labelY);
+    g.fillStyle = '#f6fbff';
+    g.shadowColor='rgba(243,112,34,0.28)';
+    g.shadowBlur=8;
+    g.fillText(rowLabel, PL-16, labelY);
+    g.shadowBlur=0;
 
     /* row separator line */
     g.strokeStyle = 'rgba(35,55,78,0.35)'; g.lineWidth = 1;
@@ -220,9 +333,10 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
     /* burners */
     for(var c=0; c<COLS; c++){
       var fx = PL + c*cw + cw*0.38; // flame slightly left of center so pip fits
-      var ftype = FLAMES[rowIdx][c];
-      drawBurner(fx, topBurnerY, ftype, 22);
-      drawBurner(fx, botBurnerY, ftype, 22);
+      var state = wallRows && wallRows[rowIdx] ? wallRows[rowIdx][c] : "C";
+      var ftype = flameTypeFromState(state);
+      drawBurner(fx, topBurnerY, ftype, 24);
+      drawBurner(fx, botBurnerY, ftype, 24);
     }
 
     /* temp reading below the zone */
@@ -235,7 +349,7 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
   drawRowZone(3, PT+2+rowAH*2,   rowAH,   'ROW 4');
 
   /* temp strip 1 */
-  g.font = 'bold 21px "Courier New"';
+  g.font = '700 24px "Trebuchet MS","Segoe UI",Arial,sans-serif';
   g.textAlign = 'center'; g.textBaseline = 'middle';
   for(var c=0;c<COLS;c++){
     var tx=PL+c*cw+cw/2;
@@ -247,7 +361,7 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
   /* ── TST BAR 1 */
   function drawTST(y, tstArr){
     var bw = TW-PL-PR;
-    /* amber gradient bar */
+    /* amber gradient bar with mild glass sheen */
     var gr = g.createLinearGradient(PL,0,PL+bw,0);
     gr.addColorStop(0,    '#7a3000');
     gr.addColorStop(0.18, '#c45c00');
@@ -267,8 +381,11 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
     sh.addColorStop(0,'rgba(0,0,0,0)');
     sh.addColorStop(1,'rgba(0,0,0,0.28)');
     g.fillStyle=sh; g.beginPath(); g.roundRect(PL,y,bw,tstH,6); g.fill();
+    g.strokeStyle='rgba(255,255,255,0.16)';
+    g.lineWidth=1.2;
+    g.beginPath(); g.roundRect(PL,y,bw,tstH,6); g.stroke();
     /* PH TST label */
-    g.font='bold 22px "Courier New"';
+    g.font='700 24px "Trebuchet MS","Segoe UI",Arial,sans-serif';
     g.textAlign='right'; g.textBaseline='middle';
     g.fillStyle='rgba(255,255,255,0.95)';
     g.fillText('PH TST', PL-8, y+tstH/2);
@@ -304,7 +421,7 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
   drawRowZone(1, zBtop+rowBH,    rowBH, 'ROW 2');
 
   /* temp strip 2 */
-  g.font = 'bold 21px "Courier New"';
+  g.font = '700 24px "Trebuchet MS","Segoe UI",Arial,sans-serif';
   g.textAlign = 'center'; g.textBaseline = 'middle';
   for(var c=0;c<COLS;c++){
     var tx2=PL+c*cw+cw/2;
@@ -320,7 +437,7 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
   /* ── FACE LABEL WATERMARK */
   g.save();
   g.globalAlpha=0.055;
-  g.font='bold 280px "Courier New"';
+  g.font='700 300px "Trebuchet MS","Segoe UI",Arial,sans-serif';
   g.fillStyle='#88aacc';
   g.textAlign='center'; g.textBaseline='middle';
   g.fillText(label, TW/2, TH/2);
@@ -329,8 +446,11 @@ function buildBurnerCanvas(label, tstRow1, tstRow2){
   return cv;
 }
 
-var cvA=buildBurnerCanvas('A',TST_A,TST_B);
-var cvB=buildBurnerCanvas('B',TST_B,TST_A);
+var fallbackWallRows = buildFallbackWallRows();
+var wallRowsFront = loadWallRowsForKey(chamberWalls[0]) || fallbackWallRows;
+var wallRowsBack  = loadWallRowsForKey(chamberWalls[1]) || fallbackWallRows;
+var cvA=buildBurnerCanvas(chamberWalls[0], wallRowsFront, TST_A, TST_B);
+var cvB=buildBurnerCanvas(chamberWalls[1], wallRowsBack,  TST_B, TST_A);
 
 /* ═══════════════════════════════════════════════════════════
    THREE.JS SCENE
