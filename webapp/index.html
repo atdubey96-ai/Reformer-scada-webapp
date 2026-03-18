@@ -11364,8 +11364,8 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         #tab-heatmap .hm-uploaded-viewer .viewer-layout{
           display:flex;
-          align-items:flex-start;
-          gap:14px;
+          align-items:stretch;
+          gap:12px;
           min-height:clamp(560px,76vh,900px);
         }
         #tab-heatmap .hm-uploaded-viewer .canvas-area{
@@ -11427,7 +11427,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         #tab-heatmap.hm-uploaded-zoom-active .hm-uploaded-viewer .canvas-area.hm-uploaded-zoom-target-canvas{
           position:fixed;
-          inset:14px;
+          inset:18px;
           z-index:9600;
           width:auto;
           height:auto;
@@ -11457,14 +11457,14 @@ html, body, body *, body *::before, body *::after, svg text{
           pointer-events:none;
         }
         #tab-heatmap .hm-uploaded-viewer .side-panel{
-          width:270px;
+          width:260px;
           background:#10151C;
           border:1px solid #1E2530;
           border-radius:24px;
-          padding:24px 20px;
+          padding:18px 16px;
           display:flex;
           flex-direction:column;
-          gap:24px;
+          gap:16px;
         }
         @media (min-width:961px){
           #tab-heatmap .hm-uploaded-viewer .viewer-section{
@@ -11485,45 +11485,48 @@ html, body, body *, body *::before, body *::after, svg text{
             height:100%;
           }
           #tab-heatmap .hm-uploaded-viewer .side-panel{
-            width:276px;
+            width:260px;
+            height:100%;
             max-height:100%;
-            overflow:auto;
-            scrollbar-width:thin;
+            overflow:hidden;
           }
         }
+        #tab-heatmap .hm-uploaded-viewer .panel-section{
+          min-width:0;
+        }
         #tab-heatmap .hm-uploaded-viewer .panel-section h3{
-          font-size:10px;
+          font-size:9px;
           font-weight:600;
           color:#999;
           text-transform:uppercase;
           letter-spacing:1.5px;
-          margin-bottom:14px;
+          margin-bottom:10px;
         }
         #tab-heatmap .hm-uploaded-viewer .state-grid{
           display:grid;
           grid-template-columns:repeat(2,minmax(0,1fr));
-          gap:10px;
+          gap:8px;
         }
         #tab-heatmap .hm-uploaded-viewer .clean-dot-legend{
           display:flex;
           flex-direction:column;
-          gap:8px;
-          margin-top:12px;
-          padding-top:10px;
+          gap:6px;
+          margin-top:10px;
+          padding-top:8px;
           border-top:1px solid rgba(148,163,184,0.14);
         }
         #tab-heatmap .hm-uploaded-viewer .clean-dot-item{
           display:flex;
           align-items:center;
-          gap:10px;
+          gap:8px;
           color:#cbd5e1;
-          font-size:11px;
+          font-size:10px;
           font-weight:600;
           line-height:1.2;
         }
         #tab-heatmap .hm-uploaded-viewer .clean-dot-bullet{
-          width:12px;
-          height:12px;
+          width:11px;
+          height:11px;
           border-radius:999px;
           flex:0 0 auto;
           border:1.3px solid rgba(226,232,240,0.45);
@@ -11536,26 +11539,26 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         #tab-heatmap .hm-uploaded-viewer .state-pill{
           display:grid;
-          grid-template-columns:30px minmax(0,1fr) auto;
+          grid-template-columns:28px minmax(0,1fr) auto;
           align-items:center;
-          gap:8px;
-          min-height:54px;
+          gap:7px;
+          min-height:46px;
           min-width:0;
-          padding:10px 10px;
-          border-radius:16px;
+          padding:8px 9px;
+          border-radius:15px;
           border:1px solid rgba(148,163,184,0.24);
           background:linear-gradient(180deg,rgba(17,24,39,0.92),rgba(15,23,42,0.78));
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
           overflow:hidden;
         }
         #tab-heatmap .hm-uploaded-viewer .state-pill-icon{
-          width:30px;
-          height:30px;
+          width:28px;
+          height:28px;
           border-radius:999px;
           display:flex;
           align-items:center;
           justify-content:center;
-          font-size:13px;
+          font-size:12px;
           font-weight:700;
           color:#f8fafc;
           box-shadow:0 6px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.14);
@@ -11568,7 +11571,7 @@ html, body, body *, body *::before, body *::after, svg text{
           gap:2px;
         }
         #tab-heatmap .hm-uploaded-viewer .state-pill-name{
-          font-size:10.5px;
+          font-size:9.5px;
           font-weight:700;
           letter-spacing:0.4px;
           color:#e2e8f0;
@@ -11576,14 +11579,14 @@ html, body, body *, body *::before, body *::after, svg text{
           line-height:1.05;
         }
         #tab-heatmap .hm-uploaded-viewer .state-pill-type{
-          font-size:9px;
+          font-size:8px;
           font-weight:600;
           color:#94a3b8;
           white-space:normal;
           line-height:1.05;
         }
         #tab-heatmap .hm-uploaded-viewer .state-pill-count{
-          font-size:16px;
+          font-size:14px;
           font-weight:700;
           line-height:1;
           color:#ffffff;
@@ -11623,20 +11626,22 @@ html, body, body *, body *::before, body *::after, svg text{
           display:flex;
           justify-content:space-between;
           align-items:center;
-          padding:8px 0;
+          padding:6px 0;
           border-bottom:1px solid #1A2030;
+          gap:8px;
         }
         #tab-heatmap .hm-uploaded-viewer .info-row:last-child{
           border-bottom:none;
         }
         #tab-heatmap .hm-uploaded-viewer .info-label{
-          font-size:12px;
+          font-size:11px;
           color:#999;
         }
         #tab-heatmap .hm-uploaded-viewer .info-value{
-          font-size:13px;
+          font-size:12px;
           font-weight:500;
           color:#FFF;
+          text-align:right;
         }
         #tab-heatmap .hm-uploaded-viewer .info-value.ok{color:#6EE7B7;}
         #tab-heatmap .hm-uploaded-viewer .info-value.warn{color:#FBBF24;}
@@ -11661,8 +11666,8 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap .hm-uploaded-viewer .temp-legend-vertical{
           display:flex;
           align-items:stretch;
-          gap:16px;
-          min-height:200px;
+          gap:12px;
+          min-height:126px;
         }
         #tab-heatmap .hm-uploaded-viewer .temp-legend-axis{
           display:flex;
@@ -11676,20 +11681,20 @@ html, body, body *, body *::before, body *::after, svg text{
           display:inline-flex;
           align-items:center;
           justify-content:center;
-          padding:6px 12px;
+          padding:5px 10px;
           border-radius:999px;
           border:1px solid rgba(243,112,34,0.34);
           background:linear-gradient(180deg,rgba(52,44,34,0.9),rgba(30,25,20,0.82));
           color:#f8fafc;
-          font-size:11px;
+          font-size:10px;
           font-weight:700;
           letter-spacing:0.7px;
           text-transform:uppercase;
         }
         #tab-heatmap .hm-uploaded-viewer .temp-legend-bar{
-          width:32px;
+          width:24px;
           flex:1 1 auto;
-          min-height:160px;
+          min-height:104px;
           border-radius:999px;
           background:linear-gradient(180deg,#22c55e 0%,#facc15 52%,#ef4444 100%);
           box-shadow:
@@ -11700,16 +11705,16 @@ html, body, body *, body *::before, body *::after, svg text{
           display:flex;
           flex-direction:column;
           justify-content:space-between;
-          min-height:200px;
-          padding:6px 0;
+          min-height:126px;
+          padding:2px 0;
         }
         #tab-heatmap .hm-uploaded-viewer .temp-legend-stop{
           display:flex;
           flex-direction:column;
-          gap:3px;
+          gap:2px;
         }
         #tab-heatmap .hm-uploaded-viewer .temp-legend-cap{
-          font-size:13px;
+          font-size:11px;
           font-weight:700;
           color:#f8fafc;
           letter-spacing:0.3px;
@@ -11717,12 +11722,12 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-heatmap .hm-uploaded-viewer .temp-legend-cap.cool{color:#86efac;}
         #tab-heatmap .hm-uploaded-viewer .temp-legend-cap.hot{color:#fda4af;}
         #tab-heatmap .hm-uploaded-viewer .temp-legend-limit{
-          font-size:12px;
+          font-size:11px;
           font-weight:600;
           color:#cbd5e1;
         }
         #tab-heatmap .hm-uploaded-viewer .temp-legend-mid{
-          font-size:11px;
+          font-size:10px;
           font-weight:700;
           color:#94a3b8;
           letter-spacing:0.5px;
@@ -11735,9 +11740,9 @@ html, body, body *, body *::before, body *::after, svg text{
         }
         #tab-heatmap .hm-uploaded-viewer .control-btn{
           font-family:'Outfit',sans-serif;
-          font-size:12px;
+          font-size:11px;
           font-weight:500;
-          padding:10px 14px;
+          padding:8px 12px;
           border-radius:6px;
           border:none;
           cursor:pointer;
@@ -12033,7 +12038,7 @@ html, body, body *, body *::before, body *::after, svg text{
         var HM_UPLOADED_CAMERA_Y_RATIO = 0.5;
         var HM_UPLOADED_LOOKAT_Y_RATIO = 0.5;
         var HM_UPLOADED_ORTHO_PADDING = 1.04;
-        var HM_UPLOADED_ORTHO_PADDING_ZOOM = 0.92;
+        var HM_UPLOADED_ORTHO_PADDING_ZOOM = 1.08;
 
         function hmUploadedClampRotationX(){
           return 0;
@@ -12041,15 +12046,46 @@ html, body, body *, body *::before, body *::after, svg text{
 
         function hmUploadedUpdateChamberSceneVisibility(state){
           if(!state) return;
+          var rotY = state && state.rotation && typeof state.rotation.y === "number"
+            ? state.rotation.y
+            : 0;
+          var cosY = Math.cos(rotY);
+          var sinY = Math.sin(rotY);
           if(state.wallOverlays){
             Object.keys(state.wallOverlays).forEach(function(wallKey){
               var overlay = state.wallOverlays[wallKey];
               if(!overlay) return;
-              if(overlay.outerMaterial) overlay.outerMaterial.opacity = 1;
-              if(overlay.outerMesh) overlay.outerMesh.visible = true;
-              if(overlay.innerMaterial) overlay.innerMaterial.opacity = 1;
-              if(overlay.innerMesh) overlay.innerMesh.visible = true;
+              var opacity = overlay.face === "back"
+                ? Math.max(0, -cosY)
+                : Math.max(0, cosY);
+              opacity = opacity > 0.12 ? Math.pow(opacity, 0.88) : 0;
+              if(overlay.outerMaterial) overlay.outerMaterial.opacity = opacity;
+              if(overlay.outerMesh) overlay.outerMesh.visible = opacity > 0.01;
+              if(overlay.innerMaterial) overlay.innerMaterial.opacity = opacity;
+              if(overlay.innerMesh) overlay.innerMesh.visible = opacity > 0.01;
             });
+          }
+          if(state.sideShells){
+            var sideReveal = Math.abs(sinY);
+            var showBothSides = sideReveal < 0.36;
+            var showLeft = showBothSides || sinY > 0;
+            var showRight = showBothSides || sinY < 0;
+            if(state.sideShells.left){
+              state.sideShells.left.visible = showLeft;
+            }
+            if(state.sideShells.right){
+              state.sideShells.right.visible = showRight;
+            }
+            if(Array.isArray(state.sideShells.leftFrames)){
+              state.sideShells.leftFrames.forEach(function(frame){
+                if(frame) frame.visible = showLeft;
+              });
+            }
+            if(Array.isArray(state.sideShells.rightFrames)){
+              state.sideShells.rightFrames.forEach(function(frame){
+                if(frame) frame.visible = showRight;
+              });
+            }
           }
 
           if(state.chamberWire && state.chamberWire.material){
@@ -12503,6 +12539,7 @@ html, body, body *, body *::before, body *::after, svg text{
           );
           frame.renderOrder = 10;
           parent.add(frame);
+          return frame;
         }
 
         function hmUploadedAddLabel(parent, text, x, y, z){
@@ -13008,6 +13045,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
           return {
             wallKey:String(wallKey || ""),
+            face:String(face || "front"),
             canvas:canvas,
             texture:texture,
             outerMaterial:outerMaterial,
@@ -13200,69 +13238,7 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedCreatePeepSideDisplay(dims, zoneKey, side, renderer){
-          if(typeof THREE === "undefined" || !dims) return null;
-          var group = new THREE.Group();
-          var tunnelDepth = Math.max(0.92, Math.min(1.26, dims.sX * 0.078));
-          var tunnelInset = 0.12;
-          var tunnelH = Math.max(0.4, dims.windowSize - (tunnelInset * 2));
-          var tunnelW = Math.max(0.4, dims.windowSize - (tunnelInset * 2));
-          var wallT = 0.035;
-          var tunnelMat = new THREE.MeshStandardMaterial({
-            color:0x05080d,
-            metalness:0.08,
-            roughness:0.92,
-            side:THREE.DoubleSide
-          });
-          var windows = [
-            dims.windowTopY,
-            dims.windowBottomY
-          ];
-
-          windows.forEach(function(centerY){
-            var dir = side === "left" ? 1 : -1;
-            var xOuter = side === "left" ? (-dims.sX / 2) : (dims.sX / 2);
-            var xInner = xOuter + (dir * tunnelDepth);
-            var xMid = (xOuter + xInner) / 2;
-
-            var topWall = new THREE.Mesh(
-              new THREE.BoxGeometry(tunnelDepth, wallT, tunnelW),
-              tunnelMat
-            );
-            topWall.position.set(xMid, centerY + (tunnelH / 2) - (wallT / 2), 0);
-            group.add(topWall);
-
-            var bottomWall = new THREE.Mesh(
-              new THREE.BoxGeometry(tunnelDepth, wallT, tunnelW),
-              tunnelMat
-            );
-            bottomWall.position.set(xMid, centerY - (tunnelH / 2) + (wallT / 2), 0);
-            group.add(bottomWall);
-
-            var nearZ = -(tunnelW / 2) + (wallT / 2);
-            var farZ = (tunnelW / 2) - (wallT / 2);
-            var leftWall = new THREE.Mesh(
-              new THREE.BoxGeometry(tunnelDepth, tunnelH, wallT),
-              tunnelMat
-            );
-            leftWall.position.set(xMid, centerY, nearZ);
-            group.add(leftWall);
-
-            var rightWall = new THREE.Mesh(
-              new THREE.BoxGeometry(tunnelDepth, tunnelH, wallT),
-              tunnelMat
-            );
-            rightWall.position.set(xMid, centerY, farZ);
-            group.add(rightWall);
-          });
-
-          return {
-            zoneKey:String(zoneKey || ""),
-            side:String(side || "left"),
-            dims:dims,
-            mesh:group,
-            panels:[],
-            glassPanes:[]
-          };
+          return null;
         }
 
         function hmUploadedGetPeepWindowRect(display, centerY){
@@ -13592,14 +13568,14 @@ html, body, body *, body *::before, body *::after, svg text{
           };
 
           var wallShellMat = new THREE.MeshStandardMaterial({
-            color:0xffffff,
+            color:0xd7dde4,
             map:hmUploadedGetShellTexture(renderer || null, "wall"),
             metalness:0.46,
             roughness:0.68,
             side:THREE.DoubleSide
           });
           var topShellMat = new THREE.MeshStandardMaterial({
-            color:0xffffff,
+            color:0xdce2e9,
             map:hmUploadedGetShellTexture(renderer || null, "top"),
             metalness:0.42,
             roughness:0.7,
@@ -13607,6 +13583,11 @@ html, body, body *, body *::before, body *::after, svg text{
           });
           var tubeMat = new THREE.MeshStandardMaterial({color:0x6f8092, metalness:0.76, roughness:0.34});
           var commonTubeMat = new THREE.MeshStandardMaterial({color:0x7d8ea2, metalness:0.72, roughness:0.3});
+          var edgeMat = new THREE.LineBasicMaterial({
+            color:0x8c96a4,
+            transparent:true,
+            opacity:0.92
+          });
           var wallOverlays = {};
           var peepDisplays = [];
 
@@ -13653,23 +13634,14 @@ html, body, body *, body *::before, body *::after, svg text{
           bottomWall.position.set(0, wallT / 2, 0);
           chamber.add(bottomWall);
 
-          var leftPeep = hmUploadedCreatePeepSideDisplay(dims, zoneKey, "left", renderer || null);
-          var rightPeep = hmUploadedCreatePeepSideDisplay(dims, zoneKey, "right", renderer || null);
-          peepDisplays.push(leftPeep, rightPeep);
-          [leftPeep, rightPeep].forEach(function(display){
-            if(!display) return;
-            chamber.add(display.mesh);
-            if(Array.isArray(display.glassPanes)){
-              display.glassPanes.forEach(function(glass){
-                chamber.add(glass);
-              });
-            }
-          });
-
-          hmUploadedAddSideWindowFrame(chamber, -sX / 2 - 0.001, windowTopY, 0, windowSize);
-          hmUploadedAddSideWindowFrame(chamber, -sX / 2 - 0.001, windowBottomY, 0, windowSize);
-          hmUploadedAddSideWindowFrame(chamber, sX / 2 + 0.001, windowTopY, 0, windowSize);
-          hmUploadedAddSideWindowFrame(chamber, sX / 2 + 0.001, windowBottomY, 0, windowSize);
+          var leftWindowFrames = [
+            hmUploadedAddSideWindowFrame(chamber, -sX / 2 - 0.001, windowTopY, 0, windowSize),
+            hmUploadedAddSideWindowFrame(chamber, -sX / 2 - 0.001, windowBottomY, 0, windowSize)
+          ];
+          var rightWindowFrames = [
+            hmUploadedAddSideWindowFrame(chamber, sX / 2 + 0.001, windowTopY, 0, windowSize),
+            hmUploadedAddSideWindowFrame(chamber, sX / 2 + 0.001, windowBottomY, 0, windowSize)
+          ];
 
           for(var i = 0; i < tubeCount; i++){
             var tx = tubeXStart + (i * tubeSpacing);
@@ -13699,9 +13671,23 @@ html, body, body *, body *::before, body *::after, svg text{
           headerBackCap.position.set(-commonTubeLen / 2, commonTubeY, 0);
           chamber.add(headerBackCap);
 
+          var outerEdges = new THREE.LineSegments(
+            new THREE.EdgesGeometry(new THREE.BoxGeometry(sX + 0.024, sY + 0.024, sZ + 0.024)),
+            edgeMat
+          );
+          outerEdges.position.set(0, sY / 2, 0);
+          outerEdges.renderOrder = 11;
+          chamber.add(outerEdges);
+
           return {
             wallOverlays:wallOverlays,
             peepDisplays:peepDisplays,
+            sideShells:{
+              left:leftWall,
+              right:rightWall,
+              leftFrames:leftWindowFrames,
+              rightFrames:rightWindowFrames
+            },
             fitTarget:chamber,
             chamberWire:null,
             frameInfo:{
@@ -13836,6 +13822,7 @@ html, body, body *, body *::before, body *::after, svg text{
             camDist:initialCamDist,
             touchStart:null,
             wallOverlays:buildResult.wallOverlays || {},
+            sideShells:buildResult.sideShells || null,
             chamberWire:buildResult.chamberWire || null,
             frameInfo:buildResult.frameInfo || null,
             latestSnapshot:null,
