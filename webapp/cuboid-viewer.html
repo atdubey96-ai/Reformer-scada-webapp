@@ -848,6 +848,32 @@ group.add(hdr);
   group.add(ec);
 });
 
+/* ── CAMERA FRAMING: keep the full cuboid comfortably inside canvas ── */
+var fitBounds = new THREE.Box3().setFromObject(group);
+var fitCenter = fitBounds.getCenter(new THREE.Vector3());
+var fitSize = fitBounds.getSize(new THREE.Vector3());
+var fitMaxWidth = Math.sqrt(fitSize.x*fitSize.x + fitSize.z*fitSize.z);
+var FIT_PAD = 1.08;
+
+function frameViewerToScene(){
+  var nw = Math.max(container.clientWidth, 1);
+  var nh = Math.max(container.clientHeight, 1);
+  var aspect = nw / nh;
+  var hFov = 2 * Math.atan(Math.tan(FOV_RAD / 2) * aspect);
+  var fitHeight = fitSize.y * FIT_PAD;
+  var fitWidth = fitMaxWidth * FIT_PAD;
+  var distV = (fitHeight / 2) / Math.tan(FOV_RAD / 2);
+  var distH = (fitWidth / 2) / Math.tan(hFov / 2);
+  var dist = Math.max(distV, distH) + fitSize.z * 0.55;
+
+  renderer.setSize(nw, nh);
+  camera.aspect = aspect;
+  camera.position.set(fitCenter.x, fitCenter.y, dist);
+  camera.lookAt(fitCenter.x, fitCenter.y, fitCenter.z);
+  camera.updateProjectionMatrix();
+}
+frameViewerToScene();
+
 /* ═══════════════════════════════════════════════════════════
    INTERACTION
 ═══════════════════════════════════════════════════════════ */
@@ -922,12 +948,7 @@ updateHintBar();
    RESIZE — recalculate camera to always fit cuboid in canvas
 ═══════════════════════════════════════════════════════════ */
 function resizeViewer(){
-  var nw = container.clientWidth, nh = container.clientHeight;
-  renderer.setSize(nw, nh);
-  var d = calcDims(nw, nh);
-  camera.aspect = d.asp;
-  camera.position.z = d.camDist;
-  camera.updateProjectionMatrix();
+  frameViewerToScene();
 }
 window.addEventListener('resize', resizeViewer);
 document.addEventListener('fullscreenchange', resizeViewer);
