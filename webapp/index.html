@@ -3074,6 +3074,8 @@ body.light-theme .cw-nudge{
   overflow:hidden;
   background:#07090d;
   box-shadow:0 16px 40px rgba(0,0,0,0.34);
+  position:relative;
+  z-index:1;
 }
 #tab-cuboid .cuboid-tab-frame{
   display:block;
@@ -3081,6 +3083,42 @@ body.light-theme .cw-nudge{
   height:clamp(520px,calc(100svh - 190px),980px);
   border:0;
   background:#07090d;
+}
+#cuboid-overlay-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(3,5,8,0.82);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease;
+  z-index:1890;
+}
+#cuboid-overlay-backdrop.is-active{
+  opacity:1;
+  pointer-events:auto;
+}
+#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded{
+  position:fixed;
+  top:12px;
+  right:12px;
+  bottom:12px;
+  left:12px;
+  width:auto;
+  height:auto;
+  border-radius:14px;
+  z-index:1905;
+  box-shadow:0 28px 70px rgba(0,0,0,0.62);
+}
+#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame{
+  height:100%;
+}
+body.cuboid-overlay-lock{
+  overflow:hidden;
+}
+body.cuboid-overlay-lock .bottom-tab-bar,
+body.cuboid-overlay-lock #masterAlarm{
+  opacity:0;
+  pointer-events:none;
 }
 body.light-theme #tab-cuboid{
   background:#07090d;
@@ -6396,6 +6434,13 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-cuboid .cuboid-tab-frame{
     height:clamp(460px,calc(100svh - 215px),820px);
+  }
+  #tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded{
+    top:8px;
+    right:8px;
+    bottom:8px;
+    left:8px;
+    border-radius:12px !important;
   }
   body.light-theme #tab-heatmap > div,
   body.light-theme #tab-burner,
@@ -15245,6 +15290,7 @@ html, body, body *, body *::before, body *::after, svg text{
   </div>
 
 </div><!-- /tab-panels -->
+<div id="cuboid-overlay-backdrop" onclick="setCuboidOverlayActive(false)" aria-hidden="true"></div>
 
 <!-- ====================================================
      BOTTOM TAB BAR
@@ -18636,6 +18682,31 @@ function ensureCuboidViewerLoaded(forceReload){
   }
 }
 
+function notifyCuboidOverlayState(active){
+  var frame = document.getElementById("cuboid-tab-frame");
+  if(!frame || !frame.contentWindow) return;
+  try{
+    frame.contentWindow.postMessage({ type:"cuboid-overlay-state", active:!!active }, "*");
+  }catch(e){}
+}
+
+function setCuboidOverlayActive(active){
+  var shell = document.querySelector("#tab-cuboid .cuboid-tab-shell");
+  var backdrop = document.getElementById("cuboid-overlay-backdrop");
+  if(!shell || !backdrop) return;
+  var next = !!active;
+  shell.classList.toggle("cuboid-shell-expanded", next);
+  backdrop.classList.toggle("is-active", next);
+  document.body.classList.toggle("cuboid-overlay-lock", next);
+  notifyCuboidOverlayState(next);
+}
+
+function toggleCuboidOverlay(){
+  var shell = document.querySelector("#tab-cuboid .cuboid-tab-shell");
+  if(!shell) return;
+  setCuboidOverlayActive(!shell.classList.contains("cuboid-shell-expanded"));
+}
+
 function handleGlobalRefreshClick(){
   var active = document.querySelector('.tab-panel.tab-active');
   var tab = active && active.id ? active.id.replace('tab-','') : '';
@@ -18667,6 +18738,7 @@ function exitViewerFullscreenIfNeeded(nextTab){
 }
 
 function switchTab(tab){
+  if(tab !== 'cuboid') setCuboidOverlayActive(false);
   if(exitViewerFullscreenIfNeeded(tab)){
     _pendingTabAfterViewerFullscreen = tab;
     return;
@@ -18699,7 +18771,10 @@ function switchTab(tab){
   }
   if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
-  if(tab === 'cuboid') setTimeout(ensureCuboidViewerLoaded, 0);
+  if(tab === 'cuboid'){
+    setTimeout(ensureCuboidViewerLoaded, 0);
+    setTimeout(function(){ notifyCuboidOverlayState(false); }, 60);
+  }
   updateGlobalRefreshButtonLabel(tab);
   updateDesktopPrimaryInterfacePickerUi();
 }
@@ -18713,6 +18788,15 @@ function handlePendingViewerTabSwitch(){
     }, 30);
   }
 }
+
+(function initCuboidFrameBridge(){
+  var frame = document.getElementById("cuboid-tab-frame");
+  if(!frame) return;
+  frame.addEventListener("load", function(){
+    var shell = document.querySelector("#tab-cuboid .cuboid-tab-shell");
+    notifyCuboidOverlayState(!!(shell && shell.classList.contains("cuboid-shell-expanded")));
+  });
+})();
 
 (function initHeatMapHeaderTools(){
   var active = document.querySelector('.tab-panel.tab-active');
@@ -18742,6 +18826,16 @@ window.addEventListener("orientationchange", function(){
 });
 window.addEventListener("fullscreenchange", handlePendingViewerTabSwitch);
 window.addEventListener("webkitfullscreenchange", handlePendingViewerTabSwitch);
+window.addEventListener("message", function(ev){
+  var data = ev && ev.data ? ev.data : null;
+  if(!data || data.type !== "cuboid-toggle-overlay") return;
+  toggleCuboidOverlay();
+});
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape"){
+    setCuboidOverlayActive(false);
+  }
+});
 
 function bindPeepHoleHorizontalDrag(el){
   if(!el || el._tdPhDragBound) return;

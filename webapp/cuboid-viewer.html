@@ -40,29 +40,13 @@ html,body{width:100%;height:100%;background:#07090d;overflow:hidden;
   font-size:9px;letter-spacing:2px;color:rgba(120,150,180,0.45);
   pointer-events:none;white-space:nowrap;
 }
-
-#wrap:fullscreen,
-#wrap:-webkit-full-screen{
-  width:100vw;
-  height:100vh;
-  padding:16px;
-  background:#07090d;
-}
-#wrap:fullscreen #canvas-area,
-#wrap:-webkit-full-screen #canvas-area{
-  width:100%;
-  height:100%;
-  max-width:100%;
-  max-height:100%;
-  margin:0 auto;
-}
 </style>
 </head>
 <body>
 <div id="wrap">
   <div id="canvas-area">
     <div id="chamber-label">AB CHAMBER — REFORMER</div>
-    <div id="hint-bar">DRAG TO ROTATE &nbsp;·&nbsp; DOUBLE-CLICK / DOUBLE-TAP FOR FULL SCREEN</div>
+    <div id="hint-bar">DRAG TO ROTATE &nbsp;·&nbsp; DOUBLE-CLICK / DOUBLE-TAP TO EXPAND</div>
   </div>
 </div>
 
@@ -873,20 +857,23 @@ var autoSpin=true;
 var SPIN_SPEED=0.004;
 var lastTapAt=0;
 var touchMoved=false;
+var overlayExpanded=false;
 
 var cvEl=renderer.domElement;
+var hintEl=document.getElementById('hint-bar');
+
+function updateHintBar(){
+  if(!hintEl) return;
+  hintEl.innerHTML = overlayExpanded
+    ? 'DRAG TO ROTATE &nbsp;·&nbsp; DOUBLE-CLICK / DOUBLE-TAP TO RETURN'
+    : 'DRAG TO ROTATE &nbsp;·&nbsp; DOUBLE-CLICK / DOUBLE-TAP TO EXPAND';
+}
 
 function toggleViewerFullscreen(){
-  var fsEl = document.fullscreenElement || document.webkitFullscreenElement || null;
-  if(fsEl){
-    if(document.exitFullscreen) document.exitFullscreen();
-    else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+  if(window.parent && window.parent !== window){
+    try{ window.parent.postMessage({ type:"cuboid-toggle-overlay" }, "*"); }catch(e){}
     return;
   }
-  var viewerRoot = document.getElementById('wrap');
-  if(!viewerRoot) return;
-  if(viewerRoot.requestFullscreen) viewerRoot.requestFullscreen();
-  else if(viewerRoot.webkitRequestFullscreen) viewerRoot.webkitRequestFullscreen();
 }
 
 function startDrag(x){dragging=true;lastX=x;autoSpin=false;touchMoved=false;}
@@ -923,6 +910,13 @@ cvEl.addEventListener('touchend',function(){
   }
   lastTapAt = now;
 });
+window.addEventListener('message', function(ev){
+  var data = ev && ev.data ? ev.data : null;
+  if(!data || data.type !== "cuboid-overlay-state") return;
+  overlayExpanded = !!data.active;
+  updateHintBar();
+});
+updateHintBar();
 
 /* ═══════════════════════════════════════════════════════════
    RESIZE — recalculate camera to always fit cuboid in canvas
