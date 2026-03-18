@@ -12055,10 +12055,11 @@ html, body, body *, body *::before, body *::after, svg text{
             Object.keys(state.wallOverlays).forEach(function(wallKey){
               var overlay = state.wallOverlays[wallKey];
               if(!overlay) return;
-              var opacity = overlay.face === "back"
-                ? Math.max(0, -cosY)
-                : Math.max(0, cosY);
-              opacity = opacity > 0.12 ? Math.pow(opacity, 0.88) : 0;
+              var facing = overlay.face === "back"
+                ? (-cosY)
+                : cosY;
+              var opacity = Math.max(0, (facing - 0.58) / 0.42);
+              opacity = opacity > 0 ? (opacity * opacity) : 0;
               if(overlay.outerMaterial) overlay.outerMaterial.opacity = opacity;
               if(overlay.outerMesh) overlay.outerMesh.visible = opacity > 0.01;
               if(overlay.innerMaterial) overlay.innerMaterial.opacity = opacity;
@@ -12085,6 +12086,12 @@ html, body, body *, body *::before, body *::after, svg text{
               state.sideShells.rightFrames.forEach(function(frame){
                 if(frame) frame.visible = showRight;
               });
+            }
+            if(state.sideShells.leftDisplay){
+              state.sideShells.leftDisplay.visible = showLeft;
+            }
+            if(state.sideShells.rightDisplay){
+              state.sideShells.rightDisplay.visible = showRight;
             }
           }
 
@@ -13027,8 +13034,8 @@ html, body, body *, body *::before, body *::after, svg text{
             polygonOffsetFactor:-1,
             polygonOffsetUnits:-1
           });
-          var planeW = Math.max(0.8, dims.sX + 0.04);
-          var planeH = Math.max(0.8, dims.sY + 0.04);
+          var planeW = Math.max(0.8, dims.sX);
+          var planeH = Math.max(0.8, dims.sY);
           var outerMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), outerMaterial);
           var innerMesh = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), innerMaterial);
           if(face === "back"){
@@ -13237,8 +13244,109 @@ html, body, body *, body *::before, body *::after, svg text{
           });
         }
 
-        function hmUploadedCreatePeepSideDisplay(dims, zoneKey, side, renderer){
-          return null;
+        function hmUploadedSetPeepBurnerState(burner, state){
+          if(!burner) return;
+          var s = String(state || "C").toUpperCase();
+          var active = s === "O" || s === "N" || s === "B";
+          var palette = hmUploadedGetBurnerPalette(s);
+          if(burner.coreMaterial){
+            burner.coreMaterial.color.set(active ? palette.flame : "#1f2937");
+            burner.coreMaterial.emissive.set(active ? palette.flame : "#0b1016");
+            burner.coreMaterial.emissiveIntensity = active ? 0.82 : 0.05;
+            burner.coreMaterial.opacity = active ? 0.96 : 0.32;
+          }
+          if(burner.glowMaterial){
+            burner.glowMaterial.color.set(active ? palette.flame : "#1f2937");
+            burner.glowMaterial.opacity = active ? (s === "B" ? 0.26 : 0.2) : 0.04;
+          }
+          if(burner.glowMesh){
+            var sx = active ? 1.38 : 0.8;
+            var sy = active ? 1.72 : 0.86;
+            burner.glowMesh.scale.set(sx, sy, sx);
+          }
+        }
+
+        function hmUploadedCreatePeepSideDisplay(dims, wallKey, side, renderer){
+          if(typeof THREE === "undefined" || !dims) return null;
+          var group = new THREE.Group();
+          var pipeCount = 4;
+          var sampleCols = [1, 5, 9, 13];
+          var pipeSpanZ = Math.min(0.9, dims.windowSize * 0.72);
+          var pipeStepZ = pipeCount > 1 ? (pipeSpanZ / (pipeCount - 1)) : 0;
+          var pipeStartZ = -(pipeSpanZ / 2);
+          var pipeX = side === "left" ? (-dims.sX / 2 + 0.34) : (dims.sX / 2 - 0.34);
+          var pipeTopY = Math.max(0.9, dims.sY - 1.42);
+          var pipeBottomY = 0.72;
+          var rowStepY = (pipeTopY - pipeBottomY) / 5;
+          var pipeHeight = pipeTopY - pipeBottomY + 0.2;
+          var pipeMat = new THREE.MeshStandardMaterial({
+            color:0x5f6977,
+            metalness:0.8,
+            roughness:0.28
+          });
+          var burners = [];
+
+          for(var pi = 0; pi < pipeCount; pi++){
+            var pz = pipeStartZ + (pi * pipeStepZ);
+            var pipe = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.028, 0.028, pipeHeight, 12),
+              pipeMat
+            );
+            pipe.position.set(pipeX, pipeBottomY + (pipeHeight / 2), pz);
+            group.add(pipe);
+
+            for(var ri = 0; ri < 6; ri++){
+              var rowNumber = 6 - ri;
+              var burnerY = pipeTopY - (ri * rowStepY);
+              var glow = new THREE.Mesh(
+                new THREE.SphereGeometry(0.078, 12, 12),
+                new THREE.MeshBasicMaterial({
+                  color:0x1f2937,
+                  transparent:true,
+                  opacity:0.04
+                })
+              );
+              glow.position.set(pipeX, burnerY, pz);
+              group.add(glow);
+
+              var core = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.026, 0.042, 0.14, 10),
+                new THREE.MeshStandardMaterial({
+                  color:0x1f2937,
+                  emissive:0x0b1016,
+                  emissiveIntensity:0.05,
+                  metalness:0.12,
+                  roughness:0.24,
+                  transparent:true,
+                  opacity:0.32
+                })
+              );
+              core.position.set(pipeX, burnerY, pz);
+              group.add(core);
+
+              var burner = {
+                wallKey:String(wallKey || ""),
+                rowNumber:rowNumber,
+                colIndex:sampleCols[pi],
+                glowMesh:glow,
+                glowMaterial:glow.material,
+                coreMesh:core,
+                coreMaterial:core.material
+              };
+              hmUploadedSetPeepBurnerState(burner, "C");
+              burners.push(burner);
+            }
+          }
+
+          return {
+            wallKey:String(wallKey || ""),
+            side:String(side || "left"),
+            dims:dims,
+            mesh:group,
+            burners:burners,
+            panels:[],
+            glassPanes:[]
+          };
         }
 
         function hmUploadedGetPeepWindowRect(display, centerY){
@@ -13326,7 +13434,16 @@ html, body, body *, body *::before, body *::after, svg text{
         }
 
         function hmUploadedPaintPeepSideDisplay(display, snapshot){
-          return;
+          if(!display || !Array.isArray(display.burners)) return;
+          var rows = snapshot && snapshot.hmData && Array.isArray(snapshot.hmData[display.wallKey])
+            ? snapshot.hmData[display.wallKey]
+            : [];
+          display.burners.forEach(function(burner){
+            var rowIdx = Math.max(0, Math.min(rows.length - 1, burner.rowNumber - 1));
+            var row = Array.isArray(rows[rowIdx]) ? rows[rowIdx] : [];
+            var state = String(row[burner.colIndex] || "C").toUpperCase();
+            hmUploadedSetPeepBurnerState(burner, state);
+          });
         }
 
         function hmUploadedRefreshViewerPeepDisplays(state, snapshot){
@@ -13581,6 +13698,12 @@ html, body, body *, body *::before, body *::after, svg text{
             roughness:0.7,
             side:THREE.DoubleSide
           });
+          var faceShellMat = new THREE.MeshStandardMaterial({
+            color:0x0c1016,
+            metalness:0.18,
+            roughness:0.82,
+            side:THREE.DoubleSide
+          });
           var tubeMat = new THREE.MeshStandardMaterial({color:0x6f8092, metalness:0.76, roughness:0.34});
           var commonTubeMat = new THREE.MeshStandardMaterial({color:0x7d8ea2, metalness:0.72, roughness:0.3});
           var edgeMat = new THREE.LineBasicMaterial({
@@ -13600,6 +13723,13 @@ html, body, body *, body *::before, body *::after, svg text{
           hmUploadedPrepareOverlay(backOverlay);
           wallOverlays[frontWallKey] = frontOverlay;
           wallOverlays[backWallKey] = backOverlay;
+          var frontShell = new THREE.Mesh(new THREE.PlaneGeometry(sX, sY), faceShellMat);
+          frontShell.position.set(0, sY / 2, sZ / 2 - 0.004);
+          chamber.add(frontShell);
+          var backShell = new THREE.Mesh(new THREE.PlaneGeometry(sX, sY), faceShellMat.clone());
+          backShell.position.set(0, sY / 2, -sZ / 2 + 0.004);
+          backShell.rotation.y = Math.PI;
+          chamber.add(backShell);
           chamber.add(frontOverlay.outerMesh);
           chamber.add(frontOverlay.innerMesh);
           chamber.add(backOverlay.outerMesh);
@@ -13633,6 +13763,13 @@ html, body, body *, body *::before, body *::after, svg text{
           );
           bottomWall.position.set(0, wallT / 2, 0);
           chamber.add(bottomWall);
+
+          var leftPeep = hmUploadedCreatePeepSideDisplay(dims, frontWallKey, "left", renderer || null);
+          var rightPeep = hmUploadedCreatePeepSideDisplay(dims, backWallKey, "right", renderer || null);
+          peepDisplays.push(leftPeep, rightPeep);
+          [leftPeep, rightPeep].forEach(function(display){
+            if(display && display.mesh) chamber.add(display.mesh);
+          });
 
           var leftWindowFrames = [
             hmUploadedAddSideWindowFrame(chamber, -sX / 2 - 0.001, windowTopY, 0, windowSize),
@@ -13686,7 +13823,9 @@ html, body, body *, body *::before, body *::after, svg text{
               left:leftWall,
               right:rightWall,
               leftFrames:leftWindowFrames,
-              rightFrames:rightWindowFrames
+              rightFrames:rightWindowFrames,
+              leftDisplay:leftPeep ? leftPeep.mesh : null,
+              rightDisplay:rightPeep ? rightPeep.mesh : null
             },
             fitTarget:chamber,
             chamberWire:null,
