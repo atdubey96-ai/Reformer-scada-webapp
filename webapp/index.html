@@ -3067,6 +3067,11 @@ body.light-theme .cw-nudge{
   padding:14px 18px 18px;
   background:#07090d;
 }
+#tab-cuboid .cuboid-tab-stack{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
 #tab-cuboid .cuboid-tab-shell{
   width:100%;
   border:1px solid rgba(60,100,150,0.4);
@@ -6427,6 +6432,9 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cuboid{
     border:1px solid rgba(60,100,150,0.34) !important;
     background:#07090d !important;
+  }
+  #tab-cuboid .cuboid-tab-stack{
+    gap:12px;
   }
   #tab-cuboid .cuboid-tab-shell{
     border-color:rgba(60,100,150,0.4) !important;
@@ -15275,17 +15283,31 @@ html, body, body *, body *::before, body *::after, svg text{
 
   <!-- TAB 6: Cuboid -->
   <div id="tab-cuboid" class="tab-panel">
-    <div class="cuboid-tab-shell">
-      <iframe
-        id="cuboid-tab-frame"
-        class="cuboid-tab-frame"
-        title="Cuboid Viewer"
-        src="about:blank"
-        data-src="./cuboid-viewer.html"
-        loading="lazy"
-        allow="fullscreen"
-        allowfullscreen
-      ></iframe>
+    <div class="cuboid-tab-stack">
+      <div class="cuboid-tab-shell">
+        <iframe
+          id="cuboid-tab-frame"
+          class="cuboid-tab-frame"
+          title="Cuboid Viewer"
+          src="about:blank"
+          data-src="./cuboid-viewer.html"
+          loading="lazy"
+          allow="fullscreen"
+          allowfullscreen
+        ></iframe>
+      </div>
+      <div class="cuboid-tab-shell">
+        <iframe
+          id="cuboid-tab-frame-2"
+          class="cuboid-tab-frame"
+          title="Cuboid Viewer"
+          src="about:blank"
+          data-src="./cuboid-viewer.html"
+          loading="lazy"
+          allow="fullscreen"
+          allowfullscreen
+        ></iframe>
+      </div>
     </div>
   </div>
 
@@ -18667,44 +18689,70 @@ function initMobileMetaLogo(){
   if(src) mobileLogo.setAttribute("src", src);
 }
 
-function ensureCuboidViewerLoaded(forceReload){
-  var frame = document.getElementById("cuboid-tab-frame");
-  if(!frame) return;
-  var baseSrc = String(frame.getAttribute("data-src") || "./cuboid-viewer.html").trim();
-  if(!baseSrc) return;
-  if(forceReload){
-    frame.setAttribute("src", baseSrc + "?ts=" + Date.now());
-    return;
-  }
-  var current = String(frame.getAttribute("src") || "").trim();
-  if(!current || current === "about:blank"){
-    frame.setAttribute("src", baseSrc);
-  }
+function getCuboidFrames(){
+  return Array.prototype.slice.call(document.querySelectorAll("#tab-cuboid .cuboid-tab-frame"));
 }
 
-function notifyCuboidOverlayState(active){
-  var frame = document.getElementById("cuboid-tab-frame");
+function getCuboidShells(){
+  return Array.prototype.slice.call(document.querySelectorAll("#tab-cuboid .cuboid-tab-shell"));
+}
+
+function findCuboidShellByWindow(win){
+  var frames = getCuboidFrames();
+  for(var i=0;i<frames.length;i++){
+    try{
+      if(frames[i].contentWindow === win) return frames[i].closest(".cuboid-tab-shell");
+    }catch(e){}
+  }
+  return null;
+}
+
+function ensureCuboidViewerLoaded(forceReload){
+  var frames = getCuboidFrames();
+  if(!frames.length) return;
+  var stamp = Date.now();
+  frames.forEach(function(frame, idx){
+    var baseSrc = String(frame.getAttribute("data-src") || "./cuboid-viewer.html").trim();
+    if(!baseSrc) return;
+    if(forceReload){
+      frame.setAttribute("src", baseSrc + "?ts=" + stamp + "-" + idx);
+      return;
+    }
+    var current = String(frame.getAttribute("src") || "").trim();
+    if(!current || current === "about:blank"){
+      frame.setAttribute("src", baseSrc);
+    }
+  });
+}
+
+function notifyCuboidOverlayState(active, frame){
   if(!frame || !frame.contentWindow) return;
   try{
     frame.contentWindow.postMessage({ type:"cuboid-overlay-state", active:!!active }, "*");
   }catch(e){}
 }
 
-function setCuboidOverlayActive(active){
-  var shell = document.querySelector("#tab-cuboid .cuboid-tab-shell");
+function setCuboidOverlayActive(active, shell){
   var backdrop = document.getElementById("cuboid-overlay-backdrop");
-  if(!shell || !backdrop) return;
+  if(!backdrop) return;
+  var shells = getCuboidShells();
+  var targetShell = shell || document.querySelector("#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded") || shells[0] || null;
+  if(!targetShell) return;
   var next = !!active;
-  shell.classList.toggle("cuboid-shell-expanded", next);
+  shells.forEach(function(item){
+    var isTarget = next && item === targetShell;
+    item.classList.toggle("cuboid-shell-expanded", isTarget);
+    var frame = item.querySelector(".cuboid-tab-frame");
+    notifyCuboidOverlayState(isTarget, frame);
+  });
   backdrop.classList.toggle("is-active", next);
   document.body.classList.toggle("cuboid-overlay-lock", next);
-  notifyCuboidOverlayState(next);
 }
 
-function toggleCuboidOverlay(){
-  var shell = document.querySelector("#tab-cuboid .cuboid-tab-shell");
+function toggleCuboidOverlay(sourceWindow){
+  var shell = findCuboidShellByWindow(sourceWindow) || document.querySelector("#tab-cuboid .cuboid-tab-shell");
   if(!shell) return;
-  setCuboidOverlayActive(!shell.classList.contains("cuboid-shell-expanded"));
+  setCuboidOverlayActive(!shell.classList.contains("cuboid-shell-expanded"), shell);
 }
 
 function handleGlobalRefreshClick(){
@@ -18773,7 +18821,9 @@ function switchTab(tab){
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
   if(tab === 'cuboid'){
     setTimeout(ensureCuboidViewerLoaded, 0);
-    setTimeout(function(){ notifyCuboidOverlayState(false); }, 60);
+    setTimeout(function(){
+      getCuboidFrames().forEach(function(frame){ notifyCuboidOverlayState(false, frame); });
+    }, 60);
   }
   updateGlobalRefreshButtonLabel(tab);
   updateDesktopPrimaryInterfacePickerUi();
@@ -18790,11 +18840,13 @@ function handlePendingViewerTabSwitch(){
 }
 
 (function initCuboidFrameBridge(){
-  var frame = document.getElementById("cuboid-tab-frame");
-  if(!frame) return;
-  frame.addEventListener("load", function(){
-    var shell = document.querySelector("#tab-cuboid .cuboid-tab-shell");
-    notifyCuboidOverlayState(!!(shell && shell.classList.contains("cuboid-shell-expanded")));
+  var frames = getCuboidFrames();
+  if(!frames.length) return;
+  frames.forEach(function(frame){
+    frame.addEventListener("load", function(){
+      var shell = frame.closest(".cuboid-tab-shell");
+      notifyCuboidOverlayState(!!(shell && shell.classList.contains("cuboid-shell-expanded")), frame);
+    });
   });
 })();
 
@@ -18829,7 +18881,7 @@ window.addEventListener("webkitfullscreenchange", handlePendingViewerTabSwitch);
 window.addEventListener("message", function(ev){
   var data = ev && ev.data ? ev.data : null;
   if(!data || data.type !== "cuboid-toggle-overlay") return;
-  toggleCuboidOverlay();
+  toggleCuboidOverlay(ev.source);
 });
 document.addEventListener("keydown", function(e){
   if(e.key === "Escape"){
