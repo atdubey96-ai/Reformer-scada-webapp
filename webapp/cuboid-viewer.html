@@ -10,19 +10,18 @@ html,body{width:100%;height:100%;background:#07090d;overflow:hidden;
 
 #wrap{
   width:100vw;height:100vh;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  gap:10px;
+  padding:12px;
 }
 
 #canvas-area{
   position:relative;
-  width:92vw;height:84vh;
+  width:100%;height:100%;
   border:1.5px solid rgba(60,100,150,0.4);
-  border-radius:4px;
+  border-radius:6px;
   background:#07090d;
   overflow:hidden;
   cursor:grab;
+  touch-action:none;
 }
 #canvas-area:active{cursor:grabbing;}
 #canvas-area canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
@@ -38,33 +37,13 @@ html,body{width:100%;height:100%;background:#07090d;overflow:hidden;
   font-size:9px;letter-spacing:2px;color:rgba(120,150,180,0.45);
   pointer-events:none;white-space:nowrap;
 }
-
-#ctrl-row{
-  display:flex;gap:10px;align-items:center;
-}
-.cbtn{
-  background:rgba(15,25,40,0.9);
-  border:1px solid rgba(60,100,150,0.45);
-  color:rgba(140,180,220,0.85);
-  padding:4px 18px;border-radius:3px;
-  font-family:'Courier New',monospace;font-size:10px;
-  letter-spacing:2px;cursor:pointer;
-  transition:all .18s;
-}
-.cbtn:hover{background:rgba(30,55,90,0.9);color:#cde;border-color:rgba(100,160,220,0.7);}
-.sep{color:rgba(80,110,140,0.4);font-size:10px;}
 </style>
 </head>
 <body>
 <div id="wrap">
   <div id="canvas-area">
     <div id="chamber-label">AB CHAMBER — REFORMER</div>
-    <div id="hint-bar">DRAG ← → TO ROTATE &nbsp;·&nbsp; DOUBLE-CLICK TO RESET</div>
-  </div>
-  <div id="ctrl-row">
-    <button class="cbtn" id="btn-front">◀ FRONT (A)</button>
-    <span class="sep">|</span>
-    <button class="cbtn" id="btn-back">BACK (B) ▶</button>
+    <div id="hint-bar">DRAG TO ROTATE &nbsp;·&nbsp; DOUBLE-CLICK / DOUBLE-TAP FOR FULL SCREEN</div>
   </div>
 </div>
 
@@ -873,11 +852,30 @@ var targetRotY=0, currentRotY=0;
 var dragging=false, lastX=0;
 var autoSpin=true;
 var SPIN_SPEED=0.004;
+var lastTapAt=0;
+var touchMoved=false;
 
 var cvEl=renderer.domElement;
 
-function startDrag(x){dragging=true;lastX=x;autoSpin=false;}
-function moveDrag(x){if(!dragging)return;targetRotY+=(x-lastX)*0.009;lastX=x;}
+function toggleViewerFullscreen(){
+  var fsEl = document.fullscreenElement || document.webkitFullscreenElement || null;
+  if(fsEl){
+    if(document.exitFullscreen) document.exitFullscreen();
+    else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+    return;
+  }
+  var root = document.documentElement;
+  if(root.requestFullscreen) root.requestFullscreen();
+  else if(root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+}
+
+function startDrag(x){dragging=true;lastX=x;autoSpin=false;touchMoved=false;}
+function moveDrag(x){
+  if(!dragging)return;
+  if(Math.abs(x-lastX) > 2) touchMoved=true;
+  targetRotY+=(x-lastX)*0.009;
+  lastX=x;
+}
 function endDrag(){dragging=false;}
 
 cvEl.addEventListener('mousedown',function(e){startDrag(e.clientX);});
@@ -888,31 +886,38 @@ cvEl.addEventListener('touchstart',function(e){startDrag(e.touches[0].clientX);e
 window.addEventListener('touchmove',function(e){moveDrag(e.touches[0].clientX);},{passive:true});
 window.addEventListener('touchend',endDrag);
 
-cvEl.addEventListener('dblclick',function(){
-  targetRotY=Math.round(currentRotY/(Math.PI))*Math.PI;
-  autoSpin=true;
+cvEl.addEventListener('dblclick',function(e){
+  e.preventDefault();
+  toggleViewerFullscreen();
 });
-
-document.getElementById('btn-front').addEventListener('click',function(){
-  targetRotY=Math.round(currentRotY/(2*Math.PI))*2*Math.PI;
-  autoSpin=false;
-});
-document.getElementById('btn-back').addEventListener('click',function(){
-  targetRotY=Math.round(currentRotY/(2*Math.PI))*2*Math.PI+Math.PI;
-  autoSpin=false;
+cvEl.addEventListener('touchend',function(){
+  if(touchMoved){
+    lastTapAt = 0;
+    return;
+  }
+  var now = Date.now();
+  if(now - lastTapAt < 320){
+    toggleViewerFullscreen();
+    lastTapAt = 0;
+    return;
+  }
+  lastTapAt = now;
 });
 
 /* ═══════════════════════════════════════════════════════════
    RESIZE — recalculate camera to always fit cuboid in canvas
 ═══════════════════════════════════════════════════════════ */
-window.addEventListener('resize', function(){
+function resizeViewer(){
   var nw = container.clientWidth, nh = container.clientHeight;
   renderer.setSize(nw, nh);
   var d = calcDims(nw, nh);
   camera.aspect = d.asp;
   camera.position.z = d.camDist;
   camera.updateProjectionMatrix();
-});
+}
+window.addEventListener('resize', resizeViewer);
+document.addEventListener('fullscreenchange', resizeViewer);
+document.addEventListener('webkitfullscreenchange', resizeViewer);
 
 /* ═══════════════════════════════════════════════════════════
    RENDER LOOP
