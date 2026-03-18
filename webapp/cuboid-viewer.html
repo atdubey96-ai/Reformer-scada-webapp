@@ -1336,40 +1336,29 @@ function cuboidCreateSideDisplay(side, wallKey){
       map:texture,
       transparent:true,
       side:THREE.DoubleSide,
-      depthTest:false,
       depthWrite:false,
       alphaTest:0.02
     });
-
-    function createMesh(insetX, renderOrder, scaleW, scaleH){
-      var mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(HOLE_W * scaleW, HOLE_H * scaleH),
-        material
-      );
-      if(side === "left"){
-        mesh.position.set(-CW/2 + insetX, centerY, 0);
-        mesh.rotation.y = Math.PI / 2;
-      }else{
-        mesh.position.set(CW/2 - insetX, centerY, 0);
-        mesh.rotation.y = -Math.PI / 2;
-      }
-      mesh.renderOrder = renderOrder;
-      group.add(mesh);
-      return mesh;
+    var mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(HOLE_W * 0.88, HOLE_H * 0.82),
+      material
+    );
+    var insetX = Math.max(0.24, Math.min(0.32, CW * 0.03));
+    if(side === "left"){
+      mesh.position.set(-CW/2 + insetX, centerY, 0);
+      mesh.rotation.y = Math.PI / 2;
+    }else{
+      mesh.position.set(CW/2 - insetX, centerY, 0);
+      mesh.rotation.y = -Math.PI / 2;
     }
-
-    var nearInset = Math.max(0.08, Math.min(0.12, CW * 0.012));
-    var deepInset = Math.max(0.24, Math.min(0.32, CW * 0.03));
-    var nearMesh = createMesh(nearInset, 26, 0.80, 0.76);
-    var deepMesh = createMesh(deepInset, 25, 0.88, 0.82);
-
+    mesh.renderOrder = 11;
+    group.add(mesh);
     return {
       zoneKind:zoneKind,
       canvas:canvas,
       texture:texture,
       material:material,
-      mesh:nearMesh,
-      deepMesh:deepMesh
+      mesh:mesh
     };
   }
 
