@@ -223,6 +223,13 @@ function cuboidToggleFullscreen(){
 document.addEventListener("fullscreenchange",cuboidRefreshHint);
 document.addEventListener("webkitfullscreenchange",cuboidRefreshHint);
 cuboidRefreshHint();
+window.addEventListener("message",function(ev){
+  var data=ev && ev.data ? ev.data : null;
+  if(!data || data.type!=="cuboid-reset-view") return;
+  autoSpin=false;
+  if(btnAuto) btnAuto.textContent="Auto Rotate";
+  setRotationTarget(0);
+});
 
 function cuboidGetParentApp(){
   try{

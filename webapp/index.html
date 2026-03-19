@@ -3089,6 +3089,282 @@ body.light-theme .cw-nudge{
   border:0;
   background:#07090d;
 }
+#tab-cuboid .cuboid-legend-panel{
+  padding:14px 16px 16px;
+  border-top:1px solid rgba(56,84,124,0.34);
+  background:linear-gradient(180deg,rgba(11,16,24,0.98),rgba(9,13,20,0.98));
+}
+#tab-cuboid .cuboid-legend-scroll{
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:stretch;
+  gap:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+#tab-cuboid .cuboid-legend-scroll::-webkit-scrollbar{
+  height:10px;
+}
+#tab-cuboid .cuboid-legend-scroll::-webkit-scrollbar-thumb{
+  background:rgba(76,104,148,0.5);
+  border-radius:999px;
+}
+#tab-cuboid .cuboid-legend-scroll::-webkit-scrollbar-track{
+  background:rgba(10,16,24,0.45);
+}
+#tab-cuboid .cuboid-legend-block{
+  flex:0 0 auto;
+  min-height:150px;
+  padding:0 18px;
+}
+#tab-cuboid .cuboid-legend-block + .cuboid-legend-block{
+  border-left:1px solid rgba(64,84,114,0.38);
+}
+#tab-cuboid .cuboid-legend-states{ min-width:640px; padding-left:4px; }
+#tab-cuboid .cuboid-legend-clean{ min-width:320px; }
+#tab-cuboid .cuboid-legend-live{ min-width:340px; }
+#tab-cuboid .cuboid-legend-tst{ min-width:290px; }
+#tab-cuboid .cuboid-legend-controls{ min-width:220px; padding-right:4px; }
+#tab-cuboid .cuboid-legend-title{
+  margin-bottom:14px;
+  font-size:9px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(184,191,206,0.82);
+}
+#tab-cuboid .cuboid-legend-state-row{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+#tab-cuboid .cuboid-legend-state-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:88px;
+  padding:14px 14px 14px 16px;
+  border-radius:22px;
+  border:1px solid rgba(76,102,146,0.35);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="B"]{
+  background:linear-gradient(135deg,rgba(27,46,92,0.94),rgba(18,27,45,0.96));
+  border-color:rgba(61,114,225,0.48);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="C"]{
+  background:linear-gradient(135deg,rgba(42,50,68,0.92),rgba(22,28,40,0.96));
+  border-color:rgba(108,124,154,0.44);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="O"]{
+  background:linear-gradient(135deg,rgba(18,74,53,0.94),rgba(13,36,29,0.96));
+  border-color:rgba(42,165,108,0.44);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="N"]{
+  background:linear-gradient(135deg,rgba(92,55,16,0.92),rgba(40,30,22,0.96));
+  border-color:rgba(176,122,28,0.44);
+}
+#tab-cuboid .cuboid-legend-badge{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  font-weight:700;
+  color:#f8fbff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 18px rgba(0,0,0,0.22);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="B"] .cuboid-legend-badge{ background:linear-gradient(180deg,#5f9dff,#2155d8); }
+#tab-cuboid .cuboid-legend-state-card[data-state="C"] .cuboid-legend-badge{ background:linear-gradient(180deg,#9ba8bc,#66748d); }
+#tab-cuboid .cuboid-legend-state-card[data-state="O"] .cuboid-legend-badge{ background:linear-gradient(180deg,#3dd26d,#0b8d47); }
+#tab-cuboid .cuboid-legend-state-card[data-state="N"] .cuboid-legend-badge{ background:linear-gradient(180deg,#f7a61d,#c56600); }
+#tab-cuboid .cuboid-legend-state-copy{
+  flex:1 1 auto;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+#tab-cuboid .cuboid-legend-state-name{
+  font-size:13px;
+  font-weight:700;
+  color:#eef4ff;
+}
+#tab-cuboid .cuboid-legend-state-desc{
+  font-size:10px;
+  line-height:1.25;
+  color:rgba(198,208,226,0.82);
+}
+#tab-cuboid .cuboid-legend-state-count{
+  font-size:20px;
+  font-weight:700;
+  color:#ffffff;
+}
+#tab-cuboid .cuboid-legend-clean-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding-top:6px;
+}
+#tab-cuboid .cuboid-legend-clean-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:12px;
+  color:rgba(214,223,236,0.9);
+}
+#tab-cuboid .cuboid-legend-clean-bullet{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:2px solid rgba(126,138,159,0.72);
+  background:transparent;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+}
+#tab-cuboid .cuboid-legend-clean-bullet.is-clean{
+  border-color:rgba(149,255,193,0.92);
+  background:radial-gradient(circle at 35% 30%,#9fffba,#42d674);
+  box-shadow:0 0 14px rgba(86,233,128,0.34);
+}
+#tab-cuboid .cuboid-legend-clean-text{
+  flex:1 1 auto;
+  line-height:1.35;
+}
+#tab-cuboid .cuboid-legend-clean-value{
+  font-size:18px;
+  font-weight:700;
+  color:#ffffff;
+}
+#tab-cuboid .cuboid-legend-live-rows{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding-top:2px;
+}
+#tab-cuboid .cuboid-legend-live-row{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:18px;
+  padding-bottom:10px;
+  border-bottom:1px solid rgba(47,64,92,0.4);
+}
+#tab-cuboid .cuboid-legend-live-row:last-child{
+  border-bottom:0;
+  padding-bottom:0;
+}
+#tab-cuboid .cuboid-legend-live-label{
+  font-size:12px;
+  color:rgba(171,182,198,0.82);
+}
+#tab-cuboid .cuboid-legend-live-value{
+  max-width:180px;
+  font-size:14px;
+  font-weight:700;
+  color:#72ffd8;
+  text-align:right;
+  overflow-wrap:anywhere;
+}
+#tab-cuboid .cuboid-legend-live-value.is-neutral{
+  color:#e9eef8;
+}
+#tab-cuboid .cuboid-legend-tst-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+}
+#tab-cuboid .cuboid-legend-tst-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:98px;
+  min-height:48px;
+  padding:0 16px;
+  border-radius:18px;
+  border:1px solid rgba(176,108,44,0.58);
+  background:linear-gradient(180deg,rgba(49,37,28,0.92),rgba(26,23,21,0.94));
+  color:#fff6e8;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+#tab-cuboid .cuboid-legend-tst-meta{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+#tab-cuboid .cuboid-legend-tst-cold{
+  font-size:11px;
+  font-weight:700;
+  color:#8affb8;
+}
+#tab-cuboid .cuboid-legend-tst-cold-value{
+  font-size:12px;
+  color:#e7eef8;
+}
+#tab-cuboid .cuboid-legend-tst-bar{
+  position:relative;
+  height:22px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#32d061 0%,#ffe227 48%,#ff7e2e 76%,#ff5252 100%);
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.20);
+}
+#tab-cuboid .cuboid-legend-tst-range{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:10px;
+}
+#tab-cuboid .cuboid-legend-tst-range-label{
+  font-size:11px;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:rgba(154,170,198,0.88);
+}
+#tab-cuboid .cuboid-legend-tst-hot{
+  font-size:11px;
+  font-weight:700;
+  color:#ff9aa7;
+}
+#tab-cuboid .cuboid-legend-tst-hot-value,
+#tab-cuboid .cuboid-legend-tst-min,
+#tab-cuboid .cuboid-legend-tst-max{
+  font-size:12px;
+  color:#f5f8ff;
+  font-weight:700;
+}
+#tab-cuboid .cuboid-legend-controls{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding-top:2px;
+}
+#tab-cuboid .cuboid-legend-action{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:58px;
+  padding:0 18px;
+  border-radius:14px;
+  border:1px solid rgba(70,92,140,0.42);
+  background:linear-gradient(180deg,rgba(28,36,58,0.95),rgba(18,23,36,0.96));
+  color:#e6edf9;
+  font-family:"Courier New",Courier,monospace;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.6px;
+  cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,transform .18s ease;
+}
+#tab-cuboid .cuboid-legend-action:hover{
+  background:linear-gradient(180deg,rgba(41,56,92,0.95),rgba(20,28,44,0.98));
+  border-color:rgba(104,142,220,0.62);
+  transform:translateY(-1px);
+}
 #cuboid-overlay-backdrop{
   position:fixed;
   inset:0;
@@ -5759,6 +6035,9 @@ function renderHeatMap(){
     dateVal: dateVal,
     entryDt: entry ? entry.dt : ""
   };
+  if(typeof refreshCuboidLegendPanels === "function"){
+    refreshCuboidLegendPanels();
+  }
 
   if(typeof r3dSyncFromHeatMapSnapshot === "function"){
     r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
@@ -6442,6 +6721,33 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-cuboid .cuboid-tab-frame{
     height:clamp(640px,calc(100svh - 150px),1040px);
+  }
+  #tab-cuboid .cuboid-legend-panel{
+    padding:12px 12px 14px;
+  }
+  #tab-cuboid .cuboid-legend-block{
+    padding:0 14px;
+    min-height:142px;
+  }
+  #tab-cuboid .cuboid-legend-states{ min-width:560px; padding-left:2px; }
+  #tab-cuboid .cuboid-legend-clean{ min-width:286px; }
+  #tab-cuboid .cuboid-legend-live{ min-width:290px; }
+  #tab-cuboid .cuboid-legend-tst{ min-width:250px; }
+  #tab-cuboid .cuboid-legend-controls{ min-width:190px; padding-right:2px; }
+  #tab-cuboid .cuboid-legend-state-row{ gap:10px; }
+  #tab-cuboid .cuboid-legend-state-card{
+    min-height:80px;
+    padding:12px;
+    border-radius:20px;
+  }
+  #tab-cuboid .cuboid-legend-badge{
+    width:48px;
+    height:48px;
+    font-size:16px;
+  }
+  #tab-cuboid .cuboid-legend-title{
+    margin-bottom:12px;
+    letter-spacing:2.4px;
   }
   #tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded{
     top:8px;
@@ -15284,29 +15590,235 @@ html, body, body *, body *::before, body *::after, svg text{
   <!-- TAB 6: Cuboid -->
   <div id="tab-cuboid" class="tab-panel">
     <div class="cuboid-tab-stack">
-      <div class="cuboid-tab-shell">
+      <div class="cuboid-tab-shell" data-cuboid-shell="ab">
         <iframe
           id="cuboid-tab-frame"
           class="cuboid-tab-frame"
           title="Furnace Cuboid Viewer AB"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260319-02"
+          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260319-03"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
         ></iframe>
+        <div class="cuboid-legend-panel" data-cuboid-legend="ab">
+          <div class="cuboid-legend-scroll">
+            <section class="cuboid-legend-block cuboid-legend-states">
+              <div class="cuboid-legend-title">Burner State Legend</div>
+              <div class="cuboid-legend-state-row">
+                <div class="cuboid-legend-state-card" data-state="B">
+                  <div class="cuboid-legend-badge">B</div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Both</div>
+                    <div class="cuboid-legend-state-desc">Blue Burner</div>
+                  </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="C">
+                  <div class="cuboid-legend-badge">C</div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Cold</div>
+                    <div class="cuboid-legend-state-desc">Closed / None</div>
+                  </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="O">
+                  <div class="cuboid-legend-badge">O</div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Off Gas</div>
+                    <div class="cuboid-legend-state-desc">Green Burner</div>
+                  </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="N">
+                  <div class="cuboid-legend-badge">N</div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">NG Only</div>
+                    <div class="cuboid-legend-state-desc">Amber Burner</div>
+                  </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-n">0</div>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-clean">
+              <div class="cuboid-legend-title">Cleaning</div>
+              <div class="cuboid-legend-clean-list">
+                <div class="cuboid-legend-clean-item">
+                  <span class="cuboid-legend-clean-bullet is-clean"></span>
+                  <span class="cuboid-legend-clean-text">Green Dot = Burner Cleaned</span>
+                  <strong class="cuboid-legend-clean-value" data-legend-value="cleaned">0</strong>
+                </div>
+                <div class="cuboid-legend-clean-item">
+                  <span class="cuboid-legend-clean-bullet"></span>
+                  <span class="cuboid-legend-clean-text">Empty Dot = Burner Not Cleaned</span>
+                  <strong class="cuboid-legend-clean-value" data-legend-value="uncleaned">0</strong>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-live">
+              <div class="cuboid-legend-title">Live Parameters</div>
+              <div class="cuboid-legend-live-rows">
+                <div class="cuboid-legend-live-row">
+                  <span class="cuboid-legend-live-label">Chamber Temp</span>
+                  <strong class="cuboid-legend-live-value" data-legend-value="avg-temp">--</strong>
+                </div>
+                <div class="cuboid-legend-live-row">
+                  <span class="cuboid-legend-live-label">Flame Status</span>
+                  <strong class="cuboid-legend-live-value" data-legend-value="active-burners">--</strong>
+                </div>
+                <div class="cuboid-legend-live-row">
+                  <span class="cuboid-legend-live-label">Data Stamp</span>
+                  <strong class="cuboid-legend-live-value is-neutral" data-legend-value="stamp">Latest</strong>
+                </div>
+                <div class="cuboid-legend-live-row">
+                  <span class="cuboid-legend-live-label">Shift</span>
+                  <strong class="cuboid-legend-live-value is-neutral" data-legend-value="shift">All</strong>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-tst">
+              <div class="cuboid-legend-title">TST Gradient</div>
+              <div class="cuboid-legend-tst-top">
+                <div class="cuboid-legend-tst-chip">PH TST</div>
+                <div class="cuboid-legend-tst-meta">
+                  <div class="cuboid-legend-tst-cold">Cold</div>
+                  <div class="cuboid-legend-tst-cold-value" data-legend-value="tst-cold">--</div>
+                </div>
+              </div>
+              <div class="cuboid-legend-tst-bar"></div>
+              <div class="cuboid-legend-tst-range">
+                <span class="cuboid-legend-tst-min" data-legend-value="tst-min">--</span>
+                <span class="cuboid-legend-tst-range-label">TST Range</span>
+                <span class="cuboid-legend-tst-max" data-legend-value="tst-max">--</span>
+              </div>
+              <div class="cuboid-legend-tst-range" style="margin-top:8px;">
+                <span class="cuboid-legend-tst-hot">Hot</span>
+                <span class="cuboid-legend-tst-hot-value" data-legend-value="tst-hot">--</span>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-controls">
+              <div class="cuboid-legend-title">Controls</div>
+              <div class="cuboid-legend-controls">
+                <button class="cuboid-legend-action" data-cuboid-action="reset-view" data-cuboid-chamber="ab">Reset Front View</button>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
-      <div class="cuboid-tab-shell">
+      <div class="cuboid-tab-shell" data-cuboid-shell="cd">
         <iframe
           id="cuboid-tab-frame-2"
           class="cuboid-tab-frame"
           title="Furnace Cuboid Viewer CD"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260319-02"
+          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260319-03"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
         ></iframe>
+        <div class="cuboid-legend-panel" data-cuboid-legend="cd">
+          <div class="cuboid-legend-scroll">
+            <section class="cuboid-legend-block cuboid-legend-states">
+              <div class="cuboid-legend-title">Burner State Legend</div>
+              <div class="cuboid-legend-state-row">
+                <div class="cuboid-legend-state-card" data-state="B">
+                  <div class="cuboid-legend-badge">B</div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Both</div>
+                    <div class="cuboid-legend-state-desc">Blue Burner</div>
+                  </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="C">
+                  <div class="cuboid-legend-badge">C</div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Cold</div>
+                    <div class="cuboid-legend-state-desc">Closed / None</div>
+                  </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="O">
+                  <div class="cuboid-legend-badge">O</div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Off Gas</div>
+                    <div class="cuboid-legend-state-desc">Green Burner</div>
+                  </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="N">
+                  <div class="cuboid-legend-badge">N</div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">NG Only</div>
+                    <div class="cuboid-legend-state-desc">Amber Burner</div>
+                  </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-n">0</div>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-clean">
+              <div class="cuboid-legend-title">Cleaning</div>
+              <div class="cuboid-legend-clean-list">
+                <div class="cuboid-legend-clean-item">
+                  <span class="cuboid-legend-clean-bullet is-clean"></span>
+                  <span class="cuboid-legend-clean-text">Green Dot = Burner Cleaned</span>
+                  <strong class="cuboid-legend-clean-value" data-legend-value="cleaned">0</strong>
+                </div>
+                <div class="cuboid-legend-clean-item">
+                  <span class="cuboid-legend-clean-bullet"></span>
+                  <span class="cuboid-legend-clean-text">Empty Dot = Burner Not Cleaned</span>
+                  <strong class="cuboid-legend-clean-value" data-legend-value="uncleaned">0</strong>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-live">
+              <div class="cuboid-legend-title">Live Parameters</div>
+              <div class="cuboid-legend-live-rows">
+                <div class="cuboid-legend-live-row">
+                  <span class="cuboid-legend-live-label">Chamber Temp</span>
+                  <strong class="cuboid-legend-live-value" data-legend-value="avg-temp">--</strong>
+                </div>
+                <div class="cuboid-legend-live-row">
+                  <span class="cuboid-legend-live-label">Flame Status</span>
+                  <strong class="cuboid-legend-live-value" data-legend-value="active-burners">--</strong>
+                </div>
+                <div class="cuboid-legend-live-row">
+                  <span class="cuboid-legend-live-label">Data Stamp</span>
+                  <strong class="cuboid-legend-live-value is-neutral" data-legend-value="stamp">Latest</strong>
+                </div>
+                <div class="cuboid-legend-live-row">
+                  <span class="cuboid-legend-live-label">Shift</span>
+                  <strong class="cuboid-legend-live-value is-neutral" data-legend-value="shift">All</strong>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-tst">
+              <div class="cuboid-legend-title">TST Gradient</div>
+              <div class="cuboid-legend-tst-top">
+                <div class="cuboid-legend-tst-chip">PH TST</div>
+                <div class="cuboid-legend-tst-meta">
+                  <div class="cuboid-legend-tst-cold">Cold</div>
+                  <div class="cuboid-legend-tst-cold-value" data-legend-value="tst-cold">--</div>
+                </div>
+              </div>
+              <div class="cuboid-legend-tst-bar"></div>
+              <div class="cuboid-legend-tst-range">
+                <span class="cuboid-legend-tst-min" data-legend-value="tst-min">--</span>
+                <span class="cuboid-legend-tst-range-label">TST Range</span>
+                <span class="cuboid-legend-tst-max" data-legend-value="tst-max">--</span>
+              </div>
+              <div class="cuboid-legend-tst-range" style="margin-top:8px;">
+                <span class="cuboid-legend-tst-hot">Hot</span>
+                <span class="cuboid-legend-tst-hot-value" data-legend-value="tst-hot">--</span>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-controls">
+              <div class="cuboid-legend-title">Controls</div>
+              <div class="cuboid-legend-controls">
+                <button class="cuboid-legend-action" data-cuboid-action="reset-view" data-cuboid-chamber="cd">Reset Front View</button>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -18693,8 +19205,219 @@ function getCuboidFrames(){
   return Array.prototype.slice.call(document.querySelectorAll("#tab-cuboid .cuboid-tab-frame"));
 }
 
+function getCuboidFrameByChamber(chamber){
+  return String(chamber || "").toLowerCase() === "cd"
+    ? document.getElementById("cuboid-tab-frame-2")
+    : document.getElementById("cuboid-tab-frame");
+}
+
 function getCuboidShells(){
   return Array.prototype.slice.call(document.querySelectorAll("#tab-cuboid .cuboid-tab-shell"));
+}
+
+function getCuboidLegendPanels(){
+  return Array.prototype.slice.call(document.querySelectorAll("#tab-cuboid .cuboid-legend-panel"));
+}
+
+function getCuboidLegendPanelByChamber(chamber){
+  return document.querySelector('#tab-cuboid .cuboid-legend-panel[data-cuboid-legend="' + String(chamber || "").toLowerCase() + '"]');
+}
+
+function cuboidLegendNormalizeBurnerState(raw){
+  var s = String(raw == null ? "" : raw).toUpperCase().trim();
+  return (s === "O" || s === "N" || s === "B" || s === "C") ? s : "C";
+}
+
+function cuboidLegendDefaultHmData(){
+  var defaultPatterns = [
+    ["N","O","N","B","N","O","N","O","B","N","O","N","O","N","O"],
+    ["O","N","O","N","O","B","O","N","O","N","B","O","N","O","N"],
+    ["B","N","O","N","N","O","N","O","N","O","N","O","B","N","O"],
+    ["N","O","B","O","N","O","N","B","O","N","O","N","O","O","N"],
+    ["O","N","N","O","B","N","O","N","O","B","N","O","N","N","O"],
+    ["N","B","O","N","O","N","O","N","B","O","N","O","N","O","N"]
+  ];
+  var walls = ["A","B","C","D"];
+  var hmData = {};
+  for(var wi=0; wi<walls.length; wi++){
+    hmData[walls[wi]] = [];
+    for(var ri=0; ri<6; ri++){
+      hmData[walls[wi]].push(defaultPatterns[(ri + wi) % defaultPatterns.length].slice());
+    }
+  }
+  return hmData;
+}
+
+function cuboidLegendSanitizeHmData(source){
+  var walls = ["A","B","C","D"];
+  var out = {};
+  var src = source && typeof source === "object" ? source : {};
+  for(var wi=0; wi<walls.length; wi++){
+    var wall = walls[wi];
+    var srcRows = Array.isArray(src[wall]) ? src[wall] : [];
+    out[wall] = [];
+    for(var ri=0; ri<6; ri++){
+      var srcRow = Array.isArray(srcRows[ri]) ? srcRows[ri] : [];
+      var row = [];
+      for(var bi=0; bi<15; bi++) row.push(cuboidLegendNormalizeBurnerState(srcRow[bi]));
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
+function cuboidLegendLoadHmData(){
+  if(window._hmRenderSnapshot && window._hmRenderSnapshot.hmData){
+    return cuboidLegendSanitizeHmData(window._hmRenderSnapshot.hmData);
+  }
+  try{
+    var raw = localStorage.getItem("burnerData");
+    if(raw){
+      return cuboidLegendSanitizeHmData(JSON.parse(raw));
+    }
+  }catch(e){}
+  return cuboidLegendDefaultHmData();
+}
+
+function cuboidLegendLoadTempEntries(){
+  if(Array.isArray(tempDataEntries) && tempDataEntries.length) return tempDataEntries.slice();
+  try{
+    var raw = localStorage.getItem("tempDataEntries");
+    if(raw){
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  }catch(e){}
+  return [];
+}
+
+function cuboidLegendPickLatestEntry(entries){
+  var list = Array.isArray(entries) ? entries.slice() : [];
+  if(!list.length) return null;
+  list.sort(function(a, b){
+    var ta = Date.parse(String(a && (a.dt || a.date || a.createdAt || a.created_at) || ""));
+    var tb = Date.parse(String(b && (b.dt || b.date || b.createdAt || b.created_at) || ""));
+    ta = isFinite(ta) ? ta : 0;
+    tb = isFinite(tb) ? tb : 0;
+    return tb - ta;
+  });
+  return list[0] || null;
+}
+
+function cuboidLegendGetPeepRow(entry, key){
+  var vals = entry && entry.peepHoles ? entry.peepHoles[key] : null;
+  var out = [];
+  for(var i=0; i<15; i++){
+    var n = Number(vals && vals[i]);
+    out.push(isFinite(n) ? n : "");
+  }
+  return out;
+}
+
+function cuboidLegendBuildSnapshot(chamber){
+  var zone = String(chamber || "").toLowerCase() === "cd" ? "cd" : "ab";
+  var snapshot = {
+    hmData: cuboidLegendLoadHmData(),
+    top: [],
+    bot: [],
+    entryDt: "Latest",
+    selectedShift: "All"
+  };
+  if(window._hmRenderSnapshot){
+    snapshot.top = zone === "cd" ? (window._hmRenderSnapshot.cdTop || []) : (window._hmRenderSnapshot.abTop || []);
+    snapshot.bot = zone === "cd" ? (window._hmRenderSnapshot.cdBot || []) : (window._hmRenderSnapshot.abBot || []);
+    snapshot.entryDt = window._hmRenderSnapshot.entryDt || snapshot.entryDt;
+    snapshot.selectedShift = window._hmRenderSnapshot.selectedShift || snapshot.selectedShift;
+    return snapshot;
+  }
+  var entry = cuboidLegendPickLatestEntry(cuboidLegendLoadTempEntries());
+  if(entry){
+    snapshot.top = cuboidLegendGetPeepRow(entry, zone + "-top");
+    snapshot.bot = cuboidLegendGetPeepRow(entry, zone + "-bot");
+    snapshot.entryDt = entry.dt || snapshot.entryDt;
+    snapshot.selectedShift = entry.selectedShift || entry.shift || snapshot.selectedShift;
+  }
+  return snapshot;
+}
+
+function cuboidLegendCountCleaning(log, walls){
+  var cleaned = 0;
+  for(var wi=0; wi<walls.length; wi++){
+    var wallMap = log && log[walls[wi]] && typeof log[walls[wi]] === "object" ? log[walls[wi]] : {};
+    for(var row=1; row<=6; row++){
+      for(var burner=1; burner<=15; burner++){
+        if(String(wallMap["R" + row + "B" + burner] || "").trim()) cleaned++;
+      }
+    }
+  }
+  return { cleaned: cleaned, uncleaned: Math.max(0, (walls.length * 90) - cleaned) };
+}
+
+function cuboidLegendSetText(panel, key, value){
+  var el = panel ? panel.querySelector('[data-legend-value="' + key + '"]') : null;
+  if(el) el.textContent = String(value);
+}
+
+function refreshCuboidLegendPanels(){
+  var log = (typeof loadCleaningLog === "function") ? (loadCleaningLog() || {}) : {};
+  ["ab","cd"].forEach(function(chamber){
+    var panel = getCuboidLegendPanelByChamber(chamber);
+    if(!panel) return;
+    var walls = chamber === "cd" ? ["C","D"] : ["A","B"];
+    var snapshot = cuboidLegendBuildSnapshot(chamber);
+    var counts = hmCountStatesForWalls(snapshot.hmData, walls);
+    var temps = hmToNumericTemps((snapshot.top || []).concat(snapshot.bot || []));
+    var avg = "--", min = "--", max = "--";
+    if(temps.length){
+      var sum = 0;
+      var lo = temps[0];
+      var hi = temps[0];
+      for(var i=0; i<temps.length; i++){
+        var n = temps[i];
+        sum += n;
+        if(n < lo) lo = n;
+        if(n > hi) hi = n;
+      }
+      avg = Math.round(sum / temps.length) + "°C";
+      min = Math.round(lo) + "°C";
+      max = Math.round(hi) + "°C";
+    }
+    var activeBurners = (counts.O || 0) + (counts.N || 0) + (counts.B || 0);
+    var cleaning = cuboidLegendCountCleaning(log, walls);
+    cuboidLegendSetText(panel, "count-b", counts.B || 0);
+    cuboidLegendSetText(panel, "count-c", counts.C || 0);
+    cuboidLegendSetText(panel, "count-o", counts.O || 0);
+    cuboidLegendSetText(panel, "count-n", counts.N || 0);
+    cuboidLegendSetText(panel, "cleaned", cleaning.cleaned);
+    cuboidLegendSetText(panel, "uncleaned", cleaning.uncleaned);
+    cuboidLegendSetText(panel, "avg-temp", avg);
+    cuboidLegendSetText(panel, "active-burners", activeBurners + " active burners");
+    cuboidLegendSetText(panel, "stamp", snapshot.entryDt || "Latest");
+    cuboidLegendSetText(panel, "shift", snapshot.selectedShift || "All");
+    cuboidLegendSetText(panel, "tst-cold", min);
+    cuboidLegendSetText(panel, "tst-min", min);
+    cuboidLegendSetText(panel, "tst-max", max);
+    cuboidLegendSetText(panel, "tst-hot", max);
+  });
+}
+
+function bindCuboidLegendActions(){
+  getCuboidLegendPanels().forEach(function(panel){
+    if(panel._legendBound) return;
+    panel._legendBound = true;
+    var resetBtn = panel.querySelector('[data-cuboid-action="reset-view"]');
+    if(resetBtn){
+      resetBtn.addEventListener("click", function(){
+        var chamber = String(resetBtn.getAttribute("data-cuboid-chamber") || "ab").toLowerCase();
+        var frame = getCuboidFrameByChamber(chamber);
+        try{
+          if(frame && frame.contentWindow){
+            frame.contentWindow.postMessage({ type:"cuboid-reset-view" }, "*");
+          }
+        }catch(e){}
+      });
+    }
+  });
 }
 
 function findCuboidShellByWindow(win){
@@ -18765,6 +19488,7 @@ function handleGlobalRefreshClick(){
   }
   if(tab === 'cuboid'){
     ensureCuboidViewerLoaded(true);
+    refreshCuboidLegendPanels();
     showToast("↻ Cuboid viewer refreshed");
     return;
   }
@@ -18821,6 +19545,8 @@ function switchTab(tab){
   if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
   if(tab === 'cuboid'){
     setTimeout(ensureCuboidViewerLoaded, 0);
+    setTimeout(bindCuboidLegendActions, 0);
+    setTimeout(refreshCuboidLegendPanels, 0);
     setTimeout(function(){
       getCuboidFrames().forEach(function(frame){ notifyCuboidOverlayState(false, frame); });
     }, 60);
@@ -18848,6 +19574,11 @@ function handlePendingViewerTabSwitch(){
       notifyCuboidOverlayState(!!(shell && shell.classList.contains("cuboid-shell-expanded")), frame);
     });
   });
+})();
+
+(function initCuboidLegendUi(){
+  bindCuboidLegendActions();
+  refreshCuboidLegendPanels();
 })();
 
 (function initHeatMapHeaderTools(){
@@ -18878,6 +19609,17 @@ window.addEventListener("orientationchange", function(){
 });
 window.addEventListener("fullscreenchange", handlePendingViewerTabSwitch);
 window.addEventListener("webkitfullscreenchange", handlePendingViewerTabSwitch);
+window.addEventListener("storage", function(){
+  setTimeout(function(){
+    refreshCuboidLegendPanels();
+  }, 0);
+});
+window.setInterval(function(){
+  var active = document.querySelector('.tab-panel.tab-active');
+  if(active && active.id === "tab-cuboid"){
+    refreshCuboidLegendPanels();
+  }
+}, 1500);
 window.addEventListener("message", function(ev){
   var data = ev && ev.data ? ev.data : null;
   if(!data || data.type !== "cuboid-toggle-overlay") return;
