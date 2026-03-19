@@ -1295,8 +1295,36 @@ for(let i=0;i<nT;i++){
   conn.position.set(tx,FH/2+tProt,0);
   group.add(conn);
 }
-const hPath=new THREE.CatmullRomCurve3([new THREE.Vector3(tSX-0.15,FH/2+tProt,0),new THREE.Vector3(tSX+tSpan+0.15,FH/2+tProt,0)]);
-group.add(new THREE.Mesh(new THREE.TubeGeometry(hPath,4,0.09,16,false),new THREE.MeshStandardMaterial({color:0x4a5668,roughness:0.2,metalness:0.97})));
+const headerSpan=FW*0.94;
+const headerStartX=-headerSpan/2;
+const headerEndX=headerSpan/2;
+const headerY=FH/2+tProt+0.01;
+const headerRadius=0.115;
+const hPath=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(headerStartX,headerY,0),
+  new THREE.Vector3(headerEndX,headerY,0)
+]);
+const headerMat=new THREE.MeshStandardMaterial({
+  color:0xa9b4c1,
+  roughness:0.16,
+  metalness:0.95,
+  emissive:0x202835,
+  emissiveIntensity:0.42
+});
+group.add(new THREE.Mesh(new THREE.TubeGeometry(hPath,8,headerRadius,20,false),headerMat));
+const headerCapMat=new THREE.MeshStandardMaterial({
+  color:0x8c99a8,
+  roughness:0.18,
+  metalness:0.97,
+  emissive:0x161d26,
+  emissiveIntensity:0.28
+});
+[headerStartX,headerEndX].forEach(function(x){
+  const collar=new THREE.Mesh(new THREE.CylinderGeometry(headerRadius*1.22,headerRadius*1.22,0.08,18),headerCapMat);
+  collar.rotation.z=Math.PI/2;
+  collar.position.set(x,headerY,0);
+  group.add(collar);
+});
 
 const flameGroups=[];
 function buildFlameGeo(len,br){
