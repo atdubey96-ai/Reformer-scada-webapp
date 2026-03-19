@@ -1055,26 +1055,57 @@ function makeMetalCanvas(w,h,opts){
     return n-Math.floor(n);
   }
 
+  function clampByte(v){
+    return Math.max(0,Math.min(255,Math.round(v)));
+  }
+
+  function rgba(r,g2,b,a){
+    return "rgba("+clampByte(r)+","+clampByte(g2)+","+clampByte(b)+","+a+")";
+  }
+
   const base=g.createLinearGradient(0,0,w,h);
-  base.addColorStop(0.00,"#8a9099");
-  base.addColorStop(0.15,"#b8bec6");
-  base.addColorStop(0.30,"#d4d9df");
-  base.addColorStop(0.45,"#c0c6cc");
-  base.addColorStop(0.55,"#a8adb4");
-  base.addColorStop(0.70,"#bfc5cc");
-  base.addColorStop(0.85,"#d0d5da");
-  base.addColorStop(1.00,"#909498");
+  base.addColorStop(0.00,"#525a63");
+  base.addColorStop(0.12,"#8d969f");
+  base.addColorStop(0.24,"#b7c0c8");
+  base.addColorStop(0.38,"#737b84");
+  base.addColorStop(0.54,"#9ea7af");
+  base.addColorStop(0.70,"#58606a");
+  base.addColorStop(0.86,"#949da6");
+  base.addColorStop(1.00,"#434b54");
   g.fillStyle=base;
   g.fillRect(0,0,w,h);
 
-  for(let s=0;s<180;s++){
+  const plateXs=[0,Math.round(w*0.24),Math.round(w*0.5),Math.round(w*0.76),w];
+  const plateYs=[0,Math.round(h*0.34),Math.round(h*0.68),h];
+  for(let py=0;py<plateYs.length-1;py++){
+    for(let px=0;px<plateXs.length-1;px++){
+      const idx=py*(plateXs.length-1)+px;
+      const x0=plateXs[px];
+      const y0=plateYs[py];
+      const x1=plateXs[px+1];
+      const y1=plateYs[py+1];
+      const tint=-18+noise(18+idx)*42;
+      const alpha=0.12+noise(42+idx)*0.10;
+      g.fillStyle=rgba(112+tint,118+tint,124+tint,alpha);
+      g.fillRect(x0,y0,x1-x0,y1-y0);
+
+      const plateGrad=g.createLinearGradient(x0,y0,x1,y1);
+      plateGrad.addColorStop(0,rgba(245,244,240,0.08+noise(72+idx)*0.05));
+      plateGrad.addColorStop(0.45,"rgba(0,0,0,0)");
+      plateGrad.addColorStop(1,rgba(10,12,16,0.12+noise(92+idx)*0.08));
+      g.fillStyle=plateGrad;
+      g.fillRect(x0,y0,x1-x0,y1-y0);
+    }
+  }
+
+  for(let s=0;s<260;s++){
     const sy=noise(10+s)*h;
     const sw=40+noise(40+s)*(w-40);
     const sx=noise(80+s)*(w-sw);
     const bright=noise(120+s)<0.5;
-    const alpha=0.03+noise(160+s)*0.09;
+    const alpha=0.03+noise(160+s)*0.10;
     const streak=g.createLinearGradient(sx,0,sx+sw,0);
-    const col=bright ? "255,255,255" : "30,30,40";
+    const col=bright ? "255,248,236" : "18,20,26";
     streak.addColorStop(0,"rgba("+col+",0)");
     streak.addColorStop(0.4,"rgba("+col+","+alpha+")");
     streak.addColorStop(0.6,"rgba("+col+","+alpha+")");
@@ -1084,39 +1115,106 @@ function makeMetalCanvas(w,h,opts){
     g.fillRect(sx,sy,sw,th);
   }
 
+  for(let d=0;d<80;d++){
+    const sx=noise(240+d)*w;
+    const sy=noise(300+d)*h;
+    const len=120+noise(360+d)*260;
+    const ang=-0.32+(noise(420+d)*0.64);
+    g.strokeStyle=rgba(255,250,236,0.015+noise(480+d)*0.03);
+    g.lineWidth=0.9+noise(540+d)*1.8;
+    g.beginPath();
+    g.moveTo(sx,sy);
+    g.lineTo(sx+Math.cos(ang)*len,sy+Math.sin(ang)*len);
+    g.stroke();
+  }
+
+  const edgeBand=Math.max(18,Math.round(Math.min(w,h)*0.022));
+  g.strokeStyle="rgba(26,28,34,0.78)";
+  g.lineWidth=edgeBand*0.72;
+  g.strokeRect(edgeBand*0.5,edgeBand*0.5,w-edgeBand,h-edgeBand);
+  const edgeGlow=g.createLinearGradient(0,0,w,h);
+  edgeGlow.addColorStop(0,"rgba(245,242,232,0.16)");
+  edgeGlow.addColorStop(0.5,"rgba(255,255,255,0.02)");
+  edgeGlow.addColorStop(1,"rgba(12,14,18,0.22)");
+  g.strokeStyle=edgeGlow;
+  g.lineWidth=Math.max(2,edgeBand*0.12);
+  g.strokeRect(edgeBand*0.75,edgeBand*0.75,w-edgeBand*1.5,h-edgeBand*1.5);
+
   const hSeams=[Math.round(h*0.33),Math.round(h*0.66)];
   hSeams.forEach(function(sy){
-    g.strokeStyle="rgba(50,48,45,0.7)";
-    g.lineWidth=2.5;
+    g.strokeStyle="rgba(36,34,32,0.78)";
+    g.lineWidth=3.2;
     g.beginPath();
     g.moveTo(0,sy);
     g.lineTo(w,sy);
     g.stroke();
     const wg=g.createLinearGradient(0,sy-4,0,sy);
-    wg.addColorStop(0,"rgba(220,215,210,0)");
-    wg.addColorStop(1,"rgba(220,215,210,0.4)");
+    wg.addColorStop(0,"rgba(255,246,228,0)");
+    wg.addColorStop(1,"rgba(255,246,228,0.38)");
     g.fillStyle=wg;
     g.fillRect(0,sy-4,w,4);
     const sg=g.createLinearGradient(0,sy,0,sy+5);
-    sg.addColorStop(0,"rgba(30,28,25,0.35)");
+    sg.addColorStop(0,"rgba(16,14,12,0.46)");
     sg.addColorStop(1,"rgba(30,28,25,0)");
     g.fillStyle=sg;
     g.fillRect(0,sy,w,5);
   });
   const vSeams=[Math.round(w*0.25),Math.round(w*0.5),Math.round(w*0.75)];
   vSeams.forEach(function(sx){
-    g.strokeStyle="rgba(50,48,45,0.6)";
-    g.lineWidth=2;
+    g.strokeStyle="rgba(34,32,30,0.72)";
+    g.lineWidth=2.4;
     g.beginPath();
     g.moveTo(sx,0);
     g.lineTo(sx,h);
     g.stroke();
     const wg=g.createLinearGradient(sx,0,sx+4,0);
-    wg.addColorStop(0,"rgba(210,205,200,0.3)");
+    wg.addColorStop(0,"rgba(255,244,228,0.28)");
     wg.addColorStop(1,"rgba(210,205,200,0)");
     g.fillStyle=wg;
     g.fillRect(sx,0,4,h);
   });
+
+  const patchCount=5;
+  for(let p=0;p<patchCount;p++){
+    const pw=120+noise(620+p)*200;
+    const ph=70+noise(660+p)*150;
+    const px=edgeBand*1.4+noise(700+p)*(w-pw-edgeBand*2.8);
+    const py=edgeBand*1.4+noise(740+p)*(h-ph-edgeBand*2.8);
+    const grad=g.createLinearGradient(px,py,px+pw,py+ph);
+    grad.addColorStop(0,rgba(168,174,180,0.18+noise(780+p)*0.08));
+    grad.addColorStop(0.52,rgba(86,92,98,0.16+noise(820+p)*0.08));
+    grad.addColorStop(1,rgba(26,28,32,0.20+noise(860+p)*0.08));
+    g.fillStyle=grad;
+    g.fillRect(px,py,pw,ph);
+    g.strokeStyle="rgba(22,22,24,0.58)";
+    g.lineWidth=2;
+    g.strokeRect(px,py,pw,ph);
+    g.strokeStyle="rgba(255,245,228,0.18)";
+    g.lineWidth=1;
+    g.strokeRect(px+1.5,py+1.5,pw-3,ph-3);
+    [[px+14,py+14],[px+pw-14,py+14],[px+14,py+ph-14],[px+pw-14,py+ph-14]].forEach(function(pt,idx){
+      const bx=pt[0];
+      const by=pt[1];
+      const br=5.4+noise(900+p*5+idx)*1.2;
+      const bg=g.createRadialGradient(bx-1.4,by-1.8,1,bx,by,br);
+      bg.addColorStop(0,"rgba(255,252,246,0.96)");
+      bg.addColorStop(0.3,"rgba(176,181,186,0.92)");
+      bg.addColorStop(0.72,"rgba(92,96,100,0.92)");
+      bg.addColorStop(1,"rgba(44,46,52,0.96)");
+      g.fillStyle=bg;
+      g.beginPath();
+      g.arc(bx,by,br,0,Math.PI*2);
+      g.fill();
+      g.strokeStyle="rgba(24,24,26,0.55)";
+      g.lineWidth=1;
+      g.beginPath();
+      g.moveTo(bx-br*0.48,by);
+      g.lineTo(bx+br*0.48,by);
+      g.moveTo(bx,by-br*0.48);
+      g.lineTo(bx,by+br*0.48);
+      g.stroke();
+    });
+  }
 
   const boltPositions=[];
   hSeams.forEach(function(sy){
@@ -1131,20 +1229,20 @@ function makeMetalCanvas(w,h,opts){
     const bx=bp[0];
     const by=bp[1];
     const br=6.5+(noise(260+idx)*1.2);
-    g.fillStyle="rgba(20,18,16,0.5)";
+    g.fillStyle="rgba(16,16,18,0.56)";
     g.beginPath();
     g.arc(bx+1,by+1,br,0,Math.PI*2);
     g.fill();
     const bg=g.createRadialGradient(bx-2,by-2,1,bx,by,br);
-    bg.addColorStop(0,"#e8eaec");
-    bg.addColorStop(0.4,"#b0b4b8");
-    bg.addColorStop(0.8,"#7a7e82");
-    bg.addColorStop(1,"#555860");
+    bg.addColorStop(0,"#f2f2ee");
+    bg.addColorStop(0.35,"#bcc1c6");
+    bg.addColorStop(0.75,"#6f757d");
+    bg.addColorStop(1,"#464c54");
     g.fillStyle=bg;
     g.beginPath();
     g.arc(bx,by,br,0,Math.PI*2);
     g.fill();
-    g.strokeStyle="rgba(40,38,36,0.6)";
+    g.strokeStyle="rgba(32,30,28,0.68)";
     g.lineWidth=1.2;
     g.beginPath();
     for(let i6=0;i6<6;i6++){
@@ -1163,12 +1261,12 @@ function makeMetalCanvas(w,h,opts){
   });
 
   const rustColors=[
-    "rgba(120,65,20,0.18)",
-    "rgba(95,50,15,0.14)",
-    "rgba(140,80,30,0.12)",
-    "rgba(80,40,10,0.10)"
+    "rgba(122,70,24,0.20)",
+    "rgba(92,54,18,0.16)",
+    "rgba(148,88,30,0.14)",
+    "rgba(72,40,14,0.12)"
   ];
-  for(let r=0;r<22;r++){
+  for(let r=0;r<28;r++){
     const rx=noise(320+r)*w;
     const ry=noise(360+r)*h;
     const rsz=4+noise(400+r)*20;
@@ -1183,21 +1281,34 @@ function makeMetalCanvas(w,h,opts){
     g.fill();
   }
 
-  for(let og=0;og<8;og++){
+  for(let og=0;og<14;og++){
     const ox=noise(520+og)*w;
     const oLen=30+noise(560+og)*120;
     const oy=noise(600+og)*(h-oLen);
     const oGrad=g.createLinearGradient(0,oy,0,oy+oLen);
     oGrad.addColorStop(0,"rgba(20,18,14,0)");
-    oGrad.addColorStop(0.3,"rgba(20,18,14,0.12)");
+    oGrad.addColorStop(0.28,"rgba(18,16,12,0.18)");
     oGrad.addColorStop(1,"rgba(20,18,14,0)");
     g.fillStyle=oGrad;
-    g.fillRect(ox-1,oy,2+noise(640+og)*3,oLen);
+    g.fillRect(ox-1.5,oy,3.5+noise(640+og)*4,oLen);
   }
 
-  g.strokeStyle="rgba(40,38,36,0.25)";
+  for(let sm=0;sm<12;sm++){
+    const sw=w*(0.07+noise(960+sm)*0.14);
+    const sh=h*(0.05+noise(1000+sm)*0.12);
+    const sx=noise(1040+sm)*(w-sw);
+    const sy=noise(1080+sm)*(h-sh);
+    const smoke=g.createRadialGradient(sx+sw*0.5,sy+sh*0.5,0,sx+sw*0.5,sy+sh*0.5,Math.max(sw,sh));
+    smoke.addColorStop(0,"rgba(20,22,26,0.16)");
+    smoke.addColorStop(0.55,"rgba(20,22,26,0.08)");
+    smoke.addColorStop(1,"rgba(20,22,26,0)");
+    g.fillStyle=smoke;
+    g.fillRect(sx,sy,sw,sh);
+  }
+
+  g.strokeStyle="rgba(40,38,36,0.28)";
   g.lineWidth=1;
-  for(let sc=0;sc<15;sc++){
+  for(let sc=0;sc<22;sc++){
     const scx=noise(680+sc)*w;
     const scy=noise(720+sc)*h;
     const scLen=10+noise(760+sc)*60;
@@ -1217,17 +1328,17 @@ function makeMetalCanvas(w,h,opts){
   }
 
   const vgH=g.createLinearGradient(0,0,w,0);
-  vgH.addColorStop(0,"rgba(0,0,0,0.22)");
+  vgH.addColorStop(0,"rgba(0,0,0,0.26)");
   vgH.addColorStop(0.1,"rgba(0,0,0,0)");
   vgH.addColorStop(0.9,"rgba(0,0,0,0)");
-  vgH.addColorStop(1,"rgba(0,0,0,0.22)");
+  vgH.addColorStop(1,"rgba(0,0,0,0.28)");
   g.fillStyle=vgH;
   g.fillRect(0,0,w,h);
   const vgV=g.createLinearGradient(0,0,0,h);
-  vgV.addColorStop(0,"rgba(0,0,0,0.15)");
+  vgV.addColorStop(0,"rgba(0,0,0,0.18)");
   vgV.addColorStop(0.08,"rgba(0,0,0,0)");
   vgV.addColorStop(0.92,"rgba(0,0,0,0)");
-  vgV.addColorStop(1,"rgba(0,0,0,0.25)");
+  vgV.addColorStop(1,"rgba(0,0,0,0.30)");
   g.fillStyle=vgV;
   g.fillRect(0,0,w,h);
 
@@ -1248,10 +1359,10 @@ function metalTex(seedShift,repeatX,repeatY){
   return t;
 }
 
-const shellSideTex=metalTex(1.1,1.2,1.0);
-const shellTopTex=metalTex(2.3,1.4,1.1);
-const shellBottomTex=metalTex(3.7,1.4,1.1);
-const shellFrameTex=metalTex(5.2,1.0,1.0);
+const shellSideTex=metalTex(1.1,0.96,0.92);
+const shellTopTex=metalTex(2.3,1.08,0.94);
+const shellBottomTex=metalTex(3.7,1.08,0.98);
+const shellFrameTex=metalTex(5.2,0.86,0.88);
 
 const FW=13.8,FH=6.08,FD=1.5;
 const vp=document.getElementById("vp");
@@ -1295,10 +1406,10 @@ group.add(innerL);
 
 const shellM=function(mapTex){
   return new THREE.MeshStandardMaterial({
-    color:0xa0a7af,
+    color:0x8d959d,
     map:mapTex || shellSideTex,
-    roughness:0.52,
-    metalness:0.84,
+    roughness:0.42,
+    metalness:0.9,
     side:THREE.DoubleSide
   });
 };
@@ -1496,7 +1607,7 @@ function makeSide(isLeft){
     fh2.lineTo(-pw/2,cy+ph/2);
     fh2.lineTo(-pw/2,cy-ph/2);
     fs.holes.push(fh2);
-    const fm=new THREE.Mesh(new THREE.ShapeGeometry(fs),new THREE.MeshStandardMaterial({color:0x6c7884,map:shellFrameTex,roughness:0.30,metalness:0.92,side:THREE.DoubleSide}));
+    const fm=new THREE.Mesh(new THREE.ShapeGeometry(fs),new THREE.MeshStandardMaterial({color:0x737d86,map:shellFrameTex,roughness:0.22,metalness:0.95,side:THREE.DoubleSide}));
     fm.rotation.y=isLeft ? -Math.PI/2 : Math.PI/2;
     fm.position.x=(isLeft ? -FW/2 : FW/2)+(isLeft ? -0.02 : 0.02);
     group.add(fm);
@@ -1613,21 +1724,16 @@ function addBurners(fz,fdir){
 addBurners(FD/2-0.015,-1);
 addBurners(-FD/2+0.015,1);
 
-const DRAG_ROTATION_SPAN=Math.PI*1.18;
-const SPRING_STIFFNESS=34;
-const SPRING_DAMPING=10.5;
-const THROW_GAIN=0.96;
-const THROW_FRICTION=4.9;
+const DRAG_ROTATION_SPAN=Math.PI*1.16;
+const SPRING_STIFFNESS=30;
+const SPRING_DAMPING=13.4;
 const AUTO_ROTATE_SPEED=0.34;
 const AUTO_ROTATE_RAMP=5.2;
-const MAX_THROW_SPEED=1.95;
 const MAX_DRAG_DELTA=42;
 const TAP_MOVE_TOLERANCE=10;
-const LEAN_Z_LIMIT=0.032;
-const LEAN_X_LIMIT=0.016;
 
-let rotY=0,targetRotY=0,springVelocity=0,throwVelocity=0,autoSpin=false;
-let activePointerId=null,isDragging=false,lastX=0,lastDragTs=0,lastPointerVelocity=0,dragDistance=0;
+let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
+let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
 let touchMoved=false,lastTapAt=0,lastFrameTs=0,autoSpinMix=0;
 
 function normalizeAngle(angle){
@@ -1647,48 +1753,41 @@ function shortestAngleDelta(fromAngle,toAngle){
 
 function setRotationTarget(targetAngle){
   targetRotY=rotY+shortestAngleDelta(rotY,targetAngle);
-  throwVelocity=0;
-  springVelocity*=0.3;
+  springVelocity*=0.18;
 }
 
 function startDrag(clientX){
   isDragging=true;
   lastX=clientX;
-  lastDragTs=performance.now();
-  lastPointerVelocity=0;
-  throwVelocity=0;
-  springVelocity*=0.2;
+  targetRotY=rotY;
+  springVelocity=0;
   dragDistance=0;
   touchMoved=false;
 }
 
 function moveDrag(clientX){
   if(!isDragging) return;
-  const now=performance.now();
   const rawDx=clientX-lastX;
   const dx=Math.max(-MAX_DRAG_DELTA,Math.min(MAX_DRAG_DELTA,rawDx));
   dragDistance+=Math.abs(rawDx);
   if(Math.abs(rawDx)>2) touchMoved=true;
   const width=Math.max(320,GW());
   const deltaRot=(dx/width)*DRAG_ROTATION_SPAN;
-  targetRotY+=deltaRot;
-  const dt=Math.max(8,now-lastDragTs)/1000;
-  const instantVelocity=deltaRot/dt;
-  lastPointerVelocity=(lastPointerVelocity*0.45)+(instantVelocity*0.55);
+  rotY+=deltaRot;
+  targetRotY=rotY;
+  springVelocity=0;
   lastX=clientX;
-  lastDragTs=now;
 }
 
 function stopDrag(){
   if(!isDragging) return;
   isDragging=false;
-  throwVelocity=Math.max(-MAX_THROW_SPEED,Math.min(MAX_THROW_SPEED,lastPointerVelocity*THROW_GAIN));
-  lastPointerVelocity=0;
+  targetRotY=rotY;
+  springVelocity=0;
 }
 
 function snapToNearestFace(){
-  const projectedAngle=rotY+(springVelocity*0.22)+(throwVelocity*0.28);
-  const snapped=Math.round(normalizeAngle(projectedAngle)/(Math.PI/2))*(Math.PI/2);
+  const snapped=Math.round(normalizeAngle(rotY)/(Math.PI/2))*(Math.PI/2);
   setRotationTarget(snapped);
 }
 
@@ -1733,7 +1832,6 @@ btnA.addEventListener("click",function(){ setRotationTarget(0); });
 btnB.addEventListener("click",function(){ setRotationTarget(Math.PI); });
 btnAuto.addEventListener("click",function(){
   autoSpin=!autoSpin;
-  if(autoSpin) throwVelocity=0;
   this.textContent=autoSpin ? "Stop" : "Auto Rotate";
 });
 
@@ -1755,22 +1853,22 @@ function animate(t){
     targetRotY+=AUTO_ROTATE_SPEED*autoSpinMix*dt;
   }
 
-  if(!isDragging && Math.abs(throwVelocity)>0.0001){
-    targetRotY+=throwVelocity*dt;
-    throwVelocity*=Math.exp(-THROW_FRICTION*dt);
-    if(Math.abs(throwVelocity)<0.0001) throwVelocity=0;
+  if(isDragging){
+    targetRotY=rotY;
+    springVelocity=0;
+  }else{
+    springVelocity+=(targetRotY-rotY)*SPRING_STIFFNESS*dt;
+    springVelocity*=Math.exp(-SPRING_DAMPING*dt);
+    rotY+=springVelocity*dt;
+    if(Math.abs(targetRotY-rotY)<0.00008 && Math.abs(springVelocity)<0.00008){
+      rotY=targetRotY;
+      springVelocity=0;
+    }
   }
 
-  springVelocity+=(targetRotY-rotY)*SPRING_STIFFNESS*dt;
-  springVelocity*=Math.exp(-SPRING_DAMPING*dt);
-  rotY+=springVelocity*dt;
-
   rigGroup.rotation.y=rotY;
-  const motionMetric=springVelocity+(throwVelocity*0.28)+(isDragging ? (lastPointerVelocity*0.12) : 0);
-  const targetLeanZ=Math.max(-LEAN_Z_LIMIT,Math.min(LEAN_Z_LIMIT,-motionMetric*0.042));
-  const targetLeanX=Math.max(0,Math.min(LEAN_X_LIMIT,Math.abs(targetLeanZ)*0.32+(autoSpinMix*0.005)));
-  group.rotation.z+=(targetLeanZ-group.rotation.z)*(1-Math.exp(-8*dt));
-  group.rotation.x+=(targetLeanX-group.rotation.x)*(1-Math.exp(-7*dt));
+  group.rotation.x=0;
+  group.rotation.z=0;
   innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
   const ts=t*0.001;
   if((t-lastOverlayPaintAt)>=OVERLAY_TICK_MS){
