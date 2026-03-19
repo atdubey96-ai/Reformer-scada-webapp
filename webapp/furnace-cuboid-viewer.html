@@ -36,9 +36,11 @@ body{color:rgba(140,180,220,0.85);}
   width:min(97vw,1680px);
   height:min(calc(100vh - 78px),92vh);
   overflow:hidden;
-  background:#08090d;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(58,78,104,0.52) 0%, rgba(26,33,45,0.88) 22%, rgba(10,13,19,0.97) 54%, #06070b 100%);
   border:1px solid rgba(60,90,130,0.3);
   border-radius:10px;
+  box-shadow:inset 0 0 90px rgba(80,115,165,0.12);
   cursor:grab;
   touch-action:none;
 }
@@ -1368,12 +1370,13 @@ const FW=13.8,FH=6.08,FD=1.5;
 const vp=document.getElementById("vp");
 const GW=function(){ return vp.clientWidth; };
 const GH=function(){ return vp.clientHeight; };
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,2));
+renderer.setClearColor(0x000000,0);
 vp.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x08090d);
+scene.background=null;
 
 const camera=new THREE.PerspectiveCamera(32,GW()/GH(),0.1,300);
 function fitCamera(){
@@ -1394,22 +1397,32 @@ scene.add(rigGroup);
 const group=new THREE.Group();
 rigGroup.add(group);
 
-scene.add(new THREE.AmbientLight(0xc8d8e8,1.4));
-const sun=new THREE.DirectionalLight(0xfff5e0,1.2);
+scene.add(new THREE.AmbientLight(0xd5e0ee,1.18));
+const hemi=new THREE.HemisphereLight(0xe9f1ff,0x1a2430,0.92);
+scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff5e0,1.34);
 sun.position.set(5,8,10);
 scene.add(sun);
-const fill=new THREE.DirectionalLight(0x8899bb,0.5);
+const fill=new THREE.DirectionalLight(0x9ab3d8,0.82);
 fill.position.set(-5,-3,-8);
 scene.add(fill);
+const rimCool=new THREE.DirectionalLight(0xbad1ff,0.96);
+rimCool.position.set(-10,1.5,4);
+scene.add(rimCool);
+const rimWarm=new THREE.DirectionalLight(0xffddb4,0.58);
+rimWarm.position.set(8,-1.2,7);
+scene.add(rimWarm);
 const innerL=new THREE.PointLight(0xff6600,1.2,12);
 group.add(innerL);
 
 const shellM=function(mapTex){
   return new THREE.MeshStandardMaterial({
-    color:0x8d959d,
+    color:0xaab3bc,
     map:mapTex || shellSideTex,
-    roughness:0.42,
-    metalness:0.9,
+    roughness:0.34,
+    metalness:0.93,
+    emissive:0x171e27,
+    emissiveIntensity:0.18,
     side:THREE.DoubleSide
   });
 };
@@ -1430,7 +1443,7 @@ drawOuterCanvas(outerCanvFront,chamberWalls[0],0);
 const outerTexFront=new THREE.CanvasTexture(outerCanvFront);
 const faceFront=new THREE.Mesh(
   new THREE.PlaneGeometry(FW,FH),
-  new THREE.MeshStandardMaterial({map:outerTexFront,roughness:0.52,metalness:0.68,side:THREE.FrontSide})
+  new THREE.MeshStandardMaterial({color:0xe5ecf3,map:outerTexFront,roughness:0.48,metalness:0.72,emissive:0x0b1017,emissiveIntensity:0.10,side:THREE.FrontSide})
 );
 faceFront.position.z=FD/2;
 group.add(faceFront);
@@ -1442,7 +1455,7 @@ drawOuterCanvas(outerCanvBack,chamberWalls[1],0);
 const outerTexBack=new THREE.CanvasTexture(outerCanvBack);
 const faceBack=new THREE.Mesh(
   new THREE.PlaneGeometry(FW,FH),
-  new THREE.MeshStandardMaterial({map:outerTexBack,roughness:0.52,metalness:0.68,side:THREE.FrontSide})
+  new THREE.MeshStandardMaterial({color:0xe5ecf3,map:outerTexBack,roughness:0.48,metalness:0.72,emissive:0x0b1017,emissiveIntensity:0.10,side:THREE.FrontSide})
 );
 faceBack.position.z=-FD/2;
 faceBack.rotation.y=Math.PI;
@@ -1607,7 +1620,7 @@ function makeSide(isLeft){
     fh2.lineTo(-pw/2,cy+ph/2);
     fh2.lineTo(-pw/2,cy-ph/2);
     fs.holes.push(fh2);
-    const fm=new THREE.Mesh(new THREE.ShapeGeometry(fs),new THREE.MeshStandardMaterial({color:0x737d86,map:shellFrameTex,roughness:0.22,metalness:0.95,side:THREE.DoubleSide}));
+    const fm=new THREE.Mesh(new THREE.ShapeGeometry(fs),new THREE.MeshStandardMaterial({color:0x8e99a4,map:shellFrameTex,roughness:0.18,metalness:0.97,emissive:0x1d2530,emissiveIntensity:0.16,side:THREE.DoubleSide}));
     fm.rotation.y=isLeft ? -Math.PI/2 : Math.PI/2;
     fm.position.x=(isLeft ? -FW/2 : FW/2)+(isLeft ? -0.02 : 0.02);
     group.add(fm);
@@ -1616,7 +1629,7 @@ function makeSide(isLeft){
 makeSide(true);
 makeSide(false);
 
-const tubeM=new THREE.MeshStandardMaterial({color:0x5a6878,roughness:0.22,metalness:0.96});
+const tubeM=new THREE.MeshStandardMaterial({color:0x798898,roughness:0.18,metalness:0.97,emissive:0x111923,emissiveIntensity:0.12});
 const tR=0.091,tProt=0.35,nT=8,tSpan=FW*0.76,tSX=-tSpan/2;
 for(let i=0;i<nT;i++){
   const tx=tSX+i*tSpan/(nT-1);
@@ -1637,19 +1650,19 @@ const hPath=new THREE.CatmullRomCurve3([
   new THREE.Vector3(headerEndX,headerY,0)
 ]);
 const headerMat=new THREE.MeshStandardMaterial({
-  color:0xa9b4c1,
-  roughness:0.16,
-  metalness:0.95,
-  emissive:0x202835,
-  emissiveIntensity:0.42
+  color:0xc1cad4,
+  roughness:0.12,
+  metalness:0.97,
+  emissive:0x26303d,
+  emissiveIntensity:0.48
 });
 group.add(new THREE.Mesh(new THREE.TubeGeometry(hPath,8,headerRadius,20,false),headerMat));
 const headerCapMat=new THREE.MeshStandardMaterial({
-  color:0x8c99a8,
-  roughness:0.18,
-  metalness:0.97,
-  emissive:0x161d26,
-  emissiveIntensity:0.28
+  color:0x9aa8b8,
+  roughness:0.14,
+  metalness:0.98,
+  emissive:0x1d2630,
+  emissiveIntensity:0.32
 });
 [headerStartX,headerEndX].forEach(function(x){
   const collar=new THREE.Mesh(new THREE.CylinderGeometry(headerRadius*1.22,headerRadius*1.22,0.08,18),headerCapMat);
