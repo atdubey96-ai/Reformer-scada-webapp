@@ -915,9 +915,24 @@ var glowTexture = makeGlowTexture();
 var ringGeo = new THREE.TorusGeometry(0.095, 0.026, 10, 26);
 var nozzlePortGeo = new THREE.CylinderGeometry(0.07, 0.078, 0.05, 16);
 var capGeo = new THREE.CylinderGeometry(0.074, 0.084, 0.05, 16);
-var flameAuraGeo = new THREE.ConeGeometry(0.16, 0.62, 14, 1, true);
-var flameOuterGeo = new THREE.ConeGeometry(0.13, 0.5, 16, 1, true);
-var flameInnerGeo = new THREE.ConeGeometry(0.072, 0.34, 14, 1, true);
+function createFlameLathe(radius, height){
+  var points = [
+    new THREE.Vector2(0.012 * radius, 0),
+    new THREE.Vector2(0.36 * radius, 0.08 * height),
+    new THREE.Vector2(0.78 * radius, 0.18 * height),
+    new THREE.Vector2(radius, 0.34 * height),
+    new THREE.Vector2(0.84 * radius, 0.52 * height),
+    new THREE.Vector2(0.52 * radius, 0.74 * height),
+    new THREE.Vector2(0.18 * radius, 0.92 * height),
+    new THREE.Vector2(0.01 * radius, height)
+  ];
+  var geo = new THREE.LatheGeometry(points, 26);
+  geo.translate(0, -height * 0.22, 0);
+  return geo;
+}
+var flameAuraGeo = createFlameLathe(0.21, 0.78);
+var flameOuterGeo = createFlameLathe(0.165, 0.62);
+var flameInnerGeo = createFlameLathe(0.088, 0.42);
 var tipGeo = new THREE.SphereGeometry(0.064, 12, 12);
 
 var sharedFlameMaterials = {};
@@ -1247,18 +1262,20 @@ function animateBurners(time){
     item.glow.scale.set(0.42 + pulse * 0.13, 0.42 + pulse * 0.13, 1);
     item.glow.material.opacity = 0.24 + pulse * 0.14;
     item.auraFlame.position.set(item.baseX + cross * 0.45, item.baseY + sway * 0.2, item.baseZAura + item.dir * (0.01 + pulse * 0.02));
-    item.auraFlame.scale.set(0.98 + pulse * 0.16, 1.02 + pulse * 0.24, 0.98 + pulse * 0.16);
+    item.auraFlame.scale.set(0.92 + pulse * 0.14, 1.04 + pulse * 0.26, 0.92 + pulse * 0.14);
     item.auraFlame.material.opacity = 0.12 + pulse * 0.08;
-    item.auraFlame.rotation.z = sway * 1.3;
+    item.auraFlame.rotation.z = sway * 1.34 + flutter * 0.5;
     item.auraFlame.rotation.y = item.dir === -1 ? cross * 0.9 : Math.PI + cross * 0.9;
     item.outerFlame.position.set(item.baseX + cross * 0.62, item.baseY + sway * 0.28, item.baseZOuter + item.dir * (pulse * 0.028));
-    item.outerFlame.scale.set(0.92 + pulse * 0.16, 1.04 + pulse * 0.26, 0.92 + pulse * 0.16);
+    item.outerFlame.scale.set(0.9 + pulse * 0.14, 1.02 + pulse * 0.3, 0.9 + pulse * 0.14);
     item.innerFlame.position.set(item.baseX + cross * 0.34, item.baseY + sway * 0.22, item.baseZInner + item.dir * (pulse * 0.022));
-    item.innerFlame.scale.set(0.9 + pulse * 0.12, 0.96 + pulse * 0.22, 0.9 + pulse * 0.12);
+    item.innerFlame.scale.set(0.88 + pulse * 0.12, 0.94 + pulse * 0.24, 0.88 + pulse * 0.12);
     item.flameTip.position.set(item.baseX + cross * 0.9, item.baseY + sway * 0.34 + flutter * 0.16, item.baseZTip + item.dir * (pulse * 0.034));
     item.flameTip.scale.setScalar(0.88 + pulse * 0.22);
-    item.outerFlame.rotation.z = sway + flutter;
-    item.innerFlame.rotation.z = sway * 1.18 - flutter * 0.72;
+    item.outerFlame.rotation.z = sway + flutter * 0.9;
+    item.innerFlame.rotation.z = sway * 1.22 - flutter * 0.84;
+    item.outerFlame.rotation.y = item.dir === -1 ? cross * 0.5 : Math.PI + cross * 0.5;
+    item.innerFlame.rotation.y = item.dir === -1 ? cross * 0.32 : Math.PI + cross * 0.32;
   });
 }
 
