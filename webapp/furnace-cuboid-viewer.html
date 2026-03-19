@@ -1042,6 +1042,217 @@ function makeInnerCanvas(){
   return c;
 }
 
+function makeMetalCanvas(w,h,opts){
+  const mc=document.createElement("canvas");
+  mc.width=w;
+  mc.height=h;
+  const g=mc.getContext("2d");
+  const cfg=opts && typeof opts==="object" ? opts : {};
+  const seedShift=Number(cfg.seedShift) || 0;
+
+  function noise(seed){
+    const n=Math.sin(seed*12.9898+78.233+seedShift*31.7)*43758.5453123;
+    return n-Math.floor(n);
+  }
+
+  const base=g.createLinearGradient(0,0,w,h);
+  base.addColorStop(0.00,"#8a9099");
+  base.addColorStop(0.15,"#b8bec6");
+  base.addColorStop(0.30,"#d4d9df");
+  base.addColorStop(0.45,"#c0c6cc");
+  base.addColorStop(0.55,"#a8adb4");
+  base.addColorStop(0.70,"#bfc5cc");
+  base.addColorStop(0.85,"#d0d5da");
+  base.addColorStop(1.00,"#909498");
+  g.fillStyle=base;
+  g.fillRect(0,0,w,h);
+
+  for(let s=0;s<180;s++){
+    const sy=noise(10+s)*h;
+    const sw=40+noise(40+s)*(w-40);
+    const sx=noise(80+s)*(w-sw);
+    const bright=noise(120+s)<0.5;
+    const alpha=0.03+noise(160+s)*0.09;
+    const streak=g.createLinearGradient(sx,0,sx+sw,0);
+    const col=bright ? "255,255,255" : "30,30,40";
+    streak.addColorStop(0,"rgba("+col+",0)");
+    streak.addColorStop(0.4,"rgba("+col+","+alpha+")");
+    streak.addColorStop(0.6,"rgba("+col+","+alpha+")");
+    streak.addColorStop(1,"rgba("+col+",0)");
+    g.fillStyle=streak;
+    const th=0.5+noise(200+s)*1.5;
+    g.fillRect(sx,sy,sw,th);
+  }
+
+  const hSeams=[Math.round(h*0.33),Math.round(h*0.66)];
+  hSeams.forEach(function(sy){
+    g.strokeStyle="rgba(50,48,45,0.7)";
+    g.lineWidth=2.5;
+    g.beginPath();
+    g.moveTo(0,sy);
+    g.lineTo(w,sy);
+    g.stroke();
+    const wg=g.createLinearGradient(0,sy-4,0,sy);
+    wg.addColorStop(0,"rgba(220,215,210,0)");
+    wg.addColorStop(1,"rgba(220,215,210,0.4)");
+    g.fillStyle=wg;
+    g.fillRect(0,sy-4,w,4);
+    const sg=g.createLinearGradient(0,sy,0,sy+5);
+    sg.addColorStop(0,"rgba(30,28,25,0.35)");
+    sg.addColorStop(1,"rgba(30,28,25,0)");
+    g.fillStyle=sg;
+    g.fillRect(0,sy,w,5);
+  });
+  const vSeams=[Math.round(w*0.25),Math.round(w*0.5),Math.round(w*0.75)];
+  vSeams.forEach(function(sx){
+    g.strokeStyle="rgba(50,48,45,0.6)";
+    g.lineWidth=2;
+    g.beginPath();
+    g.moveTo(sx,0);
+    g.lineTo(sx,h);
+    g.stroke();
+    const wg=g.createLinearGradient(sx,0,sx+4,0);
+    wg.addColorStop(0,"rgba(210,205,200,0.3)");
+    wg.addColorStop(1,"rgba(210,205,200,0)");
+    g.fillStyle=wg;
+    g.fillRect(sx,0,4,h);
+  });
+
+  const boltPositions=[];
+  hSeams.forEach(function(sy){
+    vSeams.forEach(function(sx){
+      boltPositions.push([sx,sy]);
+    });
+    for(let b=0;b<5;b++){
+      boltPositions.push([Math.round(w*(0.1+b*0.18)),sy]);
+    }
+  });
+  boltPositions.forEach(function(bp,idx){
+    const bx=bp[0];
+    const by=bp[1];
+    const br=6.5+(noise(260+idx)*1.2);
+    g.fillStyle="rgba(20,18,16,0.5)";
+    g.beginPath();
+    g.arc(bx+1,by+1,br,0,Math.PI*2);
+    g.fill();
+    const bg=g.createRadialGradient(bx-2,by-2,1,bx,by,br);
+    bg.addColorStop(0,"#e8eaec");
+    bg.addColorStop(0.4,"#b0b4b8");
+    bg.addColorStop(0.8,"#7a7e82");
+    bg.addColorStop(1,"#555860");
+    g.fillStyle=bg;
+    g.beginPath();
+    g.arc(bx,by,br,0,Math.PI*2);
+    g.fill();
+    g.strokeStyle="rgba(40,38,36,0.6)";
+    g.lineWidth=1.2;
+    g.beginPath();
+    for(let i6=0;i6<6;i6++){
+      const a6=i6*Math.PI/3-Math.PI/6;
+      const px=bx+Math.cos(a6)*br*0.72;
+      const py=by+Math.sin(a6)*br*0.72;
+      if(i6===0) g.moveTo(px,py);
+      else g.lineTo(px,py);
+    }
+    g.closePath();
+    g.stroke();
+    g.fillStyle="rgba(30,28,26,0.7)";
+    g.beginPath();
+    g.arc(bx,by,1.5,0,Math.PI*2);
+    g.fill();
+  });
+
+  const rustColors=[
+    "rgba(120,65,20,0.18)",
+    "rgba(95,50,15,0.14)",
+    "rgba(140,80,30,0.12)",
+    "rgba(80,40,10,0.10)"
+  ];
+  for(let r=0;r<22;r++){
+    const rx=noise(320+r)*w;
+    const ry=noise(360+r)*h;
+    const rsz=4+noise(400+r)*20;
+    const rg=g.createRadialGradient(rx,ry,0,rx,ry,rsz);
+    const rc=rustColors[Math.floor(noise(440+r)*rustColors.length)%rustColors.length];
+    rg.addColorStop(0,rc);
+    rg.addColorStop(0.5,rc.replace(/[\d.]+\)$/,"0.06)"));
+    rg.addColorStop(1,"rgba(0,0,0,0)");
+    g.fillStyle=rg;
+    g.beginPath();
+    g.ellipse(rx,ry,rsz,rsz*0.6,noise(480+r)*Math.PI,0,Math.PI*2);
+    g.fill();
+  }
+
+  for(let og=0;og<8;og++){
+    const ox=noise(520+og)*w;
+    const oLen=30+noise(560+og)*120;
+    const oy=noise(600+og)*(h-oLen);
+    const oGrad=g.createLinearGradient(0,oy,0,oy+oLen);
+    oGrad.addColorStop(0,"rgba(20,18,14,0)");
+    oGrad.addColorStop(0.3,"rgba(20,18,14,0.12)");
+    oGrad.addColorStop(1,"rgba(20,18,14,0)");
+    g.fillStyle=oGrad;
+    g.fillRect(ox-1,oy,2+noise(640+og)*3,oLen);
+  }
+
+  g.strokeStyle="rgba(40,38,36,0.25)";
+  g.lineWidth=1;
+  for(let sc=0;sc<15;sc++){
+    const scx=noise(680+sc)*w;
+    const scy=noise(720+sc)*h;
+    const scLen=10+noise(760+sc)*60;
+    const scAngle=noise(800+sc)*Math.PI;
+    g.beginPath();
+    g.moveTo(scx,scy);
+    g.lineTo(scx+Math.cos(scAngle)*scLen,scy+Math.sin(scAngle)*scLen);
+    g.stroke();
+    g.strokeStyle="rgba(240,238,235,0.15)";
+    g.lineWidth=0.5;
+    g.beginPath();
+    g.moveTo(scx+0.5,scy+0.5);
+    g.lineTo(scx+Math.cos(scAngle)*scLen+0.5,scy+Math.sin(scAngle)*scLen+0.5);
+    g.stroke();
+    g.strokeStyle="rgba(40,38,36,0.25)";
+    g.lineWidth=1;
+  }
+
+  const vgH=g.createLinearGradient(0,0,w,0);
+  vgH.addColorStop(0,"rgba(0,0,0,0.22)");
+  vgH.addColorStop(0.1,"rgba(0,0,0,0)");
+  vgH.addColorStop(0.9,"rgba(0,0,0,0)");
+  vgH.addColorStop(1,"rgba(0,0,0,0.22)");
+  g.fillStyle=vgH;
+  g.fillRect(0,0,w,h);
+  const vgV=g.createLinearGradient(0,0,0,h);
+  vgV.addColorStop(0,"rgba(0,0,0,0.15)");
+  vgV.addColorStop(0.08,"rgba(0,0,0,0)");
+  vgV.addColorStop(0.92,"rgba(0,0,0,0)");
+  vgV.addColorStop(1,"rgba(0,0,0,0.25)");
+  g.fillStyle=vgV;
+  g.fillRect(0,0,w,h);
+
+  return mc;
+}
+
+function metalTex(seedShift,repeatX,repeatY){
+  const mc=makeMetalCanvas(1024,1024,{ seedShift:seedShift });
+  const t=new THREE.CanvasTexture(mc);
+  t.wrapS=THREE.RepeatWrapping;
+  t.wrapT=THREE.RepeatWrapping;
+  t.repeat.set(repeatX || 1,repeatY || 1);
+  if(typeof t.colorSpace !== "undefined" && THREE.SRGBColorSpace){
+    t.colorSpace=THREE.SRGBColorSpace;
+  }else if(typeof t.encoding !== "undefined" && THREE.sRGBEncoding){
+    t.encoding=THREE.sRGBEncoding;
+  }
+  return t;
+}
+
+const shellSideTex=metalTex(1.1,1.2,1.0);
+const shellTopTex=metalTex(2.3,1.4,1.1);
+const shellBottomTex=metalTex(3.7,1.4,1.1);
+const shellFrameTex=metalTex(5.2,1.0,1.0);
+
 const FW=13.8,FH=6.08,FD=1.5;
 const vp=document.getElementById("vp");
 const GW=function(){ return vp.clientWidth; };
@@ -1080,13 +1291,21 @@ scene.add(fill);
 const innerL=new THREE.PointLight(0xff6600,1.2,12);
 group.add(innerL);
 
-const shellM=function(){ return new THREE.MeshStandardMaterial({color:0x8a9098,roughness:0.60,metalness:0.75,side:THREE.DoubleSide}); };
+const shellM=function(mapTex){
+  return new THREE.MeshStandardMaterial({
+    color:0xa0a7af,
+    map:mapTex || shellSideTex,
+    roughness:0.52,
+    metalness:0.84,
+    side:THREE.DoubleSide
+  });
+};
 
-const capTop=new THREE.Mesh(new THREE.PlaneGeometry(FW,FD),shellM());
+const capTop=new THREE.Mesh(new THREE.PlaneGeometry(FW,FD),shellM(shellTopTex));
 capTop.rotation.x=-Math.PI/2;
 capTop.position.y=FH/2;
 group.add(capTop);
-const capBot=new THREE.Mesh(new THREE.PlaneGeometry(FW,FD),shellM());
+const capBot=new THREE.Mesh(new THREE.PlaneGeometry(FW,FD),shellM(shellBottomTex));
 capBot.rotation.x=Math.PI/2;
 capBot.position.y=-FH/2;
 group.add(capBot);
@@ -1255,7 +1474,7 @@ function makeSide(isLeft){
     sh.holes.push(hole);
   });
   const geo=new THREE.ShapeGeometry(sh);
-  const m=new THREE.Mesh(geo,shellM());
+  const m=new THREE.Mesh(geo,shellM(shellSideTex));
   m.rotation.y=isLeft ? -Math.PI/2 : Math.PI/2;
   m.position.x=isLeft ? -FW/2 : FW/2;
   group.add(m);
@@ -1275,7 +1494,7 @@ function makeSide(isLeft){
     fh2.lineTo(-pw/2,cy+ph/2);
     fh2.lineTo(-pw/2,cy-ph/2);
     fs.holes.push(fh2);
-    const fm=new THREE.Mesh(new THREE.ShapeGeometry(fs),new THREE.MeshStandardMaterial({color:0x556065,roughness:0.35,metalness:0.90,side:THREE.DoubleSide}));
+    const fm=new THREE.Mesh(new THREE.ShapeGeometry(fs),new THREE.MeshStandardMaterial({color:0x6c7884,map:shellFrameTex,roughness:0.30,metalness:0.92,side:THREE.DoubleSide}));
     fm.rotation.y=isLeft ? -Math.PI/2 : Math.PI/2;
     fm.position.x=(isLeft ? -FW/2 : FW/2)+(isLeft ? -0.02 : 0.02);
     group.add(fm);
