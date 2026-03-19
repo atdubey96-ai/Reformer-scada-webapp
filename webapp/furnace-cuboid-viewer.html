@@ -672,20 +672,21 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
   ctx.stroke();
 }
 
-function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale){
-  const railH=Math.max(5,1.95*(Number(scale)||2.6));
+function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
+  const scaleVal=Math.max(1,Number(scale) || 2.6);
   const railY=y;
+  const railH=Math.max(5.4,2.05*scaleVal);
   const railTop=railY-(railH/2);
   const railR=railH/2;
   const railGrad=ctx.createLinearGradient(0,railTop,0,railTop+railH);
-  railGrad.addColorStop(0,"rgba(227,232,238,0.92)");
-  railGrad.addColorStop(0.26,"rgba(147,156,167,0.96)");
-  railGrad.addColorStop(0.52,"rgba(78,86,97,0.98)");
-  railGrad.addColorStop(0.78,"rgba(163,171,180,0.96)");
-  railGrad.addColorStop(1,"rgba(48,54,61,0.98)");
-  const railShadow=ctx.createLinearGradient(0,railTop,0,railTop+railH+10);
+  railGrad.addColorStop(0,"rgba(231,236,241,0.95)");
+  railGrad.addColorStop(0.24,"rgba(153,163,173,0.97)");
+  railGrad.addColorStop(0.54,"rgba(77,85,95,0.99)");
+  railGrad.addColorStop(0.82,"rgba(173,181,188,0.96)");
+  railGrad.addColorStop(1,"rgba(49,55,63,0.99)");
+  const railShadow=ctx.createLinearGradient(0,railTop,0,railTop+railH+12);
   railShadow.addColorStop(0,"rgba(0,0,0,0)");
-  railShadow.addColorStop(1,"rgba(0,0,0,0.26)");
+  railShadow.addColorStop(1,"rgba(0,0,0,0.30)");
 
   ctx.save();
   ctx.fillStyle=railShadow;
@@ -696,24 +697,24 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale){
   cuboidRoundRectPath(ctx,left,railTop,right-left,railH,railR);
   ctx.fill();
   ctx.lineWidth=1.2;
-  ctx.strokeStyle="rgba(235,240,245,0.46)";
+  ctx.strokeStyle="rgba(235,241,247,0.44)";
   ctx.stroke();
 
-  ctx.strokeStyle="rgba(255,255,255,0.54)";
+  ctx.strokeStyle="rgba(255,255,255,0.56)";
   ctx.lineWidth=1;
   ctx.beginPath();
-  ctx.moveTo(left+railR,railTop+1.15);
-  ctx.lineTo(right-railR,railTop+1.15);
+  ctx.moveTo(left+railR,railTop+1.2);
+  ctx.lineTo(right-railR,railTop+1.2);
   ctx.stroke();
 
-  const capW=Math.max(7,railH*1.15);
-  const capH=railH+3;
+  const capW=Math.max(8.5,railH*1.34);
+  const capH=railH+4.2;
   const capGrad=ctx.createLinearGradient(0,railTop-2,0,railTop+capH);
-  capGrad.addColorStop(0,"rgba(205,212,220,0.92)");
-  capGrad.addColorStop(0.5,"rgba(99,108,119,0.96)");
-  capGrad.addColorStop(1,"rgba(48,54,62,0.98)");
+  capGrad.addColorStop(0,"rgba(210,217,224,0.94)");
+  capGrad.addColorStop(0.48,"rgba(100,109,120,0.97)");
+  capGrad.addColorStop(1,"rgba(48,54,61,0.99)");
 
-  [left+6,right-6].forEach(function(cx){
+  [left+8,right-8].forEach(function(cx){
     ctx.fillStyle=capGrad;
     cuboidRoundRectPath(ctx,cx-(capW/2),railY-(capH/2),capW,capH,capW/2);
     ctx.fill();
@@ -721,28 +722,67 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale){
     ctx.stroke();
   });
 
+  const branchW=Math.max(3.2,0.9*scaleVal);
+  const elbowRadius=Math.max(2.8,1.1*scaleVal);
+  const branchOffset=Math.max(8,3.2*scaleVal);
+  const branchGrad=ctx.createLinearGradient(0,railTop-(9*scaleVal),0,railY+6);
+  branchGrad.addColorStop(0,"rgba(225,232,239,0.92)");
+  branchGrad.addColorStop(0.42,"rgba(136,145,155,0.95)");
+  branchGrad.addColorStop(1,"rgba(58,66,75,0.97)");
+
+  ctx.lineCap="round";
+  ctx.lineJoin="round";
   for(let ci=0;ci<15;ci++){
     const x=left+slotW*(ci+0.5);
-    const riserW=Math.max(3.4,0.92*(Number(scale)||2.6));
-    const riserTop=railTop-(6.4*(Number(scale)||2.6));
-    const riserH=(railTop-riserTop)+(railH*0.72);
-    const riserGrad=ctx.createLinearGradient(0,riserTop,0,riserTop+riserH);
-    riserGrad.addColorStop(0,"rgba(229,234,240,0.88)");
-    riserGrad.addColorStop(0.45,"rgba(124,133,144,0.94)");
-    riserGrad.addColorStop(1,"rgba(59,66,75,0.96)");
-    ctx.fillStyle=riserGrad;
-    cuboidRoundRectPath(ctx,x-(riserW/2),riserTop,riserW,riserH,riserW/2);
+    const branchX=x-branchOffset;
+    const connectY=(Number(burnerY) || railY)+(4.95*scaleVal);
+    const elbowY=Math.min(railY-(1.2*scaleVal),connectY+(2.5*elbowRadius));
+    const nozzleY=connectY-(0.7*elbowRadius);
+
+    ctx.strokeStyle="rgba(0,0,0,0.24)";
+    ctx.lineWidth=branchW+1.8;
+    ctx.beginPath();
+    ctx.moveTo(branchX+0.9,railY+1.1);
+    ctx.lineTo(branchX+0.9,elbowY+0.9);
+    ctx.quadraticCurveTo(branchX+0.9,connectY+0.7,branchX+elbowRadius+0.9,connectY+0.7);
+    ctx.lineTo(x-(0.9*elbowRadius)+0.9,connectY+0.7);
+    ctx.quadraticCurveTo(x+0.8,connectY+0.7,x+0.8,nozzleY+0.7);
+    ctx.stroke();
+
+    ctx.strokeStyle=branchGrad;
+    ctx.lineWidth=branchW;
+    ctx.beginPath();
+    ctx.moveTo(branchX,railY);
+    ctx.lineTo(branchX,elbowY);
+    ctx.quadraticCurveTo(branchX,connectY,branchX+elbowRadius,connectY);
+    ctx.lineTo(x-(0.9*elbowRadius),connectY);
+    ctx.quadraticCurveTo(x,connectY,x,nozzleY);
+    ctx.stroke();
+
+    ctx.strokeStyle="rgba(255,255,255,0.30)";
+    ctx.lineWidth=Math.max(0.9,branchW*0.32);
+    ctx.beginPath();
+    ctx.moveTo(branchX-(branchW*0.18),railY-(railH*0.18));
+    ctx.lineTo(branchX-(branchW*0.18),elbowY+(branchW*0.12));
+    ctx.quadraticCurveTo(branchX-(branchW*0.18),connectY+(branchW*0.12),branchX+elbowRadius-(branchW*0.18),connectY+(branchW*0.08));
+    ctx.lineTo(x-elbowRadius,connectY+(branchW*0.08));
+    ctx.stroke();
+
+    ctx.fillStyle="rgba(28,35,45,0.82)";
+    ctx.beginPath();
+    ctx.ellipse(branchX,railY,branchW*1.4,Math.max(1.8,railH*0.34),0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x,nozzleY,branchW*1.08,Math.max(1.4,branchW*0.58),0,0,Math.PI*2);
     ctx.fill();
 
-    ctx.fillStyle="rgba(245,248,252,0.36)";
+    ctx.strokeStyle="rgba(233,238,244,0.38)";
+    ctx.lineWidth=0.95;
     ctx.beginPath();
-    ctx.ellipse(x,riserTop+1.5,riserW*0.72,riserW*0.46,0,0,Math.PI*2);
-    ctx.fill();
-
-    ctx.strokeStyle="rgba(12,16,24,0.42)";
-    ctx.lineWidth=1;
+    ctx.ellipse(branchX,railY,branchW*1.1,Math.max(1.5,railH*0.22),0,0,Math.PI*2);
+    ctx.stroke();
     ctx.beginPath();
-    ctx.ellipse(x,railY,riserW*1.55,Math.max(1.7,railH*0.34),0,0,Math.PI*2);
+    ctx.ellipse(x,nozzleY,branchW*0.9,Math.max(1.2,branchW*0.44),0,0,Math.PI*2);
     ctx.stroke();
   }
   ctx.restore();
@@ -977,9 +1017,10 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
       ctx,
       gridLeft+Math.round(slotW*0.14),
       gridRight-Math.round(slotW*0.14),
-      centerY+28,
+      centerY+31,
       slotW,
-      iconScale
+      iconScale,
+      centerY+10
     );
     for(let ci=0;ci<15;ci++){
       const state=cuboidNormalizeBurnerState(rowData[ci]);
