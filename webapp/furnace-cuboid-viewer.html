@@ -672,6 +672,82 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
   ctx.stroke();
 }
 
+function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale){
+  const railH=Math.max(5,1.95*(Number(scale)||2.6));
+  const railY=y;
+  const railTop=railY-(railH/2);
+  const railR=railH/2;
+  const railGrad=ctx.createLinearGradient(0,railTop,0,railTop+railH);
+  railGrad.addColorStop(0,"rgba(227,232,238,0.92)");
+  railGrad.addColorStop(0.26,"rgba(147,156,167,0.96)");
+  railGrad.addColorStop(0.52,"rgba(78,86,97,0.98)");
+  railGrad.addColorStop(0.78,"rgba(163,171,180,0.96)");
+  railGrad.addColorStop(1,"rgba(48,54,61,0.98)");
+  const railShadow=ctx.createLinearGradient(0,railTop,0,railTop+railH+10);
+  railShadow.addColorStop(0,"rgba(0,0,0,0)");
+  railShadow.addColorStop(1,"rgba(0,0,0,0.26)");
+
+  ctx.save();
+  ctx.fillStyle=railShadow;
+  cuboidRoundRectPath(ctx,left+2,railTop+4,right-left-4,railH,railR);
+  ctx.fill();
+
+  ctx.fillStyle=railGrad;
+  cuboidRoundRectPath(ctx,left,railTop,right-left,railH,railR);
+  ctx.fill();
+  ctx.lineWidth=1.2;
+  ctx.strokeStyle="rgba(235,240,245,0.46)";
+  ctx.stroke();
+
+  ctx.strokeStyle="rgba(255,255,255,0.54)";
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(left+railR,railTop+1.15);
+  ctx.lineTo(right-railR,railTop+1.15);
+  ctx.stroke();
+
+  const capW=Math.max(7,railH*1.15);
+  const capH=railH+3;
+  const capGrad=ctx.createLinearGradient(0,railTop-2,0,railTop+capH);
+  capGrad.addColorStop(0,"rgba(205,212,220,0.92)");
+  capGrad.addColorStop(0.5,"rgba(99,108,119,0.96)");
+  capGrad.addColorStop(1,"rgba(48,54,62,0.98)");
+
+  [left+6,right-6].forEach(function(cx){
+    ctx.fillStyle=capGrad;
+    cuboidRoundRectPath(ctx,cx-(capW/2),railY-(capH/2),capW,capH,capW/2);
+    ctx.fill();
+    ctx.strokeStyle="rgba(236,240,245,0.28)";
+    ctx.stroke();
+  });
+
+  for(let ci=0;ci<15;ci++){
+    const x=left+slotW*(ci+0.5);
+    const riserW=Math.max(3.4,0.92*(Number(scale)||2.6));
+    const riserTop=railTop-(6.4*(Number(scale)||2.6));
+    const riserH=(railTop-riserTop)+(railH*0.72);
+    const riserGrad=ctx.createLinearGradient(0,riserTop,0,riserTop+riserH);
+    riserGrad.addColorStop(0,"rgba(229,234,240,0.88)");
+    riserGrad.addColorStop(0.45,"rgba(124,133,144,0.94)");
+    riserGrad.addColorStop(1,"rgba(59,66,75,0.96)");
+    ctx.fillStyle=riserGrad;
+    cuboidRoundRectPath(ctx,x-(riserW/2),riserTop,riserW,riserH,riserW/2);
+    ctx.fill();
+
+    ctx.fillStyle="rgba(245,248,252,0.36)";
+    ctx.beginPath();
+    ctx.ellipse(x,riserTop+1.5,riserW*0.72,riserW*0.46,0,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.strokeStyle="rgba(12,16,24,0.42)";
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.ellipse(x,railY,riserW*1.55,Math.max(1.7,railH*0.34),0,0,Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function cuboidDrawPeepBar(ctx,label,vals,left,centerY,width,scale){
   const k=Math.max(1,Number(scale)||1);
   const barHeight=Math.round(46*k);
@@ -897,6 +973,14 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
     ctx.fillText("ROW "+item,14+Math.round(rowW/2),centerY);
 
     const rowData=Array.isArray(rows[item-1]) ? rows[item-1] : [];
+    cuboidDrawFuelRail(
+      ctx,
+      gridLeft+Math.round(slotW*0.14),
+      gridRight-Math.round(slotW*0.14),
+      centerY+28,
+      slotW,
+      iconScale
+    );
     for(let ci=0;ci<15;ci++){
       const state=cuboidNormalizeBurnerState(rowData[ci]);
       const burnerX=gridLeft+slotW*(ci+0.5);
