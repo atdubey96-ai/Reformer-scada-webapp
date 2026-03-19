@@ -1048,13 +1048,12 @@ function cuboidCreateFaceOverlay(face, wallKey){
   var innerMaterial = new THREE.MeshBasicMaterial({
     map:texture,
     transparent:true,
-    side:THREE.FrontSide,
-    depthTest:false,
+    side:THREE.DoubleSide,
     depthWrite:false,
     alphaTest:0.02,
     polygonOffset:true,
     polygonOffsetFactor:-1,
-    polygonOffsetUnits:-4
+    polygonOffsetUnits:-1
   });
   var planeW = Math.max(0.8, CW - 0.42);
   var planeH = Math.max(0.8, CH - 0.34);
@@ -1066,21 +1065,18 @@ function cuboidCreateFaceOverlay(face, wallKey){
     new THREE.PlaneGeometry(Math.max(0.8, CW - 0.42), Math.max(0.8, CH - 0.34)),
     innerMaterial
   );
-  // Keep the inner data plane essentially pasted to the inner metal wall.
-  // Visibility is handled by render order + polygon offset, so the gap can stay tiny.
-  var innerInset = Math.max(0.004, Math.min(0.008, CD * 0.004));
+  var innerInset = Math.max(0.02, CD * 0.12);
   if(face === "back"){
     outerPlane.position.set(0, 0, -CD/2 - 0.009);
     outerPlane.rotation.y = Math.PI;
     innerPlane.position.set(0, 0, -CD/2 + innerInset);
-    innerPlane.rotation.y = 0;
+    innerPlane.rotation.y = Math.PI;
   }else{
     outerPlane.position.set(0, 0, CD/2 + 0.009);
     innerPlane.position.set(0, 0, CD/2 - innerInset);
-    innerPlane.rotation.y = Math.PI;
   }
   outerPlane.renderOrder = 9;
-  innerPlane.renderOrder = 14;
+  innerPlane.renderOrder = 7;
   group.add(outerPlane);
   group.add(innerPlane);
   return {
