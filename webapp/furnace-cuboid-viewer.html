@@ -38,7 +38,9 @@ body{color:rgba(140,180,220,0.85);}
   justify-content:center;
   gap:4px;
   min-height:48px;
-  padding:8px 16px 9px 15px;
+  width:clamp(540px,48vw,820px);
+  max-width:100%;
+  padding:8px 24px 9px 22px;
   position:relative;
   overflow:hidden;
   border-radius:14px;
@@ -50,7 +52,7 @@ body{color:rgba(140,180,220,0.85);}
     inset 0 1px 0 rgba(255,255,255,0.08),
     inset 0 0 28px rgba(74,126,214,0.09);
   text-align:left;
-  flex:0 0 auto;
+  flex:0 1 auto;
 }
 #viewerTag::before{
   content:"";
