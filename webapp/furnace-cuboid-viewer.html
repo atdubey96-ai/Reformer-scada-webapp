@@ -744,7 +744,7 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
   ctx.stroke();
 }
 
-function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
+function cuboidGetFuelRailGeometry(y,scale,burnerY){
   const scaleVal=Math.max(1,Number(scale) || 2.6);
   const scaleX=scaleVal*0.9;
   const burnerBaseW=20.5*scaleX;
@@ -753,8 +753,87 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
   const gapY=Math.max(3.2,1.18*scaleVal);
   const railH=Math.max(6.4,2.18*scaleVal);
   const railY=Math.max(y,burnerBaseY+burnerBaseH+gapY+(railH/2));
-  const railTop=railY-(railH/2);
-  const railR=railH/2;
+  return {
+    scaleVal:scaleVal,
+    scaleX:scaleX,
+    burnerBaseW:burnerBaseW,
+    burnerBaseH:burnerBaseH,
+    burnerBaseY:burnerBaseY,
+    gapY:gapY,
+    railH:railH,
+    railY:railY,
+    railTop:railY-(railH/2),
+    railR:railH/2
+  };
+}
+
+function cuboidDrawVerticalFuelManifold(ctx,x,topY,bottomY,jointYs,scale){
+  const scaleVal=Math.max(1,Number(scale) || 2.6);
+  const tubeW=Math.max(8.8,2.9*scaleVal);
+  const tubeX=x-(tubeW/2);
+  const startY=Math.min(topY,bottomY);
+  const endY=Math.max(topY,bottomY);
+  const tubeGrad=ctx.createLinearGradient(tubeX,0,tubeX+tubeW,0);
+  tubeGrad.addColorStop(0,"rgba(40,46,55,0.98)");
+  tubeGrad.addColorStop(0.22,"rgba(205,213,221,0.96)");
+  tubeGrad.addColorStop(0.52,"rgba(109,118,129,0.99)");
+  tubeGrad.addColorStop(0.76,"rgba(226,232,239,0.94)");
+  tubeGrad.addColorStop(1,"rgba(48,54,62,0.99)");
+  const shadowGrad=ctx.createLinearGradient(tubeX,0,tubeX+tubeW+7,0);
+  shadowGrad.addColorStop(0,"rgba(0,0,0,0.22)");
+  shadowGrad.addColorStop(1,"rgba(0,0,0,0)");
+  const collarH=Math.max(8.5,2.75*scaleVal);
+  const collarW=tubeW+Math.max(6,1.85*scaleVal);
+  const collarX=x-(collarW/2);
+  const collarGrad=ctx.createLinearGradient(0,0,collarW,0);
+  collarGrad.addColorStop(0,"rgba(52,58,67,0.96)");
+  collarGrad.addColorStop(0.24,"rgba(214,220,227,0.92)");
+  collarGrad.addColorStop(0.55,"rgba(114,124,135,0.98)");
+  collarGrad.addColorStop(0.82,"rgba(225,230,236,0.90)");
+  collarGrad.addColorStop(1,"rgba(48,55,63,0.98)");
+
+  ctx.save();
+  ctx.fillStyle=shadowGrad;
+  cuboidRoundRectPath(ctx,tubeX+2,startY+4,tubeW,endY-startY,tubeW/2);
+  ctx.fill();
+
+  ctx.fillStyle=tubeGrad;
+  cuboidRoundRectPath(ctx,tubeX,startY,tubeW,endY-startY,tubeW/2);
+  ctx.fill();
+  ctx.strokeStyle="rgba(239,243,248,0.34)";
+  ctx.lineWidth=1.05;
+  ctx.stroke();
+
+  ctx.strokeStyle="rgba(255,255,255,0.54)";
+  ctx.lineWidth=0.95;
+  ctx.beginPath();
+  ctx.moveTo(tubeX+(tubeW*0.26),startY+tubeW*0.24);
+  ctx.lineTo(tubeX+(tubeW*0.26),endY-(tubeW*0.24));
+  ctx.stroke();
+
+  const collarYs=[startY+3,endY-3].concat(Array.isArray(jointYs)?jointYs:[]);
+  collarYs.forEach(function(cy){
+    ctx.fillStyle=collarGrad;
+    cuboidRoundRectPath(ctx,collarX,cy-(collarH/2),collarW,collarH,collarH/2);
+    ctx.fill();
+    ctx.strokeStyle="rgba(238,242,247,0.24)";
+    ctx.lineWidth=0.95;
+    ctx.stroke();
+  });
+
+  ctx.restore();
+}
+
+function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
+  const geo=cuboidGetFuelRailGeometry(y,scale,burnerY);
+  const scaleVal=geo.scaleVal;
+  const burnerBaseW=geo.burnerBaseW;
+  const burnerBaseH=geo.burnerBaseH;
+  const burnerBaseY=geo.burnerBaseY;
+  const railH=geo.railH;
+  const railY=geo.railY;
+  const railTop=geo.railTop;
+  const railR=geo.railR;
   const railGrad=ctx.createLinearGradient(0,railTop,0,railTop+railH);
   railGrad.addColorStop(0,"rgba(237,242,247,0.97)");
   railGrad.addColorStop(0.2,"rgba(170,179,189,0.98)");
@@ -980,7 +1059,6 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   const botVals=(wallKey==="A"||wallKey==="B") ? (snapshot.abBot||[]) : (snapshot.cdBot||[]);
   const panelInset=6;
   const padX=24;
-  const titleY=40;
   const gridLeft=134;
   const gridRight=w-18;
   const gridW=gridRight-gridLeft;
@@ -1025,6 +1103,7 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   const headerLeft=12;
   const headerRight=w-12;
   const headerHeight=separatorY-headerTop;
+  const headerTextY=headerTop+Math.round(headerHeight/2)+8;
   const headGrad=ctx.createLinearGradient(0,0,w,0);
   headGrad.addColorStop(0,"rgba(6,8,16,0.985)");
   headGrad.addColorStop(0.55,"rgba(12,13,22,0.99)");
@@ -1044,12 +1123,12 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   ctx.textAlign="left";
   ctx.textBaseline="middle";
   ctx.font="700 40px Times New Roman, serif";
-  ctx.fillText("WALL "+wallKey,padX,titleY+8);
+  ctx.fillText("WALL "+wallKey,padX,headerTextY);
 
   ctx.textAlign="right";
   ctx.font="700 21px Times New Roman, serif";
   ctx.fillStyle="rgba(255,255,255,0.98)";
-  ctx.fillText("6 rows x 15 burners",w-padX,titleY+6);
+  ctx.fillText("6 rows x 15 burners",w-padX,headerTextY+1);
 
   ctx.textAlign="center";
   ctx.textBaseline="middle";
@@ -1067,6 +1146,19 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
     ctx.fillStyle="#ffffff";
     ctx.fillText("B"+bn,bx,burnerNumY+1);
   }
+
+  const leftHeaderX=gridLeft+Math.round(slotW*0.14);
+  const rightHeaderX=gridRight-Math.round(slotW*0.14);
+  const numericRowCenters=itemCenters.filter(function(_,idx){
+    return typeof rowOrder[idx]==="number";
+  });
+  const rowRailYs=numericRowCenters.map(function(centerY){
+    return cuboidGetFuelRailGeometry(centerY+34,iconScale,centerY+10).railY;
+  });
+  const manifoldTopY=separatorY+12;
+  const manifoldBottomY=(rowRailYs[rowRailYs.length-1] || (h-86))+Math.max(24,7*iconScale);
+  cuboidDrawVerticalFuelManifold(ctx,leftHeaderX,manifoldTopY,manifoldBottomY,rowRailYs,iconScale);
+  cuboidDrawVerticalFuelManifold(ctx,rightHeaderX,manifoldTopY,manifoldBottomY,rowRailYs,iconScale);
 
   for(let ii=0;ii<rowOrder.length;ii++){
     const item=rowOrder[ii];
@@ -1107,8 +1199,8 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
     const rowData=Array.isArray(rows[item-1]) ? rows[item-1] : [];
     cuboidDrawFuelRail(
       ctx,
-      gridLeft+Math.round(slotW*0.14),
-      gridRight-Math.round(slotW*0.14),
+      leftHeaderX,
+      rightHeaderX,
       centerY+34,
       slotW,
       iconScale,
