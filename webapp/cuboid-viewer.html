@@ -1131,26 +1131,27 @@ function cuboidCreateInnerCircleOverlay(face, phaseBase){
   var material = new THREE.MeshBasicMaterial({
     map:texture,
     transparent:true,
-    side:THREE.BackSide,
-    depthTest:false,
+    side:THREE.FrontSide,
+    depthTest:true,
     depthWrite:false,
     alphaTest:0.01,
     polygonOffset:true,
     polygonOffsetFactor:-1,
-    polygonOffsetUnits:-5
+    polygonOffsetUnits:-3
   });
   var plane = new THREE.Mesh(
     new THREE.PlaneGeometry(Math.max(0.8, CW - 0.40), Math.max(0.8, CH - 0.30)),
     material
   );
-  var inset = Math.max(0.004, Math.min(0.008, CD * 0.006));
+  var inset = Math.max(0.006, Math.min(0.01, CD * 0.007));
   if(face === "back"){
     plane.position.set(0, 0, -CD/2 + inset);
-    plane.rotation.y = Math.PI;
+    plane.rotation.y = 0;
   }else{
     plane.position.set(0, 0, CD/2 - inset);
+    plane.rotation.y = Math.PI;
   }
-  plane.renderOrder = 13;
+  plane.renderOrder = 10;
   group.add(plane);
   return plane;
 }
