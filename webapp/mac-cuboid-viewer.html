@@ -717,7 +717,7 @@ host.appendChild(renderer.domElement);
 var scene = new THREE.Scene();
 scene.background = new THREE.Color(0x05070b);
 
-var camera = new THREE.PerspectiveCamera(24, Math.max(1, host.clientWidth / Math.max(1, host.clientHeight)), 0.1, 300);
+var camera = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 300);
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 var keyLight = new THREE.DirectionalLight(0xfff1dc, 1.25);
@@ -930,9 +930,9 @@ function createFlameLathe(radius, height){
   geo.translate(0, -height * 0.22, 0);
   return geo;
 }
-var flameAuraGeo = createFlameLathe(0.21, 0.78);
-var flameOuterGeo = createFlameLathe(0.165, 0.62);
-var flameInnerGeo = createFlameLathe(0.088, 0.42);
+var flameAuraGeo = createFlameLathe(0.105, 0.82);
+var flameOuterGeo = createFlameLathe(0.082, 0.66);
+var flameInnerGeo = createFlameLathe(0.044, 0.44);
 var tipGeo = new THREE.SphereGeometry(0.064, 12, 12);
 
 var sharedFlameMaterials = {};
@@ -948,9 +948,9 @@ var sharedFlameMaterials = {};
       depthWrite:false
     }),
     aura:new THREE.MeshBasicMaterial({
-      color:style.flame,
+      color:0x58504c,
       transparent:true,
-      opacity:0.16,
+      opacity:0.09,
       side:THREE.DoubleSide,
       blending:THREE.AdditiveBlending,
       depthWrite:false
@@ -974,7 +974,7 @@ var sharedFlameMaterials = {};
       map:glowTexture,
       color:style.flame,
       transparent:true,
-      opacity:0.34,
+      opacity:0.18,
       blending:THREE.AdditiveBlending,
       depthWrite:false
     })
@@ -1152,7 +1152,6 @@ function applySnapshotToBurners(snapshot){
     item.innerFlame.visible = true;
     item.flameTip.visible = true;
     item.glow.material.color.set(style.flame);
-    item.auraFlame.material.color.set(style.flame);
     item.outerFlame.material.color.set(style.flame);
     item.innerFlame.material.color.set(style.core);
     item.flameTip.material.color.set(style.core);
@@ -1196,17 +1195,17 @@ var lastX = 0;
 
 function fitCamera(){
   var aspect = Math.max(1, host.clientWidth) / Math.max(1, host.clientHeight);
-  camera.aspect = aspect;
   rotator.rotation.set(defaultPitch, currentYaw, 0);
   var bounds = new THREE.Box3().setFromObject(model);
   var size = bounds.getSize(new THREE.Vector3());
   var center = bounds.getCenter(new THREE.Vector3());
-  var fovRad = camera.fov * Math.PI / 180;
-  var hFov = 2 * Math.atan(Math.tan(fovRad / 2) * aspect);
-  var distV = (size.y * 1.02 / 2) / Math.tan(fovRad / 2);
-  var distH = (size.x * 1.01 / 2) / Math.tan(hFov / 2);
-  var distance = Math.max(distV, distH) + size.z * 0.22;
-  camera.position.set(center.x, center.y + size.y * 0.01, distance);
+  var pad = 1.03;
+  var halfHeight = Math.max(size.y * pad * 0.5, (size.x * pad * 0.5) / aspect);
+  camera.left = -halfHeight * aspect;
+  camera.right = halfHeight * aspect;
+  camera.top = halfHeight;
+  camera.bottom = -halfHeight;
+  camera.position.set(center.x, center.y + size.y * 0.01, center.z + 42);
   camera.lookAt(center.x, center.y, center.z);
   camera.updateProjectionMatrix();
 }
@@ -1259,19 +1258,19 @@ function animateBurners(time){
     var flutter = Math.sin(time * 7.2 + item.seed * 1.4) * 0.03;
     var cross = Math.cos(time * 4.1 + item.seed * 0.7) * 0.026;
     item.glow.position.set(item.baseX + cross * 0.22, item.baseY + sway * 0.18, item.baseZGlow + item.dir * (0.01 + pulse * 0.008));
-    item.glow.scale.set(0.42 + pulse * 0.13, 0.42 + pulse * 0.13, 1);
-    item.glow.material.opacity = 0.24 + pulse * 0.14;
+    item.glow.scale.set(0.24 + pulse * 0.08, 0.24 + pulse * 0.08, 1);
+    item.glow.material.opacity = 0.08 + pulse * 0.05;
     item.auraFlame.position.set(item.baseX + cross * 0.45, item.baseY + sway * 0.2, item.baseZAura + item.dir * (0.01 + pulse * 0.02));
-    item.auraFlame.scale.set(0.92 + pulse * 0.14, 1.04 + pulse * 0.26, 0.92 + pulse * 0.14);
-    item.auraFlame.material.opacity = 0.12 + pulse * 0.08;
+    item.auraFlame.scale.set(0.58 + pulse * 0.08, 1.0 + pulse * 0.18, 0.58 + pulse * 0.08);
+    item.auraFlame.material.opacity = 0.04 + pulse * 0.035;
     item.auraFlame.rotation.z = sway * 1.34 + flutter * 0.5;
     item.auraFlame.rotation.y = item.dir === -1 ? cross * 0.9 : Math.PI + cross * 0.9;
     item.outerFlame.position.set(item.baseX + cross * 0.62, item.baseY + sway * 0.28, item.baseZOuter + item.dir * (pulse * 0.028));
-    item.outerFlame.scale.set(0.9 + pulse * 0.14, 1.02 + pulse * 0.3, 0.9 + pulse * 0.14);
+    item.outerFlame.scale.set(0.54 + pulse * 0.08, 0.98 + pulse * 0.24, 0.54 + pulse * 0.08);
     item.innerFlame.position.set(item.baseX + cross * 0.34, item.baseY + sway * 0.22, item.baseZInner + item.dir * (pulse * 0.022));
-    item.innerFlame.scale.set(0.88 + pulse * 0.12, 0.94 + pulse * 0.24, 0.88 + pulse * 0.12);
+    item.innerFlame.scale.set(0.5 + pulse * 0.07, 0.9 + pulse * 0.2, 0.5 + pulse * 0.07);
     item.flameTip.position.set(item.baseX + cross * 0.9, item.baseY + sway * 0.34 + flutter * 0.16, item.baseZTip + item.dir * (pulse * 0.034));
-    item.flameTip.scale.setScalar(0.88 + pulse * 0.22);
+    item.flameTip.scale.setScalar(0.62 + pulse * 0.12);
     item.outerFlame.rotation.z = sway + flutter * 0.9;
     item.innerFlame.rotation.z = sway * 1.22 - flutter * 0.84;
     item.outerFlame.rotation.y = item.dir === -1 ? cross * 0.5 : Math.PI + cross * 0.5;
