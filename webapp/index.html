@@ -3090,60 +3090,46 @@ body.light-theme .cw-nudge{
   background:#07090d;
 }
 #tab-cuboid .cuboid-legend-panel{
-  padding:14px 16px 16px;
+  padding:12px 14px 14px;
   border-top:1px solid rgba(56,84,124,0.34);
   background:linear-gradient(180deg,rgba(11,16,24,0.98),rgba(9,13,20,0.98));
 }
 #tab-cuboid .cuboid-legend-scroll{
-  display:flex;
-  flex-wrap:nowrap;
+  display:grid;
+  grid-template-columns:minmax(0,2.5fr) minmax(0,1.05fr) minmax(0,1.15fr) minmax(0,0.92fr) minmax(0,0.82fr);
   align-items:stretch;
-  gap:0;
-  overflow-x:auto;
-  overflow-y:hidden;
-}
-#tab-cuboid .cuboid-legend-scroll::-webkit-scrollbar{
-  height:10px;
-}
-#tab-cuboid .cuboid-legend-scroll::-webkit-scrollbar-thumb{
-  background:rgba(76,104,148,0.5);
-  border-radius:999px;
-}
-#tab-cuboid .cuboid-legend-scroll::-webkit-scrollbar-track{
-  background:rgba(10,16,24,0.45);
+  gap:10px;
+  overflow:visible;
 }
 #tab-cuboid .cuboid-legend-block{
-  flex:0 0 auto;
-  min-height:150px;
-  padding:0 18px;
+  min-width:0;
+  min-height:132px;
+  padding:0 12px;
 }
 #tab-cuboid .cuboid-legend-block + .cuboid-legend-block{
   border-left:1px solid rgba(64,84,114,0.38);
 }
-#tab-cuboid .cuboid-legend-states{ min-width:640px; padding-left:4px; }
-#tab-cuboid .cuboid-legend-clean{ min-width:320px; }
-#tab-cuboid .cuboid-legend-live{ min-width:340px; }
-#tab-cuboid .cuboid-legend-tst{ min-width:290px; }
-#tab-cuboid .cuboid-legend-controls{ min-width:220px; padding-right:4px; }
+#tab-cuboid .cuboid-legend-states{ padding-left:2px; }
+#tab-cuboid .cuboid-legend-controls{ padding-right:2px; }
 #tab-cuboid .cuboid-legend-title{
-  margin-bottom:14px;
-  font-size:9px;
-  letter-spacing:3px;
+  margin-bottom:10px;
+  font-size:8px;
+  letter-spacing:2.2px;
   text-transform:uppercase;
   color:rgba(184,191,206,0.82);
 }
 #tab-cuboid .cuboid-legend-state-row{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
+  gap:8px;
 }
 #tab-cuboid .cuboid-legend-state-card{
   display:flex;
   align-items:center;
-  gap:12px;
-  min-height:88px;
-  padding:14px 14px 14px 16px;
-  border-radius:22px;
+  gap:9px;
+  min-height:70px;
+  padding:10px 10px 10px 11px;
+  border-radius:18px;
   border:1px solid rgba(76,102,146,0.35);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
 }
@@ -3164,13 +3150,13 @@ body.light-theme .cw-nudge{
   border-color:rgba(176,122,28,0.44);
 }
 #tab-cuboid .cuboid-legend-badge{
-  width:56px;
-  height:56px;
+  width:42px;
+  height:42px;
   border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:18px;
+  font-size:15px;
   font-weight:700;
   color:#f8fbff;
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 18px rgba(0,0,0,0.22);
@@ -3183,41 +3169,42 @@ body.light-theme .cw-nudge{
   flex:1 1 auto;
   display:flex;
   flex-direction:column;
-  gap:2px;
+  gap:1px;
+  min-width:0;
 }
 #tab-cuboid .cuboid-legend-state-name{
-  font-size:13px;
+  font-size:11px;
   font-weight:700;
   color:#eef4ff;
 }
 #tab-cuboid .cuboid-legend-state-desc{
-  font-size:10px;
-  line-height:1.25;
+  font-size:8px;
+  line-height:1.15;
   color:rgba(198,208,226,0.82);
 }
 #tab-cuboid .cuboid-legend-state-count{
-  font-size:20px;
+  font-size:16px;
   font-weight:700;
   color:#ffffff;
 }
 #tab-cuboid .cuboid-legend-clean-list{
   display:flex;
   flex-direction:column;
-  gap:14px;
-  padding-top:6px;
+  gap:10px;
+  padding-top:4px;
 }
 #tab-cuboid .cuboid-legend-clean-item{
   display:flex;
   align-items:center;
-  gap:12px;
-  font-size:12px;
+  gap:9px;
+  font-size:10px;
   color:rgba(214,223,236,0.9);
 }
 #tab-cuboid .cuboid-legend-clean-bullet{
-  width:18px;
-  height:18px;
+  width:14px;
+  height:14px;
   border-radius:50%;
-  border:2px solid rgba(126,138,159,0.72);
+  border:1.5px solid rgba(126,138,159,0.72);
   background:transparent;
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
 }
@@ -3231,22 +3218,22 @@ body.light-theme .cw-nudge{
   line-height:1.35;
 }
 #tab-cuboid .cuboid-legend-clean-value{
-  font-size:18px;
+  font-size:15px;
   font-weight:700;
   color:#ffffff;
 }
 #tab-cuboid .cuboid-legend-live-rows{
   display:flex;
   flex-direction:column;
-  gap:12px;
-  padding-top:2px;
+  gap:10px;
+  padding-top:1px;
 }
 #tab-cuboid .cuboid-legend-live-row{
   display:flex;
   align-items:baseline;
   justify-content:space-between;
-  gap:18px;
-  padding-bottom:10px;
+  gap:10px;
+  padding-bottom:8px;
   border-bottom:1px solid rgba(47,64,92,0.4);
 }
 #tab-cuboid .cuboid-legend-live-row:last-child{
@@ -3254,12 +3241,12 @@ body.light-theme .cw-nudge{
   padding-bottom:0;
 }
 #tab-cuboid .cuboid-legend-live-label{
-  font-size:12px;
+  font-size:10px;
   color:rgba(171,182,198,0.82);
 }
 #tab-cuboid .cuboid-legend-live-value{
-  max-width:180px;
-  font-size:14px;
+  max-width:150px;
+  font-size:12px;
   font-weight:700;
   color:#72ffd8;
   text-align:right;
@@ -3271,42 +3258,42 @@ body.light-theme .cw-nudge{
 #tab-cuboid .cuboid-legend-tst-top{
   display:flex;
   align-items:center;
-  gap:10px;
-  margin-bottom:16px;
+  gap:8px;
+  margin-bottom:12px;
 }
 #tab-cuboid .cuboid-legend-tst-chip{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-width:98px;
-  min-height:48px;
-  padding:0 16px;
-  border-radius:18px;
+  min-width:82px;
+  min-height:38px;
+  padding:0 12px;
+  border-radius:14px;
   border:1px solid rgba(176,108,44,0.58);
   background:linear-gradient(180deg,rgba(49,37,28,0.92),rgba(26,23,21,0.94));
   color:#fff6e8;
-  font-size:12px;
+  font-size:10px;
   font-weight:700;
-  letter-spacing:1px;
+  letter-spacing:0.6px;
   text-transform:uppercase;
 }
 #tab-cuboid .cuboid-legend-tst-meta{
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:3px;
 }
 #tab-cuboid .cuboid-legend-tst-cold{
-  font-size:11px;
+  font-size:10px;
   font-weight:700;
   color:#8affb8;
 }
 #tab-cuboid .cuboid-legend-tst-cold-value{
-  font-size:12px;
+  font-size:11px;
   color:#e7eef8;
 }
 #tab-cuboid .cuboid-legend-tst-bar{
   position:relative;
-  height:22px;
+  height:16px;
   border-radius:999px;
   background:linear-gradient(90deg,#32d061 0%,#ffe227 48%,#ff7e2e 76%,#ff5252 100%);
   border:1px solid rgba(255,255,255,0.12);
@@ -3316,47 +3303,47 @@ body.light-theme .cw-nudge{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
-  margin-top:10px;
+  gap:8px;
+  margin-top:8px;
 }
 #tab-cuboid .cuboid-legend-tst-range-label{
-  font-size:11px;
-  letter-spacing:1.4px;
+  font-size:9px;
+  letter-spacing:1px;
   text-transform:uppercase;
   color:rgba(154,170,198,0.88);
 }
 #tab-cuboid .cuboid-legend-tst-hot{
-  font-size:11px;
+  font-size:10px;
   font-weight:700;
   color:#ff9aa7;
 }
 #tab-cuboid .cuboid-legend-tst-hot-value,
 #tab-cuboid .cuboid-legend-tst-min,
 #tab-cuboid .cuboid-legend-tst-max{
-  font-size:12px;
+  font-size:11px;
   color:#f5f8ff;
   font-weight:700;
 }
 #tab-cuboid .cuboid-legend-controls{
   display:flex;
   flex-direction:column;
-  gap:12px;
-  padding-top:2px;
+  gap:10px;
+  padding-top:1px;
 }
 #tab-cuboid .cuboid-legend-action{
   display:flex;
   align-items:center;
   justify-content:center;
-  min-height:58px;
-  padding:0 18px;
-  border-radius:14px;
+  min-height:46px;
+  padding:0 12px;
+  border-radius:12px;
   border:1px solid rgba(70,92,140,0.42);
   background:linear-gradient(180deg,rgba(28,36,58,0.95),rgba(18,23,36,0.96));
   color:#e6edf9;
   font-family:"Courier New",Courier,monospace;
-  font-size:12px;
+  font-size:10px;
   font-weight:700;
-  letter-spacing:0.6px;
+  letter-spacing:0.3px;
   cursor:pointer;
   transition:background .18s ease,border-color .18s ease,transform .18s ease;
 }
@@ -3364,6 +3351,37 @@ body.light-theme .cw-nudge{
   background:linear-gradient(180deg,rgba(41,56,92,0.95),rgba(20,28,44,0.98));
   border-color:rgba(104,142,220,0.62);
   transform:translateY(-1px);
+}
+@media (max-width:1400px){
+  #tab-cuboid .cuboid-legend-scroll{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px 8px;
+  }
+  #tab-cuboid .cuboid-legend-block + .cuboid-legend-block{
+    border-left:0;
+  }
+  #tab-cuboid .cuboid-legend-states{
+    grid-column:1 / span 2;
+  }
+  #tab-cuboid .cuboid-legend-clean{
+    grid-column:3;
+  }
+  #tab-cuboid .cuboid-legend-live,
+  #tab-cuboid .cuboid-legend-tst,
+  #tab-cuboid .cuboid-legend-controls{
+    min-width:0;
+  }
+}
+@media (max-width:1080px){
+  #tab-cuboid .cuboid-legend-scroll{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  #tab-cuboid .cuboid-legend-states{
+    grid-column:1 / -1;
+  }
+  #tab-cuboid .cuboid-legend-state-row{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
 }
 #cuboid-overlay-backdrop{
   position:fixed;
@@ -6725,29 +6743,53 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cuboid .cuboid-legend-panel{
     padding:12px 12px 14px;
   }
-  #tab-cuboid .cuboid-legend-block{
-    padding:0 14px;
-    min-height:142px;
+  #tab-cuboid .cuboid-legend-scroll{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px 8px;
   }
-  #tab-cuboid .cuboid-legend-states{ min-width:560px; padding-left:2px; }
-  #tab-cuboid .cuboid-legend-clean{ min-width:286px; }
-  #tab-cuboid .cuboid-legend-live{ min-width:290px; }
-  #tab-cuboid .cuboid-legend-tst{ min-width:250px; }
-  #tab-cuboid .cuboid-legend-controls{ min-width:190px; padding-right:2px; }
+  #tab-cuboid .cuboid-legend-block{
+    padding:0 10px;
+    min-height:128px;
+  }
+  #tab-cuboid .cuboid-legend-block + .cuboid-legend-block{
+    border-left:0;
+  }
+  #tab-cuboid .cuboid-legend-states{
+    grid-column:1 / -1;
+    padding-left:2px;
+  }
+  #tab-cuboid .cuboid-legend-clean,
+  #tab-cuboid .cuboid-legend-live,
+  #tab-cuboid .cuboid-legend-tst,
+  #tab-cuboid .cuboid-legend-controls{
+    min-width:0;
+    padding-right:2px;
+  }
   #tab-cuboid .cuboid-legend-state-row{ gap:10px; }
   #tab-cuboid .cuboid-legend-state-card{
-    min-height:80px;
-    padding:12px;
-    border-radius:20px;
+    min-height:68px;
+    padding:10px;
+    border-radius:16px;
   }
   #tab-cuboid .cuboid-legend-badge{
-    width:48px;
-    height:48px;
-    font-size:16px;
+    width:38px;
+    height:38px;
+    font-size:14px;
   }
   #tab-cuboid .cuboid-legend-title{
-    margin-bottom:12px;
-    letter-spacing:2.4px;
+    margin-bottom:10px;
+    letter-spacing:2px;
+  }
+  #tab-cuboid .cuboid-legend-live-value{
+    max-width:120px;
+  }
+  #tab-cuboid .cuboid-legend-tst-chip{
+    min-width:72px;
+    min-height:34px;
+    padding:0 10px;
+  }
+  #tab-cuboid .cuboid-legend-action{
+    min-height:42px;
   }
   #tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded{
     top:8px;
