@@ -1021,6 +1021,145 @@ var matBack   = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain, s
 var boxMesh = new THREE.Mesh(boxGeo, [matRight, matLeft, matTop, matBot, matFront, matBack]);
 group.add(boxMesh);
 
+function cuboidNoise(seed){
+  var n = Math.sin(seed * 12.9898 + 78.233) * 43758.5453123;
+  return n - Math.floor(n);
+}
+
+function cuboidPaintInnerCircleGrid(canvas, phaseBase){
+  var ctx = canvas.getContext("2d");
+  var w = canvas.width;
+  var h = canvas.height;
+  var cols = 15;
+  var rows = 6;
+  var marginX = Math.round(w * 0.075);
+  var marginY = Math.round(h * 0.10);
+  var gridW = w - (marginX * 2);
+  var gridH = h - (marginY * 2);
+  var stepX = gridW / Math.max(1, cols - 1);
+  var stepY = gridH / Math.max(1, rows - 1);
+  var baseRadius = Math.min(stepX, stepY) * 0.20;
+
+  ctx.clearRect(0, 0, w, h);
+
+  for(var r=0; r<rows; r++){
+    for(var c=0; c<cols; c++){
+      var seed = (phaseBase || 0) + (r * 19.13) + (c * 7.37);
+      var jitterX = (cuboidNoise(seed) - 0.5) * stepX * 0.04;
+      var jitterY = (cuboidNoise(seed + 3.1) - 0.5) * stepY * 0.05;
+      var cx = marginX + (stepX * c) + jitterX;
+      var cy = marginY + (stepY * r) + jitterY;
+      var radius = baseRadius * (0.90 + cuboidNoise(seed + 8.4) * 0.18);
+
+      var shadow = ctx.createRadialGradient(
+        cx + (radius * 0.16), cy + (radius * 0.18), radius * 0.10,
+        cx + (radius * 0.16), cy + (radius * 0.18), radius * 1.45
+      );
+      shadow.addColorStop(0, "rgba(0,0,0,0.34)");
+      shadow.addColorStop(0.72, "rgba(0,0,0,0.14)");
+      shadow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = shadow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 1.55, 0, Math.PI * 2);
+      ctx.fill();
+
+      var rustGrad = ctx.createRadialGradient(
+        cx - (radius * 0.22), cy - (radius * 0.26), radius * 0.12,
+        cx, cy, radius
+      );
+      rustGrad.addColorStop(0, "rgba(68,52,38,0.98)");
+      rustGrad.addColorStop(0.42, "rgba(26,23,21,0.98)");
+      rustGrad.addColorStop(0.74, "rgba(12,11,10,0.98)");
+      rustGrad.addColorStop(1, "rgba(58,36,24,0.96)");
+      ctx.fillStyle = rustGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.lineWidth = Math.max(1.5, radius * 0.10);
+      ctx.strokeStyle = "rgba(96,62,40,0.44)";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.90, 0, Math.PI * 2);
+      ctx.stroke();
+
+      var innerCore = ctx.createRadialGradient(
+        cx - (radius * 0.18), cy - (radius * 0.18), radius * 0.05,
+        cx, cy, radius * 0.72
+      );
+      innerCore.addColorStop(0, "rgba(20,18,17,0.92)");
+      innerCore.addColorStop(0.55, "rgba(7,7,7,0.95)");
+      innerCore.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = innerCore;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.72, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(164,112,78,0.12)";
+      ctx.beginPath();
+      ctx.arc(cx - (radius * 0.24), cy - (radius * 0.26), radius * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+
+      for(var p=0; p<3; p++){
+        var pitSeed = seed + (p * 5.7);
+        var px = cx + (cuboidNoise(pitSeed + 0.7) - 0.5) * radius * 0.9;
+        var py = cy + (cuboidNoise(pitSeed + 1.8) - 0.5) * radius * 0.9;
+        var pr = radius * (0.07 + cuboidNoise(pitSeed + 2.4) * 0.07);
+        ctx.fillStyle = "rgba(0,0,0,0.22)";
+        ctx.beginPath();
+        ctx.arc(px, py, pr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+}
+
+function cuboidCreateInnerCircleOverlay(face, phaseBase){
+  var canvas = document.createElement("canvas");
+  canvas.width = 1440;
+  canvas.height = 1080;
+  cuboidPaintInnerCircleGrid(canvas, phaseBase || 0);
+  var texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
+    texture.colorSpace = THREE.SRGBColorSpace;
+  }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
+    texture.encoding = THREE.sRGBEncoding;
+  }
+  var material = new THREE.MeshBasicMaterial({
+    map:texture,
+    transparent:true,
+    side:THREE.BackSide,
+    depthTest:false,
+    depthWrite:false,
+    alphaTest:0.01,
+    polygonOffset:true,
+    polygonOffsetFactor:-1,
+    polygonOffsetUnits:-5
+  });
+  var plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(Math.max(0.8, CW - 0.40), Math.max(0.8, CH - 0.30)),
+    material
+  );
+  var inset = Math.max(0.004, Math.min(0.008, CD * 0.006));
+  if(face === "back"){
+    plane.position.set(0, 0, -CD/2 + inset);
+    plane.rotation.y = Math.PI;
+  }else{
+    plane.position.set(0, 0, CD/2 - inset);
+  }
+  plane.renderOrder = 13;
+  group.add(plane);
+  return plane;
+}
+
+var cuboidInnerCircleOverlays = {
+  front: cuboidCreateInnerCircleOverlay("front", 0.13),
+  back: cuboidCreateInnerCircleOverlay("back", 0.61)
+};
+
 function cuboidCreateFaceOverlay(face, wallKey){
   var canvas = document.createElement("canvas");
   canvas.width = 1440;
