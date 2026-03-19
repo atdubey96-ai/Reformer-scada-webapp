@@ -36,11 +36,11 @@ body{color:rgba(140,180,220,0.85);}
   display:flex;
   flex-direction:column;
   justify-content:center;
-  gap:4px;
-  min-height:48px;
-  width:clamp(540px,48vw,820px);
+  gap:3px;
+  min-height:44px;
+  width:clamp(430px,40vw,640px);
   max-width:100%;
-  padding:8px 24px 9px 22px;
+  padding:8px 20px 9px 18px;
   position:relative;
   overflow:hidden;
   border-radius:14px;
@@ -63,18 +63,11 @@ body{color:rgba(140,180,220,0.85);}
     radial-gradient(circle at 86% 78%, rgba(255,168,82,0.14), transparent 36%);
   pointer-events:none;
 }
-.viewer-tag-kicker{
-  position:relative;
-  font-size:7px;
-  letter-spacing:3px;
-  color:rgba(147,188,234,0.78);
-  text-transform:uppercase;
-}
 .viewer-tag-title{
   position:relative;
-  font-size:13px;
+  font-size:12px;
   font-weight:700;
-  letter-spacing:1.3px;
+  letter-spacing:1.15px;
   text-transform:uppercase;
   color:#eaf2ff;
   background:linear-gradient(90deg,#fff7d2 0%,#cfe5ff 42%,#8ef0d3 100%);
@@ -86,7 +79,7 @@ body{color:rgba(140,180,220,0.85);}
 .viewer-tag-summary{
   position:relative;
   font-size:8px;
-  letter-spacing:1px;
+  letter-spacing:0.9px;
   color:rgba(199,218,242,0.88);
   white-space:nowrap;
 }
@@ -200,9 +193,8 @@ body{color:rgba(140,180,220,0.85);}
 <div id="app">
   <div id="topbar">
     <div id="viewerTag">
-      <span class="viewer-tag-kicker">Realtime Furnace Cuboid Analytics</span>
-      <span class="viewer-tag-title" id="viewerTagTitle">AB Burner, TST & Cleaning Status</span>
-      <span class="viewer-tag-summary">Live burners • TST data • cleaning status</span>
+      <span class="viewer-tag-title" id="viewerTagTitle">AB Burners • TST • Cleaning Status</span>
+      <span class="viewer-tag-summary">Live wall analytics and flame status view</span>
     </div>
     <div id="ctrls">
       <button class="btn" id="btnA">Face A</button>
@@ -250,7 +242,7 @@ const btnA=document.getElementById("btnA");
 const btnB=document.getElementById("btnB");
 const btnAuto=document.getElementById("btnAuto");
 const btnResetView=document.getElementById("btnResetView");
-if(viewerTagTitle) viewerTagTitle.textContent=chamberZoneKey+" Burner, TST & Cleaning Status";
+if(viewerTagTitle) viewerTagTitle.textContent=chamberZoneKey+" Burners • TST • Cleaning Status";
 if(btnA) btnA.textContent="Face "+chamberWalls[0];
 if(btnB) btnB.textContent="Face "+chamberWalls[1];
 
