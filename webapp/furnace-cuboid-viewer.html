@@ -1285,7 +1285,7 @@ makeSide(true);
 makeSide(false);
 
 const tubeM=new THREE.MeshStandardMaterial({color:0x5a6878,roughness:0.22,metalness:0.96});
-const tR=0.065,tProt=0.35,nT=8,tSpan=FW*0.76,tSX=-tSpan/2;
+const tR=0.091,tProt=0.35,nT=8,tSpan=FW*0.76,tSX=-tSpan/2;
 for(let i=0;i<nT;i++){
   const tx=tSX+i*tSpan/(nT-1);
   const tb=new THREE.Mesh(new THREE.CylinderGeometry(tR,tR,FH+tProt*2,18),tubeM.clone());
