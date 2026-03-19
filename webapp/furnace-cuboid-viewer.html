@@ -33,12 +33,32 @@ body{color:rgba(140,180,220,0.85);}
   flex-wrap:wrap;
 }
 #viewerTag{
-  font-size:10px;
-  letter-spacing:2.6px;
-  color:rgba(173,203,232,0.82);
-  text-transform:uppercase;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:3px;
+  min-height:44px;
+  padding:7px 15px 8px 14px;
+  border-radius:14px;
+  border:1px solid rgba(72,112,170,0.38);
+  background:linear-gradient(135deg,rgba(14,22,35,0.96),rgba(7,12,20,0.94));
+  box-shadow:0 10px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
   text-align:left;
   flex:0 0 auto;
+}
+.viewer-tag-kicker{
+  font-size:7px;
+  letter-spacing:3px;
+  color:rgba(138,173,214,0.72);
+  text-transform:uppercase;
+}
+.viewer-tag-title{
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:1.6px;
+  text-transform:uppercase;
+  color:#eaf2ff;
+  text-shadow:0 0 16px rgba(104,156,232,0.12);
 }
 #vp{
   position:relative;
@@ -106,10 +126,11 @@ body{color:rgba(140,180,220,0.85);}
     justify-content:center;
   }
   #viewerTag{
-    font-size:9px;
-    letter-spacing:2px;
     width:100%;
+    min-height:42px;
+    padding:8px 12px 9px;
     text-align:center;
+    align-items:center;
   }
   #vp{
     width:100%;
@@ -139,7 +160,10 @@ body{color:rgba(140,180,220,0.85);}
 <body>
 <div id="app">
   <div id="topbar">
-    <div id="viewerTag">AB LIVE WALLS</div>
+    <div id="viewerTag">
+      <span class="viewer-tag-kicker">Realtime Furnace Cuboid</span>
+      <span class="viewer-tag-title" id="viewerTagTitle">AB Live Burner Wall Perspective</span>
+    </div>
     <div id="ctrls">
       <button class="btn" id="btnA">Face A</button>
       <button class="btn" id="btnB">Face B</button>
@@ -180,13 +204,13 @@ const chamberWalls=chamberParam==="cd"?["C","D"]:["A","B"];
 const chamberZoneKey=chamberParam==="cd"?"CD":"AB";
 
 const app=document.getElementById("app");
-const viewerTag=document.getElementById("viewerTag");
+const viewerTagTitle=document.getElementById("viewerTagTitle");
 const hint=document.getElementById("hint");
 const btnA=document.getElementById("btnA");
 const btnB=document.getElementById("btnB");
 const btnAuto=document.getElementById("btnAuto");
 const btnResetView=document.getElementById("btnResetView");
-if(viewerTag) viewerTag.textContent=chamberZoneKey+" LIVE WALLS";
+if(viewerTagTitle) viewerTagTitle.textContent=chamberZoneKey+" Live Burner Wall Perspective";
 if(btnA) btnA.textContent="Face "+chamberWalls[0];
 if(btnB) btnB.textContent="Face "+chamberWalls[1];
 
