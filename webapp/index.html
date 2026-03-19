@@ -3109,13 +3109,13 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-panel{
   position:relative;
-  width:100%;
-  max-width:none;
+  width:min(97%,1680px);
+  max-width:1680px;
   box-sizing:border-box;
-  margin:0 0 6px;
+  margin:-2px auto 6px;
   padding:7px 14px 9px;
   border:1px solid rgba(70,102,148,0.46);
-  border-radius:0 0 8px 8px;
+  border-radius:12px;
   background:linear-gradient(180deg,rgba(14,20,30,0.98),rgba(8,12,19,0.98));
   box-shadow:0 14px 28px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
 }
@@ -6707,9 +6707,11 @@ html, body, body *, body *::before, body *::after, svg text{
     height:clamp(640px,calc(100svh - 150px),1040px);
   }
   #tab-cuboid .cuboid-legend-panel{
-    margin:0 0 7px;
+    width:min(100%,1680px);
+    max-width:1680px;
+    margin:-1px auto 7px;
     padding:9px 12px 10px;
-    border-radius:0 0 14px 14px;
+    border-radius:14px;
   }
   #tab-cuboid .cuboid-legend-scroll{
     grid-template-columns:repeat(2,minmax(0,1fr));
