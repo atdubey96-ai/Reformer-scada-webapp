@@ -1015,8 +1015,8 @@ var matRight  = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, o
 var matLeft   = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.0});
 var matTop    = new THREE.MeshBasicMaterial({color:0xaab0b8, map:topTexMain});
 var matBot    = new THREE.MeshBasicMaterial({color:0x858a90, map:botTexMain});
-var matFront  = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain});
-var matBack   = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain});
+var matFront  = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain, side:THREE.DoubleSide});
+var matBack   = new THREE.MeshBasicMaterial({color:0xa8aeb6, map:frontTexMain, side:THREE.DoubleSide});
 
 var boxMesh = new THREE.Mesh(boxGeo, [matRight, matLeft, matTop, matBot, matFront, matBack]);
 group.add(boxMesh);
