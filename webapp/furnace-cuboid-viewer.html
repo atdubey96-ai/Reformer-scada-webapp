@@ -21,20 +21,29 @@ body{color:rgba(140,180,220,0.85);}
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:10px;
+  gap:8px;
   padding:10px;
+}
+#topbar{
+  width:min(97vw,1680px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
 }
 #viewerTag{
   font-size:10px;
   letter-spacing:2.6px;
   color:rgba(173,203,232,0.82);
   text-transform:uppercase;
-  text-align:center;
+  text-align:left;
+  flex:0 0 auto;
 }
 #vp{
   position:relative;
   width:min(97vw,1680px);
-  height:min(calc(100vh - 78px),92vh);
+  height:min(calc(100vh - 110px),90vh);
   overflow:hidden;
   background:
     radial-gradient(circle at 50% 42%, rgba(58,78,104,0.52) 0%, rgba(26,33,45,0.88) 22%, rgba(10,13,19,0.97) 54%, #06070b 100%);
@@ -66,7 +75,9 @@ body{color:rgba(140,180,220,0.85);}
   display:flex;
   gap:8px;
   flex-wrap:wrap;
-  justify-content:center;
+  justify-content:flex-end;
+  align-items:center;
+  flex:1 1 520px;
 }
 .btn{
   background:rgba(10,18,32,0.92);
@@ -89,13 +100,20 @@ body{color:rgba(140,180,220,0.85);}
     gap:8px;
     padding:8px;
   }
+  #topbar{
+    width:100%;
+    gap:8px;
+    justify-content:center;
+  }
   #viewerTag{
     font-size:9px;
     letter-spacing:2px;
+    width:100%;
+    text-align:center;
   }
   #vp{
     width:100%;
-    height:min(calc(100vh - 96px),88vh);
+    height:min(calc(100vh - 138px),86vh);
   }
   #hint{
     font-size:7px;
@@ -105,6 +123,8 @@ body{color:rgba(140,180,220,0.85);}
   #ctrls{
     width:100%;
     gap:6px;
+    justify-content:center;
+    flex:1 1 auto;
   }
   .btn{
     flex:1 1 calc(33.333% - 6px);
@@ -118,13 +138,15 @@ body{color:rgba(140,180,220,0.85);}
 </head>
 <body>
 <div id="app">
-  <div id="viewerTag">AB LIVE WALLS</div>
-  <div id="vp"><div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div></div>
-  <div id="ctrls">
-    <button class="btn" id="btnA">Face A</button>
-    <button class="btn" id="btnB">Face B</button>
-    <button class="btn" id="btnAuto">Auto Rotate</button>
+  <div id="topbar">
+    <div id="viewerTag">AB LIVE WALLS</div>
+    <div id="ctrls">
+      <button class="btn" id="btnA">Face A</button>
+      <button class="btn" id="btnB">Face B</button>
+      <button class="btn" id="btnAuto">Auto Rotate</button>
+    </div>
   </div>
+  <div id="vp"><div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
