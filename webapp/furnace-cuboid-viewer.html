@@ -552,14 +552,49 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
   const stemH=8.6*iconScale;
   const stemX=x-(stemW/2);
   const stemY=y+(0.4*iconScale);
-  const baseW=18*scaleX;
-  const baseH=4.8*iconScale;
+  const baseW=20.5*scaleX;
+  const baseH=4.25*iconScale;
   const baseX=x-(baseW/2);
-  const baseY=y+(5.4*iconScale);
+  const baseY=y+(4.7*iconScale);
+  const baseShadowY=baseY+(baseH*0.96);
+  const baseGrad=ctx.createLinearGradient(0,baseY,0,baseY+baseH);
+  baseGrad.addColorStop(0,"rgba(207,214,224,0.92)");
+  baseGrad.addColorStop(0.26,"rgba(96,104,115,0.97)");
+  baseGrad.addColorStop(0.62,"rgba(41,47,55,0.99)");
+  baseGrad.addColorStop(1,"rgba(17,22,29,0.98)");
+  const collarW=Math.max(11*scaleX,baseW*0.58);
+  const collarH=2.35*iconScale;
+  const collarX=x-(collarW/2);
+  const collarY=baseY-(0.68*iconScale);
+  const collarGrad=ctx.createLinearGradient(0,collarY,0,collarY+collarH);
+  collarGrad.addColorStop(0,"rgba(224,229,235,0.78)");
+  collarGrad.addColorStop(0.45,"rgba(82,91,102,0.92)");
+  collarGrad.addColorStop(1,"rgba(28,34,41,0.96)");
 
-  ctx.fillStyle="rgba(9,13,24,0.92)";
-  cuboidRoundRectPath(ctx,baseX,baseY,baseW,baseH,3*iconScale);
+  ctx.fillStyle="rgba(0,0,0,0.34)";
+  ctx.beginPath();
+  ctx.ellipse(x,baseShadowY,baseW*0.62,baseH*0.44,0,0,Math.PI*2);
   ctx.fill();
+
+  ctx.fillStyle=collarGrad;
+  cuboidRoundRectPath(ctx,collarX,collarY,collarW,collarH,collarH/2);
+  ctx.fill();
+  ctx.strokeStyle="rgba(232,236,241,0.18)";
+  ctx.lineWidth=Math.max(0.8,0.45*iconScale);
+  ctx.stroke();
+
+  ctx.fillStyle=baseGrad;
+  cuboidRoundRectPath(ctx,baseX,baseY,baseW,baseH,baseH*0.46);
+  ctx.fill();
+  ctx.strokeStyle="rgba(236,241,247,0.26)";
+  ctx.lineWidth=Math.max(0.85,0.42*iconScale);
+  ctx.stroke();
+  ctx.strokeStyle="rgba(255,255,255,0.28)";
+  ctx.lineWidth=Math.max(0.7,0.34*iconScale);
+  ctx.beginPath();
+  ctx.moveTo(baseX+(baseH*0.42),baseY+0.9);
+  ctx.lineTo(baseX+baseW-(baseH*0.42),baseY+0.9);
+  ctx.stroke();
 
   if(s==="C"){
     ctx.save();
@@ -674,8 +709,13 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
 
 function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
   const scaleVal=Math.max(1,Number(scale) || 2.6);
-  const railY=y;
-  const railH=Math.max(7.2,2.65*scaleVal);
+  const scaleX=scaleVal*0.9;
+  const burnerBaseW=20.5*scaleX;
+  const burnerBaseH=4.25*scaleVal;
+  const burnerBaseY=(Number(burnerY) || y)+(4.7*scaleVal);
+  const gapY=Math.max(3.2,1.18*scaleVal);
+  const railH=Math.max(6.4,2.18*scaleVal);
+  const railY=Math.max(y,burnerBaseY+burnerBaseH+gapY+(railH/2));
   const railTop=railY-(railH/2);
   const railR=railH/2;
   const railGrad=ctx.createLinearGradient(0,railTop,0,railTop+railH);
@@ -722,10 +762,9 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
     ctx.stroke();
   });
 
-  const branchW=Math.max(4.2,1.2*scaleVal);
-  const elbowRadius=Math.max(3.3,1.25*scaleVal);
-  const baseSideOffset=Math.max(15.5,5.9*scaleVal);
-  const tapOffset=Math.max(10.5,3.9*scaleVal);
+  const branchW=Math.max(3.85,1.04*scaleVal);
+  const elbowRadius=Math.max(3.3,1.18*scaleVal);
+  const tapOffset=Math.max(9.5,3.5*scaleVal);
   const branchGrad=ctx.createLinearGradient(0,railTop-(10*scaleVal),0,railY+8);
   branchGrad.addColorStop(0,"rgba(232,238,244,0.95)");
   branchGrad.addColorStop(0.4,"rgba(148,157,166,0.97)");
@@ -735,28 +774,24 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
   ctx.lineJoin="round";
   for(let ci=0;ci<15;ci++){
     const x=left+slotW*(ci+0.5);
-    const side=(ci % 2===0) ? -1 : 1;
-    const baseSideX=x+(side*baseSideOffset);
-    const tapX=baseSideX+(side*tapOffset);
-    const connectY=Math.min(
-      (Number(burnerY) || railY)+(6.6*scaleVal),
-      railTop-Math.max(2.3,0.92*scaleVal)
-    );
+    const basePortX=x-(burnerBaseW/2)+(1.2*scaleVal);
+    const tapX=basePortX-tapOffset;
+    const connectY=burnerBaseY+(burnerBaseH*0.56);
     const elbowY=connectY+elbowRadius;
 
     ctx.strokeStyle="rgba(0,0,0,0.24)";
-    ctx.lineWidth=branchW+2.1;
+    ctx.lineWidth=branchW+1.9;
     ctx.beginPath();
     ctx.moveTo(tapX+0.9,railY+1.2);
     ctx.lineTo(tapX+0.9,elbowY+0.9);
     ctx.quadraticCurveTo(
       tapX+0.9,
       connectY+0.9,
-      tapX-(side*elbowRadius)+0.9,
+      tapX+elbowRadius+0.9,
       connectY+0.9
     );
-    ctx.lineTo(baseSideX+(side*elbowRadius*0.62)+0.9,connectY+0.9);
-    ctx.quadraticCurveTo(baseSideX+0.8,connectY+0.9,baseSideX+0.8,connectY-(0.22*elbowRadius)+0.9);
+    ctx.lineTo(basePortX-(elbowRadius*0.48)+0.9,connectY+0.9);
+    ctx.quadraticCurveTo(basePortX+0.8,connectY+0.9,basePortX+0.8,connectY-(0.16*elbowRadius)+0.9);
     ctx.stroke();
 
     ctx.strokeStyle=branchGrad;
@@ -767,25 +802,25 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
     ctx.quadraticCurveTo(
       tapX,
       connectY,
-      tapX-(side*elbowRadius),
+      tapX+elbowRadius,
       connectY
     );
-    ctx.lineTo(baseSideX+(side*elbowRadius*0.62),connectY);
-    ctx.quadraticCurveTo(baseSideX,connectY,baseSideX,connectY-(0.22*elbowRadius));
+    ctx.lineTo(basePortX-(elbowRadius*0.48),connectY);
+    ctx.quadraticCurveTo(basePortX,connectY,basePortX,connectY-(0.16*elbowRadius));
     ctx.stroke();
 
     ctx.strokeStyle="rgba(255,255,255,0.34)";
-    ctx.lineWidth=Math.max(1,branchW*0.34);
+    ctx.lineWidth=Math.max(0.95,branchW*0.32);
     ctx.beginPath();
-    ctx.moveTo(tapX-(side*branchW*0.18),railY-(railH*0.18));
-    ctx.lineTo(tapX-(side*branchW*0.18),elbowY+(branchW*0.12));
+    ctx.moveTo(tapX-(branchW*0.16),railY-(railH*0.18));
+    ctx.lineTo(tapX-(branchW*0.16),elbowY+(branchW*0.10));
     ctx.quadraticCurveTo(
-      tapX-(side*branchW*0.18),
-      connectY+(branchW*0.10),
-      tapX-(side*(elbowRadius-(branchW*0.2))),
+      tapX-(branchW*0.16),
+      connectY+(branchW*0.08),
+      tapX+(elbowRadius-(branchW*0.12)),
       connectY+(branchW*0.08)
     );
-    ctx.lineTo(baseSideX+(side*elbowRadius*0.42),connectY+(branchW*0.08));
+    ctx.lineTo(basePortX-(elbowRadius*0.3),connectY+(branchW*0.08));
     ctx.stroke();
 
     ctx.fillStyle="rgba(28,35,45,0.82)";
@@ -793,7 +828,7 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
     ctx.ellipse(tapX,railY,branchW*1.42,Math.max(1.9,railH*0.34),0,0,Math.PI*2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(baseSideX,connectY,branchW*1.2,Math.max(1.6,branchW*0.62),0,0,Math.PI*2);
+    ctx.ellipse(basePortX,connectY,branchW*1.06,Math.max(1.45,branchW*0.56),0,0,Math.PI*2);
     ctx.fill();
 
     ctx.strokeStyle="rgba(233,238,244,0.38)";
@@ -802,7 +837,7 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
     ctx.ellipse(tapX,railY,branchW*1.08,Math.max(1.5,railH*0.22),0,0,Math.PI*2);
     ctx.stroke();
     ctx.beginPath();
-    ctx.ellipse(baseSideX,connectY,branchW*0.96,Math.max(1.3,branchW*0.48),0,0,Math.PI*2);
+    ctx.ellipse(basePortX,connectY,branchW*0.86,Math.max(1.2,branchW*0.42),0,0,Math.PI*2);
     ctx.stroke();
   }
   ctx.restore();
