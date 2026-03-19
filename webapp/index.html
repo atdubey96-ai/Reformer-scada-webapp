@@ -1841,8 +1841,8 @@ td select option{background:#1e293b;color:#e2e8f0;}
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:4px;
-  padding:6px 5px 5px;
+  gap:7px;
+  padding:4px 5px 4px;
   cursor:pointer;
   position:relative;
   outline:none;
@@ -16066,6 +16066,7 @@ const BURNER_STATE_META = {
 const BURNER_OPENING_MIN = 0;
 const BURNER_OPENING_MAX = 100;
 const BURNER_OPENING_STEP = 5;
+const BURNER_OPENING_ACTIVE_MIN = 5;
 const chartInstances = {};
 const hmChartInstances = {};
 
@@ -16763,9 +16764,9 @@ function normalizeBurnerOpeningValue(raw, state){
   var s = normalizeBurnerStateSnapshotValue(state);
   var fallback = (s === "C") ? 0 : 100;
   var n = Number(raw);
-  if(!isFinite(n)) n = fallback;
+  if(!isFinite(n) || (s !== "C" && n <= 0)) n = fallback;
   n = Math.round(n / BURNER_OPENING_STEP) * BURNER_OPENING_STEP;
-  n = Math.max(BURNER_OPENING_MIN, Math.min(BURNER_OPENING_MAX, n));
+  n = Math.max(s === "C" ? BURNER_OPENING_MIN : BURNER_OPENING_ACTIVE_MIN, Math.min(BURNER_OPENING_MAX, n));
   if(s === "C") return 0;
   return n;
 }
@@ -17116,7 +17117,7 @@ function ensureBurnerCellEditor(){
         + '<span class="burner-cell-editor-value" data-burner-editor-opening>0%</span>'
       + '</div>'
       + '<input class="burner-cell-editor-slider" data-burner-editor-slider type="range" min="' + BURNER_OPENING_MIN + '" max="' + BURNER_OPENING_MAX + '" step="' + BURNER_OPENING_STEP + '" value="100">'
-      + '<div class="burner-cell-editor-scale"><span>0%</span><span>50%</span><span>100%</span></div>'
+      + '<div class="burner-cell-editor-scale"><span data-burner-editor-scale-min>0%</span><span data-burner-editor-scale-mid>50%</span><span data-burner-editor-scale-max>100%</span></div>'
       + '<div class="burner-cell-editor-note" data-burner-editor-note>Adjust opening with the burner state without changing the table layout.</div>'
     + '</div>';
   document.body.appendChild(editor);
@@ -17175,6 +17176,10 @@ function updateBurnerCellEditorUI(){
   var openingEl = editor.querySelector("[data-burner-editor-opening]");
   var note = editor.querySelector("[data-burner-editor-note]");
   var slider = editor.querySelector("[data-burner-editor-slider]");
+  var scaleMin = editor.querySelector("[data-burner-editor-scale-min]");
+  var scaleMid = editor.querySelector("[data-burner-editor-scale-mid]");
+  var scaleMax = editor.querySelector("[data-burner-editor-scale-max]");
+  var activeMin = BURNER_OPENING_ACTIVE_MIN;
   editor.dataset.state = state;
   if(loc) loc.textContent = "Wall " + wallName + " · R" + (ri + 1) + " B" + (ci + 1);
   if(meta) meta.textContent = getBurnerStateLabel(state);
@@ -17182,12 +17187,16 @@ function updateBurnerCellEditorUI(){
   if(note){
     note.textContent = state === "C"
       ? "Cold burners remain at 0% opening."
-      : "Fine-tune opening while keeping the same burner table structure.";
+      : "Active burners default to 100% opening until they are marked closed.";
   }
   if(slider){
+    slider.min = state === "C" ? String(BURNER_OPENING_MIN) : String(activeMin);
     slider.value = String(opening);
     slider.disabled = (state === "C");
   }
+  if(scaleMin) scaleMin.textContent = state === "C" ? "0%" : (activeMin + "%");
+  if(scaleMid) scaleMid.textContent = "50%";
+  if(scaleMax) scaleMax.textContent = "100%";
   var stateButtons = editor.querySelectorAll("[data-burner-editor-state]");
   stateButtons.forEach(function(btn){
     btn.classList.toggle("is-active", btn.getAttribute("data-burner-editor-state") === state);
