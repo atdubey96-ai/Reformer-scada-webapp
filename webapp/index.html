@@ -3090,27 +3090,41 @@ body.light-theme .cw-nudge{
   background:#07090d;
 }
 #tab-cuboid .cuboid-legend-panel{
-  padding:12px 14px 14px;
-  border-top:1px solid rgba(56,84,124,0.34);
-  background:linear-gradient(180deg,rgba(11,16,24,0.98),rgba(9,13,20,0.98));
+  position:relative;
+  margin:10px 12px 12px;
+  padding:14px 16px 16px;
+  border:1px solid rgba(70,102,148,0.46);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(14,20,30,0.98),rgba(8,12,19,0.98));
+  box-shadow:0 14px 28px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+#tab-cuboid .cuboid-legend-panel::before{
+  content:"";
+  position:absolute;
+  inset:-5px;
+  border:1px solid rgba(82,120,176,0.28);
+  border-radius:22px;
+  pointer-events:none;
 }
 #tab-cuboid .cuboid-legend-scroll{
   display:grid;
-  grid-template-columns:minmax(0,2.5fr) minmax(0,1.05fr) minmax(0,1.15fr) minmax(0,0.92fr) minmax(0,0.82fr);
+  grid-template-columns:minmax(0,2.9fr) minmax(0,1.18fr) minmax(0,1.22fr) minmax(0,1.05fr);
   align-items:stretch;
-  gap:10px;
+  gap:12px;
   overflow:visible;
 }
 #tab-cuboid .cuboid-legend-block{
   min-width:0;
   min-height:132px;
-  padding:0 12px;
+  padding:0 14px;
 }
 #tab-cuboid .cuboid-legend-block + .cuboid-legend-block{
   border-left:1px solid rgba(64,84,114,0.38);
 }
 #tab-cuboid .cuboid-legend-states{ padding-left:2px; }
-#tab-cuboid .cuboid-legend-controls{ padding-right:2px; }
+#tab-cuboid .cuboid-legend-clean,
+#tab-cuboid .cuboid-legend-live,
+#tab-cuboid .cuboid-legend-tst{ padding-right:4px; }
 #tab-cuboid .cuboid-legend-title{
   margin-bottom:10px;
   font-size:8px;
@@ -3245,7 +3259,7 @@ body.light-theme .cw-nudge{
   color:rgba(171,182,198,0.82);
 }
 #tab-cuboid .cuboid-legend-live-value{
-  max-width:150px;
+  max-width:172px;
   font-size:12px;
   font-weight:700;
   color:#72ffd8;
@@ -3324,51 +3338,20 @@ body.light-theme .cw-nudge{
   color:#f5f8ff;
   font-weight:700;
 }
-#tab-cuboid .cuboid-legend-controls{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding-top:1px;
-}
-#tab-cuboid .cuboid-legend-action{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:46px;
-  padding:0 12px;
-  border-radius:12px;
-  border:1px solid rgba(70,92,140,0.42);
-  background:linear-gradient(180deg,rgba(28,36,58,0.95),rgba(18,23,36,0.96));
-  color:#e6edf9;
-  font-family:"Courier New",Courier,monospace;
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:0.3px;
-  cursor:pointer;
-  transition:background .18s ease,border-color .18s ease,transform .18s ease;
-}
-#tab-cuboid .cuboid-legend-action:hover{
-  background:linear-gradient(180deg,rgba(41,56,92,0.95),rgba(20,28,44,0.98));
-  border-color:rgba(104,142,220,0.62);
-  transform:translateY(-1px);
-}
 @media (max-width:1400px){
   #tab-cuboid .cuboid-legend-scroll{
     grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:10px 8px;
+    gap:12px 10px;
   }
   #tab-cuboid .cuboid-legend-block + .cuboid-legend-block{
     border-left:0;
   }
   #tab-cuboid .cuboid-legend-states{
-    grid-column:1 / span 2;
-  }
-  #tab-cuboid .cuboid-legend-clean{
-    grid-column:3;
+    grid-column:1 / -1;
   }
   #tab-cuboid .cuboid-legend-live,
   #tab-cuboid .cuboid-legend-tst,
-  #tab-cuboid .cuboid-legend-controls{
+  #tab-cuboid .cuboid-legend-clean{
     min-width:0;
   }
 }
@@ -3377,6 +3360,9 @@ body.light-theme .cw-nudge{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
   #tab-cuboid .cuboid-legend-states{
+    grid-column:1 / -1;
+  }
+  #tab-cuboid .cuboid-legend-tst{
     grid-column:1 / -1;
   }
   #tab-cuboid .cuboid-legend-state-row{
@@ -6741,7 +6727,9 @@ html, body, body *, body *::before, body *::after, svg text{
     height:clamp(640px,calc(100svh - 150px),1040px);
   }
   #tab-cuboid .cuboid-legend-panel{
+    margin:8px 8px 10px;
     padding:12px 12px 14px;
+    border-radius:16px;
   }
   #tab-cuboid .cuboid-legend-scroll{
     grid-template-columns:repeat(2,minmax(0,1fr));
@@ -6760,10 +6748,12 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-cuboid .cuboid-legend-clean,
   #tab-cuboid .cuboid-legend-live,
-  #tab-cuboid .cuboid-legend-tst,
-  #tab-cuboid .cuboid-legend-controls{
+  #tab-cuboid .cuboid-legend-tst{
     min-width:0;
     padding-right:2px;
+  }
+  #tab-cuboid .cuboid-legend-tst{
+    grid-column:1 / -1;
   }
   #tab-cuboid .cuboid-legend-state-row{ gap:10px; }
   #tab-cuboid .cuboid-legend-state-card{
@@ -6787,9 +6777,6 @@ html, body, body *, body *::before, body *::after, svg text{
     min-width:72px;
     min-height:34px;
     padding:0 10px;
-  }
-  #tab-cuboid .cuboid-legend-action{
-    min-height:42px;
   }
   #tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded{
     top:8px;
@@ -15638,7 +15625,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           title="Furnace Cuboid Viewer AB"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260319-03"
+          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260319-04"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -15738,12 +15725,6 @@ html, body, body *, body *::before, body *::after, svg text{
                 <span class="cuboid-legend-tst-hot-value" data-legend-value="tst-hot">--</span>
               </div>
             </section>
-            <section class="cuboid-legend-block cuboid-legend-controls">
-              <div class="cuboid-legend-title">Controls</div>
-              <div class="cuboid-legend-controls">
-                <button class="cuboid-legend-action" data-cuboid-action="reset-view" data-cuboid-chamber="ab">Reset Front View</button>
-              </div>
-            </section>
           </div>
         </div>
       </div>
@@ -15753,7 +15734,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           title="Furnace Cuboid Viewer CD"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260319-03"
+          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260319-04"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -15851,12 +15832,6 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="cuboid-legend-tst-range" style="margin-top:8px;">
                 <span class="cuboid-legend-tst-hot">Hot</span>
                 <span class="cuboid-legend-tst-hot-value" data-legend-value="tst-hot">--</span>
-              </div>
-            </section>
-            <section class="cuboid-legend-block cuboid-legend-controls">
-              <div class="cuboid-legend-title">Controls</div>
-              <div class="cuboid-legend-controls">
-                <button class="cuboid-legend-action" data-cuboid-action="reset-view" data-cuboid-chamber="cd">Reset Front View</button>
               </div>
             </section>
           </div>
@@ -19444,22 +19419,7 @@ function refreshCuboidLegendPanels(){
 }
 
 function bindCuboidLegendActions(){
-  getCuboidLegendPanels().forEach(function(panel){
-    if(panel._legendBound) return;
-    panel._legendBound = true;
-    var resetBtn = panel.querySelector('[data-cuboid-action="reset-view"]');
-    if(resetBtn){
-      resetBtn.addEventListener("click", function(){
-        var chamber = String(resetBtn.getAttribute("data-cuboid-chamber") || "ab").toLowerCase();
-        var frame = getCuboidFrameByChamber(chamber);
-        try{
-          if(frame && frame.contentWindow){
-            frame.contentWindow.postMessage({ type:"cuboid-reset-view" }, "*");
-          }
-        }catch(e){}
-      });
-    }
-  });
+  return;
 }
 
 function findCuboidShellByWindow(win){

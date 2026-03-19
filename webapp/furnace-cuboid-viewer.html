@@ -127,8 +127,8 @@ body{color:rgba(140,180,220,0.85);}
     flex:1 1 auto;
   }
   .btn{
-    flex:1 1 calc(33.333% - 6px);
-    min-width:104px;
+    flex:1 1 calc(50% - 6px);
+    min-width:118px;
     padding:8px 10px;
     font-size:9px;
     letter-spacing:1.2px;
@@ -144,6 +144,7 @@ body{color:rgba(140,180,220,0.85);}
       <button class="btn" id="btnA">Face A</button>
       <button class="btn" id="btnB">Face B</button>
       <button class="btn" id="btnAuto">Auto Rotate</button>
+      <button class="btn" id="btnResetView">Reset Front View</button>
     </div>
   </div>
   <div id="vp"><div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div></div>
@@ -184,6 +185,7 @@ const hint=document.getElementById("hint");
 const btnA=document.getElementById("btnA");
 const btnB=document.getElementById("btnB");
 const btnAuto=document.getElementById("btnAuto");
+const btnResetView=document.getElementById("btnResetView");
 if(viewerTag) viewerTag.textContent=chamberZoneKey+" LIVE WALLS";
 if(btnA) btnA.textContent="Face "+chamberWalls[0];
 if(btnB) btnB.textContent="Face "+chamberWalls[1];
@@ -220,15 +222,19 @@ function cuboidToggleFullscreen(){
   }
 }
 
+function resetFrontView(){
+  autoSpin=false;
+  if(btnAuto) btnAuto.textContent="Auto Rotate";
+  setRotationTarget(0);
+}
+
 document.addEventListener("fullscreenchange",cuboidRefreshHint);
 document.addEventListener("webkitfullscreenchange",cuboidRefreshHint);
 cuboidRefreshHint();
 window.addEventListener("message",function(ev){
   var data=ev && ev.data ? ev.data : null;
   if(!data || data.type!=="cuboid-reset-view") return;
-  autoSpin=false;
-  if(btnAuto) btnAuto.textContent="Auto Rotate";
-  setRotationTarget(0);
+  resetFrontView();
 });
 
 function cuboidGetParentApp(){
@@ -1916,6 +1922,9 @@ btnB.addEventListener("click",function(){ setRotationTarget(Math.PI); });
 btnAuto.addEventListener("click",function(){
   autoSpin=!autoSpin;
   this.textContent=autoSpin ? "Stop" : "Auto Rotate";
+});
+btnResetView.addEventListener("click",function(){
+  resetFrontView();
 });
 
 const ro=new ResizeObserver(function(){
