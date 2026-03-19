@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mac Reformer Cuboid</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#06080c;
+  font-family:Georgia,"Times New Roman",serif;
+}
+#viewer-root{
+  width:100vw;
+  height:100vh;
+  padding:12px;
+}
+#viewer-shell{
+  position:relative;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  border:1.5px solid rgba(72,112,156,0.42);
+  border-radius:12px;
+  background:
+    radial-gradient(circle at top left, rgba(37,56,86,0.28), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(18,29,48,0.24), transparent 24%),
+    linear-gradient(180deg,#05070b 0%,#0a0e14 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06),0 20px 48px rgba(0,0,0,0.36);
+  cursor:grab;
+  touch-action:none;
+}
+#viewer-shell:active{cursor:grabbing}
+#scene-host,
+#scene-host canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.hud-card{
+  position:absolute;
+  z-index:4;
+  pointer-events:none;
+  border:1px solid rgba(118,152,196,0.25);
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(10,14,22,0.72),rgba(7,10,16,0.44));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+#top-hud{
+  top:16px;
+  left:16px;
+  min-width:320px;
+  padding:14px 16px;
+}
+#hud-title{
+  color:#f8fafc;
+  font-size:28px;
+  font-weight:700;
+  letter-spacing:1px;
+}
+#hud-subtitle{
+  margin-top:4px;
+  color:rgba(214,226,242,0.8);
+  font-size:12px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+#hud-meta{
+  margin-top:8px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.hud-pill{
+  padding:6px 10px;
+  border:1px solid rgba(132,164,202,0.2);
+  border-radius:999px;
+  color:#dbe8f8;
+  background:rgba(12,18,28,0.46);
+  font-size:11px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+#bottom-hint{
+  right:16px;
+  bottom:16px;
+  padding:10px 14px;
+  color:rgba(188,208,232,0.72);
+  font-size:11px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+@media (max-width: 900px){
+  #viewer-root{padding:8px}
+  #top-hud{
+    top:10px;
+    left:10px;
+    right:10px;
+    min-width:auto;
+  }
+  #hud-title{font-size:22px}
+  #hud-subtitle{font-size:10px}
+  #hud-meta{gap:6px}
+  .hud-pill{font-size:10px;padding:5px 8px}
+  #bottom-hint{
+    left:10px;
+    right:10px;
+    bottom:10px;
+    text-align:center;
+    font-size:10px;
+  }
+}
+</style>
+</head>
+<body>
+<div id="viewer-root">
+  <div id="viewer-shell">
+    <div id="scene-host"></div>
+    <div class="hud-card" id="top-hud">
+      <div id="hud-title">MAC REFORMER CUBOID</div>
+      <div id="hud-subtitle">Dynamic Furnace Chamber Viewer</div>
+      <div id="hud-meta">
+        <div class="hud-pill" id="hud-chamber">Chamber AB</div>
+        <div class="hud-pill" id="hud-sync">Live Local Sync</div>
+        <div class="hud-pill" id="hud-temps">TST Ready</div>
+      </div>
+    </div>
+    <div class="hud-card" id="bottom-hint">Drag Horizontally To Rotate Along Y Axis</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+var chamberParam = (function(){
+  try{
+    var q = new URLSearchParams(window.location.search || "");
+    var raw = String(q.get("chamber") || "ab").toLowerCase().trim();
+    return raw === "cd" ? "cd" : "ab";
+  }catch(e){
+    return "ab";
+  }
+})();
+var chamberWalls = chamberParam === "cd" ? ["C","D"] : ["A","B"];
+var chamberLabel = chamberParam === "cd" ? "CD" : "AB";
+
+var hudChamber = document.getElementById("hud-chamber");
+var hudSync = document.getElementById("hud-sync");
+var hudTemps = document.getElementById("hud-temps");
+if(hudChamber) hudChamber.textContent = "Chamber " + chamberLabel;
+
+function getParentApp(){
+  try{
+    if(window.parent && window.parent !== window && window.parent.location && window.parent.location.origin === window.location.origin){
+      return window.parent;
+    }
+  }catch(e){}
+  return null;
+}
+
+function normalizeState(raw){
+  var s = String(raw == null ? "" : raw).trim().toUpperCase();
+  return (s === "O" || s === "N" || s === "B" || s === "C") ? s : "C";
+}
+
+function sanitizeBurnerData(source){
+  var walls = ["A","B","C","D"];
+  var clean = {};
+  var src = source && typeof source === "object" ? source : {};
+  for(var wi=0; wi<walls.length; wi++){
+    var wall = walls[wi];
+    var srcRows = Array.isArray(src[wall]) ? src[wall] : [];
+    clean[wall] = [];
+    for(var ri=0; ri<6; ri++){
+      var srcRow = Array.isArray(srcRows[ri]) ? srcRows[ri] : [];
+      var row = [];
+      for(var bi=0; bi<15; bi++) row.push(normalizeState(srcRow[bi]));
+      clean[wall].push(row);
+    }
+  }
+  return clean;
+}
+
+function sanitizeTstArray(arr){
+  var out = [];
+  var src = Array.isArray(arr) ? arr : [];
+  for(var i=0; i<15; i++){
+    var n = Number(src[i]);
+    out.push(isFinite(n) ? n : "");
+  }
+  return out;
+}
+
+function defaultBurnerData(){
+  var patterns = [
+    ["N","O","N","B","N","O","N","O","B","N","O","N","O","N","O"],
+    ["O","N","O","N","O","B","O","N","O","N","B","O","N","O","N"],
+    ["B","N","O","N","N","O","N","O","N","O","N","O","B","N","O"],
+    ["N","O","B","O","N","O","N","B","O","N","O","N","O","O","N"],
+    ["O","N","N","O","B","N","O","N","O","B","N","O","N","N","O"],
+    ["N","B","O","N","O","N","O","N","B","O","N","O","N","O","N"]
+  ];
+  var walls = ["A","B","C","D"];
+  var out = {};
+  for(var wi=0; wi<walls.length; wi++){
+    out[walls[wi]] = [];
+    for(var ri=0; ri<6; ri++) out[walls[wi]].push(patterns[(ri + wi) % patterns.length].slice());
+  }
+  return out;
+}
+
+function hasActiveStates(hmData){
+  var walls = ["A","B","C","D"];
+  for(var wi=0; wi<walls.length; wi++){
+    var rows = hmData[walls[wi]];
+    if(!Array.isArray(rows)) continue;
+    for(var ri=0; ri<rows.length; ri++){
+      var row = rows[ri];
+      if(!Array.isArray(row)) continue;
+      for(var bi=0; bi<row.length; bi++){
+        var s = normalizeState(row[bi]);
+        if(s !== "C") return true;
+      }
+    }
+  }
+  return false;
+}
+
+function loadBurnerMap(){
+  var app = getParentApp();
+  if(app && app._hmRenderSnapshot && app._hmRenderSnapshot.hmData){
+    return sanitizeBurnerData(app._hmRenderSnapshot.hmData);
+  }
+  try{
+    var raw = localStorage.getItem("burnerData");
+    if(raw){
+      var parsed = sanitizeBurnerData(JSON.parse(raw));
+      if(hasActiveStates(parsed)) return parsed;
+    }
+  }catch(e){}
+  return defaultBurnerData();
+}
+
+function latestTempEntry(){
+  var app = getParentApp();
+  if(app && app._hmRenderSnapshot){
+    return {
+      dt: app._hmRenderSnapshot.entryDt || "Latest",
+      shift: app._hmRenderSnapshot.selectedShift || "All",
+      peepHoles: {
+        "ab-bot": sanitizeTstArray(app._hmRenderSnapshot.abBot || []),
+        "ab-top": sanitizeTstArray(app._hmRenderSnapshot.abTop || []),
+        "cd-bot": sanitizeTstArray(app._hmRenderSnapshot.cdBot || []),
+        "cd-top": sanitizeTstArray(app._hmRenderSnapshot.cdTop || [])
+      }
+    };
+  }
+  try{
+    var raw = localStorage.getItem("tempDataEntries");
+    var entries = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(entries) || !entries.length) return null;
+    entries.sort(function(a, b){
+      var ta = Date.parse(String(a && (a.dt || a.date || a.createdAt || a.created_at) || "")) || 0;
+      var tb = Date.parse(String(b && (b.dt || b.date || b.createdAt || b.created_at) || "")) || 0;
+      return tb - ta;
+    });
+    return entries[0] || null;
+  }catch(e){}
+  return null;
+}
+
+function peepRow(entry, key){
+  if(!entry || !entry.peepHoles || !entry.peepHoles[key]) return Array(15).fill("");
+  return sanitizeTstArray(entry.peepHoles[key]);
+}
+
+function loadCleaningLog(){
+  try{
+    var raw = localStorage.getItem("burnerCleaningLog");
+    var parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  }catch(e){}
+  return {};
+}
+
+function buildLiveSnapshot(){
+  var temps = latestTempEntry();
+  return {
+    hmData: loadBurnerMap(),
+    cleaning: loadCleaningLog(),
+    abBot: peepRow(temps, "ab-bot"),
+    abTop: peepRow(temps, "ab-top"),
+    cdBot: peepRow(temps, "cd-bot"),
+    cdTop: peepRow(temps, "cd-top"),
+    dt: temps && temps.dt ? String(temps.dt) : "Live",
+    shift: temps && temps.shift ? String(temps.shift) : "All"
+  };
+}
+
+function wallTstRows(snapshot, wallKey){
+  if(wallKey === "A" || wallKey === "B"){
+    return {
+      top: sanitizeTstArray(snapshot.abTop || []),
+      bottom: sanitizeTstArray(snapshot.abBot || [])
+    };
+  }
+  return {
+    top: sanitizeTstArray(snapshot.cdTop || []),
+    bottom: sanitizeTstArray(snapshot.cdBot || [])
+  };
+}
+
+function digestSnapshot(snapshot){
+  return JSON.stringify({
+    walls: chamberWalls,
+    data: snapshot.hmData,
+    clean: snapshot.cleaning,
+    abBot: snapshot.abBot,
+    abTop: snapshot.abTop,
+    cdBot: snapshot.cdBot,
+    cdTop: snapshot.cdTop,
+    dt: snapshot.dt,
+    shift: snapshot.shift
+  });
+}
+
+function colorForState(state){
+  if(state === "O"){
+    return { flame:"#31d46a", core:"#eafff1", glow:"#19b855", ring:"#2a8a4f" };
+  }
+  if(state === "B"){
+    return { flame:"#2d7df8", core:"#e9f2ff", glow:"#3f89ff", ring:"#315f95" };
+  }
+  if(state === "N"){
+    return { flame:"#ffad1f", core:"#fff2bf", glow:"#ff8a16", ring:"#8a5a1a" };
+  }
+  return { flame:"#38414f", core:"#8c97a5", glow:"#202833", ring:"#454f5d" };
+}
+
+function tempColor(value){
+  var n = Number(value);
+  if(!isFinite(n)) return "rgba(82,93,110,0.45)";
+  var min = 860;
+  var max = 1000;
+  var ratio = Math.max(0, Math.min(1, (n - min) / (max - min)));
+  var r;
+  var g;
+  var b;
+  if(ratio < 0.5){
+    var t = ratio / 0.5;
+    r = Math.round(24 + (236 - 24) * t);
+    g = Math.round(100 + (214 - 100) * t);
+    b = Math.round(56 + (28 - 56) * t);
+  }else{
+    var u = (ratio - 0.5) / 0.5;
+    r = Math.round(236 + (118 - 236) * u);
+    g = Math.round(214 + (34 - 214) * u);
+    b = Math.round(28 + (34 - 28) * u);
+  }
+  return "rgb(" + r + "," + g + "," + b + ")";
+}
+
+function isBurnerCleaned(snapshot, wallKey, rowNumber, burnerNumber){
+  var wallLog = snapshot.cleaning && snapshot.cleaning[wallKey] ? snapshot.cleaning[wallKey] : {};
+  var key = "R" + rowNumber + "B" + burnerNumber;
+  return !!String(wallLog[key] || "").trim();
+}
+
+function makeGlowTexture(){
+  var canvas = document.createElement("canvas");
+  canvas.width = 128;
+  canvas.height = 128;
+  var ctx = canvas.getContext("2d");
+  var g = ctx.createRadialGradient(64, 64, 4, 64, 64, 64);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(0.28, "rgba(255,255,255,0.8)");
+  g.addColorStop(0.62, "rgba(255,255,255,0.18)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  var texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  return texture;
+}
+
+function makeMetalTexture(seedShift){
+  var canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 1024;
+  var ctx = canvas.getContext("2d");
+  var w = canvas.width;
+  var h = canvas.height;
+
+  var base = ctx.createLinearGradient(0, 0, w, h);
+  base.addColorStop(0, "#7f8791");
+  base.addColorStop(0.16, "#c5cbd3");
+  base.addColorStop(0.34, "#eceff3");
+  base.addColorStop(0.52, "#b8bec6");
+  base.addColorStop(0.76, "#d4d9df");
+  base.addColorStop(1, "#858b93");
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, w, h);
+
+  for(var i=0; i<220; i++){
+    var x = ((Math.sin((i + 1 + seedShift) * 13.7) * 0.5) + 0.5) * w;
+    var y = ((Math.sin((i + 1 + seedShift) * 7.9) * 0.5) + 0.5) * h;
+    var len = 80 + (((Math.sin((i + 1 + seedShift) * 5.2) * 0.5) + 0.5) * 360);
+    var alpha = 0.03 + (((Math.sin((i + 1 + seedShift) * 2.4) * 0.5) + 0.5) * 0.08);
+    var streak = ctx.createLinearGradient(x, 0, x + len, 0);
+    streak.addColorStop(0, "rgba(255,255,255,0)");
+    streak.addColorStop(0.48, "rgba(255,255,255," + alpha + ")");
+    streak.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = streak;
+    ctx.fillRect(x, y, len, 1.2);
+  }
+
+  var seamYs = [h * 0.34, h * 0.67];
+  var seamXs = [w * 0.25, w * 0.5, w * 0.75];
+  ctx.strokeStyle = "rgba(52,50,48,0.68)";
+  ctx.lineWidth = 2.2;
+  seamYs.forEach(function(sy){
+    ctx.beginPath();
+    ctx.moveTo(0, sy);
+    ctx.lineTo(w, sy);
+    ctx.stroke();
+  });
+  seamXs.forEach(function(sx){
+    ctx.beginPath();
+    ctx.moveTo(sx, 0);
+    ctx.lineTo(sx, h);
+    ctx.stroke();
+  });
+
+  var boltPoints = [];
+  seamYs.forEach(function(sy){
+    seamXs.forEach(function(sx){ boltPoints.push([sx, sy]); });
+    for(var bi=0; bi<5; bi++) boltPoints.push([w * (0.12 + bi * 0.18), sy]);
+  });
+  boltPoints.forEach(function(pt){
+    var bx = pt[0];
+    var by = pt[1];
+    var r = 8;
+    var bg = ctx.createRadialGradient(bx - 2, by - 2, 1, bx, by, r);
+    bg.addColorStop(0, "#eef2f5");
+    bg.addColorStop(0.45, "#a8afb7");
+    bg.addColorStop(0.82, "#6c737c");
+    bg.addColorStop(1, "#444950");
+    ctx.fillStyle = "rgba(18,16,14,0.36)";
+    ctx.beginPath();
+    ctx.arc(bx + 1, by + 1, r + 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.arc(bx, by, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(40,38,36,0.62)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(bx, by, r * 0.68, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  for(var ri=0; ri<20; ri++){
+    var rx = ((Math.sin((ri + seedShift) * 11.2) * 0.5) + 0.5) * w;
+    var ry = ((Math.sin((ri + seedShift) * 9.6) * 0.5) + 0.5) * h;
+    var rr = 5 + (((Math.sin((ri + seedShift) * 2.8) * 0.5) + 0.5) * 18);
+    var rust = ctx.createRadialGradient(rx, ry, 0, rx, ry, rr);
+    rust.addColorStop(0, "rgba(118,66,26,0.18)");
+    rust.addColorStop(0.55, "rgba(82,48,18,0.08)");
+    rust.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = rust;
+    ctx.beginPath();
+    ctx.arc(rx, ry, rr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  var vignetteX = ctx.createLinearGradient(0, 0, w, 0);
+  vignetteX.addColorStop(0, "rgba(0,0,0,0.24)");
+  vignetteX.addColorStop(0.1, "rgba(0,0,0,0)");
+  vignetteX.addColorStop(0.9, "rgba(0,0,0,0)");
+  vignetteX.addColorStop(1, "rgba(0,0,0,0.24)");
+  ctx.fillStyle = vignetteX;
+  ctx.fillRect(0, 0, w, h);
+
+  var texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
+    texture.colorSpace = THREE.SRGBColorSpace;
+  }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
+    texture.encoding = THREE.sRGBEncoding;
+  }
+  return texture;
+}
+
+function drawRoundedRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawPanelFlame(ctx, x, y, state, cleaned, time, seed){
+  var palette = colorForState(state);
+  var pulse = 0.88 + Math.sin(time * 5.4 + seed) * 0.08 + Math.sin(time * 8.1 + seed * 1.7) * 0.04;
+  var h = 30 * pulse;
+  var w = 18 * pulse;
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  ctx.fillStyle = "rgba(14,16,20,0.76)";
+  ctx.beginPath();
+  ctx.arc(0, 14, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = cleaned ? "rgba(129,234,162,0.95)" : "rgba(146,156,168,0.46)";
+  ctx.lineWidth = cleaned ? 2.2 : 1.4;
+  ctx.beginPath();
+  ctx.arc(0, 14, 11, 0, Math.PI * 2);
+  ctx.stroke();
+
+  if(state !== "C"){
+    var glow = ctx.createRadialGradient(0, -2, 4, 0, -2, 26);
+    glow.addColorStop(0, palette.glow.replace(")", ",0.30)").replace("rgb", "rgba"));
+    glow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, -6, 26, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = palette.flame;
+    ctx.beginPath();
+    ctx.moveTo(0, -h);
+    ctx.bezierCurveTo(w, -h * 0.32, w * 0.82, 8, 0, 12);
+    ctx.bezierCurveTo(-w * 0.82, 8, -w, -h * 0.32, 0, -h);
+    ctx.fill();
+
+    ctx.fillStyle = palette.core;
+    ctx.beginPath();
+    ctx.moveTo(0, -h * 0.52);
+    ctx.bezierCurveTo(w * 0.42, -h * 0.14, w * 0.36, 5, 0, 7);
+    ctx.bezierCurveTo(-w * 0.36, 5, -w * 0.42, -h * 0.14, 0, -h * 0.52);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawTstStrip(ctx, label, vals, x, y, width, time){
+  var barH = 22;
+  var radius = 10;
+  var labelW = 108;
+  ctx.fillStyle = "rgba(9,13,20,0.96)";
+  drawRoundedRect(ctx, x, y - 20, labelW, 40, 12);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(136,156,186,0.24)";
+  ctx.lineWidth = 1.1;
+  ctx.stroke();
+  ctx.fillStyle = "#f8fafc";
+  ctx.font = "700 22px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, x + labelW / 2, y);
+
+  var barX = x + labelW + 22;
+  var segW = width / 15;
+  drawRoundedRect(ctx, barX, y - barH / 2, width, barH, radius);
+  ctx.fillStyle = "rgba(24,30,38,0.88)";
+  ctx.fill();
+
+  for(var i=0; i<15; i++){
+    var vx = barX + i * segW;
+    ctx.fillStyle = tempColor(vals[i]);
+    drawRoundedRect(ctx, vx + 1, y - barH / 2 + 1, Math.max(4, segW - 2), barH - 2, Math.min(radius, 8));
+    ctx.fill();
+
+    var pulse = 1 + Math.sin(time * 4.8 + i * 0.7) * 0.08;
+    ctx.beginPath();
+    ctx.arc(vx + segW / 2, y, 4.7 * pulse, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.16)";
+    ctx.fill();
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = "rgba(255,255,255,0.8)";
+    ctx.stroke();
+  }
+}
+
+function paintWallBoard(canvas, wallKey, snapshot, time, phase){
+  var ctx = canvas.getContext("2d");
+  var w = canvas.width;
+  var h = canvas.height;
+  var rows = snapshot.hmData[wallKey];
+  var tst = wallTstRows(snapshot, wallKey);
+  var panelX = 22;
+  var panelY = 22;
+  var panelW = w - 44;
+  var panelH = h - 44;
+  var gridLeft = 192;
+  var gridRight = w - 52;
+  var gridW = gridRight - gridLeft;
+  var colStep = gridW / 15;
+  var items = [6,5,4,"TOP",3,2,"BOT",1];
+  var topY = 182;
+  var bottomY = h - 92;
+  var stepY = (bottomY - topY) / (items.length - 1);
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  drawRoundedRect(ctx, panelX + 10, panelY + 12, panelW, panelH, 28);
+  ctx.fill();
+
+  var body = ctx.createLinearGradient(0, panelY, 0, h);
+  body.addColorStop(0, "rgba(7,11,18,0.98)");
+  body.addColorStop(0.55, "rgba(10,14,22,0.97)");
+  body.addColorStop(1, "rgba(6,9,15,0.98)");
+  ctx.fillStyle = body;
+  drawRoundedRect(ctx, panelX, panelY, panelW, panelH, 28);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(180,210,238,0.18)";
+  ctx.lineWidth = 1.7;
+  ctx.stroke();
+
+  var gloss = ctx.createLinearGradient(0, panelY, 0, panelY + 160);
+  gloss.addColorStop(0, "rgba(255,255,255,0.16)");
+  gloss.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gloss;
+  drawRoundedRect(ctx, panelX + 2, panelY + 2, panelW - 4, 140, 24);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 46px Georgia, serif";
+  ctx.fillText("WALL " + wallKey, 54, 78);
+  ctx.textAlign = "right";
+  ctx.font = "700 22px Georgia, serif";
+  ctx.fillText("6 rows x 15 burners", w - 56, 68);
+
+  ctx.strokeStyle = "rgba(242,112,30,0.92)";
+  ctx.lineWidth = 3.4;
+  ctx.beginPath();
+  ctx.moveTo(40, 108);
+  ctx.lineTo(w - 40, 108);
+  ctx.stroke();
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 24px Georgia, serif";
+  for(var bi=0; bi<15; bi++){
+    var bx = gridLeft + colStep * (bi + 0.5);
+    ctx.fillStyle = "rgba(10,15,24,0.94)";
+    drawRoundedRect(ctx, bx - 32, 118, 64, 36, 10);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(110,132,160,0.34)";
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("B" + (bi + 1), bx, 136);
+  }
+
+  for(var ii=0; ii<items.length; ii++){
+    var item = items[ii];
+    var cy = topY + stepY * ii;
+    ctx.strokeStyle = "rgba(90,104,126,0.16)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(34, cy + 26);
+    ctx.lineTo(w - 34, cy + 26);
+    ctx.stroke();
+
+    if(item === "TOP"){
+      drawTstStrip(ctx, "PH TST", tst.top, 30, cy, gridW - 6, time + phase);
+      continue;
+    }
+    if(item === "BOT"){
+      drawTstStrip(ctx, "PH TST", tst.bottom, 30, cy, gridW - 6, time + phase + 0.7);
+      continue;
+    }
+
+    ctx.fillStyle = "rgba(10,15,24,0.94)";
+    drawRoundedRect(ctx, 28, cy - 24, 108, 48, 13);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(126,146,172,0.28)";
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.font = "700 24px Georgia, serif";
+    ctx.fillText("ROW " + item, 82, cy);
+
+    var rowData = Array.isArray(rows[item - 1]) ? rows[item - 1] : [];
+    for(var ci=0; ci<15; ci++){
+      var state = normalizeState(rowData[ci]);
+      var cleaned = isBurnerCleaned(snapshot, wallKey, item, ci + 1);
+      var iconX = gridLeft + colStep * (ci + 0.5);
+      drawPanelFlame(ctx, iconX, cy - 2, state, cleaned, time + phase, (ii + 1) * 0.4 + ci * 0.15);
+    }
+  }
+}
+
+var host = document.getElementById("scene-host");
+var renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setSize(host.clientWidth, host.clientHeight);
+host.appendChild(renderer.domElement);
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05070b);
+
+var camera = new THREE.PerspectiveCamera(24, Math.max(1, host.clientWidth / Math.max(1, host.clientHeight)), 0.1, 300);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+var keyLight = new THREE.DirectionalLight(0xfff1dc, 1.25);
+keyLight.position.set(14, 12, 18);
+scene.add(keyLight);
+var fillLight = new THREE.DirectionalLight(0x9bc4ff, 0.42);
+fillLight.position.set(-14, 6, 12);
+scene.add(fillLight);
+var rimLight = new THREE.DirectionalLight(0x86a4d8, 0.34);
+rimLight.position.set(0, 1, -18);
+scene.add(rimLight);
+
+var chamberGlow = new THREE.PointLight(0xff9836, 1.1, 24);
+chamberGlow.position.set(0, 0, 0);
+scene.add(chamberGlow);
+
+var baseGroup = new THREE.Group();
+scene.add(baseGroup);
+var rotator = new THREE.Group();
+baseGroup.add(rotator);
+var model = new THREE.Group();
+rotator.add(model);
+
+var bodyTexture = makeMetalTexture(0.7);
+var innerTexture = makeMetalTexture(3.8);
+var headerTexture = makeMetalTexture(6.1);
+bodyTexture.repeat.set(1.1, 1);
+innerTexture.repeat.set(1.1, 1);
+headerTexture.repeat.set(0.6, 0.6);
+
+var DIM = {
+  length: 14.4,
+  height: 8.1,
+  depth: 2.25,
+  wall: 0.14,
+  windowSize: 1.45,
+  windowOffsetY: 1.72,
+  burnerInset: 0.14,
+  tubeRadius: 0.11,
+  tubeTopOut: 0.38,
+  tubeBottomGap: 0.25
+};
+
+var metalBodyMat = new THREE.MeshStandardMaterial({
+  color:0xc0c7cf,
+  map:bodyTexture,
+  metalness:0.82,
+  roughness:0.34,
+  side:THREE.DoubleSide
+});
+var metalInnerMat = new THREE.MeshStandardMaterial({
+  color:0xa4abb4,
+  map:innerTexture,
+  metalness:0.76,
+  roughness:0.38,
+  side:THREE.DoubleSide
+});
+var trimMat = new THREE.MeshStandardMaterial({
+  color:0x3d434b,
+  metalness:0.88,
+  roughness:0.26
+});
+var tubeMat = new THREE.MeshStandardMaterial({
+  color:0x757d88,
+  map:headerTexture,
+  metalness:0.92,
+  roughness:0.18
+});
+var darkPortMat = new THREE.MeshStandardMaterial({
+  color:0x111316,
+  metalness:0.68,
+  roughness:0.46
+});
+var hotPortMat = new THREE.MeshStandardMaterial({
+  color:0x282c30,
+  metalness:0.78,
+  roughness:0.32
+});
+
+function addPanelBox(width, height, depth, x, y, z, material){
+  var mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
+  mesh.position.set(x, y, z);
+  model.add(mesh);
+  return mesh;
+}
+
+function roundedHolePath(path, cx, cy, w, h, r){
+  path.moveTo(cx - w / 2 + r, cy - h / 2);
+  path.lineTo(cx + w / 2 - r, cy - h / 2);
+  path.quadraticCurveTo(cx + w / 2, cy - h / 2, cx + w / 2, cy - h / 2 + r);
+  path.lineTo(cx + w / 2, cy + h / 2 - r);
+  path.quadraticCurveTo(cx + w / 2, cy + h / 2, cx + w / 2 - r, cy + h / 2);
+  path.lineTo(cx - w / 2 + r, cy + h / 2);
+  path.quadraticCurveTo(cx - w / 2, cy + h / 2, cx - w / 2, cy + h / 2 - r);
+  path.lineTo(cx - w / 2, cy - h / 2 + r);
+  path.quadraticCurveTo(cx - w / 2, cy - h / 2, cx - w / 2 + r, cy - h / 2);
+}
+
+function createSideWallShape(width, height, windowSize, offsetY){
+  var shape = new THREE.Shape();
+  roundedHolePath(shape, 0, 0, width, height, Math.min(width, height) * 0.05);
+  var holeA = new THREE.Path();
+  roundedHolePath(holeA, 0, offsetY, windowSize, windowSize, windowSize * 0.08);
+  shape.holes.push(holeA);
+  var holeB = new THREE.Path();
+  roundedHolePath(holeB, 0, -offsetY, windowSize, windowSize, windowSize * 0.08);
+  shape.holes.push(holeB);
+  return shape;
+}
+
+var sideShape = createSideWallShape(DIM.depth, DIM.height, DIM.windowSize, DIM.windowOffsetY);
+var sideGeo = new THREE.ShapeGeometry(sideShape, 10);
+var rightOuter = new THREE.Mesh(sideGeo, metalBodyMat);
+rightOuter.rotation.y = Math.PI / 2;
+rightOuter.position.x = DIM.length / 2;
+model.add(rightOuter);
+var rightInner = new THREE.Mesh(sideGeo.clone(), metalInnerMat);
+rightInner.rotation.y = -Math.PI / 2;
+rightInner.position.x = DIM.length / 2 - DIM.wall;
+model.add(rightInner);
+var leftOuter = new THREE.Mesh(sideGeo.clone(), metalBodyMat);
+leftOuter.rotation.y = -Math.PI / 2;
+leftOuter.position.x = -DIM.length / 2;
+model.add(leftOuter);
+var leftInner = new THREE.Mesh(sideGeo.clone(), metalInnerMat);
+leftInner.rotation.y = Math.PI / 2;
+leftInner.position.x = -DIM.length / 2 + DIM.wall;
+model.add(leftInner);
+
+addPanelBox(DIM.length, DIM.height, DIM.wall, 0, 0, DIM.depth / 2, metalBodyMat);
+addPanelBox(DIM.length, DIM.height, DIM.wall, 0, 0, -DIM.depth / 2, metalBodyMat);
+addPanelBox(DIM.length, DIM.wall, DIM.depth, 0, DIM.height / 2, 0, metalBodyMat);
+addPanelBox(DIM.length, DIM.wall, DIM.depth, 0, -DIM.height / 2, 0, metalBodyMat);
+
+function addEdgeBar(size, position){
+  var mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2]), trimMat);
+  mesh.position.set(position[0], position[1], position[2]);
+  model.add(mesh);
+}
+
+var edge = 0.09;
+addEdgeBar([DIM.length + edge, edge, edge], [0, DIM.height / 2, DIM.depth / 2]);
+addEdgeBar([DIM.length + edge, edge, edge], [0, -DIM.height / 2, DIM.depth / 2]);
+addEdgeBar([DIM.length + edge, edge, edge], [0, DIM.height / 2, -DIM.depth / 2]);
+addEdgeBar([DIM.length + edge, edge, edge], [0, -DIM.height / 2, -DIM.depth / 2]);
+addEdgeBar([edge, DIM.height, edge], [DIM.length / 2, 0, DIM.depth / 2]);
+addEdgeBar([edge, DIM.height, edge], [-DIM.length / 2, 0, DIM.depth / 2]);
+addEdgeBar([edge, DIM.height, edge], [DIM.length / 2, 0, -DIM.depth / 2]);
+addEdgeBar([edge, DIM.height, edge], [-DIM.length / 2, 0, -DIM.depth / 2]);
+
+function addWindowTunnel(sideSign, yPos){
+  var x = sideSign * (DIM.length / 2 - DIM.wall / 2);
+  var lip = 0.12;
+  var tunnelDepth = DIM.wall;
+  addEdgeBar([tunnelDepth, lip, DIM.windowSize + lip * 0.6], [x, yPos + DIM.windowSize / 2, 0]);
+  addEdgeBar([tunnelDepth, lip, DIM.windowSize + lip * 0.6], [x, yPos - DIM.windowSize / 2, 0]);
+  addEdgeBar([tunnelDepth, DIM.windowSize, lip], [x, yPos, DIM.windowSize / 2]);
+  addEdgeBar([tunnelDepth, DIM.windowSize, lip], [x, yPos, -DIM.windowSize / 2]);
+}
+
+addWindowTunnel(1, DIM.windowOffsetY);
+addWindowTunnel(1, -DIM.windowOffsetY);
+addWindowTunnel(-1, DIM.windowOffsetY);
+addWindowTunnel(-1, -DIM.windowOffsetY);
+
+var tubeGeo = new THREE.CylinderGeometry(DIM.tubeRadius, DIM.tubeRadius, DIM.height - DIM.tubeBottomGap + DIM.tubeTopOut, 18);
+var collarGeo = new THREE.CylinderGeometry(DIM.tubeRadius * 1.85, DIM.tubeRadius * 1.85, 0.07, 18);
+var nozzleGeo = new THREE.CylinderGeometry(DIM.tubeRadius * 0.84, DIM.tubeRadius * 1.05, 0.11, 18);
+var tubeCount = 8;
+var tubeSpan = DIM.length * 0.78;
+for(var ti=0; ti<tubeCount; ti++){
+  var tx = -tubeSpan / 2 + (tubeSpan / (tubeCount - 1)) * ti;
+  var tube = new THREE.Mesh(tubeGeo, tubeMat);
+  tube.position.set(tx, (DIM.tubeTopOut - DIM.tubeBottomGap) / 2, 0);
+  model.add(tube);
+
+  var collar = new THREE.Mesh(collarGeo, trimMat);
+  collar.position.set(tx, DIM.height / 2, 0);
+  model.add(collar);
+
+  var nozzle = new THREE.Mesh(nozzleGeo, tubeMat);
+  nozzle.position.set(tx, -DIM.height / 2 + DIM.tubeBottomGap * 0.5, 0);
+  model.add(nozzle);
+}
+
+var header = new THREE.Mesh(
+  new THREE.CylinderGeometry(DIM.tubeRadius * 2.45, DIM.tubeRadius * 2.45, DIM.length * 0.88, 20),
+  tubeMat
+);
+header.rotation.z = Math.PI / 2;
+header.position.set(0, DIM.height / 2 + DIM.tubeTopOut, 0);
+model.add(header);
+
+var glowTexture = makeGlowTexture();
+var ringGeo = new THREE.TorusGeometry(0.095, 0.026, 10, 26);
+var nozzlePortGeo = new THREE.CylinderGeometry(0.07, 0.078, 0.05, 16);
+var capGeo = new THREE.CylinderGeometry(0.074, 0.084, 0.05, 16);
+var flameOuterGeo = new THREE.ConeGeometry(0.115, 0.42, 14, 1, true);
+var flameInnerGeo = new THREE.ConeGeometry(0.06, 0.28, 12, 1, true);
+var tipGeo = new THREE.SphereGeometry(0.055, 10, 10);
+
+var sharedFlameMaterials = {};
+["O","N","B"].forEach(function(state){
+  var style = colorForState(state);
+  sharedFlameMaterials[state] = {
+    outer:new THREE.MeshBasicMaterial({
+      color:style.flame,
+      transparent:true,
+      opacity:0.42,
+      side:THREE.DoubleSide,
+      blending:THREE.AdditiveBlending,
+      depthWrite:false
+    }),
+    inner:new THREE.MeshBasicMaterial({
+      color:style.core,
+      transparent:true,
+      opacity:0.82,
+      side:THREE.DoubleSide,
+      blending:THREE.AdditiveBlending,
+      depthWrite:false
+    }),
+    tip:new THREE.MeshBasicMaterial({
+      color:style.core,
+      transparent:true,
+      opacity:0.88,
+      blending:THREE.AdditiveBlending,
+      depthWrite:false
+    }),
+    glow:new THREE.SpriteMaterial({
+      map:glowTexture,
+      color:style.flame,
+      transparent:true,
+      opacity:0.34,
+      blending:THREE.AdditiveBlending,
+      depthWrite:false
+    })
+  };
+});
+
+var burnerPortObjects = [];
+
+function createBurnerWallFace(faceName, wallKey){
+  var dir = faceName === "front" ? -1 : 1;
+  var wallZ = faceName === "front"
+    ? (DIM.depth / 2 - DIM.wall / 2 - 0.02)
+    : (-DIM.depth / 2 + DIM.wall / 2 + 0.02);
+  var cols = 15;
+  var rowNumbers = [6,5,4,3,2,1];
+  var spanX = DIM.length * 0.82;
+  var spanY = DIM.height * 0.7;
+  for(var ri=0; ri<rowNumbers.length; ri++){
+    var rowNumber = rowNumbers[ri];
+    var y = (spanY / 2) - (spanY / (rowNumbers.length - 1)) * ri;
+    for(var ci=0; ci<cols; ci++){
+      var x = -spanX / 2 + (spanX / (cols - 1)) * ci;
+      var seed = ri * 31 + ci * 3 + (faceName === "front" ? 1 : 7);
+      var ring = new THREE.Mesh(ringGeo, hotPortMat);
+      ring.position.set(x, y, wallZ + dir * 0.01);
+      model.add(ring);
+
+      var port = new THREE.Mesh(nozzlePortGeo, darkPortMat);
+      port.rotation.x = Math.PI / 2;
+      port.position.set(x, y, wallZ + dir * 0.038);
+      model.add(port);
+
+      var coldCap = new THREE.Mesh(capGeo, darkPortMat);
+      coldCap.rotation.x = Math.PI / 2;
+      coldCap.position.set(x, y, wallZ + dir * 0.055);
+      model.add(coldCap);
+
+      var glow = new THREE.Sprite(sharedFlameMaterials.N.glow.clone());
+      glow.scale.set(0.42, 0.42, 1);
+      glow.position.set(x, y, wallZ + dir * 0.08);
+      model.add(glow);
+
+      var outerFlame = new THREE.Mesh(flameOuterGeo, sharedFlameMaterials.N.outer.clone());
+      outerFlame.rotation.x = dir === -1 ? -Math.PI / 2 : Math.PI / 2;
+      outerFlame.position.set(x, y, wallZ + dir * 0.19);
+      model.add(outerFlame);
+
+      var innerFlame = new THREE.Mesh(flameInnerGeo, sharedFlameMaterials.N.inner.clone());
+      innerFlame.rotation.x = dir === -1 ? -Math.PI / 2 : Math.PI / 2;
+      innerFlame.position.set(x, y, wallZ + dir * 0.17);
+      model.add(innerFlame);
+
+      var flameTip = new THREE.Mesh(tipGeo, sharedFlameMaterials.N.tip.clone());
+      flameTip.position.set(x, y, wallZ + dir * 0.35);
+      model.add(flameTip);
+
+      var cleanMarker = new THREE.Mesh(
+        new THREE.SphereGeometry(0.028, 8, 8),
+        new THREE.MeshBasicMaterial({ color:0x73f09c, transparent:true, opacity:0.9 })
+      );
+      cleanMarker.position.set(x + 0.08, y - 0.08, wallZ + dir * 0.03);
+      cleanMarker.visible = false;
+      model.add(cleanMarker);
+
+      burnerPortObjects.push({
+        wallKey: wallKey,
+        rowNumber: rowNumber,
+        burnerNumber: ci + 1,
+        faceName: faceName,
+        seed: seed,
+        dir: dir,
+        ring: ring,
+        port: port,
+        coldCap: coldCap,
+        glow: glow,
+        outerFlame: outerFlame,
+        innerFlame: innerFlame,
+        flameTip: flameTip,
+        cleanMarker: cleanMarker,
+        currentState: "C"
+      });
+    }
+  }
+}
+
+createBurnerWallFace("front", chamberWalls[0]);
+createBurnerWallFace("back", chamberWalls[1]);
+
+function createBoardPlane(faceName, wallKey){
+  var canvas = document.createElement("canvas");
+  canvas.width = 1600;
+  canvas.height = 980;
+  var texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
+    texture.colorSpace = THREE.SRGBColorSpace;
+  }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
+    texture.encoding = THREE.sRGBEncoding;
+  }
+  var material = new THREE.MeshBasicMaterial({
+    map:texture,
+    transparent:true,
+    side:THREE.FrontSide,
+    depthWrite:false,
+    alphaTest:0.02,
+    polygonOffset:true,
+    polygonOffsetFactor:-1,
+    polygonOffsetUnits:-2
+  });
+  var plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(DIM.length - 0.7, DIM.height - 0.52),
+    material
+  );
+  if(faceName === "back"){
+    plane.position.set(0, 0, -DIM.depth / 2 - 0.08);
+    plane.rotation.y = Math.PI;
+  }else{
+    plane.position.set(0, 0, DIM.depth / 2 + 0.08);
+  }
+  model.add(plane);
+  return {
+    wallKey: wallKey,
+    canvas: canvas,
+    texture: texture,
+    plane: plane
+  };
+}
+
+var outerBoards = {
+  front: createBoardPlane("front", chamberWalls[0]),
+  back: createBoardPlane("back", chamberWalls[1])
+};
+
+function applySnapshotToBurners(snapshot){
+  burnerPortObjects.forEach(function(item){
+    var row = snapshot.hmData[item.wallKey] && snapshot.hmData[item.wallKey][item.rowNumber - 1]
+      ? snapshot.hmData[item.wallKey][item.rowNumber - 1]
+      : [];
+    var state = normalizeState(row[item.burnerNumber - 1]);
+    var cleaned = isBurnerCleaned(snapshot, item.wallKey, item.rowNumber, item.burnerNumber);
+    item.currentState = state;
+    var style = colorForState(state);
+
+    item.ring.material = state === "C" ? darkPortMat : hotPortMat;
+    item.port.material = state === "C" ? darkPortMat : hotPortMat;
+    item.coldCap.visible = state === "C";
+    item.cleanMarker.visible = cleaned;
+
+    if(state === "C"){
+      item.glow.visible = false;
+      item.outerFlame.visible = false;
+      item.innerFlame.visible = false;
+      item.flameTip.visible = false;
+      return;
+    }
+
+    item.glow.visible = true;
+    item.outerFlame.visible = true;
+    item.innerFlame.visible = true;
+    item.flameTip.visible = true;
+    item.glow.material.color.set(style.flame);
+    item.outerFlame.material.color.set(style.flame);
+    item.innerFlame.material.color.set(style.core);
+    item.flameTip.material.color.set(style.core);
+  });
+}
+
+var liveSnapshot = buildLiveSnapshot();
+var lastDigest = digestSnapshot(liveSnapshot);
+applySnapshotToBurners(liveSnapshot);
+
+function updateHud(snapshot){
+  if(hudSync) hudSync.textContent = "Data " + (snapshot.dt || "Live");
+  if(hudTemps) hudTemps.textContent = "Shift " + (snapshot.shift || "All");
+}
+updateHud(liveSnapshot);
+
+function refreshLiveData(force){
+  var next = buildLiveSnapshot();
+  var digest = digestSnapshot(next);
+  if(force || digest !== lastDigest){
+    liveSnapshot = next;
+    lastDigest = digest;
+    applySnapshotToBurners(liveSnapshot);
+    updateHud(liveSnapshot);
+  }
+}
+
+window.addEventListener("storage", function(){
+  refreshLiveData(true);
+});
+window.setInterval(function(){
+  refreshLiveData(false);
+}, 1300);
+
+var defaultYaw = 0.48;
+var defaultPitch = -0.06;
+var targetYaw = defaultYaw;
+var currentYaw = defaultYaw;
+var dragging = false;
+var lastX = 0;
+
+function fitCamera(){
+  var aspect = Math.max(1, host.clientWidth) / Math.max(1, host.clientHeight);
+  camera.aspect = aspect;
+  rotator.rotation.set(defaultPitch, currentYaw, 0);
+  var bounds = new THREE.Box3().setFromObject(model);
+  var size = bounds.getSize(new THREE.Vector3());
+  var center = bounds.getCenter(new THREE.Vector3());
+  var fovRad = camera.fov * Math.PI / 180;
+  var hFov = 2 * Math.atan(Math.tan(fovRad / 2) * aspect);
+  var distV = (size.y * 1.02 / 2) / Math.tan(fovRad / 2);
+  var distH = (size.x * 1.01 / 2) / Math.tan(hFov / 2);
+  var distance = Math.max(distV, distH) + size.z * 0.22;
+  camera.position.set(center.x, center.y + size.y * 0.01, distance);
+  camera.lookAt(center.x, center.y, center.z);
+  camera.updateProjectionMatrix();
+}
+
+function resizeRenderer(){
+  var w = Math.max(1, host.clientWidth);
+  var h = Math.max(1, host.clientHeight);
+  renderer.setSize(w, h);
+  fitCamera();
+}
+
+function startDrag(clientX){
+  dragging = true;
+  lastX = clientX;
+}
+function moveDrag(clientX){
+  if(!dragging) return;
+  targetYaw += (clientX - lastX) * 0.0065;
+  lastX = clientX;
+}
+function endDrag(){
+  dragging = false;
+}
+
+renderer.domElement.addEventListener("mousedown", function(ev){
+  startDrag(ev.clientX);
+});
+window.addEventListener("mousemove", function(ev){
+  moveDrag(ev.clientX);
+});
+window.addEventListener("mouseup", endDrag);
+renderer.domElement.addEventListener("touchstart", function(ev){
+  if(!ev.touches || !ev.touches.length) return;
+  startDrag(ev.touches[0].clientX);
+  ev.preventDefault();
+}, { passive:false });
+window.addEventListener("touchmove", function(ev){
+  if(!ev.touches || !ev.touches.length) return;
+  moveDrag(ev.touches[0].clientX);
+}, { passive:true });
+window.addEventListener("touchend", endDrag);
+window.addEventListener("resize", resizeRenderer);
+
+var lastBoardPaint = 0;
+function animateBurners(time){
+  burnerPortObjects.forEach(function(item){
+    if(item.currentState === "C") return;
+    var pulse = 0.92 + Math.sin(time * 5.2 + item.seed) * 0.10 + Math.sin(time * 8.0 + item.seed * 1.8) * 0.04;
+    item.outerFlame.scale.set(1, pulse, 1);
+    item.innerFlame.scale.set(1, 0.88 + pulse * 0.16, 1);
+    item.flameTip.scale.setScalar(0.88 + pulse * 0.16);
+    item.glow.scale.set(0.34 + pulse * 0.1, 0.34 + pulse * 0.1, 1);
+    item.glow.material.opacity = 0.24 + pulse * 0.12;
+    item.outerFlame.rotation.z = Math.sin(time * 2.1 + item.seed) * 0.09;
+    item.innerFlame.rotation.z = Math.sin(time * 2.7 + item.seed * 1.3) * 0.06;
+  });
+}
+
+function repaintBoards(time){
+  paintWallBoard(outerBoards.front.canvas, outerBoards.front.wallKey, liveSnapshot, time, 0.13);
+  paintWallBoard(outerBoards.back.canvas, outerBoards.back.wallKey, liveSnapshot, time, 0.61);
+  outerBoards.front.texture.needsUpdate = true;
+  outerBoards.back.texture.needsUpdate = true;
+}
+
+function tick(now){
+  var time = now * 0.001;
+  requestAnimationFrame(tick);
+  currentYaw += (targetYaw - currentYaw) * 0.12;
+  rotator.rotation.x = defaultPitch;
+  rotator.rotation.y = currentYaw;
+  animateBurners(time);
+  if(time - lastBoardPaint > 0.09){
+    repaintBoards(time);
+    lastBoardPaint = time;
+  }
+  renderer.render(scene, camera);
+}
+
+resizeRenderer();
+repaintBoards(0);
+requestAnimationFrame(tick);
+
+})();
+</script>
+</body>
+</html>
