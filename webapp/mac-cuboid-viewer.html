@@ -122,16 +122,6 @@ html,body{
 <div id="viewer-root">
   <div id="viewer-shell">
     <div id="scene-host"></div>
-    <div class="hud-card" id="top-hud">
-      <div id="hud-title">MAC REFORMER CUBOID</div>
-      <div id="hud-subtitle">Dynamic Furnace Chamber Viewer</div>
-      <div id="hud-meta">
-        <div class="hud-pill" id="hud-chamber">Chamber AB</div>
-        <div class="hud-pill" id="hud-sync">Live Local Sync</div>
-        <div class="hud-pill" id="hud-temps">TST Ready</div>
-      </div>
-    </div>
-    <div class="hud-card" id="bottom-hint">Drag Horizontally To Rotate Along Y Axis</div>
   </div>
 </div>
 
@@ -521,8 +511,8 @@ function drawRoundedRect(ctx, x, y, w, h, r){
 function drawPanelFlame(ctx, x, y, state, cleaned, time, seed){
   var palette = colorForState(state);
   var pulse = 0.88 + Math.sin(time * 5.4 + seed) * 0.08 + Math.sin(time * 8.1 + seed * 1.7) * 0.04;
-  var h = 30 * pulse;
-  var w = 18 * pulse;
+  var h = 36 * pulse;
+  var w = 22 * pulse;
 
   ctx.save();
   ctx.translate(x, y);
@@ -539,12 +529,12 @@ function drawPanelFlame(ctx, x, y, state, cleaned, time, seed){
   ctx.stroke();
 
   if(state !== "C"){
-    var glow = ctx.createRadialGradient(0, -2, 4, 0, -2, 26);
+    var glow = ctx.createRadialGradient(0, -4, 6, 0, -4, 32);
     glow.addColorStop(0, palette.glow.replace(")", ",0.30)").replace("rgb", "rgba"));
     glow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.arc(0, -6, 26, 0, Math.PI * 2);
+    ctx.arc(0, -8, 32, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = palette.flame;
@@ -759,7 +749,7 @@ innerTexture.repeat.set(1.1, 1);
 headerTexture.repeat.set(0.6, 0.6);
 
 var DIM = {
-  length: 14.4,
+  length: 16.2,
   height: 8.1,
   depth: 2.25,
   wall: 0.14,
@@ -925,9 +915,10 @@ var glowTexture = makeGlowTexture();
 var ringGeo = new THREE.TorusGeometry(0.095, 0.026, 10, 26);
 var nozzlePortGeo = new THREE.CylinderGeometry(0.07, 0.078, 0.05, 16);
 var capGeo = new THREE.CylinderGeometry(0.074, 0.084, 0.05, 16);
-var flameOuterGeo = new THREE.ConeGeometry(0.115, 0.42, 14, 1, true);
-var flameInnerGeo = new THREE.ConeGeometry(0.06, 0.28, 12, 1, true);
-var tipGeo = new THREE.SphereGeometry(0.055, 10, 10);
+var flameAuraGeo = new THREE.ConeGeometry(0.16, 0.62, 14, 1, true);
+var flameOuterGeo = new THREE.ConeGeometry(0.13, 0.5, 16, 1, true);
+var flameInnerGeo = new THREE.ConeGeometry(0.072, 0.34, 14, 1, true);
+var tipGeo = new THREE.SphereGeometry(0.064, 12, 12);
 
 var sharedFlameMaterials = {};
 ["O","N","B"].forEach(function(state){
@@ -937,6 +928,14 @@ var sharedFlameMaterials = {};
       color:style.flame,
       transparent:true,
       opacity:0.42,
+      side:THREE.DoubleSide,
+      blending:THREE.AdditiveBlending,
+      depthWrite:false
+    }),
+    aura:new THREE.MeshBasicMaterial({
+      color:style.flame,
+      transparent:true,
+      opacity:0.16,
       side:THREE.DoubleSide,
       blending:THREE.AdditiveBlending,
       depthWrite:false
@@ -1003,6 +1002,11 @@ function createBurnerWallFace(faceName, wallKey){
       glow.position.set(x, y, wallZ + dir * 0.08);
       model.add(glow);
 
+      var auraFlame = new THREE.Mesh(flameAuraGeo, sharedFlameMaterials.N.aura.clone());
+      auraFlame.rotation.x = dir === -1 ? -Math.PI / 2 : Math.PI / 2;
+      auraFlame.position.set(x, y, wallZ + dir * 0.22);
+      model.add(auraFlame);
+
       var outerFlame = new THREE.Mesh(flameOuterGeo, sharedFlameMaterials.N.outer.clone());
       outerFlame.rotation.x = dir === -1 ? -Math.PI / 2 : Math.PI / 2;
       outerFlame.position.set(x, y, wallZ + dir * 0.19);
@@ -1036,10 +1040,18 @@ function createBurnerWallFace(faceName, wallKey){
         port: port,
         coldCap: coldCap,
         glow: glow,
+        auraFlame: auraFlame,
         outerFlame: outerFlame,
         innerFlame: innerFlame,
         flameTip: flameTip,
         cleanMarker: cleanMarker,
+        baseX: x,
+        baseY: y,
+        baseZGlow: wallZ + dir * 0.08,
+        baseZAura: wallZ + dir * 0.22,
+        baseZOuter: wallZ + dir * 0.19,
+        baseZInner: wallZ + dir * 0.17,
+        baseZTip: wallZ + dir * 0.35,
         currentState: "C"
       });
     }
@@ -1112,6 +1124,7 @@ function applySnapshotToBurners(snapshot){
 
     if(state === "C"){
       item.glow.visible = false;
+      item.auraFlame.visible = false;
       item.outerFlame.visible = false;
       item.innerFlame.visible = false;
       item.flameTip.visible = false;
@@ -1119,10 +1132,12 @@ function applySnapshotToBurners(snapshot){
     }
 
     item.glow.visible = true;
+    item.auraFlame.visible = true;
     item.outerFlame.visible = true;
     item.innerFlame.visible = true;
     item.flameTip.visible = true;
     item.glow.material.color.set(style.flame);
+    item.auraFlame.material.color.set(style.flame);
     item.outerFlame.material.color.set(style.flame);
     item.innerFlame.material.color.set(style.core);
     item.flameTip.material.color.set(style.core);
@@ -1224,14 +1239,26 @@ var lastBoardPaint = 0;
 function animateBurners(time){
   burnerPortObjects.forEach(function(item){
     if(item.currentState === "C") return;
-    var pulse = 0.92 + Math.sin(time * 5.2 + item.seed) * 0.10 + Math.sin(time * 8.0 + item.seed * 1.8) * 0.04;
-    item.outerFlame.scale.set(1, pulse, 1);
-    item.innerFlame.scale.set(1, 0.88 + pulse * 0.16, 1);
-    item.flameTip.scale.setScalar(0.88 + pulse * 0.16);
-    item.glow.scale.set(0.34 + pulse * 0.1, 0.34 + pulse * 0.1, 1);
-    item.glow.material.opacity = 0.24 + pulse * 0.12;
-    item.outerFlame.rotation.z = Math.sin(time * 2.1 + item.seed) * 0.09;
-    item.innerFlame.rotation.z = Math.sin(time * 2.7 + item.seed * 1.3) * 0.06;
+    var pulse = 0.94 + Math.sin(time * 5.4 + item.seed) * 0.1 + Math.sin(time * 8.6 + item.seed * 1.7) * 0.05;
+    var sway = Math.sin(time * 3.1 + item.seed * 0.9) * 0.045;
+    var flutter = Math.sin(time * 7.2 + item.seed * 1.4) * 0.03;
+    var cross = Math.cos(time * 4.1 + item.seed * 0.7) * 0.026;
+    item.glow.position.set(item.baseX + cross * 0.22, item.baseY + sway * 0.18, item.baseZGlow + item.dir * (0.01 + pulse * 0.008));
+    item.glow.scale.set(0.42 + pulse * 0.13, 0.42 + pulse * 0.13, 1);
+    item.glow.material.opacity = 0.24 + pulse * 0.14;
+    item.auraFlame.position.set(item.baseX + cross * 0.45, item.baseY + sway * 0.2, item.baseZAura + item.dir * (0.01 + pulse * 0.02));
+    item.auraFlame.scale.set(0.98 + pulse * 0.16, 1.02 + pulse * 0.24, 0.98 + pulse * 0.16);
+    item.auraFlame.material.opacity = 0.12 + pulse * 0.08;
+    item.auraFlame.rotation.z = sway * 1.3;
+    item.auraFlame.rotation.y = item.dir === -1 ? cross * 0.9 : Math.PI + cross * 0.9;
+    item.outerFlame.position.set(item.baseX + cross * 0.62, item.baseY + sway * 0.28, item.baseZOuter + item.dir * (pulse * 0.028));
+    item.outerFlame.scale.set(0.92 + pulse * 0.16, 1.04 + pulse * 0.26, 0.92 + pulse * 0.16);
+    item.innerFlame.position.set(item.baseX + cross * 0.34, item.baseY + sway * 0.22, item.baseZInner + item.dir * (pulse * 0.022));
+    item.innerFlame.scale.set(0.9 + pulse * 0.12, 0.96 + pulse * 0.22, 0.9 + pulse * 0.12);
+    item.flameTip.position.set(item.baseX + cross * 0.9, item.baseY + sway * 0.34 + flutter * 0.16, item.baseZTip + item.dir * (pulse * 0.034));
+    item.flameTip.scale.setScalar(0.88 + pulse * 0.22);
+    item.outerFlame.rotation.z = sway + flutter;
+    item.innerFlame.rotation.z = sway * 1.18 - flutter * 0.72;
   });
 }
 
