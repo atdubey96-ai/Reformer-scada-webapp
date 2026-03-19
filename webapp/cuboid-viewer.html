@@ -1048,8 +1048,8 @@ function cuboidCreateFaceOverlay(face, wallKey){
   var innerMaterial = new THREE.MeshBasicMaterial({
     map:texture,
     transparent:true,
-    side:THREE.BackSide,
-    depthTest:false,
+    side:THREE.FrontSide,
+    depthTest:true,
     depthWrite:false,
     alphaTest:0.02,
     polygonOffset:true,
@@ -1073,10 +1073,11 @@ function cuboidCreateFaceOverlay(face, wallKey){
     outerPlane.position.set(0, 0, -CD/2 - 0.009);
     outerPlane.rotation.y = Math.PI;
     innerPlane.position.set(0, 0, -CD/2 + innerInset);
-    innerPlane.rotation.y = Math.PI;
+    innerPlane.rotation.y = 0;
   }else{
     outerPlane.position.set(0, 0, CD/2 + 0.009);
     innerPlane.position.set(0, 0, CD/2 - innerInset);
+    innerPlane.rotation.y = Math.PI;
   }
   outerPlane.renderOrder = 9;
   innerPlane.renderOrder = 12;
