@@ -1278,8 +1278,10 @@ function fitCamera(){
 }
 fitCamera();
 
+const rigGroup=new THREE.Group();
+scene.add(rigGroup);
 const group=new THREE.Group();
-scene.add(group);
+rigGroup.add(group);
 
 scene.add(new THREE.AmbientLight(0xc8d8e8,1.4));
 const sun=new THREE.DirectionalLight(0xfff5e0,1.2);
@@ -1611,15 +1613,22 @@ function addBurners(fz,fdir){
 addBurners(FD/2-0.015,-1);
 addBurners(-FD/2+0.015,1);
 
-const DRAG_ROTATION_FACTOR=0.0064;
-const ROTATION_DAMPING=0.14;
-const INERTIA_DECAY=0.94;
-const INERTIA_MIN=0.00008;
-const AUTO_ROTATE_SPEED=0.0032;
-const MAX_DRAG_DELTA=28;
+const DRAG_ROTATION_SPAN=Math.PI*1.18;
+const SPRING_STIFFNESS=34;
+const SPRING_DAMPING=10.5;
+const THROW_GAIN=0.96;
+const THROW_FRICTION=4.9;
+const AUTO_ROTATE_SPEED=0.34;
+const AUTO_ROTATE_RAMP=5.2;
+const MAX_THROW_SPEED=1.95;
+const MAX_DRAG_DELTA=42;
+const TAP_MOVE_TOLERANCE=10;
+const LEAN_Z_LIMIT=0.032;
+const LEAN_X_LIMIT=0.016;
 
-let rotY=0,tgtY=0,drag=false,lastX=0,autoSpin=false;
-let touchMoved=false,lastTapAt=0,lastDragTs=0,rotVelocity=0;
+let rotY=0,targetRotY=0,springVelocity=0,throwVelocity=0,autoSpin=false;
+let activePointerId=null,isDragging=false,lastX=0,lastDragTs=0,lastPointerVelocity=0,dragDistance=0;
+let touchMoved=false,lastTapAt=0,lastFrameTs=0,autoSpinMix=0;
 
 function normalizeAngle(angle){
   let a=angle;
@@ -1637,68 +1646,73 @@ function shortestAngleDelta(fromAngle,toAngle){
 }
 
 function setRotationTarget(targetAngle){
-  tgtY=rotY+shortestAngleDelta(rotY,targetAngle);
-  rotVelocity=0;
+  targetRotY=rotY+shortestAngleDelta(rotY,targetAngle);
+  throwVelocity=0;
+  springVelocity*=0.3;
 }
 
 function startDrag(clientX){
-  drag=true;
+  isDragging=true;
   lastX=clientX;
   lastDragTs=performance.now();
-  rotVelocity=0;
+  lastPointerVelocity=0;
+  throwVelocity=0;
+  springVelocity*=0.2;
+  dragDistance=0;
   touchMoved=false;
 }
 
 function moveDrag(clientX){
-  if(!drag) return;
+  if(!isDragging) return;
   const now=performance.now();
   const rawDx=clientX-lastX;
   const dx=Math.max(-MAX_DRAG_DELTA,Math.min(MAX_DRAG_DELTA,rawDx));
+  dragDistance+=Math.abs(rawDx);
   if(Math.abs(rawDx)>2) touchMoved=true;
-  const deltaRot=dx*DRAG_ROTATION_FACTOR;
-  tgtY+=deltaRot;
-  const dt=Math.max(12,now-lastDragTs);
-  const instantVelocity=deltaRot/(dt/16.6667);
-  rotVelocity=(rotVelocity*0.65)+(instantVelocity*0.35);
+  const width=Math.max(320,GW());
+  const deltaRot=(dx/width)*DRAG_ROTATION_SPAN;
+  targetRotY+=deltaRot;
+  const dt=Math.max(8,now-lastDragTs)/1000;
+  const instantVelocity=deltaRot/dt;
+  lastPointerVelocity=(lastPointerVelocity*0.45)+(instantVelocity*0.55);
   lastX=clientX;
   lastDragTs=now;
 }
 
 function stopDrag(){
-  if(!drag) return;
-  drag=false;
+  if(!isDragging) return;
+  isDragging=false;
+  throwVelocity=Math.max(-MAX_THROW_SPEED,Math.min(MAX_THROW_SPEED,lastPointerVelocity*THROW_GAIN));
+  lastPointerVelocity=0;
 }
 
 function snapToNearestFace(){
-  const projectedAngle=rotY+(rotVelocity*6);
+  const projectedAngle=rotY+(springVelocity*0.22)+(throwVelocity*0.28);
   const snapped=Math.round(normalizeAngle(projectedAngle)/(Math.PI/2))*(Math.PI/2);
   setRotationTarget(snapped);
 }
 
-vp.addEventListener("mousedown",function(e){ startDrag(e.clientX); });
-window.addEventListener("mousemove",function(e){ moveDrag(e.clientX); });
-window.addEventListener("mouseup",stopDrag);
-
-vp.addEventListener("touchstart",function(e){
-  if(!e.touches || !e.touches.length) return;
-  startDrag(e.touches[0].clientX);
-  e.preventDefault();
-},{passive:false});
-window.addEventListener("touchmove",function(e){
-  if(!e.touches || !e.touches.length) return;
-  moveDrag(e.touches[0].clientX);
-},{passive:true});
-window.addEventListener("touchend",function(){
+vp.addEventListener("pointerdown",function(e){
+  activePointerId=e.pointerId;
+  if(vp.setPointerCapture) vp.setPointerCapture(e.pointerId);
+  startDrag(e.clientX);
+});
+vp.addEventListener("pointermove",function(e){
+  if(activePointerId!==e.pointerId) return;
+  moveDrag(e.clientX);
+});
+function endPointerGesture(e){
+  if(activePointerId!==e.pointerId) return;
+  if(vp.releasePointerCapture){
+    try{ vp.releasePointerCapture(e.pointerId); }catch(_e){}
+  }
+  activePointerId=null;
+  const wasTapCandidate=dragDistance<=TAP_MOVE_TOLERANCE && !touchMoved;
   stopDrag();
-  if(touchMoved) lastTapAt=0;
-});
-
-vp.addEventListener("dblclick",function(e){
-  e.preventDefault();
-  snapToNearestFace();
-});
-vp.addEventListener("touchend",function(){
-  if(touchMoved) return;
+  if(!wasTapCandidate){
+    lastTapAt=0;
+    return;
+  }
   const now=Date.now();
   if(now-lastTapAt<320){
     snapToNearestFace();
@@ -1706,13 +1720,20 @@ vp.addEventListener("touchend",function(){
     return;
   }
   lastTapAt=now;
+}
+vp.addEventListener("pointerup",endPointerGesture);
+vp.addEventListener("pointercancel",endPointerGesture);
+
+vp.addEventListener("dblclick",function(e){
+  e.preventDefault();
+  snapToNearestFace();
 });
 
 btnA.addEventListener("click",function(){ setRotationTarget(0); });
 btnB.addEventListener("click",function(){ setRotationTarget(Math.PI); });
 btnAuto.addEventListener("click",function(){
   autoSpin=!autoSpin;
-  if(autoSpin) rotVelocity=0;
+  if(autoSpin) throwVelocity=0;
   this.textContent=autoSpin ? "Stop" : "Auto Rotate";
 });
 
@@ -1725,18 +1746,31 @@ renderer.setSize(GW(),GH());
 
 function animate(t){
   requestAnimationFrame(animate);
-  if(autoSpin && !drag){
-    tgtY+=AUTO_ROTATE_SPEED;
-  }else if(!drag){
-    if(Math.abs(rotVelocity)>INERTIA_MIN){
-      tgtY+=rotVelocity;
-      rotVelocity*=INERTIA_DECAY;
-    }else{
-      rotVelocity=0;
-    }
+  const dt=lastFrameTs ? Math.min(0.05,Math.max(0.001,(t-lastFrameTs)/1000)) : (1/60);
+  lastFrameTs=t;
+
+  const targetAutoMix=(autoSpin && !isDragging) ? 1 : 0;
+  autoSpinMix+=(targetAutoMix-autoSpinMix)*(1-Math.exp(-AUTO_ROTATE_RAMP*dt));
+  if(autoSpinMix>0.0001){
+    targetRotY+=AUTO_ROTATE_SPEED*autoSpinMix*dt;
   }
-  rotY+=(tgtY-rotY)*ROTATION_DAMPING;
-  group.rotation.y=rotY;
+
+  if(!isDragging && Math.abs(throwVelocity)>0.0001){
+    targetRotY+=throwVelocity*dt;
+    throwVelocity*=Math.exp(-THROW_FRICTION*dt);
+    if(Math.abs(throwVelocity)<0.0001) throwVelocity=0;
+  }
+
+  springVelocity+=(targetRotY-rotY)*SPRING_STIFFNESS*dt;
+  springVelocity*=Math.exp(-SPRING_DAMPING*dt);
+  rotY+=springVelocity*dt;
+
+  rigGroup.rotation.y=rotY;
+  const motionMetric=springVelocity+(throwVelocity*0.28)+(isDragging ? (lastPointerVelocity*0.12) : 0);
+  const targetLeanZ=Math.max(-LEAN_Z_LIMIT,Math.min(LEAN_Z_LIMIT,-motionMetric*0.042));
+  const targetLeanX=Math.max(0,Math.min(LEAN_X_LIMIT,Math.abs(targetLeanZ)*0.32+(autoSpinMix*0.005)));
+  group.rotation.z+=(targetLeanZ-group.rotation.z)*(1-Math.exp(-8*dt));
+  group.rotation.x+=(targetLeanX-group.rotation.x)*(1-Math.exp(-7*dt));
   innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
   const ts=t*0.001;
   if((t-lastOverlayPaintAt)>=OVERLAY_TICK_MS){
