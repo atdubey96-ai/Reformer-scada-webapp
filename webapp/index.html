@@ -3126,7 +3126,7 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-scroll{
   display:grid;
-  grid-template-columns:minmax(0,2.9fr) minmax(0,1.18fr) minmax(0,1.22fr) minmax(0,1.05fr);
+  grid-template-columns:minmax(0,3fr) minmax(0,1.18fr) minmax(0,1.18fr);
   align-items:stretch;
   gap:12px;
   overflow:visible;
@@ -3141,7 +3141,6 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-states{ padding-left:2px; }
 #tab-cuboid .cuboid-legend-clean,
-#tab-cuboid .cuboid-legend-live,
 #tab-cuboid .cuboid-legend-tst{ padding-right:4px; }
 #tab-cuboid .cuboid-legend-title{
   margin-bottom:10px;
@@ -3254,39 +3253,6 @@ body.light-theme .cw-nudge{
   font-weight:700;
   color:#ffffff;
 }
-#tab-cuboid .cuboid-legend-live-rows{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding-top:1px;
-}
-#tab-cuboid .cuboid-legend-live-row{
-  display:flex;
-  align-items:baseline;
-  justify-content:space-between;
-  gap:10px;
-  padding-bottom:8px;
-  border-bottom:1px solid rgba(47,64,92,0.4);
-}
-#tab-cuboid .cuboid-legend-live-row:last-child{
-  border-bottom:0;
-  padding-bottom:0;
-}
-#tab-cuboid .cuboid-legend-live-label{
-  font-size:10px;
-  color:rgba(171,182,198,0.82);
-}
-#tab-cuboid .cuboid-legend-live-value{
-  max-width:172px;
-  font-size:12px;
-  font-weight:700;
-  color:#72ffd8;
-  text-align:right;
-  overflow-wrap:anywhere;
-}
-#tab-cuboid .cuboid-legend-live-value.is-neutral{
-  color:#e9eef8;
-}
 #tab-cuboid .cuboid-legend-tst-top{
   display:flex;
   align-items:center;
@@ -3358,7 +3324,7 @@ body.light-theme .cw-nudge{
 }
 @media (max-width:1400px){
   #tab-cuboid .cuboid-legend-scroll{
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns:repeat(2,minmax(0,1fr));
     gap:12px 10px;
   }
   #tab-cuboid .cuboid-legend-block + .cuboid-legend-block{
@@ -3367,7 +3333,6 @@ body.light-theme .cw-nudge{
   #tab-cuboid .cuboid-legend-states{
     grid-column:1 / -1;
   }
-  #tab-cuboid .cuboid-legend-live,
   #tab-cuboid .cuboid-legend-tst,
   #tab-cuboid .cuboid-legend-clean{
     min-width:0;
@@ -3378,9 +3343,6 @@ body.light-theme .cw-nudge{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
   #tab-cuboid .cuboid-legend-states{
-    grid-column:1 / -1;
-  }
-  #tab-cuboid .cuboid-legend-tst{
     grid-column:1 / -1;
   }
   #tab-cuboid .cuboid-legend-state-row{
@@ -6766,7 +6728,6 @@ html, body, body *, body *::before, body *::after, svg text{
     padding-left:2px;
   }
   #tab-cuboid .cuboid-legend-clean,
-  #tab-cuboid .cuboid-legend-live,
   #tab-cuboid .cuboid-legend-tst{
     min-width:0;
     padding-right:2px;
@@ -6788,9 +6749,6 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cuboid .cuboid-legend-title{
     margin-bottom:10px;
     letter-spacing:2px;
-  }
-  #tab-cuboid .cuboid-legend-live-value{
-    max-width:120px;
   }
   #tab-cuboid .cuboid-legend-tst-chip{
     min-width:72px;
@@ -15620,27 +15578,6 @@ html, body, body *, body *::before, body *::after, svg text{
                 </div>
               </div>
             </section>
-            <section class="cuboid-legend-block cuboid-legend-live">
-              <div class="cuboid-legend-title">Live Parameters</div>
-              <div class="cuboid-legend-live-rows">
-                <div class="cuboid-legend-live-row">
-                  <span class="cuboid-legend-live-label">Chamber Temp</span>
-                  <strong class="cuboid-legend-live-value" data-legend-value="avg-temp">--</strong>
-                </div>
-                <div class="cuboid-legend-live-row">
-                  <span class="cuboid-legend-live-label">Flame Status</span>
-                  <strong class="cuboid-legend-live-value" data-legend-value="active-burners">--</strong>
-                </div>
-                <div class="cuboid-legend-live-row">
-                  <span class="cuboid-legend-live-label">Data Stamp</span>
-                  <strong class="cuboid-legend-live-value is-neutral" data-legend-value="stamp">Latest</strong>
-                </div>
-                <div class="cuboid-legend-live-row">
-                  <span class="cuboid-legend-live-label">Shift</span>
-                  <strong class="cuboid-legend-live-value is-neutral" data-legend-value="shift">All</strong>
-                </div>
-              </div>
-            </section>
             <section class="cuboid-legend-block cuboid-legend-tst">
               <div class="cuboid-legend-title">TST Gradient</div>
               <div class="cuboid-legend-tst-top">
@@ -15726,27 +15663,6 @@ html, body, body *, body *::before, body *::after, svg text{
                   <span class="cuboid-legend-clean-bullet"></span>
                   <span class="cuboid-legend-clean-text">Empty Dot = Burner Not Cleaned</span>
                   <strong class="cuboid-legend-clean-value" data-legend-value="uncleaned">0</strong>
-                </div>
-              </div>
-            </section>
-            <section class="cuboid-legend-block cuboid-legend-live">
-              <div class="cuboid-legend-title">Live Parameters</div>
-              <div class="cuboid-legend-live-rows">
-                <div class="cuboid-legend-live-row">
-                  <span class="cuboid-legend-live-label">Chamber Temp</span>
-                  <strong class="cuboid-legend-live-value" data-legend-value="avg-temp">--</strong>
-                </div>
-                <div class="cuboid-legend-live-row">
-                  <span class="cuboid-legend-live-label">Flame Status</span>
-                  <strong class="cuboid-legend-live-value" data-legend-value="active-burners">--</strong>
-                </div>
-                <div class="cuboid-legend-live-row">
-                  <span class="cuboid-legend-live-label">Data Stamp</span>
-                  <strong class="cuboid-legend-live-value is-neutral" data-legend-value="stamp">Latest</strong>
-                </div>
-                <div class="cuboid-legend-live-row">
-                  <span class="cuboid-legend-live-label">Shift</span>
-                  <strong class="cuboid-legend-live-value is-neutral" data-legend-value="shift">All</strong>
                 </div>
               </div>
             </section>
@@ -19432,22 +19348,18 @@ function refreshCuboidLegendPanels(){
     var snapshot = cuboidLegendBuildSnapshot(chamber);
     var counts = hmCountStatesForWalls(snapshot.hmData, walls);
     var temps = hmToNumericTemps((snapshot.top || []).concat(snapshot.bot || []));
-    var avg = "--", min = "--", max = "--";
+    var min = "--", max = "--";
     if(temps.length){
-      var sum = 0;
       var lo = temps[0];
       var hi = temps[0];
       for(var i=0; i<temps.length; i++){
         var n = temps[i];
-        sum += n;
         if(n < lo) lo = n;
         if(n > hi) hi = n;
       }
-      avg = Math.round(sum / temps.length) + "°C";
       min = Math.round(lo) + "°C";
       max = Math.round(hi) + "°C";
     }
-    var activeBurners = (counts.O || 0) + (counts.N || 0) + (counts.B || 0);
     var cleaning = cuboidLegendCountCleaning(log, walls);
     cuboidLegendSetText(panel, "count-b", counts.B || 0);
     cuboidLegendSetText(panel, "count-c", counts.C || 0);
@@ -19455,10 +19367,6 @@ function refreshCuboidLegendPanels(){
     cuboidLegendSetText(panel, "count-n", counts.N || 0);
     cuboidLegendSetText(panel, "cleaned", cleaning.cleaned);
     cuboidLegendSetText(panel, "uncleaned", cleaning.uncleaned);
-    cuboidLegendSetText(panel, "avg-temp", avg);
-    cuboidLegendSetText(panel, "active-burners", activeBurners + " active burners");
-    cuboidLegendSetText(panel, "stamp", snapshot.entryDt || "Latest");
-    cuboidLegendSetText(panel, "shift", snapshot.selectedShift || "All");
     cuboidLegendSetText(panel, "tst-cold", min);
     cuboidLegendSetText(panel, "tst-min", min);
     cuboidLegendSetText(panel, "tst-max", max);
