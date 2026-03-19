@@ -1828,6 +1828,205 @@ td select{
 }
 td select option{background:#1e293b;color:#e2e8f0;}
 
+#tab-burner .burner-grid-table td[data-row][data-col]{
+  height:52px;
+}
+#tab-burner .burner-cell-trigger{
+  width:100%;
+  height:100%;
+  border:none;
+  background:transparent;
+  color:inherit;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  padding:6px 5px 5px;
+  cursor:pointer;
+  position:relative;
+  outline:none;
+}
+#tab-burner .burner-cell-trigger::after{
+  content:"▾";
+  position:absolute;
+  top:3px;
+  right:4px;
+  font-size:8px;
+  line-height:1;
+  color:rgba(255,255,255,0.68);
+  pointer-events:none;
+}
+#tab-burner .burner-cell-state{
+  font-size:10.5px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:0.7px;
+  text-transform:uppercase;
+}
+#tab-burner .burner-cell-opening{
+  font-size:9.5px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:0.25px;
+  opacity:0.95;
+}
+#tab-burner td.burner-editor-open,
+#tab-burner td.burner-editor-open:hover{
+  transform:none !important;
+  z-index:12 !important;
+}
+#tab-burner td.burner-editor-open:hover::after,
+#tab-burner td.burner-editor-open:hover::before{
+  display:none;
+}
+.burner-cell-editor{
+  --burner-editor-accent:#60a5fa;
+  position:fixed;
+  z-index:1300;
+  width:min(340px,calc(100vw - 20px));
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(82,117,168,0.48);
+  background:linear-gradient(180deg,rgba(13,19,29,0.98),rgba(8,12,19,0.98));
+  box-shadow:0 18px 42px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter:blur(12px);
+}
+.burner-cell-editor[hidden]{display:none !important;}
+.burner-cell-editor[data-state="B"]{--burner-editor-accent:#60a5fa;}
+.burner-cell-editor[data-state="N"]{--burner-editor-accent:#fbbf24;}
+.burner-cell-editor[data-state="O"]{--burner-editor-accent:#4ade80;}
+.burner-cell-editor[data-state="C"]{--burner-editor-accent:#cbd5e1;}
+.burner-cell-editor-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.burner-cell-editor-loc{
+  font-size:12px;
+  font-weight:800;
+  color:#eaf2ff;
+  letter-spacing:0.35px;
+}
+.burner-cell-editor-meta{
+  font-size:10px;
+  font-weight:700;
+  color:var(--burner-editor-accent);
+  white-space:nowrap;
+}
+.burner-cell-editor-group{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.burner-cell-editor-group + .burner-cell-editor-group{
+  margin-top:12px;
+}
+.burner-cell-editor-label-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.burner-cell-editor-label{
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:rgba(190,204,224,0.82);
+}
+.burner-cell-editor-value{
+  font-size:12px;
+  font-weight:800;
+  color:#f8fbff;
+}
+.burner-cell-editor-state-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;
+}
+.burner-cell-editor-state-btn{
+  border:1px solid rgba(86,110,146,0.4);
+  background:rgba(14,22,34,0.82);
+  color:#dce6f5;
+  border-radius:12px;
+  padding:7px 6px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  cursor:pointer;
+  transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease, background .14s ease;
+}
+.burner-cell-editor-state-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(125,152,194,0.72);
+}
+.burner-cell-editor-state-btn.is-active{
+  border-color:var(--burner-editor-accent);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.14), 0 10px 18px rgba(0,0,0,0.22);
+}
+.burner-cell-editor-state-btn[data-state="B"].is-active{
+  background:linear-gradient(180deg,rgba(36,87,177,0.92),rgba(21,46,97,0.96));
+}
+.burner-cell-editor-state-btn[data-state="N"].is-active{
+  background:linear-gradient(180deg,rgba(183,116,22,0.92),rgba(96,56,11,0.96));
+}
+.burner-cell-editor-state-btn[data-state="O"].is-active{
+  background:linear-gradient(180deg,rgba(24,138,75,0.92),rgba(15,65,39,0.96));
+}
+.burner-cell-editor-state-btn[data-state="C"].is-active{
+  background:linear-gradient(180deg,rgba(96,111,129,0.92),rgba(49,61,77,0.96));
+}
+.burner-cell-editor-state-code{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:0.6px;
+}
+.burner-cell-editor-state-name{
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.2px;
+}
+.burner-cell-editor-slider{
+  width:100%;
+  accent-color:var(--burner-editor-accent);
+  cursor:pointer;
+}
+.burner-cell-editor-slider[disabled]{
+  cursor:not-allowed;
+  opacity:0.45;
+}
+.burner-cell-editor-scale{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:9px;
+  font-weight:700;
+  color:rgba(184,198,220,0.7);
+}
+.burner-cell-editor-note{
+  font-size:9px;
+  line-height:1.35;
+  color:rgba(184,198,220,0.68);
+}
+body.light-theme .burner-cell-editor{
+  background:linear-gradient(180deg,rgba(248,251,255,0.98),rgba(234,241,248,0.98));
+  border-color:rgba(91,122,165,0.34);
+  box-shadow:0 16px 34px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.78);
+}
+body.light-theme .burner-cell-editor-loc{color:#14263d;}
+body.light-theme .burner-cell-editor-label{color:#4d617b;}
+body.light-theme .burner-cell-editor-value{color:#122235;}
+body.light-theme .burner-cell-editor-state-btn{
+  background:rgba(255,255,255,0.92);
+  color:#22344b;
+  border-color:rgba(129,154,190,0.34);
+}
+
 /* ====================================================
    ANALYTICS
 ==================================================== */
@@ -5895,7 +6094,12 @@ function renderHeatMap(){
       }
     }
     /* Also fix the global and persist so other tabs work too */
-    try{ data = hmData; saveData(); }catch(e){}
+    try{
+      data = hmData;
+      saveData();
+      burnerOpeningData = sanitizeBurnerOpeningShape(burnerOpeningData, data);
+      saveBurnerOpeningData();
+    }catch(e){}
   } else {
     /* Sync to global for other features */
     try{ data = hmData; }catch(e){}
@@ -15835,6 +16039,15 @@ const WALL_NAMES     = ["A","B","C","D"];
 const ROWS           = 6;
 const BURNERS        = 15;
 const TEXT_MAP       = {B:"#000",N:"#000",O:"#000",C:"#fff"};
+const BURNER_STATE_META = {
+  B:{short:"BOTH", label:"Both (NG + FO)"},
+  N:{short:"NG",   label:"NG Only"},
+  O:{short:"OG",   label:"Off Gas"},
+  C:{short:"COLD", label:"None / Cold"}
+};
+const BURNER_OPENING_MIN = 0;
+const BURNER_OPENING_MAX = 100;
+const BURNER_OPENING_STEP = 5;
 const chartInstances = {};
 const hmChartInstances = {};
 
@@ -16526,6 +16739,86 @@ function buildDefaultData(){
 }
 
 var data={};
+var burnerOpeningData={};
+
+function normalizeBurnerOpeningValue(raw, state){
+  var s = normalizeBurnerStateSnapshotValue(state);
+  var fallback = (s === "C") ? 0 : 100;
+  var n = Number(raw);
+  if(!isFinite(n)) n = fallback;
+  n = Math.round(n / BURNER_OPENING_STEP) * BURNER_OPENING_STEP;
+  n = Math.max(BURNER_OPENING_MIN, Math.min(BURNER_OPENING_MAX, n));
+  if(s === "C") return 0;
+  return n;
+}
+
+function buildDefaultBurnerOpeningData(sourceData){
+  var src = (sourceData && typeof sourceData === "object") ? sourceData : buildDefaultData();
+  var out = {};
+  WALL_NAMES.forEach(function(w){
+    out[w] = [];
+    for(var ri=0; ri<ROWS; ri++){
+      var srcRow = Array.isArray(src[w] && src[w][ri]) ? src[w][ri] : [];
+      var row = [];
+      for(var ci=0; ci<BURNERS; ci++){
+        row.push(normalizeBurnerOpeningValue(null, srcRow[ci]));
+      }
+      out[w].push(row);
+    }
+  });
+  return out;
+}
+
+function sanitizeBurnerOpeningShape(source, stateSource){
+  var src = (source && typeof source === "object") ? source : {};
+  var states = (stateSource && typeof stateSource === "object") ? stateSource : data;
+  var out = {};
+  WALL_NAMES.forEach(function(w){
+    var srcRows = Array.isArray(src[w]) ? src[w] : [];
+    out[w] = [];
+    for(var ri=0; ri<ROWS; ri++){
+      var srcRow = Array.isArray(srcRows[ri]) ? srcRows[ri] : [];
+      var stateRow = Array.isArray(states[w] && states[w][ri]) ? states[w][ri] : [];
+      var row = [];
+      for(var ci=0; ci<BURNERS; ci++){
+        row.push(normalizeBurnerOpeningValue(srcRow[ci], stateRow[ci]));
+      }
+      out[w].push(row);
+    }
+  });
+  return out;
+}
+
+function loadBurnerOpeningData(){
+  try{
+    var raw = localStorage.getItem("burnerOpeningData");
+    if(raw){
+      var parsed = JSON.parse(raw);
+      burnerOpeningData = sanitizeBurnerOpeningShape(parsed, data);
+      return;
+    }
+  }catch(e){}
+  burnerOpeningData = buildDefaultBurnerOpeningData(data);
+}
+
+function saveBurnerOpeningData(){
+  localStorage.setItem("burnerOpeningData", JSON.stringify(sanitizeBurnerOpeningShape(burnerOpeningData, data)));
+}
+
+function getBurnerOpeningValue(wallName, ri, ci, state){
+  if(!burnerOpeningData || typeof burnerOpeningData !== "object"){
+    burnerOpeningData = buildDefaultBurnerOpeningData(data);
+  }
+  var wallRows = burnerOpeningData[wallName];
+  if(!Array.isArray(wallRows) || !Array.isArray(wallRows[ri])) return normalizeBurnerOpeningValue(null, state);
+  return normalizeBurnerOpeningValue(wallRows[ri][ci], state);
+}
+
+function setBurnerOpeningValue(wallName, ri, ci, value, state){
+  burnerOpeningData = sanitizeBurnerOpeningShape(burnerOpeningData, data);
+  burnerOpeningData[wallName][ri][ci] = normalizeBurnerOpeningValue(value, state);
+}
+
 function loadData(){
   try{
     var raw=localStorage.getItem("burnerData");
@@ -16538,21 +16831,34 @@ function saveData(){localStorage.setItem("burnerData",JSON.stringify(data));}
 /* ==================================================
    PENDING BURNER CHANGES
 ================================================== */
-var burnerPending = {}; /* {wallName: {ri_ci: newValue}} — staged, not yet saved */
+var burnerPending = {}; /* {wallName: {ri_ci:{state,opening,prevState,prevOpening}}} — staged, not yet saved */
+
+function hasBurnerPendingChanges(){
+  return Object.keys(burnerPending || {}).some(function(wallName){
+    return burnerPending[wallName] && Object.keys(burnerPending[wallName]).length > 0;
+  });
+}
+
+function syncBurnerUnsavedBadge(){
+  var badge = document.getElementById("burnerUnsavedBadge");
+  var dirty = hasBurnerPendingChanges();
+  if(badge) badge.style.display = dirty ? "inline-flex" : "none";
+  if(!dirty) burnerPending = {};
+}
 
 function markBurnerUnsaved(){
-  var badge = document.getElementById("burnerUnsavedBadge");
-  if(badge) badge.style.display = "inline-flex";
+  syncBurnerUnsavedBadge();
 }
 function clearBurnerUnsaved(){
-  var badge = document.getElementById("burnerUnsavedBadge");
-  if(badge) badge.style.display = "none";
   burnerPending = {};
+  syncBurnerUnsavedBadge();
 }
 function commitBurnerPending(){
-  if(!Object.keys(burnerPending).length) return;
+  if(!hasBurnerPendingChanges()) return;
+  if(typeof closeBurnerCellEditor === "function") closeBurnerCellEditor();
   /* data object is already updated in-place during staging — just persist */
   saveData();
+  saveBurnerOpeningData();
   clearBurnerUnsaved();
 }
 
@@ -16650,6 +16956,274 @@ function setBurnerMobileWall(wall){
   burnerMobileActiveWall = next;
   persistBurnerMobileWallKey();
   applyBurnerMobileWallFilter();
+}
+
+function getBurnerStateShortLabel(state){
+  var s = normalizeBurnerStateSnapshotValue(state);
+  return (BURNER_STATE_META[s] && BURNER_STATE_META[s].short) ? BURNER_STATE_META[s].short : s;
+}
+
+function getBurnerStateLabel(state){
+  var s = normalizeBurnerStateSnapshotValue(state);
+  return (BURNER_STATE_META[s] && BURNER_STATE_META[s].label) ? BURNER_STATE_META[s].label : s;
+}
+
+function getBurnerOpeningDisplayText(opening, state){
+  var val = normalizeBurnerOpeningValue(opening, state);
+  return val + "%";
+}
+
+function getBurnerCellTip(wallName, ri, ci, state, opening, pending){
+  var tip = "Wall " + wallName + " · R" + (ri + 1) + " B" + (ci + 1) + " · " + getBurnerStateLabel(state) + " · Opening " + getBurnerOpeningDisplayText(opening, state);
+  if(pending) tip += " (unsaved)";
+  return tip;
+}
+
+function stageBurnerCellChange(wallName, ri, ci, patch){
+  patch = patch || {};
+  var key = ri + "_" + ci;
+  var currentState = normalizeBurnerStateSnapshotValue(data[wallName][ri][ci]);
+  var currentOpening = getBurnerOpeningValue(wallName, ri, ci, currentState);
+  var existing = burnerPending[wallName] && burnerPending[wallName][key] ? burnerPending[wallName][key] : null;
+  var originalState = existing ? normalizeBurnerStateSnapshotValue(existing.prevState) : currentState;
+  var originalOpening = existing ? normalizeBurnerOpeningValue(existing.prevOpening, originalState) : currentOpening;
+
+  var nextState = (patch.state != null) ? normalizeBurnerStateSnapshotValue(patch.state) : currentState;
+  var nextOpening = (patch.opening != null) ? normalizeBurnerOpeningValue(patch.opening, nextState) : currentOpening;
+
+  if(currentState === "C" && nextState !== "C" && patch.opening == null && currentOpening === 0){
+    nextOpening = 100;
+  }
+  if(nextState === "C") nextOpening = 0;
+
+  data[wallName][ri][ci] = nextState;
+  setBurnerOpeningValue(wallName, ri, ci, nextOpening, nextState);
+
+  if(nextState === originalState && nextOpening === originalOpening){
+    if(burnerPending[wallName]) delete burnerPending[wallName][key];
+    if(burnerPending[wallName] && !Object.keys(burnerPending[wallName]).length) delete burnerPending[wallName];
+  }else{
+    if(!burnerPending[wallName]) burnerPending[wallName] = {};
+    burnerPending[wallName][key] = {
+      prevState: originalState,
+      prevOpening: originalOpening,
+      state: nextState,
+      opening: nextOpening
+    };
+  }
+  syncBurnerUnsavedBadge();
+  return {
+    state: nextState,
+    opening: nextOpening,
+    stateChanged: nextState !== currentState,
+    openingChanged: nextOpening !== currentOpening
+  };
+}
+
+function ensureBurnerCellTrigger(td, wallName, ri, ci){
+  var btn = td.querySelector(".burner-cell-trigger");
+  if(btn) return btn;
+  btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "burner-cell-trigger";
+  btn.innerHTML = '<span class="burner-cell-state"></span><span class="burner-cell-opening"></span>';
+  btn.addEventListener("click", function(ev){
+    ev.preventDefault();
+    ev.stopPropagation();
+    openBurnerCellEditor(td, wallName, ri, ci);
+  });
+  td.appendChild(btn);
+  return btn;
+}
+
+function updateBurnerCellVisual(td, wallName, ri, ci){
+  if(!td) return;
+  var state = normalizeBurnerStateSnapshotValue(data[wallName][ri][ci]);
+  var opening = getBurnerOpeningValue(wallName, ri, ci, state);
+  var pending = !!(burnerPending[wallName] && burnerPending[wallName][ri + "_" + ci]);
+  var btn = ensureBurnerCellTrigger(td, wallName, ri, ci);
+  var stateEl = btn.querySelector(".burner-cell-state");
+  var openingEl = btn.querySelector(".burner-cell-opening");
+
+  ["B","N","O","C"].forEach(function(code){ td.classList.remove(code); });
+  td.classList.add(state);
+  td.classList.toggle("burner-pending", pending);
+  td.setAttribute("data-tip", getBurnerCellTip(wallName, ri, ci, state, opening, pending));
+  btn.setAttribute("aria-label", getBurnerCellTip(wallName, ri, ci, state, opening, pending));
+  if(stateEl) stateEl.textContent = getBurnerStateShortLabel(state);
+  if(openingEl) openingEl.textContent = getBurnerOpeningDisplayText(opening, state);
+}
+
+function refreshBurnerWallSeverityBars(){
+  var walls = document.querySelectorAll("#walls .wall[data-wall]");
+  walls.forEach(function(wallCard){
+    var wallName = normalizeBurnerWallKey(wallCard.getAttribute("data-wall"));
+    if(!wallName) return;
+    var sev = wallSeverity[wallName] || "normal";
+    var bar = wallCard.querySelector(".wall-alarm");
+    if(!bar) return;
+    bar.className = "wall-alarm severity-" + sev;
+    if(sev !== "normal") bar.classList.add("blink-" + sev);
+    bar.dataset.wall = wallName;
+    bar.innerText = "Wall " + wallName + "  —  " + sev.toUpperCase();
+  });
+}
+
+var burnerCellEditor = null;
+var burnerCellEditorState = null;
+
+function ensureBurnerCellEditor(){
+  if(burnerCellEditor) return burnerCellEditor;
+  var editor = document.createElement("div");
+  editor.id = "burnerCellEditor";
+  editor.className = "burner-cell-editor";
+  editor.hidden = true;
+  editor.innerHTML =
+    '<div class="burner-cell-editor-head">'
+      + '<div class="burner-cell-editor-loc" data-burner-editor-loc></div>'
+      + '<div class="burner-cell-editor-meta" data-burner-editor-meta></div>'
+    + '</div>'
+    + '<div class="burner-cell-editor-group">'
+      + '<div class="burner-cell-editor-label">Burner State</div>'
+      + '<div class="burner-cell-editor-state-grid">'
+        + '<button type="button" class="burner-cell-editor-state-btn" data-burner-editor-state="B" data-state="B"><span class="burner-cell-editor-state-code">B</span><span class="burner-cell-editor-state-name">Both</span></button>'
+        + '<button type="button" class="burner-cell-editor-state-btn" data-burner-editor-state="N" data-state="N"><span class="burner-cell-editor-state-code">N</span><span class="burner-cell-editor-state-name">NG</span></button>'
+        + '<button type="button" class="burner-cell-editor-state-btn" data-burner-editor-state="O" data-state="O"><span class="burner-cell-editor-state-code">O</span><span class="burner-cell-editor-state-name">Off Gas</span></button>'
+        + '<button type="button" class="burner-cell-editor-state-btn" data-burner-editor-state="C" data-state="C"><span class="burner-cell-editor-state-code">C</span><span class="burner-cell-editor-state-name">Cold</span></button>'
+      + '</div>'
+    + '</div>'
+    + '<div class="burner-cell-editor-group">'
+      + '<div class="burner-cell-editor-label-row">'
+        + '<span class="burner-cell-editor-label">Opening Percentage</span>'
+        + '<span class="burner-cell-editor-value" data-burner-editor-opening>0%</span>'
+      + '</div>'
+      + '<input class="burner-cell-editor-slider" data-burner-editor-slider type="range" min="' + BURNER_OPENING_MIN + '" max="' + BURNER_OPENING_MAX + '" step="' + BURNER_OPENING_STEP + '" value="100">'
+      + '<div class="burner-cell-editor-scale"><span>0%</span><span>50%</span><span>100%</span></div>'
+      + '<div class="burner-cell-editor-note" data-burner-editor-note>Adjust opening with the burner state without changing the table layout.</div>'
+    + '</div>';
+  document.body.appendChild(editor);
+  editor.addEventListener("click", function(ev){ ev.stopPropagation(); });
+  editor.addEventListener("click", function(ev){
+    var btn = ev.target && ev.target.closest ? ev.target.closest("[data-burner-editor-state]") : null;
+    if(!btn || !burnerCellEditorState) return;
+    var td = burnerCellEditorState.anchor;
+    var result = stageBurnerCellChange(burnerCellEditorState.wallName, burnerCellEditorState.ri, burnerCellEditorState.ci, {
+      state: btn.getAttribute("data-burner-editor-state")
+    });
+    updateBurnerCellVisual(td, burnerCellEditorState.wallName, burnerCellEditorState.ri, burnerCellEditorState.ci);
+    td.classList.add("burner-editor-open");
+    if(result.stateChanged) generateAnalysis({ skipRender: true });
+    updateBurnerCellEditorUI();
+    positionBurnerCellEditor();
+  });
+  var slider = editor.querySelector("[data-burner-editor-slider]");
+  if(slider){
+    slider.addEventListener("input", function(){
+      if(!burnerCellEditorState || slider.disabled) return;
+      var td = burnerCellEditorState.anchor;
+      stageBurnerCellChange(burnerCellEditorState.wallName, burnerCellEditorState.ri, burnerCellEditorState.ci, {
+        opening: Number(slider.value)
+      });
+      updateBurnerCellVisual(td, burnerCellEditorState.wallName, burnerCellEditorState.ri, burnerCellEditorState.ci);
+      td.classList.add("burner-editor-open");
+      updateBurnerCellEditorUI();
+    });
+  }
+  document.addEventListener("click", function(ev){
+    if(!burnerCellEditor || burnerCellEditor.hidden) return;
+    if(burnerCellEditor.contains(ev.target)) return;
+    if(burnerCellEditorState && burnerCellEditorState.anchor && burnerCellEditorState.anchor.contains(ev.target)) return;
+    closeBurnerCellEditor();
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape") closeBurnerCellEditor();
+  });
+  window.addEventListener("resize", closeBurnerCellEditor);
+  window.addEventListener("scroll", closeBurnerCellEditor, true);
+  burnerCellEditor = editor;
+  return burnerCellEditor;
+}
+
+function updateBurnerCellEditorUI(){
+  if(!burnerCellEditorState) return;
+  var editor = ensureBurnerCellEditor();
+  var wallName = burnerCellEditorState.wallName;
+  var ri = burnerCellEditorState.ri;
+  var ci = burnerCellEditorState.ci;
+  var state = normalizeBurnerStateSnapshotValue(data[wallName][ri][ci]);
+  var opening = getBurnerOpeningValue(wallName, ri, ci, state);
+  var loc = editor.querySelector("[data-burner-editor-loc]");
+  var meta = editor.querySelector("[data-burner-editor-meta]");
+  var openingEl = editor.querySelector("[data-burner-editor-opening]");
+  var note = editor.querySelector("[data-burner-editor-note]");
+  var slider = editor.querySelector("[data-burner-editor-slider]");
+  editor.dataset.state = state;
+  if(loc) loc.textContent = "Wall " + wallName + " · R" + (ri + 1) + " B" + (ci + 1);
+  if(meta) meta.textContent = getBurnerStateLabel(state);
+  if(openingEl) openingEl.textContent = getBurnerOpeningDisplayText(opening, state);
+  if(note){
+    note.textContent = state === "C"
+      ? "Cold burners remain at 0% opening."
+      : "Fine-tune opening while keeping the same burner table structure.";
+  }
+  if(slider){
+    slider.value = String(opening);
+    slider.disabled = (state === "C");
+  }
+  var stateButtons = editor.querySelectorAll("[data-burner-editor-state]");
+  stateButtons.forEach(function(btn){
+    btn.classList.toggle("is-active", btn.getAttribute("data-burner-editor-state") === state);
+  });
+}
+
+function positionBurnerCellEditor(){
+  if(!burnerCellEditorState || !burnerCellEditor || burnerCellEditor.hidden) return;
+  var anchor = burnerCellEditorState.anchor;
+  if(!anchor || !document.body.contains(anchor)) return;
+  var rect = anchor.getBoundingClientRect();
+  var editorRect = burnerCellEditor.getBoundingClientRect();
+  var margin = 10;
+  var top = rect.bottom + 10;
+  var left = rect.left + (rect.width / 2) - (editorRect.width / 2);
+  if(left < margin) left = margin;
+  if(left + editorRect.width > window.innerWidth - margin){
+    left = window.innerWidth - editorRect.width - margin;
+  }
+  if(top + editorRect.height > window.innerHeight - margin){
+    top = rect.top - editorRect.height - 10;
+  }
+  if(top < margin) top = margin;
+  burnerCellEditor.style.left = Math.round(left) + "px";
+  burnerCellEditor.style.top = Math.round(top) + "px";
+}
+
+function openBurnerCellEditor(td, wallName, ri, ci){
+  if(!td) return;
+  var sameCell = burnerCellEditorState
+    && burnerCellEditorState.anchor === td
+    && burnerCellEditor
+    && !burnerCellEditor.hidden;
+  if(sameCell){
+    closeBurnerCellEditor();
+    return;
+  }
+  closeBurnerCellEditor();
+  var editor = ensureBurnerCellEditor();
+  burnerCellEditorState = { anchor: td, wallName: wallName, ri: ri, ci: ci };
+  td.classList.add("burner-editor-open");
+  editor.hidden = false;
+  updateBurnerCellEditorUI();
+  positionBurnerCellEditor();
+}
+
+function closeBurnerCellEditor(){
+  if(burnerCellEditorState && burnerCellEditorState.anchor){
+    burnerCellEditorState.anchor.classList.remove("burner-editor-open");
+  }
+  burnerCellEditorState = null;
+  if(burnerCellEditor){
+    burnerCellEditor.hidden = true;
+  }
 }
 
 function bindBurnerTableHover(gridWrap, tbl){
@@ -16898,6 +17472,7 @@ function openAlarmFromBanner(alarmKey){
    RENDER
 ================================================== */
 function render(){
+  closeBurnerCellEditor();
   const wallsDiv=document.getElementById("walls");
   wallsDiv.innerHTML="";
   Object.entries(data).forEach(([wallName,rows])=>{
@@ -16933,32 +17508,11 @@ function render(){
       const STATE_LABEL={B:"Both (NG+FO)",N:"NG Only",O:"Off Gas",C:"Cold"};
       row.forEach((cell,ci)=>{
         const td=document.createElement("td");
-        td.className=cell;
         td.setAttribute("data-row", String(ri));
         td.setAttribute("data-col", String(ci));
         td.setAttribute("data-tip","Wall "+wallName+" · R"+(ri+1)+" B"+(ci+1)+" · "+STATE_LABEL[cell]);
-        const sel=document.createElement("select");
-        sel.style.color=TEXT_MAP[cell]||"#fff";
-        ["B","N","O","C"].forEach(v=>{
-          const o=document.createElement("option");
-          o.value=v;o.text=v;
-          if(v===cell)o.selected=true;
-          sel.appendChild(o);
-        });
-        sel.addEventListener("change",e=>{
-          const nv=e.target.value;
-          const prev=data[wallName][ri][ci];
-          if(!burnerPending[wallName]) burnerPending[wallName]={};
-          burnerPending[wallName][ri+"_"+ci]={nv,prev};
-          data[wallName][ri][ci]=nv;
-          td.className=nv;
-          td.classList.add("burner-pending");
-          td.setAttribute("data-tip","Wall "+wallName+" · R"+(ri+1)+" B"+(ci+1)+" · "+STATE_LABEL[nv]+" (unsaved)");
-          sel.style.color=TEXT_MAP[nv]||"#fff";
-          markBurnerUnsaved();
-          generateAnalysis();
-        });
-        td.appendChild(sel);tr.appendChild(td);
+        updateBurnerCellVisual(td, wallName, ri, ci);
+        tr.appendChild(td);
       });
       tbl.appendChild(tr);
     });
@@ -17246,9 +17800,11 @@ function mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, 
   renderBurnerAnalysisMirror("hm-analysisContainer", hmChartInstances, "hm", wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
 }
 
-function generateAnalysis(){
+function generateAnalysis(options){
+  options = options || {};
   wallSeverity={};
   const container=document.getElementById("analysisContainer");
+  if(!container) return;
   container.innerHTML="";
   destroyChartStore(chartInstances);
   destroyChartStore(hmChartInstances);
@@ -17322,7 +17878,11 @@ function generateAnalysis(){
   /* Always re-render wall tables so severity bars are always rebuilt
      from the freshly-computed wallSeverity — eliminates any possibility
      of stale blink-* / severity-* classes getting stuck in the DOM. */
-  render();
+  if(options.skipRender){
+    refreshBurnerWallSeverityBars();
+  }else{
+    render();
+  }
   refreshAlarmPanel();
   updateAlarmTabBadge();
   window._latestBurnerAnalysisPayload = {
@@ -17385,12 +17945,12 @@ async function exportToExcel(options){
   const wb = XLSX.utils.book_new();
 
   /* Sheet 1: Burner Data */
-  const rows = [["Wall","Row","Burner","Value"]];
+  const rows = [["Wall","Row","Burner","Value","Opening (%)"]];
   Object.entries(data).forEach(([w,wr])=>{
-    wr.forEach((r,ri)=>r.forEach((c,ci)=>rows.push([w,"R"+(ri+1),"B"+(ci+1),c])));
+    wr.forEach((r,ri)=>r.forEach((c,ci)=>rows.push([w,"R"+(ri+1),"B"+(ci+1),c,getBurnerOpeningValue(w, ri, ci, c)])));
   });
   const ws1 = XLSX.utils.aoa_to_sheet(rows);
-  ws1["!cols"] = [{wch:12},{wch:8},{wch:10},{wch:10}];
+  ws1["!cols"] = [{wch:12},{wch:8},{wch:10},{wch:10},{wch:12}];
   XLSX.utils.book_append_sheet(wb, ws1, "Burner Data");
 
   /* Sheet 2+: Cleaning Log per wall */
@@ -17627,6 +18187,7 @@ function _doImport(file, onDone, silent){
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
 
       const nd={};
+      const importedOpeningData={};
       let parsedCount=0;
 
       /* First pass: collect all valid cells */
@@ -17636,11 +18197,12 @@ function _doImport(file, onDone, silent){
         const rl = r[1]!=null ? String(r[1]).trim() : "";
         const bl = r[2]!=null ? String(r[2]).trim() : "";
         const v  = r[3]!=null ? String(r[3]).trim().toUpperCase() : "";
+        const op = r[4];
         if(!w||!rl||!bl||!v)return;
         const ri=parseInt(rl.replace(/\D/g,""))-1;
         const ci=parseInt(bl.replace(/\D/g,""))-1;
         if(ri>=0&&ci>=0&&["B","N","O","C"].includes(v))
-          cells.push({w,ri,ci,v});
+          cells.push({w,ri,ci,v,op});
       });
 
       /* Detect actual row/burner count from data — never hardcode and clip */
@@ -17648,15 +18210,18 @@ function _doImport(file, onDone, silent){
       const maxBurners = cells.reduce((m,c)=>Math.max(m,c.ci+1), BURNERS);
 
       /* Second pass: write into correctly sized grids */
-      cells.forEach(({w,ri,ci,v})=>{
+      cells.forEach(({w,ri,ci,v,op})=>{
         if(!nd[w])
           nd[w]=Array.from({length:maxRows},()=>Array(maxBurners).fill("C"));
+        if(!importedOpeningData[w])
+          importedOpeningData[w]=Array.from({length:maxRows},()=>Array(maxBurners).fill(0));
         nd[w][ri][ci]=v;
+        importedOpeningData[w][ri][ci]=normalizeBurnerOpeningValue(op, v);
         parsedCount++;
       });
 
       if(!Object.keys(nd).length||parsedCount===0){
-        alert("No valid burner data found.\n\nExpected columns: Wall | Row (R1…) | Burner (B1…) | Value (B/N/O/C)");
+        alert("No valid burner data found.\n\nExpected columns: Wall | Row (R1…) | Burner (B1…) | Value (B/N/O/C) | Opening (%) optional");
         return;
       }
 
@@ -17729,6 +18294,8 @@ function _doImport(file, onDone, silent){
       /* overwrite in-memory data and persist */
       data=nd;
       saveData();
+      burnerOpeningData = sanitizeBurnerOpeningShape(importedOpeningData, nd);
+      saveBurnerOpeningData();
 
       if(foundCleaningSheets || foundCleaningHistorySheet){
         saveCleaningLog(importedCleaningLog);
@@ -19044,6 +19611,7 @@ function acknowledgeAlarm(){
 ================================================== */
 function init(){
   loadData();
+  loadBurnerOpeningData();
   generateAnalysis();
   buildCleaningTable();
   initTipTable();
