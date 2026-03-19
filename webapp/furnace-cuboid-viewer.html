@@ -20,7 +20,7 @@ body{color:rgba(140,180,220,0.85);}
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:center;
+  justify-content:flex-start;
   gap:8px;
   padding:10px;
 }
@@ -43,7 +43,7 @@ body{color:rgba(140,180,220,0.85);}
 #vp{
   position:relative;
   width:min(97vw,1680px);
-  height:min(calc(100vh - 110px),90vh);
+  height:clamp(340px,calc(100vh - 292px),1080px);
   overflow:hidden;
   background:
     radial-gradient(circle at 50% 42%, rgba(58,78,104,0.52) 0%, rgba(26,33,45,0.88) 22%, rgba(10,13,19,0.97) 54%, #06070b 100%);
@@ -79,6 +79,279 @@ body{color:rgba(140,180,220,0.85);}
   align-items:center;
   flex:1 1 520px;
 }
+#legendStrip{
+  width:min(97vw,1680px);
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:stretch;
+  gap:0;
+  padding:14px 16px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  border:1px solid rgba(60,100,150,0.38);
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(11,16,24,0.98),rgba(9,13,20,0.98));
+  box-shadow:0 16px 36px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+#legendStrip::-webkit-scrollbar{ height:10px; }
+#legendStrip::-webkit-scrollbar-thumb{
+  background:rgba(76,104,148,0.5);
+  border-radius:999px;
+}
+#legendStrip::-webkit-scrollbar-track{
+  background:rgba(10,16,24,0.45);
+}
+.legend-block{
+  flex:0 0 auto;
+  min-height:150px;
+  padding:0 18px;
+}
+.legend-block + .legend-block{
+  border-left:1px solid rgba(64,84,114,0.38);
+}
+.legend-block-states{ min-width:640px; padding-left:4px; }
+.legend-block-clean{ min-width:320px; }
+.legend-block-live{ min-width:340px; }
+.legend-block-tst{ min-width:290px; }
+.legend-block-controls{ min-width:220px; padding-right:4px; }
+.legend-title{
+  margin-bottom:14px;
+  font-size:9px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(184,191,206,0.82);
+}
+.legend-state-row{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.legend-state-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:88px;
+  padding:14px 14px 14px 16px;
+  border-radius:22px;
+  border:1px solid rgba(76,102,146,0.35);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.legend-state-card[data-state="B"]{
+  background:linear-gradient(135deg,rgba(27,46,92,0.94),rgba(18,27,45,0.96));
+  border-color:rgba(61,114,225,0.48);
+}
+.legend-state-card[data-state="C"]{
+  background:linear-gradient(135deg,rgba(42,50,68,0.92),rgba(22,28,40,0.96));
+  border-color:rgba(108,124,154,0.44);
+}
+.legend-state-card[data-state="O"]{
+  background:linear-gradient(135deg,rgba(18,74,53,0.94),rgba(13,36,29,0.96));
+  border-color:rgba(42,165,108,0.44);
+}
+.legend-state-card[data-state="N"]{
+  background:linear-gradient(135deg,rgba(92,55,16,0.92),rgba(40,30,22,0.96));
+  border-color:rgba(176,122,28,0.44);
+}
+.legend-state-badge{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  font-weight:700;
+  color:#f8fbff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 18px rgba(0,0,0,0.22);
+}
+.legend-state-card[data-state="B"] .legend-state-badge{ background:linear-gradient(180deg,#5f9dff,#2155d8); }
+.legend-state-card[data-state="C"] .legend-state-badge{ background:linear-gradient(180deg,#9ba8bc,#66748d); }
+.legend-state-card[data-state="O"] .legend-state-badge{ background:linear-gradient(180deg,#3dd26d,#0b8d47); }
+.legend-state-card[data-state="N"] .legend-state-badge{ background:linear-gradient(180deg,#f7a61d,#c56600); }
+.legend-state-copy{
+  flex:1 1 auto;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.legend-state-name{
+  font-size:13px;
+  font-weight:700;
+  color:#eef4ff;
+}
+.legend-state-desc{
+  font-size:10px;
+  line-height:1.25;
+  color:rgba(198,208,226,0.82);
+}
+.legend-state-count{
+  font-size:20px;
+  font-weight:700;
+  color:#ffffff;
+}
+.legend-clean-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding-top:6px;
+}
+.legend-clean-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:12px;
+  color:rgba(214,223,236,0.9);
+}
+.legend-clean-bullet{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:2px solid rgba(126,138,159,0.72);
+  background:transparent;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.legend-clean-bullet.is-clean{
+  border-color:rgba(149,255,193,0.92);
+  background:radial-gradient(circle at 35% 30%,#9fffba,#42d674);
+  box-shadow:0 0 14px rgba(86,233,128,0.34);
+}
+.legend-clean-text{
+  flex:1 1 auto;
+  line-height:1.35;
+}
+.legend-clean-value{
+  font-size:18px;
+  font-weight:700;
+  color:#ffffff;
+}
+.legend-live-rows{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding-top:2px;
+}
+.legend-live-row{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:18px;
+  padding-bottom:10px;
+  border-bottom:1px solid rgba(47,64,92,0.4);
+}
+.legend-live-row:last-child{
+  border-bottom:0;
+  padding-bottom:0;
+}
+.legend-live-label{
+  font-size:12px;
+  color:rgba(171,182,198,0.82);
+}
+.legend-live-value{
+  font-size:14px;
+  font-weight:700;
+  color:#72ffd8;
+  text-align:right;
+  max-width:180px;
+  overflow-wrap:anywhere;
+}
+.legend-live-value.is-neutral{ color:#e9eef8; }
+.legend-tst-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+}
+.legend-tst-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:98px;
+  min-height:48px;
+  padding:0 16px;
+  border-radius:18px;
+  border:1px solid rgba(176,108,44,0.58);
+  background:linear-gradient(180deg,rgba(49,37,28,0.92),rgba(26,23,21,0.94));
+  color:#fff6e8;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.legend-tst-meta{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.legend-tst-cold{
+  font-size:11px;
+  font-weight:700;
+  color:#8affb8;
+}
+.legend-tst-cold-value{
+  font-size:12px;
+  color:#e7eef8;
+}
+.legend-tst-bar{
+  position:relative;
+  height:22px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#32d061 0%,#ffe227 48%,#ff7e2e 76%,#ff5252 100%);
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.20);
+}
+.legend-tst-range{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:10px;
+}
+.legend-tst-range-label{
+  font-size:11px;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:rgba(154,170,198,0.88);
+}
+.legend-tst-hot{
+  font-size:11px;
+  font-weight:700;
+  color:#ff9aa7;
+}
+.legend-tst-hot-value,
+.legend-tst-min,
+.legend-tst-max{
+  font-size:12px;
+  color:#f5f8ff;
+  font-weight:700;
+}
+.legend-controls{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding-top:2px;
+}
+.legend-action{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:58px;
+  padding:0 18px;
+  border-radius:14px;
+  border:1px solid rgba(70,92,140,0.42);
+  background:linear-gradient(180deg,rgba(28,36,58,0.95),rgba(18,23,36,0.96));
+  color:#e6edf9;
+  font-family:"Courier New",Courier,monospace;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.6px;
+  cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,transform .18s ease;
+}
+.legend-action:hover{
+  background:linear-gradient(180deg,rgba(41,56,92,0.95),rgba(20,28,44,0.98));
+  border-color:rgba(104,142,220,0.62);
+  transform:translateY(-1px);
+}
 .btn{
   background:rgba(10,18,32,0.92);
   border:1px solid rgba(50,90,140,0.4);
@@ -113,7 +386,7 @@ body{color:rgba(140,180,220,0.85);}
   }
   #vp{
     width:100%;
-    height:min(calc(100vh - 138px),86vh);
+    height:clamp(270px,calc(100vh - 352px),760px);
   }
   #hint{
     font-size:7px;
@@ -125,6 +398,34 @@ body{color:rgba(140,180,220,0.85);}
     gap:6px;
     justify-content:center;
     flex:1 1 auto;
+  }
+  #legendStrip{
+    width:100%;
+    padding:12px 12px 14px;
+  }
+  .legend-block{
+    padding:0 14px;
+    min-height:142px;
+  }
+  .legend-block-states{ min-width:560px; padding-left:2px; }
+  .legend-block-clean{ min-width:286px; }
+  .legend-block-live{ min-width:290px; }
+  .legend-block-tst{ min-width:250px; }
+  .legend-block-controls{ min-width:190px; padding-right:2px; }
+  .legend-state-row{ gap:10px; }
+  .legend-state-card{
+    min-height:80px;
+    padding:12px;
+    border-radius:20px;
+  }
+  .legend-state-badge{
+    width:48px;
+    height:48px;
+    font-size:16px;
+  }
+  .legend-title{
+    margin-bottom:12px;
+    letter-spacing:2.4px;
   }
   .btn{
     flex:1 1 calc(33.333% - 6px);
@@ -147,6 +448,107 @@ body{color:rgba(140,180,220,0.85);}
     </div>
   </div>
   <div id="vp"><div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div></div>
+  <div id="legendStrip" aria-label="Burner state legend and live parameters">
+    <section class="legend-block legend-block-states">
+      <div class="legend-title">Burner State Legend</div>
+      <div class="legend-state-row">
+        <div class="legend-state-card" data-state="B">
+          <div class="legend-state-badge">B</div>
+          <div class="legend-state-copy">
+            <div class="legend-state-name">Both</div>
+            <div class="legend-state-desc">Blue Burner</div>
+          </div>
+          <div class="legend-state-count" id="legendCountB">0</div>
+        </div>
+        <div class="legend-state-card" data-state="C">
+          <div class="legend-state-badge">C</div>
+          <div class="legend-state-copy">
+            <div class="legend-state-name">Cold</div>
+            <div class="legend-state-desc">Closed / None</div>
+          </div>
+          <div class="legend-state-count" id="legendCountC">0</div>
+        </div>
+        <div class="legend-state-card" data-state="O">
+          <div class="legend-state-badge">O</div>
+          <div class="legend-state-copy">
+            <div class="legend-state-name">Off Gas</div>
+            <div class="legend-state-desc">Green Burner</div>
+          </div>
+          <div class="legend-state-count" id="legendCountO">0</div>
+        </div>
+        <div class="legend-state-card" data-state="N">
+          <div class="legend-state-badge">N</div>
+          <div class="legend-state-copy">
+            <div class="legend-state-name">NG Only</div>
+            <div class="legend-state-desc">Amber Burner</div>
+          </div>
+          <div class="legend-state-count" id="legendCountN">0</div>
+        </div>
+      </div>
+    </section>
+    <section class="legend-block legend-block-clean">
+      <div class="legend-title">Cleaning</div>
+      <div class="legend-clean-list">
+        <div class="legend-clean-item">
+          <span class="legend-clean-bullet is-clean"></span>
+          <span class="legend-clean-text">Green Dot = Burner Cleaned</span>
+          <strong class="legend-clean-value" id="legendCleanedCount">0</strong>
+        </div>
+        <div class="legend-clean-item">
+          <span class="legend-clean-bullet"></span>
+          <span class="legend-clean-text">Empty Dot = Burner Not Cleaned</span>
+          <strong class="legend-clean-value" id="legendUncleanedCount">0</strong>
+        </div>
+      </div>
+    </section>
+    <section class="legend-block legend-block-live">
+      <div class="legend-title">Live Parameters</div>
+      <div class="legend-live-rows">
+        <div class="legend-live-row">
+          <span class="legend-live-label">Chamber Temp</span>
+          <strong class="legend-live-value" id="legendChamberTemp">--</strong>
+        </div>
+        <div class="legend-live-row">
+          <span class="legend-live-label">Flame Status</span>
+          <strong class="legend-live-value" id="legendFlameStatus">--</strong>
+        </div>
+        <div class="legend-live-row">
+          <span class="legend-live-label">Data Stamp</span>
+          <strong class="legend-live-value is-neutral" id="legendDataStamp">Latest</strong>
+        </div>
+        <div class="legend-live-row">
+          <span class="legend-live-label">Shift</span>
+          <strong class="legend-live-value is-neutral" id="legendShift">All</strong>
+        </div>
+      </div>
+    </section>
+    <section class="legend-block legend-block-tst">
+      <div class="legend-title">TST Gradient</div>
+      <div class="legend-tst-top">
+        <div class="legend-tst-chip">PH TST</div>
+        <div class="legend-tst-meta">
+          <div class="legend-tst-cold">Cold</div>
+          <div class="legend-tst-cold-value" id="legendTstColdValue">--</div>
+        </div>
+      </div>
+      <div class="legend-tst-bar"></div>
+      <div class="legend-tst-range">
+        <span class="legend-tst-min" id="legendTstMin">--</span>
+        <span class="legend-tst-range-label">TST Range</span>
+        <span class="legend-tst-max" id="legendTstMax">--</span>
+      </div>
+      <div class="legend-tst-range" style="margin-top:8px;">
+        <span class="legend-tst-hot">Hot</span>
+        <span class="legend-tst-hot-value" id="legendTstHotValue">--</span>
+      </div>
+    </section>
+    <section class="legend-block legend-block-controls">
+      <div class="legend-title">Controls</div>
+      <div class="legend-controls">
+        <button class="legend-action" id="btnResetView">Reset Front View</button>
+      </div>
+    </section>
+  </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -184,6 +586,21 @@ const hint=document.getElementById("hint");
 const btnA=document.getElementById("btnA");
 const btnB=document.getElementById("btnB");
 const btnAuto=document.getElementById("btnAuto");
+const btnResetView=document.getElementById("btnResetView");
+const legendCountB=document.getElementById("legendCountB");
+const legendCountC=document.getElementById("legendCountC");
+const legendCountO=document.getElementById("legendCountO");
+const legendCountN=document.getElementById("legendCountN");
+const legendCleanedCount=document.getElementById("legendCleanedCount");
+const legendUncleanedCount=document.getElementById("legendUncleanedCount");
+const legendChamberTemp=document.getElementById("legendChamberTemp");
+const legendFlameStatus=document.getElementById("legendFlameStatus");
+const legendDataStamp=document.getElementById("legendDataStamp");
+const legendShift=document.getElementById("legendShift");
+const legendTstColdValue=document.getElementById("legendTstColdValue");
+const legendTstMin=document.getElementById("legendTstMin");
+const legendTstMax=document.getElementById("legendTstMax");
+const legendTstHotValue=document.getElementById("legendTstHotValue");
 if(viewerTag) viewerTag.textContent=chamberZoneKey+" LIVE WALLS";
 if(btnA) btnA.textContent="Face "+chamberWalls[0];
 if(btnB) btnB.textContent="Face "+chamberWalls[1];
@@ -395,6 +812,103 @@ function cuboidBuildSnapshot(){
     snapshot.selectedShift=app._hmRenderSnapshot.selectedShift || snapshot.selectedShift;
   }
   return snapshot;
+}
+
+function cuboidCountStatesForWalls(hmData,wallKeys){
+  const counts={ O:0,N:0,B:0,C:0 };
+  const walls=Array.isArray(wallKeys) ? wallKeys : [];
+  for(let wi=0;wi<walls.length;wi++){
+    const rows=hmData && Array.isArray(hmData[walls[wi]]) ? hmData[walls[wi]] : [];
+    for(let ri=0;ri<rows.length;ri++){
+      const row=Array.isArray(rows[ri]) ? rows[ri] : [];
+      for(let bi=0;bi<row.length;bi++){
+        const state=cuboidNormalizeBurnerState(row[bi]);
+        counts[state]=(counts[state] || 0)+1;
+      }
+    }
+  }
+  return counts;
+}
+
+function cuboidGetChamberPeepRows(snapshot){
+  if(chamberParam==="cd") return [snapshot && snapshot.cdTop ? snapshot.cdTop : [],snapshot && snapshot.cdBot ? snapshot.cdBot : []];
+  return [snapshot && snapshot.abTop ? snapshot.abTop : [],snapshot && snapshot.abBot ? snapshot.abBot : []];
+}
+
+function cuboidGetNumericTemps(vals){
+  const out=[];
+  const src=Array.isArray(vals) ? vals : [];
+  for(let i=0;i<src.length;i++){
+    const n=Number(src[i]);
+    if(isFinite(n)) out.push(n);
+  }
+  return out;
+}
+
+function cuboidFormatTempValue(v){
+  return isFinite(v) ? (Math.round(v)+"\u00b0C") : "--";
+}
+
+function cuboidFormatStampValue(raw){
+  const text=String(raw || "").trim();
+  if(!text) return "Latest";
+  return text;
+}
+
+function cuboidCountCleaningForWalls(cleaningLog,wallKeys){
+  let cleaned=0;
+  const walls=Array.isArray(wallKeys) ? wallKeys : [];
+  const total=walls.length*ROWS*COLS;
+  for(let wi=0;wi<walls.length;wi++){
+    const wallMap=cleaningLog && cleaningLog[walls[wi]] && typeof cleaningLog[walls[wi]]==="object" ? cleaningLog[walls[wi]] : {};
+    for(let row=1;row<=ROWS;row++){
+      for(let burner=1;burner<=COLS;burner++){
+        const key="R"+row+"B"+burner;
+        if(String(wallMap[key] || "").trim()) cleaned++;
+      }
+    }
+  }
+  return { cleaned:cleaned, uncleaned:Math.max(0,total-cleaned), total:total };
+}
+
+function cuboidRefreshLegendPanel(){
+  const snapshot=overlaySnapshot || cuboidBuildSnapshot();
+  const cleaningLog=overlayCleaningLog && typeof overlayCleaningLog==="object" ? overlayCleaningLog : cuboidLoadCleaningLog();
+  const counts=cuboidCountStatesForWalls(snapshot.hmData,chamberWalls);
+  const peepRows=cuboidGetChamberPeepRows(snapshot);
+  const temps=cuboidGetNumericTemps((peepRows[0] || []).concat(peepRows[1] || []));
+  let avgTemp=NaN;
+  let minTemp=NaN;
+  let maxTemp=NaN;
+  if(temps.length){
+    let sum=0;
+    minTemp=temps[0];
+    maxTemp=temps[0];
+    for(let i=0;i<temps.length;i++){
+      const n=temps[i];
+      sum+=n;
+      if(n<minTemp) minTemp=n;
+      if(n>maxTemp) maxTemp=n;
+    }
+    avgTemp=sum/temps.length;
+  }
+  const cleaningCounts=cuboidCountCleaningForWalls(cleaningLog,chamberWalls);
+  const activeBurners=(counts.O || 0)+(counts.N || 0)+(counts.B || 0);
+
+  if(legendCountB) legendCountB.textContent=String(counts.B || 0);
+  if(legendCountC) legendCountC.textContent=String(counts.C || 0);
+  if(legendCountO) legendCountO.textContent=String(counts.O || 0);
+  if(legendCountN) legendCountN.textContent=String(counts.N || 0);
+  if(legendCleanedCount) legendCleanedCount.textContent=String(cleaningCounts.cleaned);
+  if(legendUncleanedCount) legendUncleanedCount.textContent=String(cleaningCounts.uncleaned);
+  if(legendChamberTemp) legendChamberTemp.textContent=cuboidFormatTempValue(avgTemp);
+  if(legendFlameStatus) legendFlameStatus.textContent=activeBurners+" active burners";
+  if(legendDataStamp) legendDataStamp.textContent=cuboidFormatStampValue(snapshot.entryDt);
+  if(legendShift) legendShift.textContent=String(snapshot.selectedShift || "All");
+  if(legendTstColdValue) legendTstColdValue.textContent=cuboidFormatTempValue(minTemp);
+  if(legendTstMin) legendTstMin.textContent=cuboidFormatTempValue(minTemp);
+  if(legendTstMax) legendTstMax.textContent=cuboidFormatTempValue(maxTemp);
+  if(legendTstHotValue) legendTstHotValue.textContent=cuboidFormatTempValue(maxTemp);
 }
 
 function cuboidRoundRectPath(ctx,x,y,w,h,r){
@@ -1626,6 +2140,7 @@ function syncFaceOverlays(force){
   cuboidPaintWallCanvas(faceOverlays.back.canvas,chamberWalls[1],overlaySnapshot,overlayCleaningLog[chamberWalls[1]] || {},overlayAnimPhase);
   faceOverlays.front.texture.needsUpdate=true;
   faceOverlays.back.texture.needsUpdate=true;
+  cuboidRefreshLegendPanel();
 }
 
 syncFaceOverlays(true);
@@ -1910,6 +2425,13 @@ btnAuto.addEventListener("click",function(){
   autoSpin=!autoSpin;
   this.textContent=autoSpin ? "Stop" : "Auto Rotate";
 });
+if(btnResetView){
+  btnResetView.addEventListener("click",function(){
+    autoSpin=false;
+    if(btnAuto) btnAuto.textContent="Auto Rotate";
+    setRotationTarget(0);
+  });
+}
 
 const ro=new ResizeObserver(function(){
   renderer.setSize(GW(),GH());
