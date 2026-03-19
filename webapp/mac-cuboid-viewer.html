@@ -988,15 +988,17 @@ function createBurnerWallFace(faceName, wallKey){
   var wallZ = faceName === "front"
     ? (DIM.depth / 2 - DIM.wall / 2 - 0.02)
     : (-DIM.depth / 2 + DIM.wall / 2 + 0.02);
-  var cols = 15;
+  var burnerColumns = [1,3,5,8,11,13,15];
+  var cols = burnerColumns.length;
   var rowNumbers = [6,5,4,3,2,1];
-  var spanX = DIM.length * 0.82;
+  var spanX = DIM.length * 0.7;
   var spanY = DIM.height * 0.7;
   for(var ri=0; ri<rowNumbers.length; ri++){
     var rowNumber = rowNumbers[ri];
     var y = (spanY / 2) - (spanY / (rowNumbers.length - 1)) * ri;
     for(var ci=0; ci<cols; ci++){
       var x = -spanX / 2 + (spanX / (cols - 1)) * ci;
+      var burnerNumber = burnerColumns[ci];
       var seed = ri * 31 + ci * 3 + (faceName === "front" ? 1 : 7);
       var ring = new THREE.Mesh(ringGeo, hotPortMat);
       ring.position.set(x, y, wallZ + dir * 0.01);
@@ -1047,7 +1049,7 @@ function createBurnerWallFace(faceName, wallKey){
       burnerPortObjects.push({
         wallKey: wallKey,
         rowNumber: rowNumber,
-        burnerNumber: ci + 1,
+        burnerNumber: burnerNumber,
         faceName: faceName,
         seed: seed,
         dir: dir,
