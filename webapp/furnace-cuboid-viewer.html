@@ -1103,7 +1103,21 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   const headerLeft=12;
   const headerRight=w-12;
   const headerHeight=separatorY-headerTop;
-  const headerTextY=headerTop+Math.round(headerHeight/2)+8;
+  function cuboidHeaderBaseline(font,text){
+    const sizeMatch=String(font).match(/(\d+)px/);
+    const fontPx=sizeMatch ? Number(sizeMatch[1]) : 24;
+    ctx.font=font;
+    const metrics=ctx.measureText(text);
+    const ascent=metrics.actualBoundingBoxAscent || (fontPx*0.72);
+    const descent=metrics.actualBoundingBoxDescent || (fontPx*0.18);
+    return headerTop+((headerHeight+ascent-descent)/2);
+  }
+  const wallTitle="WALL "+wallKey;
+  const wallTitleFont="700 40px Times New Roman, serif";
+  const wallTitleY=cuboidHeaderBaseline(wallTitleFont,wallTitle)+2.5;
+  const wallMetaText="6 rows x 15 burners";
+  const wallMetaFont="700 21px Times New Roman, serif";
+  const wallMetaY=cuboidHeaderBaseline(wallMetaFont,wallMetaText)+1.8;
   const headGrad=ctx.createLinearGradient(0,0,w,0);
   headGrad.addColorStop(0,"rgba(6,8,16,0.985)");
   headGrad.addColorStop(0.55,"rgba(12,13,22,0.99)");
@@ -1121,14 +1135,14 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
 
   ctx.fillStyle="#ffffff";
   ctx.textAlign="left";
-  ctx.textBaseline="middle";
-  ctx.font="700 40px Times New Roman, serif";
-  ctx.fillText("WALL "+wallKey,padX,headerTextY);
+  ctx.textBaseline="alphabetic";
+  ctx.font=wallTitleFont;
+  ctx.fillText(wallTitle,padX,wallTitleY);
 
   ctx.textAlign="right";
-  ctx.font="700 21px Times New Roman, serif";
+  ctx.font=wallMetaFont;
   ctx.fillStyle="rgba(255,255,255,0.98)";
-  ctx.fillText("6 rows x 15 burners",w-padX,headerTextY+1);
+  ctx.fillText(wallMetaText,w-padX,wallMetaY);
 
   ctx.textAlign="center";
   ctx.textBaseline="middle";
@@ -1155,7 +1169,7 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   const rowRailYs=numericRowCenters.map(function(centerY){
     return cuboidGetFuelRailGeometry(centerY+34,iconScale,centerY+10).railY;
   });
-  const manifoldTopY=separatorY+12;
+  const manifoldTopY=headerTop+4;
   const manifoldBottomY=(rowRailYs[rowRailYs.length-1] || (h-86))+Math.max(24,7*iconScale);
   cuboidDrawVerticalFuelManifold(ctx,leftHeaderX,manifoldTopY,manifoldBottomY,rowRailYs,iconScale);
   cuboidDrawVerticalFuelManifold(ctx,rightHeaderX,manifoldTopY,manifoldBottomY,rowRailYs,iconScale);
@@ -2110,6 +2124,75 @@ const headerCapMat=new THREE.MeshStandardMaterial({
   collar.rotation.z=Math.PI/2;
   collar.position.set(x,headerY,0);
   group.add(collar);
+});
+
+const overlayCanvasW=1440;
+const overlayGridLeft=134;
+const overlayGridRight=overlayCanvasW-18;
+const overlaySlotW=(overlayGridRight-overlayGridLeft)/15;
+const overlayLeftHeaderX=overlayGridLeft+(overlaySlotW*0.14);
+const overlayRightHeaderX=overlayGridRight-(overlaySlotW*0.14);
+const overlayPlaneW=FW-0.22;
+function overlayXToWorld(canvasX){
+  return ((canvasX/overlayCanvasW)-0.5)*overlayPlaneW;
+}
+const edgeFeedXs=[overlayXToWorld(overlayLeftHeaderX),overlayXToWorld(overlayRightHeaderX)];
+const edgeFeedZs=[FD/2+0.04,-FD/2-0.04];
+const edgeFeedRadius=0.078;
+const edgeFeedBottomY=(FH/2)-0.04;
+const edgeFeedTopY=headerY-0.11;
+const edgeFeedMat=new THREE.MeshStandardMaterial({
+  color:0xafbbc8,
+  roughness:0.14,
+  metalness:0.98,
+  emissive:0x24303a,
+  emissiveIntensity:0.28
+});
+edgeFeedXs.forEach(function(x){
+  const headerJoinCollar=new THREE.Mesh(
+    new THREE.CylinderGeometry(headerRadius*1.16,headerRadius*1.16,0.08,18),
+    headerCapMat.clone()
+  );
+  headerJoinCollar.rotation.z=Math.PI/2;
+  headerJoinCollar.position.set(x,headerY,0);
+  group.add(headerJoinCollar);
+
+  edgeFeedZs.forEach(function(z){
+    const vertH=edgeFeedTopY-edgeFeedBottomY;
+    const vertTube=new THREE.Mesh(
+      new THREE.CylinderGeometry(edgeFeedRadius,edgeFeedRadius,vertH,18),
+      edgeFeedMat.clone()
+    );
+    vertTube.position.set(x,edgeFeedBottomY+(vertH/2),z);
+    group.add(vertTube);
+
+    const vertCollar=new THREE.Mesh(
+      new THREE.CylinderGeometry(edgeFeedRadius*1.26,edgeFeedRadius*1.26,0.085,16),
+      headerCapMat.clone()
+    );
+    vertCollar.position.set(x,edgeFeedTopY,z);
+    group.add(vertCollar);
+
+    const elbowPeakY=headerY+0.035;
+    const elbowPath=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(x,edgeFeedTopY,z),
+      new THREE.Vector3(x,elbowPeakY,z*0.86),
+      new THREE.Vector3(x,headerY,0)
+    ]);
+    const elbowTube=new THREE.Mesh(
+      new THREE.TubeGeometry(elbowPath,14,edgeFeedRadius*0.94,18,false),
+      edgeFeedMat.clone()
+    );
+    group.add(elbowTube);
+
+    const elbowJoinCollar=new THREE.Mesh(
+      new THREE.CylinderGeometry(edgeFeedRadius*1.24,edgeFeedRadius*1.24,0.085,16),
+      headerCapMat.clone()
+    );
+    elbowJoinCollar.rotation.x=Math.PI/2;
+    elbowJoinCollar.position.set(x,elbowPeakY,z*0.82);
+    group.add(elbowJoinCollar);
+  });
 });
 
 const flameGroups=[];
