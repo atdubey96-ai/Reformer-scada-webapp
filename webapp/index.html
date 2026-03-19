@@ -3063,17 +3063,11 @@ body.light-theme .cw-nudge{
   font-size:12px;font-weight:700;letter-spacing:0.4px;
   max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-#tab-cuboid,
-#tab-mac{
+#tab-cuboid{
   padding:14px 18px 18px;
   background:#07090d;
 }
 #tab-cuboid .cuboid-tab-stack{
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-}
-#tab-mac .mac-tab-stack{
   display:flex;
   flex-direction:column;
   gap:18px;
@@ -3088,27 +3082,10 @@ body.light-theme .cw-nudge{
   position:relative;
   z-index:1;
 }
-#tab-mac .mac-tab-shell{
-  width:100%;
-  border:1px solid rgba(60,100,150,0.4);
-  border-radius:8px;
-  overflow:hidden;
-  background:#07090d;
-  box-shadow:0 16px 40px rgba(0,0,0,0.34);
-  position:relative;
-  z-index:1;
-}
 #tab-cuboid .cuboid-tab-frame{
   display:block;
   width:100%;
   height:clamp(700px,calc(100svh - 120px),1240px);
-  border:0;
-  background:#07090d;
-}
-#tab-mac .mac-tab-frame{
-  display:block;
-  width:100%;
-  height:clamp(620px,calc(100svh - 182px),1320px);
   border:0;
   background:#07090d;
 }
@@ -3148,8 +3125,7 @@ body.cuboid-overlay-lock #masterAlarm{
   opacity:0;
   pointer-events:none;
 }
-body.light-theme #tab-cuboid,
-body.light-theme #tab-mac{
+body.light-theme #tab-cuboid{
   background:#07090d;
 }
 
@@ -6439,7 +6415,6 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cleaning .cleaning-section,
   #tab-tempdata > div,
   #tab-cuboid,
-  #tab-mac,
   #tab-alarms .alarms-section{
     margin:0 !important;
     padding:12px !important;
@@ -6454,30 +6429,19 @@ html, body, body *, body *::before, body *::after, svg text{
     border:1px solid var(--m-border) !important;
     background:linear-gradient(165deg, var(--m-surface) 0%, var(--m-surface-2) 100%) !important;
   }
-  #tab-cuboid,
-  #tab-mac{
+  #tab-cuboid{
     border:1px solid rgba(60,100,150,0.34) !important;
     background:#07090d !important;
   }
   #tab-cuboid .cuboid-tab-stack{
     gap:12px;
   }
-  #tab-mac .mac-tab-stack{
-    gap:12px;
-  }
   #tab-cuboid .cuboid-tab-shell{
-    border-color:rgba(60,100,150,0.4) !important;
-    border-radius:14px !important;
-  }
-  #tab-mac .mac-tab-shell{
     border-color:rgba(60,100,150,0.4) !important;
     border-radius:14px !important;
   }
   #tab-cuboid .cuboid-tab-frame{
     height:clamp(640px,calc(100svh - 150px),1040px);
-  }
-  #tab-mac .mac-tab-frame{
-    height:clamp(500px,calc(100svh - 205px),980px);
   }
   #tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded{
     top:8px;
@@ -15347,24 +15311,6 @@ html, body, body *, body *::before, body *::after, svg text{
     </div>
   </div>
 
-  <!-- TAB 7: Mac -->
-  <div id="tab-mac" class="tab-panel">
-    <div class="mac-tab-stack">
-      <div class="mac-tab-shell">
-        <iframe
-          id="mac-tab-frame"
-          class="mac-tab-frame"
-          title="Mac Cuboid Viewer"
-          src="about:blank"
-          data-src="./mac-cuboid-viewer.html?chamber=ab&build=20260319-25"
-          loading="lazy"
-          allow="fullscreen"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
 </div><!-- /tab-panels -->
 <div id="cuboid-overlay-backdrop" onclick="setCuboidOverlayActive(false)" aria-hidden="true"></div>
 
@@ -15396,10 +15342,6 @@ html, body, body *, body *::before, body *::after, svg text{
   <button class="btab" id="btab-cuboid" onclick="switchTab('cuboid')">
     <span class="btab-icon">🧊</span>
     <span class="btab-label">Cuboid</span>
-  </button>
-  <button class="btab" id="btab-mac" onclick="switchTab('mac')">
-    <span class="btab-icon">💻</span>
-    <span class="btab-label">Mac</span>
   </button>
 </div>
 
@@ -18735,7 +18677,6 @@ function updateGlobalRefreshButtonLabel(tab){
   btn.textContent =
     key === "alarms" ? "↻ Refresh Alarms" :
     key === "cuboid" ? "↻ Refresh Cuboid" :
-    key === "mac" ? "↻ Refresh Mac" :
     "🔄 Refresh Data";
 }
 
@@ -18750,10 +18691,6 @@ function initMobileMetaLogo(){
 
 function getCuboidFrames(){
   return Array.prototype.slice.call(document.querySelectorAll("#tab-cuboid .cuboid-tab-frame"));
-}
-
-function getMacFrame(){
-  return document.querySelector("#tab-mac .mac-tab-frame");
 }
 
 function getCuboidShells(){
@@ -18786,21 +18723,6 @@ function ensureCuboidViewerLoaded(forceReload){
       frame.setAttribute("src", baseSrc);
     }
   });
-}
-
-function ensureMacViewerLoaded(forceReload){
-  var frame = getMacFrame();
-  if(!frame) return;
-  var baseSrc = String(frame.getAttribute("data-src") || "./mac-cuboid-viewer.html").trim();
-  if(!baseSrc) return;
-  if(forceReload){
-    frame.setAttribute("src", baseSrc + (baseSrc.indexOf("?") >= 0 ? "&" : "?") + "ts=" + Date.now());
-    return;
-  }
-  var current = String(frame.getAttribute("src") || "").trim();
-  if(!current || current === "about:blank"){
-    frame.setAttribute("src", baseSrc);
-  }
 }
 
 function notifyCuboidOverlayState(active, frame){
@@ -18844,11 +18766,6 @@ function handleGlobalRefreshClick(){
   if(tab === 'cuboid'){
     ensureCuboidViewerLoaded(true);
     showToast("↻ Cuboid viewer refreshed");
-    return;
-  }
-  if(tab === 'mac'){
-    ensureMacViewerLoaded(true);
-    showToast("↻ Mac viewer refreshed");
     return;
   }
   smartRefresh();
@@ -18907,9 +18824,6 @@ function switchTab(tab){
     setTimeout(function(){
       getCuboidFrames().forEach(function(frame){ notifyCuboidOverlayState(false, frame); });
     }, 60);
-  }
-  if(tab === 'mac'){
-    setTimeout(ensureMacViewerLoaded, 0);
   }
   updateGlobalRefreshButtonLabel(tab);
   updateDesktopPrimaryInterfacePickerUi();
