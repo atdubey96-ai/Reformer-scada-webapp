@@ -119,7 +119,7 @@ body{color:rgba(140,180,220,0.85);}
 <body>
 <div id="app">
   <div id="viewerTag">AB LIVE WALLS</div>
-  <div id="vp"><div id="hint">DRAG TO ROTATE · DOUBLE-CLICK SNAP</div></div>
+  <div id="vp"><div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div></div>
   <div id="ctrls">
     <button class="btn" id="btnA">Face A</button>
     <button class="btn" id="btnB">Face B</button>
@@ -156,13 +156,51 @@ const chamberParam=(function(){
 const chamberWalls=chamberParam==="cd"?["C","D"]:["A","B"];
 const chamberZoneKey=chamberParam==="cd"?"CD":"AB";
 
+const app=document.getElementById("app");
 const viewerTag=document.getElementById("viewerTag");
+const hint=document.getElementById("hint");
 const btnA=document.getElementById("btnA");
 const btnB=document.getElementById("btnB");
 const btnAuto=document.getElementById("btnAuto");
 if(viewerTag) viewerTag.textContent=chamberZoneKey+" LIVE WALLS";
 if(btnA) btnA.textContent="Face "+chamberWalls[0];
 if(btnB) btnB.textContent="Face "+chamberWalls[1];
+
+function cuboidFullscreenElement(){
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+
+function cuboidIsFullscreen(){
+  return cuboidFullscreenElement()===app;
+}
+
+function cuboidRefreshHint(){
+  if(!hint) return;
+  hint.textContent=cuboidIsFullscreen() ? "DRAG TO ROTATE · DOUBLE-TAP EXIT FULLSCREEN" : "DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN";
+}
+
+function cuboidToggleFullscreen(){
+  const currentFs=cuboidFullscreenElement();
+  if(currentFs){
+    if(currentFs!==app) return;
+    const exitFs=document.exitFullscreen || document.webkitExitFullscreen;
+    if(exitFs){
+      const result=exitFs.call(document);
+      if(result && typeof result.catch==="function") result.catch(function(){});
+    }
+    return;
+  }
+  if(!app) return;
+  const requestFs=app.requestFullscreen || app.webkitRequestFullscreen;
+  if(requestFs){
+    const result=requestFs.call(app);
+    if(result && typeof result.catch==="function") result.catch(function(){});
+  }
+}
+
+document.addEventListener("fullscreenchange",cuboidRefreshHint);
+document.addEventListener("webkitfullscreenchange",cuboidRefreshHint);
+cuboidRefreshHint();
 
 function cuboidGetParentApp(){
   try{
@@ -1830,7 +1868,7 @@ function endPointerGesture(e){
   }
   const now=Date.now();
   if(now-lastTapAt<320){
-    snapToNearestFace();
+    cuboidToggleFullscreen();
     lastTapAt=0;
     return;
   }
@@ -1841,7 +1879,7 @@ vp.addEventListener("pointercancel",endPointerGesture);
 
 vp.addEventListener("dblclick",function(e){
   e.preventDefault();
-  snapToNearestFace();
+  cuboidToggleFullscreen();
 });
 
 btnA.addEventListener("click",function(){ setRotationTarget(0); });
