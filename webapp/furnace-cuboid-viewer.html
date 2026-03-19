@@ -1611,28 +1611,68 @@ function addBurners(fz,fdir){
 addBurners(FD/2-0.015,-1);
 addBurners(-FD/2+0.015,1);
 
+const DRAG_ROTATION_FACTOR=0.0064;
+const ROTATION_DAMPING=0.14;
+const INERTIA_DECAY=0.94;
+const INERTIA_MIN=0.00008;
+const AUTO_ROTATE_SPEED=0.0032;
+const MAX_DRAG_DELTA=28;
+
 let rotY=0,tgtY=0,drag=false,lastX=0,autoSpin=false;
-let touchMoved=false,lastTapAt=0;
+let touchMoved=false,lastTapAt=0,lastDragTs=0,rotVelocity=0;
+
+function normalizeAngle(angle){
+  let a=angle;
+  const tau=Math.PI*2;
+  while(a<=-Math.PI) a+=tau;
+  while(a>Math.PI) a-=tau;
+  return a;
+}
+
+function shortestAngleDelta(fromAngle,toAngle){
+  let delta=normalizeAngle(toAngle)-normalizeAngle(fromAngle);
+  if(delta>Math.PI) delta-=Math.PI*2;
+  if(delta<-Math.PI) delta+=Math.PI*2;
+  return delta;
+}
+
+function setRotationTarget(targetAngle){
+  tgtY=rotY+shortestAngleDelta(rotY,targetAngle);
+  rotVelocity=0;
+}
 
 function startDrag(clientX){
   drag=true;
   lastX=clientX;
+  lastDragTs=performance.now();
+  rotVelocity=0;
   touchMoved=false;
 }
 
 function moveDrag(clientX){
   if(!drag) return;
-  if(Math.abs(clientX-lastX)>2) touchMoved=true;
-  tgtY+=(clientX-lastX)*0.008;
+  const now=performance.now();
+  const rawDx=clientX-lastX;
+  const dx=Math.max(-MAX_DRAG_DELTA,Math.min(MAX_DRAG_DELTA,rawDx));
+  if(Math.abs(rawDx)>2) touchMoved=true;
+  const deltaRot=dx*DRAG_ROTATION_FACTOR;
+  tgtY+=deltaRot;
+  const dt=Math.max(12,now-lastDragTs);
+  const instantVelocity=deltaRot/(dt/16.6667);
+  rotVelocity=(rotVelocity*0.65)+(instantVelocity*0.35);
   lastX=clientX;
+  lastDragTs=now;
 }
 
 function stopDrag(){
+  if(!drag) return;
   drag=false;
 }
 
 function snapToNearestFace(){
-  tgtY=Math.round(rotY/(Math.PI/2))*(Math.PI/2);
+  const projectedAngle=rotY+(rotVelocity*6);
+  const snapped=Math.round(normalizeAngle(projectedAngle)/(Math.PI/2))*(Math.PI/2);
+  setRotationTarget(snapped);
 }
 
 vp.addEventListener("mousedown",function(e){ startDrag(e.clientX); });
@@ -1668,10 +1708,11 @@ vp.addEventListener("touchend",function(){
   lastTapAt=now;
 });
 
-btnA.addEventListener("click",function(){ tgtY=0; });
-btnB.addEventListener("click",function(){ tgtY=Math.PI; });
+btnA.addEventListener("click",function(){ setRotationTarget(0); });
+btnB.addEventListener("click",function(){ setRotationTarget(Math.PI); });
 btnAuto.addEventListener("click",function(){
   autoSpin=!autoSpin;
+  if(autoSpin) rotVelocity=0;
   this.textContent=autoSpin ? "Stop" : "Auto Rotate";
 });
 
@@ -1684,8 +1725,17 @@ renderer.setSize(GW(),GH());
 
 function animate(t){
   requestAnimationFrame(animate);
-  if(autoSpin) tgtY+=0.006;
-  rotY+=(tgtY-rotY)*0.10;
+  if(autoSpin && !drag){
+    tgtY+=AUTO_ROTATE_SPEED;
+  }else if(!drag){
+    if(Math.abs(rotVelocity)>INERTIA_MIN){
+      tgtY+=rotVelocity;
+      rotVelocity*=INERTIA_DECAY;
+    }else{
+      rotVelocity=0;
+    }
+  }
+  rotY+=(tgtY-rotY)*ROTATION_DAMPING;
   group.rotation.y=rotY;
   innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
   const ts=t*0.001;
