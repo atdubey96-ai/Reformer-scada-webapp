@@ -1589,6 +1589,7 @@ function makeSide(isLeft){
   sh.lineTo(-FD/2,FH/2);
   sh.lineTo(-FD/2,-FH/2);
   const pw=FD*0.52,ph=pw;
+  const peepFrameMarginScale=1.2;
   [[FH*0.18],[-FH*0.18]].forEach(function(arr){
     const cy=arr[0];
     const hole=new THREE.Path();
@@ -1606,7 +1607,9 @@ function makeSide(isLeft){
   group.add(m);
   [[FH*0.18],[-FH*0.18]].forEach(function(arr){
     const cy=arr[0];
-    const fw=pw*1.09,fh=ph*1.09;
+    const frameMarginX=(pw*0.045)*peepFrameMarginScale;
+    const frameMarginY=(ph*0.045)*peepFrameMarginScale;
+    const fw=pw+(frameMarginX*2),fh=ph+(frameMarginY*2);
     const fs=new THREE.Shape();
     fs.moveTo(-fw/2,cy-fh/2);
     fs.lineTo(fw/2,cy-fh/2);
