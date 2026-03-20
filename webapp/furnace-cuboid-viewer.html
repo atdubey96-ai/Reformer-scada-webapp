@@ -1114,10 +1114,10 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   }
   const wallTitle="WALL "+wallKey;
   const wallTitleFont="700 40px Times New Roman, serif";
-  const wallTitleY=cuboidHeaderBaseline(wallTitleFont,wallTitle)+2.5;
+  const wallTitleY=cuboidHeaderBaseline(wallTitleFont,wallTitle);
   const wallMetaText="6 rows x 15 burners";
   const wallMetaFont="700 21px Times New Roman, serif";
-  const wallMetaY=cuboidHeaderBaseline(wallMetaFont,wallMetaText)+1.8;
+  const wallMetaY=cuboidHeaderBaseline(wallMetaFont,wallMetaText);
   const headGrad=ctx.createLinearGradient(0,0,w,0);
   headGrad.addColorStop(0,"rgba(6,8,16,0.985)");
   headGrad.addColorStop(0.55,"rgba(12,13,22,0.99)");
@@ -1161,15 +1161,16 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
     ctx.fillText("B"+bn,bx,burnerNumY+1);
   }
 
-  const leftHeaderX=gridLeft+Math.round(slotW*0.14);
-  const rightHeaderX=gridRight-Math.round(slotW*0.14);
+  const manifoldShift=Math.round(slotW*0.18);
+  const leftHeaderX=gridLeft-manifoldShift;
+  const rightHeaderX=gridRight+manifoldShift;
   const numericRowCenters=itemCenters.filter(function(_,idx){
     return typeof rowOrder[idx]==="number";
   });
   const rowRailYs=numericRowCenters.map(function(centerY){
     return cuboidGetFuelRailGeometry(centerY+34,iconScale,centerY+10).railY;
   });
-  const manifoldTopY=headerTop+4;
+  const manifoldTopY=-10;
   const manifoldBottomY=(rowRailYs[rowRailYs.length-1] || (h-86))+Math.max(24,7*iconScale);
   cuboidDrawVerticalFuelManifold(ctx,leftHeaderX,manifoldTopY,manifoldBottomY,rowRailYs,iconScale);
   cuboidDrawVerticalFuelManifold(ctx,rightHeaderX,manifoldTopY,manifoldBottomY,rowRailYs,iconScale);
@@ -2095,11 +2096,25 @@ for(let i=0;i<nT;i++){
   conn.position.set(tx,FH/2+tProt,0);
   group.add(conn);
 }
+const overlayCanvasW=1440;
+const overlayGridLeft=134;
+const overlayGridRight=overlayCanvasW-18;
+const overlaySlotW=(overlayGridRight-overlayGridLeft)/15;
+const overlayManifoldShift=overlaySlotW*0.18;
+const overlayLeftHeaderX=overlayGridLeft-overlayManifoldShift;
+const overlayRightHeaderX=overlayGridRight+overlayManifoldShift;
+const overlayPlaneW=FW-0.22;
+function overlayXToWorld(canvasX){
+  return ((canvasX/overlayCanvasW)-0.5)*overlayPlaneW;
+}
+const edgeFeedXs=[overlayXToWorld(overlayLeftHeaderX),overlayXToWorld(overlayRightHeaderX)];
 const headerSpan=FW*0.94;
 const headerStartX=-headerSpan/2;
-const headerEndX=headerSpan/2;
 const headerY=FH/2+tProt+0.01;
 const headerRadius=0.115;
+const leftHeaderStub=edgeFeedXs[0]-headerStartX;
+const headerRightStub=Math.max(leftHeaderStub,0.92);
+const headerEndX=edgeFeedXs[1]+headerRightStub;
 const hPath=new THREE.CatmullRomCurve3([
   new THREE.Vector3(headerStartX,headerY,0),
   new THREE.Vector3(headerEndX,headerY,0)
@@ -2125,18 +2140,6 @@ const headerCapMat=new THREE.MeshStandardMaterial({
   collar.position.set(x,headerY,0);
   group.add(collar);
 });
-
-const overlayCanvasW=1440;
-const overlayGridLeft=134;
-const overlayGridRight=overlayCanvasW-18;
-const overlaySlotW=(overlayGridRight-overlayGridLeft)/15;
-const overlayLeftHeaderX=overlayGridLeft+(overlaySlotW*0.14);
-const overlayRightHeaderX=overlayGridRight-(overlaySlotW*0.14);
-const overlayPlaneW=FW-0.22;
-function overlayXToWorld(canvasX){
-  return ((canvasX/overlayCanvasW)-0.5)*overlayPlaneW;
-}
-const edgeFeedXs=[overlayXToWorld(overlayLeftHeaderX),overlayXToWorld(overlayRightHeaderX)];
 const edgeFeedZs=[FD/2+0.04,-FD/2-0.04];
 const edgeFeedRadius=0.078;
 const edgeFeedBottomY=(FH/2)-0.04;
