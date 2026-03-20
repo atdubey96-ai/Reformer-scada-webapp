@@ -773,6 +773,15 @@ function cuboidDrawVerticalFuelManifold(ctx,x,topY,bottomY,jointYs,scale){
   const tubeX=x-(tubeW/2);
   const startY=Math.min(topY,bottomY);
   const endY=Math.max(topY,bottomY);
+  const backPlateW=tubeW+Math.max(10,3.1*scaleVal);
+  const backPlateX=x-(backPlateW/2);
+  const backPlatePad=Math.max(5,1.5*scaleVal);
+  const backPlateGrad=ctx.createLinearGradient(backPlateX,0,backPlateX+backPlateW,0);
+  backPlateGrad.addColorStop(0,"rgba(3,6,10,0)");
+  backPlateGrad.addColorStop(0.16,"rgba(6,9,15,0.48)");
+  backPlateGrad.addColorStop(0.50,"rgba(10,14,22,0.66)");
+  backPlateGrad.addColorStop(0.84,"rgba(6,9,15,0.48)");
+  backPlateGrad.addColorStop(1,"rgba(3,6,10,0)");
   const tubeGrad=ctx.createLinearGradient(tubeX,0,tubeX+tubeW,0);
   tubeGrad.addColorStop(0,"rgba(40,46,55,0.98)");
   tubeGrad.addColorStop(0.22,"rgba(205,213,221,0.96)");
@@ -793,6 +802,13 @@ function cuboidDrawVerticalFuelManifold(ctx,x,topY,bottomY,jointYs,scale){
   collarGrad.addColorStop(1,"rgba(48,55,63,0.98)");
 
   ctx.save();
+  ctx.fillStyle=backPlateGrad;
+  cuboidRoundRectPath(ctx,backPlateX,startY-backPlatePad,backPlateW,(endY-startY)+(backPlatePad*2),backPlateW/2);
+  ctx.fill();
+  ctx.strokeStyle="rgba(182,192,205,0.12)";
+  ctx.lineWidth=0.9;
+  ctx.stroke();
+
   ctx.fillStyle=shadowGrad;
   cuboidRoundRectPath(ctx,tubeX+2,startY+4,tubeW,endY-startY,tubeW/2);
   ctx.fill();
@@ -809,6 +825,12 @@ function cuboidDrawVerticalFuelManifold(ctx,x,topY,bottomY,jointYs,scale){
   ctx.beginPath();
   ctx.moveTo(tubeX+(tubeW*0.26),startY+tubeW*0.24);
   ctx.lineTo(tubeX+(tubeW*0.26),endY-(tubeW*0.24));
+  ctx.stroke();
+  ctx.strokeStyle="rgba(18,24,31,0.44)";
+  ctx.lineWidth=0.95;
+  ctx.beginPath();
+  ctx.moveTo(tubeX+tubeW-(tubeW*0.24),startY+tubeW*0.24);
+  ctx.lineTo(tubeX+tubeW-(tubeW*0.24),endY-(tubeW*0.24));
   ctx.stroke();
 
   const collarYs=[startY+3,endY-3].concat(Array.isArray(jointYs)?jointYs:[]);
@@ -2161,17 +2183,32 @@ const headerCapMat=new THREE.MeshStandardMaterial({
 const edgeFeedRadius=0.078;
 const edgeFeedBottomY=(FH/2)-0.04;
 const edgeFeedTopY=headerY-0.11;
+const edgeFeedSleeveMat=new THREE.MeshStandardMaterial({
+  color:0x101720,
+  roughness:0.42,
+  metalness:0.36,
+  emissive:0x060b12,
+  emissiveIntensity:0.08,
+  transparent:true,
+  opacity:0.92
+});
 const edgeFeedMat=new THREE.MeshStandardMaterial({
-  color:0xafbbc8,
-  roughness:0.14,
+  color:0xc5d0db,
+  roughness:0.12,
   metalness:0.98,
-  emissive:0x24303a,
-  emissiveIntensity:0.28
+  emissive:0x2f3a46,
+  emissiveIntensity:0.38
 });
 edgeFeedConfigs.forEach(function(cfg){
   const x=cfg.x;
   const z=cfg.z;
   const vertH=edgeFeedTopY-edgeFeedBottomY;
+  const vertSleeve=new THREE.Mesh(
+    new THREE.CylinderGeometry(edgeFeedRadius*1.18,edgeFeedRadius*1.18,vertH+0.012,18),
+    edgeFeedSleeveMat.clone()
+  );
+  vertSleeve.position.set(x,edgeFeedBottomY+(vertH/2),z);
+  group.add(vertSleeve);
   const vertTube=new THREE.Mesh(
     new THREE.CylinderGeometry(edgeFeedRadius,edgeFeedRadius,vertH,18),
     edgeFeedMat.clone()
@@ -2192,6 +2229,11 @@ edgeFeedConfigs.forEach(function(cfg){
     new THREE.Vector3(x,elbowPeakY,z*0.86),
     new THREE.Vector3(x,headerY,0)
   ]);
+  const elbowSleeve=new THREE.Mesh(
+    new THREE.TubeGeometry(elbowPath,14,edgeFeedRadius*1.11,18,false),
+    edgeFeedSleeveMat.clone()
+  );
+  group.add(elbowSleeve);
   const elbowTube=new THREE.Mesh(
     new THREE.TubeGeometry(elbowPath,14,edgeFeedRadius*0.94,18,false),
     edgeFeedMat.clone()
