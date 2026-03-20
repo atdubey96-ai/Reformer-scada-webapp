@@ -3425,7 +3425,7 @@ body.light-theme .cw-nudge{
   flex:1 1 auto;
   display:flex;
   flex-direction:column;
-  gap:1px;
+  gap:3px;
   min-width:0;
 }
 #tab-cuboid .cuboid-legend-state-name{
@@ -3434,9 +3434,40 @@ body.light-theme .cw-nudge{
   color:#eef4ff;
 }
 #tab-cuboid .cuboid-legend-state-desc{
+  display:inline-flex;
+  align-items:center;
+  align-self:flex-start;
+  padding:2px 6px 2px 7px;
+  border-radius:999px;
+  border:1px solid rgba(160,176,201,0.20);
   font-size:7px;
   line-height:1.1;
-  color:rgba(198,208,226,0.82);
+  font-weight:700;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:#eef4ff;
+  background:rgba(12,18,28,0.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="B"] .cuboid-legend-state-desc{
+  background:rgba(58,115,235,0.18);
+  border-color:rgba(113,162,255,0.34);
+  color:#dcecff;
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="C"] .cuboid-legend-state-desc{
+  background:rgba(135,148,170,0.16);
+  border-color:rgba(172,184,203,0.28);
+  color:#eef2f7;
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="O"] .cuboid-legend-state-desc{
+  background:rgba(38,180,110,0.16);
+  border-color:rgba(107,229,166,0.28);
+  color:#dcffee;
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="N"] .cuboid-legend-state-desc{
+  background:rgba(245,158,11,0.16);
+  border-color:rgba(255,198,95,0.28);
+  color:#fff0cf;
 }
 #tab-cuboid .cuboid-legend-state-count{
   font-size:15px;
@@ -15764,7 +15795,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-badge">C</div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Cold</div>
-                    <div class="cuboid-legend-state-desc">Closed / None</div>
+                    <div class="cuboid-legend-state-desc">Closed Burner</div>
                   </div>
                   <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
                 </div>
@@ -15844,7 +15875,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-badge">C</div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Cold</div>
-                    <div class="cuboid-legend-state-desc">Closed / None</div>
+                    <div class="cuboid-legend-state-desc">Closed Burner</div>
                   </div>
                   <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
                 </div>
