@@ -2107,14 +2107,23 @@ const overlayPlaneW=FW-0.22;
 function overlayXToWorld(canvasX){
   return ((canvasX/overlayCanvasW)-0.5)*overlayPlaneW;
 }
-const edgeFeedXs=[overlayXToWorld(overlayLeftHeaderX),overlayXToWorld(overlayRightHeaderX)];
-const headerSpan=FW*0.94;
-const headerStartX=-headerSpan/2;
+const frontEdgeFeedXs=[overlayXToWorld(overlayLeftHeaderX),overlayXToWorld(overlayRightHeaderX)];
+const backEdgeFeedXs=[-frontEdgeFeedXs[0],-frontEdgeFeedXs[1]];
+const edgeFeedConfigs=[
+  {x:frontEdgeFeedXs[0],z:FD/2+0.04},
+  {x:frontEdgeFeedXs[1],z:FD/2+0.04},
+  {x:backEdgeFeedXs[0],z:-FD/2-0.04},
+  {x:backEdgeFeedXs[1],z:-FD/2-0.04}
+];
+const outerJoinAbs=Math.max.apply(null,edgeFeedConfigs.map(function(cfg){
+  return Math.abs(cfg.x);
+}));
+const defaultHeaderHalf=(FW*0.94)/2;
+const headerStub=Math.max(defaultHeaderHalf-outerJoinAbs,0.92);
+const headerStartX=-outerJoinAbs-headerStub;
 const headerY=FH/2+tProt+0.01;
 const headerRadius=0.115;
-const leftHeaderStub=edgeFeedXs[0]-headerStartX;
-const headerRightStub=Math.max(leftHeaderStub,0.92);
-const headerEndX=edgeFeedXs[1]+headerRightStub;
+const headerEndX=outerJoinAbs+headerStub;
 const hPath=new THREE.CatmullRomCurve3([
   new THREE.Vector3(headerStartX,headerY,0),
   new THREE.Vector3(headerEndX,headerY,0)
@@ -2140,7 +2149,15 @@ const headerCapMat=new THREE.MeshStandardMaterial({
   collar.position.set(x,headerY,0);
   group.add(collar);
 });
-const edgeFeedZs=[FD/2+0.04,-FD/2-0.04];
+[-outerJoinAbs,outerJoinAbs].forEach(function(x){
+  const headerJoinCollar=new THREE.Mesh(
+    new THREE.CylinderGeometry(headerRadius*1.16,headerRadius*1.16,0.08,18),
+    headerCapMat.clone()
+  );
+  headerJoinCollar.rotation.z=Math.PI/2;
+  headerJoinCollar.position.set(x,headerY,0);
+  group.add(headerJoinCollar);
+});
 const edgeFeedRadius=0.078;
 const edgeFeedBottomY=(FH/2)-0.04;
 const edgeFeedTopY=headerY-0.11;
@@ -2151,51 +2168,43 @@ const edgeFeedMat=new THREE.MeshStandardMaterial({
   emissive:0x24303a,
   emissiveIntensity:0.28
 });
-edgeFeedXs.forEach(function(x){
-  const headerJoinCollar=new THREE.Mesh(
-    new THREE.CylinderGeometry(headerRadius*1.16,headerRadius*1.16,0.08,18),
+edgeFeedConfigs.forEach(function(cfg){
+  const x=cfg.x;
+  const z=cfg.z;
+  const vertH=edgeFeedTopY-edgeFeedBottomY;
+  const vertTube=new THREE.Mesh(
+    new THREE.CylinderGeometry(edgeFeedRadius,edgeFeedRadius,vertH,18),
+    edgeFeedMat.clone()
+  );
+  vertTube.position.set(x,edgeFeedBottomY+(vertH/2),z);
+  group.add(vertTube);
+
+  const vertCollar=new THREE.Mesh(
+    new THREE.CylinderGeometry(edgeFeedRadius*1.26,edgeFeedRadius*1.26,0.085,16),
     headerCapMat.clone()
   );
-  headerJoinCollar.rotation.z=Math.PI/2;
-  headerJoinCollar.position.set(x,headerY,0);
-  group.add(headerJoinCollar);
+  vertCollar.position.set(x,edgeFeedTopY,z);
+  group.add(vertCollar);
 
-  edgeFeedZs.forEach(function(z){
-    const vertH=edgeFeedTopY-edgeFeedBottomY;
-    const vertTube=new THREE.Mesh(
-      new THREE.CylinderGeometry(edgeFeedRadius,edgeFeedRadius,vertH,18),
-      edgeFeedMat.clone()
-    );
-    vertTube.position.set(x,edgeFeedBottomY+(vertH/2),z);
-    group.add(vertTube);
+  const elbowPeakY=headerY+0.035;
+  const elbowPath=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(x,edgeFeedTopY,z),
+    new THREE.Vector3(x,elbowPeakY,z*0.86),
+    new THREE.Vector3(x,headerY,0)
+  ]);
+  const elbowTube=new THREE.Mesh(
+    new THREE.TubeGeometry(elbowPath,14,edgeFeedRadius*0.94,18,false),
+    edgeFeedMat.clone()
+  );
+  group.add(elbowTube);
 
-    const vertCollar=new THREE.Mesh(
-      new THREE.CylinderGeometry(edgeFeedRadius*1.26,edgeFeedRadius*1.26,0.085,16),
-      headerCapMat.clone()
-    );
-    vertCollar.position.set(x,edgeFeedTopY,z);
-    group.add(vertCollar);
-
-    const elbowPeakY=headerY+0.035;
-    const elbowPath=new THREE.CatmullRomCurve3([
-      new THREE.Vector3(x,edgeFeedTopY,z),
-      new THREE.Vector3(x,elbowPeakY,z*0.86),
-      new THREE.Vector3(x,headerY,0)
-    ]);
-    const elbowTube=new THREE.Mesh(
-      new THREE.TubeGeometry(elbowPath,14,edgeFeedRadius*0.94,18,false),
-      edgeFeedMat.clone()
-    );
-    group.add(elbowTube);
-
-    const elbowJoinCollar=new THREE.Mesh(
-      new THREE.CylinderGeometry(edgeFeedRadius*1.24,edgeFeedRadius*1.24,0.085,16),
-      headerCapMat.clone()
-    );
-    elbowJoinCollar.rotation.x=Math.PI/2;
-    elbowJoinCollar.position.set(x,elbowPeakY,z*0.82);
-    group.add(elbowJoinCollar);
-  });
+  const elbowJoinCollar=new THREE.Mesh(
+    new THREE.CylinderGeometry(edgeFeedRadius*1.24,edgeFeedRadius*1.24,0.085,16),
+    headerCapMat.clone()
+  );
+  elbowJoinCollar.rotation.x=Math.PI/2;
+  elbowJoinCollar.position.set(x,elbowPeakY,z*0.82);
+  group.add(elbowJoinCollar);
 });
 
 const flameGroups=[];
