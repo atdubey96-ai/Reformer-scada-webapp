@@ -2018,11 +2018,6 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .burner-cell-editor-scale span:last-child{
   text-align:right;
 }
-.burner-cell-editor-note{
-  font-size:9px;
-  line-height:1.35;
-  color:rgba(184,198,220,0.68);
-}
 body.light-theme .burner-cell-editor{
   background:linear-gradient(180deg,rgba(248,251,255,0.98),rgba(234,241,248,0.98));
   border-color:rgba(91,122,165,0.34);
@@ -17246,7 +17241,6 @@ function ensureBurnerCellEditor(){
       + '</div>'
       + '<input class="burner-cell-editor-slider" data-burner-editor-slider type="range" min="' + BURNER_OPENING_MIN + '" max="' + BURNER_OPENING_MAX + '" step="' + BURNER_OPENING_STEP + '" value="100">'
       + '<div class="burner-cell-editor-scale"><span>0</span><span>10</span><span>20</span><span>30</span><span>40</span><span>50</span><span>60</span><span>70</span><span>80</span><span>90</span><span>100</span></div>'
-      + '<div class="burner-cell-editor-note" data-burner-editor-note>Adjust opening with the burner state without changing the table layout.</div>'
     + '</div>';
   document.body.appendChild(editor);
   editor.addEventListener("click", function(ev){ ev.stopPropagation(); });
@@ -17302,18 +17296,12 @@ function updateBurnerCellEditorUI(){
   var loc = editor.querySelector("[data-burner-editor-loc]");
   var meta = editor.querySelector("[data-burner-editor-meta]");
   var openingEl = editor.querySelector("[data-burner-editor-opening]");
-  var note = editor.querySelector("[data-burner-editor-note]");
   var slider = editor.querySelector("[data-burner-editor-slider]");
   var activeMin = BURNER_OPENING_ACTIVE_MIN;
   editor.dataset.state = state;
   if(loc) loc.textContent = "Wall " + wallName + " · R" + (ri + 1) + " B" + (ci + 1);
   if(meta) meta.textContent = getBurnerStateLabel(state);
   if(openingEl) openingEl.textContent = getBurnerOpeningDisplayText(opening, state);
-  if(note){
-    note.textContent = state === "C"
-      ? "Cold burners remain at 0% opening."
-      : "Active burners default to 100% opening until they are marked closed.";
-  }
   if(slider){
     slider.min = state === "C" ? String(BURNER_OPENING_MIN) : String(activeMin);
     slider.value = String(opening);
