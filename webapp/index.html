@@ -3418,11 +3418,19 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-badge{
   position:relative;
-  flex:0 0 40px;
-  width:40px;
-  height:44px;
+  flex:0 0 50px;
+  width:50px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  filter:none;
+}
+#tab-cuboid .cuboid-legend-badge canvas,
+#tab-cuboid .cuboid-legend-opening-burner canvas{
   display:block;
-  filter:drop-shadow(0 10px 16px rgba(0,0,0,0.24));
+  width:100%;
+  height:100%;
 }
 #tab-cuboid .cuboid-legend-badge-flame,
 #tab-cuboid .cuboid-legend-badge-core,
@@ -3621,10 +3629,12 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-opening-burner{
   position:relative;
-  width:42px;
-  height:52px;
-  display:block;
-  filter:drop-shadow(0 10px 16px rgba(0,0,0,0.24));
+  width:46px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  filter:none;
 }
 #tab-cuboid .cuboid-legend-opening-flame,
 #tab-cuboid .cuboid-legend-opening-core,
@@ -7273,8 +7283,12 @@ html, body, body *, body *::before, body *::after, svg text{
     border-radius:16px;
   }
   #tab-cuboid .cuboid-legend-badge{
-    width:40px;
-    height:44px;
+    width:46px;
+    height:52px;
+  }
+  #tab-cuboid .cuboid-legend-opening-burner{
+    width:42px;
+    height:52px;
   }
   #tab-cuboid .cuboid-legend-title{
     margin-bottom:10px;
@@ -16260,7 +16274,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="cuboid-legend-title">Burner State Legend</div>
               <div class="cuboid-legend-state-row">
                 <div class="cuboid-legend-state-card" data-state="B">
-                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Both</div>
                     <div class="cuboid-legend-state-desc">Blue Burner</div>
@@ -16268,7 +16282,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="C">
-                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Cold</div>
                     <div class="cuboid-legend-state-desc">Closed Burner</div>
@@ -16276,7 +16290,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="O">
-                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Off Gas</div>
                     <div class="cuboid-legend-state-desc">Green Burner</div>
@@ -16284,7 +16298,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="N">
-                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">NG Only</div>
                     <div class="cuboid-legend-state-desc">Amber Burner</div>
@@ -16298,53 +16312,25 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="cuboid-legend-opening-row">
                 <div class="cuboid-legend-opening-item" data-open="25">
                   <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <span class="cuboid-legend-opening-flame"></span>
-                    <span class="cuboid-legend-opening-core"></span>
-                    <span class="cuboid-legend-opening-stem"></span>
-                    <span class="cuboid-legend-opening-collar"></span>
-                    <span class="cuboid-legend-opening-base"></span>
-                    <span class="cuboid-legend-opening-port"></span>
-                    <span class="cuboid-legend-opening-port-cap"></span>
-                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="25"></canvas>
                   </div>
                   <div class="cuboid-legend-opening-label">25%</div>
                 </div>
                 <div class="cuboid-legend-opening-item" data-open="50">
                   <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <span class="cuboid-legend-opening-flame"></span>
-                    <span class="cuboid-legend-opening-core"></span>
-                    <span class="cuboid-legend-opening-stem"></span>
-                    <span class="cuboid-legend-opening-collar"></span>
-                    <span class="cuboid-legend-opening-base"></span>
-                    <span class="cuboid-legend-opening-port"></span>
-                    <span class="cuboid-legend-opening-port-cap"></span>
-                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="50"></canvas>
                   </div>
                   <div class="cuboid-legend-opening-label">50%</div>
                 </div>
                 <div class="cuboid-legend-opening-item" data-open="75">
                   <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <span class="cuboid-legend-opening-flame"></span>
-                    <span class="cuboid-legend-opening-core"></span>
-                    <span class="cuboid-legend-opening-stem"></span>
-                    <span class="cuboid-legend-opening-collar"></span>
-                    <span class="cuboid-legend-opening-base"></span>
-                    <span class="cuboid-legend-opening-port"></span>
-                    <span class="cuboid-legend-opening-port-cap"></span>
-                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="75"></canvas>
                   </div>
                   <div class="cuboid-legend-opening-label">75%</div>
                 </div>
                 <div class="cuboid-legend-opening-item" data-open="100">
                   <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <span class="cuboid-legend-opening-flame"></span>
-                    <span class="cuboid-legend-opening-core"></span>
-                    <span class="cuboid-legend-opening-stem"></span>
-                    <span class="cuboid-legend-opening-collar"></span>
-                    <span class="cuboid-legend-opening-base"></span>
-                    <span class="cuboid-legend-opening-port"></span>
-                    <span class="cuboid-legend-opening-port-cap"></span>
-                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas>
                   </div>
                   <div class="cuboid-legend-opening-label">100%</div>
                 </div>
@@ -16397,7 +16383,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="cuboid-legend-title">Burner State Legend</div>
               <div class="cuboid-legend-state-row">
                 <div class="cuboid-legend-state-card" data-state="B">
-                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Both</div>
                     <div class="cuboid-legend-state-desc">Blue Burner</div>
@@ -16405,7 +16391,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="C">
-                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Cold</div>
                     <div class="cuboid-legend-state-desc">Closed Burner</div>
@@ -16413,7 +16399,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="O">
-                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Off Gas</div>
                     <div class="cuboid-legend-state-desc">Green Burner</div>
@@ -16421,7 +16407,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="N">
-                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">NG Only</div>
                     <div class="cuboid-legend-state-desc">Amber Burner</div>
@@ -16435,53 +16421,25 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="cuboid-legend-opening-row">
                 <div class="cuboid-legend-opening-item" data-open="25">
                   <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <span class="cuboid-legend-opening-flame"></span>
-                    <span class="cuboid-legend-opening-core"></span>
-                    <span class="cuboid-legend-opening-stem"></span>
-                    <span class="cuboid-legend-opening-collar"></span>
-                    <span class="cuboid-legend-opening-base"></span>
-                    <span class="cuboid-legend-opening-port"></span>
-                    <span class="cuboid-legend-opening-port-cap"></span>
-                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="25"></canvas>
                   </div>
                   <div class="cuboid-legend-opening-label">25%</div>
                 </div>
                 <div class="cuboid-legend-opening-item" data-open="50">
                   <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <span class="cuboid-legend-opening-flame"></span>
-                    <span class="cuboid-legend-opening-core"></span>
-                    <span class="cuboid-legend-opening-stem"></span>
-                    <span class="cuboid-legend-opening-collar"></span>
-                    <span class="cuboid-legend-opening-base"></span>
-                    <span class="cuboid-legend-opening-port"></span>
-                    <span class="cuboid-legend-opening-port-cap"></span>
-                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="50"></canvas>
                   </div>
                   <div class="cuboid-legend-opening-label">50%</div>
                 </div>
                 <div class="cuboid-legend-opening-item" data-open="75">
                   <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <span class="cuboid-legend-opening-flame"></span>
-                    <span class="cuboid-legend-opening-core"></span>
-                    <span class="cuboid-legend-opening-stem"></span>
-                    <span class="cuboid-legend-opening-collar"></span>
-                    <span class="cuboid-legend-opening-base"></span>
-                    <span class="cuboid-legend-opening-port"></span>
-                    <span class="cuboid-legend-opening-port-cap"></span>
-                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="75"></canvas>
                   </div>
                   <div class="cuboid-legend-opening-label">75%</div>
                 </div>
                 <div class="cuboid-legend-opening-item" data-open="100">
                   <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <span class="cuboid-legend-opening-flame"></span>
-                    <span class="cuboid-legend-opening-core"></span>
-                    <span class="cuboid-legend-opening-stem"></span>
-                    <span class="cuboid-legend-opening-collar"></span>
-                    <span class="cuboid-legend-opening-base"></span>
-                    <span class="cuboid-legend-opening-port"></span>
-                    <span class="cuboid-legend-opening-port-cap"></span>
-                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas>
                   </div>
                   <div class="cuboid-legend-opening-label">100%</div>
                 </div>
@@ -20846,9 +20804,455 @@ function cuboidLegendSetText(panel, key, value){
   if(el) el.textContent = String(value);
 }
 
+function cuboidLegendRoundRectPath(ctx, x, y, w, h, r){
+  var rad = Math.max(0, Math.min(Number(r) || 0, Math.min(w, h) / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.lineTo(x + w - rad, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+  ctx.lineTo(x + w, y + h - rad);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+  ctx.lineTo(x + rad, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+  ctx.lineTo(x, y + rad);
+  ctx.quadraticCurveTo(x, y, x + rad, y);
+  ctx.closePath();
+}
+
+function cuboidLegendGetBurnerPalette(state){
+  return {
+    O:{flame:"#22c55e", core:"#86efac", inner:"#ecfdf5", stem:"#15803d", glow:"rgba(34,197,94,0.52)"},
+    N:{flame:"#f59e0b", core:"#fcd34d", inner:"#fef3c7", stem:"#b45309", glow:"rgba(245,158,11,0.54)"},
+    B:{flame:"#3b82f6", core:"#93c5fd", inner:"#dbeafe", stem:"#1d4ed8", glow:"rgba(59,130,246,0.54)"},
+    C:{flame:"#6b7280", core:"#d7dde6", inner:"#f8fafc", stem:"#4b5563", glow:"rgba(226,232,240,0.12)"}
+  }[state] || {flame:"#6b7280", core:"#d7dde6", inner:"#f8fafc", stem:"#4b5563", glow:"rgba(226,232,240,0.12)"};
+}
+
+function cuboidLegendDrawTipFlameGlow(ctx, x, y, state, phase, scale){
+  var s = normalizeBurnerStateSnapshotValue(state);
+  if(s !== "O" && s !== "N" && s !== "B") return;
+  var palette = cuboidLegendGetBurnerPalette(s);
+  var waveA = 0.5 + (0.5 * Math.sin(phase * 1.8));
+  var waveB = 0.5 + (0.5 * Math.sin((phase * 2.45) + 1.3));
+  var waveC = 0.5 + (0.5 * Math.sin((phase * 2.05) + 2.5));
+  var waveD = 0.5 + (0.5 * Math.sin((phase * 3.15) + 0.4));
+  var scaleX = scale * 0.88;
+  var scaleY = scale * 1.52;
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = 0.18 + (waveA * 0.16);
+  ctx.fillStyle = palette.glow;
+  ctx.beginPath();
+  ctx.ellipse(x, y - (18 * scaleY), (13 * scaleX) + (waveB * 3.6), (16.5 * scaleY) + (waveA * 5.6), 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.14 + (waveC * 0.11);
+  ctx.beginPath();
+  ctx.ellipse(x - (6 * scaleX), y - (16 * scaleY), (5.8 * scaleX) + (waveA * 1.5), (8.2 * scaleY) + (waveB * 2.1), -0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + (6 * scaleX), y - (16 * scaleY), (5.8 * scaleX) + (waveB * 1.5), (8.2 * scaleY) + (waveA * 2.1), 0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.12 + (waveD * 0.1);
+  ctx.fillStyle = palette.inner;
+  ctx.beginPath();
+  ctx.ellipse(x, y - (22 * scaleY) - (waveA * 2.6), (2.7 * scaleX) + (waveC * 0.7), (4.9 * scaleY) + (waveB * 1.3), 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function cuboidLegendDrawOpeningWindow(ctx, x, baseX, baseY, baseW, baseH, state, opening, iconScale, scaleX){
+  var s = normalizeBurnerStateSnapshotValue(state);
+  var palette = cuboidLegendGetBurnerPalette(s);
+  var openingRatio = Math.max(0, Math.min(1, normalizeBurnerOpeningValue(opening, s) / 100));
+  var bezelW = Math.min(baseW * 0.86, 19.4 * scaleX);
+  var bezelH = Math.max(baseH * 0.78, 3.15 * iconScale);
+  var bezelX = x - (bezelW / 2);
+  var bezelY = baseY + ((baseH - bezelH) / 2);
+  var bezelGrad = ctx.createLinearGradient(0, bezelY, 0, bezelY + bezelH);
+  var innerPad = Math.max(0.78, 0.24 * iconScale);
+  var innerX;
+  var innerY;
+  var innerW;
+  var innerH;
+  var cavityGrad;
+  var fillW;
+  var fillGrad;
+  var ribCount;
+  var si;
+  var ribX;
+  var capX;
+  var glossGrad;
+  bezelGrad.addColorStop(0, "rgba(34,41,49,0.98)");
+  bezelGrad.addColorStop(0.4, "rgba(10,14,19,0.98)");
+  bezelGrad.addColorStop(1, "rgba(58,66,76,0.94)");
+  innerX = bezelX + innerPad;
+  innerY = bezelY + innerPad;
+  innerW = bezelW - (innerPad * 2);
+  innerH = bezelH - (innerPad * 2);
+  cavityGrad = ctx.createLinearGradient(0, innerY, 0, innerY + innerH);
+  cavityGrad.addColorStop(0, "rgba(2,5,9,0.98)");
+  cavityGrad.addColorStop(0.52, "rgba(10,15,20,0.98)");
+  cavityGrad.addColorStop(1, "rgba(28,34,40,0.94)");
+  fillW = Math.max(0, innerW * openingRatio);
+
+  ctx.fillStyle = bezelGrad;
+  cuboidLegendRoundRectPath(ctx, bezelX, bezelY, bezelW, bezelH, bezelH / 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(196,203,211,0.24)";
+  ctx.lineWidth = Math.max(0.6, 0.28 * iconScale);
+  ctx.stroke();
+
+  ctx.fillStyle = cavityGrad;
+  cuboidLegendRoundRectPath(ctx, innerX, innerY, innerW, innerH, Math.min(innerH / 2, 0.72 * iconScale));
+  ctx.fill();
+
+  if(fillW > 0.2 && s !== "C"){
+    fillGrad = ctx.createLinearGradient(innerX, 0, innerX + Math.max(fillW, 0.8), 0);
+    fillGrad.addColorStop(0, palette.flame);
+    fillGrad.addColorStop(0.5, palette.core);
+    fillGrad.addColorStop(1, palette.inner);
+    ctx.save();
+    ctx.shadowBlur = 4.6 * iconScale;
+    ctx.shadowColor = palette.glow;
+    ctx.fillStyle = fillGrad;
+    cuboidLegendRoundRectPath(ctx, innerX, innerY, fillW, innerH, Math.min(innerH / 2, 0.72 * iconScale));
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ribCount = 5;
+  for(si = 1; si < ribCount; si++){
+    ribX = innerX + ((innerW * si) / ribCount);
+    ctx.strokeStyle = "rgba(230,236,244,0.16)";
+    ctx.lineWidth = Math.max(0.45, 0.16 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(ribX, innerY + 0.28);
+    ctx.lineTo(ribX, innerY + innerH - 0.28);
+    ctx.stroke();
+  }
+
+  if(fillW > 0.2 && s !== "C"){
+    capX = innerX + fillW;
+    ctx.strokeStyle = "rgba(255,255,255,0.42)";
+    ctx.lineWidth = Math.max(0.75, 0.24 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(capX, innerY + 0.22);
+    ctx.lineTo(capX, innerY + innerH - 0.22);
+    ctx.stroke();
+  }
+
+  if(s === "C"){
+    ctx.strokeStyle = "rgba(245,158,11,0.72)";
+    ctx.lineWidth = Math.max(0.9, 0.3 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(innerX + (0.9 * iconScale), innerY + innerH - (0.35 * iconScale));
+    ctx.lineTo(innerX + innerW - (0.9 * iconScale), innerY + (0.35 * iconScale));
+    ctx.stroke();
+  }else{
+    glossGrad = ctx.createLinearGradient(0, innerY, 0, innerY + (innerH * 0.55));
+    glossGrad.addColorStop(0, "rgba(255,255,255,0.34)");
+    glossGrad.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = glossGrad;
+    cuboidLegendRoundRectPath(ctx, innerX + 0.18, innerY + 0.18, innerW - 0.36, innerH * 0.46, Math.min(innerH / 2, 0.64 * iconScale));
+    ctx.fill();
+  }
+}
+
+function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
+  var s = normalizeBurnerStateSnapshotValue(state);
+  var palette = cuboidLegendGetBurnerPalette(s);
+  var iconScale = Math.max(0.82, Number(scale) || 1.45);
+  var scaleX = iconScale * 0.9;
+  var scaleY = iconScale * 1.55;
+  var openingRatio = normalizeBurnerOpeningValue(opening, s) / 100;
+  var flameHeightFactor = s !== "C" ? (0.45 + (openingRatio * 0.9)) : 1;
+  var flameWidthFactor = s !== "C" ? (0.58 + (openingRatio * 0.52)) : 1;
+  var flicker = 0.94 + (Math.sin(phase * 1.95) * 0.11) + (Math.sin((phase * 2.8) + 0.9) * 0.07);
+  var sidePulse = 0.94 + (Math.sin((phase * 2.35) + 0.4) * 0.12);
+  var lift = (s === "C") ? 0 : ((2.2 + (Math.sin(phase * 1.75) * 1.35)) * scaleY * flameHeightFactor);
+  var stemW = 6.6 * scaleX;
+  var stemH = 8.6 * iconScale;
+  var stemX = x - (stemW / 2);
+  var stemY = y + (0.4 * iconScale);
+  var baseW = 20.5 * scaleX;
+  var baseH = 4.25 * iconScale;
+  var baseX = x - (baseW / 2);
+  var baseY = y + (4.7 * iconScale);
+  var baseShadowY = baseY + (baseH * 0.96);
+  var inletPortX = baseX + (1.22 * iconScale);
+  var inletCenterY = baseY + (baseH * 0.57);
+  var inletStubW = Math.max(4.9 * iconScale, baseH * 0.94);
+  var inletStubH = Math.max(2.15 * iconScale, baseH * 0.54);
+  var inletStubX = inletPortX - (inletStubW * 0.58);
+  var inletStubY = inletCenterY - (inletStubH / 2);
+  var inletCapR = Math.max(1.18 * iconScale, inletStubH * 0.56);
+  var baseGrad = ctx.createLinearGradient(0, baseY, 0, baseY + baseH);
+  var inletGrad = ctx.createLinearGradient(inletStubX, 0, inletStubX + inletStubW, 0);
+  var collarW = Math.max(11 * scaleX, baseW * 0.58);
+  var collarH = 2.35 * iconScale;
+  var collarX = x - (collarW / 2);
+  var collarY = baseY - (0.68 * iconScale);
+  var collarGrad = ctx.createLinearGradient(0, collarY, 0, collarY + collarH);
+  var closedCapW;
+  var closedCapH;
+  var closedCapX;
+  var closedCapY;
+  var closedCapGrad;
+  var closedStemH;
+  var closedStemY;
+
+  baseGrad.addColorStop(0, "rgba(207,214,224,0.92)");
+  baseGrad.addColorStop(0.26, "rgba(96,104,115,0.97)");
+  baseGrad.addColorStop(0.62, "rgba(41,47,55,0.99)");
+  baseGrad.addColorStop(1, "rgba(17,22,29,0.98)");
+  inletGrad.addColorStop(0, "rgba(55,62,70,0.98)");
+  inletGrad.addColorStop(0.26, "rgba(224,231,239,0.94)");
+  inletGrad.addColorStop(0.58, "rgba(118,127,137,0.98)");
+  inletGrad.addColorStop(1, "rgba(34,40,47,0.98)");
+  collarGrad.addColorStop(0, "rgba(224,229,235,0.78)");
+  collarGrad.addColorStop(0.45, "rgba(82,91,102,0.92)");
+  collarGrad.addColorStop(1, "rgba(28,34,41,0.96)");
+
+  ctx.fillStyle = "rgba(0,0,0,0.34)";
+  ctx.beginPath();
+  ctx.ellipse(x, baseShadowY, baseW * 0.62, baseH * 0.44, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = collarGrad;
+  cuboidLegendRoundRectPath(ctx, collarX, collarY, collarW, collarH, collarH / 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(232,236,241,0.18)";
+  ctx.lineWidth = Math.max(0.8, 0.45 * iconScale);
+  ctx.stroke();
+
+  ctx.fillStyle = baseGrad;
+  cuboidLegendRoundRectPath(ctx, baseX, baseY, baseW, baseH, baseH * 0.46);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(236,241,247,0.26)";
+  ctx.lineWidth = Math.max(0.85, 0.42 * iconScale);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = Math.max(0.7, 0.34 * iconScale);
+  ctx.beginPath();
+  ctx.moveTo(baseX + (baseH * 0.42), baseY + 0.9);
+  ctx.lineTo(baseX + baseW - (baseH * 0.42), baseY + 0.9);
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(0,0,0,0.26)";
+  ctx.beginPath();
+  ctx.ellipse(inletPortX - (0.22 * iconScale), inletCenterY + (0.18 * iconScale), inletStubW * 0.58, inletStubH * 0.70, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = inletGrad;
+  cuboidLegendRoundRectPath(ctx, inletStubX, inletStubY, inletStubW, inletStubH, inletStubH / 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(239,244,248,0.34)";
+  ctx.lineWidth = Math.max(0.78, 0.34 * iconScale);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(inletPortX, inletCenterY, inletCapR, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(22,28,34,0.96)";
+  ctx.fill();
+  ctx.lineWidth = Math.max(0.92, 0.42 * iconScale);
+  ctx.strokeStyle = "rgba(232,238,244,0.38)";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(inletPortX - (0.16 * iconScale), inletCenterY - (0.04 * iconScale), Math.max(0.46 * iconScale, 0.7), 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.34)";
+  ctx.fill();
+
+  cuboidLegendDrawOpeningWindow(ctx, x, baseX, baseY, baseW, baseH, s, opening, iconScale, scaleX);
+
+  if(s === "C"){
+    closedCapW = 18.5 * scaleX;
+    closedCapH = 5.9 * iconScale;
+    closedCapX = x - (closedCapW / 2);
+    closedCapY = y - (1.8 * iconScale);
+    closedCapGrad = ctx.createLinearGradient(0, closedCapY, 0, closedCapY + closedCapH);
+    closedCapGrad.addColorStop(0, "rgba(224,228,234,0.95)");
+    closedCapGrad.addColorStop(0.26, "rgba(109,117,127,0.98)");
+    closedCapGrad.addColorStop(0.68, "rgba(53,59,67,1)");
+    closedCapGrad.addColorStop(1, "rgba(24,29,36,0.98)");
+    closedStemH = 8.9 * iconScale;
+    closedStemY = y + (0.6 * iconScale);
+
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + (2.3 * iconScale), 8.6 * scaleX, 3.9 * iconScale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = palette.stem;
+    cuboidLegendRoundRectPath(ctx, stemX, closedStemY, stemW, closedStemH, 3.1 * iconScale);
+    ctx.fill();
+    ctx.lineWidth = Math.max(0.95, 0.62 * iconScale);
+    ctx.strokeStyle = "rgba(226,232,240,0.20)";
+    ctx.stroke();
+
+    ctx.fillStyle = closedCapGrad;
+    cuboidLegendRoundRectPath(ctx, closedCapX, closedCapY, closedCapW, closedCapH, 3.4 * iconScale);
+    ctx.fill();
+    ctx.lineWidth = Math.max(1.05, 0.68 * iconScale);
+    ctx.strokeStyle = "rgba(240,244,247,0.34)";
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.42)";
+    ctx.lineWidth = Math.max(0.85, 0.42 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(closedCapX + (closedCapH * 0.46), closedCapY + 1.05);
+    ctx.lineTo(closedCapX + closedCapW - (closedCapH * 0.46), closedCapY + 1.05);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(245,158,11,0.90)";
+    ctx.lineWidth = Math.max(1.5, 0.86 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(closedCapX + (2.6 * scaleX), closedCapY + (1.4 * iconScale));
+    ctx.lineTo(closedCapX + closedCapW - (2.6 * scaleX), closedCapY + closedCapH - (1.3 * iconScale));
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(15,23,32,0.92)";
+    ctx.beginPath();
+    ctx.arc(closedCapX + (3.15 * scaleX), closedCapY + (closedCapH / 2), 1.2 * iconScale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(closedCapX + closedCapW - (3.15 * scaleX), closedCapY + (closedCapH / 2), 1.2 * iconScale, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = palette.core;
+    ctx.beginPath();
+    ctx.arc(x, closedStemY + (1.55 * iconScale), 1.35 * iconScale, 0, Math.PI * 2);
+    ctx.fill();
+  }else{
+    cuboidLegendDrawTipFlameGlow(ctx, x, y, s, phase, iconScale);
+    ctx.fillStyle = palette.stem;
+    cuboidLegendRoundRectPath(ctx, stemX, stemY, stemW, stemH, 3.2 * iconScale);
+    ctx.fill();
+
+    ctx.save();
+    ctx.shadowBlur = 11 * iconScale;
+    ctx.shadowColor = palette.glow;
+    ctx.beginPath();
+    ctx.moveTo(x, y - (12.8 * scaleY) - lift);
+    ctx.bezierCurveTo(
+      x + (11 * scaleX) * flicker * flameWidthFactor,
+      y - (6.9 * scaleY) - (lift * 0.52),
+      x + (8.2 * scaleX) * sidePulse * flameWidthFactor,
+      y + (0.9 * iconScale),
+      x,
+      y + (2.4 * iconScale)
+    );
+    ctx.bezierCurveTo(
+      x - (8.2 * scaleX) * sidePulse * flameWidthFactor,
+      y + (0.9 * iconScale),
+      x - (11 * scaleX) * flicker * flameWidthFactor,
+      y - (6.9 * scaleY) - (lift * 0.52),
+      x,
+      y - (12.8 * scaleY) - lift
+    );
+    ctx.closePath();
+    ctx.fillStyle = palette.flame;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.moveTo(x, y - (8.5 * scaleY) - (lift * 0.46));
+    ctx.bezierCurveTo(
+      x + (6.5 * scaleX) * sidePulse * flameWidthFactor,
+      y - (4.6 * scaleY) - (lift * 0.18),
+      x + (4.8 * scaleX) * flicker * flameWidthFactor,
+      y + (0.15 * iconScale),
+      x,
+      y + (1.6 * iconScale)
+    );
+    ctx.bezierCurveTo(
+      x - (4.8 * scaleX) * flicker * flameWidthFactor,
+      y + (0.15 * iconScale),
+      x - (6.5 * scaleX) * sidePulse * flameWidthFactor,
+      y - (4.6 * scaleY) - (lift * 0.18),
+      x,
+      y - (8.5 * scaleY) - (lift * 0.46)
+    );
+    ctx.closePath();
+    ctx.fillStyle = palette.core;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(x, y - (5.6 * scaleY) - (lift * 0.22));
+    ctx.bezierCurveTo(
+      x + (3.2 * scaleX) * sidePulse * flameWidthFactor,
+      y - (3.0 * scaleY) - (lift * 0.1),
+      x + (2.4 * scaleX) * flicker * flameWidthFactor,
+      y + (0.22 * iconScale),
+      x,
+      y + (1.2 * iconScale)
+    );
+    ctx.bezierCurveTo(
+      x - (2.4 * scaleX) * flicker * flameWidthFactor,
+      y + (0.22 * iconScale),
+      x - (3.2 * scaleX) * sidePulse * flameWidthFactor,
+      y - (3.0 * scaleY) - (lift * 0.1),
+      x,
+      y - (5.6 * scaleY) - (lift * 0.22)
+    );
+    ctx.closePath();
+    ctx.fillStyle = palette.inner;
+    ctx.fill();
+  }
+}
+
+function paintCuboidLegendGlyphCanvas(canvas){
+  var ctx;
+  var dpr;
+  var rect;
+  var cssW;
+  var cssH;
+  var role;
+  var state;
+  var opening;
+  var scale;
+  if(!canvas || !canvas.getContext) return false;
+  rect = canvas.getBoundingClientRect();
+  cssW = Math.max(1, Math.round(rect.width || canvas.clientWidth || 48));
+  cssH = Math.max(1, Math.round(rect.height || canvas.clientHeight || 52));
+  if(cssW < 6 || cssH < 6) return false;
+  dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  if(canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)){
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+  }
+  ctx = canvas.getContext("2d");
+  if(!ctx) return false;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+  state = normalizeBurnerStateSnapshotValue(canvas.getAttribute("data-glyph-state"));
+  opening = normalizeBurnerOpeningValue(canvas.getAttribute("data-glyph-opening"), state);
+  role = canvas.classList.contains("cuboid-legend-opening-canvas") ? "opening" : "state";
+  scale = Math.min(cssW / 33, cssH / 36);
+  cuboidLegendDrawBurnerGlyph(
+    ctx,
+    cssW / 2,
+    role === "opening" ? (cssH * 0.58) : (cssH * 0.56),
+    state,
+    0.92,
+    scale,
+    opening
+  );
+  return true;
+}
+
+function renderCuboidLegendGlyphs(){
+  Array.prototype.forEach.call(document.querySelectorAll("#tab-cuboid .cuboid-legend-glyph-canvas"), function(canvas){
+    paintCuboidLegendGlyphCanvas(canvas);
+  });
+}
+
 function refreshCuboidLegendPanels(force){
   var nextDigest = cuboidComputeLegendDigest();
-  if(!force && nextDigest && nextDigest === _cuboidLegendDigest) return false;
+  if(!force && nextDigest && nextDigest === _cuboidLegendDigest){
+    renderCuboidLegendGlyphs();
+    return false;
+  }
   _cuboidLegendDigest = nextDigest;
   var log = {};
   try{
@@ -20887,6 +21291,7 @@ function refreshCuboidLegendPanels(force){
     cuboidLegendSetText(panel, "tst-min", min);
     cuboidLegendSetText(panel, "tst-max", max);
   });
+  renderCuboidLegendGlyphs();
   return true;
 }
 
