@@ -6194,6 +6194,7 @@ function renderHeatMap(){
   /* ── Self-contained burner data loading ── */
   /* Read burner data DIRECTLY from localStorage, bypassing loadData() entirely */
   var hmData = null;
+  var heatMapUiEnabled = (typeof isHeatMapTabEnabled === "function") ? isHeatMapTabEnabled() : false;
 
   try {
     var raw = localStorage.getItem("burnerData");
@@ -6368,16 +6369,18 @@ function renderHeatMap(){
     refreshCuboidLegendPanels();
   }
 
-  if(typeof r3dSyncFromHeatMapSnapshot === "function"){
+  if(heatMapUiEnabled && typeof r3dSyncFromHeatMapSnapshot === "function"){
     r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
   }
-  if(typeof hmUploadedSyncFromHeatMapSnapshot === "function"){
+  if(heatMapUiEnabled && typeof hmUploadedSyncFromHeatMapSnapshot === "function"){
     hmUploadedSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
   }
   updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
-  clearHeatMapPanelContent();
-  if(typeof applyHeatMapWallPanelState === "function") applyHeatMapWallPanelState();
-  if(wallPanelsVisible && activeWall) ensureHeatMapWallBuilt(activeWall);
+  if(heatMapUiEnabled){
+    clearHeatMapPanelContent();
+    if(typeof applyHeatMapWallPanelState === "function") applyHeatMapWallPanelState();
+    if(wallPanelsVisible && activeWall) ensureHeatMapWallBuilt(activeWall);
+  }
 }
 
 function hmToNumericTemps(vals){
@@ -7674,7 +7677,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
 
   <!-- TAB: Reformer Heat Map -->
-  <div id="tab-heatmap" class="tab-panel tab-active">
+  <div id="tab-heatmap" class="tab-panel" hidden data-retired-tab="heatmap">
     <div style="padding:14px 18px;background:#0b1525;min-height:100%;">
 
       <!-- Heat-map controls moved to top header row (left of refresh/save). -->
@@ -15343,12 +15346,14 @@ html, body, body *, body *::before, body *::after, svg text{
         _activeHeatMapWall = "A";
         _hmWallPanelsVisible = false;
         if(typeof requestHeatMapRender === "function") requestHeatMapRender(40);
-        if(typeof window.hmUploadedStabilizeViewers === "function"){
+        if(typeof isHeatMapTabEnabled === "function" && isHeatMapTabEnabled() && typeof window.hmUploadedStabilizeViewers === "function"){
           setTimeout(window.hmUploadedStabilizeViewers, 60);
         }
         initHeatMapIconPicker();
-        initMobileCuboidToggle();
-        initHeatMapCuboidZoom();
+        if(typeof isHeatMapTabEnabled !== "function" || isHeatMapTabEnabled()){
+          initMobileCuboidToggle();
+          initHeatMapCuboidZoom();
+        }
       })();
       </script>
 
@@ -15857,7 +15862,7 @@ html, body, body *, body *::before, body *::after, svg text{
   </div>
 
   <!-- TAB 6: Cuboid -->
-  <div id="tab-cuboid" class="tab-panel">
+  <div id="tab-cuboid" class="tab-panel tab-active">
     <div class="cuboid-tab-stack">
       <div class="cuboid-tab-shell" data-cuboid-shell="ab">
         <iframe
@@ -16141,10 +16146,6 @@ html, body, body *, body *::before, body *::after, svg text{
      BOTTOM TAB BAR
 ==================================================== -->
 <div class="bottom-tab-bar">
-  <button class="btab btab-active" id="btab-heatmap" class="btab btab-active" onclick="switchTab('heatmap')">
-    <span class="btab-icon">🌡️</span>
-    <span class="btab-label">Reformer Heat Map</span>
-  </button>
   <button class="btab" id="btab-burner" onclick="switchTab('burner')">
     <span class="btab-icon">🔥</span>
     <span class="btab-label">Burner Data &amp; Analysis</span>
@@ -16162,7 +16163,7 @@ html, body, body *, body *::before, body *::after, svg text{
     <span class="btab-label">Alarms</span>
     <span class="btab-alarm-count" id="btab-alarm-count" style="display:none">0</span>
   </button>
-  <button class="btab" id="btab-cuboid" onclick="switchTab('cuboid')">
+  <button class="btab btab-active" id="btab-cuboid" onclick="switchTab('cuboid')">
     <span class="btab-icon">🧊</span>
     <span class="btab-label">Cuboid</span>
   </button>
@@ -16600,8 +16601,18 @@ function isDesktopPrimaryInterfaceViewport(){
   return !(window.matchMedia && window.matchMedia("(max-width: 900px)").matches);
 }
 
+function isHeatMapTabEnabled(){
+  var panel = document.getElementById("tab-heatmap");
+  var btn = document.getElementById("btab-heatmap");
+  return !!(panel && !panel.hasAttribute("hidden") && btn);
+}
+
+function getDefaultLiveTab(){
+  return isHeatMapTabEnabled() ? "heatmap" : "cuboid";
+}
+
 function getDesktopPrimaryInterfaceMode(){
-  return "heatmap";
+  return getDefaultLiveTab();
 }
 
 function updateDesktopPrimaryInterfacePickerUi(){
@@ -16609,19 +16620,25 @@ function updateDesktopPrimaryInterfacePickerUi(){
   if(wrap) wrap.style.display = "none";
   var heatBtn = document.getElementById("interfaceModeHeatBtn");
   if(heatBtn){
-    heatBtn.classList.add("active");
-    heatBtn.setAttribute("aria-pressed", "true");
+    var heatActive = isHeatMapTabEnabled() && getDesktopPrimaryInterfaceMode() === "heatmap";
+    heatBtn.classList.toggle("active", heatActive);
+    heatBtn.setAttribute("aria-pressed", heatActive ? "true" : "false");
   }
 }
 
 function applyDesktopPrimaryInterfaceMode(forceSwitch){
   var heatBtn = document.getElementById("btab-heatmap");
-  if(heatBtn) heatBtn.style.display = "";
+  if(heatBtn) heatBtn.style.display = isHeatMapTabEnabled() ? "" : "none";
 
   updateDesktopPrimaryInterfacePickerUi();
 
   if(!forceSwitch) return;
   if(typeof isUserLoggedIn === "function" && !isUserLoggedIn()) return;
+  var active = document.querySelector(".tab-panel.tab-active");
+  var activeTab = active && active.id ? active.id.replace("tab-", "") : "";
+  if((!activeTab || activeTab === "heatmap") && !isHeatMapTabEnabled() && typeof switchTab === "function"){
+    switchTab(getDefaultLiveTab());
+  }
 }
 
 function setDesktopPrimaryInterfaceMode(mode){
@@ -19804,8 +19821,11 @@ function init(){
   if(notificationsEnabled){
   }
   startServerSaveWatcher();
-  /* Render heatmap on load since it is the first visible tab */
-  setTimeout(renderHeatMap, 0);
+  /* Build the shared snapshot on load and prime the default Cuboid view. */
+  setTimeout(function(){
+    if(typeof requestHeatMapRender === "function") requestHeatMapRender(0);
+    if(typeof ensureCuboidViewerLoaded === "function") ensureCuboidViewerLoaded();
+  }, 0);
   setTimeout(function(){ applyDesktopPrimaryInterfaceMode(true); }, 40);
 }
 
@@ -20212,6 +20232,13 @@ function exitViewerFullscreenIfNeeded(nextTab){
 }
 
 function switchTab(tab){
+  tab = String(tab || "").toLowerCase();
+  if(tab === "heatmap" && typeof isHeatMapTabEnabled === "function" && !isHeatMapTabEnabled()){
+    tab = getDefaultLiveTab();
+  }
+  if(!document.getElementById('tab-' + tab) || !document.getElementById('btab-' + tab)){
+    tab = getDefaultLiveTab();
+  }
   if(tab !== 'cuboid') setCuboidOverlayActive(false);
   if(exitViewerFullscreenIfNeeded(tab)){
     _pendingTabAfterViewerFullscreen = tab;
@@ -20286,7 +20313,7 @@ function handlePendingViewerTabSwitch(){
 
 (function initHeatMapHeaderTools(){
   var active = document.querySelector('.tab-panel.tab-active');
-  var tab = active && active.id ? active.id.replace('tab-','') : 'heatmap';
+  var tab = active && active.id ? active.id.replace('tab-','') : getDefaultLiveTab();
   syncHeatMapHeaderTools(tab);
   updateGlobalRefreshButtonLabel(tab);
   initMobileMetaLogo();
