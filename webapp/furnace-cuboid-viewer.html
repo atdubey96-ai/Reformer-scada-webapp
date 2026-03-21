@@ -234,6 +234,8 @@ const chamberParam=(function(){
 })();
 const chamberWalls=chamberParam==="cd"?["C","D"]:["A","B"];
 const chamberZoneKey=chamberParam==="cd"?"CD":"AB";
+const cuboidOpeningStep=5;
+const cuboidOpeningPrototypeTarget={row:6,burner:1};
 
 const app=document.getElementById("app");
 const viewerTagTitle=document.getElementById("viewerTagTitle");
@@ -324,6 +326,77 @@ function cuboidSanitizeBurnerSnapshot(source){
     }
   }
   return out;
+}
+
+function cuboidNormalizeOpeningValue(raw,state){
+  const s=cuboidNormalizeBurnerState(state);
+  const fallback=s==="C" ? 0 : 100;
+  let n=Number(raw);
+  if(!isFinite(n) || (s!=="C" && n<=0)) n=fallback;
+  n=Math.round(n/cuboidOpeningStep)*cuboidOpeningStep;
+  n=Math.max(s==="C" ? 0 : cuboidOpeningStep,Math.min(100,n));
+  return s==="C" ? 0 : n;
+}
+
+function cuboidBuildDefaultOpeningData(stateSource){
+  const states=stateSource && typeof stateSource==="object" ? stateSource : cuboidBuildDefaultBurnerData();
+  const walls=["A","B","C","D"];
+  const out={};
+  for(let wi=0;wi<walls.length;wi++){
+    const wall=walls[wi];
+    const stateRows=Array.isArray(states[wall]) ? states[wall] : [];
+    out[wall]=[];
+    for(let ri=0;ri<6;ri++){
+      const stateRow=Array.isArray(stateRows[ri]) ? stateRows[ri] : [];
+      const row=[];
+      for(let bi=0;bi<15;bi++){
+        row.push(cuboidNormalizeOpeningValue(null,stateRow[bi]));
+      }
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
+function cuboidSanitizeOpeningSnapshot(source,stateSource){
+  const src=source && typeof source==="object" ? source : {};
+  const states=stateSource && typeof stateSource==="object" ? stateSource : cuboidBuildDefaultBurnerData();
+  const walls=["A","B","C","D"];
+  const out={};
+  for(let wi=0;wi<walls.length;wi++){
+    const wall=walls[wi];
+    const srcRows=Array.isArray(src[wall]) ? src[wall] : [];
+    const stateRows=Array.isArray(states[wall]) ? states[wall] : [];
+    out[wall]=[];
+    for(let ri=0;ri<6;ri++){
+      const srcRow=Array.isArray(srcRows[ri]) ? srcRows[ri] : [];
+      const stateRow=Array.isArray(stateRows[ri]) ? stateRows[ri] : [];
+      const row=[];
+      for(let bi=0;bi<15;bi++){
+        row.push(cuboidNormalizeOpeningValue(srcRow[bi],stateRow[bi]));
+      }
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
+function cuboidLoadBurnerOpeningData(stateSource){
+  const states=stateSource && typeof stateSource==="object" ? stateSource : cuboidBuildDefaultBurnerData();
+  const app=cuboidGetParentApp();
+  try{
+    if(app && app.burnerOpeningData && typeof app.burnerOpeningData==="object"){
+      return cuboidSanitizeOpeningSnapshot(app.burnerOpeningData,states);
+    }
+  }catch(_e){}
+  try{
+    const raw=localStorage.getItem("burnerOpeningData");
+    if(raw){
+      const parsed=JSON.parse(raw);
+      return cuboidSanitizeOpeningSnapshot(parsed,states);
+    }
+  }catch(_e){}
+  return cuboidBuildDefaultOpeningData(states);
 }
 
 function cuboidSanitizeTstRow(vals){
@@ -450,8 +523,10 @@ function cuboidLoadCleaningLog(){
 function cuboidBuildSnapshot(){
   const app=cuboidGetParentApp();
   const entry=cuboidResolvePeepEntry();
+  const hmData=cuboidLoadBurnerData();
   const snapshot={
-    hmData:cuboidLoadBurnerData(),
+    hmData:hmData,
+    openingData:cuboidLoadBurnerOpeningData(hmData),
     abBot:cuboidGetPeepRow(entry,"ab-bot"),
     abTop:cuboidGetPeepRow(entry,"ab-top"),
     cdBot:cuboidGetPeepRow(entry,"cd-bot"),
@@ -538,16 +613,75 @@ function cuboidDrawTipFlameGlow(ctx,x,y,state,phase,scale){
   ctx.restore();
 }
 
-function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
+function cuboidGetOpeningSegmentCount(opening,state){
+  const s=cuboidNormalizeBurnerState(state);
+  if(s==="C") return 0;
+  return Math.max(1,Math.min(5,Math.ceil(cuboidNormalizeOpeningValue(opening,s)/20)));
+}
+
+function cuboidDrawBurnerOpeningWindow(ctx,x,baseX,baseY,baseW,baseH,state,opening,iconScale,scaleX){
+  const s=cuboidNormalizeBurnerState(state);
+  const palette=cuboidGetBurnerPalette(s);
+  const bezelW=Math.min(baseW*0.7,16.5*scaleX);
+  const bezelH=Math.max(baseH*0.44,2.1*iconScale);
+  const bezelX=x-(bezelW/2);
+  const bezelY=baseY+((baseH-bezelH)/2);
+  const bezelGrad=ctx.createLinearGradient(0,bezelY,0,bezelY+bezelH);
+  bezelGrad.addColorStop(0,"rgba(18,24,31,0.96)");
+  bezelGrad.addColorStop(0.52,"rgba(6,10,16,0.98)");
+  bezelGrad.addColorStop(1,"rgba(42,49,57,0.92)");
+  const innerPad=Math.max(0.7,0.22*iconScale);
+  const innerX=bezelX+innerPad;
+  const innerY=bezelY+innerPad;
+  const innerW=bezelW-(innerPad*2);
+  const innerH=bezelH-(innerPad*2);
+  const gap=Math.max(0.45,0.16*iconScale);
+  const segW=(innerW-(gap*4))/5;
+  const litCount=cuboidGetOpeningSegmentCount(opening,s);
+
+  ctx.fillStyle=bezelGrad;
+  cuboidRoundRectPath(ctx,bezelX,bezelY,bezelW,bezelH,bezelH/2);
+  ctx.fill();
+  ctx.strokeStyle="rgba(196,203,211,0.24)";
+  ctx.lineWidth=Math.max(0.6,0.28*iconScale);
+  ctx.stroke();
+
+  for(let si=0;si<5;si++){
+    const segX=innerX+(si*(segW+gap));
+    const lit=si<litCount;
+    const segGrad=ctx.createLinearGradient(0,innerY,0,innerY+innerH);
+    if(lit){
+      segGrad.addColorStop(0,palette.inner);
+      segGrad.addColorStop(0.34,palette.core);
+      segGrad.addColorStop(1,palette.flame);
+    }else{
+      segGrad.addColorStop(0,"rgba(58,67,78,0.92)");
+      segGrad.addColorStop(1,"rgba(10,14,20,0.96)");
+    }
+    ctx.fillStyle=segGrad;
+    cuboidRoundRectPath(ctx,segX,innerY,segW,innerH,Math.min(innerH/2,0.72*iconScale));
+    ctx.fill();
+    if(lit){
+      ctx.strokeStyle="rgba(255,255,255,0.18)";
+      ctx.lineWidth=Math.max(0.45,0.16*iconScale);
+      ctx.stroke();
+    }
+  }
+}
+
+function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening,showOpeningPrototype){
   let s=String(state || "C").toUpperCase();
   if(s!=="O" && s!=="N" && s!=="B") s="C";
   const palette=cuboidGetBurnerPalette(s);
   const iconScale=Math.max(1,Number(scale) || 2.7);
   const scaleX=iconScale*0.9;
   const scaleY=iconScale*1.55;
+  const openingRatio=showOpeningPrototype ? (cuboidNormalizeOpeningValue(opening,s)/100) : 1;
+  const flameHeightFactor=showOpeningPrototype && s!=="C" ? (0.78+(openingRatio*0.28)) : 1;
+  const flameWidthFactor=showOpeningPrototype && s!=="C" ? (0.86+(openingRatio*0.14)) : 1;
   const flicker=0.94+(Math.sin(phase*1.95)*0.11)+(Math.sin(phase*2.8+0.9)*0.07);
   const sidePulse=0.94+(Math.sin(phase*2.35+0.4)*0.12);
-  const lift=(s==="C") ? 0 : ((2.2+(Math.sin(phase*1.75)*1.35))*scaleY);
+  const lift=(s==="C") ? 0 : ((2.2+(Math.sin(phase*1.75)*1.35))*scaleY*flameHeightFactor);
   const stemW=6.6*scaleX;
   const stemH=8.6*iconScale;
   const stemX=x-(stemW/2);
@@ -595,6 +729,10 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
   ctx.moveTo(baseX+(baseH*0.42),baseY+0.9);
   ctx.lineTo(baseX+baseW-(baseH*0.42),baseY+0.9);
   ctx.stroke();
+
+  if(showOpeningPrototype){
+    cuboidDrawBurnerOpeningWindow(ctx,x,baseX,baseY,baseW,baseH,s,opening,iconScale,scaleX);
+  }
 
   if(s==="C"){
     const closedCapW=18.5*scaleX;
@@ -666,17 +804,17 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
     ctx.beginPath();
     ctx.moveTo(x,y-(12.8*scaleY)-lift);
     ctx.bezierCurveTo(
-      x+(11*scaleX)*flicker,
+      x+(11*scaleX)*flicker*flameWidthFactor,
       y-(6.9*scaleY)-(lift*0.52),
-      x+(8.2*scaleX)*sidePulse,
+      x+(8.2*scaleX)*sidePulse*flameWidthFactor,
       y+(0.9*iconScale),
       x,
       y+(2.4*iconScale)
     );
     ctx.bezierCurveTo(
-      x-(8.2*scaleX)*sidePulse,
+      x-(8.2*scaleX)*sidePulse*flameWidthFactor,
       y+(0.9*iconScale),
-      x-(11*scaleX)*flicker,
+      x-(11*scaleX)*flicker*flameWidthFactor,
       y-(6.9*scaleY)-(lift*0.52),
       x,
       y-(12.8*scaleY)-lift
@@ -689,17 +827,17 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
     ctx.beginPath();
     ctx.moveTo(x,y-(8.5*scaleY)-(lift*0.46));
     ctx.bezierCurveTo(
-      x+(6.5*scaleX)*sidePulse,
+      x+(6.5*scaleX)*sidePulse*flameWidthFactor,
       y-(4.6*scaleY)-(lift*0.18),
-      x+(4.8*scaleX)*flicker,
+      x+(4.8*scaleX)*flicker*flameWidthFactor,
       y+(0.15*iconScale),
       x,
       y+(1.6*iconScale)
     );
     ctx.bezierCurveTo(
-      x-(4.8*scaleX)*flicker,
+      x-(4.8*scaleX)*flicker*flameWidthFactor,
       y+(0.15*iconScale),
-      x-(6.5*scaleX)*sidePulse,
+      x-(6.5*scaleX)*sidePulse*flameWidthFactor,
       y-(4.6*scaleY)-(lift*0.18),
       x,
       y-(8.5*scaleY)-(lift*0.46)
@@ -711,17 +849,17 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale){
     ctx.beginPath();
     ctx.moveTo(x,y-(5.6*scaleY)-(lift*0.22));
     ctx.bezierCurveTo(
-      x+(3.2*scaleX)*sidePulse,
+      x+(3.2*scaleX)*sidePulse*flameWidthFactor,
       y-(3.0*scaleY)-(lift*0.1),
-      x+(2.4*scaleX)*flicker,
+      x+(2.4*scaleX)*flicker*flameWidthFactor,
       y-(0.2*iconScale),
       x,
       y+(0.8*iconScale)
     );
     ctx.bezierCurveTo(
-      x-(2.4*scaleX)*flicker,
+      x-(2.4*scaleX)*flicker*flameWidthFactor,
       y-(0.2*iconScale),
-      x-(3.2*scaleX)*sidePulse,
+      x-(3.2*scaleX)*sidePulse*flameWidthFactor,
       y-(3.0*scaleY)-(lift*0.1),
       x,
       y-(5.6*scaleY)-(lift*0.22)
@@ -1077,6 +1215,7 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   ctx.clearRect(0,0,w,h);
 
   const rows=Array.isArray(snapshot.hmData[wallKey]) ? snapshot.hmData[wallKey] : [];
+  const openingRows=snapshot.openingData && Array.isArray(snapshot.openingData[wallKey]) ? snapshot.openingData[wallKey] : [];
   const topVals=(wallKey==="A"||wallKey==="B") ? (snapshot.abTop||[]) : (snapshot.cdTop||[]);
   const botVals=(wallKey==="A"||wallKey==="B") ? (snapshot.abBot||[]) : (snapshot.cdBot||[]);
   const panelInset=6;
@@ -1234,6 +1373,7 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
     ctx.fillText("ROW "+item,14+Math.round(rowW/2),centerY);
 
     const rowData=Array.isArray(rows[item-1]) ? rows[item-1] : [];
+    const openingRow=Array.isArray(openingRows[item-1]) ? openingRows[item-1] : [];
     cuboidDrawFuelRail(
       ctx,
       leftHeaderX,
@@ -1245,10 +1385,12 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
     );
     for(let ci=0;ci<15;ci++){
       const state=cuboidNormalizeBurnerState(rowData[ci]);
+      const openingVal=cuboidNormalizeOpeningValue(openingRow[ci],state);
       const burnerX=gridLeft+slotW*(ci+0.5);
       const key="R"+item+"B"+(ci+1);
       const cleaned=!!String(cleaningMap && cleaningMap[key] ? cleaningMap[key] : "").trim();
-      cuboidDrawBurnerGlyph(ctx,burnerX,centerY+10,state,cleaned,(phaseBase || 0)+(ii*0.55)+(ci*0.28),iconScale);
+      const showOpeningPrototype=(item===cuboidOpeningPrototypeTarget.row) && ((ci+1)===cuboidOpeningPrototypeTarget.burner);
+      cuboidDrawBurnerGlyph(ctx,burnerX,centerY+10,state,cleaned,(phaseBase || 0)+(ii*0.55)+(ci*0.28),iconScale,openingVal,showOpeningPrototype);
     }
   }
 }
@@ -2012,6 +2154,8 @@ function buildFaceDigest(snapshot,cleaningLog){
     selectedShift:snapshot && snapshot.selectedShift ? snapshot.selectedShift : "",
     frontRows:snapshot && snapshot.hmData ? snapshot.hmData[chamberWalls[0]] : [],
     backRows:snapshot && snapshot.hmData ? snapshot.hmData[chamberWalls[1]] : [],
+    frontOpenings:snapshot && snapshot.openingData ? snapshot.openingData[chamberWalls[0]] : [],
+    backOpenings:snapshot && snapshot.openingData ? snapshot.openingData[chamberWalls[1]] : [],
     abBot:snapshot ? snapshot.abBot : [],
     abTop:snapshot ? snapshot.abTop : [],
     cdBot:snapshot ? snapshot.cdBot : [],
