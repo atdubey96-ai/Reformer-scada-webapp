@@ -19959,6 +19959,115 @@ function getCuboidLegendPanelByChamber(chamber){
   return document.querySelector('#tab-cuboid .cuboid-legend-panel[data-cuboid-legend="' + String(chamber || "").toLowerCase() + '"]');
 }
 
+function isCuboidTabActive(){
+  var active = document.querySelector(".tab-panel.tab-active");
+  return !!(active && active.id === "tab-cuboid");
+}
+
+function cuboidSafeStringify(value){
+  try{
+    return JSON.stringify(value == null ? null : value);
+  }catch(e){
+    return "";
+  }
+}
+
+function cuboidReadLocalStorageString(key){
+  try{
+    return String(localStorage.getItem(key) || "");
+  }catch(e){
+    return "";
+  }
+}
+
+var _cuboidLegendDigest = "";
+var _cuboidExtendedDigests = {
+  analysis:"",
+  cleaning:"",
+  temp:"",
+  adjustment:""
+};
+var _cuboidFrameVisibilityObserver = null;
+var _cuboidFrameInView = new WeakMap();
+
+function cuboidComputeLegendDigest(){
+  var snap = window._hmRenderSnapshot || null;
+  var cleanSource = "";
+  try{
+    cleanSource = cuboidSafeStringify(
+      (typeof getMergedCleaningLog === "function")
+        ? getMergedCleaningLog()
+        : ((typeof loadCleaningLog === "function") ? (loadCleaningLog() || {}) : {})
+    );
+  }catch(e){
+    cleanSource = cuboidReadLocalStorageString(CLEANING_KEY);
+  }
+  return hashStringFNV1a([
+    cuboidSafeStringify(snap && snap.hmData ? snap.hmData : (typeof data === "object" ? data : {})),
+    cuboidSafeStringify(snap && snap.abTop ? snap.abTop : []),
+    cuboidSafeStringify(snap && snap.abBot ? snap.abBot : []),
+    cuboidSafeStringify(snap && snap.cdTop ? snap.cdTop : []),
+    cuboidSafeStringify(snap && snap.cdBot ? snap.cdBot : []),
+    String(snap && snap.entryDt ? snap.entryDt : ""),
+    String(snap && snap.selectedShift ? snap.selectedShift : ""),
+    cleanSource
+  ].join("|"));
+}
+
+function cuboidBuildExtendedDigests(){
+  var snap = window._hmRenderSnapshot || null;
+  var burnerSource = cuboidSafeStringify(typeof data === "object" ? data : {});
+  var tempSource = cuboidSafeStringify(Array.isArray(tempDataEntries) ? tempDataEntries : []);
+  var cleanPendingSource = cuboidSafeStringify(typeof cleaningPending === "object" ? cleaningPending : {});
+  var cleanLogRaw = cuboidReadLocalStorageString(CLEANING_KEY);
+  var cleanHistRaw = cuboidReadLocalStorageString(CLEANING_HIST);
+  var snapshotSource = hashStringFNV1a([
+    burnerSource,
+    tempSource,
+    String(snap && snap.entryDt ? snap.entryDt : ""),
+    String(snap && snap.selectedShift ? snap.selectedShift : ""),
+    cuboidSafeStringify(snap && snap.abTop ? snap.abTop : []),
+    cuboidSafeStringify(snap && snap.abBot ? snap.abBot : []),
+    cuboidSafeStringify(snap && snap.cdTop ? snap.cdTop : []),
+    cuboidSafeStringify(snap && snap.cdBot ? snap.cdBot : [])
+  ].join("|"));
+  return {
+    analysis:hashStringFNV1a(burnerSource),
+    cleaning:hashStringFNV1a([cleanLogRaw, cleanHistRaw, cleanPendingSource].join("|")),
+    temp:hashStringFNV1a(tempSource),
+    adjustment:hashStringFNV1a([snapshotSource, cleanLogRaw, cleanHistRaw].join("|"))
+  };
+}
+
+function notifyCuboidHostState(frame){
+  if(!frame || !frame.contentWindow) return;
+  try{
+    frame.contentWindow.postMessage({
+      type:"cuboid-host-state",
+      active:isCuboidTabActive(),
+      inView:_cuboidFrameInView.has(frame) ? !!_cuboidFrameInView.get(frame) : true
+    }, "*");
+  }catch(e){}
+}
+
+function initCuboidFrameVisibilityObserver(){
+  if(_cuboidFrameVisibilityObserver || typeof IntersectionObserver !== "function") return;
+  _cuboidFrameVisibilityObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      var frame = entry && entry.target;
+      if(!frame) return;
+      _cuboidFrameInView.set(frame, !!(entry.isIntersecting && entry.intersectionRatio > 0.18));
+      notifyCuboidHostState(frame);
+    });
+  }, {
+    threshold:[0, 0.18, 0.35]
+  });
+  getCuboidFrames().forEach(function(frame){
+    _cuboidFrameInView.set(frame, true);
+    _cuboidFrameVisibilityObserver.observe(frame);
+  });
+}
+
 function cuboidLegendNormalizeBurnerState(raw){
   var s = String(raw == null ? "" : raw).toUpperCase().trim();
   return (s === "O" || s === "N" || s === "B" || s === "C") ? s : "C";
@@ -20094,8 +20203,18 @@ function cuboidLegendSetText(panel, key, value){
   if(el) el.textContent = String(value);
 }
 
-function refreshCuboidLegendPanels(){
-  var log = (typeof loadCleaningLog === "function") ? (loadCleaningLog() || {}) : {};
+function refreshCuboidLegendPanels(force){
+  var nextDigest = cuboidComputeLegendDigest();
+  if(!force && nextDigest && nextDigest === _cuboidLegendDigest) return false;
+  _cuboidLegendDigest = nextDigest;
+  var log = {};
+  try{
+    log = (typeof getMergedCleaningLog === "function")
+      ? (getMergedCleaningLog() || {})
+      : ((typeof loadCleaningLog === "function") ? (loadCleaningLog() || {}) : {});
+  }catch(e){
+    log = {};
+  }
   ["ab","cd"].forEach(function(chamber){
     var panel = getCuboidLegendPanelByChamber(chamber);
     if(!panel) return;
@@ -20125,15 +20244,29 @@ function refreshCuboidLegendPanels(){
     cuboidLegendSetText(panel, "tst-min", min);
     cuboidLegendSetText(panel, "tst-max", max);
   });
+  return true;
 }
 
-function refreshCuboidExtendedPanels(){
-  if(typeof requestHeatMapRender === "function") requestHeatMapRender(0);
-  if(typeof generateAnalysis === "function") generateAnalysis();
-  if(typeof buildCleaningTable === "function") buildCleaningTable();
-  if(typeof renderTempDataTable === "function") renderTempDataTable();
-  if(typeof updateHeatMapAdjustmentLogic === "function" && window._hmRenderSnapshot){
+function refreshCuboidExtendedPanels(force){
+  var digests = cuboidBuildExtendedDigests();
+  if(typeof requestHeatMapRender === "function" && (force || !window._hmRenderSnapshot)){
+    requestHeatMapRender(0);
+  }
+  if(typeof generateAnalysis === "function" && (force || digests.analysis !== _cuboidExtendedDigests.analysis)){
+    generateAnalysis();
+    _cuboidExtendedDigests.analysis = digests.analysis;
+  }
+  if(typeof buildCleaningTable === "function" && (force || digests.cleaning !== _cuboidExtendedDigests.cleaning)){
+    buildCleaningTable();
+    _cuboidExtendedDigests.cleaning = digests.cleaning;
+  }
+  if(typeof renderTempDataTable === "function" && (force || digests.temp !== _cuboidExtendedDigests.temp)){
+    renderTempDataTable();
+    _cuboidExtendedDigests.temp = digests.temp;
+  }
+  if(typeof updateHeatMapAdjustmentLogic === "function" && window._hmRenderSnapshot && (force || digests.adjustment !== _cuboidExtendedDigests.adjustment)){
     updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
+    _cuboidExtendedDigests.adjustment = digests.adjustment;
   }
 }
 
@@ -20166,6 +20299,7 @@ function ensureCuboidViewerLoaded(forceReload){
     if(!current || current === "about:blank"){
       frame.setAttribute("src", baseSrc);
     }
+    notifyCuboidHostState(frame);
   });
 }
 
@@ -20209,8 +20343,8 @@ function handleGlobalRefreshClick(){
   }
   if(tab === 'cuboid'){
     ensureCuboidViewerLoaded(true);
-    refreshCuboidLegendPanels();
-    refreshCuboidExtendedPanels();
+    refreshCuboidLegendPanels(true);
+    refreshCuboidExtendedPanels(true);
     showToast("↻ Cuboid viewer refreshed");
     return;
   }
@@ -20275,11 +20409,18 @@ function switchTab(tab){
   if(tab === 'cuboid'){
     setTimeout(ensureCuboidViewerLoaded, 0);
     setTimeout(bindCuboidLegendActions, 0);
-    setTimeout(refreshCuboidLegendPanels, 0);
-    setTimeout(refreshCuboidExtendedPanels, 40);
+    setTimeout(function(){ refreshCuboidLegendPanels(false); }, 0);
+    setTimeout(function(){ refreshCuboidExtendedPanels(false); }, 40);
     setTimeout(function(){
-      getCuboidFrames().forEach(function(frame){ notifyCuboidOverlayState(false, frame); });
+      getCuboidFrames().forEach(function(frame){
+        notifyCuboidOverlayState(false, frame);
+        notifyCuboidHostState(frame);
+      });
     }, 60);
+  }else{
+    setTimeout(function(){
+      getCuboidFrames().forEach(function(frame){ notifyCuboidHostState(frame); });
+    }, 0);
   }
   updateGlobalRefreshButtonLabel(tab);
   updateDesktopPrimaryInterfacePickerUi();
@@ -20296,19 +20437,21 @@ function handlePendingViewerTabSwitch(){
 }
 
 (function initCuboidFrameBridge(){
+  initCuboidFrameVisibilityObserver();
   var frames = getCuboidFrames();
   if(!frames.length) return;
   frames.forEach(function(frame){
     frame.addEventListener("load", function(){
       var shell = frame.closest(".cuboid-tab-shell");
       notifyCuboidOverlayState(!!(shell && shell.classList.contains("cuboid-shell-expanded")), frame);
+      notifyCuboidHostState(frame);
     });
   });
 })();
 
 (function initCuboidLegendUi(){
   bindCuboidLegendActions();
-  refreshCuboidLegendPanels();
+  refreshCuboidLegendPanels(true);
 })();
 
 (function initHeatMapHeaderTools(){
@@ -20339,18 +20482,20 @@ window.addEventListener("orientationchange", function(){
 });
 window.addEventListener("fullscreenchange", handlePendingViewerTabSwitch);
 window.addEventListener("webkitfullscreenchange", handlePendingViewerTabSwitch);
-window.addEventListener("storage", function(){
+window.addEventListener("storage", function(ev){
+  var key = ev && ev.key ? String(ev.key) : "";
+  if(key && ["burnerData","burnerOpeningData","tempDataEntries",CLEANING_KEY,CLEANING_HIST].indexOf(key) === -1) return;
   setTimeout(function(){
-    refreshCuboidLegendPanels();
-    refreshCuboidExtendedPanels();
+    refreshCuboidLegendPanels(true);
+    refreshCuboidExtendedPanels(true);
   }, 0);
 });
 window.setInterval(function(){
-  var active = document.querySelector('.tab-panel.tab-active');
-  if(active && active.id === "tab-cuboid"){
-    refreshCuboidLegendPanels();
+  if(document.hidden) return;
+  if(isCuboidTabActive()){
+    refreshCuboidLegendPanels(false);
   }
-}, 1500);
+}, 4000);
 window.addEventListener("message", function(ev){
   var data = ev && ev.data ? ev.data : null;
   if(!data || data.type !== "cuboid-toggle-overlay") return;
