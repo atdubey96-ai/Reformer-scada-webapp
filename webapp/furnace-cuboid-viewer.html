@@ -245,7 +245,10 @@ const btnAuto=document.getElementById("btnAuto");
 const btnResetView=document.getElementById("btnResetView");
 let hostTabActive=true;
 let hostInView=true;
+let hostFocused=true;
 let lastRenderTs=0;
+let pushedCuboidLiveData=null;
+let pushedCuboidLiveDigest="";
 if(viewerTagTitle) viewerTagTitle.textContent=chamberZoneKey+" Burners • TST • Cleaning Status";
 if(btnA) btnA.textContent="Face "+chamberWalls[0];
 if(btnB) btnB.textContent="Face "+chamberWalls[1];
@@ -309,8 +312,21 @@ window.addEventListener("message",function(ev){
   if(data.type==="cuboid-host-state"){
     hostTabActive=!!data.active;
     hostInView=data.inView !== false;
+    hostFocused=data.focused !== false;
     lastFrameTs=0;
     lastRenderTs=0;
+    return;
+  }
+  if(data.type==="cuboid-live-data"){
+    const nextDigest=String(data.digest || "");
+    if(nextDigest && nextDigest===pushedCuboidLiveDigest) return;
+    pushedCuboidLiveDigest=nextDigest || ("cuboid-live-"+Date.now());
+    pushedCuboidLiveData=(data.payload && typeof data.payload==="object") ? data.payload : null;
+    lastFrameTs=0;
+    lastRenderTs=0;
+    if(refreshOverlayData(true)){
+      syncFaceOverlays(false);
+    }
   }
 });
 
@@ -402,6 +418,9 @@ function cuboidSanitizeOpeningSnapshot(source,stateSource){
 
 function cuboidLoadBurnerOpeningData(stateSource){
   const states=stateSource && typeof stateSource==="object" ? stateSource : cuboidBuildDefaultBurnerData();
+  if(pushedCuboidLiveData && pushedCuboidLiveData.openingData){
+    return cuboidSanitizeOpeningSnapshot(pushedCuboidLiveData.openingData,states);
+  }
   const app=cuboidGetParentApp();
   try{
     if(app && app.burnerOpeningData && typeof app.burnerOpeningData==="object"){
@@ -467,6 +486,9 @@ function cuboidHasActiveBurners(hmData){
 }
 
 function cuboidLoadBurnerData(){
+  if(pushedCuboidLiveData && pushedCuboidLiveData.hmData){
+    return cuboidSanitizeBurnerSnapshot(pushedCuboidLiveData.hmData);
+  }
   const app=cuboidGetParentApp();
   if(app && app._hmRenderSnapshot && app._hmRenderSnapshot.hmData){
     return cuboidSanitizeBurnerSnapshot(app._hmRenderSnapshot.hmData);
@@ -508,6 +530,18 @@ function cuboidPickLatestEntry(entries){
 }
 
 function cuboidResolvePeepEntry(){
+  if(pushedCuboidLiveData){
+    return {
+      peepHoles:{
+        "ab-bot":cuboidSanitizeTstRow(pushedCuboidLiveData.abBot || []),
+        "ab-top":cuboidSanitizeTstRow(pushedCuboidLiveData.abTop || []),
+        "cd-bot":cuboidSanitizeTstRow(pushedCuboidLiveData.cdBot || []),
+        "cd-top":cuboidSanitizeTstRow(pushedCuboidLiveData.cdTop || [])
+      },
+      dt:pushedCuboidLiveData.entryDt || "Latest",
+      selectedShift:pushedCuboidLiveData.selectedShift || "All"
+    };
+  }
   const app=cuboidGetParentApp();
   if(app && app._hmRenderSnapshot){
     return {
@@ -530,6 +564,9 @@ function cuboidGetPeepRow(entry,key){
 }
 
 function cuboidLoadCleaningLog(){
+  if(pushedCuboidLiveData && pushedCuboidLiveData.cleaningLog && typeof pushedCuboidLiveData.cleaningLog==="object"){
+    return pushedCuboidLiveData.cleaningLog;
+  }
   try{
     const raw=localStorage.getItem("burnerCleaningLog");
     const parsed=raw ? JSON.parse(raw) : {};
@@ -2197,6 +2234,7 @@ let lastOverlayPaintAt=0;
 const OVERLAY_TICK_MS=140;
 const OVERLAY_PHASE_STEP=0.34;
 let overlaySourceToken={
+  pushedDigest:"",
   snapshotRef:null,
   openingRef:null,
   cleaningRaw:"",
@@ -2206,8 +2244,20 @@ let overlaySourceToken={
 };
 
 function captureOverlaySourceToken(){
+  if(pushedCuboidLiveDigest){
+    return {
+      pushedDigest:pushedCuboidLiveDigest,
+      snapshotRef:null,
+      openingRef:null,
+      cleaningRaw:"",
+      burnerRaw:"",
+      openingRaw:"",
+      tempRaw:""
+    };
+  }
   const appRef=cuboidGetParentApp();
   const token={
+    pushedDigest:"",
     snapshotRef:appRef && appRef._hmRenderSnapshot ? appRef._hmRenderSnapshot : null,
     openingRef:appRef && appRef.burnerOpeningData ? appRef.burnerOpeningData : null,
     cleaningRaw:"",
@@ -2229,6 +2279,7 @@ function captureOverlaySourceToken(){
 function overlaySourceTokenChanged(nextToken){
   return !(
     nextToken &&
+    nextToken.pushedDigest===overlaySourceToken.pushedDigest &&
     nextToken.snapshotRef===overlaySourceToken.snapshotRef &&
     nextToken.openingRef===overlaySourceToken.openingRef &&
     nextToken.cleaningRaw===overlaySourceToken.cleaningRaw &&
@@ -2296,7 +2347,7 @@ window.setInterval(function(){
   if(refreshOverlayData(false)){
     syncFaceOverlays(false);
   }
-},2400);
+},9000);
 
 function makeSide(isLeft){
   const sh=new THREE.Shape();
@@ -2565,7 +2616,8 @@ const AUTO_ROTATE_RAMP=5.2;
 const MAX_DRAG_DELTA=42;
 const TAP_MOVE_TOLERANCE=10;
 const ACTIVE_FRAME_MS=16;
-const IDLE_FRAME_MS=34;
+const FOCUSED_IDLE_FRAME_MS=18;
+const BACKGROUND_IDLE_FRAME_MS=48;
 const SLEEP_FRAME_MS=220;
 
 let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
@@ -2684,7 +2736,9 @@ renderer.setSize(GW(),GH());
 function animate(t){
   requestAnimationFrame(animate);
   const canRender=cuboidCanRenderNow();
-  const targetFrameMs=canRender ? ((isDragging || autoSpin || cuboidIsFullscreen()) ? ACTIVE_FRAME_MS : IDLE_FRAME_MS) : SLEEP_FRAME_MS;
+  const targetFrameMs=canRender
+    ? ((isDragging || autoSpin || cuboidIsFullscreen()) ? ACTIVE_FRAME_MS : (hostFocused ? FOCUSED_IDLE_FRAME_MS : BACKGROUND_IDLE_FRAME_MS))
+    : SLEEP_FRAME_MS;
   if(lastRenderTs && (t-lastRenderTs)<targetFrameMs) return;
   lastRenderTs=t;
   const dt=lastFrameTs ? Math.min(0.05,Math.max(0.001,(t-lastFrameTs)/1000)) : (1/60);
