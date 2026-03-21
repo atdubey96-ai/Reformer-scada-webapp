@@ -3351,9 +3351,9 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-scroll{
   display:grid;
-  grid-template-columns:minmax(0,3.08fr) minmax(220px,0.78fr) minmax(194px,0.64fr) minmax(280px,0.82fr);
+  grid-template-columns:minmax(0,1.22fr) minmax(210px,0.72fr) minmax(286px,0.9fr);
   align-items:start;
-  gap:10px;
+  gap:12px 10px;
   overflow:visible;
 }
 #tab-cuboid .cuboid-legend-block{
@@ -3364,19 +3364,22 @@ body.light-theme .cw-nudge{
 #tab-cuboid .cuboid-legend-block + .cuboid-legend-block{
   border-left:1px solid rgba(64,84,114,0.38);
 }
-#tab-cuboid .cuboid-legend-states{ padding-left:2px; }
+#tab-cuboid .cuboid-legend-states{
+  grid-column:1 / -1;
+  padding-left:2px;
+}
 #tab-cuboid .cuboid-legend-openings,
 #tab-cuboid .cuboid-legend-clean,
 #tab-cuboid .cuboid-legend-tst{ padding-right:4px; }
 #tab-cuboid .cuboid-legend-openings{
   width:100%;
-  max-width:378px;
+  max-width:none;
   justify-self:stretch;
 }
 #tab-cuboid .cuboid-legend-tst{
   width:100%;
-  max-width:340px;
-  justify-self:end;
+  max-width:none;
+  justify-self:stretch;
 }
 #tab-cuboid .cuboid-legend-title{
   margin-bottom:7px;
@@ -20990,12 +20993,12 @@ function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
   var openingValue = normalizeBurnerOpeningValue(opening, s);
   var openingRatio = openingValue / 100;
   var flameTier = s === "C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : (openingValue >= 25 ? 1 : 0))));
-  var flameHeightFactor = s !== "C" ? ([0,0.34,0.7,0.92,1.14][flameTier] || 0) : 1;
-  var flameWidthFactor = s !== "C" ? ([0,0.22,0.58,0.86,1.06][flameTier] || 0) : 1;
-  var glowIntensity = s !== "C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.22 : (flameTier === 2 ? 0.1 : 0))) : 0;
-  var outerScale = flameTier >= 4 ? 1.06 : (flameTier === 3 ? 0.94 : 0.8);
-  var midScale = flameTier >= 4 ? 1.03 : (flameTier === 3 ? 0.98 : (flameTier === 2 ? 0.94 : 0.8));
-  var innerScale = flameTier === 1 ? 0.78 : (flameTier === 2 ? 0.96 : (flameTier === 3 ? 1.04 : 1.1));
+  var flameHeightFactor = s !== "C" ? ([0,0.22,0.66,0.92,1.14][flameTier] || 0) : 1;
+  var flameWidthFactor = s !== "C" ? ([0,0.14,0.56,0.86,1.06][flameTier] || 0) : 1;
+  var glowIntensity = s !== "C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.22 : (flameTier === 2 ? 0.14 : 0))) : 0;
+  var outerScale = flameTier >= 4 ? 1.06 : (flameTier === 3 ? 0.94 : 0.78);
+  var midScale = flameTier >= 4 ? 1.03 : (flameTier === 3 ? 0.98 : (flameTier === 2 ? 1.02 : 0.76));
+  var innerScale = flameTier === 1 ? 0.58 : (flameTier === 2 ? 0.92 : (flameTier === 3 ? 1.04 : 1.1));
   var flicker = 0.94 + (Math.sin(phase * 1.95) * 0.11) + (Math.sin((phase * 2.8) + 0.9) * 0.07);
   var sidePulse = 0.94 + (Math.sin((phase * 2.35) + 0.4) * 0.12);
   var lift = (s === "C") ? 0 : ((1.8 + (Math.sin(phase * 1.75) * 1.15)) * scaleY * flameHeightFactor);
