@@ -3499,16 +3499,7 @@ body.light-theme .cw-nudge{
   background:linear-gradient(180deg,#93a2ba,#5d6b80);
 }
 #tab-cuboid .cuboid-legend-state-card[data-state="C"] .cuboid-legend-badge::after{
-  content:"";
-  position:absolute;
-  left:8px;
-  top:11px;
-  width:24px;
-  height:2.5px;
-  border-radius:999px;
-  background:linear-gradient(90deg,rgba(251,191,36,0.88),rgba(245,158,11,0.98));
-  transform:rotate(-24deg);
-  box-shadow:0 0 8px rgba(245,158,11,0.34);
+  content:none;
 }
 #tab-cuboid .cuboid-legend-state-card[data-state="O"] .cuboid-legend-badge-flame{
   background:linear-gradient(180deg,#dcfce7 0%,#4ade80 42%,#15803d 100%);
@@ -21282,13 +21273,17 @@ function paintCuboidLegendGlyphCanvas(canvas){
   state = normalizeBurnerStateSnapshotValue(canvas.getAttribute("data-glyph-state"));
   opening = normalizeBurnerOpeningValue(canvas.getAttribute("data-glyph-opening"), state);
   role = canvas.classList.contains("cuboid-legend-opening-canvas") ? "opening" : "state";
-  scale = role === "opening"
-    ? Math.min(cssW / 33, cssH / 36)
-    : Math.min(cssW / 41, cssH / 47);
+  if(role === "opening"){
+    scale = Math.min(cssW / 33, cssH / 36);
+  }else if(state === "C"){
+    scale = Math.min(cssW / 37, cssH / 41);
+  }else{
+    scale = Math.min(cssW / 41, cssH / 47);
+  }
   cuboidLegendDrawBurnerGlyph(
     ctx,
     cssW / 2,
-    role === "opening" ? (cssH * 0.58) : (cssH * 0.66),
+    role === "opening" ? (cssH * 0.58) : (state === "C" ? (cssH * 0.64) : (cssH * 0.66)),
     state,
     0.92,
     scale,
