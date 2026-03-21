@@ -776,12 +776,12 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
   const openingValue=cuboidNormalizeOpeningValue(opening,s);
   const openingRatio=openingValue/100;
   const flameTier=s==="C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : (openingValue >= 25 ? 1 : 0))));
-  const flameHeightFactor=s!=="C" ? ([0,0.56,0.72,0.88,1.12][flameTier] || 0) : 1;
-  const flameWidthFactor=s!=="C" ? ([0,0.5,0.7,0.86,1.04][flameTier] || 0) : 1;
-  const glowIntensity=s!=="C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.24 : (flameTier === 2 ? 0.08 : 0))) : 0;
-  const outerScale=flameTier >= 4 ? 1.04 : 0.8;
-  const midScale=flameTier >= 4 ? 1.02 : (flameTier === 3 ? 0.92 : 0.84);
-  const innerScale=flameTier <= 1 ? 1.24 : (flameTier === 2 ? 1.1 : (flameTier === 3 ? 1.02 : 1.08));
+  const flameHeightFactor=s!=="C" ? ([0,0.34,0.7,0.92,1.14][flameTier] || 0) : 1;
+  const flameWidthFactor=s!=="C" ? ([0,0.22,0.58,0.86,1.06][flameTier] || 0) : 1;
+  const glowIntensity=s!=="C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.22 : (flameTier === 2 ? 0.1 : 0))) : 0;
+  const outerScale=flameTier >= 4 ? 1.06 : (flameTier === 3 ? 0.94 : 0.8);
+  const midScale=flameTier >= 4 ? 1.03 : (flameTier === 3 ? 0.98 : (flameTier === 2 ? 0.94 : 0.8));
+  const innerScale=flameTier === 1 ? 0.78 : (flameTier === 2 ? 0.96 : (flameTier === 3 ? 1.04 : 1.1));
   const flicker=0.94+(Math.sin(phase*1.95)*0.11)+(Math.sin(phase*2.8+0.9)*0.07);
   const sidePulse=0.94+(Math.sin(phase*2.35+0.4)*0.12);
   const lift=(s==="C") ? 0 : ((1.8+(Math.sin(phase*1.75)*1.15))*scaleY*flameHeightFactor);

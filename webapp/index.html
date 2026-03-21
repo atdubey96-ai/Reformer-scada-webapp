@@ -3391,13 +3391,10 @@ body.light-theme .cw-nudge{
   gap:8px;
 }
 #tab-cuboid .cuboid-legend-state-card{
-  display:grid;
-  grid-template-columns:60px minmax(0,1fr) minmax(42px,auto);
-  grid-template-rows:minmax(0,1fr) minmax(0,1fr);
-  align-items:center;
-  column-gap:8px;
-  min-height:68px;
-  padding:8px 9px 8px 10px;
+  position:relative;
+  display:block;
+  min-height:72px;
+  padding:10px 50px 10px 82px;
   border-radius:16px;
   border:1px solid rgba(76,102,146,0.35);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
@@ -3421,8 +3418,9 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-badge{
   position:relative;
-  grid-column:1;
-  grid-row:1 / span 2;
+  position:absolute;
+  left:10px;
+  top:50%;
   width:60px;
   height:64px;
   display:flex;
@@ -3430,6 +3428,7 @@ body.light-theme .cw-nudge{
   justify-content:center;
   filter:none;
   overflow:visible;
+  transform:translateY(-50%);
 }
 #tab-cuboid .cuboid-legend-badge canvas,
 #tab-cuboid .cuboid-legend-opening-burner canvas{
@@ -3534,21 +3533,22 @@ body.light-theme .cw-nudge{
   background:linear-gradient(180deg,#f4a21c,#cd6706);
 }
 #tab-cuboid .cuboid-legend-state-copy{
-  grid-column:2;
-  grid-row:1 / span 2;
   display:flex;
   flex-direction:column;
   gap:4px;
   min-width:0;
   justify-content:center;
-  overflow:hidden;
+  min-height:52px;
+  overflow:visible;
 }
 #tab-cuboid .cuboid-legend-state-name{
   font-size:10px;
   font-weight:700;
   color:#eef4ff;
-  line-height:1.08;
+  line-height:1.14;
   white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 #tab-cuboid .cuboid-legend-state-desc{
   display:inline-flex;
@@ -3591,16 +3591,16 @@ body.light-theme .cw-nudge{
   color:#fff0cf;
 }
 #tab-cuboid .cuboid-legend-state-count{
-  grid-column:3;
-  grid-row:1 / span 2;
-  align-self:center;
-  justify-self:end;
+  position:absolute;
+  top:50%;
+  right:12px;
   min-width:42px;
   font-size:13px;
   font-weight:700;
   color:#ffffff;
   text-align:right;
   line-height:1;
+  transform:translateY(-50%);
 }
 #tab-cuboid .cuboid-legend-opening-row{
   display:grid;
@@ -7299,12 +7299,12 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-cuboid .cuboid-legend-state-row{ gap:10px; }
   #tab-cuboid .cuboid-legend-state-card{
-    grid-template-columns:56px minmax(0,1fr) minmax(40px,auto);
-    min-height:74px;
-    padding:10px 9px;
+    min-height:76px;
+    padding:10px 46px 10px 76px;
     border-radius:16px;
   }
   #tab-cuboid .cuboid-legend-badge{
+    left:8px;
     width:54px;
     height:60px;
   }
@@ -16285,7 +16285,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="AB live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260321-05"
+          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-01"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -16394,7 +16394,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="CD live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260321-05"
+          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-01"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -20990,12 +20990,12 @@ function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
   var openingValue = normalizeBurnerOpeningValue(opening, s);
   var openingRatio = openingValue / 100;
   var flameTier = s === "C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : (openingValue >= 25 ? 1 : 0))));
-  var flameHeightFactor = s !== "C" ? ([0,0.56,0.72,0.88,1.12][flameTier] || 0) : 1;
-  var flameWidthFactor = s !== "C" ? ([0,0.5,0.7,0.86,1.04][flameTier] || 0) : 1;
-  var glowIntensity = s !== "C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.24 : (flameTier === 2 ? 0.08 : 0))) : 0;
-  var outerScale = flameTier >= 4 ? 1.04 : 0.8;
-  var midScale = flameTier >= 4 ? 1.02 : (flameTier === 3 ? 0.92 : 0.84);
-  var innerScale = flameTier <= 1 ? 1.24 : (flameTier === 2 ? 1.1 : (flameTier === 3 ? 1.02 : 1.08));
+  var flameHeightFactor = s !== "C" ? ([0,0.34,0.7,0.92,1.14][flameTier] || 0) : 1;
+  var flameWidthFactor = s !== "C" ? ([0,0.22,0.58,0.86,1.06][flameTier] || 0) : 1;
+  var glowIntensity = s !== "C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.22 : (flameTier === 2 ? 0.1 : 0))) : 0;
+  var outerScale = flameTier >= 4 ? 1.06 : (flameTier === 3 ? 0.94 : 0.8);
+  var midScale = flameTier >= 4 ? 1.03 : (flameTier === 3 ? 0.98 : (flameTier === 2 ? 0.94 : 0.8));
+  var innerScale = flameTier === 1 ? 0.78 : (flameTier === 2 ? 0.96 : (flameTier === 3 ? 1.04 : 1.1));
   var flicker = 0.94 + (Math.sin(phase * 1.95) * 0.11) + (Math.sin((phase * 2.8) + 0.9) * 0.07);
   var sidePulse = 0.94 + (Math.sin((phase * 2.35) + 0.4) * 0.12);
   var lift = (s === "C") ? 0 : ((1.8 + (Math.sin(phase * 1.75) * 1.15)) * scaleY * flameHeightFactor);
