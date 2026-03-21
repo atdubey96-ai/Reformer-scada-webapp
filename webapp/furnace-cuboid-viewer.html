@@ -235,7 +235,6 @@ const chamberParam=(function(){
 const chamberWalls=chamberParam==="cd"?["C","D"]:["A","B"];
 const chamberZoneKey=chamberParam==="cd"?"CD":"AB";
 const cuboidOpeningStep=5;
-const cuboidOpeningPrototypeTarget={row:6,burner:1};
 
 const app=document.getElementById("app");
 const viewerTagTitle=document.getElementById("viewerTagTitle");
@@ -705,16 +704,16 @@ function cuboidDrawBurnerOpeningWindow(ctx,x,baseX,baseY,baseW,baseH,state,openi
   }
 }
 
-function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening,showOpeningPrototype){
+function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
   let s=String(state || "C").toUpperCase();
   if(s!=="O" && s!=="N" && s!=="B") s="C";
   const palette=cuboidGetBurnerPalette(s);
   const iconScale=Math.max(1,Number(scale) || 2.7);
   const scaleX=iconScale*0.9;
   const scaleY=iconScale*1.55;
-  const openingRatio=showOpeningPrototype ? (cuboidNormalizeOpeningValue(opening,s)/100) : 1;
-  const flameHeightFactor=showOpeningPrototype && s!=="C" ? (0.45+(openingRatio*0.9)) : 1;
-  const flameWidthFactor=showOpeningPrototype && s!=="C" ? (0.58+(openingRatio*0.52)) : 1;
+  const openingRatio=cuboidNormalizeOpeningValue(opening,s)/100;
+  const flameHeightFactor=s!=="C" ? (0.45+(openingRatio*0.9)) : 1;
+  const flameWidthFactor=s!=="C" ? (0.58+(openingRatio*0.52)) : 1;
   const flicker=0.94+(Math.sin(phase*1.95)*0.11)+(Math.sin(phase*2.8+0.9)*0.07);
   const sidePulse=0.94+(Math.sin(phase*2.35+0.4)*0.12);
   const lift=(s==="C") ? 0 : ((2.2+(Math.sin(phase*1.75)*1.35))*scaleY*flameHeightFactor);
@@ -766,9 +765,7 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening,showOpe
   ctx.lineTo(baseX+baseW-(baseH*0.42),baseY+0.9);
   ctx.stroke();
 
-  if(showOpeningPrototype){
-    cuboidDrawBurnerOpeningWindow(ctx,x,baseX,baseY,baseW,baseH,s,opening,iconScale,scaleX);
-  }
+  cuboidDrawBurnerOpeningWindow(ctx,x,baseX,baseY,baseW,baseH,s,opening,iconScale,scaleX);
 
   if(s==="C"){
     const closedCapW=18.5*scaleX;
@@ -1425,8 +1422,7 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
       const burnerX=gridLeft+slotW*(ci+0.5);
       const key="R"+item+"B"+(ci+1);
       const cleaned=!!String(cleaningMap && cleaningMap[key] ? cleaningMap[key] : "").trim();
-      const showOpeningPrototype=(item===cuboidOpeningPrototypeTarget.row) && ((ci+1)===cuboidOpeningPrototypeTarget.burner);
-      cuboidDrawBurnerGlyph(ctx,burnerX,centerY+10,state,cleaned,(phaseBase || 0)+(ii*0.55)+(ci*0.28),iconScale,openingVal,showOpeningPrototype);
+      cuboidDrawBurnerGlyph(ctx,burnerX,centerY+10,state,cleaned,(phaseBase || 0)+(ii*0.55)+(ci*0.28),iconScale,openingVal);
     }
   }
 }
