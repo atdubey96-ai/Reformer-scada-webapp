@@ -199,6 +199,16 @@ body.light-theme .btab-active{
   border-color:rgba(243,112,34,0.4);
   box-shadow:0 7px 14px rgba(243,112,34,0.14), inset 0 1px 0 rgba(255,255,255,0.52);
 }
+body.light-theme .btab-label{
+  color:#304766;
+  text-shadow:0 1px 0 rgba(255,255,255,0.72);
+}
+body.light-theme .btab:hover .btab-label{
+  color:#17273d;
+}
+body.light-theme .btab-active .btab-label{
+  color:#7a3305;
+}
 body.light-theme .btab-icon{
   background:
     radial-gradient(130% 115% at 30% 18%,rgba(255,255,255,0.88) 0%,rgba(255,255,255,0) 44%),
@@ -3265,14 +3275,14 @@ body.light-theme .cw-nudge{
 .btab{
   flex:1;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;
-  padding:7px 8px;
+  gap:6px;
+  padding:9px 8px 10px;
   margin:4px 3px;
   border-radius:13px;
   background:transparent;
   border:1px solid transparent;
   cursor:pointer;
-  color:#64748b;font-family:'Rajdhani',sans-serif;
+  color:#aabbd1;font-family:'Rajdhani',sans-serif;
   transition:background .2s, color .2s, border-color .2s, transform .2s, box-shadow .2s;
   border-top:none;
   position:relative;
@@ -3289,16 +3299,22 @@ body.light-theme .cw-nudge{
   pointer-events:none;
 }
 .btab:hover{
-  background:linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.03));
-  color:#d6e2f5;
-  border-color:rgba(148,163,184,0.34);
+  background:linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04));
+  color:#eef6ff;
+  border-color:rgba(169,188,216,0.42);
   transform:translateY(-1px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.10);
 }
 .btab-active{
-  color:#ffd0b2 !important;
-  border-color:rgba(243,112,34,0.48) !important;
-  background:linear-gradient(180deg,rgba(243,112,34,0.24),rgba(243,112,34,0.1)) !important;
-  box-shadow:0 8px 16px rgba(243,112,34,0.16), inset 0 1px 0 rgba(255,214,185,0.33);
+  color:#fff3e8 !important;
+  border-color:rgba(137,128,255,0.52) !important;
+  background:
+    radial-gradient(120% 170% at 50% 0%,rgba(126,150,255,0.20) 0%,rgba(126,150,255,0) 58%),
+    linear-gradient(180deg,rgba(93,103,214,0.28),rgba(55,64,134,0.18)) !important;
+  box-shadow:
+    0 12px 22px rgba(70,80,180,0.20),
+    inset 0 1px 0 rgba(235,239,255,0.34),
+    inset 0 -10px 18px rgba(14,18,42,0.10);
 }
 .btab-active::after{
   content:"";
@@ -3306,19 +3322,20 @@ body.light-theme .cw-nudge{
   left:20%;
   right:20%;
   bottom:0;
-  height:2px;
+  height:2.5px;
   border-radius:4px;
-  background:linear-gradient(90deg,rgba(243,112,34,0),rgba(243,112,34,0.95),rgba(243,112,34,0));
+  background:linear-gradient(90deg,rgba(124,154,255,0),rgba(124,154,255,0.98),rgba(255,164,97,0.96),rgba(124,154,255,0));
 }
 .btab-icon{
   --tab-icon-accent:#a8bdd5;
+  --tab-icon-glow:rgba(168,189,213,0.22);
   position:relative;
-  width:28px;
-  height:28px;
+  width:36px;
+  height:36px;
   display:grid;
   place-items:center;
   flex:0 0 auto;
-  border-radius:9px;
+  border-radius:11px;
   color:var(--tab-icon-accent);
   background:
     radial-gradient(130% 115% at 30% 18%,rgba(255,255,255,0.16) 0%,rgba(255,255,255,0) 45%),
@@ -3330,11 +3347,23 @@ body.light-theme .cw-nudge{
     0 4px 10px rgba(0,0,0,0.24);
   transition:transform .2s, border-color .2s, box-shadow .2s, color .2s, background .2s;
   line-height:1;
+  overflow:visible;
+}
+.btab-icon::before{
+  content:"";
+  position:absolute;
+  inset:-7px;
+  border-radius:15px;
+  background:radial-gradient(80% 78% at 50% 50%,var(--tab-icon-glow) 0%,rgba(0,0,0,0) 72%);
+  opacity:0.86;
+  pointer-events:none;
+  z-index:-1;
 }
 .btab-icon svg{
-  width:18px;
-  height:18px;
+  width:20px;
+  height:20px;
   display:block;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.34));
 }
 .btab-icon svg *{
   vector-effect:non-scaling-stroke;
@@ -3357,31 +3386,38 @@ body.light-theme .cw-nudge{
 }
 .btab:hover .btab-icon{
   transform:translateY(-1px);
-  border-color:rgba(170,190,218,0.34);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 -1px 0 rgba(0,0,0,0.24),
-    0 6px 14px rgba(0,0,0,0.30);
-}
-.btab-active .btab-icon{
-  border-color:rgba(255,225,206,0.26);
-  background:
-    radial-gradient(130% 115% at 30% 18%,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0) 46%),
-    linear-gradient(180deg,rgba(28,36,50,0.98),rgba(12,18,28,0.98));
+  border-color:rgba(188,207,233,0.46);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.16),
     inset 0 -1px 0 rgba(0,0,0,0.22),
-    0 8px 18px rgba(0,0,0,0.34);
+    0 7px 16px rgba(0,0,0,0.34);
 }
-#btab-burner{ --tab-icon-accent:#ffb558; }
-#btab-cleaning{ --tab-icon-accent:#74dbc2; }
-#btab-cuboid{ --tab-icon-accent:#8db8ff; }
-#btab-tempdata{ --tab-icon-accent:#ff8d68; }
-#btab-alarms{ --tab-icon-accent:#ff6b62; }
+.btab-active .btab-icon{
+  border-color:rgba(212,223,255,0.34);
+  background:
+    radial-gradient(130% 115% at 30% 18%,rgba(255,255,255,0.30) 0%,rgba(255,255,255,0) 46%),
+    linear-gradient(180deg,rgba(31,40,62,0.98),rgba(11,17,29,0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 10px 18px rgba(0,0,0,0.38);
+}
+#btab-burner{ --tab-icon-accent:#ffbe67; --tab-icon-glow:rgba(255,190,103,0.28); }
+#btab-cleaning{ --tab-icon-accent:#78dfc8; --tab-icon-glow:rgba(120,223,200,0.24); }
+#btab-cuboid{ --tab-icon-accent:#9abfff; --tab-icon-glow:rgba(154,191,255,0.30); }
+#btab-tempdata{ --tab-icon-accent:#ff9772; --tab-icon-glow:rgba(255,151,114,0.24); }
+#btab-alarms{ --tab-icon-accent:#ff746b; --tab-icon-glow:rgba(255,116,107,0.28); }
 .btab-label{
-  font-size:12px;font-weight:700;letter-spacing:0.4px;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:0.28px;
+  color:#dce7f7;
+  text-shadow:0 1px 0 rgba(0,0,0,0.36);
+  line-height:1.06;
   max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+.btab:hover .btab-label{ color:#f6fbff; }
+.btab-active .btab-label{ color:#fff8f1; }
 #tab-cuboid{
   padding:14px 18px 18px;
   background:#07090d;
@@ -7084,13 +7120,13 @@ html, body, body *, body *::before, body *::after, svg text{
     border-radius:11px !important;
   }
   .bottom-tab-bar .btab-icon{
-    width:24px !important;
-    height:24px !important;
+    width:28px !important;
+    height:28px !important;
     border-radius:8px !important;
   }
   .bottom-tab-bar .btab-icon svg{
-    width:15px !important;
-    height:15px !important;
+    width:17px !important;
+    height:17px !important;
   }
   .bottom-tab-bar .btab-label{
     font-size:10px !important;
