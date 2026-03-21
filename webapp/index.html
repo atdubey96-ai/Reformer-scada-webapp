@@ -3406,21 +3406,109 @@ body.light-theme .cw-nudge{
   border-color:rgba(176,122,28,0.44);
 }
 #tab-cuboid .cuboid-legend-badge{
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:14px;
-  font-weight:700;
-  color:#f8fbff;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 18px rgba(0,0,0,0.22);
+  position:relative;
+  flex:0 0 40px;
+  width:40px;
+  height:44px;
+  display:block;
+  filter:drop-shadow(0 10px 16px rgba(0,0,0,0.24));
 }
-#tab-cuboid .cuboid-legend-state-card[data-state="B"] .cuboid-legend-badge{ background:linear-gradient(180deg,#5f9dff,#2155d8); }
-#tab-cuboid .cuboid-legend-state-card[data-state="C"] .cuboid-legend-badge{ background:linear-gradient(180deg,#9ba8bc,#66748d); }
-#tab-cuboid .cuboid-legend-state-card[data-state="O"] .cuboid-legend-badge{ background:linear-gradient(180deg,#3dd26d,#0b8d47); }
-#tab-cuboid .cuboid-legend-state-card[data-state="N"] .cuboid-legend-badge{ background:linear-gradient(180deg,#f7a61d,#c56600); }
+#tab-cuboid .cuboid-legend-badge-flame,
+#tab-cuboid .cuboid-legend-badge-core,
+#tab-cuboid .cuboid-legend-badge-stem,
+#tab-cuboid .cuboid-legend-badge-base{
+  position:absolute;
+  left:50%;
+}
+#tab-cuboid .cuboid-legend-badge-flame{
+  top:0;
+  width:18px;
+  height:24px;
+  border-radius:60% 0 64% 64%;
+  transform:translateX(-50%) rotate(45deg);
+}
+#tab-cuboid .cuboid-legend-badge-core{
+  top:7px;
+  width:9px;
+  height:12px;
+  border-radius:60% 0 64% 64%;
+  transform:translateX(-50%) rotate(45deg);
+}
+#tab-cuboid .cuboid-legend-badge-stem{
+  bottom:8px;
+  width:9px;
+  height:10px;
+  transform:translateX(-50%);
+  border-radius:5px;
+}
+#tab-cuboid .cuboid-legend-badge-base{
+  bottom:2px;
+  width:24px;
+  height:7px;
+  transform:translateX(-50%);
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(232,238,244,0.92),rgba(88,96,109,0.96) 42%,rgba(18,24,31,0.98));
+  border:1px solid rgba(228,234,241,0.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 5px rgba(0,0,0,0.28);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="B"] .cuboid-legend-badge-flame{
+  background:linear-gradient(180deg,#dbeafe 0%,#63a9ff 45%,#1d4ed8 100%);
+  box-shadow:0 0 14px rgba(59,130,246,0.38);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="B"] .cuboid-legend-badge-core{
+  background:linear-gradient(180deg,#ffffff 0%,#dbeafe 48%,#93c5fd 100%);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="B"] .cuboid-legend-badge-stem{
+  background:linear-gradient(180deg,#4b8fff,#214fd1);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="C"] .cuboid-legend-badge-flame{
+  top:9px;
+  width:23px;
+  height:8px;
+  border-radius:999px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg,#d4dbe5 0%,#8996aa 45%,#4c5869 100%);
+  box-shadow:0 2px 8px rgba(148,163,184,0.18);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="C"] .cuboid-legend-badge-core{
+  display:none;
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="C"] .cuboid-legend-badge-stem{
+  bottom:8px;
+  background:linear-gradient(180deg,#93a2ba,#5d6b80);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="C"] .cuboid-legend-badge::after{
+  content:"";
+  position:absolute;
+  left:8px;
+  top:11px;
+  width:24px;
+  height:2.5px;
+  border-radius:999px;
+  background:linear-gradient(90deg,rgba(251,191,36,0.88),rgba(245,158,11,0.98));
+  transform:rotate(-24deg);
+  box-shadow:0 0 8px rgba(245,158,11,0.34);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="O"] .cuboid-legend-badge-flame{
+  background:linear-gradient(180deg,#dcfce7 0%,#4ade80 42%,#15803d 100%);
+  box-shadow:0 0 14px rgba(34,197,94,0.36);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="O"] .cuboid-legend-badge-core{
+  background:linear-gradient(180deg,#ffffff 0%,#ecfdf5 45%,#86efac 100%);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="O"] .cuboid-legend-badge-stem{
+  background:linear-gradient(180deg,#31c868,#15954a);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="N"] .cuboid-legend-badge-flame{
+  background:linear-gradient(180deg,#fef3c7 0%,#f59e0b 45%,#b45309 100%);
+  box-shadow:0 0 14px rgba(245,158,11,0.36);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="N"] .cuboid-legend-badge-core{
+  background:linear-gradient(180deg,#ffffff 0%,#fff7dd 48%,#fcd34d 100%);
+}
+#tab-cuboid .cuboid-legend-state-card[data-state="N"] .cuboid-legend-badge-stem{
+  background:linear-gradient(180deg,#f4a21c,#cd6706);
+}
 #tab-cuboid .cuboid-legend-state-copy{
   flex:1 1 auto;
   display:flex;
@@ -6996,9 +7084,8 @@ html, body, body *, body *::before, body *::after, svg text{
     border-radius:16px;
   }
   #tab-cuboid .cuboid-legend-badge{
-    width:38px;
-    height:38px;
-    font-size:14px;
+    width:40px;
+    height:44px;
   }
   #tab-cuboid .cuboid-legend-title{
     margin-bottom:10px;
@@ -15784,7 +15871,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="cuboid-legend-title">Burner State Legend</div>
               <div class="cuboid-legend-state-row">
                 <div class="cuboid-legend-state-card" data-state="B">
-                  <div class="cuboid-legend-badge">B</div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Both</div>
                     <div class="cuboid-legend-state-desc">Blue Burner</div>
@@ -15792,7 +15879,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="C">
-                  <div class="cuboid-legend-badge">C</div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Cold</div>
                     <div class="cuboid-legend-state-desc">Closed Burner</div>
@@ -15800,7 +15887,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="O">
-                  <div class="cuboid-legend-badge">O</div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Off Gas</div>
                     <div class="cuboid-legend-state-desc">Green Burner</div>
@@ -15808,7 +15895,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="N">
-                  <div class="cuboid-legend-badge">N</div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">NG Only</div>
                     <div class="cuboid-legend-state-desc">Amber Burner</div>
@@ -15864,7 +15951,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <div class="cuboid-legend-title">Burner State Legend</div>
               <div class="cuboid-legend-state-row">
                 <div class="cuboid-legend-state-card" data-state="B">
-                  <div class="cuboid-legend-badge">B</div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Both</div>
                     <div class="cuboid-legend-state-desc">Blue Burner</div>
@@ -15872,7 +15959,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="C">
-                  <div class="cuboid-legend-badge">C</div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Cold</div>
                     <div class="cuboid-legend-state-desc">Closed Burner</div>
@@ -15880,7 +15967,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="O">
-                  <div class="cuboid-legend-badge">O</div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">Off Gas</div>
                     <div class="cuboid-legend-state-desc">Green Burner</div>
@@ -15888,7 +15975,7 @@ html, body, body *, body *::before, body *::after, svg text{
                   <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
                 </div>
                 <div class="cuboid-legend-state-card" data-state="N">
-                  <div class="cuboid-legend-badge">N</div>
+                  <div class="cuboid-legend-badge" aria-hidden="true"><span class="cuboid-legend-badge-flame"></span><span class="cuboid-legend-badge-core"></span><span class="cuboid-legend-badge-stem"></span><span class="cuboid-legend-badge-base"></span></div>
                   <div class="cuboid-legend-state-copy">
                     <div class="cuboid-legend-state-name">NG Only</div>
                     <div class="cuboid-legend-state-desc">Amber Burner</div>
