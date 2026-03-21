@@ -16263,7 +16263,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="AB live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260321-02"
+          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260321-03"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -16372,7 +16372,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="CD live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260321-02"
+          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260321-03"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -16641,7 +16641,7 @@ const BURNER_STATE_META = {
 const BURNER_OPENING_MIN = 0;
 const BURNER_OPENING_MAX = 100;
 const BURNER_OPENING_STEP = 25;
-const BURNER_OPENING_ACTIVE_MIN = 25;
+const BURNER_OPENING_ACTIVE_MIN = 0;
 const chartInstances = {};
 const hmChartInstances = {};
 var burnerUiReady = false;
@@ -17355,11 +17355,11 @@ var burnerOpeningData={};
 function normalizeBurnerOpeningValue(raw, state){
   var s = normalizeBurnerStateSnapshotValue(state);
   var fallback = (s === "C") ? 0 : 100;
+  var hasRaw = !(raw == null || raw === "");
   var n = Number(raw);
-  if(!isFinite(n) || (s !== "C" && n <= 0)) n = fallback;
+  if(!hasRaw || !isFinite(n) || n < 0) n = fallback;
   n = Math.round(n / BURNER_OPENING_STEP) * BURNER_OPENING_STEP;
   n = Math.max(s === "C" ? BURNER_OPENING_MIN : BURNER_OPENING_ACTIVE_MIN, Math.min(BURNER_OPENING_MAX, n));
-  if(s === "C") return 0;
   return n;
 }
 
@@ -17716,7 +17716,6 @@ function ensureBurnerCellEditor(){
         + '<span class="burner-cell-editor-value" data-burner-editor-opening>0%</span>'
       + '</div>'
       + '<input class="burner-cell-editor-slider" data-burner-editor-slider type="range" min="' + BURNER_OPENING_MIN + '" max="' + BURNER_OPENING_MAX + '" step="' + BURNER_OPENING_STEP + '" value="100">'
-      + '<div class="burner-cell-editor-scale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>'
     + '</div>';
   document.body.appendChild(editor);
   editor.addEventListener("click", function(ev){ ev.stopPropagation(); });
@@ -20968,10 +20967,13 @@ function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
   var scaleY = iconScale * 1.55;
   var openingValue = normalizeBurnerOpeningValue(opening, s);
   var openingRatio = openingValue / 100;
-  var flameTier = s === "C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : 1)));
-  var flameHeightFactor = s !== "C" ? (flameTier <= 1 ? 0.3 : (flameTier === 2 ? 0.48 : (flameTier === 3 ? 0.72 : 1))) : 1;
-  var flameWidthFactor = s !== "C" ? (flameTier <= 1 ? 0.26 : (flameTier === 2 ? 0.46 : (flameTier === 3 ? 0.76 : 1))) : 1;
-  var glowIntensity = s !== "C" ? (flameTier <= 1 ? 0 : (flameTier === 2 ? 0.16 : (flameTier === 3 ? 0.38 : 1))) : 0;
+  var flameTier = s === "C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : (openingValue >= 25 ? 1 : 0))));
+  var flameHeightFactor = s !== "C" ? ([0,0.56,0.72,0.88,1.12][flameTier] || 0) : 1;
+  var flameWidthFactor = s !== "C" ? ([0,0.5,0.7,0.86,1.04][flameTier] || 0) : 1;
+  var glowIntensity = s !== "C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.24 : (flameTier === 2 ? 0.08 : 0))) : 0;
+  var outerScale = flameTier >= 4 ? 1.04 : 0.8;
+  var midScale = flameTier >= 4 ? 1.02 : (flameTier === 3 ? 0.92 : 0.84);
+  var innerScale = flameTier <= 1 ? 1.24 : (flameTier === 2 ? 1.1 : (flameTier === 3 ? 1.02 : 1.08));
   var flicker = 0.94 + (Math.sin(phase * 1.95) * 0.11) + (Math.sin((phase * 2.8) + 0.9) * 0.07);
   var sidePulse = 0.94 + (Math.sin((phase * 2.35) + 0.4) * 0.12);
   var lift = (s === "C") ? 0 : ((1.8 + (Math.sin(phase * 1.75) * 1.15)) * scaleY * flameHeightFactor);
@@ -21140,22 +21142,22 @@ function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
       ctx.shadowColor = palette.glow;
       ctx.globalAlpha = flameTier >= 4 ? 1 : 0.84;
       ctx.beginPath();
-      ctx.moveTo(x, y - (12.8 * scaleY) - lift);
+      ctx.moveTo(x, y - (12.8 * scaleY * outerScale) - lift);
       ctx.bezierCurveTo(
-        x + (11 * scaleX) * flicker * flameWidthFactor,
-        y - (6.9 * scaleY) - (lift * 0.52),
-        x + (8.2 * scaleX) * sidePulse * flameWidthFactor,
+        x + (11 * scaleX) * flicker * flameWidthFactor * outerScale,
+        y - (6.9 * scaleY * outerScale) - (lift * 0.52),
+        x + (8.2 * scaleX) * sidePulse * flameWidthFactor * outerScale,
         y + (0.9 * iconScale),
         x,
         y + (2.4 * iconScale)
       );
       ctx.bezierCurveTo(
-        x - (8.2 * scaleX) * sidePulse * flameWidthFactor,
+        x - (8.2 * scaleX) * sidePulse * flameWidthFactor * outerScale,
         y + (0.9 * iconScale),
-        x - (11 * scaleX) * flicker * flameWidthFactor,
-        y - (6.9 * scaleY) - (lift * 0.52),
+        x - (11 * scaleX) * flicker * flameWidthFactor * outerScale,
+        y - (6.9 * scaleY * outerScale) - (lift * 0.52),
         x,
-        y - (12.8 * scaleY) - lift
+        y - (12.8 * scaleY * outerScale) - lift
       );
       ctx.closePath();
       ctx.fillStyle = palette.flame;
@@ -21165,50 +21167,58 @@ function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
 
     if(flameTier >= 2){
       ctx.beginPath();
-      ctx.moveTo(x, y - (8.5 * scaleY) - (lift * 0.46));
+      ctx.moveTo(x, y - (8.5 * scaleY * midScale) - (lift * 0.46));
       ctx.bezierCurveTo(
-        x + (6.5 * scaleX) * sidePulse * flameWidthFactor,
-        y - (4.6 * scaleY) - (lift * 0.18),
-        x + (4.8 * scaleX) * flicker * flameWidthFactor,
+        x + (6.5 * scaleX) * sidePulse * flameWidthFactor * midScale,
+        y - (4.6 * scaleY * midScale) - (lift * 0.18),
+        x + (4.8 * scaleX) * flicker * flameWidthFactor * midScale,
         y + (0.15 * iconScale),
         x,
         y + (1.6 * iconScale)
       );
       ctx.bezierCurveTo(
-        x - (4.8 * scaleX) * flicker * flameWidthFactor,
+        x - (4.8 * scaleX) * flicker * flameWidthFactor * midScale,
         y + (0.15 * iconScale),
-        x - (6.5 * scaleX) * sidePulse * flameWidthFactor,
-        y - (4.6 * scaleY) - (lift * 0.18),
+        x - (6.5 * scaleX) * sidePulse * flameWidthFactor * midScale,
+        y - (4.6 * scaleY * midScale) - (lift * 0.18),
         x,
-        y - (8.5 * scaleY) - (lift * 0.46)
+        y - (8.5 * scaleY * midScale) - (lift * 0.46)
       );
       ctx.closePath();
+      ctx.globalAlpha = flameTier === 2 ? 0.94 : 1;
       ctx.fillStyle = palette.core;
       ctx.fill();
+      ctx.globalAlpha = 1;
     }
 
     if(flameTier >= 1){
+      ctx.save();
+      if(flameTier === 1){
+        ctx.shadowBlur = 4.8 * iconScale;
+        ctx.shadowColor = palette.core;
+      }
       ctx.beginPath();
-      ctx.moveTo(x, y - (5.6 * scaleY) - (lift * 0.22));
+      ctx.moveTo(x, y - (5.6 * scaleY * innerScale) - (lift * 0.22));
       ctx.bezierCurveTo(
-        x + (3.2 * scaleX) * sidePulse * flameWidthFactor,
-        y - (3.0 * scaleY) - (lift * 0.1),
-        x + (2.4 * scaleX) * flicker * flameWidthFactor,
+        x + (3.2 * scaleX) * sidePulse * flameWidthFactor * innerScale,
+        y - (3.0 * scaleY * innerScale) - (lift * 0.1),
+        x + (2.4 * scaleX) * flicker * flameWidthFactor * innerScale,
         y + (0.22 * iconScale),
         x,
         y + (1.2 * iconScale)
       );
       ctx.bezierCurveTo(
-        x - (2.4 * scaleX) * flicker * flameWidthFactor,
+        x - (2.4 * scaleX) * flicker * flameWidthFactor * innerScale,
         y + (0.22 * iconScale),
-        x - (3.2 * scaleX) * sidePulse * flameWidthFactor,
-        y - (3.0 * scaleY) - (lift * 0.1),
+        x - (3.2 * scaleX) * sidePulse * flameWidthFactor * innerScale,
+        y - (3.0 * scaleY * innerScale) - (lift * 0.1),
         x,
-        y - (5.6 * scaleY) - (lift * 0.22)
+        y - (5.6 * scaleY * innerScale) - (lift * 0.22)
       );
       ctx.closePath();
       ctx.fillStyle = palette.inner;
       ctx.fill();
+      ctx.restore();
     }
   }
 }

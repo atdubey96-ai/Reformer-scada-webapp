@@ -234,7 +234,7 @@ const chamberParam=(function(){
 })();
 const chamberWalls=chamberParam==="cd"?["C","D"]:["A","B"];
 const chamberZoneKey=chamberParam==="cd"?"CD":"AB";
-const cuboidOpeningStep=5;
+const cuboidOpeningStep=25;
 
 const app=document.getElementById("app");
 const viewerTagTitle=document.getElementById("viewerTagTitle");
@@ -366,11 +366,12 @@ function cuboidSanitizeBurnerSnapshot(source){
 function cuboidNormalizeOpeningValue(raw,state){
   const s=cuboidNormalizeBurnerState(state);
   const fallback=s==="C" ? 0 : 100;
+  const hasRaw=!(raw == null || raw === "");
   let n=Number(raw);
-  if(!isFinite(n) || (s!=="C" && n<=0)) n=fallback;
+  if(!hasRaw || !isFinite(n) || n<0) n=fallback;
   n=Math.round(n/cuboidOpeningStep)*cuboidOpeningStep;
-  n=Math.max(s==="C" ? 0 : cuboidOpeningStep,Math.min(100,n));
-  return s==="C" ? 0 : n;
+  n=Math.max(0,Math.min(100,n));
+  return n;
 }
 
 function cuboidBuildDefaultOpeningData(stateSource){
@@ -772,10 +773,13 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
   const scaleY=iconScale*1.55;
   const openingValue=cuboidNormalizeOpeningValue(opening,s);
   const openingRatio=openingValue/100;
-  const flameTier=s==="C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : 1)));
-  const flameHeightFactor=s!=="C" ? (flameTier <= 1 ? 0.3 : (flameTier === 2 ? 0.48 : (flameTier === 3 ? 0.72 : 1))) : 1;
-  const flameWidthFactor=s!=="C" ? (flameTier <= 1 ? 0.26 : (flameTier === 2 ? 0.46 : (flameTier === 3 ? 0.76 : 1))) : 1;
-  const glowIntensity=s!=="C" ? (flameTier <= 1 ? 0 : (flameTier === 2 ? 0.16 : (flameTier === 3 ? 0.38 : 1))) : 0;
+  const flameTier=s==="C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : (openingValue >= 25 ? 1 : 0))));
+  const flameHeightFactor=s!=="C" ? ([0,0.56,0.72,0.88,1.12][flameTier] || 0) : 1;
+  const flameWidthFactor=s!=="C" ? ([0,0.5,0.7,0.86,1.04][flameTier] || 0) : 1;
+  const glowIntensity=s!=="C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.24 : (flameTier === 2 ? 0.08 : 0))) : 0;
+  const outerScale=flameTier >= 4 ? 1.04 : 0.8;
+  const midScale=flameTier >= 4 ? 1.02 : (flameTier === 3 ? 0.92 : 0.84);
+  const innerScale=flameTier <= 1 ? 1.24 : (flameTier === 2 ? 1.1 : (flameTier === 3 ? 1.02 : 1.08));
   const flicker=0.94+(Math.sin(phase*1.95)*0.11)+(Math.sin(phase*2.8+0.9)*0.07);
   const sidePulse=0.94+(Math.sin(phase*2.35+0.4)*0.12);
   const lift=(s==="C") ? 0 : ((1.8+(Math.sin(phase*1.75)*1.15))*scaleY*flameHeightFactor);
@@ -936,22 +940,22 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
       ctx.shadowColor=palette.glow;
       ctx.globalAlpha=flameTier >= 4 ? 1 : 0.84;
       ctx.beginPath();
-      ctx.moveTo(x,y-(12.8*scaleY)-lift);
+      ctx.moveTo(x,y-(12.8*scaleY*outerScale)-lift);
       ctx.bezierCurveTo(
-        x+(11*scaleX)*flicker*flameWidthFactor,
-        y-(6.9*scaleY)-(lift*0.52),
-        x+(8.2*scaleX)*sidePulse*flameWidthFactor,
+        x+(11*scaleX)*flicker*flameWidthFactor*outerScale,
+        y-(6.9*scaleY*outerScale)-(lift*0.52),
+        x+(8.2*scaleX)*sidePulse*flameWidthFactor*outerScale,
         y+(0.9*iconScale),
         x,
         y+(2.4*iconScale)
       );
       ctx.bezierCurveTo(
-        x-(8.2*scaleX)*sidePulse*flameWidthFactor,
+        x-(8.2*scaleX)*sidePulse*flameWidthFactor*outerScale,
         y+(0.9*iconScale),
-        x-(11*scaleX)*flicker*flameWidthFactor,
-        y-(6.9*scaleY)-(lift*0.52),
+        x-(11*scaleX)*flicker*flameWidthFactor*outerScale,
+        y-(6.9*scaleY*outerScale)-(lift*0.52),
         x,
-        y-(12.8*scaleY)-lift
+        y-(12.8*scaleY*outerScale)-lift
       );
       ctx.closePath();
       ctx.fillStyle=palette.flame;
@@ -961,50 +965,58 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
 
     if(flameTier >= 2){
       ctx.beginPath();
-      ctx.moveTo(x,y-(8.5*scaleY)-(lift*0.46));
+      ctx.moveTo(x,y-(8.5*scaleY*midScale)-(lift*0.46));
       ctx.bezierCurveTo(
-        x+(6.5*scaleX)*sidePulse*flameWidthFactor,
-        y-(4.6*scaleY)-(lift*0.18),
-        x+(4.8*scaleX)*flicker*flameWidthFactor,
+        x+(6.5*scaleX)*sidePulse*flameWidthFactor*midScale,
+        y-(4.6*scaleY*midScale)-(lift*0.18),
+        x+(4.8*scaleX)*flicker*flameWidthFactor*midScale,
         y+(0.15*iconScale),
         x,
         y+(1.6*iconScale)
       );
       ctx.bezierCurveTo(
-        x-(4.8*scaleX)*flicker*flameWidthFactor,
+        x-(4.8*scaleX)*flicker*flameWidthFactor*midScale,
         y+(0.15*iconScale),
-        x-(6.5*scaleX)*sidePulse*flameWidthFactor,
-        y-(4.6*scaleY)-(lift*0.18),
+        x-(6.5*scaleX)*sidePulse*flameWidthFactor*midScale,
+        y-(4.6*scaleY*midScale)-(lift*0.18),
         x,
-        y-(8.5*scaleY)-(lift*0.46)
+        y-(8.5*scaleY*midScale)-(lift*0.46)
       );
       ctx.closePath();
+      ctx.globalAlpha=flameTier === 2 ? 0.94 : 1;
       ctx.fillStyle=palette.core;
       ctx.fill();
+      ctx.globalAlpha=1;
     }
 
     if(flameTier >= 1){
+      ctx.save();
+      if(flameTier === 1){
+        ctx.shadowBlur=4.8*iconScale;
+        ctx.shadowColor=palette.core;
+      }
       ctx.beginPath();
-      ctx.moveTo(x,y-(5.6*scaleY)-(lift*0.22));
+      ctx.moveTo(x,y-(5.6*scaleY*innerScale)-(lift*0.22));
       ctx.bezierCurveTo(
-        x+(3.2*scaleX)*sidePulse*flameWidthFactor,
-        y-(3.0*scaleY)-(lift*0.1),
-        x+(2.4*scaleX)*flicker*flameWidthFactor,
+        x+(3.2*scaleX)*sidePulse*flameWidthFactor*innerScale,
+        y-(3.0*scaleY*innerScale)-(lift*0.1),
+        x+(2.4*scaleX)*flicker*flameWidthFactor*innerScale,
         y-(0.2*iconScale),
         x,
         y+(0.8*iconScale)
       );
       ctx.bezierCurveTo(
-        x-(2.4*scaleX)*flicker*flameWidthFactor,
+        x-(2.4*scaleX)*flicker*flameWidthFactor*innerScale,
         y-(0.2*iconScale),
-        x-(3.2*scaleX)*sidePulse*flameWidthFactor,
-        y-(3.0*scaleY)-(lift*0.1),
+        x-(3.2*scaleX)*sidePulse*flameWidthFactor*innerScale,
+        y-(3.0*scaleY*innerScale)-(lift*0.1),
         x,
-        y-(5.6*scaleY)-(lift*0.22)
+        y-(5.6*scaleY*innerScale)-(lift*0.22)
       );
       ctx.closePath();
       ctx.fillStyle=palette.inner;
       ctx.fill();
+      ctx.restore();
     }
   }
 
