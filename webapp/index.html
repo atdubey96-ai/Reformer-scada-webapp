@@ -16192,6 +16192,7 @@ const BURNER_OPENING_STEP = 5;
 const BURNER_OPENING_ACTIVE_MIN = 5;
 const chartInstances = {};
 const hmChartInstances = {};
+var burnerUiReady = false;
 
 /* ==================================================
    LOGIN / LOGOUT
@@ -17664,6 +17665,48 @@ function render(){
   applyBurnerMobileWallFilter();
 }
 
+function refreshBurnerWallTablesInPlace(){
+  closeBurnerCellEditor();
+  var wallsDiv = document.getElementById("walls");
+  if(!wallsDiv) return false;
+  var wallEntries = Object.entries(data || {});
+  if(!wallEntries.length) return false;
+  var existingWalls = wallsDiv.querySelectorAll(".wall[data-wall]");
+  if(existingWalls.length !== wallEntries.length) return false;
+
+  for(var wi=0; wi<wallEntries.length; wi++){
+    var wallName = wallEntries[wi][0];
+    var rows = wallEntries[wi][1];
+    if(!Array.isArray(rows) || rows.length !== ROWS) return false;
+
+    var wallCard = wallsDiv.querySelector('.wall[data-wall="' + wallName + '"]');
+    if(!wallCard) return false;
+
+    var table = wallCard.querySelector(".burner-grid-table");
+    if(!table) return false;
+
+    var headerRow = table.querySelector('tr[data-header-row="1"]');
+    if(!headerRow || headerRow.children.length !== (BURNERS + 1)) return false;
+
+    for(var ri=0; ri<ROWS; ri++){
+      var rowData = Array.isArray(rows[ri]) ? rows[ri] : [];
+      if(rowData.length !== BURNERS) return false;
+      var tr = table.querySelector('tr[data-row-index="' + ri + '"]');
+      if(!tr) return false;
+
+      for(var ci=0; ci<BURNERS; ci++){
+        var td = tr.querySelector('td[data-row="' + ri + '"][data-col="' + ci + '"]');
+        if(!td) return false;
+        updateBurnerCellVisual(td, wallName, ri, ci);
+      }
+    }
+  }
+
+  refreshBurnerWallSeverityBars();
+  applyBurnerMobileWallFilter();
+  return true;
+}
+
 /* ==================================================
    ANALYSIS
 ================================================== */
@@ -18012,13 +18055,12 @@ function generateAnalysis(options){
   /* Unified bottom banner + sound for imbalance and high-frequency cleaning alarms */
   syncMasterAlarmBanner();
 
-  /* Always re-render wall tables so severity bars are always rebuilt
-     from the freshly-computed wallSeverity — eliminates any possibility
-     of stale blink-* / severity-* classes getting stuck in the DOM. */
+  /* Keep wall severity/current cell state fresh, but avoid tearing down
+     the whole burner grid when an in-place update is sufficient. */
   if(options.skipRender){
     refreshBurnerWallSeverityBars();
   }else{
-    render();
+    if(!refreshBurnerWallTablesInPlace()) render();
   }
   refreshAlarmPanel();
   updateAlarmTabBadge();
@@ -18037,7 +18079,10 @@ function refreshThemeSensitivePanels(){
   if(typeof isUserLoggedIn === "function" && !isUserLoggedIn()) return;
   if(typeof generateAnalysis !== "function") return;
   if(!document.getElementById("analysisContainer")) return;
-  setTimeout(generateAnalysis, 0);
+  if(!burnerUiReady) return;
+  setTimeout(function(){
+    generateAnalysis({ skipRender:true });
+  }, 0);
 }
 
 /* ==================================================
@@ -18060,7 +18105,7 @@ async function exportToExcel(options){
   const hadBurnerPending = Object.keys(burnerPending).length > 0;
   commitBurnerPending();
   if(hadBurnerPending){
-    render();
+    if(!refreshBurnerWallTablesInPlace()) render();
     if(!silent){
       showToast("✅ Burner data saved successfully");
       notifyAndBroadcast("burner_data_saved", "Burner Data Saved", "New burner data has been saved.", "burner_data_saved", 3000);
@@ -18442,7 +18487,6 @@ function _doImport(file, onDone, silent){
 
       /* FIX 3: force full re-render, then show alert so DOM paints first */
       generateAnalysis();   /* rebuilds wall tables and analysis */
-      render();             /* explicit second call keeps burner cell controls fully fresh */
       buildCleaningTable(); /* rebuild cleaning log after import */
 
       /* ── Import Temp Data sheet if present ── */
@@ -19750,6 +19794,7 @@ function init(){
   loadData();
   loadBurnerOpeningData();
   generateAnalysis();
+  burnerUiReady = true;
   buildCleaningTable();
   initTipTable();
   applyMobileHorizontalScrollFixes();
