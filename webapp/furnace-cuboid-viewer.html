@@ -783,11 +783,23 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
   const baseX=x-(baseW/2);
   const baseY=y+(4.7*iconScale);
   const baseShadowY=baseY+(baseH*0.96);
+  const inletPortX=baseX+(1.22*iconScale);
+  const inletCenterY=baseY+(baseH*0.57);
+  const inletStubW=Math.max(4.9*iconScale,baseH*0.94);
+  const inletStubH=Math.max(2.15*iconScale,baseH*0.54);
+  const inletStubX=inletPortX-(inletStubW*0.58);
+  const inletStubY=inletCenterY-(inletStubH/2);
+  const inletCapR=Math.max(1.18*iconScale,inletStubH*0.56);
   const baseGrad=ctx.createLinearGradient(0,baseY,0,baseY+baseH);
   baseGrad.addColorStop(0,"rgba(207,214,224,0.92)");
   baseGrad.addColorStop(0.26,"rgba(96,104,115,0.97)");
   baseGrad.addColorStop(0.62,"rgba(41,47,55,0.99)");
   baseGrad.addColorStop(1,"rgba(17,22,29,0.98)");
+  const inletGrad=ctx.createLinearGradient(inletStubX,0,inletStubX+inletStubW,0);
+  inletGrad.addColorStop(0,"rgba(55,62,70,0.98)");
+  inletGrad.addColorStop(0.26,"rgba(224,231,239,0.94)");
+  inletGrad.addColorStop(0.58,"rgba(118,127,137,0.98)");
+  inletGrad.addColorStop(1,"rgba(34,40,47,0.98)");
   const collarW=Math.max(11*scaleX,baseW*0.58);
   const collarH=2.35*iconScale;
   const collarX=x-(collarW/2);
@@ -821,6 +833,31 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
   ctx.moveTo(baseX+(baseH*0.42),baseY+0.9);
   ctx.lineTo(baseX+baseW-(baseH*0.42),baseY+0.9);
   ctx.stroke();
+
+  ctx.fillStyle="rgba(0,0,0,0.26)";
+  ctx.beginPath();
+  ctx.ellipse(inletPortX-(0.22*iconScale),inletCenterY+(0.18*iconScale),inletStubW*0.58,inletStubH*0.70,0,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle=inletGrad;
+  cuboidRoundRectPath(ctx,inletStubX,inletStubY,inletStubW,inletStubH,inletStubH/2);
+  ctx.fill();
+  ctx.strokeStyle="rgba(239,244,248,0.34)";
+  ctx.lineWidth=Math.max(0.78,0.34*iconScale);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(inletPortX,inletCenterY,inletCapR,0,Math.PI*2);
+  ctx.fillStyle="rgba(22,28,34,0.96)";
+  ctx.fill();
+  ctx.lineWidth=Math.max(0.92,0.42*iconScale);
+  ctx.strokeStyle="rgba(232,238,244,0.38)";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(inletPortX-(0.16*iconScale),inletCenterY-(0.04*iconScale),Math.max(0.46*iconScale,0.7),0,Math.PI*2);
+  ctx.fillStyle="rgba(255,255,255,0.34)";
+  ctx.fill();
 
   cuboidDrawBurnerOpeningWindow(ctx,x,baseX,baseY,baseW,baseH,s,opening,iconScale,scaleX);
 
@@ -1194,7 +1231,7 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
     ctx.ellipse(tapX,railY,branchW*1.42,Math.max(1.9,railH*0.34),0,0,Math.PI*2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(basePortX,connectY,branchW*1.06,Math.max(1.45,branchW*0.56),0,0,Math.PI*2);
+    ctx.ellipse(basePortX,connectY,branchW*1.28,Math.max(1.7,branchW*0.72),0,0,Math.PI*2);
     ctx.fill();
 
     ctx.strokeStyle="rgba(233,238,244,0.38)";
@@ -1203,7 +1240,13 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
     ctx.ellipse(tapX,railY,branchW*1.08,Math.max(1.5,railH*0.22),0,0,Math.PI*2);
     ctx.stroke();
     ctx.beginPath();
-    ctx.ellipse(basePortX,connectY,branchW*0.86,Math.max(1.2,branchW*0.42),0,0,Math.PI*2);
+    ctx.ellipse(basePortX,connectY,branchW*1.02,Math.max(1.36,branchW*0.54),0,0,Math.PI*2);
+    ctx.stroke();
+
+    ctx.strokeStyle="rgba(255,255,255,0.52)";
+    ctx.lineWidth=Math.max(0.8,branchW*0.22);
+    ctx.beginPath();
+    ctx.arc(basePortX-(branchW*0.08),connectY-(branchW*0.03),Math.max(0.85,branchW*0.34),0,Math.PI*2);
     ctx.stroke();
   }
   ctx.restore();
