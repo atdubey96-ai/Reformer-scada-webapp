@@ -199,6 +199,33 @@ body.light-theme .btab-active{
   border-color:rgba(243,112,34,0.4);
   box-shadow:0 7px 14px rgba(243,112,34,0.14), inset 0 1px 0 rgba(255,255,255,0.52);
 }
+body.light-theme .btab-icon{
+  background:
+    radial-gradient(130% 115% at 30% 18%,rgba(255,255,255,0.88) 0%,rgba(255,255,255,0) 44%),
+    linear-gradient(180deg,rgba(252,254,255,0.98),rgba(226,235,246,0.92));
+  border-color:rgba(126,148,181,0.30);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.96),
+    inset 0 -1px 0 rgba(166,181,201,0.26),
+    0 4px 10px rgba(110,131,160,0.18);
+}
+body.light-theme .btab:hover .btab-icon{
+  border-color:rgba(104,129,164,0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.98),
+    inset 0 -1px 0 rgba(166,181,201,0.22),
+    0 6px 12px rgba(97,121,154,0.22);
+}
+body.light-theme .btab-active .btab-icon{
+  background:
+    radial-gradient(130% 115% at 30% 18%,rgba(255,255,255,1) 0%,rgba(255,255,255,0) 44%),
+    linear-gradient(180deg,rgba(255,248,240,0.98),rgba(243,228,210,0.94));
+  border-color:rgba(227,146,76,0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.98),
+    inset 0 -1px 0 rgba(201,156,110,0.16),
+    0 7px 14px rgba(205,136,77,0.18);
+}
 
 body.light-theme .tab-panel{background:#f0f4fa;}
 
@@ -3283,7 +3310,74 @@ body.light-theme .cw-nudge{
   border-radius:4px;
   background:linear-gradient(90deg,rgba(243,112,34,0),rgba(243,112,34,0.95),rgba(243,112,34,0));
 }
-.btab-icon{ font-size:20px; line-height:1; }
+.btab-icon{
+  --tab-icon-accent:#a8bdd5;
+  position:relative;
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  border-radius:9px;
+  color:var(--tab-icon-accent);
+  background:
+    radial-gradient(130% 115% at 30% 18%,rgba(255,255,255,0.16) 0%,rgba(255,255,255,0) 45%),
+    linear-gradient(180deg,rgba(20,28,42,0.98),rgba(9,14,22,0.96));
+  border:1px solid rgba(138,158,186,0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 4px 10px rgba(0,0,0,0.24);
+  transition:transform .2s, border-color .2s, box-shadow .2s, color .2s, background .2s;
+  line-height:1;
+}
+.btab-icon svg{
+  width:18px;
+  height:18px;
+  display:block;
+}
+.btab-icon svg *{
+  vector-effect:non-scaling-stroke;
+}
+.btab-icon .tab-icon-stroke{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.85;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.btab-icon .tab-icon-fill{
+  fill:currentColor;
+  stroke:none;
+  opacity:0.22;
+}
+.btab-icon .tab-icon-solid{
+  fill:currentColor;
+  stroke:none;
+}
+.btab:hover .btab-icon{
+  transform:translateY(-1px);
+  border-color:rgba(170,190,218,0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.24),
+    0 6px 14px rgba(0,0,0,0.30);
+}
+.btab-active .btab-icon{
+  border-color:rgba(255,225,206,0.26);
+  background:
+    radial-gradient(130% 115% at 30% 18%,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0) 46%),
+    linear-gradient(180deg,rgba(28,36,50,0.98),rgba(12,18,28,0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 8px 18px rgba(0,0,0,0.34);
+}
+#btab-burner{ --tab-icon-accent:#ffb558; }
+#btab-cleaning{ --tab-icon-accent:#74dbc2; }
+#btab-cuboid{ --tab-icon-accent:#8db8ff; }
+#btab-tempdata{ --tab-icon-accent:#ff8d68; }
+#btab-alarms{ --tab-icon-accent:#ff6b62; }
 .btab-label{
   font-size:12px;font-weight:700;letter-spacing:0.4px;
   max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -6989,7 +7083,15 @@ html, body, body *, body *::before, body *::after, svg text{
     padding:7px 4px !important;
     border-radius:11px !important;
   }
-  .bottom-tab-bar .btab-icon{font-size:16px !important;}
+  .bottom-tab-bar .btab-icon{
+    width:24px !important;
+    height:24px !important;
+    border-radius:8px !important;
+  }
+  .bottom-tab-bar .btab-icon svg{
+    width:15px !important;
+    height:15px !important;
+  }
   .bottom-tab-bar .btab-label{
     font-size:10px !important;
     line-height:1.12 !important;
@@ -16597,23 +16699,70 @@ html, body, body *, body *::before, body *::after, svg text{
 ==================================================== -->
 <div class="bottom-tab-bar">
   <button class="btab" id="btab-burner" onclick="switchTab('burner')">
-    <span class="btab-icon">🔥</span>
+    <span class="btab-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <rect class="tab-icon-fill" x="5" y="16.4" width="14" height="2.8" rx="1.4"></rect>
+        <path class="tab-icon-stroke" d="M6 18h12"></path>
+        <path class="tab-icon-stroke" d="M12 4.3c2 1.7 3.2 3.9 3.2 5.8a3.2 3.2 0 1 1-6.4 0c0-1.9 1.2-4.1 3.2-5.8Z"></path>
+        <path class="tab-icon-stroke" d="M12 7.2c.95 1 1.45 1.9 1.45 2.8a1.45 1.45 0 0 1-2.9 0c0-.9.5-1.8 1.45-2.8Z"></path>
+        <path class="tab-icon-stroke" d="M4.7 14.1h2.3"></path>
+        <path class="tab-icon-stroke" d="M17 14.1h2.3"></path>
+      </svg>
+    </span>
     <span class="btab-label">Burner Data &amp; Analysis</span>
   </button>
   <button class="btab" id="btab-cleaning" onclick="switchTab('cleaning')">
-    <span class="btab-icon">🧹</span>
+    <span class="btab-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path class="tab-icon-stroke" d="M6.3 17.6 11.8 12"></path>
+        <path class="tab-icon-stroke" d="m11.8 12 6-2.4"></path>
+        <path class="tab-icon-stroke" d="m15.4 7.8 2.1-2.1"></path>
+        <path class="tab-icon-stroke" d="M5.3 18.6h4.4"></path>
+        <circle class="tab-icon-solid" cx="18.8" cy="6" r="1"></circle>
+        <circle class="tab-icon-solid" cx="20.1" cy="8.3" r=".95"></circle>
+        <circle class="tab-icon-solid" cx="17.1" cy="8.9" r=".85"></circle>
+      </svg>
+    </span>
     <span class="btab-label">Cleaning Status</span>
   </button>
   <button class="btab btab-active" id="btab-cuboid" onclick="switchTab('cuboid')">
-    <span class="btab-icon">🎛️</span>
+    <span class="btab-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <rect class="tab-icon-fill" x="4.6" y="5.3" width="14.8" height="13.4" rx="2.4"></rect>
+        <rect class="tab-icon-stroke" x="4.6" y="5.3" width="14.8" height="13.4" rx="2.4"></rect>
+        <path class="tab-icon-stroke" d="M8.2 10.8a3.8 3.8 0 0 1 7.6 0"></path>
+        <path class="tab-icon-stroke" d="m12 10.8 2-2"></path>
+        <circle class="tab-icon-solid" cx="8.1" cy="14.8" r="1.05"></circle>
+        <circle class="tab-icon-solid" cx="12" cy="14.8" r="1.05"></circle>
+        <circle class="tab-icon-solid" cx="15.9" cy="14.8" r="1.05"></circle>
+      </svg>
+    </span>
     <span class="btab-label">Live Dashboard</span>
   </button>
   <button class="btab" id="btab-tempdata" onclick="switchTab('tempdata')">
-    <span class="btab-icon">🌡️</span>
+    <span class="btab-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path class="tab-icon-stroke" d="M10.2 6.1a1.8 1.8 0 1 1 3.6 0v7.1a3.7 3.7 0 1 1-3.6 0Z"></path>
+        <path class="tab-icon-stroke" d="M12 8.2v5.7"></path>
+        <circle class="tab-icon-solid" cx="12" cy="17.4" r="1.35"></circle>
+        <path class="tab-icon-stroke" d="M16.7 8.5h2.4"></path>
+        <path class="tab-icon-stroke" d="M16.7 11.6h2.4"></path>
+      </svg>
+    </span>
     <span class="btab-label">Temp. Data</span>
   </button>
   <button class="btab btab-alarm" id="btab-alarms" onclick="switchTab('alarms')">
-    <span class="btab-icon">🚨</span>
+    <span class="btab-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path class="tab-icon-stroke" d="M8.1 18h7.8"></path>
+        <path class="tab-icon-stroke" d="M9.1 18v-4.3a2.9 2.9 0 0 1 5.8 0V18"></path>
+        <path class="tab-icon-stroke" d="M8.4 12.4h7.2"></path>
+        <path class="tab-icon-stroke" d="m7.1 8-2.1-1.3"></path>
+        <path class="tab-icon-stroke" d="m16.9 8 2.1-1.3"></path>
+        <path class="tab-icon-stroke" d="M12 5.8V3.6"></path>
+        <circle class="tab-icon-solid" cx="12" cy="14.2" r="1"></circle>
+      </svg>
+    </span>
     <span class="btab-label">Alarms</span>
     <span class="btab-alarm-count" id="btab-alarm-count" style="display:none">0</span>
   </button>
