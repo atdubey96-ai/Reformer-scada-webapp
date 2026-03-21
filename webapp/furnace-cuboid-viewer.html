@@ -2145,7 +2145,13 @@ const FW=13.8,FH=6.08,FD=1.5;
 const vp=document.getElementById("vp");
 const GW=function(){ return vp.clientWidth; };
 const GH=function(){ return vp.clientHeight; };
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
+const renderer=new THREE.WebGLRenderer({
+  antialias:!cuboidIsChromeLike,
+  alpha:true,
+  powerPreference:"high-performance",
+  precision:cuboidIsChromeLike ? "mediump" : "highp",
+  stencil:false
+});
 renderer.setClearColor(0x000000,0);
 vp.appendChild(renderer.domElement);
 let appliedPixelRatio=0;
@@ -2155,15 +2161,15 @@ function cuboidGetTargetPixelRatio(){
   const activeNow=isDragging || autoSpin || cuboidIsFullscreen();
   let cap;
   if(!cuboidCanRenderNow()){
-    cap=0.8;
+    cap=0.65;
   }else if(activeNow){
-    cap=cuboidIsChromeLike ? 1.28 : 1.45;
+    cap=cuboidIsChromeLike ? 1.06 : 1.45;
   }else if(hostFocused){
-    cap=cuboidIsChromeLike ? 1.1 : 1.28;
+    cap=cuboidIsChromeLike ? 0.92 : 1.28;
   }else{
-    cap=cuboidIsChromeLike ? 0.9 : 1;
+    cap=cuboidIsChromeLike ? 0.68 : 1;
   }
-  return Math.max(0.78,Math.min(deviceRatio,cap));
+  return Math.max(0.62,Math.min(deviceRatio,cap));
 }
 
 function cuboidApplyRendererQuality(force){
@@ -2711,12 +2717,12 @@ const MAX_DRAG_DELTA=42;
 const TAP_MOVE_TOLERANCE=10;
 const ACTIVE_FRAME_MS=16;
 const FOCUSED_IDLE_FRAME_MS=16;
-const BACKGROUND_IDLE_FRAME_MS=34;
-const SLEEP_FRAME_MS=320;
+const BACKGROUND_IDLE_FRAME_MS=110;
+const SLEEP_FRAME_MS=420;
 const ACTIVE_OVERLAY_TICK_MS=84;
-const BACKGROUND_OVERLAY_TICK_MS=170;
+const BACKGROUND_OVERLAY_TICK_MS=420;
 const ACTIVE_FLAME_TICK_MS=16;
-const BACKGROUND_FLAME_TICK_MS=34;
+const BACKGROUND_FLAME_TICK_MS=120;
 
 let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
 let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
