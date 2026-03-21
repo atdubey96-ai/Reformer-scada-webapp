@@ -3351,7 +3351,7 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-scroll{
   display:grid;
-  grid-template-columns:minmax(0,2.28fr) minmax(292px,1.04fr) minmax(214px,0.76fr) minmax(296px,0.96fr);
+  grid-template-columns:minmax(0,2.68fr) minmax(248px,0.9fr) minmax(204px,0.7fr) minmax(286px,0.88fr);
   align-items:start;
   gap:10px;
   overflow:visible;
@@ -3388,14 +3388,15 @@ body.light-theme .cw-nudge{
 #tab-cuboid .cuboid-legend-state-row{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:6px;
+  gap:8px;
 }
 #tab-cuboid .cuboid-legend-state-card{
-  display:flex;
+  display:grid;
+  grid-template-columns:56px minmax(0,1fr) minmax(34px,auto);
   align-items:center;
-  gap:7px;
-  min-height:56px;
-  padding:7px 7px 7px 8px;
+  column-gap:8px;
+  min-height:64px;
+  padding:8px 8px 8px 9px;
   border-radius:16px;
   border:1px solid rgba(76,102,146,0.35);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
@@ -3418,13 +3419,13 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-badge{
   position:relative;
-  flex:0 0 50px;
-  width:50px;
-  height:56px;
+  width:56px;
+  height:62px;
   display:flex;
   align-items:center;
   justify-content:center;
   filter:none;
+  overflow:visible;
 }
 #tab-cuboid .cuboid-legend-badge canvas,
 #tab-cuboid .cuboid-legend-opening-burner canvas{
@@ -3529,25 +3530,26 @@ body.light-theme .cw-nudge{
   background:linear-gradient(180deg,#f4a21c,#cd6706);
 }
 #tab-cuboid .cuboid-legend-state-copy{
-  flex:1 1 auto;
   display:flex;
   flex-direction:column;
-  gap:3px;
+  gap:4px;
   min-width:0;
 }
 #tab-cuboid .cuboid-legend-state-name{
   font-size:10px;
   font-weight:700;
   color:#eef4ff;
+  line-height:1.08;
 }
 #tab-cuboid .cuboid-legend-state-desc{
   display:inline-flex;
   align-items:center;
   align-self:flex-start;
+  max-width:100%;
   padding:2px 6px 2px 7px;
   border-radius:999px;
   border:1px solid rgba(160,176,201,0.20);
-  font-size:7px;
+  font-size:6px;
   line-height:1.1;
   font-weight:700;
   letter-spacing:0.06em;
@@ -3555,6 +3557,7 @@ body.light-theme .cw-nudge{
   color:#eef4ff;
   background:rgba(12,18,28,0.34);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+  white-space:nowrap;
 }
 #tab-cuboid .cuboid-legend-state-card[data-state="B"] .cuboid-legend-state-desc{
   background:rgba(58,115,235,0.18);
@@ -3577,14 +3580,16 @@ body.light-theme .cw-nudge{
   color:#fff0cf;
 }
 #tab-cuboid .cuboid-legend-state-count{
+  min-width:34px;
   font-size:14px;
   font-weight:700;
   color:#ffffff;
+  text-align:right;
 }
 #tab-cuboid .cuboid-legend-opening-row{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:7px;
+  gap:6px;
 }
 #tab-cuboid .cuboid-legend-opening-item{
   --legend-open-ratio:1;
@@ -3596,7 +3601,7 @@ body.light-theme .cw-nudge{
   align-items:center;
   justify-content:flex-start;
   gap:6px;
-  min-height:94px;
+  min-height:92px;
   padding:7px 5px 6px;
   border-radius:14px;
   border:1px solid rgba(72,96,128,0.28);
@@ -7278,13 +7283,14 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-cuboid .cuboid-legend-state-row{ gap:10px; }
   #tab-cuboid .cuboid-legend-state-card{
-    min-height:68px;
-    padding:10px;
+    grid-template-columns:54px minmax(0,1fr) minmax(34px,auto);
+    min-height:72px;
+    padding:10px 9px;
     border-radius:16px;
   }
   #tab-cuboid .cuboid-legend-badge{
-    width:46px;
-    height:52px;
+    width:52px;
+    height:58px;
   }
   #tab-cuboid .cuboid-legend-opening-burner{
     width:42px;
@@ -16263,7 +16269,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="AB live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260321-03"
+          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260321-04"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -16372,7 +16378,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="CD live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260321-03"
+          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260321-04"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -21250,11 +21256,13 @@ function paintCuboidLegendGlyphCanvas(canvas){
   state = normalizeBurnerStateSnapshotValue(canvas.getAttribute("data-glyph-state"));
   opening = normalizeBurnerOpeningValue(canvas.getAttribute("data-glyph-opening"), state);
   role = canvas.classList.contains("cuboid-legend-opening-canvas") ? "opening" : "state";
-  scale = Math.min(cssW / 33, cssH / 36);
+  scale = role === "opening"
+    ? Math.min(cssW / 33, cssH / 36)
+    : Math.min(cssW / 41, cssH / 47);
   cuboidLegendDrawBurnerGlyph(
     ctx,
     cssW / 2,
-    role === "opening" ? (cssH * 0.58) : (cssH * 0.56),
+    role === "opening" ? (cssH * 0.58) : (cssH * 0.66),
     state,
     0.92,
     scale,

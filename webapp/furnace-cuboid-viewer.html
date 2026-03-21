@@ -247,6 +247,8 @@ let hostTabActive=true;
 let hostInView=true;
 let hostFocused=true;
 let lastRenderTs=0;
+const cuboidUa=navigator.userAgent || "";
+const cuboidIsChromeLike=/\bChrome\//.test(cuboidUa) || /\bCriOS\//.test(cuboidUa);
 let pushedCuboidLiveData=null;
 let pushedCuboidLiveDigest="";
 if(viewerTagTitle) viewerTagTitle.textContent=chamberZoneKey+" Burners • TST • Cleaning Status";
@@ -2143,10 +2145,35 @@ const FW=13.8,FH=6.08,FD=1.5;
 const vp=document.getElementById("vp");
 const GW=function(){ return vp.clientWidth; };
 const GH=function(){ return vp.clientHeight; };
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,2));
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
 renderer.setClearColor(0x000000,0);
 vp.appendChild(renderer.domElement);
+let appliedPixelRatio=0;
+
+function cuboidGetTargetPixelRatio(){
+  const deviceRatio=Math.max(1,window.devicePixelRatio || 1);
+  const activeNow=isDragging || autoSpin || cuboidIsFullscreen();
+  let cap;
+  if(!cuboidCanRenderNow()){
+    cap=0.8;
+  }else if(activeNow){
+    cap=cuboidIsChromeLike ? 1.28 : 1.45;
+  }else if(hostFocused){
+    cap=cuboidIsChromeLike ? 1.1 : 1.28;
+  }else{
+    cap=cuboidIsChromeLike ? 0.9 : 1;
+  }
+  return Math.max(0.78,Math.min(deviceRatio,cap));
+}
+
+function cuboidApplyRendererQuality(force){
+  const nextRatio=cuboidGetTargetPixelRatio();
+  if(!force && Math.abs(nextRatio-appliedPixelRatio)<0.02) return false;
+  appliedPixelRatio=nextRatio;
+  renderer.setPixelRatio(nextRatio);
+  renderer.setSize(GW(),GH(),false);
+  return true;
+}
 
 const scene=new THREE.Scene();
 scene.background=null;
@@ -2684,12 +2711,17 @@ const MAX_DRAG_DELTA=42;
 const TAP_MOVE_TOLERANCE=10;
 const ACTIVE_FRAME_MS=16;
 const FOCUSED_IDLE_FRAME_MS=16;
-const BACKGROUND_IDLE_FRAME_MS=20;
-const SLEEP_FRAME_MS=220;
+const BACKGROUND_IDLE_FRAME_MS=34;
+const SLEEP_FRAME_MS=320;
+const ACTIVE_OVERLAY_TICK_MS=84;
+const BACKGROUND_OVERLAY_TICK_MS=170;
+const ACTIVE_FLAME_TICK_MS=16;
+const BACKGROUND_FLAME_TICK_MS=34;
 
 let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
 let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
 let touchMoved=false,lastTapAt=0,lastFrameTs=0,autoSpinMix=0;
+let lastFlameUpdateAt=0;
 
 function normalizeAngle(angle){
   let a=angle;
@@ -2794,11 +2826,11 @@ btnResetView.addEventListener("click",function(){
 });
 
 const ro=new ResizeObserver(function(){
-  renderer.setSize(GW(),GH());
+  cuboidApplyRendererQuality(true);
   fitCamera();
 });
 ro.observe(vp);
-renderer.setSize(GW(),GH());
+cuboidApplyRendererQuality(true);
 
 function animate(t){
   requestAnimationFrame(animate);
@@ -2810,6 +2842,7 @@ function animate(t){
   lastRenderTs=t;
   const dt=lastFrameTs ? Math.min(0.05,Math.max(0.001,(t-lastFrameTs)/1000)) : (1/60);
   lastFrameTs=t;
+  cuboidApplyRendererQuality(false);
 
   if(!canRender){
     if(refreshOverlayData(false)){
@@ -2842,21 +2875,25 @@ function animate(t){
   group.rotation.z=0;
   innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
   const ts=t*0.001;
-  if((t-lastOverlayPaintAt)>=OVERLAY_TICK_MS){
+  const overlayTickMs=(hostFocused || isDragging || autoSpin || cuboidIsFullscreen()) ? ACTIVE_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS;
+  if((t-lastOverlayPaintAt)>=overlayTickMs){
     overlayAnimPhase=(overlayAnimPhase+OVERLAY_PHASE_STEP)%(Math.PI*2);
     syncFaceOverlays(false);
     lastOverlayPaintAt=t;
   }
-  flameGroups.forEach(function(f){
-    const s=f.seed;
-    const flk=0.86+0.16*Math.sin(ts*2.3+s)+0.07*Math.sin(ts*5.1+s*1.4);
-    f.om.scale.set(flk,flk,0.88+0.14*Math.sin(ts*1.9+s*0.7));
-    f.om.material.opacity=0.30+0.16*Math.sin(ts*3.2+s);
-    f.mm.scale.set(0.9+0.1*flk,0.9+0.1*flk,0.88+0.15*Math.sin(ts*3.1+s));
-    f.mm.material.opacity=0.45+0.18*Math.sin(ts*4.3+s*1.3);
-    f.cm2.scale.set(0.92+0.08*flk,0.92+0.08*flk,0.90+0.12*Math.sin(ts*4.2+s));
-    f.cm2.material.opacity=0.68+0.22*Math.sin(ts*6.1+s*0.8);
-  });
+  if(!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=((hostFocused || isDragging || autoSpin || cuboidIsFullscreen()) ? ACTIVE_FLAME_TICK_MS : BACKGROUND_FLAME_TICK_MS)){
+    flameGroups.forEach(function(f){
+      const s=f.seed;
+      const flk=0.86+0.16*Math.sin(ts*2.3+s)+0.07*Math.sin(ts*5.1+s*1.4);
+      f.om.scale.set(flk,flk,0.88+0.14*Math.sin(ts*1.9+s*0.7));
+      f.om.material.opacity=0.30+0.16*Math.sin(ts*3.2+s);
+      f.mm.scale.set(0.9+0.1*flk,0.9+0.1*flk,0.88+0.15*Math.sin(ts*3.1+s));
+      f.mm.material.opacity=0.45+0.18*Math.sin(ts*4.3+s*1.3);
+      f.cm2.scale.set(0.92+0.08*flk,0.92+0.08*flk,0.90+0.12*Math.sin(ts*4.2+s));
+      f.cm2.material.opacity=0.68+0.22*Math.sin(ts*6.1+s*0.8);
+    });
+    lastFlameUpdateAt=t;
+  }
   renderer.render(scene,camera);
 }
 requestAnimationFrame(animate);
