@@ -3351,9 +3351,9 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-scroll{
   display:grid;
-  grid-template-columns:minmax(0,1.22fr) minmax(210px,0.72fr) minmax(286px,0.9fr);
+  grid-template-columns:minmax(0,2.88fr) minmax(230px,0.84fr) minmax(188px,0.62fr) minmax(270px,0.8fr);
   align-items:start;
-  gap:12px 10px;
+  gap:10px;
   overflow:visible;
 }
 #tab-cuboid .cuboid-legend-block{
@@ -3364,22 +3364,19 @@ body.light-theme .cw-nudge{
 #tab-cuboid .cuboid-legend-block + .cuboid-legend-block{
   border-left:1px solid rgba(64,84,114,0.38);
 }
-#tab-cuboid .cuboid-legend-states{
-  grid-column:1 / -1;
-  padding-left:2px;
-}
+#tab-cuboid .cuboid-legend-states{ padding-left:2px; }
 #tab-cuboid .cuboid-legend-openings,
 #tab-cuboid .cuboid-legend-clean,
 #tab-cuboid .cuboid-legend-tst{ padding-right:4px; }
 #tab-cuboid .cuboid-legend-openings{
   width:100%;
-  max-width:none;
+  max-width:320px;
   justify-self:stretch;
 }
 #tab-cuboid .cuboid-legend-tst{
   width:100%;
-  max-width:none;
-  justify-self:stretch;
+  max-width:320px;
+  justify-self:end;
 }
 #tab-cuboid .cuboid-legend-title{
   margin-bottom:7px;
@@ -3391,13 +3388,15 @@ body.light-theme .cw-nudge{
 #tab-cuboid .cuboid-legend-state-row{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:8px;
+  gap:6px;
 }
 #tab-cuboid .cuboid-legend-state-card{
-  position:relative;
-  display:block;
-  min-height:72px;
-  padding:10px 50px 10px 82px;
+  display:grid;
+  grid-template-columns:46px minmax(0,1fr) minmax(28px,auto);
+  align-items:center;
+  column-gap:6px;
+  min-height:58px;
+  padding:7px 8px 7px 7px;
   border-radius:16px;
   border:1px solid rgba(76,102,146,0.35);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
@@ -3421,17 +3420,13 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-badge{
   position:relative;
-  position:absolute;
-  left:10px;
-  top:50%;
-  width:60px;
-  height:64px;
+  width:46px;
+  height:52px;
   display:flex;
   align-items:center;
   justify-content:center;
   filter:none;
   overflow:visible;
-  transform:translateY(-50%);
 }
 #tab-cuboid .cuboid-legend-badge canvas,
 #tab-cuboid .cuboid-legend-opening-burner canvas{
@@ -3538,17 +3533,17 @@ body.light-theme .cw-nudge{
 #tab-cuboid .cuboid-legend-state-copy{
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:3px;
   min-width:0;
   justify-content:center;
-  min-height:52px;
-  overflow:visible;
+  min-height:44px;
+  overflow:hidden;
 }
 #tab-cuboid .cuboid-legend-state-name{
-  font-size:10px;
+  font-size:9px;
   font-weight:700;
   color:#eef4ff;
-  line-height:1.14;
+  line-height:1.08;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -3561,7 +3556,7 @@ body.light-theme .cw-nudge{
   padding:2px 6px 2px 7px;
   border-radius:999px;
   border:1px solid rgba(160,176,201,0.20);
-  font-size:5.8px;
+  font-size:5.7px;
   line-height:1.1;
   font-weight:700;
   letter-spacing:0.06em;
@@ -3594,16 +3589,12 @@ body.light-theme .cw-nudge{
   color:#fff0cf;
 }
 #tab-cuboid .cuboid-legend-state-count{
-  position:absolute;
-  top:50%;
-  right:12px;
-  min-width:42px;
+  min-width:28px;
   font-size:13px;
   font-weight:700;
   color:#ffffff;
   text-align:right;
   line-height:1;
-  transform:translateY(-50%);
 }
 #tab-cuboid .cuboid-legend-opening-row{
   display:grid;
@@ -7302,14 +7293,14 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-cuboid .cuboid-legend-state-row{ gap:10px; }
   #tab-cuboid .cuboid-legend-state-card{
-    min-height:76px;
-    padding:10px 46px 10px 76px;
+    grid-template-columns:44px minmax(0,1fr) minmax(26px,auto);
+    min-height:64px;
+    padding:8px 7px;
     border-radius:16px;
   }
   #tab-cuboid .cuboid-legend-badge{
-    left:8px;
-    width:54px;
-    height:60px;
+    width:42px;
+    height:48px;
   }
   #tab-cuboid .cuboid-legend-opening-burner{
     width:42px;
@@ -16288,7 +16279,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="AB live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-01"
+          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-02"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -16397,7 +16388,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="CD live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-01"
+          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-02"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -20993,12 +20984,13 @@ function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
   var openingValue = normalizeBurnerOpeningValue(opening, s);
   var openingRatio = openingValue / 100;
   var flameTier = s === "C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : (openingValue >= 25 ? 1 : 0))));
-  var flameHeightFactor = s !== "C" ? ([0,0.22,0.66,0.92,1.14][flameTier] || 0) : 1;
-  var flameWidthFactor = s !== "C" ? ([0,0.14,0.56,0.86,1.06][flameTier] || 0) : 1;
-  var glowIntensity = s !== "C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.22 : (flameTier === 2 ? 0.14 : 0))) : 0;
-  var outerScale = flameTier >= 4 ? 1.06 : (flameTier === 3 ? 0.94 : 0.78);
-  var midScale = flameTier >= 4 ? 1.03 : (flameTier === 3 ? 0.98 : (flameTier === 2 ? 1.02 : 0.76));
-  var innerScale = flameTier === 1 ? 0.58 : (flameTier === 2 ? 0.92 : (flameTier === 3 ? 1.04 : 1.1));
+  var flameHeightFactor = s !== "C" ? ([0,0.42,0.68,0.92,1.14][flameTier] || 0) : 1;
+  var flameWidthFactor = s !== "C" ? ([0,0.26,0.56,0.84,1.04][flameTier] || 0) : 1;
+  var glowIntensity = s !== "C" ? ([0,0.08,0.14,0.28,0.58][flameTier] || 0) : 0;
+  var outerScale = flameTier >= 4 ? 1.04 : (flameTier === 3 ? 0.96 : (flameTier === 2 ? 0.84 : 0.74));
+  var midScale = flameTier >= 4 ? 1 : (flameTier === 3 ? 0.94 : (flameTier === 2 ? 0.82 : 0));
+  var innerScale = flameTier >= 4 ? 0.96 : (flameTier === 3 ? 0.82 : 0);
+  var hotScale = flameTier >= 4 ? 0.62 : 0;
   var flicker = 0.94 + (Math.sin(phase * 1.95) * 0.11) + (Math.sin((phase * 2.8) + 0.9) * 0.07);
   var sidePulse = 0.94 + (Math.sin((phase * 2.35) + 0.4) * 0.12);
   var lift = (s === "C") ? 0 : ((1.8 + (Math.sin(phase * 1.75) * 1.15)) * scaleY * flameHeightFactor);
@@ -21161,11 +21153,11 @@ function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
     cuboidLegendRoundRectPath(ctx, stemX, stemY, stemW, stemH, 3.2 * iconScale);
     ctx.fill();
 
-    if(flameTier >= 3){
+    if(flameTier >= 1){
       ctx.save();
-      ctx.shadowBlur = (flameTier >= 4 ? 11 : 6.4) * iconScale;
+      ctx.shadowBlur = (flameTier >= 4 ? 11 : (flameTier === 1 ? 4.8 : 6.4)) * iconScale;
       ctx.shadowColor = palette.glow;
-      ctx.globalAlpha = flameTier >= 4 ? 1 : 0.84;
+      ctx.globalAlpha = flameTier === 1 ? 0.94 : (flameTier >= 4 ? 1 : 0.88);
       ctx.beginPath();
       ctx.moveTo(x, y - (12.8 * scaleY * outerScale) - lift);
       ctx.bezierCurveTo(
@@ -21216,12 +21208,8 @@ function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
       ctx.globalAlpha = 1;
     }
 
-    if(flameTier >= 1){
+    if(flameTier >= 3){
       ctx.save();
-      if(flameTier === 1){
-        ctx.shadowBlur = 4.8 * iconScale;
-        ctx.shadowColor = palette.core;
-      }
       ctx.beginPath();
       ctx.moveTo(x, y - (5.6 * scaleY * innerScale) - (lift * 0.22));
       ctx.bezierCurveTo(
@@ -21242,6 +21230,33 @@ function cuboidLegendDrawBurnerGlyph(ctx, x, y, state, phase, scale, opening){
       );
       ctx.closePath();
       ctx.fillStyle = palette.inner;
+      ctx.fill();
+      ctx.restore();
+    }
+    if(flameTier >= 4){
+      ctx.save();
+      ctx.shadowBlur = 4.2 * iconScale;
+      ctx.shadowColor = "rgba(255,255,255,0.72)";
+      ctx.beginPath();
+      ctx.moveTo(x, y - (4.3 * scaleY * hotScale) - (lift * 0.12));
+      ctx.bezierCurveTo(
+        x + (1.8 * scaleX) * hotScale,
+        y - (2.1 * scaleY * hotScale) - (lift * 0.04),
+        x + (1.2 * scaleX) * hotScale,
+        y + (0.14 * iconScale),
+        x,
+        y + (0.55 * iconScale)
+      );
+      ctx.bezierCurveTo(
+        x - (1.2 * scaleX) * hotScale,
+        y + (0.14 * iconScale),
+        x - (1.8 * scaleX) * hotScale,
+        y - (2.1 * scaleY * hotScale) - (lift * 0.04),
+        x,
+        y - (4.3 * scaleY * hotScale) - (lift * 0.12)
+      );
+      ctx.closePath();
+      ctx.fillStyle = "rgba(255,255,255,0.98)";
       ctx.fill();
       ctx.restore();
     }

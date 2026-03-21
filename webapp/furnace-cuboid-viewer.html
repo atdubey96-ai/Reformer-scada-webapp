@@ -776,12 +776,13 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
   const openingValue=cuboidNormalizeOpeningValue(opening,s);
   const openingRatio=openingValue/100;
   const flameTier=s==="C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : (openingValue >= 25 ? 1 : 0))));
-  const flameHeightFactor=s!=="C" ? ([0,0.22,0.66,0.92,1.14][flameTier] || 0) : 1;
-  const flameWidthFactor=s!=="C" ? ([0,0.14,0.56,0.86,1.06][flameTier] || 0) : 1;
-  const glowIntensity=s!=="C" ? (flameTier >= 4 ? 1 : (flameTier === 3 ? 0.22 : (flameTier === 2 ? 0.14 : 0))) : 0;
-  const outerScale=flameTier >= 4 ? 1.06 : (flameTier === 3 ? 0.94 : 0.78);
-  const midScale=flameTier >= 4 ? 1.03 : (flameTier === 3 ? 0.98 : (flameTier === 2 ? 1.02 : 0.76));
-  const innerScale=flameTier === 1 ? 0.58 : (flameTier === 2 ? 0.92 : (flameTier === 3 ? 1.04 : 1.1));
+  const flameHeightFactor=s!=="C" ? ([0,0.42,0.68,0.92,1.14][flameTier] || 0) : 1;
+  const flameWidthFactor=s!=="C" ? ([0,0.26,0.56,0.84,1.04][flameTier] || 0) : 1;
+  const glowIntensity=s!=="C" ? ([0,0.08,0.14,0.28,0.58][flameTier] || 0) : 0;
+  const outerScale=flameTier >= 4 ? 1.04 : (flameTier === 3 ? 0.96 : (flameTier === 2 ? 0.84 : 0.74));
+  const midScale=flameTier >= 4 ? 1 : (flameTier === 3 ? 0.94 : (flameTier === 2 ? 0.82 : 0));
+  const innerScale=flameTier >= 4 ? 0.96 : (flameTier === 3 ? 0.82 : 0);
+  const hotScale=flameTier >= 4 ? 0.62 : 0;
   const flicker=0.94+(Math.sin(phase*1.95)*0.11)+(Math.sin(phase*2.8+0.9)*0.07);
   const sidePulse=0.94+(Math.sin(phase*2.35+0.4)*0.12);
   const lift=(s==="C") ? 0 : ((1.8+(Math.sin(phase*1.75)*1.15))*scaleY*flameHeightFactor);
@@ -936,11 +937,11 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
     cuboidRoundRectPath(ctx,stemX,stemY,stemW,stemH,3.2*iconScale);
     ctx.fill();
 
-    if(flameTier >= 3){
+    if(flameTier >= 1){
       ctx.save();
-      ctx.shadowBlur=(flameTier >= 4 ? 11 : 6.4)*iconScale;
+      ctx.shadowBlur=(flameTier >= 4 ? 11 : (flameTier === 1 ? 4.8 : 6.4))*iconScale;
       ctx.shadowColor=palette.glow;
-      ctx.globalAlpha=flameTier >= 4 ? 1 : 0.84;
+      ctx.globalAlpha=flameTier === 1 ? 0.94 : (flameTier >= 4 ? 1 : 0.88);
       ctx.beginPath();
       ctx.moveTo(x,y-(12.8*scaleY*outerScale)-lift);
       ctx.bezierCurveTo(
@@ -991,12 +992,8 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
       ctx.globalAlpha=1;
     }
 
-    if(flameTier >= 1){
+    if(flameTier >= 3){
       ctx.save();
-      if(flameTier === 1){
-        ctx.shadowBlur=4.8*iconScale;
-        ctx.shadowColor=palette.core;
-      }
       ctx.beginPath();
       ctx.moveTo(x,y-(5.6*scaleY*innerScale)-(lift*0.22));
       ctx.bezierCurveTo(
@@ -1017,6 +1014,33 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
       );
       ctx.closePath();
       ctx.fillStyle=palette.inner;
+      ctx.fill();
+      ctx.restore();
+    }
+    if(flameTier >= 4){
+      ctx.save();
+      ctx.shadowBlur=4.2*iconScale;
+      ctx.shadowColor="rgba(255,255,255,0.72)";
+      ctx.beginPath();
+      ctx.moveTo(x,y-(4.3*scaleY*hotScale)-(lift*0.12));
+      ctx.bezierCurveTo(
+        x+(1.8*scaleX)*hotScale,
+        y-(2.1*scaleY*hotScale)-(lift*0.04),
+        x+(1.2*scaleX)*hotScale,
+        y+(0.14*iconScale),
+        x,
+        y+(0.55*iconScale)
+      );
+      ctx.bezierCurveTo(
+        x-(1.2*scaleX)*hotScale,
+        y+(0.14*iconScale),
+        x-(1.8*scaleX)*hotScale,
+        y-(2.1*scaleY*hotScale)-(lift*0.04),
+        x,
+        y-(4.3*scaleY*hotScale)-(lift*0.12)
+      );
+      ctx.closePath();
+      ctx.fillStyle="rgba(255,255,255,0.98)";
       ctx.fill();
       ctx.restore();
     }
