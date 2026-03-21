@@ -16640,8 +16640,8 @@ const BURNER_STATE_META = {
 };
 const BURNER_OPENING_MIN = 0;
 const BURNER_OPENING_MAX = 100;
-const BURNER_OPENING_STEP = 5;
-const BURNER_OPENING_ACTIVE_MIN = 5;
+const BURNER_OPENING_STEP = 25;
+const BURNER_OPENING_ACTIVE_MIN = 25;
 const chartInstances = {};
 const hmChartInstances = {};
 var burnerUiReady = false;
@@ -17716,7 +17716,7 @@ function ensureBurnerCellEditor(){
         + '<span class="burner-cell-editor-value" data-burner-editor-opening>0%</span>'
       + '</div>'
       + '<input class="burner-cell-editor-slider" data-burner-editor-slider type="range" min="' + BURNER_OPENING_MIN + '" max="' + BURNER_OPENING_MAX + '" step="' + BURNER_OPENING_STEP + '" value="100">'
-      + '<div class="burner-cell-editor-scale"><span>0</span><span>10</span><span>20</span><span>30</span><span>40</span><span>50</span><span>60</span><span>70</span><span>80</span><span>90</span><span>100</span></div>'
+      + '<div class="burner-cell-editor-scale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>'
     + '</div>';
   document.body.appendChild(editor);
   editor.addEventListener("click", function(ev){ ev.stopPropagation(); });
