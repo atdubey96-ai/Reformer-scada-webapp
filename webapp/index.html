@@ -3351,7 +3351,7 @@ body.light-theme .cw-nudge{
 }
 #tab-cuboid .cuboid-legend-scroll{
   display:grid;
-  grid-template-columns:minmax(0,2.74fr) minmax(218px,0.74fr) minmax(312px,1fr);
+  grid-template-columns:minmax(0,2.28fr) minmax(292px,1.04fr) minmax(214px,0.76fr) minmax(296px,0.96fr);
   align-items:start;
   gap:10px;
   overflow:visible;
@@ -3365,8 +3365,14 @@ body.light-theme .cw-nudge{
   border-left:1px solid rgba(64,84,114,0.38);
 }
 #tab-cuboid .cuboid-legend-states{ padding-left:2px; }
+#tab-cuboid .cuboid-legend-openings,
 #tab-cuboid .cuboid-legend-clean,
 #tab-cuboid .cuboid-legend-tst{ padding-right:4px; }
+#tab-cuboid .cuboid-legend-openings{
+  width:100%;
+  max-width:378px;
+  justify-self:stretch;
+}
 #tab-cuboid .cuboid-legend-tst{
   width:100%;
   max-width:340px;
@@ -3382,14 +3388,14 @@ body.light-theme .cw-nudge{
 #tab-cuboid .cuboid-legend-state-row{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:7px;
+  gap:6px;
 }
 #tab-cuboid .cuboid-legend-state-card{
   display:flex;
   align-items:center;
-  gap:8px;
-  min-height:58px;
-  padding:7px 8px 7px 9px;
+  gap:7px;
+  min-height:56px;
+  padding:7px 7px 7px 8px;
   border-radius:16px;
   border:1px solid rgba(76,102,146,0.35);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
@@ -3563,9 +3569,170 @@ body.light-theme .cw-nudge{
   color:#fff0cf;
 }
 #tab-cuboid .cuboid-legend-state-count{
-  font-size:15px;
+  font-size:14px;
   font-weight:700;
   color:#ffffff;
+}
+#tab-cuboid .cuboid-legend-opening-row{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;
+}
+#tab-cuboid .cuboid-legend-opening-item{
+  --legend-open-ratio:1;
+  --legend-flame-scale-x:1;
+  --legend-flame-scale-y:1;
+  --legend-flame-opacity:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  min-height:94px;
+  padding:7px 5px 6px;
+  border-radius:14px;
+  border:1px solid rgba(72,96,128,0.28);
+  background:linear-gradient(180deg,rgba(17,22,32,0.9),rgba(8,12,18,0.94));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+#tab-cuboid .cuboid-legend-opening-item[data-open="25"]{
+  --legend-open-ratio:0.25;
+  --legend-flame-scale-x:0.7;
+  --legend-flame-scale-y:0.56;
+  --legend-flame-opacity:0.86;
+}
+#tab-cuboid .cuboid-legend-opening-item[data-open="50"]{
+  --legend-open-ratio:0.5;
+  --legend-flame-scale-x:0.82;
+  --legend-flame-scale-y:0.74;
+  --legend-flame-opacity:0.92;
+}
+#tab-cuboid .cuboid-legend-opening-item[data-open="75"]{
+  --legend-open-ratio:0.75;
+  --legend-flame-scale-x:0.94;
+  --legend-flame-scale-y:0.9;
+  --legend-flame-opacity:0.97;
+}
+#tab-cuboid .cuboid-legend-opening-item[data-open="100"]{
+  --legend-open-ratio:1;
+  --legend-flame-scale-x:1.03;
+  --legend-flame-scale-y:1.04;
+  --legend-flame-opacity:1;
+}
+#tab-cuboid .cuboid-legend-opening-burner{
+  position:relative;
+  width:42px;
+  height:52px;
+  display:block;
+  filter:drop-shadow(0 10px 16px rgba(0,0,0,0.24));
+}
+#tab-cuboid .cuboid-legend-opening-flame,
+#tab-cuboid .cuboid-legend-opening-core,
+#tab-cuboid .cuboid-legend-opening-stem,
+#tab-cuboid .cuboid-legend-opening-base,
+#tab-cuboid .cuboid-legend-opening-collar,
+#tab-cuboid .cuboid-legend-opening-port,
+#tab-cuboid .cuboid-legend-opening-port-cap,
+#tab-cuboid .cuboid-legend-opening-window{
+  position:absolute;
+  left:50%;
+}
+#tab-cuboid .cuboid-legend-opening-flame{
+  top:1px;
+  width:17px;
+  height:24px;
+  border-radius:60% 0 64% 64%;
+  transform:translateX(-50%) rotate(45deg) scaleX(var(--legend-flame-scale-x)) scaleY(var(--legend-flame-scale-y));
+  transform-origin:center bottom;
+  background:linear-gradient(180deg,#fff2bf 0%,#f59e0b 44%,#b45309 100%);
+  box-shadow:0 0 13px rgba(245,158,11,0.34);
+  opacity:var(--legend-flame-opacity);
+}
+#tab-cuboid .cuboid-legend-opening-core{
+  top:8px;
+  width:8px;
+  height:11px;
+  border-radius:60% 0 64% 64%;
+  transform:translateX(-50%) rotate(45deg) scaleX(var(--legend-flame-scale-x)) scaleY(var(--legend-flame-scale-y));
+  transform-origin:center bottom;
+  background:linear-gradient(180deg,#ffffff 0%,#fff6dd 46%,#fde68a 100%);
+  opacity:0.94;
+}
+#tab-cuboid .cuboid-legend-opening-stem{
+  bottom:12px;
+  width:8px;
+  height:9px;
+  transform:translateX(-50%);
+  border-radius:5px;
+  background:linear-gradient(180deg,#f4a21c,#cd6706);
+}
+#tab-cuboid .cuboid-legend-opening-collar{
+  bottom:10px;
+  width:22px;
+  height:2px;
+  transform:translateX(-50%);
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(224,229,235,0.8),rgba(38,45,53,0.94));
+  border:1px solid rgba(231,236,241,0.16);
+}
+#tab-cuboid .cuboid-legend-opening-base{
+  bottom:4px;
+  width:25px;
+  height:7px;
+  transform:translateX(-50%);
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(232,238,244,0.92),rgba(88,96,109,0.96) 42%,rgba(18,24,31,0.98));
+  border:1px solid rgba(228,234,241,0.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 5px rgba(0,0,0,0.28);
+}
+#tab-cuboid .cuboid-legend-opening-port{
+  left:8px;
+  bottom:5px;
+  width:8px;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg,rgba(55,62,70,0.98),rgba(224,231,239,0.94) 38%,rgba(34,40,47,0.98));
+  box-shadow:0 1px 3px rgba(0,0,0,0.22);
+}
+#tab-cuboid .cuboid-legend-opening-port-cap{
+  left:10px;
+  bottom:5px;
+  width:4px;
+  height:4px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:rgba(22,28,34,0.96);
+  border:1px solid rgba(232,238,244,0.38);
+}
+#tab-cuboid .cuboid-legend-opening-window{
+  bottom:5px;
+  width:18px;
+  height:3px;
+  transform:translateX(-50%);
+  border-radius:999px;
+  border:1px solid rgba(196,203,211,0.2);
+  background:
+    repeating-linear-gradient(90deg,rgba(230,236,244,0.14) 0 1px,transparent 1px 3.5px),
+    linear-gradient(180deg,rgba(2,5,9,0.98),rgba(28,34,40,0.94));
+  overflow:hidden;
+}
+#tab-cuboid .cuboid-legend-opening-fill{
+  position:absolute;
+  left:1px;
+  top:1px;
+  bottom:1px;
+  width:calc(100% - 2px);
+  border-radius:999px;
+  transform-origin:left center;
+  transform:scaleX(var(--legend-open-ratio));
+  background:linear-gradient(90deg,#f4a21c 0%,#fff2b3 52%,#fcd34d 100%);
+  box-shadow:0 0 8px rgba(245,158,11,0.34);
+}
+#tab-cuboid .cuboid-legend-opening-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  color:#eef4ff;
 }
 #tab-cuboid .cuboid-legend-clean-list{
   display:flex;
@@ -3671,6 +3838,7 @@ body.light-theme .cw-nudge{
   #tab-cuboid .cuboid-legend-states{
     grid-column:1 / -1;
   }
+  #tab-cuboid .cuboid-legend-openings,
   #tab-cuboid .cuboid-legend-tst,
   #tab-cuboid .cuboid-legend-clean{
     min-width:0;
@@ -3686,6 +3854,17 @@ body.light-theme .cw-nudge{
     grid-column:1 / -1;
   }
   #tab-cuboid .cuboid-legend-state-row{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  #tab-cuboid .cuboid-legend-opening-row{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+@media (max-width:760px){
+  #tab-cuboid .cuboid-legend-openings{
+    grid-column:1 / -1;
+  }
+  #tab-cuboid .cuboid-legend-opening-row{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
@@ -16114,6 +16293,63 @@ html, body, body *, body *::before, body *::after, svg text{
                 </div>
               </div>
             </section>
+            <section class="cuboid-legend-block cuboid-legend-openings">
+              <div class="cuboid-legend-title">Opening Guide</div>
+              <div class="cuboid-legend-opening-row">
+                <div class="cuboid-legend-opening-item" data-open="25">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <span class="cuboid-legend-opening-flame"></span>
+                    <span class="cuboid-legend-opening-core"></span>
+                    <span class="cuboid-legend-opening-stem"></span>
+                    <span class="cuboid-legend-opening-collar"></span>
+                    <span class="cuboid-legend-opening-base"></span>
+                    <span class="cuboid-legend-opening-port"></span>
+                    <span class="cuboid-legend-opening-port-cap"></span>
+                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                  </div>
+                  <div class="cuboid-legend-opening-label">25%</div>
+                </div>
+                <div class="cuboid-legend-opening-item" data-open="50">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <span class="cuboid-legend-opening-flame"></span>
+                    <span class="cuboid-legend-opening-core"></span>
+                    <span class="cuboid-legend-opening-stem"></span>
+                    <span class="cuboid-legend-opening-collar"></span>
+                    <span class="cuboid-legend-opening-base"></span>
+                    <span class="cuboid-legend-opening-port"></span>
+                    <span class="cuboid-legend-opening-port-cap"></span>
+                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                  </div>
+                  <div class="cuboid-legend-opening-label">50%</div>
+                </div>
+                <div class="cuboid-legend-opening-item" data-open="75">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <span class="cuboid-legend-opening-flame"></span>
+                    <span class="cuboid-legend-opening-core"></span>
+                    <span class="cuboid-legend-opening-stem"></span>
+                    <span class="cuboid-legend-opening-collar"></span>
+                    <span class="cuboid-legend-opening-base"></span>
+                    <span class="cuboid-legend-opening-port"></span>
+                    <span class="cuboid-legend-opening-port-cap"></span>
+                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                  </div>
+                  <div class="cuboid-legend-opening-label">75%</div>
+                </div>
+                <div class="cuboid-legend-opening-item" data-open="100">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <span class="cuboid-legend-opening-flame"></span>
+                    <span class="cuboid-legend-opening-core"></span>
+                    <span class="cuboid-legend-opening-stem"></span>
+                    <span class="cuboid-legend-opening-collar"></span>
+                    <span class="cuboid-legend-opening-base"></span>
+                    <span class="cuboid-legend-opening-port"></span>
+                    <span class="cuboid-legend-opening-port-cap"></span>
+                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                  </div>
+                  <div class="cuboid-legend-opening-label">100%</div>
+                </div>
+              </div>
+            </section>
             <section class="cuboid-legend-block cuboid-legend-clean">
               <div class="cuboid-legend-title">Cleaning</div>
               <div class="cuboid-legend-clean-list">
@@ -16191,6 +16427,63 @@ html, body, body *, body *::before, body *::after, svg text{
                     <div class="cuboid-legend-state-desc">Amber Burner</div>
                   </div>
                   <div class="cuboid-legend-state-count" data-legend-value="count-n">0</div>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-openings">
+              <div class="cuboid-legend-title">Opening Guide</div>
+              <div class="cuboid-legend-opening-row">
+                <div class="cuboid-legend-opening-item" data-open="25">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <span class="cuboid-legend-opening-flame"></span>
+                    <span class="cuboid-legend-opening-core"></span>
+                    <span class="cuboid-legend-opening-stem"></span>
+                    <span class="cuboid-legend-opening-collar"></span>
+                    <span class="cuboid-legend-opening-base"></span>
+                    <span class="cuboid-legend-opening-port"></span>
+                    <span class="cuboid-legend-opening-port-cap"></span>
+                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                  </div>
+                  <div class="cuboid-legend-opening-label">25%</div>
+                </div>
+                <div class="cuboid-legend-opening-item" data-open="50">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <span class="cuboid-legend-opening-flame"></span>
+                    <span class="cuboid-legend-opening-core"></span>
+                    <span class="cuboid-legend-opening-stem"></span>
+                    <span class="cuboid-legend-opening-collar"></span>
+                    <span class="cuboid-legend-opening-base"></span>
+                    <span class="cuboid-legend-opening-port"></span>
+                    <span class="cuboid-legend-opening-port-cap"></span>
+                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                  </div>
+                  <div class="cuboid-legend-opening-label">50%</div>
+                </div>
+                <div class="cuboid-legend-opening-item" data-open="75">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <span class="cuboid-legend-opening-flame"></span>
+                    <span class="cuboid-legend-opening-core"></span>
+                    <span class="cuboid-legend-opening-stem"></span>
+                    <span class="cuboid-legend-opening-collar"></span>
+                    <span class="cuboid-legend-opening-base"></span>
+                    <span class="cuboid-legend-opening-port"></span>
+                    <span class="cuboid-legend-opening-port-cap"></span>
+                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                  </div>
+                  <div class="cuboid-legend-opening-label">75%</div>
+                </div>
+                <div class="cuboid-legend-opening-item" data-open="100">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <span class="cuboid-legend-opening-flame"></span>
+                    <span class="cuboid-legend-opening-core"></span>
+                    <span class="cuboid-legend-opening-stem"></span>
+                    <span class="cuboid-legend-opening-collar"></span>
+                    <span class="cuboid-legend-opening-base"></span>
+                    <span class="cuboid-legend-opening-port"></span>
+                    <span class="cuboid-legend-opening-port-cap"></span>
+                    <span class="cuboid-legend-opening-window"><span class="cuboid-legend-opening-fill"></span></span>
+                  </div>
+                  <div class="cuboid-legend-opening-label">100%</div>
                 </div>
               </div>
             </section>
