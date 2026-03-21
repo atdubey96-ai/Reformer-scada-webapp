@@ -3892,10 +3892,9 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
   }
   #btab-burner{order:1;}
   #btab-cleaning{order:2;}
-  #btab-heatmap{order:3;}
+  #btab-cuboid{order:3;}
   #btab-tempdata{order:4;}
   #btab-alarms{order:5;}
-  #btab-cuboid{order:6;}
   #btab-heatmap .btab-icon{
     width:40px;
     height:40px;
@@ -16222,6 +16221,10 @@ html, body, body *, body *::before, body *::after, svg text{
     <span class="btab-icon">🧹</span>
     <span class="btab-label">Cleaning Status</span>
   </button>
+  <button class="btab btab-active" id="btab-cuboid" onclick="switchTab('cuboid')">
+    <span class="btab-icon">🎛️</span>
+    <span class="btab-label">Live Dashboard</span>
+  </button>
   <button class="btab" id="btab-tempdata" onclick="switchTab('tempdata')">
     <span class="btab-icon">🌡️</span>
     <span class="btab-label">Temp. Data</span>
@@ -16230,10 +16233,6 @@ html, body, body *, body *::before, body *::after, svg text{
     <span class="btab-icon">🚨</span>
     <span class="btab-label">Alarms</span>
     <span class="btab-alarm-count" id="btab-alarm-count" style="display:none">0</span>
-  </button>
-  <button class="btab btab-active" id="btab-cuboid" onclick="switchTab('cuboid')">
-    <span class="btab-icon">🧊</span>
-    <span class="btab-label">Cuboid</span>
   </button>
 </div>
 
@@ -20003,7 +20002,7 @@ function updateGlobalRefreshButtonLabel(tab){
   var key = String(tab || "").toLowerCase();
   btn.textContent =
     key === "alarms" ? "↻ Refresh Alarms" :
-    key === "cuboid" ? "↻ Refresh Cuboid" :
+    key === "cuboid" ? "↻ Refresh Dashboard" :
     "🔄 Refresh Data";
 }
 
@@ -20566,7 +20565,7 @@ function handleGlobalRefreshClick(){
     refreshCuboidLegendPanels(true);
     refreshCuboidExtendedPanels(true);
     scheduleCuboidFrameDataPush(20, true);
-    showToast("↻ Cuboid viewer refreshed");
+    showToast("↻ Live dashboard refreshed");
     return;
   }
   smartRefresh();
