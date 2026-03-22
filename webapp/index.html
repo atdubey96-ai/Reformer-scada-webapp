@@ -3476,12 +3476,81 @@ body.light-theme .cw-nudge{
   position:relative;
   z-index:1;
 }
+#tab-cuboid .cuboid-tab-frame-wrap{
+  position:relative;
+  height:clamp(700px,calc(100svh - 120px),1240px);
+  overflow:hidden;
+  background:#07090d;
+  isolation:isolate;
+}
 #tab-cuboid .cuboid-tab-frame{
   display:block;
   width:100%;
-  height:clamp(700px,calc(100svh - 120px),1240px);
+  height:100%;
+  position:relative;
+  overflow:hidden;
   border:0;
   background:#07090d;
+  contain:layout paint size style;
+}
+#tab-cuboid .cuboid-tab-frame-mask{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(52,74,108,0.32) 0%, rgba(18,24,34,0.92) 25%, rgba(7,9,13,0.98) 62%, rgba(4,5,8,1) 100%);
+  transition:opacity .26s ease, visibility .26s ease;
+}
+#tab-cuboid .cuboid-tab-frame-mask::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 100%);
+  background-size:180px 180px, 180px 180px;
+  opacity:0.22;
+  pointer-events:none;
+}
+#tab-cuboid .cuboid-tab-frame-mask::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(144,188,255,0.16), transparent 32%),
+    radial-gradient(circle at 50% 86%, rgba(255,177,88,0.12), transparent 26%);
+  pointer-events:none;
+}
+#tab-cuboid .cuboid-tab-frame-mask-copy{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  padding:18px 20px;
+  text-align:center;
+  color:rgba(208,221,241,0.9);
+}
+#tab-cuboid .cuboid-tab-frame-mask-title{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:2.6px;
+  text-transform:uppercase;
+  color:#e6eef9;
+}
+#tab-cuboid .cuboid-tab-frame-mask-subtitle{
+  font-size:9px;
+  letter-spacing:1.8px;
+  color:rgba(154,178,210,0.78);
+}
+#tab-cuboid .cuboid-tab-shell.cuboid-shell-frame-ready .cuboid-tab-frame-mask{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
 }
 #tab-cuboid .cuboid-legend-panel{
   position:relative;
@@ -4063,6 +4132,7 @@ body.light-theme .cw-nudge{
   z-index:1905;
   box-shadow:0 28px 70px rgba(0,0,0,0.62);
 }
+#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame-wrap,
 #tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame{
   height:100%;
 }
@@ -7405,8 +7475,11 @@ html, body, body *, body *::before, body *::after, svg text{
     border-color:rgba(60,100,150,0.4) !important;
     border-radius:14px !important;
   }
-  #tab-cuboid .cuboid-tab-frame{
+  #tab-cuboid .cuboid-tab-frame-wrap{
     height:clamp(640px,calc(100svh - 150px),1040px);
+  }
+  #tab-cuboid .cuboid-tab-frame{
+    height:100%;
   }
   #tab-cuboid .cuboid-legend-panel{
     width:min(100%,1680px);
@@ -16414,16 +16487,25 @@ html, body, body *, body *::before, body *::after, svg text{
   <div id="tab-cuboid" class="tab-panel tab-active">
     <div class="cuboid-tab-stack">
       <div class="cuboid-tab-shell" data-cuboid-shell="ab">
-        <iframe
-          id="cuboid-tab-frame"
-          class="cuboid-tab-frame"
-          aria-label="AB live burner wall cuboid viewer"
-          src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-04"
-          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-04"
-          loading="eager"
-          allow="fullscreen"
-          allowfullscreen
-        ></iframe>
+        <div class="cuboid-tab-frame-wrap">
+          <div class="cuboid-tab-frame-mask" data-cuboid-frame-mask="ab" aria-hidden="true">
+            <div class="cuboid-tab-frame-mask-copy">
+              <div class="cuboid-tab-frame-mask-title">AB Live Dashboard</div>
+              <div class="cuboid-tab-frame-mask-subtitle">Preparing burner walls, TST and cleaning view</div>
+            </div>
+          </div>
+          <iframe
+            id="cuboid-tab-frame"
+            class="cuboid-tab-frame"
+            aria-label="AB live burner wall cuboid viewer"
+            src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-04"
+            data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-04"
+            data-cuboid-load="eager"
+            loading="eager"
+            allow="fullscreen"
+            allowfullscreen
+          ></iframe>
+        </div>
         <div class="cuboid-legend-panel" data-cuboid-legend="ab">
           <div class="cuboid-legend-scroll">
             <section class="cuboid-legend-block cuboid-legend-states">
@@ -16519,16 +16601,24 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
       </div>
       <div class="cuboid-tab-shell" data-cuboid-shell="cd">
-        <iframe
-          id="cuboid-tab-frame-2"
-          class="cuboid-tab-frame"
-          aria-label="CD live burner wall cuboid viewer"
-          src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-04"
-          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-04"
-          loading="eager"
-          allow="fullscreen"
-          allowfullscreen
-        ></iframe>
+        <div class="cuboid-tab-frame-wrap">
+          <div class="cuboid-tab-frame-mask" data-cuboid-frame-mask="cd" aria-hidden="true">
+            <div class="cuboid-tab-frame-mask-copy">
+              <div class="cuboid-tab-frame-mask-title">CD Live Dashboard</div>
+              <div class="cuboid-tab-frame-mask-subtitle">Preparing burner walls, TST and cleaning view</div>
+            </div>
+          </div>
+          <iframe
+            id="cuboid-tab-frame-2"
+            class="cuboid-tab-frame"
+            aria-label="CD live burner wall cuboid viewer"
+            data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-04"
+            data-cuboid-load="deferred"
+            loading="lazy"
+            allow="fullscreen"
+            allowfullscreen
+          ></iframe>
+        </div>
         <div class="cuboid-legend-panel" data-cuboid-legend="cd">
           <div class="cuboid-legend-scroll">
             <section class="cuboid-legend-block cuboid-legend-states">
@@ -18724,6 +18814,7 @@ function mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, 
 }
 
 function generateAnalysis(options){
+  _burnerAnalysisPrimed = true;
   options = options || {};
   wallSeverity={};
   const container=document.getElementById("analysisContainer");
@@ -19349,6 +19440,7 @@ function saveTipDataStore(rows){
 var tipRows = [];  /* in-memory working copy */
 
 function initTipTable(){
+  _tipTablePrimed = true;
   tipRows = loadTipData();
   if(!tipRows.length) tipRows = [newTipRow()];  /* start with one blank row */
   renderTipTable();
@@ -19982,6 +20074,7 @@ function renderCleaningTableInto(wrapId, log){
 }
 
 function buildCleaningTable(){
+  _cleaningTablePrimed = true;
   const log = getMergedCleaningLog();
   renderCleaningTableInto("cleaningTablesWrap", log);
   renderCleaningTableInto("hm-cleaningTablesWrap", log);
@@ -20540,10 +20633,7 @@ function acknowledgeAlarm(){
 function init(){
   loadData();
   loadBurnerOpeningData();
-  generateAnalysis();
   burnerUiReady = true;
-  buildCleaningTable();
-  initTipTable();
   applyMobileHorizontalScrollFixes();
   updateNotificationToggleUI();
   subscribeCrossDeviceNotifications();
@@ -20551,6 +20641,11 @@ function init(){
   if(notificationsEnabled){
   }
   startServerSaveWatcher();
+  if(getDefaultLiveTab() !== "cuboid"){
+    ensureBurnerAnalysisBuilt(false);
+    ensureCleaningTableBuilt(false);
+    ensureTipTableBuilt(false);
+  }
   /* Build the shared snapshot on load and prime the default Cuboid view. */
   setTimeout(function(){
     if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches();
@@ -20690,6 +20785,10 @@ function getCuboidLegendPanelByChamber(chamber){
   return document.querySelector('#tab-cuboid .cuboid-legend-panel[data-cuboid-legend="' + String(chamber || "").toLowerCase() + '"]');
 }
 
+function getCuboidFollowupStack(){
+  return document.querySelector("#tab-cuboid .cuboid-followup-stack");
+}
+
 function isCuboidTabActive(){
   var active = document.querySelector(".tab-panel.tab-active");
   return !!(active && active.id === "tab-cuboid");
@@ -20724,6 +20823,78 @@ var _cuboidFrameVisibilityObserver = null;
 var _cuboidFrameInView = new WeakMap();
 var _cuboidFrameDataDigest = "";
 var _cuboidFrameDataTimer = null;
+var _cuboidFrameReady = new WeakMap();
+var _cuboidFollowupObserver = null;
+var _cuboidFollowupInView = false;
+var _cuboidExtendedRefreshPending = false;
+var _burnerAnalysisPrimed = false;
+var _cleaningTablePrimed = false;
+var _tipTablePrimed = false;
+
+function getCuboidShellForFrame(frame){
+  return frame && frame.closest ? frame.closest(".cuboid-tab-shell") : null;
+}
+
+function cuboidSetFrameReady(frame, ready){
+  if(!frame) return;
+  var next = !!ready;
+  _cuboidFrameReady.set(frame, next);
+  var shell = getCuboidShellForFrame(frame);
+  if(shell) shell.classList.toggle("cuboid-shell-frame-ready", next);
+}
+
+function cuboidIsFrameReady(frame){
+  return !!(frame && _cuboidFrameReady.get(frame));
+}
+
+function cuboidFrameNeedsLoad(frame){
+  if(!frame) return false;
+  var current = String(frame.getAttribute("src") || "").trim();
+  return !current || current === "about:blank";
+}
+
+function cuboidGetFrameLoadMode(frame){
+  return String(frame && frame.getAttribute("data-cuboid-load") || "eager").toLowerCase();
+}
+
+function cuboidShouldLoadFrame(frame){
+  if(!frame) return false;
+  if(cuboidGetFrameLoadMode(frame) === "eager") return true;
+  if(frame.closest && frame.closest(".cuboid-tab-shell.cuboid-shell-expanded")) return true;
+  if(!isCuboidTabActive()) return false;
+  var meta = cuboidGetFrameViewMeta(frame);
+  return !!(meta.inView || Number(meta.ratio || 0) > 0.02);
+}
+
+function cuboidMaybeRunPendingExtendedRefresh(){
+  if(!_cuboidExtendedRefreshPending || !_cuboidFollowupInView || !isCuboidTabActive()) return;
+  _cuboidExtendedRefreshPending = false;
+  scheduleCuboidExtendedRefresh(0, false);
+}
+
+function ensureBurnerAnalysisBuilt(force){
+  if(typeof generateAnalysis !== "function") return false;
+  if(!force && _burnerAnalysisPrimed) return false;
+  generateAnalysis();
+  _burnerAnalysisPrimed = true;
+  return true;
+}
+
+function ensureCleaningTableBuilt(force){
+  if(typeof buildCleaningTable !== "function") return false;
+  if(!force && _cleaningTablePrimed) return false;
+  buildCleaningTable();
+  _cleaningTablePrimed = true;
+  return true;
+}
+
+function ensureTipTableBuilt(force){
+  if(typeof initTipTable !== "function") return false;
+  if(!force && _tipTablePrimed) return false;
+  initTipTable();
+  _tipTablePrimed = true;
+  return true;
+}
 
 function cuboidBuildPeepRow(entry, key){
   var vals = entry && entry.peepHoles ? entry.peepHoles[key] : null;
@@ -20807,7 +20978,10 @@ function cuboidGetFrameViewMeta(frame){
 function cuboidGetFocusedFrame(){
   var expanded = document.querySelector("#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame");
   if(expanded) return expanded;
-  var frames = getCuboidFrames();
+  var frames = getCuboidFrames().filter(function(frame){
+    return cuboidIsFrameReady(frame) || cuboidGetFrameLoadMode(frame) === "eager";
+  });
+  if(!frames.length) frames = getCuboidFrames();
   var best = null;
   var bestRatio = -1;
   frames.forEach(function(frame){
@@ -20877,7 +21051,7 @@ function cuboidBuildExtendedDigests(){
 }
 
 function notifyCuboidHostState(frame){
-  if(!frame || !frame.contentWindow) return;
+  if(!frame || !frame.contentWindow || !cuboidIsFrameReady(frame)) return;
   var meta = cuboidGetFrameViewMeta(frame);
   var focusedFrame = cuboidGetFocusedFrame();
   try{
@@ -20902,15 +21076,20 @@ function initCuboidFrameVisibilityObserver(){
         ratio:ratio
       });
     });
+    if(isCuboidTabActive()){
+      ensureCuboidViewerLoaded(false);
+    }
     notifyAllCuboidHostStates();
   }, {
-    threshold:[0, 0.18, 0.35]
+    rootMargin:"260px 0px 340px 0px",
+    threshold:[0, 0.02, 0.18, 0.35]
   });
   getCuboidFrames().forEach(function(frame){
     _cuboidFrameInView.set(frame, {
-      inView:true,
-      ratio:1
+      inView:cuboidGetFrameLoadMode(frame) === "eager",
+      ratio:cuboidGetFrameLoadMode(frame) === "eager" ? 1 : 0
     });
+    cuboidSetFrameReady(frame, false);
     _cuboidFrameVisibilityObserver.observe(frame);
   });
 }
@@ -20985,8 +21164,7 @@ function pushCuboidFrameData(force){
   if(!force && digest && digest === _cuboidFrameDataDigest) return false;
   _cuboidFrameDataDigest = digest;
   frames.forEach(function(frame){
-    var currentSrc = String(frame && frame.getAttribute("src") || "").trim();
-    if(!frame || !frame.contentWindow || !currentSrc || currentSrc === "about:blank") return;
+    if(!frame || !frame.contentWindow || !cuboidIsFrameReady(frame)) return;
     try{
       frame.contentWindow.postMessage({
         type:"cuboid-live-data",
@@ -21704,6 +21882,11 @@ function refreshCuboidLegendPanels(force){
 
 function refreshCuboidExtendedPanels(force){
   if(!force && !isCuboidTabActive()) return false;
+  if(!force && !_cuboidFollowupInView){
+    _cuboidExtendedRefreshPending = true;
+    return false;
+  }
+  _cuboidExtendedRefreshPending = false;
   var digests = cuboidBuildExtendedDigests();
   var snapshot = refreshCuboidRenderSnapshot(false) || getCuboidRenderSnapshot(false);
   if(typeof generateAnalysis === "function" && (force || digests.analysis !== _cuboidExtendedDigests.analysis)){
@@ -21744,13 +21927,16 @@ function ensureCuboidViewerLoaded(forceReload){
   var stamp = Date.now();
   frames.forEach(function(frame, idx){
     var baseSrc = String(frame.getAttribute("data-src") || "./cuboid-viewer.html").trim();
+    var shouldLoad = forceReload ? (cuboidIsFrameReady(frame) || cuboidShouldLoadFrame(frame)) : cuboidShouldLoadFrame(frame);
     if(!baseSrc) return;
     if(forceReload){
+      if(!shouldLoad) return;
+      cuboidSetFrameReady(frame, false);
       frame.setAttribute("src", baseSrc + (baseSrc.indexOf("?") >= 0 ? "&" : "?") + "ts=" + stamp + "-" + idx);
       return;
     }
-    var current = String(frame.getAttribute("src") || "").trim();
-    if(!current || current === "about:blank"){
+    if(cuboidFrameNeedsLoad(frame) && shouldLoad){
+      cuboidSetFrameReady(frame, false);
       frame.setAttribute("src", baseSrc);
     }
     notifyCuboidHostState(frame);
@@ -21759,7 +21945,7 @@ function ensureCuboidViewerLoaded(forceReload){
 }
 
 function notifyCuboidOverlayState(active, frame){
-  if(!frame || !frame.contentWindow) return;
+  if(!frame || !frame.contentWindow || !cuboidIsFrameReady(frame)) return;
   try{
     frame.contentWindow.postMessage({ type:"cuboid-overlay-state", active:!!active }, "*");
   }catch(e){}
@@ -21861,8 +22047,23 @@ function switchTab(tab){
       }
     }
   }
-  if(tab === 'burner') setTimeout(applyBurnerMobileWallFilter, 0);
-  if(tab === 'tempdata') setTimeout(applyMobileHorizontalScrollFixes, 0);
+  if(tab === 'burner'){
+    setTimeout(function(){
+      ensureBurnerAnalysisBuilt(false);
+      applyBurnerMobileWallFilter();
+    }, 0);
+  }
+  if(tab === 'cleaning'){
+    setTimeout(function(){
+      ensureCleaningTableBuilt(false);
+    }, 0);
+  }
+  if(tab === 'tempdata'){
+    setTimeout(function(){
+      ensureTipTableBuilt(false);
+      applyMobileHorizontalScrollFixes();
+    }, 0);
+  }
   if(tab === 'cuboid'){
     setTimeout(ensureCuboidViewerLoaded, 0);
     setTimeout(bindCuboidLegendActions, 0);
@@ -21899,13 +22100,54 @@ function handlePendingViewerTabSwitch(){
   var frames = getCuboidFrames();
   if(!frames.length) return;
   frames.forEach(function(frame){
-    frame.addEventListener("load", function(){
+    var onFrameLoad = function(){
+      var currentSrc = String(frame.getAttribute("src") || "").trim();
+      var ready = !!currentSrc && currentSrc !== "about:blank";
+      cuboidSetFrameReady(frame, ready);
+      if(!ready) return;
       var shell = frame.closest(".cuboid-tab-shell");
       notifyCuboidOverlayState(!!(shell && shell.classList.contains("cuboid-shell-expanded")), frame);
       notifyCuboidHostState(frame);
       scheduleCuboidFrameDataPush(0, true);
-    });
+    };
+    frame.addEventListener("load", onFrameLoad);
+    try{
+      if(!cuboidFrameNeedsLoad(frame) && frame.contentDocument && frame.contentDocument.readyState === "complete"){
+        setTimeout(onFrameLoad, 0);
+      }
+    }catch(e){}
   });
+})();
+
+(function initCuboidFollowupVisibility(){
+  var stack = getCuboidFollowupStack();
+  if(!stack) return;
+  if(typeof IntersectionObserver !== "function"){
+    _cuboidFollowupInView = true;
+    return;
+  }
+  if(_cuboidFollowupObserver) return;
+  var syncFollowupState = function(entry){
+    if(entry){
+      _cuboidFollowupInView = !!(entry.isIntersecting || Number(entry.intersectionRatio || 0) > 0);
+    }else{
+      try{
+        var rect = stack.getBoundingClientRect();
+        _cuboidFollowupInView = rect.top < (window.innerHeight + 260) && rect.bottom > -120;
+      }catch(e){
+        _cuboidFollowupInView = false;
+      }
+    }
+    cuboidMaybeRunPendingExtendedRefresh();
+  };
+  _cuboidFollowupObserver = new IntersectionObserver(function(entries){
+    syncFollowupState(entries && entries[0] ? entries[0] : null);
+  }, {
+    rootMargin:"280px 0px 360px 0px",
+    threshold:[0, 0.01, 0.08]
+  });
+  _cuboidFollowupObserver.observe(stack);
+  syncFollowupState(null);
 })();
 
 (function initCuboidLegendUi(){
