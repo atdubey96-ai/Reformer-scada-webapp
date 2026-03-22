@@ -15939,14 +15939,14 @@ html, body, body *, body *::before, body *::after, svg text{
       <h2 class="scada-panel-title">📊 Burner Distribution Analytics</h2>
       <div id="analysisContainer"></div>
     </div>
-    <div class="burner-history-card">
+    <div class="burner-history-card" data-burner-history-root>
       <div class="burner-history-title">📜 Historical Burner Data</div>
       <div class="burner-history-subtitle">Saved burner snapshots only. Filter by shift, date, and HGU load, then open any row to inspect the historical burner state.</div>
       <div class="burner-history-toolbar">
         <div class="burner-history-filter-row">
           <div class="burner-history-shift-box">
             <span class="burner-history-shift-label">Shift</span>
-            <select id="burner-history-shift" class="burner-history-shift-select" onchange="setBurnerHistoryShiftFilter(this.value)">
+            <select id="burner-history-shift" data-burner-history-shift class="burner-history-shift-select" onchange="setBurnerHistoryShiftFilter(this.value)">
               <option value="All">🔁 All Shifts</option>
               <option value="Morning">🌅 Morning</option>
               <option value="Evening">🌆 Evening</option>
@@ -15955,17 +15955,17 @@ html, body, body *, body *::before, body *::after, svg text{
           </div>
           <div class="burner-history-shift-box burner-history-date-box">
             <span class="burner-history-shift-label">Date</span>
-            <input type="date" id="burner-history-date" class="burner-history-date-input" onchange="setBurnerHistoryFilterFromControls(this)">
+            <input type="date" id="burner-history-date" data-burner-history-date class="burner-history-date-input" onchange="setBurnerHistoryFilterFromControls(this)">
           </div>
           <div class="burner-history-shift-box burner-history-load-box" data-burner-history-filter-bar>
             <span class="burner-history-shift-label">HGU Load (%)</span>
             <input type="number" step="any" class="burner-history-load-input" data-burner-history-min oninput="setBurnerHistoryFilterFromControls(this)" placeholder="Min" aria-label="Burner history minimum HGU load">
             <span class="burner-history-range-sep">to</span>
             <input type="number" step="any" class="burner-history-load-input" data-burner-history-max oninput="setBurnerHistoryFilterFromControls(this)" placeholder="Max" aria-label="Burner history maximum HGU load">
-            <button type="button" class="burner-history-clear-btn" onclick="clearBurnerHistoryFilter()">Clear</button>
+            <button type="button" class="burner-history-clear-btn" onclick="clearBurnerHistoryFilter(this)">Clear</button>
           </div>
         </div>
-        <div class="burner-history-count" id="burner-history-count">No snapshots</div>
+        <div class="burner-history-count" id="burner-history-count" data-burner-history-count>No snapshots</div>
       </div>
       <div class="burner-history-scroll">
         <table id="burner-history-table">
@@ -15976,7 +15976,7 @@ html, body, body *, body *::before, body *::after, svg text{
               <th style="text-align:center;">HGU Load (%)</th>
             </tr>
           </thead>
-          <tbody id="burner-history-tbody">
+          <tbody id="burner-history-tbody" data-burner-history-tbody>
             <tr><td colspan="3" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>
           </tbody>
         </table>
@@ -16734,6 +16734,50 @@ html, body, body *, body *::before, body *::after, svg text{
                 </thead>
                 <tbody id="hm-td-saved-tbody">
                   <tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="burner-history-card" data-burner-history-root>
+            <div class="burner-history-title">📜 Historical Burner Data</div>
+            <div class="burner-history-subtitle">Saved burner snapshots only. Filter by shift, date, and HGU load, then open any row to inspect the historical burner state.</div>
+            <div class="burner-history-toolbar">
+              <div class="burner-history-filter-row">
+                <div class="burner-history-shift-box">
+                  <span class="burner-history-shift-label">Shift</span>
+                  <select id="hm-burner-history-shift" data-burner-history-shift class="burner-history-shift-select" onchange="setBurnerHistoryShiftFilter(this.value)">
+                    <option value="All">🔁 All Shifts</option>
+                    <option value="Morning">🌅 Morning</option>
+                    <option value="Evening">🌆 Evening</option>
+                    <option value="Night">🌙 Night</option>
+                  </select>
+                </div>
+                <div class="burner-history-shift-box burner-history-date-box">
+                  <span class="burner-history-shift-label">Date</span>
+                  <input type="date" id="hm-burner-history-date" data-burner-history-date class="burner-history-date-input" onchange="setBurnerHistoryFilterFromControls(this)">
+                </div>
+                <div class="burner-history-shift-box burner-history-load-box" data-burner-history-filter-bar>
+                  <span class="burner-history-shift-label">HGU Load (%)</span>
+                  <input type="number" step="any" class="burner-history-load-input" data-burner-history-min oninput="setBurnerHistoryFilterFromControls(this)" placeholder="Min" aria-label="Dashboard burner history minimum HGU load">
+                  <span class="burner-history-range-sep">to</span>
+                  <input type="number" step="any" class="burner-history-load-input" data-burner-history-max oninput="setBurnerHistoryFilterFromControls(this)" placeholder="Max" aria-label="Dashboard burner history maximum HGU load">
+                  <button type="button" class="burner-history-clear-btn" onclick="clearBurnerHistoryFilter(this)">Clear</button>
+                </div>
+              </div>
+              <div class="burner-history-count" id="hm-burner-history-count" data-burner-history-count>No snapshots</div>
+            </div>
+            <div class="burner-history-scroll">
+              <table id="hm-burner-history-table">
+                <thead>
+                  <tr>
+                    <th>Date/Time</th>
+                    <th style="text-align:center;">Shift</th>
+                    <th style="text-align:center;">HGU Load (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="hm-burner-history-tbody" data-burner-history-tbody>
+                  <tr><td colspan="3" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -25578,10 +25622,10 @@ function setBurnerHistoryShiftFilter(raw){
 }
 
 function setBurnerHistoryFilterFromControls(sourceEl){
-  var root = sourceEl && sourceEl.closest ? sourceEl.closest(".burner-history-toolbar") : document.querySelector(".burner-history-toolbar");
+  var root = sourceEl && sourceEl.closest ? sourceEl.closest("[data-burner-history-root]") : document.querySelector("[data-burner-history-root]");
   if(!root) return;
   burnerHistoryFilterState = sanitizeBurnerHistoryFilterState({
-    date: ((root.querySelector("#burner-history-date") || {}).value || ""),
+    date: ((root.querySelector("[data-burner-history-date]") || {}).value || ""),
     min: ((root.querySelector("[data-burner-history-min]") || {}).value || ""),
     max: ((root.querySelector("[data-burner-history-max]") || {}).value || "")
   });
@@ -25640,13 +25684,15 @@ function openBurnerHistorySnapshot(entryIndex){
 }
 
 function renderBurnerHistoryTable(){
-  var tbody = document.getElementById("burner-history-tbody");
-  if(!tbody) return;
+  var tbodies = Array.prototype.slice.call(document.querySelectorAll("[data-burner-history-tbody]"));
+  if(!tbodies.length) return;
 
-  var shiftEl = document.getElementById("burner-history-shift");
-  if(shiftEl) shiftEl.value = burnerHistoryShiftFilter;
-  var dateEl = document.getElementById("burner-history-date");
-  if(dateEl) dateEl.value = burnerHistoryFilterState.date || "";
+  document.querySelectorAll("[data-burner-history-shift]").forEach(function(el){
+    el.value = burnerHistoryShiftFilter;
+  });
+  document.querySelectorAll("[data-burner-history-date]").forEach(function(el){
+    el.value = burnerHistoryFilterState.date || "";
+  });
   document.querySelectorAll("[data-burner-history-min]").forEach(function(el){
     el.value = burnerHistoryFilterState.min || "";
   });
@@ -25658,19 +25704,22 @@ function renderBurnerHistoryTable(){
     return !!getEntryBurnerSnapshot(ent);
   }).length;
   var display = getBurnerHistoryFilteredEntries();
-  var countEl = document.getElementById("burner-history-count");
-  if(countEl){
+  document.querySelectorAll("[data-burner-history-count]").forEach(function(countEl){
     countEl.textContent = totalCount
       ? (display.length + " / " + totalCount + " snapshots")
       : "No snapshots";
-  }
+  });
 
   if(!totalCount){
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>';
+    tbodies.forEach(function(tbody){
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>';
+    });
     return;
   }
   if(!display.length){
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:20px;">No burner history matches the selected shift/date/load filter.</td></tr>';
+    tbodies.forEach(function(tbody){
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:20px;">No burner history matches the selected shift/date/load filter.</td></tr>';
+    });
     return;
   }
 
@@ -25692,7 +25741,9 @@ function renderBurnerHistoryTable(){
       + '</tr>';
   }
 
-  tbody.innerHTML = rowsHtml;
+  tbodies.forEach(function(tbody){
+    tbody.innerHTML = rowsHtml;
+  });
 }
 
 function renderTempDataTableInto(tbodyId, display, totalCount){
@@ -25865,7 +25916,7 @@ function renderAllPHData(){
     entries = [allEntries[allPhFocusedEntryIndex]];
     if(filterWrap) filterWrap.style.display = "none";
     if(titleEl) titleEl.textContent = "👁️ PEEP HOLE TST DATA";
-    if(subtitleEl) subtitleEl.textContent = "Selected saved entry temperature readings with burner snapshot at that timestamp.";
+    if(subtitleEl) subtitleEl.textContent = "Selected saved entry temperature readings at that timestamp.";
   }else{
     if(filterWrap) filterWrap.style.display = "flex";
     if(titleEl) titleEl.textContent = "👁️ ALL PEEP HOLE TST DATA";
@@ -25939,7 +25990,9 @@ function renderAllPHData(){
       html += '</div>';
       html += '</div>';
     }
-    html += buildEntryBurnerSnapshotHtml(ent);
+    if(snapshotOnlyMode){
+      html += buildEntryBurnerSnapshotHtml(ent);
+    }
     html += '</div>';
   });
 
