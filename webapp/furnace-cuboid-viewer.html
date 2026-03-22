@@ -2187,11 +2187,11 @@ function cuboidGetTargetPixelRatio(){
   if(!cuboidCanRenderNow()){
     cap=0.65;
   }else if(activeNow){
-    cap=cuboidIsChromeLike ? 1.06 : 1.45;
+    cap=cuboidIsChromeLike ? 1.0 : 1.45;
   }else if(hostFocused){
-    cap=cuboidIsChromeLike ? 0.92 : 1.28;
+    cap=cuboidIsChromeLike ? 0.86 : 1.28;
   }else{
-    cap=cuboidIsChromeLike ? 0.68 : 1;
+    cap=cuboidIsChromeLike ? 0.66 : 1;
   }
   return Math.max(0.62,Math.min(deviceRatio,cap));
 }
@@ -2356,7 +2356,7 @@ let overlayCleaningLog={};
 let overlayAnimPhase=0;
 let lastOverlayPaintAt=0;
 const OVERLAY_TICK_MS=84;
-const OVERLAY_PHASE_STEP=0.24;
+const OVERLAY_PHASE_STEP=0.18;
 let overlaySourceToken={
   pushedDigest:"",
   snapshotRef:null,
@@ -2743,7 +2743,7 @@ const ACTIVE_FRAME_MS=16;
 const FOCUSED_IDLE_FRAME_MS=16;
 const BACKGROUND_IDLE_FRAME_MS=110;
 const SLEEP_FRAME_MS=420;
-const ACTIVE_OVERLAY_TICK_MS=84;
+const ACTIVE_OVERLAY_TICK_MS=48;
 const BACKGROUND_OVERLAY_TICK_MS=420;
 const ACTIVE_FLAME_TICK_MS=16;
 const BACKGROUND_FLAME_TICK_MS=120;
@@ -2905,6 +2905,7 @@ function animate(t){
   group.rotation.z=0;
   innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
   const ts=t*0.001;
+  const flameTs=ts*1.14;
   const overlayTickMs=(hostFocused || isDragging || autoSpin || cuboidIsFullscreen()) ? ACTIVE_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS;
   if((t-lastOverlayPaintAt)>=overlayTickMs){
     overlayAnimPhase=(overlayAnimPhase+OVERLAY_PHASE_STEP)%(Math.PI*2);
@@ -2914,13 +2915,13 @@ function animate(t){
   if(!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=((hostFocused || isDragging || autoSpin || cuboidIsFullscreen()) ? ACTIVE_FLAME_TICK_MS : BACKGROUND_FLAME_TICK_MS)){
     flameGroups.forEach(function(f){
       const s=f.seed;
-      const flk=0.86+0.16*Math.sin(ts*2.3+s)+0.07*Math.sin(ts*5.1+s*1.4);
-      f.om.scale.set(flk,flk,0.88+0.14*Math.sin(ts*1.9+s*0.7));
-      f.om.material.opacity=0.30+0.16*Math.sin(ts*3.2+s);
-      f.mm.scale.set(0.9+0.1*flk,0.9+0.1*flk,0.88+0.15*Math.sin(ts*3.1+s));
-      f.mm.material.opacity=0.45+0.18*Math.sin(ts*4.3+s*1.3);
-      f.cm2.scale.set(0.92+0.08*flk,0.92+0.08*flk,0.90+0.12*Math.sin(ts*4.2+s));
-      f.cm2.material.opacity=0.68+0.22*Math.sin(ts*6.1+s*0.8);
+      const flk=0.86+0.16*Math.sin(flameTs*2.3+s)+0.07*Math.sin(flameTs*5.1+s*1.4);
+      f.om.scale.set(flk,flk,0.88+0.14*Math.sin(flameTs*1.9+s*0.7));
+      f.om.material.opacity=0.30+0.16*Math.sin(flameTs*3.2+s);
+      f.mm.scale.set(0.9+0.1*flk,0.9+0.1*flk,0.88+0.15*Math.sin(flameTs*3.1+s));
+      f.mm.material.opacity=0.45+0.18*Math.sin(flameTs*4.3+s*1.3);
+      f.cm2.scale.set(0.92+0.08*flk,0.92+0.08*flk,0.90+0.12*Math.sin(flameTs*4.2+s));
+      f.cm2.material.opacity=0.68+0.22*Math.sin(flameTs*6.1+s*0.8);
     });
     lastFlameUpdateAt=t;
   }

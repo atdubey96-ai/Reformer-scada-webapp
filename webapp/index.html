@@ -16424,7 +16424,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="AB live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-02"
+          data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-03"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -16529,7 +16529,7 @@ html, body, body *, body *::before, body *::after, svg text{
           class="cuboid-tab-frame"
           aria-label="CD live burner wall cuboid viewer"
           src="about:blank"
-          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-02"
+          data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-03"
           loading="lazy"
           allow="fullscreen"
           allowfullscreen
@@ -21785,15 +21785,15 @@ function switchTab(tab){
   if(tab === 'cuboid'){
     setTimeout(ensureCuboidViewerLoaded, 0);
     setTimeout(bindCuboidLegendActions, 0);
-    setTimeout(function(){ refreshCuboidLegendPanels(false); }, 0);
-    setTimeout(function(){ refreshCuboidExtendedPanels(false); }, 40);
-    setTimeout(function(){ scheduleCuboidFrameDataPush(20, false); }, 10);
+    setTimeout(function(){ refreshCuboidLegendPanels(false); }, 28);
+    setTimeout(function(){ scheduleCuboidFrameDataPush(18, false); }, 34);
+    setTimeout(function(){ refreshCuboidExtendedPanels(false); }, 180);
     setTimeout(function(){
       getCuboidFrames().forEach(function(frame){
         notifyCuboidOverlayState(false, frame);
         notifyCuboidHostState(frame);
       });
-    }, 60);
+    }, 44);
   }else{
     setTimeout(function(){
       notifyAllCuboidHostStates();
