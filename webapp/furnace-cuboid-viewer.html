@@ -2732,13 +2732,15 @@ function addBurners(fz,fdir){
 addBurners(FD/2-0.015,-1);
 addBurners(-FD/2+0.015,1);
 
-const DRAG_ROTATION_SPAN=Math.PI*1.16;
+const DRAG_ROTATION_SPAN=Math.PI*1.5;
 const SPRING_STIFFNESS=30;
 const SPRING_DAMPING=13.4;
 const AUTO_ROTATE_SPEED=0.34;
 const AUTO_ROTATE_RAMP=5.2;
 const MAX_DRAG_DELTA=42;
 const TAP_MOVE_TOLERANCE=10;
+const FACE_STEP=Math.PI/2;
+const FACE_ADVANCE_THRESHOLD=FACE_STEP*0.34;
 const ACTIVE_FRAME_MS=16;
 const FOCUSED_IDLE_FRAME_MS=16;
 const BACKGROUND_IDLE_FRAME_MS=110;
@@ -2752,6 +2754,7 @@ let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
 let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
 let touchMoved=false,lastTapAt=0,lastFrameTs=0,autoSpinMix=0;
 let lastFlameUpdateAt=0;
+let dragStartRotY=0;
 
 function normalizeAngle(angle){
   let a=angle;
@@ -2778,6 +2781,7 @@ function startDrag(clientX){
   lastX=clientX;
   targetRotY=rotY;
   springVelocity=0;
+  dragStartRotY=rotY;
   dragDistance=0;
   touchMoved=false;
 }
@@ -2799,12 +2803,18 @@ function moveDrag(clientX){
 function stopDrag(){
   if(!isDragging) return;
   isDragging=false;
-  targetRotY=rotY;
+  const dragRot=rotY-dragStartRotY;
+  const startFace=Math.round(normalizeAngle(dragStartRotY)/FACE_STEP)*FACE_STEP;
+  if(Math.abs(dragRot)>=FACE_ADVANCE_THRESHOLD){
+    setRotationTarget(startFace+(dragRot>0 ? FACE_STEP : -FACE_STEP));
+  }else{
+    snapToNearestFace();
+  }
   springVelocity=0;
 }
 
 function snapToNearestFace(){
-  const snapped=Math.round(normalizeAngle(rotY)/(Math.PI/2))*(Math.PI/2);
+  const snapped=Math.round(normalizeAngle(rotY)/FACE_STEP)*FACE_STEP;
   setRotationTarget(snapped);
 }
 
