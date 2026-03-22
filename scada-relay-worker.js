@@ -199,6 +199,199 @@ function summarizeAzureDocIntelResult(result, modelId) {
   };
 }
 
+function createEmptyTstValueArray() {
+  var values = [];
+  for (var i = 0; i < 60; i++) values.push("");
+  return values;
+}
+
+function normalizeTstHeaderToken(text) {
+  return String(text || "")
+    .toUpperCase()
+    .replace(/[–—]/g, "-")
+    .replace(/[^A-Z0-9]+/g, "");
+}
+
+function normalizeTstHeaderTokenForMatch(text) {
+  return normalizeTstHeaderToken(text)
+    .replace(/0/g, "O")
+    .replace(/8/g, "B")
+    .replace(/1/g, "I")
+    .replace(/5/g, "S");
+}
+
+function mapTstHeaderCellToKey(text) {
+  var norm = normalizeTstHeaderTokenForMatch(text);
+  if (!norm) return "";
+  if (norm.indexOf("PEEPHOLE") >= 0 || norm === "PH" || norm.indexOf("PEEP") >= 0) return "__row__";
+  if (norm.indexOf("ABBOTTOM") >= 0 || norm.indexOf("ABBOT") >= 0) return "ab-bot";
+  if (norm.indexOf("CDBOTTOM") >= 0 || norm.indexOf("CDBOT") >= 0 || norm.indexOf("COBOT") >= 0) return "cd-bot";
+  if (norm.indexOf("ABTOP") >= 0) return "ab-top";
+  if (norm.indexOf("CDTOP") >= 0 || norm.indexOf("COTOP") >= 0) return "cd-top";
+  return "";
+}
+
+function parseLikelyTstRowNumber(text) {
+  var token = String(text || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .replace(/[OQ]/g, "0")
+    .replace(/[IL]/g, "1")
+    .replace(/Z/g, "2")
+    .replace(/S/g, "5");
+  if (!/^\d{1,2}$/.test(token)) return NaN;
+  var n = Number(token);
+  return isFinite(n) && n >= 1 && n <= 15 ? n : NaN;
+}
+
+function parseLikelyTstTemp(text) {
+  var token = String(text || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+  if (!token) return NaN;
+  var digitCount = (token.match(/\d/g) || []).length;
+  if (digitCount < 2) return NaN;
+  token = token
+    .replace(/[OQ]/g, "0")
+    .replace(/D/g, "0")
+    .replace(/[IL]/g, "1")
+    .replace(/Z/g, "2")
+    .replace(/S/g, "5")
+    .replace(/G/g, "6");
+  if (!/^\d{3,4}$/.test(token)) return NaN;
+  var n = Number(token);
+  return isFinite(n) && n >= 100 && n <= 1800 ? n : NaN;
+}
+
+function setTstValueInArray(values, key, rowNo, value) {
+  var offsets = {
+    "ab-bot": 0,
+    "cd-bot": 15,
+    "ab-top": 30,
+    "cd-top": 45
+  };
+  if (!values || !offsets.hasOwnProperty(key)) return;
+  if (!(rowNo >= 1 && rowNo <= 15)) return;
+  var idx = offsets[key] + (rowNo - 1);
+  values[idx] = String(value || "");
+}
+
+function countFilledTstValues(values) {
+  var count = 0;
+  if (!Array.isArray(values)) return 0;
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i] || "").trim()) count++;
+  }
+  return count;
+}
+
+function extractTstValuesFromAzureTables(result) {
+  var analyze = result && result.analyzeResult && typeof result.analyzeResult === "object" ? result.analyzeResult : null;
+  var tables = Array.isArray(analyze && analyze.tables) ? analyze.tables : [];
+  var best = null;
+
+  for (var ti = 0; ti < tables.length; ti++) {
+    var table = tables[ti];
+    var cells = Array.isArray(table && table.cells) ? table.cells : [];
+    if (!cells.length) continue;
+
+    var rowMap = {};
+    var cellMap = {};
+    for (var ci = 0; ci < cells.length; ci++) {
+      var cell = cells[ci];
+      var rowIndex = Number(cell && cell.rowIndex);
+      var colIndex = Number(cell && cell.columnIndex);
+      if (!isFinite(rowIndex) || !isFinite(colIndex)) continue;
+      if (!rowMap[rowIndex]) rowMap[rowIndex] = [];
+      rowMap[rowIndex].push(cell);
+      cellMap[rowIndex + ":" + colIndex] = cell;
+    }
+
+    var headerRowIndex = -1;
+    var headerScore = 0;
+    var headerCols = {};
+    var rowIndexes = Object.keys(rowMap).map(function (k) {
+      return Number(k);
+    });
+
+    for (var ri = 0; ri < rowIndexes.length; ri++) {
+      var candidateRowIndex = rowIndexes[ri];
+      var rowCells = rowMap[candidateRowIndex] || [];
+      var candidateCols = {};
+      var candidateScore = 0;
+      for (var rci = 0; rci < rowCells.length; rci++) {
+        var key = mapTstHeaderCellToKey(rowCells[rci] && rowCells[rci].content);
+        if (!key) continue;
+        if (!candidateCols[key]) {
+          candidateCols[key] = Number(rowCells[rci].columnIndex);
+          candidateScore++;
+        }
+      }
+      if (candidateScore > headerScore) {
+        headerScore = candidateScore;
+        headerRowIndex = candidateRowIndex;
+        headerCols = candidateCols;
+      }
+    }
+
+    if (headerRowIndex < 0 || headerScore < 3) continue;
+
+    var rowLabelColumn = isFinite(headerCols.__row__) ? headerCols.__row__ : -1;
+    var dataCols = {
+      "ab-bot": headerCols["ab-bot"],
+      "cd-bot": headerCols["cd-bot"],
+      "ab-top": headerCols["ab-top"],
+      "cd-top": headerCols["cd-top"]
+    };
+    var values = createEmptyTstValueArray();
+
+    for (var rj = 0; rj < rowIndexes.length; rj++) {
+      var dataRowIndex = rowIndexes[rj];
+      if (dataRowIndex === headerRowIndex) continue;
+
+      var peepHole = NaN;
+      if (rowLabelColumn >= 0) {
+        var labelCell = cellMap[dataRowIndex + ":" + rowLabelColumn];
+        peepHole = parseLikelyTstRowNumber(labelCell && labelCell.content);
+      }
+      if (!isFinite(peepHole)) {
+        var candidateCells = rowMap[dataRowIndex] || [];
+        for (var cj = 0; cj < candidateCells.length; cj++) {
+          var maybeRow = parseLikelyTstRowNumber(candidateCells[cj] && candidateCells[cj].content);
+          if (isFinite(maybeRow)) {
+            peepHole = maybeRow;
+            break;
+          }
+        }
+      }
+      if (!isFinite(peepHole)) continue;
+
+      var keys = ["ab-bot", "cd-bot", "ab-top", "cd-top"];
+      for (var ki = 0; ki < keys.length; ki++) {
+        var mapKey = keys[ki];
+        var col = dataCols[mapKey];
+        if (!isFinite(col)) continue;
+        var dataCell = cellMap[dataRowIndex + ":" + col];
+        var temp = parseLikelyTstTemp(dataCell && dataCell.content);
+        if (isFinite(temp)) {
+          setTstValueInArray(values, mapKey, peepHole, String(Math.round(temp)));
+        }
+      }
+    }
+
+    var filledCount = countFilledTstValues(values);
+    if (!best || filledCount > best.filled_count) {
+      best = {
+        values: values,
+        filled_count: filledCount,
+        source: "azure-table"
+      };
+    }
+  }
+
+  return best;
+}
+
 async function handleTstOcr(request, env) {
   if (!isAzureDocIntelConfigured(env)) {
     return json(
@@ -234,13 +427,23 @@ async function handleTstOcr(request, env) {
       fileName: pickFirstNonEmptyString([payload.file_name, payload.fileName])
     });
     var ocrText = flattenAzureDocIntelText(result);
+    var tableValues = extractTstValuesFromAzureTables(result);
     return json(
       {
         ok: true,
-        mode: "azure-layout",
+        mode: tableValues && tableValues.filled_count > 0 ? "azure-table" : "azure-layout",
         provider: "azure-document-intelligence",
         ocr_text: ocrText,
-        details: Object.assign({ ocr_text: ocrText }, summarizeAzureDocIntelResult(result, getAzureDocIntelModelId(env)))
+        values: tableValues && tableValues.filled_count > 0 ? tableValues.values : undefined,
+        details: Object.assign(
+          {
+            ocr_text: ocrText,
+            values: tableValues && tableValues.filled_count > 0 ? tableValues.values : undefined,
+            filled_count: tableValues ? tableValues.filled_count : 0,
+            value_source: tableValues ? tableValues.source : "text"
+          },
+          summarizeAzureDocIntelResult(result, getAzureDocIntelModelId(env))
+        )
       },
       200
     );
