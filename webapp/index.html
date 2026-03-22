@@ -23688,6 +23688,7 @@ var tdVoiceFillWritten = 0;
 var tdVoiceFillKeepAlive = false;
 var tdVoiceFillManualStop = false;
 var tdVoiceFillRestartTimer = null;
+var tdVoiceUtteranceCommittedValues = [];
 var tdVoiceFillUseFocusedOrder = false;
 var tdVoiceLastFocusedIndex = -1;
 var tdVoiceLastFocusedAt = 0;
@@ -23904,6 +23905,28 @@ function extractTstVoiceNumbers(text){
 
   var out = [];
   var hits = raw.match(/-?\d+(?:[.,]\d+)?/g) || [];
+  function splitMergedToken(token){
+    var digits = String(token || "").replace(/\D/g, "");
+    var results = [];
+    function walk(rest){
+      if(!rest) return true;
+      var lens = [4,3];
+      for(var li=0; li<lens.length; li++){
+        var len = lens[li];
+        if(rest.length < len) continue;
+        var piece = rest.slice(0, len);
+        var n = Number(piece);
+        if(!isFinite(n)) continue;
+        if(n < TD_VOICE_FILL_MIN_TEMP || n > TD_VOICE_FILL_MAX_TEMP) continue;
+        results.push(String(Math.round(n)));
+        if(walk(rest.slice(len))) return true;
+        results.pop();
+      }
+      return false;
+    }
+    if(digits.length > 4 && walk(digits)) return results.slice();
+    return [];
+  }
   for(var i=0; i<hits.length; i++){
     var token = String(hits[i]).replace(",", ".");
     var n = Number(token);
@@ -23911,9 +23934,31 @@ function extractTstVoiceNumbers(text){
     var rounded = Math.round(n);
     if(rounded >= TD_VOICE_FILL_MIN_TEMP && rounded <= TD_VOICE_FILL_MAX_TEMP){
       out.push(String(rounded));
+      continue;
+    }
+    var merged = splitMergedToken(token);
+    if(merged.length){
+      out = out.concat(merged);
     }
   }
   return out;
+}
+
+function getTstVoiceCommittedOverlap(committed, incoming){
+  var a = Array.isArray(committed) ? committed : [];
+  var b = Array.isArray(incoming) ? incoming : [];
+  var max = Math.min(a.length, b.length);
+  for(var size=max; size>0; size--){
+    var ok = true;
+    for(var i=0; i<size; i++){
+      if(String(a[a.length - size + i] || "") !== String(b[i] || "")){
+        ok = false;
+        break;
+      }
+    }
+    if(ok) return size;
+  }
+  return 0;
 }
 
 function sanitizeTstVoiceValue(raw){
@@ -23971,7 +24016,7 @@ function ensureTstVoiceRecognition(){
 
   var rec = new Ctor();
   rec.lang = "en-IN";
-  rec.continuous = false;
+  rec.continuous = true;
   rec.interimResults = true;
   rec.maxAlternatives = 1;
 
@@ -23988,19 +24033,39 @@ function ensureTstVoiceRecognition(){
       else interimChunk += " " + txt;
     }
 
-    var consumed = extractTstVoiceNumbers(finalChunk);
-    var written = fillTdPeepFieldsFromVoiceNumbers(consumed);
-    if(written > 0) tdVoiceFillWritten += written;
-
-    if(written > 0){
-      setTstVoiceLivePreview("Saved: " + consumed.slice(0, 4).join(", "), "#34d399");
-      setTstVoiceFillStatus("Captured " + tdVoiceFillWritten + " values", "#34d399");
-    }else if(consumed.length){
-      setTstVoiceLivePreview("Heard: " + consumed.slice(0, 4).join(", "), "#fbbf24");
-    }
-
     var preview = normalizeTstVoiceTranscript(interimChunk);
     var interimNums = extractTstVoiceNumbers(preview);
+    var interimLead = [];
+    if(interimNums.length > 1){
+      var safeLeadCount = Math.max(0, interimNums.length - 1);
+      var overlapLead = getTstVoiceCommittedOverlap(tdVoiceUtteranceCommittedValues, interimNums.slice(0, safeLeadCount));
+      interimLead = interimNums.slice(overlapLead, safeLeadCount);
+    }
+    if(interimLead.length){
+      var interimWritten = fillTdPeepFieldsFromVoiceNumbers(interimLead);
+      if(interimWritten > 0){
+        tdVoiceFillWritten += interimWritten;
+        tdVoiceUtteranceCommittedValues = tdVoiceUtteranceCommittedValues.concat(interimLead.slice(0, interimWritten));
+        setTstVoiceLivePreview("Saved: " + interimLead.slice(0, 4).join(", "), "#34d399");
+        setTstVoiceFillStatus("Captured " + tdVoiceFillWritten + " values", "#34d399");
+      }
+    }
+
+    var consumed = extractTstVoiceNumbers(finalChunk);
+    if(consumed.length){
+      var overlapFinal = getTstVoiceCommittedOverlap(tdVoiceUtteranceCommittedValues, consumed);
+      var finalToCommit = consumed.slice(overlapFinal);
+      var written = fillTdPeepFieldsFromVoiceNumbers(finalToCommit);
+      if(written > 0){
+        tdVoiceFillWritten += written;
+        tdVoiceUtteranceCommittedValues = tdVoiceUtteranceCommittedValues.concat(finalToCommit.slice(0, written));
+        setTstVoiceLivePreview("Saved: " + finalToCommit.slice(0, 4).join(", "), "#34d399");
+        setTstVoiceFillStatus("Captured " + tdVoiceFillWritten + " values", "#34d399");
+      }else{
+        setTstVoiceLivePreview("Heard: " + consumed.slice(0, 4).join(", "), "#fbbf24");
+      }
+    }
+
     if(interimNums.length){
       setTstVoiceLivePreview("Heard: " + interimNums.slice(0, 4).join(", "), "#7dd3fc");
     }
@@ -24034,6 +24099,7 @@ function ensureTstVoiceRecognition(){
     var ids = getTdPeepFieldIds();
     var canContinue = tdVoiceFillKeepAlive && !tdVoiceFillManualStop && tdVoiceFillCellIndex < ids.length;
     if(canContinue){
+      tdVoiceUtteranceCommittedValues = [];
       setTstVoiceFillButtonState(true);
       if(tdVoiceFillWritten > 0){
         setTstVoiceFillStatus("Captured " + tdVoiceFillWritten + " values. Listening for next...", "#34d399");
@@ -24066,14 +24132,15 @@ function ensureTstVoiceRecognition(){
                 setTstVoiceFillButtonState(false);
                 setTstVoiceFillStatus("Could not resume microphone", "#fca5a5");
               }
-            }, 320);
+            }, 100);
           }
         }
-      }, 140);
+      }, 35);
       return;
     }
 
     tdVoiceFillKeepAlive = false;
+    tdVoiceUtteranceCommittedValues = [];
     setTstVoiceFillButtonState(false);
     if(tdVoiceFillWritten > 0){
       setTstVoiceFillStatus("Voice filled " + tdVoiceFillWritten + " cells", "#34d399");
@@ -24108,6 +24175,7 @@ function startTstVoiceInput(){
   tdVoiceFillUseFocusedOrder = cursor.source === "selected";
   tdVoiceFillCellIndex = cursor.index;
   tdVoiceFillWritten = 0;
+  tdVoiceUtteranceCommittedValues = [];
   tdVoiceFillKeepAlive = true;
   tdVoiceFillManualStop = false;
   clearTstVoiceRestartTimer();
@@ -24145,6 +24213,7 @@ function startTstVoiceInput(){
 function stopTstVoiceInput(){
   tdVoiceFillKeepAlive = false;
   tdVoiceFillManualStop = true;
+  tdVoiceUtteranceCommittedValues = [];
   clearTstVoiceRestartTimer();
   if(!tdVoiceFillListening){
     setTstVoiceFillButtonState(false);
