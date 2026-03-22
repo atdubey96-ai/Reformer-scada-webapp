@@ -2616,9 +2616,9 @@ body.light-theme .ab-chart-totals .ab-pill{
 }
 .all-ph-grid-temp-cell{
   text-align:center;
-  font-size:11px;
+  font-size:11.5px;
   font-weight:800;
-  color:var(--cell-text,#fff);
+  color:var(--cell-text,#111827);
   background:var(--cell-bg,#1e293b);
   border-radius:9px;
   min-height:42px;
@@ -2628,7 +2628,8 @@ body.light-theme .ab-chart-totals .ab-pill{
   padding:6px 4px;
   border:1px solid rgba(255,255,255,0.12);
   box-shadow:var(--cell-glow, none);
-  text-shadow:0 1px 1px rgba(0,0,0,0.3);
+  text-shadow:var(--cell-shadow,0 1px 0 rgba(255,255,255,0.38));
+  letter-spacing:0.12px;
 }
 .all-ph-snapshot-wrap{
   margin-top:14px;
@@ -2816,7 +2817,7 @@ body.light-theme .all-ph-grid-series-label{
 body.light-theme .all-ph-grid-temp-cell{
   border-color:rgba(255,255,255,0.88);
   box-shadow:var(--cell-glow, none), 0 8px 14px rgba(15,23,42,0.08);
-  text-shadow:none;
+  text-shadow:var(--cell-shadow,0 1px 0 rgba(255,255,255,0.45));
 }
 body.light-theme .all-ph-snapshot-wrap{
   border-color:rgba(100,116,139,0.22);
@@ -25980,9 +25981,10 @@ function renderAllPHData(){
           var val = vals[ph];
           var numVal = (val!=='' && val!==null && val!==undefined && !isNaN(Number(val))) ? Number(val) : null;
           var cellBg = (numVal!==null && minT!==null && maxT!==null) ? tempToColorInline(numVal, minT, maxT) : "#1e293b";
-          var textColor = (numVal!==null) ? "#fff" : "#334155";
+          var textColor = (numVal!==null) ? "#111827" : "#334155";
+          var textShadow = (numVal!==null) ? "0 1px 0 rgba(255,255,255,0.42), 0 0 8px rgba(255,255,255,0.08)" : "none";
           var dispVal = (numVal!==null) ? numVal+'°' : '—';
-          html += '<div class="all-ph-grid-temp-cell" title="PH'+(ph+1)+': '+(numVal!==null?numVal+'°C':'No data')+'" style="--cell-text:'+textColor+';--cell-bg:'+cellBg+';--cell-glow:'+(numVal!==null?('0 0 6px 1px '+cellBg+'99'):'none')+';">'+dispVal+'</div>';
+          html += '<div class="all-ph-grid-temp-cell" title="PH'+(ph+1)+': '+(numVal!==null?numVal+'°C':'No data')+'" style="--cell-text:'+textColor+';--cell-shadow:'+textShadow+';--cell-bg:'+cellBg+';--cell-glow:'+(numVal!==null?('0 0 6px 1px '+cellBg+'99'):'none')+';">'+dispVal+'</div>';
         }
         html += '</div>';
       });
