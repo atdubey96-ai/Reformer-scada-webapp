@@ -2189,9 +2189,9 @@ function cuboidGetTargetPixelRatio(){
   }else if(activeNow){
     cap=cuboidIsChromeLike ? 1.06 : 1.45;
   }else if(hostFocused){
-    cap=cuboidIsChromeLike ? 0.92 : 1.28;
+    cap=cuboidIsChromeLike ? 0.88 : 1.28;
   }else{
-    cap=cuboidIsChromeLike ? 0.68 : 1;
+    cap=cuboidIsChromeLike ? 0.62 : 1;
   }
   return Math.max(0.62,Math.min(deviceRatio,cap));
 }
@@ -2355,6 +2355,7 @@ let overlaySnapshot=null;
 let overlayCleaningLog={};
 let overlayAnimPhase=0;
 let lastOverlayPaintAt=0;
+let overlayDirty=true;
 const OVERLAY_TICK_MS=84;
 const OVERLAY_PHASE_STEP=0.24;
 let overlaySourceToken={
@@ -2444,6 +2445,7 @@ function refreshOverlayData(force){
   overlayCleaningLog=cleaningLog;
   faceDigest=nextDigest;
   overlaySourceToken=nextToken;
+  overlayDirty=true;
   return true;
 }
 
@@ -2456,6 +2458,7 @@ function syncFaceOverlays(force){
   cuboidPaintWallCanvas(faceOverlays.back.canvas,chamberWalls[1],overlaySnapshot,overlayCleaningLog[chamberWalls[1]] || {},overlayAnimPhase);
   faceOverlays.front.texture.needsUpdate=true;
   faceOverlays.back.texture.needsUpdate=true;
+  overlayDirty=false;
 }
 
 syncFaceOverlays(true);
@@ -2742,13 +2745,14 @@ const TAP_MOVE_TOLERANCE=10;
 const FACE_STEP=Math.PI/2;
 const FACE_ADVANCE_THRESHOLD=FACE_STEP*0.34;
 const ACTIVE_FRAME_MS=16;
-const FOCUSED_IDLE_FRAME_MS=16;
-const BACKGROUND_IDLE_FRAME_MS=110;
+const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 20 : 16;
+const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 185 : 110;
 const SLEEP_FRAME_MS=420;
 const ACTIVE_OVERLAY_TICK_MS=84;
-const BACKGROUND_OVERLAY_TICK_MS=420;
+const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 150 : 110;
+const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 760 : 420;
 const ACTIVE_FLAME_TICK_MS=16;
-const BACKGROUND_FLAME_TICK_MS=120;
+const BACKGROUND_FLAME_TICK_MS=cuboidIsChromeLike ? 160 : 120;
 
 let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
 let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
@@ -2875,8 +2879,9 @@ cuboidApplyRendererQuality(true);
 function animate(t){
   requestAnimationFrame(animate);
   const canRender=cuboidCanRenderNow();
+  const interactionActive=isDragging || autoSpin || cuboidIsFullscreen();
   const targetFrameMs=canRender
-    ? ((isDragging || autoSpin || cuboidIsFullscreen()) ? ACTIVE_FRAME_MS : (hostFocused ? FOCUSED_IDLE_FRAME_MS : BACKGROUND_IDLE_FRAME_MS))
+    ? (interactionActive ? ACTIVE_FRAME_MS : (hostFocused ? FOCUSED_IDLE_FRAME_MS : BACKGROUND_IDLE_FRAME_MS))
     : SLEEP_FRAME_MS;
   if(lastRenderTs && (t-lastRenderTs)<targetFrameMs) return;
   lastRenderTs=t;
@@ -2915,13 +2920,13 @@ function animate(t){
   group.rotation.z=0;
   innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
   const ts=t*0.001;
-  const overlayTickMs=(hostFocused || isDragging || autoSpin || cuboidIsFullscreen()) ? ACTIVE_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS;
-  if((t-lastOverlayPaintAt)>=overlayTickMs){
+  const overlayTickMs=interactionActive ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
+  if(overlayDirty || (t-lastOverlayPaintAt)>=overlayTickMs){
     overlayAnimPhase=(overlayAnimPhase+OVERLAY_PHASE_STEP)%(Math.PI*2);
     syncFaceOverlays(false);
     lastOverlayPaintAt=t;
   }
-  if(!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=((hostFocused || isDragging || autoSpin || cuboidIsFullscreen()) ? ACTIVE_FLAME_TICK_MS : BACKGROUND_FLAME_TICK_MS)){
+  if(!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=(interactionActive ? ACTIVE_FLAME_TICK_MS : BACKGROUND_FLAME_TICK_MS)){
     flameGroups.forEach(function(f){
       const s=f.seed;
       const flk=0.86+0.16*Math.sin(ts*2.3+s)+0.07*Math.sin(ts*5.1+s*1.4);
