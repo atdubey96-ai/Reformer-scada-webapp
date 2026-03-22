@@ -16143,6 +16143,9 @@ html, body, body *, body *::before, body *::after, svg text{
               class="td-toolbar-datetime">
           </div>
           <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
+          <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells">
+            📄 OCR File to TST
+          </button>
           <div class="td-fill-menu-wrap">
             <span style="font-size:10px;font-weight:800;color:#7ec8f0;letter-spacing:0.6px;text-transform:uppercase;">Ramp 930</span>
             <button type="button" id="td-fill-run-btn" class="td-fill-run-btn" onclick="runSelectedTstFillAction()" title="Fill all 60 TST cells with 930">📈 Ramp 930</button>
