@@ -16766,7 +16766,7 @@ html, body, body *, body *::before, body *::after, svg text{
     </span>
     <span class="btab-text">
       <span class="btab-label-top">Burner</span>
-      <span class="btab-label-sub">Analysis</span>
+      <span class="btab-label-sub"></span>
     </span>
   </button>
   <button class="btab" id="btab-cleaning" onclick="switchTab('cleaning')">
@@ -16786,7 +16786,7 @@ html, body, body *, body *::before, body *::after, svg text{
     </span>
     <span class="btab-text">
       <span class="btab-label-top">Cleaning</span>
-      <span class="btab-label-sub">Status</span>
+      <span class="btab-label-sub"></span>
     </span>
   </button>
   <button class="btab btab-active" id="btab-cuboid" onclick="switchTab('cuboid')">
@@ -16805,8 +16805,8 @@ html, body, body *, body *::before, body *::after, svg text{
       </span>
     </span>
     <span class="btab-text">
-      <span class="btab-label-top">Live</span>
-      <span class="btab-label-sub">Dashboard</span>
+      <span class="btab-label-top">Dashboard</span>
+      <span class="btab-label-sub"></span>
     </span>
   </button>
   <button class="btab" id="btab-tempdata" onclick="switchTab('tempdata')">
@@ -16822,8 +16822,8 @@ html, body, body *, body *::before, body *::after, svg text{
       </span>
     </span>
     <span class="btab-text">
-      <span class="btab-label-top">Temp.</span>
-      <span class="btab-label-sub">Data</span>
+      <span class="btab-label-top">Temp Data</span>
+      <span class="btab-label-sub"></span>
     </span>
   </button>
   <button class="btab btab-alarm" id="btab-alarms" onclick="switchTab('alarms')">
@@ -16843,8 +16843,8 @@ html, body, body *, body *::before, body *::after, svg text{
       <span class="btab-alarm-count" id="btab-alarm-count" style="display:none">0</span>
     </span>
     <span class="btab-text">
-      <span class="btab-label-top">Alarm</span>
-      <span class="btab-label-sub">Alerts</span>
+      <span class="btab-label-top">Alarms</span>
+      <span class="btab-label-sub"></span>
     </span>
   </button>
 </div>
@@ -26177,9 +26177,9 @@ function tempToColorInline(val, minT, maxT){
 </script>
 <style id="bottom-tab-banner-final-20260322">
 :root{
-  --scada-tabbar-side:clamp(34px,4.4vw,110px);
+  --scada-tabbar-side:clamp(14px,1.95vw,30px);
   --scada-tabbar-bottom:max(4px, env(safe-area-inset-bottom, 0px));
-  --scada-tabbar-height:64px;
+  --scada-tabbar-height:68px;
   --scada-tabbar-gap:10px;
 }
 body{
@@ -26189,54 +26189,44 @@ body{
   left:var(--scada-tabbar-side) !important;
   right:var(--scada-tabbar-side) !important;
   bottom:var(--scada-tabbar-bottom) !important;
-  border-radius:16px !important;
-  padding:3px 8px calc(3px + env(safe-area-inset-bottom, 0px)) !important;
+  border-radius:18px !important;
+  padding:6px 10px calc(6px + env(safe-area-inset-bottom, 0px)) !important;
   gap:0 !important;
   align-items:stretch !important;
   overflow:visible !important;
-  -webkit-backdrop-filter:blur(18px) saturate(135%) !important;
-  backdrop-filter:blur(18px) saturate(135%) !important;
-  background:
-    linear-gradient(180deg,rgba(255,255,255,0.20) 0%,rgba(255,255,255,0.06) 20%,rgba(255,255,255,0.015) 44%,rgba(255,255,255,0) 100%),
-    linear-gradient(135deg,rgba(42,54,79,0.985) 0%,rgba(22,30,47,0.988) 52%,rgba(8,12,22,0.992) 100%) !important;
-  border:1px solid rgba(152,178,218,0.38) !important;
+  -webkit-backdrop-filter:none !important;
+  backdrop-filter:none !important;
+  background:#050505 !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
   box-shadow:
-    0 24px 42px rgba(0,0,0,0.48),
-    0 0 0 1px rgba(7,13,24,0.86),
-    0 10px 18px rgba(8,14,24,0.28),
-    inset 0 1px 0 rgba(255,255,255,0.16),
-    inset 0 -22px 30px rgba(0,0,0,0.24),
-    inset 0 -1px 0 rgba(11,18,31,0.76) !important;
+    0 14px 28px rgba(0,0,0,0.34),
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -1px 0 rgba(255,255,255,0.02) !important;
 }
 body.light-theme .bottom-tab-bar{
-  background:
-    linear-gradient(180deg,rgba(255,255,255,0.99) 0%,rgba(243,247,252,0.985) 34%,rgba(228,237,247,0.99) 100%) !important;
-  border:1px solid rgba(124,148,181,0.34) !important;
+  background:#ffffff !important;
+  border:1px solid rgba(15,23,42,0.10) !important;
   box-shadow:
-    0 18px 30px rgba(26,42,66,0.18),
-    0 0 0 1px rgba(205,218,235,0.72),
+    0 14px 26px rgba(15,23,42,0.10),
     inset 0 1px 0 rgba(255,255,255,0.92),
-    inset 0 -18px 24px rgba(213,223,237,0.20),
-    inset 0 -1px 0 rgba(168,185,209,0.24) !important;
+    inset 0 -1px 0 rgba(15,23,42,0.03) !important;
 }
 .bottom-tab-bar::before{
   left:18px !important;
   right:18px !important;
-  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.46),rgba(255,255,255,0)) !important;
+  top:0 !important;
+  height:1px !important;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.18),rgba(255,255,255,0)) !important;
 }
 .bottom-tab-bar::after{
-  background:
-    radial-gradient(40% 58% at 14% -8%,rgba(88,163,255,0.26) 0%,rgba(88,163,255,0) 62%),
-    radial-gradient(48% 70% at 86% -16%,rgba(243,125,48,0.20) 0%,rgba(243,125,48,0) 62%),
-    linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0) 18%,rgba(255,255,255,0.03) 84%,rgba(255,255,255,0)) !important;
-  opacity:1 !important;
+  display:none !important;
 }
 .btab{
-  min-height:54px !important;
-  padding:4px 3px 5px !important;
+  min-height:56px !important;
+  padding:4px 4px 5px !important;
   margin:0 !important;
-  gap:2px !important;
-  border-radius:12px !important;
+  gap:3px !important;
+  border-radius:14px !important;
   background:transparent !important;
   border:0 !important;
   box-shadow:none !important;
@@ -26246,13 +26236,13 @@ body.light-theme .bottom-tab-bar{
   display:none !important;
 }
 .btab:hover{
-  background:rgba(255,255,255,0.04) !important;
+  background:rgba(255,255,255,0.02) !important;
   border-color:transparent !important;
   box-shadow:none !important;
   transform:none !important;
 }
 body.light-theme .btab:hover{
-  background:rgba(15,23,42,0.035) !important;
+  background:rgba(15,23,42,0.03) !important;
 }
 .btab-active{
   background:transparent !important;
@@ -26265,63 +26255,57 @@ body.light-theme .btab:hover{
 }
 .btab-icon-wrap{
   position:relative;
-  width:40px;
-  height:30px;
+  width:36px;
+  height:32px;
   display:flex;
   align-items:center;
   justify-content:center;
   flex:0 0 auto;
 }
 .btab-icon{
-  width:30px !important;
-  height:30px !important;
-  border-radius:999px !important;
+  width:28px !important;
+  height:28px !important;
+  border-radius:0 !important;
   background:transparent !important;
   border:0 !important;
-  color:var(--tab-icon-accent) !important;
+  color:rgba(255,255,255,0.76) !important;
   box-shadow:none !important;
 }
 .btab-icon::before{
-  inset:-3px !important;
-  border-radius:999px !important;
-  background:radial-gradient(72% 72% at 50% 50%,var(--tab-icon-glow) 0%,rgba(0,0,0,0) 72%) !important;
-  opacity:0.24 !important;
+  display:none !important;
 }
 .btab-icon svg{
-  width:18px !important;
-  height:18px !important;
-  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.26)) !important;
+  width:24px !important;
+  height:24px !important;
+  filter:none !important;
 }
 .btab-icon .tab-icon-stroke{
-  stroke-width:2.15 !important;
+  stroke-width:2.2 !important;
 }
 .btab-icon .tab-icon-fill{
-  opacity:0.24 !important;
+  opacity:0.16 !important;
+}
+.btab-icon .tab-icon-solid{
+  opacity:0.42 !important;
 }
 .btab:hover .btab-icon{
-  transform:translateY(-1px) scale(1.03) !important;
+  transform:none !important;
 }
 .btab-active .btab-icon{
-  transform:translateY(-1px) scale(1.07) !important;
-  background:
-    radial-gradient(120% 120% at 30% 18%,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0) 42%),
-    linear-gradient(180deg,rgba(28,38,59,0.92),rgba(10,16,28,0.98)) !important;
-  border:1px solid rgba(188,206,236,0.16) !important;
-  box-shadow:
-    0 8px 16px rgba(0,0,0,0.22),
-    inset 0 1px 0 rgba(255,255,255,0.14) !important;
+  transform:none !important;
+  color:#ffffff !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
 }
 body.light-theme .btab-icon{
-  color:var(--tab-icon-accent) !important;
+  color:rgba(0,0,0,0.70) !important;
 }
 body.light-theme .btab-active .btab-icon{
-  background:
-    radial-gradient(120% 120% at 30% 18%,rgba(255,255,255,0.46) 0%,rgba(255,255,255,0) 42%),
-    linear-gradient(180deg,rgba(80,90,118,0.96),rgba(43,53,74,0.98)) !important;
-  border:1px solid rgba(255,255,255,0.62) !important;
-  box-shadow:
-    0 8px 14px rgba(34,47,72,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.36) !important;
+  color:#000000 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
 }
 .btab-text{
   min-width:0;
@@ -26329,7 +26313,7 @@ body.light-theme .btab-active .btab-icon{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:1px;
+  gap:0;
   text-align:center;
 }
 .btab-label-top,
@@ -26341,59 +26325,48 @@ body.light-theme .btab-active .btab-icon{
   text-overflow:ellipsis;
 }
 .btab-label-top{
-  font-size:10.4px;
-  line-height:1.02;
-  font-weight:800;
-  letter-spacing:0.03em;
-  color:#e6eefc;
-  text-shadow:0 1px 0 rgba(0,0,0,0.28);
-}
-.btab-label-sub{
-  font-size:7.1px;
-  line-height:1;
-  font-weight:700;
-  letter-spacing:0.18em;
-  text-transform:uppercase;
-  color:rgba(190,205,227,0.78);
-}
-body.light-theme .btab-label-top{
-  color:#22344d;
+  font-size:11.4px;
+  line-height:1.05;
+  font-weight:600;
+  letter-spacing:0;
+  color:rgba(255,255,255,0.74);
   text-shadow:none;
 }
-body.light-theme .btab-label-sub{
-  color:#6f8199;
+.btab-label-sub{
+  display:none !important;
+}
+body.light-theme .btab-label-top{
+  color:rgba(0,0,0,0.72);
+  text-shadow:none;
 }
 .btab:hover .btab-label-top{
-  color:#f8fbff;
-}
-.btab:hover .btab-label-sub{
-  color:rgba(226,236,248,0.86);
+  color:rgba(255,255,255,0.88);
 }
 body.light-theme .btab:hover .btab-label-top{
-  color:#17283d;
-}
-body.light-theme .btab:hover .btab-label-sub{
-  color:#53657d;
+  color:rgba(0,0,0,0.86);
 }
 .btab-active .btab-label-top{
+  background:linear-gradient(180deg,#ffffff 0%,#e6e6e6 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
   color:#ffffff !important;
-}
-.btab-active .btab-label-sub{
-  color:rgba(229,237,249,0.90) !important;
+  font-weight:700 !important;
 }
 body.light-theme .btab-active .btab-label-top{
-  color:#152234 !important;
-}
-body.light-theme .btab-active .btab-label-sub{
-  color:#42546f !important;
+  background:linear-gradient(180deg,#040404 0%,#323232 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:#040404 !important;
 }
 .btab-alarm-count{
   top:-1px !important;
-  right:1px !important;
+  right:-2px !important;
   min-width:17px !important;
   height:17px !important;
   border-radius:999px !important;
-  border:2px solid rgba(8,14,24,0.96) !important;
+  border:2px solid #050505 !important;
   box-shadow:0 4px 10px rgba(220,38,38,0.24) !important;
 }
 body.light-theme .btab-alarm-count{
@@ -26407,37 +26380,33 @@ body.light-theme .btab-alarm-count{
 }
 @media (max-width:900px){
   :root{
-    --scada-tabbar-side:10px;
-    --scada-tabbar-height:58px;
+    --scada-tabbar-side:8px;
+    --scada-tabbar-height:62px;
     --scada-tabbar-gap:8px;
   }
   .bottom-tab-bar{
-    border-radius:14px !important;
-    padding:3px 5px calc(3px + env(safe-area-inset-bottom, 0px)) !important;
+    border-radius:16px !important;
+    padding:5px 4px calc(5px + env(safe-area-inset-bottom, 0px)) !important;
   }
   .btab{
-    min-height:49px !important;
+    min-height:50px !important;
     padding:3px 1px 4px !important;
-    border-radius:11px !important;
+    border-radius:12px !important;
   }
   .btab-icon-wrap{
-    width:36px;
-    height:27px;
+    width:32px;
+    height:29px;
   }
   .btab-icon{
-    width:26px !important;
-    height:26px !important;
+    width:24px !important;
+    height:24px !important;
   }
   .btab-icon svg{
-    width:16px !important;
-    height:16px !important;
+    width:21px !important;
+    height:21px !important;
   }
   .btab-label-top{
-    font-size:8.8px;
-  }
-  .btab-label-sub{
-    font-size:6.2px;
-    letter-spacing:0.14em;
+    font-size:10px;
   }
 }
 </style>
