@@ -23685,6 +23685,9 @@ var tdVoiceFillListening = false;
 var tdVoiceFillRecognition = null;
 var tdVoiceFillCellIndex = 0;
 var tdVoiceFillWritten = 0;
+var tdVoiceFillKeepAlive = false;
+var tdVoiceFillManualStop = false;
+var tdVoiceFillRestartTimer = null;
 var tdVoiceFillUseFocusedOrder = false;
 var tdVoiceLastFocusedIndex = -1;
 var tdVoiceLastFocusedAt = 0;
@@ -23757,6 +23760,12 @@ function setTstVoiceLivePreview(msg, color){
   el.textContent = txt;
   el.style.display = "inline-flex";
   el.style.color = color || "#7dd3fc";
+}
+
+function clearTstVoiceRestartTimer(){
+  if(!tdVoiceFillRestartTimer) return;
+  try{ clearTimeout(tdVoiceFillRestartTimer); }catch(e){}
+  tdVoiceFillRestartTimer = null;
 }
 
 function setTstVoiceFillButtonState(isListening){
@@ -23962,7 +23971,7 @@ function ensureTstVoiceRecognition(){
 
   var rec = new Ctor();
   rec.lang = "en-IN";
-  rec.continuous = true;
+  rec.continuous = false;
   rec.interimResults = true;
   rec.maxAlternatives = 1;
 
@@ -23983,8 +23992,11 @@ function ensureTstVoiceRecognition(){
     var written = fillTdPeepFieldsFromVoiceNumbers(consumed);
     if(written > 0) tdVoiceFillWritten += written;
 
-    if(consumed.length){
-      setTstVoiceLivePreview("Fill: " + consumed.slice(0, 4).join(", "), "#34d399");
+    if(written > 0){
+      setTstVoiceLivePreview("Saved: " + consumed.slice(0, 4).join(", "), "#34d399");
+      setTstVoiceFillStatus("Captured " + tdVoiceFillWritten + " values", "#34d399");
+    }else if(consumed.length){
+      setTstVoiceLivePreview("Heard: " + consumed.slice(0, 4).join(", "), "#fbbf24");
     }
 
     var preview = normalizeTstVoiceTranscript(interimChunk);
@@ -24006,6 +24018,9 @@ function ensureTstVoiceRecognition(){
     if(code === "no-speech"){
       setTstVoiceFillStatus("No speech detected. Try again.", "#fbbf24");
     }else if(code === "not-allowed" || code === "service-not-allowed"){
+      tdVoiceFillKeepAlive = false;
+      tdVoiceFillManualStop = true;
+      clearTstVoiceRestartTimer();
       setTstVoiceFillStatus("Microphone permission blocked", "#fca5a5");
     }else{
       setTstVoiceFillStatus("Voice error: " + code, "#fca5a5");
@@ -24015,6 +24030,50 @@ function ensureTstVoiceRecognition(){
 
   rec.onend = function(){
     tdVoiceFillListening = false;
+    clearTstVoiceRestartTimer();
+    var ids = getTdPeepFieldIds();
+    var canContinue = tdVoiceFillKeepAlive && !tdVoiceFillManualStop && tdVoiceFillCellIndex < ids.length;
+    if(canContinue){
+      setTstVoiceFillButtonState(true);
+      if(tdVoiceFillWritten > 0){
+        setTstVoiceFillStatus("Captured " + tdVoiceFillWritten + " values. Listening for next...", "#34d399");
+      }else{
+        setTstVoiceFillStatus("Listening for next value...", "#7dd3fc");
+      }
+      setTstVoiceLivePreview("", "#7dd3fc");
+      tdVoiceFillRestartTimer = setTimeout(function(){
+        tdVoiceFillRestartTimer = null;
+        if(!tdVoiceFillKeepAlive || tdVoiceFillManualStop || tdVoiceFillListening) return;
+        try{
+          rec.start();
+          tdVoiceFillListening = true;
+          setTstVoiceFillButtonState(true);
+          setTstVoiceFillStatus("Listening...", "#7dd3fc");
+        }catch(err){
+          if(tdVoiceFillKeepAlive && !tdVoiceFillManualStop){
+            setTstVoiceFillStatus("Reconnecting microphone...", "#7dd3fc");
+            tdVoiceFillRestartTimer = setTimeout(function(){
+              tdVoiceFillRestartTimer = null;
+              if(!tdVoiceFillKeepAlive || tdVoiceFillManualStop || tdVoiceFillListening) return;
+              try{
+                rec.start();
+                tdVoiceFillListening = true;
+                setTstVoiceFillButtonState(true);
+                setTstVoiceFillStatus("Listening...", "#7dd3fc");
+              }catch(e2){
+                tdVoiceFillKeepAlive = false;
+                tdVoiceFillManualStop = true;
+                setTstVoiceFillButtonState(false);
+                setTstVoiceFillStatus("Could not resume microphone", "#fca5a5");
+              }
+            }, 320);
+          }
+        }
+      }, 140);
+      return;
+    }
+
+    tdVoiceFillKeepAlive = false;
     setTstVoiceFillButtonState(false);
     if(tdVoiceFillWritten > 0){
       setTstVoiceFillStatus("Voice filled " + tdVoiceFillWritten + " cells", "#34d399");
@@ -24022,11 +24081,12 @@ function ensureTstVoiceRecognition(){
     }else{
       var current = document.getElementById("td-voice-fill-status");
       var txt = current ? String(current.textContent || "") : "";
-      if(!txt || txt === "Listening..."){
+      if(!txt || txt === "Listening..." || txt === "Listening for next value..."){
         setTstVoiceFillStatus("Voice stopped (no values captured)", "#fbbf24");
       }
     }
     setTstVoiceLivePreview("", "#7dd3fc");
+    tdVoiceFillManualStop = false;
   };
 
   tdVoiceFillRecognition = rec;
@@ -24034,7 +24094,7 @@ function ensureTstVoiceRecognition(){
 }
 
 function startTstVoiceInput(){
-  if(tdVoiceFillListening) return;
+  if(tdVoiceFillListening || tdVoiceFillKeepAlive) return;
   var rec = ensureTstVoiceRecognition();
   if(!rec){
     setTstVoiceFillButtonState(false);
@@ -24048,7 +24108,11 @@ function startTstVoiceInput(){
   tdVoiceFillUseFocusedOrder = cursor.source === "selected";
   tdVoiceFillCellIndex = cursor.index;
   tdVoiceFillWritten = 0;
+  tdVoiceFillKeepAlive = true;
+  tdVoiceFillManualStop = false;
+  clearTstVoiceRestartTimer();
   if(tdVoiceFillCellIndex >= ids.length){
+    tdVoiceFillKeepAlive = false;
     setTstVoiceFillButtonState(false);
     setTstVoiceFillStatus("All cells already reached. Select a cell to start overwrite.", "#fbbf24");
     setTstVoiceLivePreview("", "#7dd3fc");
@@ -24071,6 +24135,7 @@ function startTstVoiceInput(){
     }
   }catch(err){
     tdVoiceFillListening = false;
+    tdVoiceFillKeepAlive = false;
     setTstVoiceFillButtonState(false);
     setTstVoiceFillStatus("Could not start microphone", "#fca5a5");
     setTstVoiceLivePreview("", "#7dd3fc");
@@ -24078,9 +24143,18 @@ function startTstVoiceInput(){
 }
 
 function stopTstVoiceInput(){
+  tdVoiceFillKeepAlive = false;
+  tdVoiceFillManualStop = true;
+  clearTstVoiceRestartTimer();
   if(!tdVoiceFillListening){
     setTstVoiceFillButtonState(false);
     setTstVoiceLivePreview("", "#7dd3fc");
+    if(tdVoiceFillWritten > 0){
+      setTstVoiceFillStatus("Voice filled " + tdVoiceFillWritten + " cells", "#34d399");
+    }else{
+      setTstVoiceFillStatus("Voice stopped", "#fbbf24");
+    }
+    tdVoiceFillManualStop = false;
     return;
   }
   try{
@@ -24089,11 +24163,12 @@ function stopTstVoiceInput(){
     tdVoiceFillListening = false;
     setTstVoiceFillButtonState(false);
     setTstVoiceLivePreview("", "#7dd3fc");
+    tdVoiceFillManualStop = false;
   }
 }
 
 function toggleTstVoiceInput(){
-  if(tdVoiceFillListening) stopTstVoiceInput();
+  if(tdVoiceFillListening || tdVoiceFillKeepAlive) stopTstVoiceInput();
   else startTstVoiceInput();
 }
 
