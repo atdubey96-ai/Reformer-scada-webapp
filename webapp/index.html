@@ -26178,12 +26178,12 @@ function tempToColorInline(val, minT, maxT){
 <style id="bottom-tab-banner-final-20260322">
 :root{
   --scada-tabbar-side:clamp(14px,1.95vw,30px);
-  --scada-tabbar-bottom:max(4px, env(safe-area-inset-bottom, 0px));
+  --scada-tabbar-bottom:max(0px, env(safe-area-inset-bottom, 0px));
   --scada-tabbar-height:68px;
-  --scada-tabbar-gap:10px;
+  --scada-tabbar-gap:0px;
 }
 body{
-  padding-bottom:calc(var(--scada-tabbar-height) + 16px + env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom:calc(var(--scada-tabbar-height) + 12px + env(safe-area-inset-bottom, 0px)) !important;
 }
 .bottom-tab-bar{
   left:var(--scada-tabbar-side) !important;
@@ -26194,22 +26194,22 @@ body{
   gap:0 !important;
   align-items:stretch !important;
   overflow:visible !important;
-  -webkit-backdrop-filter:none !important;
-  backdrop-filter:none !important;
-  background:#050505 !important;
-  border:1px solid rgba(255,255,255,0.08) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(118%) !important;
+  backdrop-filter:blur(14px) saturate(118%) !important;
+  background:rgba(5,5,5,0.84) !important;
+  border:1px solid rgba(255,255,255,0.10) !important;
   box-shadow:
-    0 14px 28px rgba(0,0,0,0.34),
-    inset 0 1px 0 rgba(255,255,255,0.05),
-    inset 0 -1px 0 rgba(255,255,255,0.02) !important;
+    0 12px 24px rgba(0,0,0,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(255,255,255,0.03) !important;
 }
 body.light-theme .bottom-tab-bar{
-  background:#ffffff !important;
-  border:1px solid rgba(15,23,42,0.10) !important;
+  background:rgba(255,255,255,0.88) !important;
+  border:1px solid rgba(15,23,42,0.12) !important;
   box-shadow:
-    0 14px 26px rgba(15,23,42,0.10),
+    0 12px 22px rgba(15,23,42,0.08),
     inset 0 1px 0 rgba(255,255,255,0.92),
-    inset 0 -1px 0 rgba(15,23,42,0.03) !important;
+    inset 0 -1px 0 rgba(15,23,42,0.04) !important;
 }
 .bottom-tab-bar::before{
   left:18px !important;
@@ -26377,12 +26377,13 @@ body.light-theme .btab-alarm-count{
   right:var(--scada-tabbar-side) !important;
   bottom:calc(var(--scada-tabbar-bottom) + var(--scada-tabbar-height) + var(--scada-tabbar-gap)) !important;
   border-radius:18px !important;
+  margin-bottom:0 !important;
 }
 @media (max-width:900px){
   :root{
     --scada-tabbar-side:8px;
     --scada-tabbar-height:62px;
-    --scada-tabbar-gap:8px;
+    --scada-tabbar-gap:0px;
   }
   .bottom-tab-bar{
     border-radius:16px !important;
