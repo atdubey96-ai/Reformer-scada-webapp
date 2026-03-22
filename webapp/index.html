@@ -23688,6 +23688,8 @@ var tdVoiceFillWritten = 0;
 var tdVoiceFillKeepAlive = false;
 var tdVoiceFillManualStop = false;
 var tdVoiceFillRestartTimer = null;
+var tdVoiceFillSilenceTimer = null;
+var tdVoiceFillStoppedBySilence = false;
 var tdVoiceUtteranceCommittedValues = [];
 var tdVoiceFillUseFocusedOrder = false;
 var tdVoiceLastFocusedIndex = -1;
@@ -23695,6 +23697,7 @@ var tdVoiceLastFocusedAt = 0;
 var TD_VOICE_FOCUS_OVERRIDE_MS = 3500;
 var TD_VOICE_FILL_MIN_TEMP = 800;
 var TD_VOICE_FILL_MAX_TEMP = 1200;
+var TD_VOICE_AUTO_STOP_SILENCE_MS = 10000;
 var TD_RAMP_PRESET_BASE = 930;
 
 function getSelectedTstFillMode(){
@@ -23767,6 +23770,36 @@ function clearTstVoiceRestartTimer(){
   if(!tdVoiceFillRestartTimer) return;
   try{ clearTimeout(tdVoiceFillRestartTimer); }catch(e){}
   tdVoiceFillRestartTimer = null;
+}
+
+function clearTstVoiceSilenceTimer(){
+  if(!tdVoiceFillSilenceTimer) return;
+  try{ clearTimeout(tdVoiceFillSilenceTimer); }catch(e){}
+  tdVoiceFillSilenceTimer = null;
+}
+
+function armTstVoiceSilenceTimer(){
+  clearTstVoiceSilenceTimer();
+  if(!tdVoiceFillKeepAlive) return;
+  tdVoiceFillSilenceTimer = setTimeout(function(){
+    tdVoiceFillSilenceTimer = null;
+    if(!tdVoiceFillKeepAlive) return;
+    tdVoiceFillKeepAlive = false;
+    tdVoiceFillManualStop = true;
+    tdVoiceFillStoppedBySilence = true;
+    setTstVoiceFillStatus("Voice auto-stopped after 10s silence", "#fbbf24");
+    setTstVoiceLivePreview("", "#7dd3fc");
+    try{
+      if(tdVoiceFillRecognition && tdVoiceFillListening) tdVoiceFillRecognition.stop();
+      else{
+        tdVoiceFillListening = false;
+        setTstVoiceFillButtonState(false);
+      }
+    }catch(e){
+      tdVoiceFillListening = false;
+      setTstVoiceFillButtonState(false);
+    }
+  }, TD_VOICE_AUTO_STOP_SILENCE_MS);
 }
 
 function setTstVoiceFillButtonState(isListening){
@@ -24032,6 +24065,7 @@ function ensureTstVoiceRecognition(){
       if(r.isFinal) finalChunk += " " + txt;
       else interimChunk += " " + txt;
     }
+    if(finalChunk || interimChunk) armTstVoiceSilenceTimer();
 
     var preview = normalizeTstVoiceTranscript(interimChunk);
     var interimNums = extractTstVoiceNumbers(preview);
@@ -24079,6 +24113,7 @@ function ensureTstVoiceRecognition(){
   };
 
   rec.onerror = function(event){
+    clearTstVoiceSilenceTimer();
     var code = event && event.error ? String(event.error) : "unknown";
     if(code === "no-speech"){
       setTstVoiceFillStatus("No speech detected. Try again.", "#fbbf24");
@@ -24096,6 +24131,7 @@ function ensureTstVoiceRecognition(){
   rec.onend = function(){
     tdVoiceFillListening = false;
     clearTstVoiceRestartTimer();
+    clearTstVoiceSilenceTimer();
     var ids = getTdPeepFieldIds();
     var canContinue = tdVoiceFillKeepAlive && !tdVoiceFillManualStop && tdVoiceFillCellIndex < ids.length;
     if(canContinue){
@@ -24115,6 +24151,7 @@ function ensureTstVoiceRecognition(){
           tdVoiceFillListening = true;
           setTstVoiceFillButtonState(true);
           setTstVoiceFillStatus("Listening...", "#7dd3fc");
+          armTstVoiceSilenceTimer();
         }catch(err){
           if(tdVoiceFillKeepAlive && !tdVoiceFillManualStop){
             setTstVoiceFillStatus("Reconnecting microphone...", "#7dd3fc");
@@ -24126,6 +24163,7 @@ function ensureTstVoiceRecognition(){
                 tdVoiceFillListening = true;
                 setTstVoiceFillButtonState(true);
                 setTstVoiceFillStatus("Listening...", "#7dd3fc");
+                armTstVoiceSilenceTimer();
               }catch(e2){
                 tdVoiceFillKeepAlive = false;
                 tdVoiceFillManualStop = true;
@@ -24142,7 +24180,13 @@ function ensureTstVoiceRecognition(){
     tdVoiceFillKeepAlive = false;
     tdVoiceUtteranceCommittedValues = [];
     setTstVoiceFillButtonState(false);
-    if(tdVoiceFillWritten > 0){
+    if(tdVoiceFillStoppedBySilence){
+      if(tdVoiceFillWritten > 0){
+        setTstVoiceFillStatus("Voice auto-stopped after 10s silence (" + tdVoiceFillWritten + " cells filled)", "#fbbf24");
+      }else{
+        setTstVoiceFillStatus("Voice auto-stopped after 10s silence", "#fbbf24");
+      }
+    }else if(tdVoiceFillWritten > 0){
       setTstVoiceFillStatus("Voice filled " + tdVoiceFillWritten + " cells", "#34d399");
       showToast("🎙️ Voice filled " + tdVoiceFillWritten + " TST cells.");
     }else{
@@ -24153,6 +24197,7 @@ function ensureTstVoiceRecognition(){
       }
     }
     setTstVoiceLivePreview("", "#7dd3fc");
+    tdVoiceFillStoppedBySilence = false;
     tdVoiceFillManualStop = false;
   };
 
@@ -24178,7 +24223,9 @@ function startTstVoiceInput(){
   tdVoiceUtteranceCommittedValues = [];
   tdVoiceFillKeepAlive = true;
   tdVoiceFillManualStop = false;
+  tdVoiceFillStoppedBySilence = false;
   clearTstVoiceRestartTimer();
+  clearTstVoiceSilenceTimer();
   if(tdVoiceFillCellIndex >= ids.length){
     tdVoiceFillKeepAlive = false;
     setTstVoiceFillButtonState(false);
@@ -24190,6 +24237,7 @@ function startTstVoiceInput(){
   try{
     rec.start();
     tdVoiceFillListening = true;
+    armTstVoiceSilenceTimer();
     setTstVoiceFillButtonState(true);
     setTstVoiceLivePreview("Listening...", "#7dd3fc");
     if(cursor.source === "selected"){
@@ -24204,6 +24252,7 @@ function startTstVoiceInput(){
   }catch(err){
     tdVoiceFillListening = false;
     tdVoiceFillKeepAlive = false;
+    clearTstVoiceSilenceTimer();
     setTstVoiceFillButtonState(false);
     setTstVoiceFillStatus("Could not start microphone", "#fca5a5");
     setTstVoiceLivePreview("", "#7dd3fc");
@@ -24213,8 +24262,10 @@ function startTstVoiceInput(){
 function stopTstVoiceInput(){
   tdVoiceFillKeepAlive = false;
   tdVoiceFillManualStop = true;
+  tdVoiceFillStoppedBySilence = false;
   tdVoiceUtteranceCommittedValues = [];
   clearTstVoiceRestartTimer();
+  clearTstVoiceSilenceTimer();
   if(!tdVoiceFillListening){
     setTstVoiceFillButtonState(false);
     setTstVoiceLivePreview("", "#7dd3fc");
