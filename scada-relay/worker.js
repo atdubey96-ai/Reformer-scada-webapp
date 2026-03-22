@@ -392,6 +392,324 @@ function extractTstValuesFromAzureTables(result) {
   return best;
 }
 
+function medianNumber(values) {
+  var nums = [];
+  for (var i = 0; i < (Array.isArray(values) ? values.length : 0); i++) {
+    var n = Number(values[i]);
+    if (isFinite(n)) nums.push(n);
+  }
+  if (!nums.length) return NaN;
+  nums.sort(function (a, b) {
+    return a - b;
+  });
+  var mid = Math.floor(nums.length / 2);
+  return nums.length % 2 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+}
+
+function getAzurePolygonBounds(polygon) {
+  var pts = [];
+  if (Array.isArray(polygon) && polygon.length) {
+    if (typeof polygon[0] === "number") {
+      for (var i = 0; i + 1 < polygon.length; i += 2) {
+        var x = Number(polygon[i]);
+        var y = Number(polygon[i + 1]);
+        if (isFinite(x) && isFinite(y)) pts.push({ x: x, y: y });
+      }
+    } else {
+      for (var j = 0; j < polygon.length; j++) {
+        var pt = polygon[j];
+        var px = Number(pt && pt.x);
+        var py = Number(pt && pt.y);
+        if (isFinite(px) && isFinite(py)) pts.push({ x: px, y: py });
+      }
+    }
+  }
+  if (!pts.length) return null;
+
+  var minX = Infinity;
+  var maxX = -Infinity;
+  var minY = Infinity;
+  var maxY = -Infinity;
+  for (var k = 0; k < pts.length; k++) {
+    minX = Math.min(minX, pts[k].x);
+    maxX = Math.max(maxX, pts[k].x);
+    minY = Math.min(minY, pts[k].y);
+    maxY = Math.max(maxY, pts[k].y);
+  }
+  if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return null;
+  return {
+    minX: minX,
+    maxX: maxX,
+    minY: minY,
+    maxY: maxY,
+    width: Math.max(0, maxX - minX),
+    height: Math.max(0, maxY - minY),
+    cx: (minX + maxX) / 2,
+    cy: (minY + maxY) / 2
+  };
+}
+
+function createAzureLayoutItem(node, fallbackText, kind, pageNumber) {
+  var text = pickFirstNonEmptyString([node && node.content, node && node.text, fallbackText]);
+  if (!text) return null;
+  var polygon =
+    (node && node.polygon) ||
+    (Array.isArray(node && node.boundingRegions) && node.boundingRegions[0] && node.boundingRegions[0].polygon) ||
+    null;
+  var bounds = getAzurePolygonBounds(polygon);
+  if (!bounds) return null;
+  return {
+    text: text,
+    kind: kind || "item",
+    pageNumber: Number(pageNumber) || 1,
+    confidence: Number(node && node.confidence) || 0,
+    minX: bounds.minX,
+    maxX: bounds.maxX,
+    minY: bounds.minY,
+    maxY: bounds.maxY,
+    width: bounds.width,
+    height: bounds.height,
+    cx: bounds.cx,
+    cy: bounds.cy
+  };
+}
+
+function collectAzureLayoutItems(result, sourceKind) {
+  var analyze = result && result.analyzeResult && typeof result.analyzeResult === "object" ? result.analyzeResult : null;
+  var pages = Array.isArray(analyze && analyze.pages) ? analyze.pages : [];
+  var out = [];
+  for (var pi = 0; pi < pages.length; pi++) {
+    var page = pages[pi];
+    var pageNumber = Number(page && page.pageNumber) || pi + 1;
+    var nodes = Array.isArray(page && page[sourceKind]) ? page[sourceKind] : [];
+    for (var ni = 0; ni < nodes.length; ni++) {
+      var item = createAzureLayoutItem(nodes[ni], "", sourceKind, pageNumber);
+      if (item) out.push(item);
+    }
+  }
+  return out;
+}
+
+function pickBestTstHeaderCluster(items) {
+  var candidates = [];
+  for (var i = 0; i < (Array.isArray(items) ? items.length : 0); i++) {
+    var key = mapTstHeaderCellToKey(items[i] && items[i].text);
+    if (!key) continue;
+    candidates.push(
+      Object.assign(
+        {
+          headerKey: key
+        },
+        items[i]
+      )
+    );
+  }
+  if (!candidates.length) return null;
+
+  candidates.sort(function (a, b) {
+    return a.cy - b.cy;
+  });
+
+  var heightMedian = medianNumber(
+    candidates.map(function (item) {
+      return item.height;
+    })
+  );
+  var mergeThreshold = Math.max(12, (isFinite(heightMedian) ? heightMedian : 18) * 1.35);
+  var clusters = [];
+
+  for (var ci = 0; ci < candidates.length; ci++) {
+    var cand = candidates[ci];
+    var cluster = clusters.length ? clusters[clusters.length - 1] : null;
+    if (!cluster || Math.abs(cand.cy - cluster.cy) > mergeThreshold) {
+      clusters.push({
+        items: [cand],
+        cy: cand.cy
+      });
+      continue;
+    }
+    cluster.items.push(cand);
+    cluster.cy =
+      cluster.items.reduce(function (sum, item) {
+        return sum + item.cy;
+      }, 0) / cluster.items.length;
+  }
+
+  var best = null;
+  for (var cj = 0; cj < clusters.length; cj++) {
+    var group = clusters[cj];
+    var map = {};
+    var minY = Infinity;
+    var maxY = -Infinity;
+    var heights = [];
+    for (var gi = 0; gi < group.items.length; gi++) {
+      var item = group.items[gi];
+      minY = Math.min(minY, item.minY);
+      maxY = Math.max(maxY, item.maxY);
+      heights.push(item.height);
+      if (!map[item.headerKey] || item.width > map[item.headerKey].width) {
+        map[item.headerKey] = item;
+      }
+    }
+    var uniqueKeys = Object.keys(map);
+    var score = uniqueKeys.length + (map.__row__ ? 0.2 : 0);
+    if (!best || score > best.score) {
+      best = {
+        score: score,
+        items: group.items,
+        map: map,
+        uniqueCount: uniqueKeys.length,
+        minY: minY,
+        maxY: maxY,
+        medianHeight: medianNumber(heights)
+      };
+    }
+  }
+
+  return best && best.uniqueCount >= 3 ? best : null;
+}
+
+function getTstColumnGeometry(headerCluster) {
+  if (!headerCluster || !headerCluster.map) return null;
+  var keys = ["ab-bot", "cd-bot", "ab-top", "cd-top"];
+  var columns = [];
+  for (var i = 0; i < keys.length; i++) {
+    var item = headerCluster.map[keys[i]];
+    if (!item) continue;
+    columns.push({
+      key: keys[i],
+      cx: item.cx
+    });
+  }
+  if (columns.length < 2) return null;
+  columns.sort(function (a, b) {
+    return a.cx - b.cx;
+  });
+  var gaps = [];
+  for (var j = 1; j < columns.length; j++) {
+    gaps.push(columns[j].cx - columns[j - 1].cx);
+  }
+  var gapMedian = medianNumber(gaps);
+  return {
+    columns: columns,
+    minDataX: columns[0].cx,
+    maxDataX: columns[columns.length - 1].cx,
+    rowHeaderX: headerCluster.map.__row__ ? headerCluster.map.__row__.cx : columns[0].cx - (isFinite(gapMedian) ? gapMedian : 80),
+    gapMedian: isFinite(gapMedian) ? gapMedian : Math.max(80, (columns[columns.length - 1].cx - columns[0].cx) / Math.max(1, columns.length - 1))
+  };
+}
+
+function pickTstRowAnchors(items, headerCluster, columnGeometry) {
+  if (!headerCluster || !columnGeometry) return [];
+  var headerBottom = headerCluster.maxY + (isFinite(headerCluster.medianHeight) ? headerCluster.medianHeight : 18) * 0.35;
+  var splitX = (columnGeometry.rowHeaderX + columnGeometry.minDataX) / 2 + columnGeometry.gapMedian * 0.08;
+  var bestByRow = {};
+
+  for (var i = 0; i < (Array.isArray(items) ? items.length : 0); i++) {
+    var item = items[i];
+    var rowNo = parseLikelyTstRowNumber(item && item.text);
+    if (!isFinite(rowNo)) continue;
+    if (item.cy <= headerBottom) continue;
+    if (item.cx > splitX) continue;
+
+    var score = Math.abs(item.cx - columnGeometry.rowHeaderX) - item.confidence * 10;
+    if (!bestByRow[rowNo] || score < bestByRow[rowNo].score) {
+      bestByRow[rowNo] = {
+        rowNo: rowNo,
+        cy: item.cy,
+        score: score
+      };
+    }
+  }
+
+  var out = Object.keys(bestByRow)
+    .map(function (key) {
+      return bestByRow[key];
+    })
+    .sort(function (a, b) {
+      return a.rowNo - b.rowNo;
+    });
+
+  return out;
+}
+
+function extractTstValuesFromAzureGeometry(result) {
+  var lineItems = collectAzureLayoutItems(result, "lines");
+  var wordItems = collectAzureLayoutItems(result, "words");
+  var headerCluster = pickBestTstHeaderCluster(lineItems.length ? lineItems : wordItems);
+  if (!headerCluster) return null;
+
+  var columnGeometry = getTstColumnGeometry(headerCluster);
+  if (!columnGeometry) return null;
+
+  var rowAnchors = pickTstRowAnchors(wordItems.length ? wordItems : lineItems, headerCluster, columnGeometry);
+  if (rowAnchors.length < 2) rowAnchors = pickTstRowAnchors(lineItems, headerCluster, columnGeometry);
+  if (!rowAnchors.length) return null;
+
+  var rowGaps = [];
+  for (var i = 1; i < rowAnchors.length; i++) {
+    rowGaps.push(Math.abs(rowAnchors[i].cy - rowAnchors[i - 1].cy));
+  }
+  var rowStep = medianNumber(rowGaps);
+  if (!isFinite(rowStep) || rowStep <= 0) rowStep = Math.max(24, (isFinite(headerCluster.medianHeight) ? headerCluster.medianHeight : 18) * 2.2);
+
+  var headerBottom = headerCluster.maxY + (isFinite(headerCluster.medianHeight) ? headerCluster.medianHeight : 18) * 0.4;
+  var values = createEmptyTstValueArray();
+  var chosenScore = {};
+  var sources = [wordItems, lineItems];
+
+  for (var si = 0; si < sources.length; si++) {
+    var sourceItems = sources[si];
+    for (var ii = 0; ii < sourceItems.length; ii++) {
+      var item = sourceItems[ii];
+      var temp = parseLikelyTstTemp(item && item.text);
+      if (!isFinite(temp)) continue;
+      if (item.cy <= headerBottom) continue;
+      if (item.cx < columnGeometry.minDataX - columnGeometry.gapMedian * 0.25) continue;
+
+      var nearestColumn = null;
+      var nearestColumnDistance = Infinity;
+      for (var ci = 0; ci < columnGeometry.columns.length; ci++) {
+        var col = columnGeometry.columns[ci];
+        var dx = Math.abs(item.cx - col.cx);
+        if (dx < nearestColumnDistance) {
+          nearestColumnDistance = dx;
+          nearestColumn = col;
+        }
+      }
+      if (!nearestColumn || nearestColumnDistance > columnGeometry.gapMedian * 0.48) continue;
+
+      var nearestRow = null;
+      var nearestRowDistance = Infinity;
+      for (var ri = 0; ri < rowAnchors.length; ri++) {
+        var row = rowAnchors[ri];
+        var dy = Math.abs(item.cy - row.cy);
+        if (dy < nearestRowDistance) {
+          nearestRowDistance = dy;
+          nearestRow = row;
+        }
+      }
+      if (!nearestRow || nearestRowDistance > rowStep * 0.65) continue;
+
+      var cellKey = nearestColumn.key + ":" + nearestRow.rowNo;
+      var score = nearestColumnDistance + nearestRowDistance - item.confidence * 8;
+      if (chosenScore[cellKey] === undefined || score < chosenScore[cellKey]) {
+        setTstValueInArray(values, nearestColumn.key, nearestRow.rowNo, String(Math.round(temp)));
+        chosenScore[cellKey] = score;
+      }
+    }
+  }
+
+  var filledCount = countFilledTstValues(values);
+  return filledCount
+    ? {
+        values: values,
+        filled_count: filledCount,
+        source: "azure-geometry"
+      }
+    : null;
+}
+
 async function handleTstOcr(request, env) {
   if (!isAzureDocIntelConfigured(env)) {
     return json(
@@ -428,19 +746,26 @@ async function handleTstOcr(request, env) {
     });
     var ocrText = flattenAzureDocIntelText(result);
     var tableValues = extractTstValuesFromAzureTables(result);
+    var geometryValues = extractTstValuesFromAzureGeometry(result);
+    var bestValues =
+      geometryValues && geometryValues.filled_count > (tableValues ? tableValues.filled_count : 0)
+        ? geometryValues
+        : tableValues;
     return json(
       {
         ok: true,
-        mode: tableValues && tableValues.filled_count > 0 ? "azure-table" : "azure-layout",
+        mode: bestValues && bestValues.filled_count > 0 ? bestValues.source : "azure-layout",
         provider: "azure-document-intelligence",
         ocr_text: ocrText,
-        values: tableValues && tableValues.filled_count > 0 ? tableValues.values : undefined,
+        values: bestValues && bestValues.filled_count > 0 ? bestValues.values : undefined,
         details: Object.assign(
           {
             ocr_text: ocrText,
-            values: tableValues && tableValues.filled_count > 0 ? tableValues.values : undefined,
-            filled_count: tableValues ? tableValues.filled_count : 0,
-            value_source: tableValues ? tableValues.source : "text"
+            values: bestValues && bestValues.filled_count > 0 ? bestValues.values : undefined,
+            filled_count: bestValues ? bestValues.filled_count : 0,
+            value_source: bestValues ? bestValues.source : "text",
+            table_filled_count: tableValues ? tableValues.filled_count : 0,
+            geometry_filled_count: geometryValues ? geometryValues.filled_count : 0
           },
           summarizeAzureDocIntelResult(result, getAzureDocIntelModelId(env))
         )
