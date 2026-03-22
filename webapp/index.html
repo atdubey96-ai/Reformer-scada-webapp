@@ -3456,6 +3456,16 @@ body.light-theme .cw-nudge{
 #tab-cuboid .cuboid-followup-stack .hm-bottom-series{
   margin-top:18px;
 }
+@supports (content-visibility:auto){
+  #tab-cuboid .cuboid-followup-stack .analytics,
+  #tab-cuboid .cuboid-followup-stack .cleaning-section,
+  #tab-cuboid .cuboid-followup-stack .hm-saved-entries-card,
+  #tab-cuboid .cuboid-followup-stack #hm-adjust-card,
+  #tab-cuboid .cuboid-followup-stack .td-entry-card{
+    content-visibility:visible;
+    contain-intrinsic-size:auto;
+  }
+}
 #tab-cuboid .cuboid-tab-shell{
   width:100%;
   border:1px solid rgba(60,100,150,0.4);
@@ -6703,12 +6713,6 @@ function renderHeatMap(){
     dateVal: dateVal,
     entryDt: entry ? entry.dt : ""
   };
-  if(typeof refreshCuboidLegendPanels === "function"){
-    refreshCuboidLegendPanels();
-  }
-  if(typeof scheduleCuboidFrameDataPush === "function"){
-    scheduleCuboidFrameDataPush(0, false);
-  }
 
   if(heatMapUiEnabled && typeof r3dSyncFromHeatMapSnapshot === "function"){
     r3dSyncFromHeatMapSnapshot(window._hmRenderSnapshot);
@@ -12134,16 +12138,6 @@ html, body, body *, body *::before, body *::after, svg text{
         body.light-theme #tab-cuboid .td-saved-scroll{
           background:#07090d !important;
         }
-        @supports (content-visibility:auto){
-          #tab-cuboid .cuboid-followup-stack .analytics,
-          #tab-cuboid .cuboid-followup-stack .cleaning-section,
-          #tab-cuboid .cuboid-followup-stack .hm-saved-entries-card,
-          #tab-cuboid .cuboid-followup-stack #hm-adjust-card,
-          #tab-cuboid .cuboid-followup-stack .td-entry-card{
-            content-visibility:visible !important;
-            contain-intrinsic-size:auto !important;
-          }
-        }
       </style>
       <style id="cuboid-adjust-light-restore-20260321">
         body.light-theme #tab-cuboid #hm-adjust-card{
@@ -16424,9 +16418,9 @@ html, body, body *, body *::before, body *::after, svg text{
           id="cuboid-tab-frame"
           class="cuboid-tab-frame"
           aria-label="AB live burner wall cuboid viewer"
-          src="about:blank"
+          src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-04"
           data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260322-04"
-          loading="lazy"
+          loading="eager"
           allow="fullscreen"
           allowfullscreen
         ></iframe>
@@ -16529,9 +16523,9 @@ html, body, body *, body *::before, body *::after, svg text{
           id="cuboid-tab-frame-2"
           class="cuboid-tab-frame"
           aria-label="CD live burner wall cuboid viewer"
-          src="about:blank"
+          src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-04"
           data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260322-04"
-          loading="lazy"
+          loading="eager"
           allow="fullscreen"
           allowfullscreen
         ></iframe>
@@ -17715,7 +17709,8 @@ function loadData(){
 }
 function saveData(){
   localStorage.setItem("burnerData",JSON.stringify(data));
-  if(typeof requestHeatMapRender === "function") requestHeatMapRender(0);
+  if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches();
+  if(typeof isHeatMapTabEnabled === "function" && isHeatMapTabEnabled() && typeof requestHeatMapRender === "function") requestHeatMapRender(0);
   if(typeof scheduleCuboidPanelRefresh === "function") scheduleCuboidPanelRefresh(70, false);
   if(typeof scheduleCuboidFrameDataPush === "function") scheduleCuboidFrameDataPush(12, false);
 }
@@ -20558,7 +20553,8 @@ function init(){
   startServerSaveWatcher();
   /* Build the shared snapshot on load and prime the default Cuboid view. */
   setTimeout(function(){
-    if(typeof requestHeatMapRender === "function") requestHeatMapRender(0);
+    if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches();
+    if(typeof isHeatMapTabEnabled === "function" && isHeatMapTabEnabled() && typeof requestHeatMapRender === "function") requestHeatMapRender(0);
     if(typeof ensureCuboidViewerLoaded === "function") ensureCuboidViewerLoaded();
   }, 0);
   setTimeout(function(){ applyDesktopPrimaryInterfaceMode(true); }, 40);
@@ -20715,6 +20711,8 @@ function cuboidReadLocalStorageString(key){
   }
 }
 
+window._cuboidRenderSnapshot = null;
+var _cuboidRenderSnapshotDigest = "";
 var _cuboidLegendDigest = "";
 var _cuboidExtendedDigests = {
   analysis:"",
@@ -20727,7 +20725,68 @@ var _cuboidFrameInView = new WeakMap();
 var _cuboidFrameDataDigest = "";
 var _cuboidFrameDataTimer = null;
 
+function cuboidBuildPeepRow(entry, key){
+  var vals = entry && entry.peepHoles ? entry.peepHoles[key] : null;
+  var out = [];
+  for(var i=0; i<15; i++){
+    var n = Number(vals && vals[i]);
+    out.push(isFinite(n) ? n : "");
+  }
+  return out;
+}
+
+function cuboidPickLatestTempEntry(){
+  var list = Array.isArray(tempDataEntries) && tempDataEntries.length
+    ? tempDataEntries.slice()
+    : getAllTempEntries();
+  if(!list.length) return null;
+  list.sort(function(a, b){
+    var ta = Date.parse(String(a && (a.dt || a.date || a.createdAt || a.created_at) || ""));
+    var tb = Date.parse(String(b && (b.dt || b.date || b.createdAt || b.created_at) || ""));
+    ta = isFinite(ta) ? ta : 0;
+    tb = isFinite(tb) ? tb : 0;
+    return tb - ta;
+  });
+  return list[0] || null;
+}
+
+function cuboidBuildRenderSnapshot(){
+  var entry = cuboidPickLatestTempEntry();
+  var hmData = cuboidLegendSanitizeHmData(
+    (typeof captureCurrentBurnerSnapshot === "function")
+      ? captureCurrentBurnerSnapshot()
+      : cuboidLegendDefaultHmData()
+  );
+  return {
+    hmData: hmData,
+    abBot: cuboidBuildPeepRow(entry, "ab-bot"),
+    abTop: cuboidBuildPeepRow(entry, "ab-top"),
+    cdBot: cuboidBuildPeepRow(entry, "cd-bot"),
+    cdTop: cuboidBuildPeepRow(entry, "cd-top"),
+    entryDt: entry && entry.dt ? entry.dt : "Latest",
+    selectedShift: entry && (entry.selectedShift || entry.shift) ? (entry.selectedShift || entry.shift) : "All"
+  };
+}
+
+function refreshCuboidRenderSnapshot(force){
+  var snapshot = cuboidBuildRenderSnapshot();
+  var digest = hashStringFNV1a(cuboidSafeStringify(snapshot));
+  if(!force && window._cuboidRenderSnapshot && digest === _cuboidRenderSnapshotDigest){
+    return window._cuboidRenderSnapshot;
+  }
+  window._cuboidRenderSnapshot = snapshot;
+  _cuboidRenderSnapshotDigest = digest;
+  return snapshot;
+}
+
+function getCuboidRenderSnapshot(force){
+  if(force || !window._cuboidRenderSnapshot) return refreshCuboidRenderSnapshot(!!force);
+  return window._cuboidRenderSnapshot;
+}
+
 function invalidateCuboidRefreshCaches(){
+  window._cuboidRenderSnapshot = null;
+  _cuboidRenderSnapshotDigest = "";
   _cuboidLegendDigest = "";
   _cuboidExtendedDigests = {
     analysis:"",
@@ -20769,7 +20828,7 @@ function notifyAllCuboidHostStates(){
 }
 
 function cuboidComputeLegendDigest(){
-  var snap = window._hmRenderSnapshot || null;
+  var snap = refreshCuboidRenderSnapshot(false) || null;
   var cleanSource = "";
   try{
     cleanSource = cuboidSafeStringify(
@@ -20793,7 +20852,7 @@ function cuboidComputeLegendDigest(){
 }
 
 function cuboidBuildExtendedDigests(){
-  var snap = window._hmRenderSnapshot || null;
+  var snap = refreshCuboidRenderSnapshot(false) || null;
   var burnerSource = cuboidSafeStringify(typeof data === "object" ? data : {});
   var tempSource = cuboidSafeStringify(Array.isArray(tempDataEntries) ? tempDataEntries : []);
   var cleanPendingSource = cuboidSafeStringify(typeof cleaningPending === "object" ? cleaningPending : {});
@@ -20857,9 +20916,8 @@ function initCuboidFrameVisibilityObserver(){
 }
 
 function cuboidBuildLivePayload(){
-  var snap = window._hmRenderSnapshot || null;
-  var latestEntry = null;
-  var hmData = cuboidLegendLoadHmData();
+  var snap = refreshCuboidRenderSnapshot(false) || null;
+  var hmData = cuboidLegendSanitizeHmData(snap && snap.hmData ? snap.hmData : cuboidLegendDefaultHmData());
   var openingData = {};
   var cleaningLog = {};
   var payload = {
@@ -20902,25 +20960,28 @@ function cuboidBuildLivePayload(){
     payload.selectedShift = snap.selectedShift || payload.selectedShift;
     return payload;
   }
-
-  latestEntry = cuboidLegendPickLatestEntry(cuboidLegendLoadTempEntries());
-  if(latestEntry){
-    payload.abBot = cuboidLegendGetPeepRow(latestEntry, "ab-bot");
-    payload.abTop = cuboidLegendGetPeepRow(latestEntry, "ab-top");
-    payload.cdBot = cuboidLegendGetPeepRow(latestEntry, "cd-bot");
-    payload.cdTop = cuboidLegendGetPeepRow(latestEntry, "cd-top");
-    payload.entryDt = latestEntry.dt || payload.entryDt;
-    payload.selectedShift = latestEntry.selectedShift || latestEntry.shift || payload.selectedShift;
-  }
   return payload;
 }
+
+function cuboidBuildLiveBridgeState(){
+  var payload = cuboidBuildLivePayload();
+  return {
+    digest: hashStringFNV1a(cuboidSafeStringify(payload)),
+    payload: payload
+  };
+}
+
+window.cuboidHostGetLiveState = function(){
+  return cuboidBuildLiveBridgeState();
+};
 
 function pushCuboidFrameData(force){
   var frames = getCuboidFrames();
   if(!frames.length) return false;
   if(!force && !isCuboidTabActive()) return false;
-  var payload = cuboidBuildLivePayload();
-  var digest = hashStringFNV1a(cuboidSafeStringify(payload));
+  var bridgeState = cuboidBuildLiveBridgeState();
+  var payload = bridgeState.payload;
+  var digest = bridgeState.digest;
   if(!force && digest && digest === _cuboidFrameDataDigest) return false;
   _cuboidFrameDataDigest = digest;
   frames.forEach(function(frame){
@@ -21012,16 +21073,8 @@ function cuboidLegendSanitizeHmData(source){
 }
 
 function cuboidLegendLoadHmData(){
-  if(window._hmRenderSnapshot && window._hmRenderSnapshot.hmData){
-    return cuboidLegendSanitizeHmData(window._hmRenderSnapshot.hmData);
-  }
-  try{
-    var raw = localStorage.getItem("burnerData");
-    if(raw){
-      return cuboidLegendSanitizeHmData(JSON.parse(raw));
-    }
-  }catch(e){}
-  return cuboidLegendDefaultHmData();
+  var snap = getCuboidRenderSnapshot(false);
+  return cuboidLegendSanitizeHmData(snap && snap.hmData ? snap.hmData : cuboidLegendDefaultHmData());
 }
 
 function cuboidLegendLoadTempEntries(){
@@ -21061,6 +21114,7 @@ function cuboidLegendGetPeepRow(entry, key){
 
 function cuboidLegendBuildSnapshot(chamber){
   var zone = String(chamber || "").toLowerCase() === "cd" ? "cd" : "ab";
+  var snap = getCuboidRenderSnapshot(false);
   var snapshot = {
     hmData: cuboidLegendLoadHmData(),
     top: [],
@@ -21068,11 +21122,11 @@ function cuboidLegendBuildSnapshot(chamber){
     entryDt: "Latest",
     selectedShift: "All"
   };
-  if(window._hmRenderSnapshot){
-    snapshot.top = zone === "cd" ? (window._hmRenderSnapshot.cdTop || []) : (window._hmRenderSnapshot.abTop || []);
-    snapshot.bot = zone === "cd" ? (window._hmRenderSnapshot.cdBot || []) : (window._hmRenderSnapshot.abBot || []);
-    snapshot.entryDt = window._hmRenderSnapshot.entryDt || snapshot.entryDt;
-    snapshot.selectedShift = window._hmRenderSnapshot.selectedShift || snapshot.selectedShift;
+  if(snap){
+    snapshot.top = zone === "cd" ? (snap.cdTop || []) : (snap.abTop || []);
+    snapshot.bot = zone === "cd" ? (snap.cdBot || []) : (snap.abBot || []);
+    snapshot.entryDt = snap.entryDt || snapshot.entryDt;
+    snapshot.selectedShift = snap.selectedShift || snapshot.selectedShift;
     return snapshot;
   }
   var entry = cuboidLegendPickLatestEntry(cuboidLegendLoadTempEntries());
@@ -21651,9 +21705,7 @@ function refreshCuboidLegendPanels(force){
 function refreshCuboidExtendedPanels(force){
   if(!force && !isCuboidTabActive()) return false;
   var digests = cuboidBuildExtendedDigests();
-  if(typeof requestHeatMapRender === "function" && (force || !window._hmRenderSnapshot)){
-    requestHeatMapRender(0);
-  }
+  var snapshot = refreshCuboidRenderSnapshot(false) || getCuboidRenderSnapshot(false);
   if(typeof generateAnalysis === "function" && (force || digests.analysis !== _cuboidExtendedDigests.analysis)){
     generateAnalysis();
     _cuboidExtendedDigests.analysis = digests.analysis;
@@ -21666,8 +21718,8 @@ function refreshCuboidExtendedPanels(force){
     renderTempDataTable();
     _cuboidExtendedDigests.temp = digests.temp;
   }
-  if(typeof updateHeatMapAdjustmentLogic === "function" && window._hmRenderSnapshot && (force || digests.adjustment !== _cuboidExtendedDigests.adjustment)){
-    updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
+  if(typeof updateHeatMapAdjustmentLogic === "function" && snapshot && (force || digests.adjustment !== _cuboidExtendedDigests.adjustment)){
+    updateHeatMapAdjustmentLogic(snapshot);
     _cuboidExtendedDigests.adjustment = digests.adjustment;
   }
 }
@@ -21897,17 +21949,12 @@ window.addEventListener("storage", function(ev){
     return;
   }
   setTimeout(function(){
+    invalidateCuboidRefreshCaches();
     refreshCuboidLegendPanels(true);
     scheduleCuboidExtendedRefresh(120, true);
     scheduleCuboidFrameDataPush(0, true);
   }, 0);
 });
-window.setInterval(function(){
-  if(document.hidden) return;
-  if(isCuboidTabActive()){
-    refreshCuboidLegendPanels(false);
-  }
-}, 6000);
 window.addEventListener("message", function(ev){
   var data = ev && ev.data ? ev.data : null;
   if(!data || data.type !== "cuboid-toggle-overlay") return;
@@ -23260,18 +23307,26 @@ async function importServerReportPayload(payload){
 function refreshHeatMapAfterServerSync(){
   var refreshNow = function(){
     try{
-      if(typeof renderHeatMap === "function"){
-        try{ window._hmSkipCuboidRefresh = false; }catch(_e){}
-        renderHeatMap();
-      }else if(typeof requestHeatMapRender === "function"){
-        requestHeatMapRender(0);
+      if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches();
+      if(isCuboidTabActive()){
+        if(typeof scheduleCuboidPanelRefresh === "function") scheduleCuboidPanelRefresh(40, true);
+        if(typeof scheduleCuboidExtendedRefresh === "function") scheduleCuboidExtendedRefresh(140, true);
+        if(typeof scheduleCuboidFrameDataPush === "function") scheduleCuboidFrameDataPush(16, true);
       }
-      if(window._hmRenderSnapshot){
-        if(typeof updateHeatMapAdjustmentLogic === "function"){
-          updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
+      if(typeof isHeatMapTabEnabled === "function" && isHeatMapTabEnabled()){
+        if(typeof renderHeatMap === "function"){
+          try{ window._hmSkipCuboidRefresh = false; }catch(_e){}
+          renderHeatMap();
+        }else if(typeof requestHeatMapRender === "function"){
+          requestHeatMapRender(0);
         }
-        if(typeof ensureHeatMapWallBuilt === "function" && typeof _activeHeatMapWall !== "undefined" && _activeHeatMapWall){
-          ensureHeatMapWallBuilt(_activeHeatMapWall);
+        if(window._hmRenderSnapshot){
+          if(typeof updateHeatMapAdjustmentLogic === "function"){
+            updateHeatMapAdjustmentLogic(window._hmRenderSnapshot);
+          }
+          if(typeof ensureHeatMapWallBuilt === "function" && typeof _activeHeatMapWall !== "undefined" && _activeHeatMapWall){
+            ensureHeatMapWallBuilt(_activeHeatMapWall);
+          }
         }
       }
     }catch(err){
@@ -25337,7 +25392,8 @@ async function saveTempData(){
   }
 
   try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); } catch(e){}
-  if(typeof requestHeatMapRender === "function") requestHeatMapRender(0);
+  if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches();
+  if(typeof isHeatMapTabEnabled === "function" && isHeatMapTabEnabled() && typeof requestHeatMapRender === "function") requestHeatMapRender(0);
   if(typeof scheduleCuboidPanelRefresh === "function") scheduleCuboidPanelRefresh(70, false);
   if(typeof scheduleCuboidFrameDataPush === "function") scheduleCuboidFrameDataPush(14, false);
   renderTempDataTable();
@@ -25366,7 +25422,8 @@ function deleteTempEntry(idx){
     updateTempSaveButtonLabel();
   }
   try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); } catch(e){}
-  if(typeof requestHeatMapRender === "function") requestHeatMapRender(0);
+  if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches();
+  if(typeof isHeatMapTabEnabled === "function" && isHeatMapTabEnabled() && typeof requestHeatMapRender === "function") requestHeatMapRender(0);
   if(typeof scheduleCuboidPanelRefresh === "function") scheduleCuboidPanelRefresh(70, false);
   if(typeof scheduleCuboidFrameDataPush === "function") scheduleCuboidFrameDataPush(14, false);
   renderTempDataTable();
