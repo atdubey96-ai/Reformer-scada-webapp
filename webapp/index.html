@@ -26177,7 +26177,7 @@ function tempToColorInline(val, minT, maxT){
 </script>
 <style id="bottom-tab-banner-final-20260322">
 :root{
-  --scada-tabbar-side:clamp(14px,1.95vw,30px);
+  --scada-tabbar-side:clamp(58px,6.2vw,170px);
   --scada-tabbar-bottom:max(4px, env(safe-area-inset-bottom, 0px));
   --scada-tabbar-height:74px;
   --scada-tabbar-gap:10px;
@@ -26194,34 +26194,42 @@ body{
   gap:0 !important;
   align-items:stretch !important;
   overflow:visible !important;
+  -webkit-backdrop-filter:blur(18px) saturate(135%) !important;
+  backdrop-filter:blur(18px) saturate(135%) !important;
   background:
-    linear-gradient(180deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.01) 38%,rgba(255,255,255,0) 100%),
-    linear-gradient(135deg,rgba(9,14,24,0.96) 0%,rgba(12,19,32,0.95) 58%,rgba(8,13,22,0.97) 100%) !important;
-  border:1px solid rgba(110,138,176,0.28) !important;
+    linear-gradient(180deg,rgba(255,255,255,0.20) 0%,rgba(255,255,255,0.06) 20%,rgba(255,255,255,0.015) 44%,rgba(255,255,255,0) 100%),
+    linear-gradient(135deg,rgba(42,54,79,0.985) 0%,rgba(22,30,47,0.988) 52%,rgba(8,12,22,0.992) 100%) !important;
+  border:1px solid rgba(152,178,218,0.38) !important;
   box-shadow:
-    0 18px 32px rgba(0,0,0,0.34),
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    inset 0 -1px 0 rgba(13,20,34,0.58) !important;
+    0 24px 42px rgba(0,0,0,0.48),
+    0 0 0 1px rgba(7,13,24,0.86),
+    0 10px 18px rgba(8,14,24,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -22px 30px rgba(0,0,0,0.24),
+    inset 0 -1px 0 rgba(11,18,31,0.76) !important;
 }
 body.light-theme .bottom-tab-bar{
   background:
-    linear-gradient(180deg,rgba(255,255,255,0.94) 0%,rgba(246,249,253,0.94) 62%,rgba(240,245,251,0.95) 100%) !important;
-  border:1px solid rgba(130,154,187,0.24) !important;
+    linear-gradient(180deg,rgba(255,255,255,0.99) 0%,rgba(243,247,252,0.985) 34%,rgba(228,237,247,0.99) 100%) !important;
+  border:1px solid rgba(124,148,181,0.34) !important;
   box-shadow:
-    0 14px 26px rgba(26,42,66,0.14),
+    0 18px 30px rgba(26,42,66,0.18),
+    0 0 0 1px rgba(205,218,235,0.72),
     inset 0 1px 0 rgba(255,255,255,0.92),
-    inset 0 -1px 0 rgba(175,191,214,0.18) !important;
+    inset 0 -18px 24px rgba(213,223,237,0.20),
+    inset 0 -1px 0 rgba(168,185,209,0.24) !important;
 }
 .bottom-tab-bar::before{
-  left:16px !important;
-  right:16px !important;
-  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.28),rgba(255,255,255,0)) !important;
+  left:18px !important;
+  right:18px !important;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.46),rgba(255,255,255,0)) !important;
 }
 .bottom-tab-bar::after{
   background:
-    radial-gradient(42% 60% at 18% -12%,rgba(77,167,255,0.18) 0%,rgba(77,167,255,0) 60%),
-    radial-gradient(48% 70% at 82% -18%,rgba(243,112,34,0.16) 0%,rgba(243,112,34,0) 60%) !important;
-  opacity:0.95 !important;
+    radial-gradient(40% 58% at 14% -8%,rgba(88,163,255,0.26) 0%,rgba(88,163,255,0) 62%),
+    radial-gradient(48% 70% at 86% -16%,rgba(243,125,48,0.20) 0%,rgba(243,125,48,0) 62%),
+    linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0) 18%,rgba(255,255,255,0.03) 84%,rgba(255,255,255,0)) !important;
+  opacity:1 !important;
 }
 .btab{
   min-height:64px !important;
@@ -26399,7 +26407,7 @@ body.light-theme .btab-alarm-count{
 }
 @media (max-width:900px){
   :root{
-    --scada-tabbar-side:8px;
+    --scada-tabbar-side:12px;
     --scada-tabbar-height:68px;
     --scada-tabbar-gap:8px;
   }
