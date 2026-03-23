@@ -2137,15 +2137,15 @@ function cuboidGetTargetPixelRatio(){
   const activeNow=isDragging || autoSpin || cuboidIsFullscreen();
   let cap;
   if(!cuboidCanRenderNow()){
-    cap=0.58;
+    cap=0.66;
   }else if(activeNow){
-    cap=cuboidIsChromeLike ? 0.94 : 1.18;
+    cap=cuboidIsChromeLike ? 1.08 : 1.32;
   }else if(hostFocused){
-    cap=cuboidIsChromeLike ? 0.74 : 0.98;
+    cap=cuboidIsChromeLike ? 0.92 : 1.12;
   }else{
-    cap=cuboidIsChromeLike ? 0.58 : 0.82;
+    cap=cuboidIsChromeLike ? 0.72 : 0.92;
   }
-  return Math.max(0.58,Math.min(deviceRatio,cap));
+  return Math.max(0.66,Math.min(deviceRatio,cap));
 }
 
 function cuboidApplyRendererQuality(force){
@@ -2218,11 +2218,30 @@ capBot.rotation.x=Math.PI/2;
 capBot.position.y=-FH/2;
 group.add(capBot);
 
+function cuboidTuneFaceTexture(texture){
+  if(!texture) return texture;
+  texture.wrapS=THREE.ClampToEdgeWrapping;
+  texture.wrapT=THREE.ClampToEdgeWrapping;
+  texture.minFilter=THREE.LinearFilter;
+  texture.magFilter=THREE.LinearFilter;
+  if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy==="function"){
+    try{
+      texture.anisotropy=Math.max(1,Math.min(8,renderer.capabilities.getMaxAnisotropy() || 1));
+    }catch(_e){}
+  }
+  if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
+    texture.colorSpace=THREE.SRGBColorSpace;
+  }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
+    texture.encoding=THREE.sRGBEncoding;
+  }
+  return texture;
+}
+
 const outerCanvFront=document.createElement("canvas");
 outerCanvFront.width=2048;
 outerCanvFront.height=1280;
 drawOuterCanvas(outerCanvFront,chamberWalls[0],0);
-const outerTexFront=new THREE.CanvasTexture(outerCanvFront);
+const outerTexFront=cuboidTuneFaceTexture(new THREE.CanvasTexture(outerCanvFront));
 const faceFront=new THREE.Mesh(
   new THREE.PlaneGeometry(FW,FH),
   new THREE.MeshStandardMaterial({color:0xe5ecf3,map:outerTexFront,roughness:0.48,metalness:0.72,emissive:0x0b1017,emissiveIntensity:0.10,side:THREE.FrontSide})
@@ -2234,7 +2253,7 @@ const outerCanvBack=document.createElement("canvas");
 outerCanvBack.width=2048;
 outerCanvBack.height=1280;
 drawOuterCanvas(outerCanvBack,chamberWalls[1],0);
-const outerTexBack=new THREE.CanvasTexture(outerCanvBack);
+const outerTexBack=cuboidTuneFaceTexture(new THREE.CanvasTexture(outerCanvBack));
 const faceBack=new THREE.Mesh(
   new THREE.PlaneGeometry(FW,FH),
   new THREE.MeshStandardMaterial({color:0xe5ecf3,map:outerTexBack,roughness:0.48,metalness:0.72,emissive:0x0b1017,emissiveIntensity:0.10,side:THREE.FrontSide})
@@ -2264,18 +2283,9 @@ group.add(innerBack);
 
 function createFaceOverlay(face,wallKey){
   const canvas=document.createElement("canvas");
-  canvas.width=1440;
-  canvas.height=1080;
-  const texture=new THREE.CanvasTexture(canvas);
-  texture.wrapS=THREE.ClampToEdgeWrapping;
-  texture.wrapT=THREE.ClampToEdgeWrapping;
-  texture.minFilter=THREE.LinearFilter;
-  texture.magFilter=THREE.LinearFilter;
-  if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
-    texture.colorSpace=THREE.SRGBColorSpace;
-  }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
-    texture.encoding=THREE.sRGBEncoding;
-  }
+  canvas.width=1728;
+  canvas.height=1296;
+  const texture=cuboidTuneFaceTexture(new THREE.CanvasTexture(canvas));
   const material=new THREE.MeshBasicMaterial({
     map:texture,
     transparent:true,
@@ -2646,11 +2656,10 @@ const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 110 : 80;
 const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 650 : 450;
 const SLEEP_FRAME_MS=750;
 const ACTIVE_OVERLAY_TICK_MS=120;
-const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 950 : 780;
-const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 2600 : 1800;
+const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 2400 : 1800;
+const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 5200 : 3600;
 const ACTIVE_FLAME_TICK_MS=42;
 const BACKGROUND_FLAME_TICK_MS=cuboidIsChromeLike ? 1400 : 1000;
-const IDLE_OVERLAY_PHASE_STEP=0.055;
 
 let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
 let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
@@ -2830,10 +2839,12 @@ function animate(t){
     frameNeedsRender=frameNeedsRender || sceneMoving;
   }
   const ts=t*0.001;
-  const shouldAnimateOverlay=interactionActive || hostFocused;
+  const shouldAnimateOverlay=interactionActive;
   const overlayTickMs=interactionActive ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
-  if(overlayDirty || (shouldAnimateOverlay && (t-lastOverlayPaintAt)>=overlayTickMs) || (!hostFocused && (t-lastOverlayPaintAt)>=BACKGROUND_OVERLAY_TICK_MS)){
-    overlayAnimPhase=(overlayAnimPhase+(interactionActive ? OVERLAY_PHASE_STEP : IDLE_OVERLAY_PHASE_STEP))%(Math.PI*2);
+  if(overlayDirty || (shouldAnimateOverlay && (t-lastOverlayPaintAt)>=overlayTickMs)){
+    if(shouldAnimateOverlay){
+      overlayAnimPhase=(overlayAnimPhase+OVERLAY_PHASE_STEP)%(Math.PI*2);
+    }
     syncFaceOverlays(false);
     lastOverlayPaintAt=t;
     frameNeedsRender=true;
