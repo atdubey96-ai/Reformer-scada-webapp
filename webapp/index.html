@@ -7007,6 +7007,30 @@ function hmStateTransition(state, fuel, mode){
   return s === "O" ? "O → B" : "C → N";
 }
 
+function hmGetOpeningAdjustmentPlan(temp){
+  var n = Number(temp);
+  if(!isFinite(n)) return null;
+  if(n < 890){
+    return { mode:"take", actionWord:"Take", targetOpening:100, stepOpening:100, bandLabel:"below 890°C" };
+  }
+  if(n <= 900){
+    return { mode:"take", actionWord:"Take", targetOpening:75, stepOpening:75, bandLabel:"890°C to 900°C" };
+  }
+  if(n < 910){
+    return { mode:"take", actionWord:"Take", targetOpening:50, stepOpening:50, bandLabel:"900°C to 910°C" };
+  }
+  if(n > 985){
+    return { mode:"cut", actionWord:"Cut", targetOpening:0, stepOpening:100, bandLabel:"above 985°C" };
+  }
+  if(n >= 975){
+    return { mode:"cut", actionWord:"Cut", targetOpening:25, stepOpening:75, bandLabel:"975°C to 985°C" };
+  }
+  if(n > 970){
+    return { mode:"cut", actionWord:"Cut", targetOpening:50, stepOpening:50, bandLabel:"970°C to 975°C" };
+  }
+  return null;
+}
+
 function hmPickPriorityBurnerForPeep(hmData, priorityRows, burnerNo, fuel, mode, log, hist){
   var candidates = [];
   for(var i=0; i<priorityRows.length; i++){
@@ -7017,6 +7041,7 @@ function hmPickPriorityBurnerForPeep(hmData, priorityRows, burnerNo, fuel, mode,
     var cleanDate = hmLatestCleaningDate(log, hist, p.wall, p.row, b);
     candidates.push({
       wall:p.wall, row:p.row, burner:b, state:state,
+      opening:getBurnerOpeningValue(p.wall, p.row - 1, b - 1, state),
       order:i, cleanDate:cleanDate
     });
   }
@@ -7059,15 +7084,15 @@ function hmBuildAdjustmentForZone(zoneLabel, vals, hmData, priorityRows, log, hi
     var temp = Number(Array.isArray(vals) ? vals[ph-1] : "");
     if(!isFinite(temp)) continue;
 
-    if(temp > 970) highCount++;
-    else if(temp < 910) lowCount++;
-    else stableCount++;
+    var plan = hmGetOpeningAdjustmentPlan(temp);
+    if(!plan){
+      stableCount++;
+      continue;
+    }
+    if(plan.mode === "cut") highCount++;
+    else lowCount++;
 
-    if(temp >= 910 && temp <= 970) continue;
-
-    var isHigh = temp > 970;
-    var mode = isHigh ? "cut" : "take";
-    var actionWord = mode === "cut" ? "Cut" : "Take";
+    var mode = plan.mode;
     var primaryFuel = "offgas";
     var fallbackFuel = "ng";
     var primary = hmPickPriorityBurnerForPeep(hmData, priorityRows, ph, primaryFuel, mode, log, hist);
@@ -7082,9 +7107,20 @@ function hmBuildAdjustmentForZone(zoneLabel, vals, hmData, priorityRows, log, hi
 
     if(chosen){
       var fuelLabel = usedFuel === "offgas" ? "Off-gas" : "NG";
-      var transition = hmStateTransition(chosen.state, usedFuel, mode);
-      var line = actionWord + " " + fuelLabel + " at Wall " + chosen.wall + " R" + chosen.row + " B" + chosen.burner
-        + " (" + transition + ").";
+      var line = "";
+      if(mode === "take"){
+        var takeTransition = hmStateTransition(chosen.state, usedFuel, mode);
+        line = plan.actionWord + " " + fuelLabel + " at Wall " + chosen.wall + " R" + chosen.row + " B" + chosen.burner
+          + " (" + takeTransition + "). Target opening " + plan.targetOpening + "%.";
+      }else if(plan.stepOpening >= 100){
+        var cutTransition = hmStateTransition(chosen.state, usedFuel, mode);
+        line = plan.actionWord + " " + fuelLabel + " at Wall " + chosen.wall + " R" + chosen.row + " B" + chosen.burner
+          + " (" + cutTransition + "). Target opening 0%.";
+      }else{
+        line = "Reduce " + fuelLabel + " at Wall " + chosen.wall + " R" + chosen.row + " B" + chosen.burner
+          + ". Target opening " + plan.targetOpening + "%.";
+      }
+      line += " TST band: " + plan.bandLabel + ".";
       if(fallbackUsed) line += " Off-gas unavailable, NG fallback used.";
       suggestions.push({
         ph:ph,
@@ -7106,8 +7142,8 @@ function hmBuildAdjustmentForZone(zoneLabel, vals, hmData, priorityRows, log, hi
   meta += " · PH>970: " + highCount + " · PH<910: " + lowCount + " · In range: " + stableCount;
 
   var rule = "Priority order: " + orderText + " (same burner number as peep hole). ";
-  rule += "If PH TST > 970°C: cut Off-gas first, then NG fallback. ";
-  rule += "If PH TST < 910°C: take Off-gas first, then NG fallback.";
+  rule += "Below 910°C: take Off-gas first, then NG fallback, with target openings 50% (<910), 75% (900 and below), 100% (below 890). ";
+  rule += "Above 970°C: cut Off-gas first, then NG fallback, with close bands 50% (>970 → target 50%), 75% (975 to 985 → target 25%), 100% (above 985 → target 0%).";
 
   if(!suggestions.length){
     return {
@@ -16683,8 +16719,8 @@ html, body, body *, body *::before, body *::after, svg text{
             id="cuboid-tab-frame"
             class="cuboid-tab-frame"
             aria-label="AB live burner wall cuboid viewer"
-            src="./furnace-cuboid-viewer.html?chamber=ab&build=20260323-10"
-            data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260323-10"
+            src="./furnace-cuboid-viewer.html?chamber=ab&build=20260323-11"
+            data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260323-11"
             data-cuboid-load="eager"
             loading="eager"
             allow="fullscreen"
@@ -16797,7 +16833,7 @@ html, body, body *, body *::before, body *::after, svg text{
             id="cuboid-tab-frame-2"
             class="cuboid-tab-frame"
             aria-label="CD live burner wall cuboid viewer"
-            data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260323-10"
+            data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260323-11"
             data-cuboid-load="deferred"
             loading="lazy"
             allow="fullscreen"
@@ -16906,8 +16942,8 @@ html, body, body *, body *::before, body *::after, svg text{
           </div>
           <div class="hm-adjust-body" id="hm-adjust-body">
             <div class="hm-adjust-sub">
-              Rule used: <b>TST &gt; 970°C</b> → Cut Off-gas first (fallback Cut NG) ·
-              <b>TST &lt; 910°C</b> → Take Off-gas first (fallback Take NG).
+              Rule used: <b>TST &gt; 970°C</b> → Cut Off-gas first (fallback Cut NG) with target openings of <b>50%</b>, <b>25%</b>, or <b>0%</b> as temperature rises. ·
+              <b>TST &lt; 910°C</b> → Take Off-gas first (fallback Take NG) with target openings of <b>50%</b>, <b>75%</b>, or <b>100%</b> as temperature falls.
               Cleaned burners are prioritized before non-cleaned burners.
             </div>
             <div id="hm-adjustment-list" class="hm-adjust-grid">
@@ -16920,50 +16956,6 @@ html, body, body *, body *::before, body *::after, svg text{
           <div class="analytics">
             <h2 class="scada-panel-title">📊 Burner Distribution Analytics</h2>
             <div id="hm-analysisContainer"></div>
-          </div>
-
-          <div class="cleaning-section">
-            <h2 class="scada-panel-title">🧹 Burner Cleaning Log</h2>
-            <div class="cleaning-subtitle">Cleaning analysis summary for all 4 walls.</div>
-
-            <div id="hm-cleaningDashboard" class="cleaning-dashboard">
-              <div class="cdash-period-row">
-                <div class="cdash-period-card">
-                  <div class="cdash-period-icon">📅</div>
-                  <div class="cdash-period-val" id="hm-cdash-val-today">0</div>
-                  <div class="cdash-period-label">Cleaned Today</div>
-                </div>
-                <div class="cdash-period-card">
-                  <div class="cdash-period-icon">📆</div>
-                  <div class="cdash-period-val" id="hm-cdash-val-week">0</div>
-                  <div class="cdash-period-label">This Week</div>
-                </div>
-                <div class="cdash-period-card">
-                  <div class="cdash-period-icon">🗓</div>
-                  <div class="cdash-period-val" id="hm-cdash-val-month">0</div>
-                  <div class="cdash-period-label">
-                    <select id="hm-cleaningMonthSelect" onchange="handleCleaningMonthSelectChange(this.value)" title="Select month">
-                    </select>
-                  </div>
-                </div>
-                <div class="cdash-period-card cdash-total-card">
-                  <div class="cdash-period-icon">🔥</div>
-                  <div class="cdash-period-val" id="hm-cdash-val-total">0</div>
-                  <div class="cdash-period-label">Total Cleaned</div>
-                  <div class="cdash-period-sub" id="hm-cdash-val-pct">of 360</div>
-                </div>
-              </div>
-              <div class="cdash-breakdown-row">
-                <div class="cdash-breakdown-block">
-                  <div class="cdash-breakdown-title">Wall-wise Cleaned</div>
-                  <div id="hm-cdash-wall-bars" class="cdash-bars"></div>
-                </div>
-                <div class="cdash-breakdown-block">
-                  <div class="cdash-breakdown-title">Row-wise Cleaned (All Walls)</div>
-                  <div id="hm-cdash-row-bars" class="cdash-bars"></div>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div class="hm-saved-entries-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:20px 24px;">
@@ -17050,6 +17042,50 @@ html, body, body *, body *::before, body *::after, svg text{
                   <tr><td colspan="3" style="text-align:center;color:#64748b;padding:20px;">No burner history snapshots available yet.</td></tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <div class="cleaning-section">
+            <h2 class="scada-panel-title">🧹 Burner Cleaning Log</h2>
+            <div class="cleaning-subtitle">Cleaning analysis summary for all 4 walls.</div>
+
+            <div id="hm-cleaningDashboard" class="cleaning-dashboard">
+              <div class="cdash-period-row">
+                <div class="cdash-period-card">
+                  <div class="cdash-period-icon">📅</div>
+                  <div class="cdash-period-val" id="hm-cdash-val-today">0</div>
+                  <div class="cdash-period-label">Cleaned Today</div>
+                </div>
+                <div class="cdash-period-card">
+                  <div class="cdash-period-icon">📆</div>
+                  <div class="cdash-period-val" id="hm-cdash-val-week">0</div>
+                  <div class="cdash-period-label">This Week</div>
+                </div>
+                <div class="cdash-period-card">
+                  <div class="cdash-period-icon">🗓</div>
+                  <div class="cdash-period-val" id="hm-cdash-val-month">0</div>
+                  <div class="cdash-period-label">
+                    <select id="hm-cleaningMonthSelect" onchange="handleCleaningMonthSelectChange(this.value)" title="Select month">
+                    </select>
+                  </div>
+                </div>
+                <div class="cdash-period-card cdash-total-card">
+                  <div class="cdash-period-icon">🔥</div>
+                  <div class="cdash-period-val" id="hm-cdash-val-total">0</div>
+                  <div class="cdash-period-label">Total Cleaned</div>
+                  <div class="cdash-period-sub" id="hm-cdash-val-pct">of 360</div>
+                </div>
+              </div>
+              <div class="cdash-breakdown-row">
+                <div class="cdash-breakdown-block">
+                  <div class="cdash-breakdown-title">Wall-wise Cleaned</div>
+                  <div id="hm-cdash-wall-bars" class="cdash-bars"></div>
+                </div>
+                <div class="cdash-breakdown-block">
+                  <div class="cdash-breakdown-title">Row-wise Cleaned (All Walls)</div>
+                  <div id="hm-cdash-row-bars" class="cdash-bars"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

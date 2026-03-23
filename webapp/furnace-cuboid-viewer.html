@@ -577,6 +577,40 @@ function cuboidRoundRectPath(ctx,x,y,w,h,r){
   ctx.closePath();
 }
 
+function cuboidConfigureOverlayContext(ctx){
+  if(!ctx) return;
+  ctx.imageSmoothingEnabled=true;
+  if("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality="high";
+}
+
+function cuboidDrawOverlayText(ctx,text,x,y,options){
+  if(!ctx) return;
+  const opts=options || {};
+  const drawX=Math.round(Number(x) || 0);
+  const drawY=Math.round(Number(y) || 0);
+  ctx.save();
+  cuboidConfigureOverlayContext(ctx);
+  ctx.font=opts.font || "700 24px Times New Roman, serif";
+  ctx.textAlign=opts.align || "center";
+  ctx.textBaseline=opts.baseline || "middle";
+  ctx.lineJoin="round";
+  ctx.lineCap="round";
+  ctx.miterLimit=2;
+  ctx.strokeStyle=opts.stroke || "rgba(4,8,14,0.96)";
+  ctx.lineWidth=opts.lineWidth == null ? 2.4 : opts.lineWidth;
+  ctx.shadowColor=opts.shadow || "rgba(0,0,0,0.55)";
+  ctx.shadowBlur=opts.shadowBlur == null ? 5 : opts.shadowBlur;
+  ctx.shadowOffsetY=opts.shadowOffsetY == null ? 1 : opts.shadowOffsetY;
+  if(opts.stroke !== null && ctx.lineWidth > 0){
+    ctx.strokeText(text,drawX,drawY);
+  }
+  ctx.shadowBlur=0;
+  ctx.shadowOffsetY=0;
+  ctx.fillStyle=opts.fill || "#ffffff";
+  ctx.fillText(text,drawX,drawY);
+  ctx.restore();
+}
+
 function cuboidTempToColor(value){
   const n=Number(value);
   if(!isFinite(n)) return "#64748b";
@@ -1222,11 +1256,11 @@ function cuboidDrawPeepBar(ctx,label,vals,left,centerY,width,scale){
   ctx.strokeStyle="rgba(188,198,214,0.24)";
   ctx.lineWidth=1.2*k;
   ctx.stroke();
-  ctx.fillStyle="#f8fafc";
-  ctx.font="700 "+Math.round(24*k)+"px Times New Roman, serif";
-  ctx.textAlign="center";
-  ctx.textBaseline="middle";
-  ctx.fillText(label,labelCenterX,centerY);
+  cuboidDrawOverlayText(ctx,label,labelCenterX,centerY,{
+    font:"700 "+Math.round(24*k)+"px Times New Roman, serif",
+    lineWidth:1.8*k,
+    shadowBlur:4
+  });
 
   ctx.save();
   cuboidRoundRectPath(ctx,left,barTop,width,barHeight,Math.round(12*k));
@@ -1279,11 +1313,11 @@ function cuboidDrawPeepBar(ctx,label,vals,left,centerY,width,scale){
       ctx.strokeStyle="rgba(255,255,255,0.18)";
       ctx.lineWidth=1*k;
       ctx.stroke();
-      ctx.fillStyle="#ffffff";
-      ctx.font="700 "+Math.round(18*k)+"px Times New Roman, serif";
-      ctx.textAlign="center";
-      ctx.textBaseline="middle";
-      ctx.fillText(tempVal+"°",mx,pillTop+(pillH/2));
+      cuboidDrawOverlayText(ctx,tempVal+"°",mx,pillTop+(pillH/2),{
+        font:"700 "+Math.round(18*k)+"px Times New Roman, serif",
+        lineWidth:1.45*k,
+        shadowBlur:3
+      });
     }
   }
 }
@@ -1293,6 +1327,7 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   const ctx=canvas.getContext("2d");
   const w=canvas.width;
   const h=canvas.height;
+  cuboidConfigureOverlayContext(ctx);
   ctx.clearRect(0,0,w,h);
 
   const rows=Array.isArray(snapshot.hmData[wallKey]) ? snapshot.hmData[wallKey] : [];
@@ -1355,10 +1390,10 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
     return headerTop+((headerHeight+ascent-descent)/2);
   }
   const wallTitle="WALL "+wallKey;
-  const wallTitleFont="700 40px Times New Roman, serif";
+  const wallTitleFont="700 42px Times New Roman, serif";
   const wallTitleY=cuboidHeaderBaseline(wallTitleFont,wallTitle);
   const wallMetaText="6 rows x 15 burners";
-  const wallMetaFont="700 21px Times New Roman, serif";
+  const wallMetaFont="700 22px Times New Roman, serif";
   const wallMetaY=cuboidHeaderBaseline(wallMetaFont,wallMetaText);
   const headGrad=ctx.createLinearGradient(0,0,w,0);
   headGrad.addColorStop(0,"rgba(6,8,16,0.985)");
@@ -1375,32 +1410,38 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   ctx.lineTo(w-18,separatorY);
   ctx.stroke();
 
-  ctx.fillStyle="#ffffff";
-  ctx.textAlign="left";
-  ctx.textBaseline="alphabetic";
-  ctx.font=wallTitleFont;
-  ctx.fillText(wallTitle,padX,wallTitleY);
+  cuboidDrawOverlayText(ctx,wallTitle,padX,wallTitleY,{
+    font:wallTitleFont,
+    align:"left",
+    baseline:"alphabetic",
+    lineWidth:3.4,
+    shadowBlur:7
+  });
 
-  ctx.textAlign="right";
-  ctx.font=wallMetaFont;
-  ctx.fillStyle="rgba(255,255,255,0.98)";
-  ctx.fillText(wallMetaText,w-padX,wallMetaY);
+  cuboidDrawOverlayText(ctx,wallMetaText,w-padX,wallMetaY,{
+    font:wallMetaFont,
+    align:"right",
+    baseline:"alphabetic",
+    fill:"rgba(255,255,255,0.98)",
+    lineWidth:2.2,
+    shadowBlur:5
+  });
 
-  ctx.textAlign="center";
-  ctx.textBaseline="middle";
-  ctx.font="700 24px Times New Roman, serif";
   for(let bn=1;bn<=15;bn++){
     const bx=gridLeft+slotW*(bn-0.5);
-    const bW=68;
-    const bH=40;
+    const bW=72;
+    const bH=42;
     ctx.fillStyle="rgba(8,12,22,0.96)";
     cuboidRoundRectPath(ctx,bx-(bW/2),burnerNumY-(bH/2),bW,bH,10);
     ctx.fill();
     ctx.strokeStyle="rgba(140,160,190,0.34)";
     ctx.lineWidth=1.2;
     ctx.stroke();
-    ctx.fillStyle="#ffffff";
-    ctx.fillText("B"+bn,bx,burnerNumY+1);
+    cuboidDrawOverlayText(ctx,"B"+bn,bx,burnerNumY+1,{
+      font:"700 25px Times New Roman, serif",
+      lineWidth:1.9,
+      shadowBlur:4
+    });
   }
 
   const manifoldShift=Math.round(slotW*0.18);
@@ -1438,8 +1479,8 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
       continue;
     }
 
-    const rowW=96;
-    const rowH=50;
+    const rowW=104;
+    const rowH=52;
     ctx.fillStyle="rgba(8,12,22,0.96)";
     cuboidRoundRectPath(ctx,14,centerY-Math.round(rowH/2),rowW,rowH,13);
     ctx.fill();
@@ -1447,11 +1488,11 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
     ctx.lineWidth=1.2;
     ctx.stroke();
 
-    ctx.fillStyle="#ffffff";
-    ctx.font="700 23px Times New Roman, serif";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    ctx.fillText("ROW "+item,14+Math.round(rowW/2),centerY);
+    cuboidDrawOverlayText(ctx,"ROW "+item,14+Math.round(rowW/2),centerY,{
+      font:"700 24px Times New Roman, serif",
+      lineWidth:2,
+      shadowBlur:4
+    });
 
     const rowData=Array.isArray(rows[item-1]) ? rows[item-1] : [];
     const openingRow=Array.isArray(openingRows[item-1]) ? openingRows[item-1] : [];
@@ -2210,17 +2251,24 @@ group.add(innerBack);
 
 function createFaceOverlay(face,wallKey){
   const canvas=document.createElement("canvas");
-  canvas.width=1440;
-  canvas.height=1080;
+  canvas.width=1728;
+  canvas.height=1296;
   const texture=new THREE.CanvasTexture(canvas);
   texture.wrapS=THREE.ClampToEdgeWrapping;
   texture.wrapT=THREE.ClampToEdgeWrapping;
-  texture.minFilter=THREE.LinearFilter;
+  texture.minFilter=THREE.LinearMipmapLinearFilter;
   texture.magFilter=THREE.LinearFilter;
+  texture.generateMipmaps=true;
+  texture.premultiplyAlpha=false;
   if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace){
     texture.colorSpace=THREE.SRGBColorSpace;
   }else if(typeof texture.encoding !== "undefined" && THREE.sRGBEncoding){
     texture.encoding=THREE.sRGBEncoding;
+  }
+  if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function"){
+    try{
+      texture.anisotropy=Math.max(1,Math.min(8,renderer.capabilities.getMaxAnisotropy() || 1));
+    }catch(_e){}
   }
   const material=new THREE.MeshBasicMaterial({
     map:texture,
@@ -2381,7 +2429,7 @@ for(let i=0;i<nT;i++){
   conn.position.set(tx,FH/2+tProt,0);
   group.add(conn);
 }
-const overlayCanvasW=1440;
+const overlayCanvasW=1728;
 const overlayGridLeft=134;
 const overlayGridRight=overlayCanvasW-18;
 const overlaySlotW=(overlayGridRight-overlayGridLeft)/15;
