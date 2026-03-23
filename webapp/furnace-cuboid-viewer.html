@@ -1254,6 +1254,24 @@ function cuboidDrawFuelRail(ctx,left,right,y,slotW,scale,burnerY){
   ctx.restore();
 }
 
+function cuboidDrawOverlayText(ctx,text,x,y,opts){
+  opts=opts || {};
+  ctx.save();
+  ctx.font=opts.font || "700 22px Georgia, 'Times New Roman', serif";
+  ctx.textAlign=opts.align || "center";
+  ctx.textBaseline=opts.baseline || "middle";
+  ctx.lineJoin="round";
+  ctx.miterLimit=2;
+  ctx.fillStyle=opts.fillStyle || "#ffffff";
+  ctx.strokeStyle=opts.strokeStyle || "rgba(6,10,18,0.96)";
+  ctx.lineWidth=opts.strokeWidth || 2.8;
+  ctx.shadowColor=opts.shadowColor || "rgba(255,255,255,0.18)";
+  ctx.shadowBlur=opts.shadowBlur || 8;
+  ctx.strokeText(String(text || ""),x,y);
+  ctx.fillText(String(text || ""),x,y);
+  ctx.restore();
+}
+
 function cuboidDrawPeepBar(ctx,label,vals,left,centerY,width,scale){
   const k=Math.max(1,Number(scale)||1);
   const barHeight=Math.round(46*k);
@@ -1276,11 +1294,14 @@ function cuboidDrawPeepBar(ctx,label,vals,left,centerY,width,scale){
   ctx.strokeStyle="rgba(188,198,214,0.24)";
   ctx.lineWidth=1.2*k;
   ctx.stroke();
-  ctx.fillStyle="#f8fafc";
-  ctx.font="700 "+Math.round(24*k)+"px Times New Roman, serif";
-  ctx.textAlign="center";
-  ctx.textBaseline="middle";
-  ctx.fillText(label,labelCenterX,centerY);
+  cuboidDrawOverlayText(ctx,label,labelCenterX,centerY,{
+    font:"700 "+Math.round(24*k)+"px Georgia, 'Times New Roman', serif",
+    align:"center",
+    baseline:"middle",
+    strokeWidth:Math.max(2.4,1.8*k),
+    shadowBlur:Math.max(7,5*k),
+    fillStyle:"#f8fafc"
+  });
 
   ctx.save();
   cuboidRoundRectPath(ctx,left,barTop,width,barHeight,Math.round(12*k));
@@ -1333,11 +1354,13 @@ function cuboidDrawPeepBar(ctx,label,vals,left,centerY,width,scale){
       ctx.strokeStyle="rgba(255,255,255,0.18)";
       ctx.lineWidth=1*k;
       ctx.stroke();
-      ctx.fillStyle="#ffffff";
-      ctx.font="700 "+Math.round(18*k)+"px Times New Roman, serif";
-      ctx.textAlign="center";
-      ctx.textBaseline="middle";
-      ctx.fillText(tempVal+"°",mx,pillTop+(pillH/2));
+      cuboidDrawOverlayText(ctx,tempVal+"°",mx,pillTop+(pillH/2),{
+        font:"700 "+Math.round(18*k)+"px Georgia, 'Times New Roman', serif",
+        align:"center",
+        baseline:"middle",
+        strokeWidth:Math.max(1.6,1.1*k),
+        shadowBlur:Math.max(5,3.5*k)
+      });
     }
   }
 }
@@ -1347,6 +1370,8 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   const ctx=canvas.getContext("2d");
   const w=canvas.width;
   const h=canvas.height;
+  ctx.imageSmoothingEnabled=true;
+  if(typeof ctx.imageSmoothingQuality!=="undefined") ctx.imageSmoothingQuality="high";
   ctx.clearRect(0,0,w,h);
 
   const rows=Array.isArray(snapshot.hmData[wallKey]) ? snapshot.hmData[wallKey] : [];
@@ -1429,32 +1454,40 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
   ctx.lineTo(w-18,separatorY);
   ctx.stroke();
 
-  ctx.fillStyle="#ffffff";
-  ctx.textAlign="left";
-  ctx.textBaseline="alphabetic";
-  ctx.font=wallTitleFont;
-  ctx.fillText(wallTitle,padX,wallTitleY);
+  cuboidDrawOverlayText(ctx,wallTitle,padX,wallTitleY,{
+    font:"700 40px Georgia, 'Times New Roman', serif",
+    align:"left",
+    baseline:"alphabetic",
+    strokeWidth:3.4,
+    shadowBlur:11
+  });
 
-  ctx.textAlign="right";
-  ctx.font=wallMetaFont;
-  ctx.fillStyle="rgba(255,255,255,0.98)";
-  ctx.fillText(wallMetaText,w-padX,wallMetaY);
+  cuboidDrawOverlayText(ctx,wallMetaText,w-padX,wallMetaY,{
+    font:"700 21px Georgia, 'Times New Roman', serif",
+    align:"right",
+    baseline:"alphabetic",
+    strokeWidth:2.3,
+    shadowBlur:8,
+    fillStyle:"rgba(255,255,255,0.98)"
+  });
 
-  ctx.textAlign="center";
-  ctx.textBaseline="middle";
-  ctx.font="700 24px Times New Roman, serif";
   for(let bn=1;bn<=15;bn++){
     const bx=gridLeft+slotW*(bn-0.5);
-    const bW=68;
-    const bH=40;
+    const bW=72;
+    const bH=42;
     ctx.fillStyle="rgba(8,12,22,0.96)";
     cuboidRoundRectPath(ctx,bx-(bW/2),burnerNumY-(bH/2),bW,bH,10);
     ctx.fill();
-    ctx.strokeStyle="rgba(140,160,190,0.34)";
-    ctx.lineWidth=1.2;
+    ctx.strokeStyle="rgba(184,202,228,0.42)";
+    ctx.lineWidth=1.35;
     ctx.stroke();
-    ctx.fillStyle="#ffffff";
-    ctx.fillText("B"+bn,bx,burnerNumY+1);
+    cuboidDrawOverlayText(ctx,"B"+bn,bx,burnerNumY+1,{
+      font:"700 25px Georgia, 'Times New Roman', serif",
+      align:"center",
+      baseline:"middle",
+      strokeWidth:2.6,
+      shadowBlur:8
+    });
   }
 
   const manifoldShift=Math.round(slotW*0.18);
@@ -1492,20 +1525,21 @@ function cuboidPaintWallCanvas(canvas,wallKey,snapshot,cleaningMap,phaseBase){
       continue;
     }
 
-    const rowW=96;
-    const rowH=50;
+    const rowW=104;
+    const rowH=52;
     ctx.fillStyle="rgba(8,12,22,0.96)";
     cuboidRoundRectPath(ctx,14,centerY-Math.round(rowH/2),rowW,rowH,13);
     ctx.fill();
-    ctx.strokeStyle="rgba(140,160,190,0.30)";
-    ctx.lineWidth=1.2;
+    ctx.strokeStyle="rgba(184,202,228,0.38)";
+    ctx.lineWidth=1.3;
     ctx.stroke();
-
-    ctx.fillStyle="#ffffff";
-    ctx.font="700 23px Times New Roman, serif";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    ctx.fillText("ROW "+item,14+Math.round(rowW/2),centerY);
+    cuboidDrawOverlayText(ctx,"ROW "+item,14+Math.round(rowW/2),centerY,{
+      font:"700 25px Georgia, 'Times New Roman', serif",
+      align:"center",
+      baseline:"middle",
+      strokeWidth:2.7,
+      shadowBlur:8
+    });
 
     const rowData=Array.isArray(rows[item-1]) ? rows[item-1] : [];
     const openingRow=Array.isArray(openingRows[item-1]) ? openingRows[item-1] : [];
@@ -2139,11 +2173,11 @@ function cuboidGetTargetPixelRatio(){
   if(!cuboidCanRenderNow()){
     cap=0.66;
   }else if(activeNow){
-    cap=cuboidIsChromeLike ? 1.08 : 1.32;
+    cap=cuboidIsChromeLike ? 1.12 : 1.36;
   }else if(hostFocused){
-    cap=cuboidIsChromeLike ? 0.92 : 1.12;
+    cap=cuboidIsChromeLike ? 0.98 : 1.18;
   }else{
-    cap=cuboidIsChromeLike ? 0.72 : 0.92;
+    cap=cuboidIsChromeLike ? 0.76 : 0.96;
   }
   return Math.max(0.66,Math.min(deviceRatio,cap));
 }
@@ -2222,7 +2256,8 @@ function cuboidTuneFaceTexture(texture){
   if(!texture) return texture;
   texture.wrapS=THREE.ClampToEdgeWrapping;
   texture.wrapT=THREE.ClampToEdgeWrapping;
-  texture.minFilter=THREE.LinearFilter;
+  texture.generateMipmaps=true;
+  texture.minFilter=THREE.LinearMipmapLinearFilter;
   texture.magFilter=THREE.LinearFilter;
   if(renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy==="function"){
     try{
@@ -2283,8 +2318,8 @@ group.add(innerBack);
 
 function createFaceOverlay(face,wallKey){
   const canvas=document.createElement("canvas");
-  canvas.width=1728;
-  canvas.height=1296;
+  canvas.width=2048;
+  canvas.height=1536;
   const texture=cuboidTuneFaceTexture(new THREE.CanvasTexture(canvas));
   const material=new THREE.MeshBasicMaterial({
     map:texture,
@@ -2656,10 +2691,11 @@ const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 110 : 80;
 const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 650 : 450;
 const SLEEP_FRAME_MS=750;
 const ACTIVE_OVERLAY_TICK_MS=120;
-const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 2400 : 1800;
+const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 980 : 820;
 const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 5200 : 3600;
 const ACTIVE_FLAME_TICK_MS=42;
 const BACKGROUND_FLAME_TICK_MS=cuboidIsChromeLike ? 1400 : 1000;
+const IDLE_OVERLAY_PHASE_STEP=0.05;
 
 let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
 let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
@@ -2839,11 +2875,12 @@ function animate(t){
     frameNeedsRender=frameNeedsRender || sceneMoving;
   }
   const ts=t*0.001;
-  const shouldAnimateOverlay=interactionActive;
-  const overlayTickMs=interactionActive ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
+  const overlaySettledIdle=hostFocused && !isDragging && !autoSpin && !sceneMoving;
+  const shouldAnimateOverlay=overlaySettledIdle;
+  const overlayTickMs=shouldAnimateOverlay ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS;
   if(overlayDirty || (shouldAnimateOverlay && (t-lastOverlayPaintAt)>=overlayTickMs)){
     if(shouldAnimateOverlay){
-      overlayAnimPhase=(overlayAnimPhase+OVERLAY_PHASE_STEP)%(Math.PI*2);
+      overlayAnimPhase=(overlayAnimPhase+IDLE_OVERLAY_PHASE_STEP)%(Math.PI*2);
     }
     syncFaceOverlays(false);
     lastOverlayPaintAt=t;
