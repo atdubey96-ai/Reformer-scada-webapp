@@ -8938,9 +8938,16 @@ html, body, body *, body *::before, body *::after, svg text{
         .cb-face .hm-burner-wrap svg    { width: 28px !important; height: 44px !important; }
 
         @keyframes cbFlameLite{
-          0%,100%{transform:scaleY(1) scaleX(1);opacity:0.9;}
-          35%{transform:scaleY(1.08) scaleX(0.94);opacity:0.98;}
-          70%{transform:scaleY(0.94) scaleX(1.05);opacity:0.84;}
+          0%,100%{transform:translateY(0) scaleY(0.98) scaleX(1.02);opacity:0.84;}
+          22%{transform:translateY(-0.6px) scaleY(1.12) scaleX(0.92);opacity:0.98;}
+          48%{transform:translateY(0.22px) scaleY(0.9) scaleX(1.08);opacity:0.78;}
+          72%{transform:translateY(-0.35px) scaleY(1.06) scaleX(0.96);opacity:0.92;}
+        }
+        @keyframes cbFlameGlowIdle{
+          0%,100%{transform:translateX(-50%) scaleX(0.9) scaleY(0.78);opacity:0.18;}
+          32%{transform:translateX(-50%) scaleX(1.12) scaleY(1.02);opacity:0.36;}
+          60%{transform:translateX(-50%) scaleX(0.84) scaleY(0.7);opacity:0.14;}
+          82%{transform:translateX(-50%) scaleX(1.04) scaleY(0.92);opacity:0.28;}
         }
 
         /* Cuboid-only flame style: keep SVG flames and avoid expensive emoji/filter paints */
@@ -8951,7 +8958,7 @@ html, body, body *, body *::before, body *::after, svg text{
         .cb-face .hm-burner-wrap.hm-flame svg{
           display:block !important;
           transform-origin:50% 100%;
-          animation:cbFlameLite 2.25s ease-in-out infinite !important;
+          animation:cbFlameLite 1.72s ease-in-out infinite !important;
           will-change:auto;
           filter:none !important;
         }
@@ -8966,8 +8973,8 @@ html, body, body *, body *::before, body *::after, svg text{
         .cb-peephole-content .hm-burner-wrap:hover{transform:none !important;}
         .cb-face .hm-burner-wrap.hm-flame::after{
           display:block !important;
-          opacity:0.2 !important;
-          animation:none !important;
+          opacity:0.26 !important;
+          animation:cbFlameGlowIdle 1.82s ease-in-out infinite !important;
           box-shadow:none !important;
           filter:none !important;
         }
@@ -9649,7 +9656,7 @@ html, body, body *, body *::before, body *::after, svg text{
           text-shadow:0 1px 3px rgba(0,0,0,0.95) !important;
         }
         body:not(.light-theme) #tab-heatmap .cb-face .hm-burner-wrap.hm-flame::after{
-          opacity:0.08 !important;
+          opacity:0.18 !important;
         }
         </style>
       <style id="airbnb-light-theme-2026">
@@ -11893,7 +11900,7 @@ html, body, body *, body *::before, body *::after, svg text{
           border-color:rgba(255,255,255,0.2) !important;
         }
         body.light-theme #tab-heatmap .cb-face .hm-burner-wrap.hm-flame::after{
-          opacity:0.08 !important;
+          opacity:0.18 !important;
         }
 
         /* Override older ID-locked light cuboid rules so light matches dark exactly. */
@@ -12095,7 +12102,7 @@ html, body, body *, body *::before, body *::after, svg text{
           text-shadow:0 1px 3px rgba(0,0,0,0.95) !important;
         }
         body.light-theme #tab-heatmap .cb-face .hm-burner-wrap.hm-flame::after{
-          opacity:0.08 !important;
+          opacity:0.18 !important;
         }
         body.light-theme #tab-heatmap #face-ab-left .cb-side-face-panel,
         body.light-theme #tab-heatmap #face-ab-right .cb-side-face-panel,
@@ -12417,7 +12424,7 @@ html, body, body *, body *::before, body *::after, svg text{
           height:clamp(48px,calc(54px * var(--cb-front-scale)),110px) !important;
         }
         #tab-heatmap .cb-face .hm-burner-wrap.hm-flame svg{
-          animation:hmFlameFlicker 1.8s ease-in-out infinite !important;
+          animation:cbFlameLite 1.72s ease-in-out infinite !important;
           transform-origin:50% 100% !important;
           opacity:0.98 !important;
         }
@@ -12425,8 +12432,8 @@ html, body, body *, body *::before, body *::after, svg text{
           width:clamp(16px,calc(17px * var(--cb-front-scale)),28px) !important;
           height:clamp(11px,calc(11px * var(--cb-front-scale)),18px) !important;
           bottom:clamp(2px,calc(2px * var(--cb-front-scale)),6px) !important;
-          opacity:0.52 !important;
-          animation:none !important;
+          opacity:0.28 !important;
+          animation:cbFlameGlowIdle 1.82s ease-in-out infinite !important;
           filter:none !important;
         }
         #tab-heatmap .cb-face .hm-flame-O::after{
