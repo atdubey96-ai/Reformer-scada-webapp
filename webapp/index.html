@@ -2282,6 +2282,9 @@ body.light-theme .burner-cell-editor-state-btn{
   font-weight:700;
   color:#cbd5e1;
 }
+.td-saved-filter-bar .burner-history-shift-box{
+  padding:8px 12px;
+}
 body.light-theme .td-saved-entries-outline{
   border-color:rgba(59,130,246,0.35);
   box-shadow:
@@ -2310,6 +2313,12 @@ body.light-theme .td-saved-filter-status{
 body.light-theme .td-saved-filter-clear{
   color:#ffffff;
   background:linear-gradient(135deg,#64748b,#475569);
+}
+@media (max-width:900px){
+  .td-saved-filter-status{
+    margin-left:0;
+    width:100%;
+  }
 }
 @media (max-width:900px){
   .analysis-wall-card,
@@ -16909,7 +16918,20 @@ html, body, body *, body *::before, body *::after, svg text{
           </div>
         </div>
         <div class="td-saved-filter-bar" data-saved-filter-bar>
-          <span class="td-saved-filter-label">Filter</span>
+          <div class="burner-history-shift-box">
+            <span class="burner-history-shift-label">Shift</span>
+            <select class="burner-history-shift-select" data-saved-filter-shift onchange="setSavedEntryFilterFromControls(this)" aria-label="Saved TST entries shift filter">
+              <option value="All">🔁 All Shifts</option>
+              <option value="Morning">🌅 Morning</option>
+              <option value="Evening">🌆 Evening</option>
+              <option value="Night">🌙 Night</option>
+            </select>
+          </div>
+          <div class="burner-history-shift-box burner-history-date-box">
+            <span class="burner-history-shift-label">Date</span>
+            <input type="date" class="burner-history-date-input" data-saved-filter-date onchange="setSavedEntryFilterFromControls(this)" aria-label="Saved TST entries date filter">
+          </div>
+          <span class="td-saved-filter-label">Value Filter</span>
           <select class="td-saved-filter-select" data-saved-filter-field onchange="setSavedEntryFilterFromControls(this)" aria-label="Saved entries filter parameter"></select>
           <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-min oninput="setSavedEntryFilterFromControls(this)" placeholder="Min" aria-label="Saved entries minimum value">
           <span class="td-saved-filter-sep">to</span>
@@ -17319,7 +17341,20 @@ html, body, body *, body *::before, body *::after, svg text{
               </div>
             </div>
             <div class="td-saved-filter-bar" data-saved-filter-bar>
-              <span class="td-saved-filter-label">Filter</span>
+              <div class="burner-history-shift-box">
+                <span class="burner-history-shift-label">Shift</span>
+                <select class="burner-history-shift-select" data-saved-filter-shift onchange="setSavedEntryFilterFromControls(this)" aria-label="Saved TST entries shift filter">
+                  <option value="All">🔁 All Shifts</option>
+                  <option value="Morning">🌅 Morning</option>
+                  <option value="Evening">🌆 Evening</option>
+                  <option value="Night">🌙 Night</option>
+                </select>
+              </div>
+              <div class="burner-history-shift-box burner-history-date-box">
+                <span class="burner-history-shift-label">Date</span>
+                <input type="date" class="burner-history-date-input" data-saved-filter-date onchange="setSavedEntryFilterFromControls(this)" aria-label="Saved TST entries date filter">
+              </div>
+              <span class="td-saved-filter-label">Value Filter</span>
               <select class="td-saved-filter-select" data-saved-filter-field onchange="setSavedEntryFilterFromControls(this)" aria-label="Saved entries filter parameter"></select>
               <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-min oninput="setSavedEntryFilterFromControls(this)" placeholder="Min" aria-label="Saved entries minimum value">
               <span class="td-saved-filter-sep">to</span>
@@ -26951,8 +26986,14 @@ var SAVED_ENTRY_FILTER_FIELDS = [
   {key:"methaneSlip", label:"Methane Slip (%Vol)"}
 ];
 
+function normalizeSavedEntryShift(raw){
+  var s = String(raw || "All").trim();
+  if(s === "Morning" || s === "Evening" || s === "Night") return s;
+  return "All";
+}
+
 function sanitizeSavedEntryFilterState(raw){
-  var fallback = {field:"", min:"", max:""};
+  var fallback = {shift:"All", date:"", field:"", min:"", max:""};
   if(!raw || typeof raw !== "object") return fallback;
   var field = String(raw.field || "").trim();
   var validField = "";
@@ -26963,6 +27004,8 @@ function sanitizeSavedEntryFilterState(raw){
     }
   }
   return {
+    shift: normalizeSavedEntryShift(raw.shift || "All"),
+    date: normalizeImportedCleaningDate(raw.date || ""),
     field: validField,
     min: String(raw.min == null ? "" : raw.min).trim(),
     max: String(raw.max == null ? "" : raw.max).trim()
@@ -26974,7 +27017,7 @@ function loadSavedEntryFilterState(){
     var saved = localStorage.getItem(SAVED_ENTRY_FILTER_STORAGE_KEY);
     if(saved) return sanitizeSavedEntryFilterState(JSON.parse(saved));
   }catch(e){}
-  return {field:"", min:"", max:""};
+  return {shift:"All", date:"", field:"", min:"", max:""};
 }
 
 var savedEntryFilterState = loadSavedEntryFilterState();
@@ -27026,10 +27069,14 @@ function syncSavedEntryFilterUi(meta){
     statusText = tempDataEntries.length ? (tempDataEntries.length + " entries") : "No entries";
   }
   document.querySelectorAll("[data-saved-filter-bar]").forEach(function(bar){
+    var shiftEl = bar.querySelector("[data-saved-filter-shift]");
+    var dateEl = bar.querySelector("[data-saved-filter-date]");
     var fieldEl = bar.querySelector("[data-saved-filter-field]");
     var minEl = bar.querySelector("[data-saved-filter-min]");
     var maxEl = bar.querySelector("[data-saved-filter-max]");
     var statusEl = bar.querySelector("[data-saved-filter-status]");
+    if(shiftEl) shiftEl.value = savedEntryFilterState.shift || "All";
+    if(dateEl) dateEl.value = savedEntryFilterState.date || "";
     if(fieldEl) fieldEl.value = savedEntryFilterState.field || "";
     if(minEl){
       minEl.value = savedEntryFilterState.min || "";
@@ -27047,6 +27094,8 @@ function setSavedEntryFilterFromControls(sourceEl){
   var bar = sourceEl && sourceEl.closest ? sourceEl.closest("[data-saved-filter-bar]") : document.querySelector("[data-saved-filter-bar]");
   if(!bar) return;
   savedEntryFilterState = sanitizeSavedEntryFilterState({
+    shift: (bar.querySelector("[data-saved-filter-shift]") || {}).value || "All",
+    date: (bar.querySelector("[data-saved-filter-date]") || {}).value || "",
     field: (bar.querySelector("[data-saved-filter-field]") || {}).value || "",
     min: (bar.querySelector("[data-saved-filter-min]") || {}).value || "",
     max: (bar.querySelector("[data-saved-filter-max]") || {}).value || ""
@@ -27056,7 +27105,7 @@ function setSavedEntryFilterFromControls(sourceEl){
 }
 
 function clearSavedEntryFilter(){
-  savedEntryFilterState = {field:"", min:"", max:""};
+  savedEntryFilterState = {shift:"All", date:"", field:"", min:"", max:""};
   persistSavedEntryFilterState();
   renderTempDataTable();
 }
@@ -27066,6 +27115,16 @@ function getFilteredTempDataEntries(){
     return {ent: ent, originalIndex: idx};
   });
   var state = sanitizeSavedEntryFilterState(savedEntryFilterState);
+  if(state.shift !== "All"){
+    rows = rows.filter(function(row){
+      return String((row && row.ent && row.ent.shift) || "") === state.shift;
+    });
+  }
+  if(state.date){
+    rows = rows.filter(function(row){
+      return getTempEntryDateIso(row && row.ent ? row.ent.dt : "") === state.date;
+    });
+  }
   if(!state.field) return rows;
   var min = parseSavedEntryFilterNumber(state.min);
   var max = parseSavedEntryFilterNumber(state.max);
@@ -27282,7 +27341,7 @@ function renderTempDataTableInto(tbodyId, display, totalCount){
     return;
   }
   if(!display.length){
-    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#94a3b8;padding:20px;">No entries match the selected filter.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#94a3b8;padding:20px;">No entries match the selected shift/date/value filter.</td></tr>';
     return;
   }
   var rows = "";
