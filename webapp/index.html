@@ -4931,6 +4931,31 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   display:flex;align-items:center;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   font-size:11px;color:#94a3b8;
 }
+.td-ocr-quota-hint{
+  display:block;
+  width:fit-content;
+  max-width:100%;
+  margin:-6px 0 18px auto;
+  padding:7px 12px;
+  border-radius:10px;
+  border:1px solid rgba(56,189,248,0.24);
+  background:rgba(56,189,248,0.08);
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.45;
+  text-align:right;
+}
+.td-ocr-quota-hint.is-blocked{
+  border-color:rgba(251,191,36,0.36);
+  background:rgba(251,191,36,0.12);
+  color:#fde68a;
+}
+.td-ocr-quota-hint.is-error{
+  border-color:rgba(248,113,113,0.4);
+  background:rgba(127,29,29,0.18);
+  color:#fecaca;
+}
 .td-claude-modal{
   position:fixed;inset:0;display:none;align-items:center;justify-content:center;
   padding:18px;background:rgba(2,6,23,0.74);backdrop-filter:blur(8px);z-index:12000;
@@ -5039,6 +5064,11 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   .td-claude-modal-body,
   .td-claude-modal-actions{padding-left:14px;padding-right:14px;}
   .td-claude-pages-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;}
+  .td-ocr-quota-hint{
+    width:100%;
+    margin:-4px 0 16px;
+    text-align:left;
+  }
 }
 .scada-save-btn{
   display:inline-flex !important;
@@ -16349,6 +16379,7 @@ html, body, body *, body *::before, body *::after, svg text{
           </button>
         </div>
       </div>
+      <div id="td-ocr-quota-hint" class="td-ocr-quota-hint" aria-live="polite">Shared OCR quota: Today 0/6 · Week 0/25 · Month 0/100.</div>
 
       <div class="td-entry-layout">
       <!-- ── Section 1: General Temps ── -->
@@ -24268,6 +24299,223 @@ var tdClaudePdfDoc = null;
 var tdClaudePageCanvases = {};
 var tdClaudeSelectedPages = new Set();
 var tdClaudeAllResults = [];
+var TD_TST_OCR_QUOTA_STORAGE_KEY = "tstOcrQuotaUsageV1";
+var TD_TST_OCR_QUOTA_LIMITS = { day: 6, week: 25, month: 100 };
+
+function padTstOcrQuotaNum(n){
+  var num = Math.max(0, parseInt(n, 10) || 0);
+  return num < 10 ? ("0" + num) : String(num);
+}
+
+function getTstOcrQuotaOwnerKey(){
+  var empId = "";
+  try{
+    if(typeof getLoggedInEmpId === "function") empId = String(getLoggedInEmpId() || "").trim();
+  }catch(e){}
+  return empId ? ("emp:" + empId) : "browser";
+}
+
+function createEmptyTstOcrQuotaStore(){
+  return { owners: {} };
+}
+
+function normalizeTstOcrQuotaBucketMap(map){
+  var src = (map && typeof map === "object") ? map : {};
+  var out = {};
+  Object.keys(src).forEach(function(key){
+    var num = Math.max(0, parseInt(src[key], 10) || 0);
+    if(num > 0) out[key] = num;
+  });
+  return out;
+}
+
+function loadTstOcrQuotaStore(){
+  var fallback = createEmptyTstOcrQuotaStore();
+  try{
+    var raw = localStorage.getItem(TD_TST_OCR_QUOTA_STORAGE_KEY);
+    if(!raw) return fallback;
+    var parsed = JSON.parse(raw);
+    if(!parsed || typeof parsed !== "object") return fallback;
+    var ownersIn = (parsed.owners && typeof parsed.owners === "object") ? parsed.owners : {};
+    var ownersOut = {};
+    Object.keys(ownersIn).forEach(function(ownerKey){
+      var entry = ownersIn[ownerKey] || {};
+      ownersOut[ownerKey] = {
+        day: normalizeTstOcrQuotaBucketMap(entry.day),
+        week: normalizeTstOcrQuotaBucketMap(entry.week),
+        month: normalizeTstOcrQuotaBucketMap(entry.month),
+        lastUsedAt: typeof entry.lastUsedAt === "string" ? entry.lastUsedAt : "",
+        lastSource: typeof entry.lastSource === "string" ? entry.lastSource : ""
+      };
+    });
+    return { owners: ownersOut };
+  }catch(e){
+    return fallback;
+  }
+}
+
+function saveTstOcrQuotaStore(store){
+  try{
+    localStorage.setItem(TD_TST_OCR_QUOTA_STORAGE_KEY, JSON.stringify(store || createEmptyTstOcrQuotaStore()));
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function ensureTstOcrQuotaOwner(store, ownerKey){
+  if(!store || typeof store !== "object") store = createEmptyTstOcrQuotaStore();
+  if(!store.owners || typeof store.owners !== "object") store.owners = {};
+  if(!store.owners[ownerKey] || typeof store.owners[ownerKey] !== "object"){
+    store.owners[ownerKey] = { day: {}, week: {}, month: {}, lastUsedAt: "", lastSource: "" };
+  }
+  var owner = store.owners[ownerKey];
+  owner.day = normalizeTstOcrQuotaBucketMap(owner.day);
+  owner.week = normalizeTstOcrQuotaBucketMap(owner.week);
+  owner.month = normalizeTstOcrQuotaBucketMap(owner.month);
+  owner.lastUsedAt = typeof owner.lastUsedAt === "string" ? owner.lastUsedAt : "";
+  owner.lastSource = typeof owner.lastSource === "string" ? owner.lastSource : "";
+  return owner;
+}
+
+function getTstOcrQuotaDayKey(now){
+  var d = now instanceof Date ? now : new Date();
+  return d.getFullYear() + "-" + padTstOcrQuotaNum(d.getMonth() + 1) + "-" + padTstOcrQuotaNum(d.getDate());
+}
+
+function getTstOcrQuotaMonthKey(now){
+  var d = now instanceof Date ? now : new Date();
+  return d.getFullYear() + "-" + padTstOcrQuotaNum(d.getMonth() + 1);
+}
+
+function getTstOcrQuotaWeekKey(now){
+  var d = now instanceof Date ? now : new Date();
+  var utcDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  var dayNum = utcDate.getUTCDay() || 7;
+  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNum);
+  var yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+  var weekNo = Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
+  return utcDate.getUTCFullYear() + "-W" + padTstOcrQuotaNum(weekNo);
+}
+
+function getTstOcrQuotaSnapshot(now){
+  var stamp = now instanceof Date ? now : new Date();
+  var store = loadTstOcrQuotaStore();
+  var ownerKey = getTstOcrQuotaOwnerKey();
+  var owner = ensureTstOcrQuotaOwner(store, ownerKey);
+  var dayKey = getTstOcrQuotaDayKey(stamp);
+  var weekKey = getTstOcrQuotaWeekKey(stamp);
+  var monthKey = getTstOcrQuotaMonthKey(stamp);
+  return {
+    ownerKey: ownerKey,
+    dayKey: dayKey,
+    weekKey: weekKey,
+    monthKey: monthKey,
+    dayUsed: Math.max(0, parseInt(owner.day[dayKey], 10) || 0),
+    weekUsed: Math.max(0, parseInt(owner.week[weekKey], 10) || 0),
+    monthUsed: Math.max(0, parseInt(owner.month[monthKey], 10) || 0),
+    limits: TD_TST_OCR_QUOTA_LIMITS
+  };
+}
+
+function getTstOcrQuotaExceededScope(snapshot){
+  var info = snapshot || getTstOcrQuotaSnapshot();
+  var limits = info.limits || TD_TST_OCR_QUOTA_LIMITS;
+  if(info.dayUsed >= limits.day) return "day";
+  if(info.weekUsed >= limits.week) return "week";
+  if(info.monthUsed >= limits.month) return "month";
+  return "";
+}
+
+function formatTstOcrQuotaCounts(snapshot){
+  var info = snapshot || getTstOcrQuotaSnapshot();
+  var limits = info.limits || TD_TST_OCR_QUOTA_LIMITS;
+  return "Today " + info.dayUsed + "/" + limits.day + " · Week " + info.weekUsed + "/" + limits.week + " · Month " + info.monthUsed + "/" + limits.month;
+}
+
+function buildTstOcrQuotaBlockedMessage(snapshot){
+  var info = snapshot || getTstOcrQuotaSnapshot();
+  var scope = getTstOcrQuotaExceededScope(info);
+  var limits = info.limits || TD_TST_OCR_QUOTA_LIMITS;
+  var scopeText = "OCR limit reached";
+  if(scope === "day") scopeText = "Daily OCR limit reached (" + info.dayUsed + "/" + limits.day + ")";
+  else if(scope === "week") scopeText = "Weekly OCR limit reached (" + info.weekUsed + "/" + limits.week + ")";
+  else if(scope === "month") scopeText = "Monthly OCR limit reached (" + info.monthUsed + "/" + limits.month + ")";
+  return scopeText + ". Shared quota covers Vision OCR and Secondary OCR. Please contact administrator for more OCR access.";
+}
+
+function renderTstOcrQuotaHint(customText, state){
+  var el = document.getElementById("td-ocr-quota-hint");
+  if(!el) return;
+  var snapshot = getTstOcrQuotaSnapshot();
+  var blocked = !!getTstOcrQuotaExceededScope(snapshot);
+  var status = String(state || (blocked ? "blocked" : "ok")).trim();
+  if(customText){
+    el.textContent = String(customText);
+  }else if(blocked){
+    el.textContent = "OCR limit reached. " + formatTstOcrQuotaCounts(snapshot) + ". Contact administrator for more OCR access.";
+  }else{
+    el.textContent = "Shared OCR quota: " + formatTstOcrQuotaCounts(snapshot) + ".";
+  }
+  el.classList.toggle("is-blocked", status === "blocked");
+  el.classList.toggle("is-error", status === "error");
+}
+
+function showTstOcrQuotaNudge(sourceLabel, message){
+  var snapshot = getTstOcrQuotaSnapshot();
+  var msg = String(message || buildTstOcrQuotaBlockedMessage(snapshot));
+  renderTstOcrQuotaHint(msg, getTstOcrQuotaExceededScope(snapshot) ? "blocked" : "error");
+  if(sourceLabel === "Vision OCR"){
+    setTstClaudeOcrStatus("Limit reached", "#fbbf24");
+    var modal = document.getElementById("td-claude-ocr-modal");
+    if(modal && modal.style.display === "flex"){
+      setTstClaudeModalStatus(msg, "#fbbf24");
+    }
+  }else if(sourceLabel === "Secondary OCR"){
+    setTstPdfOcrStatus("Limit reached", "#fbbf24");
+  }
+  if(typeof showToast === "function") showToast("⚠ OCR limit reached. Contact administrator.");
+  alert(msg);
+}
+
+function reserveTstOcrQuotaSlot(sourceKey){
+  var now = new Date();
+  var store = loadTstOcrQuotaStore();
+  var ownerKey = getTstOcrQuotaOwnerKey();
+  var owner = ensureTstOcrQuotaOwner(store, ownerKey);
+  var snapshot = getTstOcrQuotaSnapshot(now);
+  if(getTstOcrQuotaExceededScope(snapshot)){
+    return { ok: false, snapshot: snapshot, reason: buildTstOcrQuotaBlockedMessage(snapshot) };
+  }
+
+  owner.day[snapshot.dayKey] = snapshot.dayUsed + 1;
+  owner.week[snapshot.weekKey] = snapshot.weekUsed + 1;
+  owner.month[snapshot.monthKey] = snapshot.monthUsed + 1;
+  owner.lastUsedAt = now.toISOString();
+  owner.lastSource = String(sourceKey || "ocr");
+
+  if(!saveTstOcrQuotaStore(store)){
+    return {
+      ok: false,
+      snapshot: snapshot,
+      reason: "OCR quota could not be updated on this browser. Please contact administrator before trying again."
+    };
+  }
+
+  return {
+    ok: true,
+    snapshot: {
+      ownerKey: snapshot.ownerKey,
+      dayKey: snapshot.dayKey,
+      weekKey: snapshot.weekKey,
+      monthKey: snapshot.monthKey,
+      dayUsed: snapshot.dayUsed + 1,
+      weekUsed: snapshot.weekUsed + 1,
+      monthUsed: snapshot.monthUsed + 1,
+      limits: snapshot.limits
+    }
+  };
+}
 
 function createEmptyTstClaudeGrid(){
   return Array.from({length:4}, function(){ return Array(TD_CLAUDE_OCR_PH_COUNT).fill(""); });
@@ -24279,21 +24527,26 @@ function isAnyTstOcrBusy(){
 
 function renderTstOcrButtonStates(){
   var anyBusy = isAnyTstOcrBusy();
+  var quotaSnapshot = getTstOcrQuotaSnapshot();
+  var quotaBlocked = !!getTstOcrQuotaExceededScope(quotaSnapshot);
+  var quotaMessage = buildTstOcrQuotaBlockedMessage(quotaSnapshot);
 
   var claudeBtn = document.getElementById("td-ocr-claude-btn");
   if(claudeBtn){
     claudeBtn.disabled = anyBusy;
-    claudeBtn.style.opacity = anyBusy ? "0.72" : "1";
+    claudeBtn.style.opacity = anyBusy ? "0.72" : (quotaBlocked ? "0.9" : "1");
     claudeBtn.style.cursor = anyBusy ? "not-allowed" : "pointer";
     claudeBtn.textContent = tdClaudeOcrBusy ? "⏳ Vision OCR running..." : "🤖 Vision OCR";
+    claudeBtn.title = quotaBlocked ? quotaMessage : "Upload PDF or photo and fill TST cells using Vision OCR";
   }
 
   var legacyBtn = document.getElementById("td-ocr-pdf-btn");
   if(legacyBtn){
     legacyBtn.disabled = anyBusy;
-    legacyBtn.style.opacity = anyBusy ? "0.72" : "1";
+    legacyBtn.style.opacity = anyBusy ? "0.72" : (quotaBlocked ? "0.9" : "1");
     legacyBtn.style.cursor = anyBusy ? "not-allowed" : "pointer";
     legacyBtn.textContent = tdPdfOcrBusy ? "⏳ Secondary OCR running..." : "📄 Secondary OCR";
+    legacyBtn.title = quotaBlocked ? quotaMessage : "Upload PDF or photo and fill TST cells using Secondary OCR";
   }
 }
 
@@ -24893,6 +25146,10 @@ function toggleTstVoiceInput(){
 
 function openTstPdfOcrPicker(){
   if(isAnyTstOcrBusy()) return;
+  if(getTstOcrQuotaExceededScope(getTstOcrQuotaSnapshot())){
+    showTstOcrQuotaNudge("Secondary OCR");
+    return;
+  }
   var input = document.getElementById("td-ocr-pdf-file");
   if(input) input.click();
 }
@@ -24934,11 +25191,18 @@ function updateTstClaudeExtractButtonState(){
   if(!btn) return;
   var hasFile = !!tdClaudeFileType;
   var noPdfPages = (tdClaudeFileType === "pdf" && tdClaudeSelectedPages.size < 1);
-  var disabled = tdClaudeOcrBusy || !hasFile || noPdfPages;
+  var quotaSnapshot = getTstOcrQuotaSnapshot();
+  var quotaBlocked = !!getTstOcrQuotaExceededScope(quotaSnapshot);
+  var disabled = tdClaudeOcrBusy || !hasFile || noPdfPages || quotaBlocked;
   btn.disabled = disabled;
   btn.style.opacity = disabled ? "0.62" : "1";
   btn.style.cursor = disabled ? "not-allowed" : "pointer";
   btn.textContent = tdClaudeOcrBusy ? "⏳ Extracting..." : "⚡ Extract & Fill TST";
+  btn.title = quotaBlocked ? buildTstOcrQuotaBlockedMessage(quotaSnapshot) : "";
+  var modal = document.getElementById("td-claude-ocr-modal");
+  if(quotaBlocked && modal && modal.style.display === "flex" && !tdClaudeOcrBusy){
+    setTstClaudeModalStatus(buildTstOcrQuotaBlockedMessage(quotaSnapshot), "#fbbf24");
+  }
 }
 
 function updateTstClaudePageCountLabel(totalPages){
@@ -25019,12 +25283,20 @@ function cancelTstClaudeOcr(){
 
 function openTstClaudeOcrPicker(){
   if(isAnyTstOcrBusy()) return;
+  if(getTstOcrQuotaExceededScope(getTstOcrQuotaSnapshot())){
+    showTstOcrQuotaNudge("Vision OCR");
+    return;
+  }
   var input = document.getElementById("td-ocr-claude-file");
   if(input) input.click();
 }
 
 function reselectTstClaudeOcrFile(){
   if(tdClaudeOcrBusy) return;
+  if(getTstOcrQuotaExceededScope(getTstOcrQuotaSnapshot())){
+    showTstOcrQuotaNudge("Vision OCR");
+    return;
+  }
   var input = document.getElementById("td-ocr-claude-file");
   if(input) input.click();
 }
@@ -25216,11 +25488,30 @@ async function callClaudeVisionForTst(b64, mediaType) {
 
 async function startTstClaudeExtraction() {
   if(tdClaudeOcrBusy || !tdClaudeFileType) return;
+  if(getTstOcrQuotaExceededScope(getTstOcrQuotaSnapshot())){
+    showTstOcrQuotaNudge("Vision OCR");
+    updateTstClaudeExtractButtonState();
+    return;
+  }
+  if(tdClaudeFileType === "pdf" && tdClaudeSelectedPages.size < 1){
+    setTstClaudeModalStatus("Select at least one PDF page first.", "#fbbf24");
+    updateTstClaudeExtractButtonState();
+    return;
+  }
 
   if(tdVoiceFillListening || tdVoiceFillKeepAlive){
     try{ stopTstVoiceInput(); }catch(e){}
   }
 
+  var quotaReservation = reserveTstOcrQuotaSlot("vision");
+  if(!quotaReservation.ok){
+    showTstOcrQuotaNudge("Vision OCR", quotaReservation.reason);
+    updateTstClaudeExtractButtonState();
+    renderTstOcrButtonStates();
+    return;
+  }
+  renderTstOcrQuotaHint();
+  renderTstOcrButtonStates();
   tdClaudeAllResults = [];
   setTstClaudeOcrBusy(true);
 
@@ -25293,6 +25584,10 @@ async function handleTstClaudeOcrSelect(event){
     }
     if((file.size || 0) > TD_CLAUDE_OCR_MAX_MB * 1024 * 1024){
       alert("File is too large. Please keep it under " + TD_CLAUDE_OCR_MAX_MB + " MB.");
+      return;
+    }
+    if(getTstOcrQuotaExceededScope(getTstOcrQuotaSnapshot())){
+      showTstOcrQuotaNudge("Vision OCR");
       return;
     }
     if(tdVoiceFillListening || tdVoiceFillKeepAlive){
@@ -26131,7 +26426,18 @@ async function handleTstPdfOcrSelect(event){
       alert("File is too large. Please keep it under " + TD_PDF_OCR_MAX_MB + " MB.");
       return;
     }
+    if(getTstOcrQuotaExceededScope(getTstOcrQuotaSnapshot())){
+      showTstOcrQuotaNudge("Secondary OCR");
+      return;
+    }
+    var quotaReservation = reserveTstOcrQuotaSlot("secondary");
+    if(!quotaReservation.ok){
+      showTstOcrQuotaNudge("Secondary OCR", quotaReservation.reason);
+      return;
+    }
 
+    renderTstOcrQuotaHint();
+    renderTstOcrButtonStates();
     setTstPdfOcrBusy(true);
     setTstPdfOcrStatus(fileKind === "pdf" ? "Starting PDF OCR..." : "Starting photo OCR...", "#7ec8f0");
     if(tdVoiceFillListening || tdVoiceFillKeepAlive){
@@ -26195,8 +26501,16 @@ async function handleTstPdfOcrSelect(event){
       noteTdPeepFocusByElement(ev && ev.target ? ev.target : null);
     });
     setTstRampFillStatus("Ramp preset idle", "#94a3b8");
+    renderTstOcrQuotaHint();
     renderTstOcrButtonStates();
     updateTstFillRunButtonState();
+    window.addEventListener("storage", function(ev){
+      if(ev && ev.key === TD_TST_OCR_QUOTA_STORAGE_KEY){
+        renderTstOcrQuotaHint();
+        renderTstOcrButtonStates();
+        updateTstClaudeExtractButtonState();
+      }
+    });
   });
 })();
 
