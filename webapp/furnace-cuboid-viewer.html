@@ -2640,9 +2640,11 @@ const ACTIVE_FRAME_MS=16;
 const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 20 : 16;
 const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 185 : 110;
 const SLEEP_FRAME_MS=420;
-const ACTIVE_OVERLAY_TICK_MS=84;
-const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 150 : 110;
-const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 760 : 420;
+const ACTIVE_OVERLAY_TICK_MS=110;
+const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 520 : 420;
+const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 1300 : 900;
+const ACTIVE_OVERLAY_PHASE_STEP=0.12;
+const IDLE_OVERLAY_PHASE_STEP=0.045;
 const ACTIVE_FLAME_TICK_MS=16;
 const BACKGROUND_FLAME_TICK_MS=cuboidIsChromeLike ? 160 : 120;
 
@@ -2651,6 +2653,7 @@ let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
 let touchMoved=false,lastTapAt=0,lastFrameTs=0,autoSpinMix=0;
 let lastFlameUpdateAt=0;
 let dragStartRotY=0;
+let flameGroupsIdleApplied=false;
 
 function normalizeAngle(angle){
   let a=angle;
@@ -2712,6 +2715,25 @@ function stopDrag(){
 function snapToNearestFace(){
   const snapped=Math.round(normalizeAngle(rotY)/FACE_STEP)*FACE_STEP;
   setRotationTarget(snapped);
+}
+
+function cuboidHasRotationMotion(){
+  return isDragging
+    || autoSpinMix>0.0001
+    || Math.abs(targetRotY-rotY)>=0.00008
+    || Math.abs(springVelocity)>=0.00008;
+}
+
+function setFlameGroupsIdleState(){
+  flameGroups.forEach(function(f){
+    f.om.scale.set(1,1,0.88);
+    f.om.material.opacity=0.30;
+    f.mm.scale.set(1,1,0.88);
+    f.mm.material.opacity=0.45;
+    f.cm2.scale.set(1,1,0.90);
+    f.cm2.material.opacity=0.68;
+  });
+  flameGroupsIdleApplied=true;
 }
 
 vp.addEventListener("pointerdown",function(e){
@@ -2809,13 +2831,14 @@ function animate(t){
   group.rotation.z=0;
   innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
   const ts=t*0.001;
-  const overlayTickMs=interactionActive ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
+  const rotationActive=cuboidHasRotationMotion();
+  const overlayTickMs=rotationActive ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
   if(overlayDirty || (t-lastOverlayPaintAt)>=overlayTickMs){
-    overlayAnimPhase=(overlayAnimPhase+OVERLAY_PHASE_STEP)%(Math.PI*2);
+    overlayAnimPhase=(overlayAnimPhase+(rotationActive ? ACTIVE_OVERLAY_PHASE_STEP : IDLE_OVERLAY_PHASE_STEP))%(Math.PI*2);
     syncFaceOverlays(false);
     lastOverlayPaintAt=t;
   }
-  if(!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=(interactionActive ? ACTIVE_FLAME_TICK_MS : BACKGROUND_FLAME_TICK_MS)){
+  if(rotationActive && (!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=ACTIVE_FLAME_TICK_MS)){
     flameGroups.forEach(function(f){
       const s=f.seed;
       const flk=0.86+0.16*Math.sin(ts*2.3+s)+0.07*Math.sin(ts*5.1+s*1.4);
@@ -2827,6 +2850,9 @@ function animate(t){
       f.cm2.material.opacity=0.68+0.22*Math.sin(ts*6.1+s*0.8);
     });
     lastFlameUpdateAt=t;
+    flameGroupsIdleApplied=false;
+  }else if(!rotationActive && !flameGroupsIdleApplied){
+    setFlameGroupsIdleState();
   }
   renderer.render(scene,camera);
 }
