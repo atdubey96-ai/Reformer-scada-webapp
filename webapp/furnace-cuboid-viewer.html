@@ -247,6 +247,7 @@ let hostTabActive=true;
 let hostInView=true;
 let hostFocused=true;
 let lastRenderTs=0;
+let forceNextRender=true;
 const cuboidUa=navigator.userAgent || "";
 const cuboidIsChromeLike=/\bChrome\//.test(cuboidUa) || /\bCriOS\//.test(cuboidUa);
 let pushedCuboidLiveData=null;
@@ -266,6 +267,12 @@ function cuboidIsFullscreen(){
 function cuboidRefreshHint(){
   if(!hint) return;
   hint.textContent=cuboidIsFullscreen() ? "DRAG TO ROTATE · DOUBLE-TAP EXIT FULLSCREEN" : "DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN";
+}
+
+function markViewerFrameDirty(){
+  forceNextRender=true;
+  lastFrameTs=0;
+  lastRenderTs=0;
 }
 
 function cuboidCanRenderNow(){
@@ -295,13 +302,13 @@ function resetFrontView(){
   autoSpin=false;
   if(btnAuto) btnAuto.textContent="Auto Rotate";
   setRotationTarget(0);
+  markViewerFrameDirty();
 }
 
 document.addEventListener("fullscreenchange",cuboidRefreshHint);
 document.addEventListener("webkitfullscreenchange",cuboidRefreshHint);
 document.addEventListener("visibilitychange",function(){
-  lastFrameTs=0;
-  lastRenderTs=0;
+  markViewerFrameDirty();
 });
 cuboidRefreshHint();
 window.addEventListener("message",function(ev){
@@ -315,14 +322,12 @@ window.addEventListener("message",function(ev){
     hostTabActive=!!data.active;
     hostInView=data.inView !== false;
     hostFocused=data.focused !== false;
-    lastFrameTs=0;
-    lastRenderTs=0;
+    markViewerFrameDirty();
     return;
   }
   if(data.type==="cuboid-live-data"){
     if(cuboidConsumeLiveState(data.payload, data.digest)){
-      lastFrameTs=0;
-      lastRenderTs=0;
+      markViewerFrameDirty();
       if(refreshOverlayData(true)){
         syncFaceOverlays(false);
       }
@@ -2132,15 +2137,15 @@ function cuboidGetTargetPixelRatio(){
   const activeNow=isDragging || autoSpin || cuboidIsFullscreen();
   let cap;
   if(!cuboidCanRenderNow()){
-    cap=0.65;
+    cap=0.58;
   }else if(activeNow){
-    cap=cuboidIsChromeLike ? 1.06 : 1.45;
+    cap=cuboidIsChromeLike ? 0.94 : 1.18;
   }else if(hostFocused){
-    cap=cuboidIsChromeLike ? 0.88 : 1.28;
+    cap=cuboidIsChromeLike ? 0.74 : 0.98;
   }else{
-    cap=cuboidIsChromeLike ? 0.62 : 1;
+    cap=cuboidIsChromeLike ? 0.58 : 0.82;
   }
-  return Math.max(0.62,Math.min(deviceRatio,cap));
+  return Math.max(0.58,Math.min(deviceRatio,cap));
 }
 
 function cuboidApplyRendererQuality(force){
@@ -2636,15 +2641,15 @@ const MAX_DRAG_DELTA=42;
 const TAP_MOVE_TOLERANCE=10;
 const FACE_STEP=Math.PI/2;
 const FACE_ADVANCE_THRESHOLD=FACE_STEP*0.34;
-const ACTIVE_FRAME_MS=16;
-const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 20 : 16;
-const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 185 : 110;
-const SLEEP_FRAME_MS=420;
-const ACTIVE_OVERLAY_TICK_MS=84;
-const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 150 : 110;
-const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 760 : 420;
-const ACTIVE_FLAME_TICK_MS=16;
-const BACKGROUND_FLAME_TICK_MS=cuboidIsChromeLike ? 160 : 120;
+const ACTIVE_FRAME_MS=20;
+const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 110 : 80;
+const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 650 : 450;
+const SLEEP_FRAME_MS=750;
+const ACTIVE_OVERLAY_TICK_MS=120;
+const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 2400 : 1800;
+const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 5200 : 3600;
+const ACTIVE_FLAME_TICK_MS=42;
+const BACKGROUND_FLAME_TICK_MS=cuboidIsChromeLike ? 1400 : 1000;
 
 let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
 let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
@@ -2714,6 +2719,13 @@ function snapToNearestFace(){
   setRotationTarget(snapped);
 }
 
+function cuboidHasSceneMotion(){
+  return isDragging
+    || autoSpinMix>0.0001
+    || Math.abs(targetRotY-rotY)>=0.00008
+    || Math.abs(springVelocity)>=0.00008;
+}
+
 vp.addEventListener("pointerdown",function(e){
   activePointerId=e.pointerId;
   if(vp.setPointerCapture) vp.setPointerCapture(e.pointerId);
@@ -2764,6 +2776,7 @@ btnResetView.addEventListener("click",function(){
 const ro=new ResizeObserver(function(){
   cuboidApplyRendererQuality(true);
   fitCamera();
+  markViewerFrameDirty();
 });
 ro.observe(vp);
 cuboidApplyRendererQuality(true);
@@ -2779,7 +2792,7 @@ function animate(t){
   lastRenderTs=t;
   const dt=lastFrameTs ? Math.min(0.05,Math.max(0.001,(t-lastFrameTs)/1000)) : (1/60);
   lastFrameTs=t;
-  cuboidApplyRendererQuality(false);
+  let frameNeedsRender=forceNextRender || cuboidApplyRendererQuality(false);
 
   if(!canRender){
     return;
@@ -2807,15 +2820,26 @@ function animate(t){
   rigGroup.rotation.y=rotY;
   group.rotation.x=0;
   group.rotation.z=0;
-  innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
+  const sceneMoving=cuboidHasSceneMotion();
+  if(interactionActive){
+    innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
+    frameNeedsRender=true;
+  }else{
+    innerL.intensity=1.1;
+    frameNeedsRender=frameNeedsRender || sceneMoving;
+  }
   const ts=t*0.001;
-  const overlayTickMs=interactionActive ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
-  if(overlayDirty || (t-lastOverlayPaintAt)>=overlayTickMs){
-    overlayAnimPhase=(overlayAnimPhase+OVERLAY_PHASE_STEP)%(Math.PI*2);
+  const shouldAnimateOverlay=interactionActive;
+  const overlayTickMs=shouldAnimateOverlay ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
+  if(overlayDirty || (shouldAnimateOverlay && (t-lastOverlayPaintAt)>=overlayTickMs)){
+    if(shouldAnimateOverlay){
+      overlayAnimPhase=(overlayAnimPhase+OVERLAY_PHASE_STEP)%(Math.PI*2);
+    }
     syncFaceOverlays(false);
     lastOverlayPaintAt=t;
+    frameNeedsRender=true;
   }
-  if(!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=(interactionActive ? ACTIVE_FLAME_TICK_MS : BACKGROUND_FLAME_TICK_MS)){
+  if(interactionActive && (!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=ACTIVE_FLAME_TICK_MS)){
     flameGroups.forEach(function(f){
       const s=f.seed;
       const flk=0.86+0.16*Math.sin(ts*2.3+s)+0.07*Math.sin(ts*5.1+s*1.4);
@@ -2827,8 +2851,15 @@ function animate(t){
       f.cm2.material.opacity=0.68+0.22*Math.sin(ts*6.1+s*0.8);
     });
     lastFlameUpdateAt=t;
+    frameNeedsRender=true;
+  }else if(!interactionActive && !lastFlameUpdateAt){
+    lastFlameUpdateAt=t;
+  }else if(!interactionActive && (t-lastFlameUpdateAt)>=BACKGROUND_FLAME_TICK_MS){
+    lastFlameUpdateAt=t;
   }
+  if(!frameNeedsRender) return;
   renderer.render(scene,camera);
+  forceNextRender=false;
 }
 requestAnimationFrame(animate);
 
