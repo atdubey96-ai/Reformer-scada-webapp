@@ -16321,12 +16321,12 @@ html, body, body *, body *::before, body *::after, svg text{
               class="td-toolbar-datetime">
           </div>
           <input type="file" id="td-ocr-claude-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstClaudeOcrSelect(event)">
-          <button type="button" id="td-ocr-claude-btn" onclick="openTstClaudeOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Claude Vision">
-            🤖 Claude OCR to TST
+          <button type="button" id="td-ocr-claude-btn" onclick="openTstClaudeOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Vision OCR">
+            🤖 Vision OCR to TST
           </button>
           <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
-          <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Azure / browser OCR">
-            📄 Azure / Browser OCR
+          <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Secondary OCR">
+            📄 Secondary OCR
           </button>
           <div class="td-fill-menu-wrap">
             <span style="font-size:10px;font-weight:800;color:#7ec8f0;letter-spacing:0.6px;text-transform:uppercase;">Ramp 930</span>
@@ -16336,8 +16336,8 @@ html, body, body *, body *::before, body *::after, svg text{
           </div>
           <div class="td-toolbar-status" id="td-toolbar-status-wrap" style="display:none;">
             <span id="td-ramp-fill-status" style="max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Ramp preset idle</span>
-            <span id="td-ocr-claude-status" style="display:none;">Claude OCR idle</span>
-            <span id="td-ocr-pdf-status" style="display:none;">Legacy OCR idle</span>
+            <span id="td-ocr-claude-status" style="display:none;">Vision OCR idle</span>
+            <span id="td-ocr-pdf-status" style="display:none;">Secondary OCR idle</span>
             <span id="td-voice-fill-status" style="display:none;">Voice idle</span>
           </div>
           <!-- Save / Clear -->
@@ -16571,15 +16571,15 @@ html, body, body *, body *::before, body *::after, svg text{
     <div class="td-claude-modal-card" onclick="event.stopPropagation()">
       <div class="td-claude-modal-head">
         <div>
-          <div class="td-claude-modal-title">Claude Vision OCR</div>
+          <div class="td-claude-modal-title">Vision OCR</div>
           <div id="td-claude-modal-subtitle" class="td-claude-modal-subtitle">Upload a TST photo or PDF, then extract only the values into the 60 TST cells.</div>
         </div>
-        <button type="button" class="td-claude-modal-close" onclick="cancelTstClaudeOcr()" aria-label="Close Claude OCR">✕</button>
+        <button type="button" class="td-claude-modal-close" onclick="cancelTstClaudeOcr()" aria-label="Close Vision OCR">✕</button>
       </div>
       <div class="td-claude-modal-body">
         <div id="td-claude-file-chip" class="td-claude-file-chip" style="display:none;"></div>
         <div id="td-claude-preview-wrap" class="td-claude-preview-wrap">
-          <img id="td-claude-img-preview" class="td-claude-img-preview" alt="Claude OCR preview">
+          <img id="td-claude-img-preview" class="td-claude-img-preview" alt="Vision OCR preview">
         </div>
         <div id="td-claude-pdf-pages-section" class="td-claude-pdf-pages-section">
           <div class="td-claude-page-topbar">
@@ -24285,7 +24285,7 @@ function renderTstOcrButtonStates(){
     claudeBtn.disabled = anyBusy;
     claudeBtn.style.opacity = anyBusy ? "0.72" : "1";
     claudeBtn.style.cursor = anyBusy ? "not-allowed" : "pointer";
-    claudeBtn.textContent = tdClaudeOcrBusy ? "⏳ Claude OCR running..." : "🤖 Claude OCR to TST";
+    claudeBtn.textContent = tdClaudeOcrBusy ? "⏳ Vision OCR running..." : "🤖 Vision OCR to TST";
   }
 
   var legacyBtn = document.getElementById("td-ocr-pdf-btn");
@@ -24293,7 +24293,7 @@ function renderTstOcrButtonStates(){
     legacyBtn.disabled = anyBusy;
     legacyBtn.style.opacity = anyBusy ? "0.72" : "1";
     legacyBtn.style.cursor = anyBusy ? "not-allowed" : "pointer";
-    legacyBtn.textContent = tdPdfOcrBusy ? "⏳ Legacy OCR running..." : "📄 Azure / Browser OCR";
+    legacyBtn.textContent = tdPdfOcrBusy ? "⏳ Secondary OCR running..." : "📄 Secondary OCR";
   }
 }
 
@@ -24327,7 +24327,7 @@ function runSelectedTstFillAction(){
 function setTstPdfOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-pdf-status");
   if(!st) return;
-  st.textContent = msg || "Legacy OCR idle";
+  st.textContent = msg || "Secondary OCR idle";
   st.style.color = color || "#94a3b8";
 }
 
@@ -24900,7 +24900,7 @@ function openTstPdfOcrPicker(){
 function setTstClaudeOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-claude-status");
   if(!st) return;
-  st.textContent = msg || "Claude OCR idle";
+  st.textContent = msg || "Vision OCR idle";
   st.style.color = color || "#94a3b8";
 }
 
@@ -24998,7 +24998,7 @@ function resetTstClaudeOcrState(clearInput){
   if(pageCount) pageCount.textContent = "";
 
   setTstClaudeProgress(0);
-  setTstClaudeOcrStatus("Claude OCR idle", "#94a3b8");
+  setTstClaudeOcrStatus("Vision OCR idle", "#94a3b8");
   setTstClaudeModalStatus("Choose a file to begin.", "#7ec8f0");
   updateTstClaudeExtractButtonState();
 
@@ -25010,7 +25010,7 @@ function resetTstClaudeOcrState(clearInput){
 
 function cancelTstClaudeOcr(){
   if(tdClaudeOcrBusy){
-    alert("Claude OCR is still running. Please wait for it to finish.");
+    alert("Vision OCR is still running. Please wait for it to finish.");
     return;
   }
   closeTstClaudeModal();
@@ -25042,7 +25042,7 @@ async function loadTstClaudeImage(file){
   if(previewWrap) previewWrap.style.display = "block";
   if(pdfSection) pdfSection.style.display = "none";
 
-  setTstClaudeModalStatus("Image ready. Review and run Claude Vision extraction.", "#7ec8f0");
+  setTstClaudeModalStatus("Image ready. Review and run Vision OCR extraction.", "#7ec8f0");
   updateTstClaudeExtractButtonState();
 }
 
@@ -25133,7 +25133,7 @@ async function loadTstClaudePdf(file){
   setTstClaudeProgress(100);
   setTimeout(function(){ setTstClaudeProgress(0); }, 400);
   updateTstClaudePageCountLabel(count);
-  setTstClaudeModalStatus("PDF ready. Select pages and run Claude Vision extraction.", "#7ec8f0");
+  setTstClaudeModalStatus("PDF ready. Select pages and run Vision OCR extraction.", "#7ec8f0");
   updateTstClaudeExtractButtonState();
 }
 
@@ -25227,7 +25227,7 @@ async function startTstClaudeExtraction() {
   var success = false;
   try {
     if (tdClaudeFileType === "image") {
-      setTstClaudeModalStatus("Sending image to Claude Vision...", "#7ec8f0");
+      setTstClaudeModalStatus("Sending image to Vision OCR...", "#7ec8f0");
       var imageResult = await callClaudeVisionForTst(tdClaudeImageBase64, tdClaudeImageMediaType || "image/jpeg");
       imageResult.page = "Image";
       tdClaudeAllResults.push(imageResult);
@@ -25251,21 +25251,21 @@ async function startTstClaudeExtraction() {
     var values = extractTstValuesFromClaudeResults(tdClaudeAllResults);
     var written = fillTdPeepFieldsFromList(values, true);
     if (written < 1) {
-      var failMsg = (tdClaudeAllResults[0] && (tdClaudeAllResults[0].error || tdClaudeAllResults[0].raw)) || "No valid TST values detected from Claude Vision.";
-      setTstClaudeModalStatus("Claude OCR could not detect usable TST values.", "#fca5a5");
-      setTstClaudeOcrStatus("Claude OCR failed", "#fca5a5");
-      alert("Claude OCR failed: " + failMsg);
+      var failMsg = (tdClaudeAllResults[0] && (tdClaudeAllResults[0].error || tdClaudeAllResults[0].raw)) || "No valid TST values detected from Vision OCR.";
+      setTstClaudeModalStatus("Vision OCR could not detect usable TST values.", "#fca5a5");
+      setTstClaudeOcrStatus("Vision OCR failed", "#fca5a5");
+      alert("Vision OCR failed: " + failMsg);
       return;
     }
 
     success = true;
     setTstClaudeOcrStatus("Filled " + written + " cells", "#34d399");
-    setTstClaudeModalStatus("Filled " + written + " TST cells from Claude Vision.", "#34d399");
-    showToast("✅ Claude OCR filled " + written + " TST cells.");
+    setTstClaudeModalStatus("Filled " + written + " TST cells from Vision OCR.", "#34d399");
+    showToast("✅ Vision OCR filled " + written + " TST cells.");
   } catch(err) {
-    setTstClaudeModalStatus("Claude OCR failed.", "#fca5a5");
-    setTstClaudeOcrStatus("Claude OCR failed", "#fca5a5");
-    alert("Claude OCR failed: " + (err && err.message ? err.message : err));
+    setTstClaudeModalStatus("Vision OCR failed.", "#fca5a5");
+    setTstClaudeOcrStatus("Vision OCR failed", "#fca5a5");
+    alert("Vision OCR failed: " + (err && err.message ? err.message : err));
   } finally {
     setTstClaudeOcrBusy(false);
     if(success){
@@ -25308,7 +25308,7 @@ async function handleTstClaudeOcrSelect(event){
       chip.style.display = "inline-flex";
     }
 
-    setTstClaudeOcrStatus(fileKind === "pdf" ? "Preparing Claude PDF..." : "Preparing Claude image...", "#7ec8f0");
+    setTstClaudeOcrStatus(fileKind === "pdf" ? "Preparing Vision OCR PDF..." : "Preparing Vision OCR image...", "#7ec8f0");
     setTstClaudeModalStatus(fileKind === "pdf" ? "Loading PDF pages..." : "Loading image preview...", "#7ec8f0");
 
     if(fileKind === "pdf") await loadTstClaudePdf(file);
@@ -25316,8 +25316,8 @@ async function handleTstClaudeOcrSelect(event){
   }catch(err){
     closeTstClaudeModal();
     resetTstClaudeOcrState(true);
-    setTstClaudeOcrStatus("Claude OCR failed", "#fca5a5");
-    alert("Could not prepare Claude OCR file: " + (err && err.message ? err.message : err));
+    setTstClaudeOcrStatus("Vision OCR failed", "#fca5a5");
+    alert("Could not prepare Vision OCR file: " + (err && err.message ? err.message : err));
   }finally{
     if(fileInput) fileInput.value = "";
   }
@@ -26183,8 +26183,8 @@ async function handleTstPdfOcrSelect(event){
     syncTdMobileMatrixFromBase();
     applyMobileHorizontalScrollFixes();
     resetTstClaudeOcrState(false);
-    setTstClaudeOcrStatus("Claude OCR idle", "#94a3b8");
-    setTstPdfOcrStatus("Legacy OCR idle", "#94a3b8");
+    setTstClaudeOcrStatus("Vision OCR idle", "#94a3b8");
+    setTstPdfOcrStatus("Secondary OCR idle", "#94a3b8");
     setTstVoiceFillButtonState(false);
     if(getTstVoiceRecognitionCtor()){
       setTstVoiceFillStatus("Voice idle", "#94a3b8");
