@@ -23924,8 +23924,8 @@ async function autoExportToServer(wb, filename){
   }
 }
 
-var AUTO_SYNC_INTERVAL_MS = 30000;
-var AUTO_SYNC_SAVE_MIN_GAP_MS = 28000;
+var AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+var AUTO_SYNC_SAVE_MIN_GAP_MS = AUTO_SYNC_INTERVAL_MS - 5000;
 var autoSyncCycleInFlight = false;
 var autoSaveLastAtMs = 0;
 var autoRefreshOnOpenDone = false;
