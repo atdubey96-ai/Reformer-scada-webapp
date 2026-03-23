@@ -2646,10 +2646,11 @@ const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 110 : 80;
 const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 650 : 450;
 const SLEEP_FRAME_MS=750;
 const ACTIVE_OVERLAY_TICK_MS=120;
-const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 2400 : 1800;
-const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 5200 : 3600;
+const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 950 : 780;
+const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 2600 : 1800;
 const ACTIVE_FLAME_TICK_MS=42;
 const BACKGROUND_FLAME_TICK_MS=cuboidIsChromeLike ? 1400 : 1000;
+const IDLE_OVERLAY_PHASE_STEP=0.055;
 
 let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
 let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
@@ -2829,12 +2830,10 @@ function animate(t){
     frameNeedsRender=frameNeedsRender || sceneMoving;
   }
   const ts=t*0.001;
-  const shouldAnimateOverlay=interactionActive;
-  const overlayTickMs=shouldAnimateOverlay ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
-  if(overlayDirty || (shouldAnimateOverlay && (t-lastOverlayPaintAt)>=overlayTickMs)){
-    if(shouldAnimateOverlay){
-      overlayAnimPhase=(overlayAnimPhase+OVERLAY_PHASE_STEP)%(Math.PI*2);
-    }
+  const shouldAnimateOverlay=interactionActive || hostFocused;
+  const overlayTickMs=interactionActive ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
+  if(overlayDirty || (shouldAnimateOverlay && (t-lastOverlayPaintAt)>=overlayTickMs) || (!hostFocused && (t-lastOverlayPaintAt)>=BACKGROUND_OVERLAY_TICK_MS)){
+    overlayAnimPhase=(overlayAnimPhase+(interactionActive ? OVERLAY_PHASE_STEP : IDLE_OVERLAY_PHASE_STEP))%(Math.PI*2);
     syncFaceOverlays(false);
     lastOverlayPaintAt=t;
     frameNeedsRender=true;
