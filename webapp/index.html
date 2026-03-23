@@ -3259,21 +3259,21 @@ body.light-theme .cw-nudge{
 .tab-panel.tab-active{ display:block; }
 
 .scada-app-footer{
-  width:min(1120px, calc(100% - 16px));
-  margin:12px auto 14px;
+  width:min(1380px, calc(100% - 20px));
+  margin:10px auto 12px;
 }
 .scada-footer-shell{
   position:relative;
   overflow:hidden;
-  border-radius:18px;
+  border-radius:16px;
   border:1px solid rgba(127,156,198,0.18);
   background:
     radial-gradient(100% 120% at 100% 0%, rgba(243,112,34,0.09) 0%, rgba(243,112,34,0) 38%),
     linear-gradient(180deg, rgba(12,17,27,0.92) 0%, rgba(8,12,19,0.9) 100%);
   box-shadow:
-    0 10px 24px rgba(0,0,0,0.18),
+    0 8px 18px rgba(0,0,0,0.16),
     inset 0 1px 0 rgba(255,255,255,0.05);
-  padding:16px clamp(16px,1.8vw,22px);
+  padding:12px clamp(18px,1.9vw,28px);
 }
 .scada-footer-shell::before{
   content:"";
@@ -3286,9 +3286,9 @@ body.light-theme .cw-nudge{
 }
 .scada-footer-head{
   display:grid;
-  grid-template-columns:minmax(0, 1fr) minmax(260px, 330px);
-  gap:16px;
-  align-items:center;
+  grid-template-columns:minmax(0, 1fr) minmax(410px, 470px);
+  gap:20px;
+  align-items:start;
 }
 .scada-footer-eyebrow{
   display:inline-flex;
@@ -3300,12 +3300,12 @@ body.light-theme .cw-nudge{
   letter-spacing:1.4px;
   text-transform:uppercase;
   color:#7dd3fc;
-  margin-bottom:4px;
+  margin-bottom:2px;
 }
 .scada-footer-title{
-  margin:0 0 5px;
+  margin:0 0 4px;
   font-family:'Rajdhani',sans-serif;
-  font-size:19px;
+  font-size:18px;
   line-height:1.1;
   font-weight:800;
   letter-spacing:0.2px;
@@ -3313,18 +3313,19 @@ body.light-theme .cw-nudge{
 }
 .scada-footer-copy{
   margin:0;
-  max-width:720px;
+  max-width:860px;
   color:#b9c7d9;
-  font-size:12.5px;
-  line-height:1.55;
+  font-size:12px;
+  line-height:1.45;
 }
 .scada-footer-actions{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:12px;
   min-width:0;
   justify-self:end;
-  width:min(330px, 100%);
+  width:min(460px, 100%);
+  align-self:start;
 }
 .scada-footer-card{
   border-radius:0;
@@ -3339,12 +3340,12 @@ body.light-theme .cw-nudge{
   letter-spacing:1px;
   text-transform:uppercase;
   color:#a5f3fc;
-  margin-bottom:4px;
+  margin-bottom:3px;
 }
 .scada-footer-card-copy{
   color:#cbd5e1;
-  font-size:11.8px;
-  line-height:1.5;
+  font-size:11.3px;
+  line-height:1.4;
 }
 .scada-footer-card-copy a{
   color:#93c5fd;
@@ -3357,18 +3358,18 @@ body.light-theme .cw-nudge{
 .scada-footer-install-actions{
   display:grid;
   grid-template-columns:repeat(2, minmax(0, 1fr));
-  gap:8px;
-  margin-top:7px;
+  gap:7px;
+  margin-top:6px;
 }
 .scada-footer-install-btn{
-  min-height:34px;
-  padding:0 11px;
+  min-height:30px;
+  padding:0 10px;
   border-radius:999px;
   border:1px solid rgba(125,211,252,0.22);
   background:linear-gradient(180deg, rgba(18,31,50,0.96) 0%, rgba(10,20,34,0.96) 100%);
   color:#e2f3ff;
   font-family:'Rajdhani',sans-serif;
-  font-size:11.6px;
+  font-size:11.2px;
   font-weight:800;
   letter-spacing:0.2px;
   cursor:pointer;
@@ -3382,22 +3383,22 @@ body.light-theme .cw-nudge{
 .scada-footer-link-row{
   display:flex;
   flex-wrap:wrap;
-  gap:8px;
-  margin-top:12px;
+  gap:7px;
+  margin-top:10px;
 }
 .scada-footer-link{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:30px;
-  padding:0 10px;
+  min-height:28px;
+  padding:0 11px;
   border-radius:999px;
   border:1px solid rgba(255,255,255,0.08);
   background:rgba(255,255,255,0.03);
   color:#dbe7f5;
   text-decoration:none;
   font-family:'Rajdhani',sans-serif;
-  font-size:11.2px;
+  font-size:11px;
   font-weight:700;
   letter-spacing:0.2px;
   transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
@@ -3409,23 +3410,23 @@ body.light-theme .cw-nudge{
   transform:translateY(-1px);
 }
 .scada-footer-note{
-  margin-top:12px;
-  padding-top:10px;
+  margin-top:10px;
+  padding-top:8px;
   border-top:1px solid rgba(255,255,255,0.08);
   color:#a9b8ca;
-  font-size:11.5px;
-  line-height:1.55;
+  font-size:11.1px;
+  line-height:1.45;
 }
 .scada-footer-bottom{
-  margin-top:8px;
+  margin-top:6px;
   display:flex;
   flex-wrap:wrap;
-  gap:8px 14px;
+  gap:6px 14px;
   justify-content:space-between;
   align-items:center;
   color:#8fa2b8;
-  font-size:10.8px;
-  line-height:1.6;
+  font-size:10.5px;
+  line-height:1.45;
 }
 .scada-footer-bottom a{
   color:#93c5fd;
@@ -3473,6 +3474,16 @@ body.light-theme .scada-footer-note{
 }
 body.light-theme .scada-footer-bottom{ color:#5d728a; }
 body.light-theme .scada-footer-bottom a{ color:#2563eb; }
+@media (max-width:1100px){
+  .scada-footer-head{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .scada-footer-actions{
+    width:100%;
+    justify-self:stretch;
+  }
+}
 @media (max-width:900px){
   .scada-app-footer{
     width:calc(100% - 16px);
@@ -3481,10 +3492,6 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   .scada-footer-shell{
     border-radius:16px;
     padding:14px 12px;
-  }
-  .scada-footer-head{
-    grid-template-columns:1fr;
-    gap:10px;
   }
   .scada-footer-title{
     font-size:16px;
@@ -3496,6 +3503,7 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
     grid-template-columns:1fr 1fr;
   }
   .scada-footer-actions{
+    grid-template-columns:1fr;
     width:100%;
   }
   .scada-footer-link-row{
