@@ -1883,7 +1883,10 @@ td select option{background:#1e293b;color:#e2e8f0;}
 #tab-burner .burner-cell-trigger{
   width:100%;
   height:100%;
+  -webkit-appearance:none;
+  appearance:none;
   border:none;
+  border-radius:inherit;
   background:transparent;
   color:inherit;
   display:flex;
@@ -1895,6 +1898,21 @@ td select option{background:#1e293b;color:#e2e8f0;}
   cursor:pointer;
   position:relative;
   outline:none;
+  -webkit-tap-highlight-color:transparent;
+}
+#tab-burner .burner-cell-trigger:focus,
+#tab-burner .burner-cell-trigger:active,
+#tab-burner td.burner-editor-open .burner-cell-trigger{
+  background:transparent !important;
+  color:inherit !important;
+  box-shadow:none !important;
+}
+#tab-burner .burner-cell-trigger:focus-visible{
+  outline:2px solid rgba(243,112,34,0.48);
+  outline-offset:-2px;
+}
+#tab-burner .burner-cell-trigger::-moz-focus-inner{
+  border:0;
 }
 #tab-burner .burner-cell-trigger::after{
   content:"▾";
@@ -10737,7 +10755,7 @@ html, body, body *, body *::before, body *::after, svg text{
           padding:5px 13px !important;
           font-size:12.5px !important;
         }
-        body #tab-burner td.B:not(.burner-pending){
+        body #tab-burner td.B{
           background:
             linear-gradient(180deg,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0.06) 36%,rgba(255,255,255,0) 37%),
             linear-gradient(135deg,#2a6fdb 0%,#2d62bf 56%,#224f9d 100%) !important;
@@ -10745,7 +10763,7 @@ html, body, body *, body *::before, body *::after, svg text{
           color:#f7fbff !important;
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 0 9px rgba(52,118,215,0.4) !important;
         }
-        body #tab-burner td.N:not(.burner-pending){
+        body #tab-burner td.N{
           background:
             linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.06) 36%,rgba(255,255,255,0) 37%),
             linear-gradient(135deg,#d89a2a 0%,#b9781a 56%,#8f5910 100%) !important;
@@ -10753,7 +10771,7 @@ html, body, body *, body *::before, body *::after, svg text{
           color:#fffaf1 !important;
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.26),0 0 9px rgba(180,115,26,0.42) !important;
         }
-        body #tab-burner td.O:not(.burner-pending){
+        body #tab-burner td.O{
           background:
             linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.06) 36%,rgba(255,255,255,0) 37%),
             linear-gradient(135deg,#44c977 0%,#2fa45a 56%,#1f7842 100%) !important;
@@ -10761,7 +10779,7 @@ html, body, body *, body *::before, body *::after, svg text{
           color:#f2fff8 !important;
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.26),0 0 9px rgba(45,160,88,0.42) !important;
         }
-        body #tab-burner td.C:not(.burner-pending){
+        body #tab-burner td.C{
           background:
             linear-gradient(180deg,rgba(255,255,255,0.16) 0%,rgba(255,255,255,0.05) 36%,rgba(255,255,255,0) 37%),
             linear-gradient(135deg,#677a91 0%,#53657a 56%,#3c4c5f 100%) !important;
