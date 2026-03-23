@@ -247,6 +247,7 @@ let hostTabActive=true;
 let hostInView=true;
 let hostFocused=true;
 let lastRenderTs=0;
+let forceNextRender=true;
 const cuboidUa=navigator.userAgent || "";
 const cuboidIsChromeLike=/\bChrome\//.test(cuboidUa) || /\bCriOS\//.test(cuboidUa);
 let pushedCuboidLiveData=null;
@@ -266,6 +267,16 @@ function cuboidIsFullscreen(){
 function cuboidRefreshHint(){
   if(!hint) return;
   hint.textContent=cuboidIsFullscreen() ? "DRAG TO ROTATE · DOUBLE-TAP EXIT FULLSCREEN" : "DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN";
+}
+
+function markViewerDirty(){
+  forceNextRender=true;
+  lastFrameTs=0;
+  lastRenderTs=0;
+}
+
+function syncAutoRotateButton(){
+  if(btnAuto) btnAuto.textContent=autoSpin ? "Stop" : "Auto Rotate";
 }
 
 function cuboidCanRenderNow(){
@@ -293,15 +304,21 @@ function cuboidToggleFullscreen(){
 
 function resetFrontView(){
   autoSpin=false;
-  if(btnAuto) btnAuto.textContent="Auto Rotate";
+  syncAutoRotateButton();
   setRotationTarget(0);
+  markViewerDirty();
 }
 
-document.addEventListener("fullscreenchange",cuboidRefreshHint);
-document.addEventListener("webkitfullscreenchange",cuboidRefreshHint);
+document.addEventListener("fullscreenchange",function(){
+  cuboidRefreshHint();
+  markViewerDirty();
+});
+document.addEventListener("webkitfullscreenchange",function(){
+  cuboidRefreshHint();
+  markViewerDirty();
+});
 document.addEventListener("visibilitychange",function(){
-  lastFrameTs=0;
-  lastRenderTs=0;
+  markViewerDirty();
 });
 cuboidRefreshHint();
 window.addEventListener("message",function(ev){
@@ -315,14 +332,12 @@ window.addEventListener("message",function(ev){
     hostTabActive=!!data.active;
     hostInView=data.inView !== false;
     hostFocused=data.focused !== false;
-    lastFrameTs=0;
-    lastRenderTs=0;
+    markViewerDirty();
     return;
   }
   if(data.type==="cuboid-live-data"){
     if(cuboidConsumeLiveState(data.payload, data.digest)){
-      lastFrameTs=0;
-      lastRenderTs=0;
+      markViewerDirty();
       if(refreshOverlayData(true)){
         syncFaceOverlays(false);
       }
@@ -596,27 +611,19 @@ function cuboidDrawTipFlameGlow(ctx,x,y,state,phase,scale,intensity){
   const waveA=0.5+0.5*Math.sin(phase*1.8);
   const waveB=0.5+0.5*Math.sin(phase*2.45+1.3);
   const waveC=0.5+0.5*Math.sin(phase*2.05+2.5);
-  const waveD=0.5+0.5*Math.sin(phase*3.15+0.4);
   const scaleX=scale*0.88;
   const scaleY=scale*1.52;
   ctx.save();
   ctx.globalCompositeOperation="screen";
-  ctx.globalAlpha=(0.18+(waveA*0.16))*glowIntensity;
+  ctx.globalAlpha=(0.12+(waveA*0.10))*glowIntensity;
   ctx.fillStyle=palette.glow;
   ctx.beginPath();
-  ctx.ellipse(x,y-(18*scaleY),(13*scaleX)+(waveB*3.6),(16.5*scaleY)+(waveA*5.6),0,0,Math.PI*2);
+  ctx.ellipse(x,y-(18*scaleY),(11.5*scaleX)+(waveB*2.4),(14.2*scaleY)+(waveA*3.8),0,0,Math.PI*2);
   ctx.fill();
-  ctx.globalAlpha=(0.14+(waveC*0.11))*glowIntensity;
-  ctx.beginPath();
-  ctx.ellipse(x-(6*scaleX),y-(16*scaleY),(5.8*scaleX)+(waveA*1.5),(8.2*scaleY)+(waveB*2.1),-0.22,0,Math.PI*2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(x+(6*scaleX),y-(16*scaleY),(5.8*scaleX)+(waveB*1.5),(8.2*scaleY)+(waveA*2.1),0.22,0,Math.PI*2);
-  ctx.fill();
-  ctx.globalAlpha=(0.12+(waveD*0.1))*glowIntensity;
+  ctx.globalAlpha=(0.08+(waveC*0.06))*glowIntensity;
   ctx.fillStyle=palette.inner;
   ctx.beginPath();
-  ctx.ellipse(x,y-(22*scaleY)-(waveA*2.6),(2.7*scaleX)+(waveC*0.7),(4.9*scaleY)+(waveB*1.3),0,0,Math.PI*2);
+  ctx.ellipse(x,y-(21*scaleY)-(waveA*1.4),(2.3*scaleX)+(waveC*0.45),(4.1*scaleY)+(waveB*0.8),0,0,Math.PI*2);
   ctx.fill();
   ctx.restore();
 }
@@ -721,15 +728,12 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
   const scaleX=iconScale*0.9;
   const scaleY=iconScale*1.55;
   const openingValue=cuboidNormalizeOpeningValue(opening,s);
-  const openingRatio=openingValue/100;
   const flameTier=s==="C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : (openingValue >= 25 ? 1 : 0))));
-  const flameHeightFactor=s!=="C" ? ([0,0.42,0.68,0.92,1.14][flameTier] || 0) : 1;
-  const flameWidthFactor=s!=="C" ? ([0,0.26,0.56,0.84,1.04][flameTier] || 0) : 1;
-  const glowIntensity=s!=="C" ? ([0,0.08,0.14,0.28,0.58][flameTier] || 0) : 0;
-  const outerScale=flameTier >= 4 ? 1.04 : (flameTier === 3 ? 0.96 : (flameTier === 2 ? 0.84 : 0.74));
-  const midScale=flameTier >= 4 ? 1 : (flameTier === 3 ? 0.94 : (flameTier === 2 ? 0.82 : 0));
-  const innerScale=flameTier >= 4 ? 0.96 : (flameTier === 3 ? 0.82 : 0);
-  const hotScale=flameTier >= 4 ? 0.62 : 0;
+  const flameHeightFactor=s!=="C" ? ([0,0.36,0.58,0.74,0.90][flameTier] || 0) : 1;
+  const flameWidthFactor=s!=="C" ? ([0,0.22,0.42,0.60,0.78][flameTier] || 0) : 1;
+  const glowIntensity=s!=="C" ? ([0,0.05,0.09,0.16,0.24][flameTier] || 0) : 0;
+  const outerScale=flameTier >= 4 ? 0.94 : (flameTier === 3 ? 0.88 : (flameTier === 2 ? 0.80 : 0.72));
+  const midScale=flameTier >= 4 ? 0.84 : (flameTier >= 2 ? 0.76 : 0);
   const flicker=0.94+(Math.sin(phase*1.95)*0.11)+(Math.sin(phase*2.8+0.9)*0.07);
   const sidePulse=0.94+(Math.sin(phase*2.35+0.4)*0.12);
   const lift=(s==="C") ? 0 : ((1.8+(Math.sin(phase*1.75)*1.15))*scaleY*flameHeightFactor);
@@ -886,9 +890,9 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
 
     if(flameTier >= 1){
       ctx.save();
-      ctx.shadowBlur=(flameTier >= 4 ? 11 : (flameTier === 1 ? 4.8 : 6.4))*iconScale;
+      ctx.shadowBlur=(flameTier >= 4 ? 6.2 : (flameTier === 1 ? 3.4 : 4.6))*iconScale;
       ctx.shadowColor=palette.glow;
-      ctx.globalAlpha=flameTier === 1 ? 0.94 : (flameTier >= 4 ? 1 : 0.88);
+      ctx.globalAlpha=flameTier === 1 ? 0.90 : 0.82;
       ctx.beginPath();
       ctx.moveTo(x,y-(12.8*scaleY*outerScale)-lift);
       ctx.bezierCurveTo(
@@ -937,59 +941,6 @@ function cuboidDrawBurnerGlyph(ctx,x,y,state,cleaned,phase,scale,opening){
       ctx.fillStyle=palette.core;
       ctx.fill();
       ctx.globalAlpha=1;
-    }
-
-    if(flameTier >= 3){
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(x,y-(5.6*scaleY*innerScale)-(lift*0.22));
-      ctx.bezierCurveTo(
-        x+(3.2*scaleX)*sidePulse*flameWidthFactor*innerScale,
-        y-(3.0*scaleY*innerScale)-(lift*0.1),
-        x+(2.4*scaleX)*flicker*flameWidthFactor*innerScale,
-        y-(0.2*iconScale),
-        x,
-        y+(0.8*iconScale)
-      );
-      ctx.bezierCurveTo(
-        x-(2.4*scaleX)*flicker*flameWidthFactor*innerScale,
-        y-(0.2*iconScale),
-        x-(3.2*scaleX)*sidePulse*flameWidthFactor*innerScale,
-        y-(3.0*scaleY*innerScale)-(lift*0.1),
-        x,
-        y-(5.6*scaleY*innerScale)-(lift*0.22)
-      );
-      ctx.closePath();
-      ctx.fillStyle=palette.inner;
-      ctx.fill();
-      ctx.restore();
-    }
-    if(flameTier >= 4){
-      ctx.save();
-      ctx.shadowBlur=4.2*iconScale;
-      ctx.shadowColor="rgba(255,255,255,0.72)";
-      ctx.beginPath();
-      ctx.moveTo(x,y-(4.3*scaleY*hotScale)-(lift*0.12));
-      ctx.bezierCurveTo(
-        x+(1.8*scaleX)*hotScale,
-        y-(2.1*scaleY*hotScale)-(lift*0.04),
-        x+(1.2*scaleX)*hotScale,
-        y+(0.14*iconScale),
-        x,
-        y+(0.55*iconScale)
-      );
-      ctx.bezierCurveTo(
-        x-(1.2*scaleX)*hotScale,
-        y+(0.14*iconScale),
-        x-(1.8*scaleX)*hotScale,
-        y-(2.1*scaleY*hotScale)-(lift*0.04),
-        x,
-        y-(4.3*scaleY*hotScale)-(lift*0.12)
-      );
-      ctx.closePath();
-      ctx.fillStyle="rgba(255,255,255,0.98)";
-      ctx.fill();
-      ctx.restore();
     }
   }
 
@@ -2129,7 +2080,7 @@ let appliedPixelRatio=0;
 
 function cuboidGetTargetPixelRatio(){
   const deviceRatio=Math.max(1,window.devicePixelRatio || 1);
-  const activeNow=isDragging || autoSpin || cuboidIsFullscreen();
+  const activeNow=cuboidIsFullscreen() || cuboidHasRotationMotion();
   let cap;
   if(!cuboidCanRenderNow()){
     cap=0.65;
@@ -2628,31 +2579,28 @@ addBurners(FD/2-0.015,-1);
 addBurners(-FD/2+0.015,1);
 
 const DRAG_ROTATION_SPAN=Math.PI*1.5;
-const SPRING_STIFFNESS=30;
-const SPRING_DAMPING=13.4;
 const AUTO_ROTATE_SPEED=0.34;
-const AUTO_ROTATE_RAMP=5.2;
+const SNAP_SETTLE_RATE=26;
+const SNAP_EPSILON=0.0012;
+const SNAP_INSTANT_EPSILON=0.07;
 const MAX_DRAG_DELTA=42;
 const TAP_MOVE_TOLERANCE=10;
 const FACE_STEP=Math.PI/2;
-const FACE_ADVANCE_THRESHOLD=FACE_STEP*0.34;
 const ACTIVE_FRAME_MS=16;
-const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 20 : 16;
-const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 185 : 110;
-const SLEEP_FRAME_MS=420;
+const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 110 : 84;
+const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 420 : 300;
+const SLEEP_FRAME_MS=900;
 const ACTIVE_OVERLAY_TICK_MS=110;
-const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 520 : 420;
-const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 1300 : 900;
+const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 260 : 220;
+const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 920 : 720;
 const ACTIVE_OVERLAY_PHASE_STEP=0.12;
-const IDLE_OVERLAY_PHASE_STEP=0.045;
-const ACTIVE_FLAME_TICK_MS=16;
-const BACKGROUND_FLAME_TICK_MS=cuboidIsChromeLike ? 160 : 120;
+const IDLE_OVERLAY_PHASE_STEP=0.08;
+const ACTIVE_FLAME_TICK_MS=18;
 
-let rotY=0,targetRotY=0,springVelocity=0,autoSpin=false;
+let rotY=0,targetRotY=0,autoSpin=false;
 let activePointerId=null,isDragging=false,lastX=0,dragDistance=0;
-let touchMoved=false,lastTapAt=0,lastFrameTs=0,autoSpinMix=0;
+let touchMoved=false,lastTapAt=0,lastFrameTs=0;
 let lastFlameUpdateAt=0;
-let dragStartRotY=0;
 let flameGroupsIdleApplied=false;
 
 function normalizeAngle(angle){
@@ -2671,18 +2619,35 @@ function shortestAngleDelta(fromAngle,toAngle){
 }
 
 function setRotationTarget(targetAngle){
-  targetRotY=rotY+shortestAngleDelta(rotY,targetAngle);
-  springVelocity*=0.18;
+  targetRotY=normalizeAngle(rotY+shortestAngleDelta(rotY,targetAngle));
+}
+
+function cuboidHasRotationMotion(){
+  return isDragging || autoSpin || Math.abs(shortestAngleDelta(rotY,targetRotY)) > SNAP_EPSILON;
+}
+
+function settleRotationTowardTarget(dt){
+  const diff=shortestAngleDelta(rotY,targetRotY);
+  if(Math.abs(diff) <= SNAP_EPSILON){
+    rotY=targetRotY;
+    return false;
+  }
+  rotY=normalizeAngle(rotY+(diff*(1-Math.exp(-SNAP_SETTLE_RATE*dt))));
+  if(Math.abs(shortestAngleDelta(rotY,targetRotY)) <= SNAP_EPSILON){
+    rotY=targetRotY;
+  }
+  return true;
 }
 
 function startDrag(clientX){
+  autoSpin=false;
+  syncAutoRotateButton();
   isDragging=true;
   lastX=clientX;
   targetRotY=rotY;
-  springVelocity=0;
-  dragStartRotY=rotY;
   dragDistance=0;
   touchMoved=false;
+  markViewerDirty();
 }
 
 function moveDrag(clientX){
@@ -2693,35 +2658,25 @@ function moveDrag(clientX){
   if(Math.abs(rawDx)>2) touchMoved=true;
   const width=Math.max(320,GW());
   const deltaRot=(dx/width)*DRAG_ROTATION_SPAN;
-  rotY+=deltaRot;
+  rotY=normalizeAngle(rotY+deltaRot);
   targetRotY=rotY;
-  springVelocity=0;
   lastX=clientX;
+  markViewerDirty();
 }
 
 function stopDrag(){
   if(!isDragging) return;
   isDragging=false;
-  const dragRot=rotY-dragStartRotY;
-  const startFace=Math.round(normalizeAngle(dragStartRotY)/FACE_STEP)*FACE_STEP;
-  if(Math.abs(dragRot)>=FACE_ADVANCE_THRESHOLD){
-    setRotationTarget(startFace+(dragRot>0 ? FACE_STEP : -FACE_STEP));
-  }else{
-    snapToNearestFace();
+  snapToNearestFace();
+  if(Math.abs(shortestAngleDelta(rotY,targetRotY)) <= SNAP_INSTANT_EPSILON){
+    rotY=targetRotY;
   }
-  springVelocity=0;
+  markViewerDirty();
 }
 
 function snapToNearestFace(){
   const snapped=Math.round(normalizeAngle(rotY)/FACE_STEP)*FACE_STEP;
   setRotationTarget(snapped);
-}
-
-function cuboidHasRotationMotion(){
-  return isDragging
-    || autoSpinMix>0.0001
-    || Math.abs(targetRotY-rotY)>=0.00008
-    || Math.abs(springVelocity)>=0.00008;
 }
 
 function setFlameGroupsIdleState(){
@@ -2737,6 +2692,7 @@ function setFlameGroupsIdleState(){
 }
 
 vp.addEventListener("pointerdown",function(e){
+  if(e.pointerType==="mouse" && e.button!==0) return;
   activePointerId=e.pointerId;
   if(vp.setPointerCapture) vp.setPointerCapture(e.pointerId);
   startDrag(e.clientX);
@@ -2767,17 +2723,42 @@ function endPointerGesture(e){
 }
 vp.addEventListener("pointerup",endPointerGesture);
 vp.addEventListener("pointercancel",endPointerGesture);
+vp.addEventListener("lostpointercapture",function(e){
+  if(activePointerId!==e.pointerId) return;
+  activePointerId=null;
+  stopDrag();
+});
+window.addEventListener("blur",function(){
+  activePointerId=null;
+  stopDrag();
+});
 
 vp.addEventListener("dblclick",function(e){
   e.preventDefault();
   cuboidToggleFullscreen();
 });
 
-btnA.addEventListener("click",function(){ setRotationTarget(0); });
-btnB.addEventListener("click",function(){ setRotationTarget(Math.PI); });
+btnA.addEventListener("click",function(){
+  autoSpin=false;
+  syncAutoRotateButton();
+  setRotationTarget(0);
+  markViewerDirty();
+});
+btnB.addEventListener("click",function(){
+  autoSpin=false;
+  syncAutoRotateButton();
+  setRotationTarget(Math.PI);
+  markViewerDirty();
+});
 btnAuto.addEventListener("click",function(){
   autoSpin=!autoSpin;
-  this.textContent=autoSpin ? "Stop" : "Auto Rotate";
+  if(!autoSpin){
+    snapToNearestFace();
+  }else{
+    targetRotY=rotY;
+  }
+  syncAutoRotateButton();
+  markViewerDirty();
 });
 btnResetView.addEventListener("click",function(){
   resetFrontView();
@@ -2786,6 +2767,7 @@ btnResetView.addEventListener("click",function(){
 const ro=new ResizeObserver(function(){
   cuboidApplyRendererQuality(true);
   fitCamera();
+  markViewerDirty();
 });
 ro.observe(vp);
 cuboidApplyRendererQuality(true);
@@ -2793,7 +2775,8 @@ cuboidApplyRendererQuality(true);
 function animate(t){
   requestAnimationFrame(animate);
   const canRender=cuboidCanRenderNow();
-  const interactionActive=isDragging || autoSpin || cuboidIsFullscreen();
+  const rotationActive=cuboidHasRotationMotion();
+  const interactionActive=rotationActive || cuboidIsFullscreen();
   const targetFrameMs=canRender
     ? (interactionActive ? ACTIVE_FRAME_MS : (hostFocused ? FOCUSED_IDLE_FRAME_MS : BACKGROUND_IDLE_FRAME_MS))
     : SLEEP_FRAME_MS;
@@ -2801,29 +2784,21 @@ function animate(t){
   lastRenderTs=t;
   const dt=lastFrameTs ? Math.min(0.05,Math.max(0.001,(t-lastFrameTs)/1000)) : (1/60);
   lastFrameTs=t;
-  cuboidApplyRendererQuality(false);
+  let frameNeedsRender=forceNextRender || cuboidApplyRendererQuality(false);
 
   if(!canRender){
     return;
   }
 
-  const targetAutoMix=(autoSpin && !isDragging) ? 1 : 0;
-  autoSpinMix+=(targetAutoMix-autoSpinMix)*(1-Math.exp(-AUTO_ROTATE_RAMP*dt));
-  if(autoSpinMix>0.0001){
-    targetRotY+=AUTO_ROTATE_SPEED*autoSpinMix*dt;
-  }
-
   if(isDragging){
     targetRotY=rotY;
-    springVelocity=0;
+    frameNeedsRender=true;
+  }else if(autoSpin){
+    rotY=normalizeAngle(rotY+(AUTO_ROTATE_SPEED*dt));
+    targetRotY=rotY;
+    frameNeedsRender=true;
   }else{
-    springVelocity+=(targetRotY-rotY)*SPRING_STIFFNESS*dt;
-    springVelocity*=Math.exp(-SPRING_DAMPING*dt);
-    rotY+=springVelocity*dt;
-    if(Math.abs(targetRotY-rotY)<0.00008 && Math.abs(springVelocity)<0.00008){
-      rotY=targetRotY;
-      springVelocity=0;
-    }
+    frameNeedsRender=settleRotationTowardTarget(dt) || frameNeedsRender;
   }
 
   rigGroup.rotation.y=rotY;
@@ -2831,12 +2806,12 @@ function animate(t){
   group.rotation.z=0;
   innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
   const ts=t*0.001;
-  const rotationActive=cuboidHasRotationMotion();
   const overlayTickMs=rotationActive ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
   if(overlayDirty || (t-lastOverlayPaintAt)>=overlayTickMs){
     overlayAnimPhase=(overlayAnimPhase+(rotationActive ? ACTIVE_OVERLAY_PHASE_STEP : IDLE_OVERLAY_PHASE_STEP))%(Math.PI*2);
     syncFaceOverlays(false);
     lastOverlayPaintAt=t;
+    frameNeedsRender=true;
   }
   if(rotationActive && (!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=ACTIVE_FLAME_TICK_MS)){
     flameGroups.forEach(function(f){
@@ -2851,10 +2826,14 @@ function animate(t){
     });
     lastFlameUpdateAt=t;
     flameGroupsIdleApplied=false;
+    frameNeedsRender=true;
   }else if(!rotationActive && !flameGroupsIdleApplied){
     setFlameGroupsIdleState();
+    frameNeedsRender=true;
   }
+  if(!frameNeedsRender) return;
   renderer.render(scene,camera);
+  forceNextRender=false;
 }
 requestAnimationFrame(animate);
 
