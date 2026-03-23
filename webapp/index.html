@@ -3382,6 +3382,10 @@ body.light-theme .cw-nudge{
   margin-top:6px;
 }
 .scada-footer-install-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
   min-height:30px;
   padding:0 10px;
   border-radius:999px;
@@ -8377,7 +8381,7 @@ html, body, body *, body *::before, body *::after, svg text{
 
   <div class="ls-credit-row">
     <div class="ls-credit-text">Dashboard designed &amp; developed by <b style="color:#F37022;">Ashutosh Dubey</b></div>
-    <button class="install-fab" id="installAppFab" data-install-app title="Install this dashboard app">⬇️ Install App</button>
+    <button class="install-fab" id="installAppFab" data-install-app data-install-autohide title="Install this dashboard app">⬇️ Install App</button>
   </div>
 
 
@@ -8557,7 +8561,7 @@ html, body, body *, body *::before, body *::after, svg text{
               </div>
             </div>
           </div>
-          <button class="hd-btn hd-btn-secondary" id="installAppBtn" data-install-app style="display:inline-flex;" title="Install this dashboard app">⬇️ Install App</button>
+          <button class="hd-btn hd-btn-secondary" id="installAppBtn" data-install-app data-install-autohide style="display:inline-flex;" title="Install this dashboard app">⬇️ Install App</button>
           <button class="hd-btn hd-btn-secondary" onclick="showChangePasswordModal();closeQuickMenu();">🔑 Change Password</button>
           <button class="hd-btn hd-btn-danger" onclick="logout()">⏏ Logout</button>
         </div>
@@ -17450,8 +17454,8 @@ html, body, body *, body *::before, body *::after, svg text{
           <div class="scada-footer-card-title">Install App</div>
           <button type="button" class="hd-btn hd-btn-secondary scada-footer-install-primary" data-install-app title="Install this dashboard app">⬇️ Install App</button>
           <div class="scada-footer-install-actions">
-            <button type="button" class="scada-footer-install-btn" data-install-app data-install-platform="android" aria-label="Install Reformer SCADA on Android">Android</button>
-            <button type="button" class="scada-footer-install-btn" data-install-app data-install-platform="windows" aria-label="Install Reformer SCADA on Windows">Windows</button>
+            <button type="button" class="scada-footer-install-btn" data-install-app data-install-platform="android" aria-label="Install Reformer SCADA on Android"><span aria-hidden="true">🤖</span><span>Android</span></button>
+            <button type="button" class="scada-footer-install-btn" data-install-app data-install-platform="windows" aria-label="Install Reformer SCADA on Windows"><span aria-hidden="true">⊞</span><span>Windows</span></button>
           </div>
         </div>
         <div class="scada-footer-card">
@@ -27658,6 +27662,9 @@ function tempToColorInline(val, minT, maxT){
 (function(){
   var deferredInstallPrompt = null;
   var installButtons = Array.prototype.slice.call(document.querySelectorAll("[data-install-app]"));
+  var autoHideInstallButtons = installButtons.filter(function(btn){
+    return btn.hasAttribute("data-install-autohide");
+  });
   var yearEl = document.getElementById("scada-footer-year");
 
   if(yearEl) yearEl.textContent = String(new Date().getFullYear());
@@ -27684,7 +27691,7 @@ function tempToColorInline(val, minT, maxT){
   }
 
   function showInstallButtons(show){
-    installButtons.forEach(function(btn){
+    autoHideInstallButtons.forEach(function(btn){
       btn.style.display = show ? "inline-flex" : "none";
     });
   }
