@@ -3241,20 +3241,21 @@ body.light-theme .cw-nudge{
 .tab-panel.tab-active{ display:block; }
 
 .scada-app-footer{
-  margin:14px clamp(8px,1.4vw,18px) 16px;
+  width:min(1120px, calc(100% - 16px));
+  margin:12px auto 14px;
 }
 .scada-footer-shell{
   position:relative;
   overflow:hidden;
-  border-radius:22px;
-  border:1px solid rgba(127,156,198,0.24);
+  border-radius:18px;
+  border:1px solid rgba(127,156,198,0.18);
   background:
-    radial-gradient(110% 120% at 100% 0%, rgba(243,112,34,0.14) 0%, rgba(243,112,34,0) 42%),
-    linear-gradient(180deg, rgba(12,17,27,0.96) 0%, rgba(8,12,19,0.94) 100%);
+    radial-gradient(100% 120% at 100% 0%, rgba(243,112,34,0.09) 0%, rgba(243,112,34,0) 38%),
+    linear-gradient(180deg, rgba(12,17,27,0.92) 0%, rgba(8,12,19,0.9) 100%);
   box-shadow:
-    0 16px 34px rgba(0,0,0,0.28),
-    inset 0 1px 0 rgba(255,255,255,0.07);
-  padding:22px clamp(18px,2vw,28px);
+    0 10px 24px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  padding:16px clamp(16px,1.8vw,22px);
 }
 .scada-footer-shell::before{
   content:"";
@@ -3267,63 +3268,65 @@ body.light-theme .cw-nudge{
 }
 .scada-footer-head{
   display:grid;
-  grid-template-columns:minmax(0, 1.6fr) minmax(280px, 0.9fr);
-  gap:18px;
-  align-items:start;
+  grid-template-columns:minmax(0, 1fr) minmax(260px, 330px);
+  gap:16px;
+  align-items:center;
 }
 .scada-footer-eyebrow{
   display:inline-flex;
   align-items:center;
   gap:8px;
   font-family:'Rajdhani',sans-serif;
-  font-size:11px;
+  font-size:10.5px;
   font-weight:800;
-  letter-spacing:1.6px;
+  letter-spacing:1.4px;
   text-transform:uppercase;
   color:#7dd3fc;
-  margin-bottom:8px;
+  margin-bottom:4px;
 }
 .scada-footer-title{
-  margin:0 0 8px;
+  margin:0 0 5px;
   font-family:'Rajdhani',sans-serif;
-  font-size:26px;
-  line-height:1.05;
+  font-size:19px;
+  line-height:1.1;
   font-weight:800;
   letter-spacing:0.2px;
   color:#f8fafc;
 }
 .scada-footer-copy{
   margin:0;
-  max-width:880px;
+  max-width:720px;
   color:#b9c7d9;
-  font-size:13.5px;
-  line-height:1.65;
+  font-size:12.5px;
+  line-height:1.55;
 }
 .scada-footer-actions{
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:8px;
   min-width:0;
+  justify-self:end;
+  width:min(330px, 100%);
 }
 .scada-footer-card{
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,0.08);
-  background:rgba(255,255,255,0.03);
-  padding:14px 14px 13px;
+  border-radius:0;
+  border:0;
+  background:transparent;
+  padding:0;
 }
 .scada-footer-card-title{
   font-family:'Rajdhani',sans-serif;
-  font-size:11px;
+  font-size:10px;
   font-weight:800;
-  letter-spacing:1.2px;
+  letter-spacing:1px;
   text-transform:uppercase;
-  color:#fbbf24;
-  margin-bottom:7px;
+  color:#a5f3fc;
+  margin-bottom:4px;
 }
 .scada-footer-card-copy{
   color:#cbd5e1;
-  font-size:12.5px;
-  line-height:1.55;
+  font-size:11.8px;
+  line-height:1.5;
 }
 .scada-footer-card-copy a{
   color:#93c5fd;
@@ -3336,47 +3339,47 @@ body.light-theme .cw-nudge{
 .scada-footer-install-actions{
   display:grid;
   grid-template-columns:repeat(2, minmax(0, 1fr));
-  gap:10px;
-  margin-top:10px;
+  gap:8px;
+  margin-top:7px;
 }
 .scada-footer-install-btn{
-  min-height:42px;
-  padding:0 14px;
-  border-radius:14px;
+  min-height:34px;
+  padding:0 11px;
+  border-radius:999px;
   border:1px solid rgba(125,211,252,0.22);
   background:linear-gradient(180deg, rgba(18,31,50,0.96) 0%, rgba(10,20,34,0.96) 100%);
   color:#e2f3ff;
   font-family:'Rajdhani',sans-serif;
-  font-size:13px;
+  font-size:11.6px;
   font-weight:800;
-  letter-spacing:0.3px;
+  letter-spacing:0.2px;
   cursor:pointer;
   transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .scada-footer-install-btn:hover{
   transform:translateY(-1px);
   border-color:rgba(125,211,252,0.42);
-  box-shadow:0 10px 18px rgba(8,47,73,0.24);
+  box-shadow:0 8px 14px rgba(8,47,73,0.18);
 }
 .scada-footer-link-row{
   display:flex;
   flex-wrap:wrap;
-  gap:10px;
-  margin-top:16px;
+  gap:8px;
+  margin-top:12px;
 }
 .scada-footer-link{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:34px;
-  padding:0 12px;
+  min-height:30px;
+  padding:0 10px;
   border-radius:999px;
   border:1px solid rgba(255,255,255,0.08);
   background:rgba(255,255,255,0.03);
   color:#dbe7f5;
   text-decoration:none;
   font-family:'Rajdhani',sans-serif;
-  font-size:12px;
+  font-size:11.2px;
   font-weight:700;
   letter-spacing:0.2px;
   transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
@@ -3388,22 +3391,22 @@ body.light-theme .cw-nudge{
   transform:translateY(-1px);
 }
 .scada-footer-note{
-  margin-top:16px;
-  padding-top:15px;
+  margin-top:12px;
+  padding-top:10px;
   border-top:1px solid rgba(255,255,255,0.08);
   color:#a9b8ca;
-  font-size:12.5px;
-  line-height:1.65;
+  font-size:11.5px;
+  line-height:1.55;
 }
 .scada-footer-bottom{
-  margin-top:13px;
+  margin-top:8px;
   display:flex;
   flex-wrap:wrap;
-  gap:10px 18px;
+  gap:8px 14px;
   justify-content:space-between;
   align-items:center;
   color:#8fa2b8;
-  font-size:11.5px;
+  font-size:10.8px;
   line-height:1.6;
 }
 .scada-footer-bottom a{
@@ -3417,18 +3420,14 @@ body.light-theme .cw-nudge{
 body.light-theme .scada-footer-shell{
   border-color:rgba(67,96,136,0.2);
   background:
-    radial-gradient(110% 120% at 100% 0%, rgba(243,112,34,0.1) 0%, rgba(243,112,34,0) 42%),
+    radial-gradient(100% 120% at 100% 0%, rgba(243,112,34,0.07) 0%, rgba(243,112,34,0) 38%),
     linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(242,246,251,0.96) 100%);
   box-shadow:
-    0 12px 26px rgba(21,35,56,0.1),
+    0 8px 18px rgba(21,35,56,0.08),
     inset 0 1px 0 rgba(255,255,255,0.92);
 }
 body.light-theme .scada-footer-title{ color:#0f172a; }
 body.light-theme .scada-footer-copy{ color:#46576d; }
-body.light-theme .scada-footer-card{
-  background:rgba(15,23,42,0.03);
-  border-color:rgba(67,96,136,0.12);
-}
 body.light-theme .scada-footer-card-copy{ color:#415269; }
 body.light-theme .scada-footer-card-copy a{ color:#2563eb; }
 body.light-theme .scada-footer-install-btn{
@@ -3458,37 +3457,41 @@ body.light-theme .scada-footer-bottom{ color:#5d728a; }
 body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 @media (max-width:900px){
   .scada-app-footer{
-    margin:12px 8px 14px;
+    width:calc(100% - 16px);
+    margin:10px auto 12px;
   }
   .scada-footer-shell{
-    border-radius:18px;
-    padding:18px 14px;
+    border-radius:16px;
+    padding:14px 12px;
   }
   .scada-footer-head{
     grid-template-columns:1fr;
-    gap:14px;
+    gap:10px;
   }
   .scada-footer-title{
-    font-size:21px;
+    font-size:16px;
   }
   .scada-footer-copy{
-    font-size:12.5px;
+    font-size:11.8px;
   }
   .scada-footer-install-actions{
     grid-template-columns:1fr 1fr;
+  }
+  .scada-footer-actions{
+    width:100%;
   }
   .scada-footer-link-row{
     gap:8px;
   }
   .scada-footer-link{
-    min-height:32px;
-    padding:0 10px;
-    font-size:11.5px;
+    min-height:28px;
+    padding:0 9px;
+    font-size:10.8px;
   }
   .scada-footer-bottom{
     flex-direction:column;
     align-items:flex-start;
-    gap:6px;
+    gap:4px;
   }
 }
 
@@ -17391,9 +17394,9 @@ html, body, body *, body *::before, body *::after, svg text{
   <div class="scada-footer-shell">
     <div class="scada-footer-head">
       <div class="scada-footer-brand">
-        <div class="scada-footer-eyebrow">Reformer SCADA Dashboard</div>
-        <h2 class="scada-footer-title">Operational visibility for burners, cuboid views, TST data, alarms, and historical process workflows.</h2>
-        <p class="scada-footer-copy">Live monitoring for burner status, cleaning, heat map review, cuboid analysis, TST readings, alarms, and saved operational history in one shared dashboard.</p>
+        <div class="scada-footer-eyebrow">Industrial Monitoring Dashboard</div>
+        <h2 class="scada-footer-title">Reformer SCADA</h2>
+        <p class="scada-footer-copy">Live monitoring for burner status, cleaning, cuboid analysis, TST data, alarms, and saved operational history in one shared dashboard.</p>
         <div class="scada-footer-link-row" aria-label="Footer quick links">
           <a href="#tab-burner" class="scada-footer-link" onclick="switchTab('burner'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Burner</a>
           <a href="#tab-cleaning" class="scada-footer-link" onclick="switchTab('cleaning'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Cleaning</a>
@@ -17404,11 +17407,11 @@ html, body, body *, body *::before, body *::after, svg text{
       </div>
       <div class="scada-footer-actions">
         <div class="scada-footer-card">
-          <div class="scada-footer-card-title">Install As App</div>
-          <div class="scada-footer-card-copy">Use the PWA install prompt to keep this dashboard on Android and Windows like an app for faster access.</div>
+          <div class="scada-footer-card-title">Install App</div>
+          <div class="scada-footer-card-copy">Pin this dashboard on Android or Windows using the app install prompt.</div>
           <div class="scada-footer-install-actions">
-            <button type="button" class="scada-footer-install-btn" data-install-app data-install-platform="android" aria-label="Install Reformer SCADA on Android">Android App</button>
-            <button type="button" class="scada-footer-install-btn" data-install-app data-install-platform="windows" aria-label="Install Reformer SCADA on Windows">Windows App</button>
+            <button type="button" class="scada-footer-install-btn" data-install-app data-install-platform="android" aria-label="Install Reformer SCADA on Android">Android</button>
+            <button type="button" class="scada-footer-install-btn" data-install-app data-install-platform="windows" aria-label="Install Reformer SCADA on Windows">Windows</button>
           </div>
         </div>
         <div class="scada-footer-card">
