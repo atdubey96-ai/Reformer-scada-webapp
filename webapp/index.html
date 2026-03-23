@@ -16322,7 +16322,7 @@ html, body, body *, body *::before, body *::after, svg text{
           </div>
           <input type="file" id="td-ocr-claude-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstClaudeOcrSelect(event)">
           <button type="button" id="td-ocr-claude-btn" onclick="openTstClaudeOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Vision OCR">
-            🤖 Vision OCR to TST
+            🤖 Vision OCR
           </button>
           <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
           <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Secondary OCR">
@@ -24285,7 +24285,7 @@ function renderTstOcrButtonStates(){
     claudeBtn.disabled = anyBusy;
     claudeBtn.style.opacity = anyBusy ? "0.72" : "1";
     claudeBtn.style.cursor = anyBusy ? "not-allowed" : "pointer";
-    claudeBtn.textContent = tdClaudeOcrBusy ? "⏳ Vision OCR running..." : "🤖 Vision OCR to TST";
+    claudeBtn.textContent = tdClaudeOcrBusy ? "⏳ Vision OCR running..." : "🤖 Vision OCR";
   }
 
   var legacyBtn = document.getElementById("td-ocr-pdf-btn");
