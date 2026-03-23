@@ -4931,6 +4931,115 @@ td.burner-pending.C{ box-shadow:0 0 8px 2px rgba(253,224,71,0.4) !important; }
   display:flex;align-items:center;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   font-size:11px;color:#94a3b8;
 }
+.td-claude-modal{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  padding:18px;background:rgba(2,6,23,0.74);backdrop-filter:blur(8px);z-index:12000;
+}
+.td-claude-modal-card{
+  width:min(1080px,100%);max-height:min(86vh,920px);display:flex;flex-direction:column;
+  background:linear-gradient(180deg,rgba(10,18,32,0.98),rgba(13,23,41,0.98));
+  border:1px solid rgba(126,200,240,0.2);border-radius:18px;box-shadow:0 26px 64px rgba(0,0,0,0.5);
+  overflow:hidden;
+}
+.td-claude-modal-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:18px 20px 16px;border-bottom:1px solid rgba(148,163,184,0.14);
+}
+.td-claude-modal-title{
+  font-size:18px;font-weight:800;color:#f8fafc;letter-spacing:0.2px;
+}
+.td-claude-modal-subtitle{
+  margin-top:4px;font-size:12px;color:#94a3b8;
+}
+.td-claude-modal-close{
+  flex:0 0 auto;width:36px;height:36px;border-radius:999px;cursor:pointer;
+  border:1px solid rgba(148,163,184,0.2);background:rgba(255,255,255,0.04);color:#cbd5e1;
+  font-size:16px;font-weight:700;
+}
+.td-claude-modal-body{
+  flex:1 1 auto;padding:18px 20px;overflow:auto;
+}
+.td-claude-file-chip{
+  display:inline-flex;align-items:center;gap:8px;max-width:100%;margin-bottom:14px;
+  padding:8px 12px;border-radius:999px;background:rgba(249,115,22,0.12);
+  border:1px solid rgba(249,115,22,0.28);color:#fdba74;font-size:12px;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.td-claude-preview-wrap{
+  display:none;margin-bottom:16px;border:1px solid rgba(148,163,184,0.14);
+  border-radius:14px;background:rgba(2,6,23,0.5);padding:12px;
+}
+.td-claude-img-preview{
+  width:100%;max-height:300px;object-fit:contain;border-radius:10px;background:#020617;
+}
+.td-claude-pdf-pages-section{display:none;}
+.td-claude-page-topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;
+}
+.td-claude-page-title{
+  font-size:12px;font-weight:800;color:#7ec8f0;letter-spacing:0.8px;text-transform:uppercase;
+}
+.td-claude-page-actions{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.td-claude-page-btn{
+  padding:6px 10px;border-radius:8px;cursor:pointer;
+  border:1px solid rgba(148,163,184,0.2);background:rgba(255,255,255,0.04);color:#cbd5e1;
+  font-size:12px;font-weight:700;font-family:'Rajdhani',sans-serif;
+}
+.td-claude-page-count{
+  font-size:12px;color:#94a3b8;font-weight:700;
+}
+.td-claude-pages-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;
+}
+.td-claude-page-thumb{
+  position:relative;border:2px solid rgba(30,41,59,1);border-radius:12px;overflow:hidden;
+  background:#020617;cursor:pointer;transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.td-claude-page-thumb:hover{
+  border-color:rgba(56,189,248,0.72);transform:translateY(-2px);box-shadow:0 10px 24px rgba(15,23,42,0.34);
+}
+.td-claude-page-thumb.is-selected{
+  border-color:rgba(249,115,22,0.9);box-shadow:0 0 0 1px rgba(249,115,22,0.28);
+}
+.td-claude-page-thumb canvas{
+  width:100%;display:block;background:#000;
+}
+.td-claude-page-label{
+  position:absolute;left:0;right:0;bottom:0;padding:5px 7px;background:rgba(2,6,23,0.82);
+  color:#e2e8f0;font-size:11px;font-weight:700;text-align:center;
+}
+.td-claude-page-check{
+  position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:999px;
+  display:none;align-items:center;justify-content:center;background:#f97316;color:#020617;
+  font-size:12px;font-weight:900;
+}
+.td-claude-page-thumb.is-selected .td-claude-page-check{display:flex;}
+.td-claude-modal-actions{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:14px 20px;border-top:1px solid rgba(148,163,184,0.14);
+}
+.td-claude-modal-status{
+  min-height:18px;font-size:12px;color:#7ec8f0;font-weight:700;
+}
+.td-claude-modal-btns{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;
+}
+.td-claude-progress-wrap{
+  display:none;height:4px;background:rgba(30,41,59,0.9);overflow:hidden;
+}
+.td-claude-progress-bar{
+  width:0;height:100%;background:linear-gradient(90deg,#f97316,#38bdf8);transition:width .25s ease;
+}
+@media (max-width: 720px){
+  .td-claude-modal{padding:10px;}
+  .td-claude-modal-card{max-height:92vh;border-radius:16px;}
+  .td-claude-modal-head,
+  .td-claude-modal-body,
+  .td-claude-modal-actions{padding-left:14px;padding-right:14px;}
+  .td-claude-pages-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;}
+}
 .scada-save-btn{
   display:inline-flex !important;
   align-items:center !important;
@@ -16211,9 +16320,13 @@ html, body, body *, body *::before, body *::after, svg text{
             <input type="datetime-local" id="td-datetime"
               class="td-toolbar-datetime">
           </div>
+          <input type="file" id="td-ocr-claude-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstClaudeOcrSelect(event)">
+          <button type="button" id="td-ocr-claude-btn" onclick="openTstClaudeOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Claude Vision">
+            🤖 Claude OCR to TST
+          </button>
           <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
-          <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells">
-            📄 OCR File to TST
+          <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Azure / browser OCR">
+            📄 Azure / Browser OCR
           </button>
           <div class="td-fill-menu-wrap">
             <span style="font-size:10px;font-weight:800;color:#7ec8f0;letter-spacing:0.6px;text-transform:uppercase;">Ramp 930</span>
@@ -16221,9 +16334,10 @@ html, body, body *, body *::before, body *::after, svg text{
             <button type="button" id="td-voice-fill-btn" class="td-voice-icon-btn" onclick="toggleTstVoiceInput()" title="Voice Fill TST" aria-label="Voice Fill TST">🎙️</button>
             <span id="td-voice-live-preview" class="td-voice-live-preview"></span>
           </div>
-          <div class="td-toolbar-status" style="display:none;">
+          <div class="td-toolbar-status" id="td-toolbar-status-wrap" style="display:none;">
             <span id="td-ramp-fill-status" style="max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Ramp preset idle</span>
-            <span id="td-ocr-pdf-status" style="display:none;">OCR idle</span>
+            <span id="td-ocr-claude-status" style="display:none;">Claude OCR idle</span>
+            <span id="td-ocr-pdf-status" style="display:none;">Legacy OCR idle</span>
             <span id="td-voice-fill-status" style="display:none;">Voice idle</span>
           </div>
           <!-- Save / Clear -->
@@ -16452,6 +16566,46 @@ html, body, body *, body *::before, body *::after, svg text{
 
     </div>
   </div><!-- /tab-tempdata -->
+
+  <div id="td-claude-ocr-modal" class="td-claude-modal" onclick="handleTstClaudeModalBackdrop(event)">
+    <div class="td-claude-modal-card" onclick="event.stopPropagation()">
+      <div class="td-claude-modal-head">
+        <div>
+          <div class="td-claude-modal-title">Claude Vision OCR</div>
+          <div id="td-claude-modal-subtitle" class="td-claude-modal-subtitle">Upload a TST photo or PDF, then extract only the values into the 60 TST cells.</div>
+        </div>
+        <button type="button" class="td-claude-modal-close" onclick="cancelTstClaudeOcr()" aria-label="Close Claude OCR">✕</button>
+      </div>
+      <div class="td-claude-modal-body">
+        <div id="td-claude-file-chip" class="td-claude-file-chip" style="display:none;"></div>
+        <div id="td-claude-preview-wrap" class="td-claude-preview-wrap">
+          <img id="td-claude-img-preview" class="td-claude-img-preview" alt="Claude OCR preview">
+        </div>
+        <div id="td-claude-pdf-pages-section" class="td-claude-pdf-pages-section">
+          <div class="td-claude-page-topbar">
+            <div class="td-claude-page-title">Select PDF Pages To Extract</div>
+            <div class="td-claude-page-actions">
+              <button type="button" class="td-claude-page-btn" onclick="selectAllTstClaudePages()">Select All</button>
+              <button type="button" class="td-claude-page-btn" onclick="deselectAllTstClaudePages()">Deselect All</button>
+              <span id="td-claude-page-count" class="td-claude-page-count"></span>
+            </div>
+          </div>
+          <div id="td-claude-pages-grid" class="td-claude-pages-grid"></div>
+        </div>
+      </div>
+      <div class="td-claude-modal-actions">
+        <div id="td-claude-modal-status" class="td-claude-modal-status">Choose a file to begin.</div>
+        <div class="td-claude-modal-btns">
+          <button type="button" class="td-toolbar-btn td-toolbar-btn-muted" onclick="reselectTstClaudeOcrFile()">Change File</button>
+          <button type="button" class="td-toolbar-btn td-toolbar-btn-muted" onclick="cancelTstClaudeOcr()">Cancel</button>
+          <button type="button" id="td-claude-extract-btn" class="td-toolbar-btn td-toolbar-btn-primary" onclick="startTstClaudeExtraction()">⚡ Extract &amp; Fill TST</button>
+        </div>
+      </div>
+      <div id="td-claude-progress-wrap" class="td-claude-progress-wrap">
+        <div id="td-claude-progress-bar" class="td-claude-progress-bar"></div>
+      </div>
+    </div>
+  </div>
 
 
   <!-- TAB 4: Alarms -->
@@ -24097,6 +24251,51 @@ var TD_VOICE_FILL_MIN_TEMP = 800;
 var TD_VOICE_FILL_MAX_TEMP = 1200;
 var TD_VOICE_AUTO_STOP_SILENCE_MS = 10000;
 var TD_RAMP_PRESET_BASE = 930;
+var tdClaudeOcrBusy = false;
+var TD_CLAUDE_OCR_MAX_MB = 12;
+var TD_CLAUDE_OCR_WORKER_URL = "https://ocr-proxy.iocscadasync.workers.dev/";
+var TD_CLAUDE_OCR_PH_COUNT = 15;
+var TD_CLAUDE_OCR_HEADER_MAP = [
+  { patterns: ["ab bot", "ab bottom"], row: 0 },
+  { patterns: ["cd bot", "cd bottom"], row: 1 },
+  { patterns: ["ab top"], row: 2 },
+  { patterns: ["cd top"], row: 3 }
+];
+var tdClaudeFileType = null;
+var tdClaudeImageBase64 = null;
+var tdClaudeImageMediaType = null;
+var tdClaudePdfDoc = null;
+var tdClaudePageCanvases = {};
+var tdClaudeSelectedPages = new Set();
+var tdClaudeAllResults = [];
+
+function createEmptyTstClaudeGrid(){
+  return Array.from({length:4}, function(){ return Array(TD_CLAUDE_OCR_PH_COUNT).fill(""); });
+}
+
+function isAnyTstOcrBusy(){
+  return !!(tdPdfOcrBusy || tdClaudeOcrBusy);
+}
+
+function renderTstOcrButtonStates(){
+  var anyBusy = isAnyTstOcrBusy();
+
+  var claudeBtn = document.getElementById("td-ocr-claude-btn");
+  if(claudeBtn){
+    claudeBtn.disabled = anyBusy;
+    claudeBtn.style.opacity = anyBusy ? "0.72" : "1";
+    claudeBtn.style.cursor = anyBusy ? "not-allowed" : "pointer";
+    claudeBtn.textContent = tdClaudeOcrBusy ? "⏳ Claude OCR running..." : "🤖 Claude OCR to TST";
+  }
+
+  var legacyBtn = document.getElementById("td-ocr-pdf-btn");
+  if(legacyBtn){
+    legacyBtn.disabled = anyBusy;
+    legacyBtn.style.opacity = anyBusy ? "0.72" : "1";
+    legacyBtn.style.cursor = anyBusy ? "not-allowed" : "pointer";
+    legacyBtn.textContent = tdPdfOcrBusy ? "⏳ Legacy OCR running..." : "📄 Azure / Browser OCR";
+  }
+}
 
 function getSelectedTstFillMode(){
   return "ramp";
@@ -24106,9 +24305,10 @@ function updateTstFillRunButtonState(){
   var btn = document.getElementById("td-fill-run-btn");
   if(!btn) return;
 
-  btn.disabled = tdPdfOcrBusy;
-  btn.style.opacity = tdPdfOcrBusy ? "0.72" : "1";
-  btn.style.cursor = tdPdfOcrBusy ? "not-allowed" : "pointer";
+  var busy = isAnyTstOcrBusy();
+  btn.disabled = busy;
+  btn.style.opacity = busy ? "0.72" : "1";
+  btn.style.cursor = busy ? "not-allowed" : "pointer";
   btn.textContent = "📈 Ramp 930";
   btn.style.background = "rgba(245,158,11,0.14)";
   btn.style.borderColor = "rgba(245,158,11,0.45)";
@@ -24127,20 +24327,15 @@ function runSelectedTstFillAction(){
 function setTstPdfOcrStatus(msg, color){
   var st = document.getElementById("td-ocr-pdf-status");
   if(!st) return;
-  st.textContent = msg || "OCR idle";
+  st.textContent = msg || "Legacy OCR idle";
   st.style.color = color || "#94a3b8";
 }
 
 function setTstPdfOcrBusy(busy){
   tdPdfOcrBusy = !!busy;
-  var btn = document.getElementById("td-ocr-pdf-btn");
-  if(btn){
-    btn.disabled = tdPdfOcrBusy;
-    btn.style.opacity = tdPdfOcrBusy ? "0.72" : "1";
-    btn.style.cursor = tdPdfOcrBusy ? "not-allowed" : "pointer";
-    btn.textContent = tdPdfOcrBusy ? "⏳ Reading file..." : "📄 OCR File to TST";
-  }
+  renderTstOcrButtonStates();
   updateTstFillRunButtonState();
+  setTstVoiceFillButtonState(tdVoiceFillListening);
 }
 
 function setTstVoiceFillStatus(msg, color){
@@ -24204,10 +24399,11 @@ function setTstVoiceFillButtonState(isListening){
   var btn = document.getElementById("td-voice-fill-btn");
   var listening = !!isListening;
   var supported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  var busy = isAnyTstOcrBusy();
   if(btn){
-    btn.disabled = !supported;
-    btn.style.opacity = supported ? "1" : "0.55";
-    btn.style.cursor = supported ? "pointer" : "not-allowed";
+    btn.disabled = !supported || (!listening && busy);
+    btn.style.opacity = (!supported || (!listening && busy)) ? "0.55" : "1";
+    btn.style.cursor = (!supported || (!listening && busy)) ? "not-allowed" : "pointer";
     btn.textContent = listening ? "⏹" : "🎙️";
     btn.title = listening ? "Stop Voice Fill TST" : "Voice Fill TST";
     btn.setAttribute("aria-label", listening ? "Stop Voice Fill TST" : "Voice Fill TST");
@@ -24237,7 +24433,7 @@ function countFilledTstInputCells(){
 }
 
 function fillTstRampPreset930(){
-  if(tdPdfOcrBusy){
+  if(isAnyTstOcrBusy()){
     alert("OCR is in progress. Please wait until it completes.");
     return;
   }
@@ -24605,6 +24801,11 @@ function ensureTstVoiceRecognition(){
 
 function startTstVoiceInput(){
   if(tdVoiceFillListening || tdVoiceFillKeepAlive) return;
+  if(isAnyTstOcrBusy()){
+    setTstVoiceFillButtonState(false);
+    setTstVoiceFillStatus("OCR is running. Please wait.", "#fbbf24");
+    return;
+  }
   var rec = ensureTstVoiceRecognition();
   if(!rec){
     setTstVoiceFillButtonState(false);
@@ -24691,9 +24892,435 @@ function toggleTstVoiceInput(){
 }
 
 function openTstPdfOcrPicker(){
-  if(tdPdfOcrBusy) return;
+  if(isAnyTstOcrBusy()) return;
   var input = document.getElementById("td-ocr-pdf-file");
   if(input) input.click();
+}
+
+function setTstClaudeOcrStatus(msg, color){
+  var st = document.getElementById("td-ocr-claude-status");
+  if(!st) return;
+  st.textContent = msg || "Claude OCR idle";
+  st.style.color = color || "#94a3b8";
+}
+
+function setTstClaudeOcrBusy(busy){
+  tdClaudeOcrBusy = !!busy;
+  renderTstOcrButtonStates();
+  updateTstFillRunButtonState();
+  setTstVoiceFillButtonState(tdVoiceFillListening);
+  updateTstClaudeExtractButtonState();
+}
+
+function setTstClaudeModalStatus(msg, color){
+  var el = document.getElementById("td-claude-modal-status");
+  if(!el) return;
+  el.textContent = msg || "Choose a file to begin.";
+  el.style.color = color || "#7ec8f0";
+}
+
+function setTstClaudeProgress(pct){
+  var wrap = document.getElementById("td-claude-progress-wrap");
+  var bar = document.getElementById("td-claude-progress-bar");
+  if(!wrap || !bar) return;
+  var value = Math.max(0, Math.min(100, Number(pct) || 0));
+  bar.style.width = value + "%";
+  wrap.style.display = (value > 0 && value < 100) ? "block" : "none";
+  if(value <= 0) bar.style.width = "0%";
+}
+
+function updateTstClaudeExtractButtonState(){
+  var btn = document.getElementById("td-claude-extract-btn");
+  if(!btn) return;
+  var hasFile = !!tdClaudeFileType;
+  var noPdfPages = (tdClaudeFileType === "pdf" && tdClaudeSelectedPages.size < 1);
+  var disabled = tdClaudeOcrBusy || !hasFile || noPdfPages;
+  btn.disabled = disabled;
+  btn.style.opacity = disabled ? "0.62" : "1";
+  btn.style.cursor = disabled ? "not-allowed" : "pointer";
+  btn.textContent = tdClaudeOcrBusy ? "⏳ Extracting..." : "⚡ Extract & Fill TST";
+}
+
+function updateTstClaudePageCountLabel(totalPages){
+  var el = document.getElementById("td-claude-page-count");
+  if(!el) return;
+  var total = Number(totalPages || (tdClaudePdfDoc && tdClaudePdfDoc.numPages) || 0);
+  if(total < 1){
+    el.textContent = "";
+    return;
+  }
+  el.textContent = tdClaudeSelectedPages.size + "/" + total + " pages selected";
+}
+
+function openTstClaudeModal(){
+  var modal = document.getElementById("td-claude-ocr-modal");
+  if(modal) modal.style.display = "flex";
+}
+
+function closeTstClaudeModal(){
+  var modal = document.getElementById("td-claude-ocr-modal");
+  if(modal) modal.style.display = "none";
+  setTstClaudeProgress(0);
+}
+
+function handleTstClaudeModalBackdrop(event){
+  if(!event) return;
+  if(event.target && event.target.id === "td-claude-ocr-modal"){
+    cancelTstClaudeOcr();
+  }
+}
+
+function resetTstClaudeOcrState(clearInput){
+  tdClaudeFileType = null;
+  tdClaudeImageBase64 = null;
+  tdClaudeImageMediaType = null;
+  tdClaudePdfDoc = null;
+  tdClaudePageCanvases = {};
+  tdClaudeSelectedPages = new Set();
+  tdClaudeAllResults = [];
+
+  var fileChip = document.getElementById("td-claude-file-chip");
+  if(fileChip){
+    fileChip.textContent = "";
+    fileChip.style.display = "none";
+  }
+
+  var previewWrap = document.getElementById("td-claude-preview-wrap");
+  var preview = document.getElementById("td-claude-img-preview");
+  if(previewWrap) previewWrap.style.display = "none";
+  if(preview) preview.src = "";
+
+  var pdfSection = document.getElementById("td-claude-pdf-pages-section");
+  var pagesGrid = document.getElementById("td-claude-pages-grid");
+  var pageCount = document.getElementById("td-claude-page-count");
+  if(pdfSection) pdfSection.style.display = "none";
+  if(pagesGrid) pagesGrid.innerHTML = "";
+  if(pageCount) pageCount.textContent = "";
+
+  setTstClaudeProgress(0);
+  setTstClaudeOcrStatus("Claude OCR idle", "#94a3b8");
+  setTstClaudeModalStatus("Choose a file to begin.", "#7ec8f0");
+  updateTstClaudeExtractButtonState();
+
+  if(clearInput){
+    var input = document.getElementById("td-ocr-claude-file");
+    if(input) input.value = "";
+  }
+}
+
+function cancelTstClaudeOcr(){
+  if(tdClaudeOcrBusy){
+    alert("Claude OCR is still running. Please wait for it to finish.");
+    return;
+  }
+  closeTstClaudeModal();
+  resetTstClaudeOcrState(true);
+}
+
+function openTstClaudeOcrPicker(){
+  if(isAnyTstOcrBusy()) return;
+  var input = document.getElementById("td-ocr-claude-file");
+  if(input) input.click();
+}
+
+function reselectTstClaudeOcrFile(){
+  if(tdClaudeOcrBusy) return;
+  var input = document.getElementById("td-ocr-claude-file");
+  if(input) input.click();
+}
+
+async function loadTstClaudeImage(file){
+  var dataUrl = await readFileAsDataUrl(file);
+  tdClaudeFileType = "image";
+  tdClaudeImageMediaType = file.type || "image/jpeg";
+  tdClaudeImageBase64 = toBase64FromDataUrl(dataUrl) || "";
+
+  var previewWrap = document.getElementById("td-claude-preview-wrap");
+  var preview = document.getElementById("td-claude-img-preview");
+  var pdfSection = document.getElementById("td-claude-pdf-pages-section");
+  if(preview) preview.src = dataUrl;
+  if(previewWrap) previewWrap.style.display = "block";
+  if(pdfSection) pdfSection.style.display = "none";
+
+  setTstClaudeModalStatus("Image ready. Review and run Claude Vision extraction.", "#7ec8f0");
+  updateTstClaudeExtractButtonState();
+}
+
+function toggleTstClaudePage(pageNum, el){
+  if(tdClaudeSelectedPages.has(pageNum)){
+    tdClaudeSelectedPages.delete(pageNum);
+    if(el) el.classList.remove("is-selected");
+  }else{
+    tdClaudeSelectedPages.add(pageNum);
+    if(el) el.classList.add("is-selected");
+  }
+  updateTstClaudePageCountLabel();
+  updateTstClaudeExtractButtonState();
+}
+
+function selectAllTstClaudePages(){
+  document.querySelectorAll("#td-claude-pages-grid .td-claude-page-thumb").forEach(function(el){
+    var pageNum = Number(el.getAttribute("data-page"));
+    if(pageNum >= 1) tdClaudeSelectedPages.add(pageNum);
+    el.classList.add("is-selected");
+  });
+  updateTstClaudePageCountLabel();
+  updateTstClaudeExtractButtonState();
+}
+
+function deselectAllTstClaudePages(){
+  document.querySelectorAll("#td-claude-pages-grid .td-claude-page-thumb").forEach(function(el){
+    var pageNum = Number(el.getAttribute("data-page"));
+    if(pageNum >= 1) tdClaudeSelectedPages.delete(pageNum);
+    el.classList.remove("is-selected");
+  });
+  updateTstClaudePageCountLabel();
+  updateTstClaudeExtractButtonState();
+}
+
+async function loadTstClaudePdf(file){
+  var ready = await ensurePdfJsReady();
+  if(!ready) throw new Error("PDF reader is not available.");
+
+  tdClaudeFileType = "pdf";
+  tdClaudePdfDoc = null;
+  tdClaudePageCanvases = {};
+  tdClaudeSelectedPages = new Set();
+
+  var buf = await file.arrayBuffer();
+  tdClaudePdfDoc = await window.pdfjsLib.getDocument({ data: buf }).promise;
+
+  var count = tdClaudePdfDoc.numPages || 0;
+  var pdfSection = document.getElementById("td-claude-pdf-pages-section");
+  var previewWrap = document.getElementById("td-claude-preview-wrap");
+  var pagesGrid = document.getElementById("td-claude-pages-grid");
+  var pageCount = document.getElementById("td-claude-page-count");
+  if(previewWrap) previewWrap.style.display = "none";
+  if(pdfSection) pdfSection.style.display = "block";
+  if(pagesGrid) pagesGrid.innerHTML = "";
+  if(pageCount) pageCount.textContent = "";
+
+  for(var i=1; i<=count; i++){
+    setTstClaudeModalStatus("Rendering PDF page " + i + "/" + count + "...", "#7ec8f0");
+    setTstClaudeProgress(Math.round((i - 1) / Math.max(1, count) * 100));
+
+    var thumb = document.createElement("div");
+    thumb.className = "td-claude-page-thumb is-selected";
+    thumb.setAttribute("data-page", String(i));
+    thumb.innerHTML = '<canvas></canvas><div class="td-claude-page-label">Page ' + i + '</div><div class="td-claude-page-check">✓</div>';
+    thumb.addEventListener("click", (function(pageNum, el){
+      return function(){ toggleTstClaudePage(pageNum, el); };
+    })(i, thumb));
+    if(pagesGrid) pagesGrid.appendChild(thumb);
+
+    tdClaudeSelectedPages.add(i);
+    var page = await tdClaudePdfDoc.getPage(i);
+
+    var viewportThumb = page.getViewport({ scale:0.4 });
+    var thumbCanvas = thumb.querySelector("canvas");
+    thumbCanvas.width = Math.ceil(viewportThumb.width);
+    thumbCanvas.height = Math.ceil(viewportThumb.height);
+    await page.render({ canvasContext:thumbCanvas.getContext("2d"), viewport:viewportThumb }).promise;
+
+    var viewportFull = page.getViewport({ scale:2.5 });
+    var fullCanvas = document.createElement("canvas");
+    fullCanvas.width = Math.ceil(viewportFull.width);
+    fullCanvas.height = Math.ceil(viewportFull.height);
+    await page.render({ canvasContext:fullCanvas.getContext("2d"), viewport:viewportFull }).promise;
+    tdClaudePageCanvases[i] = fullCanvas.toDataURL("image/jpeg", 0.92).split(",")[1];
+  }
+
+  setTstClaudeProgress(100);
+  setTimeout(function(){ setTstClaudeProgress(0); }, 400);
+  updateTstClaudePageCountLabel(count);
+  setTstClaudeModalStatus("PDF ready. Select pages and run Claude Vision extraction.", "#7ec8f0");
+  updateTstClaudeExtractButtonState();
+}
+
+function mergeClaudeResultIntoTstGrid(targetGrid, headers, rows){
+  var safeGrid = Array.isArray(targetGrid) ? targetGrid : createEmptyTstClaudeGrid();
+  var safeHeaders = Array.isArray(headers) ? headers : [];
+  var safeRows = Array.isArray(rows) ? rows : [];
+  var colToRow = {};
+
+  safeHeaders.forEach(function(h, i){
+    if(i === 0) return;
+    var key = String(h || "").toLowerCase().replace(/[.\s_]+/g, " ").trim();
+    for(var hi=0; hi<TD_CLAUDE_OCR_HEADER_MAP.length; hi++){
+      var entry = TD_CLAUDE_OCR_HEADER_MAP[hi];
+      if(entry.patterns.some(function(pattern){ return key.indexOf(pattern) >= 0; })){
+        colToRow[i] = entry.row;
+        break;
+      }
+    }
+  });
+
+  safeRows.forEach(function(row){
+    var phNum = parseInt(row && row[0], 10);
+    if(isNaN(phNum) || phNum < 1 || phNum > TD_CLAUDE_OCR_PH_COUNT) return;
+    var phIdx = phNum - 1;
+    Object.keys(colToRow).forEach(function(ci){
+      var ri = colToRow[ci];
+      var value = row[ci];
+      if(value !== undefined && value !== null && String(value).trim() !== ""){
+        safeGrid[ri][phIdx] = String(value);
+      }
+    });
+  });
+
+  return safeGrid;
+}
+
+function extractTstValuesFromClaudeResults(results){
+  var merged = createEmptyTstClaudeGrid();
+  var list = Array.isArray(results) ? results : [results];
+  for(var i=0; i<list.length; i++){
+    var res = list[i] || {};
+    if(Array.isArray(res.headers) && Array.isArray(res.rows)){
+      mergeClaudeResultIntoTstGrid(merged, res.headers, res.rows);
+    }
+  }
+  return merged[0].concat(merged[1], merged[2], merged[3]);
+}
+
+async function callClaudeVisionForTst(b64, mediaType) {
+  var sys = 'You are an expert OCR assistant for handwritten data tables used in industrial BMS systems.\nExtract ALL data from the table in the image. Return ONLY valid JSON with NO markdown, NO backticks, NO explanation:\n{"headers":["Peep hole no.","AB Bot","CD Bot","AB Top","CD Top"],"rows":[[1,960,850,942,941],[2,950,834,943,982]]}\nRules: First column is always the peep hole number (integer). Other 4 columns are numeric temperature/pressure readings. Include all rows. Never skip a row.';
+
+  try {
+    var resp = await fetch(TD_CLAUDE_OCR_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514", max_tokens: 2000,
+        system: sys,
+        messages: [{ role:"user", content:[
+          { type:"image", source:{ type:"base64", media_type:mediaType, data:b64 } },
+          { type:"text",  text:"Extract the complete handwritten table. Return JSON only." }
+        ]}]
+      })
+    });
+    var data = await resp.json();
+    if (data.error) return { error: typeof data.error === "string" ? data.error : data.error.message, headers:[], rows:[] };
+    if (!data.content || !data.content.length) return { error:"Empty API response", headers:[], rows:[], raw: JSON.stringify(data) };
+    var text = data.content.map(function(block){ return block.text || ""; }).join("");
+    try {
+      var parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+      return { headers: parsed.headers || [], rows: parsed.rows || [], raw: text };
+    } catch(parseErr) {
+      return { headers:[], rows:[], raw:"Parse error: " + parseErr.message + "\n\n" + text };
+    }
+  } catch(err) {
+    return { error:"Fetch failed: " + err.message, headers:[], rows:[] };
+  }
+}
+
+async function startTstClaudeExtraction() {
+  if(tdClaudeOcrBusy || !tdClaudeFileType) return;
+
+  if(tdVoiceFillListening || tdVoiceFillKeepAlive){
+    try{ stopTstVoiceInput(); }catch(e){}
+  }
+
+  tdClaudeAllResults = [];
+  setTstClaudeOcrBusy(true);
+
+  var success = false;
+  try {
+    if (tdClaudeFileType === "image") {
+      setTstClaudeModalStatus("Sending image to Claude Vision...", "#7ec8f0");
+      var imageResult = await callClaudeVisionForTst(tdClaudeImageBase64, tdClaudeImageMediaType || "image/jpeg");
+      imageResult.page = "Image";
+      tdClaudeAllResults.push(imageResult);
+    } else {
+      var pages = Array.from(tdClaudeSelectedPages).sort(function(a,b){ return a-b; });
+      if (!pages.length) {
+        setTstClaudeModalStatus("Select at least one PDF page first.", "#fbbf24");
+        return;
+      }
+      for (var i=0; i<pages.length; i++) {
+        setTstClaudeModalStatus("Extracting page " + pages[i] + " (" + (i+1) + "/" + pages.length + ")...", "#7ec8f0");
+        setTstClaudeProgress(Math.round(i / Math.max(1, pages.length) * 100));
+        var pageResult = await callClaudeVisionForTst(tdClaudePageCanvases[pages[i]], "image/jpeg");
+        pageResult.page = pages[i];
+        tdClaudeAllResults.push(pageResult);
+      }
+      setTstClaudeProgress(100);
+      setTimeout(function(){ setTstClaudeProgress(0); }, 800);
+    }
+
+    var values = extractTstValuesFromClaudeResults(tdClaudeAllResults);
+    var written = fillTdPeepFieldsFromList(values, true);
+    if (written < 1) {
+      var failMsg = (tdClaudeAllResults[0] && (tdClaudeAllResults[0].error || tdClaudeAllResults[0].raw)) || "No valid TST values detected from Claude Vision.";
+      setTstClaudeModalStatus("Claude OCR could not detect usable TST values.", "#fca5a5");
+      setTstClaudeOcrStatus("Claude OCR failed", "#fca5a5");
+      alert("Claude OCR failed: " + failMsg);
+      return;
+    }
+
+    success = true;
+    setTstClaudeOcrStatus("Filled " + written + " cells", "#34d399");
+    setTstClaudeModalStatus("Filled " + written + " TST cells from Claude Vision.", "#34d399");
+    showToast("✅ Claude OCR filled " + written + " TST cells.");
+  } catch(err) {
+    setTstClaudeModalStatus("Claude OCR failed.", "#fca5a5");
+    setTstClaudeOcrStatus("Claude OCR failed", "#fca5a5");
+    alert("Claude OCR failed: " + (err && err.message ? err.message : err));
+  } finally {
+    setTstClaudeOcrBusy(false);
+    if(success){
+      closeTstClaudeModal();
+      resetTstClaudeOcrState(true);
+    }else{
+      updateTstClaudeExtractButtonState();
+    }
+  }
+}
+
+async function handleTstClaudeOcrSelect(event){
+  var fileInput = document.getElementById("td-ocr-claude-file");
+  var file = event && event.target && event.target.files ? event.target.files[0] : null;
+  if(!file || isAnyTstOcrBusy()){
+    if(fileInput) fileInput.value = "";
+    return;
+  }
+
+  try{
+    var fileKind = getTstOcrFileKind(file);
+    if(!fileKind){
+      alert("Please upload a PDF or image file (JPG, PNG, WEBP, HEIC).");
+      return;
+    }
+    if((file.size || 0) > TD_CLAUDE_OCR_MAX_MB * 1024 * 1024){
+      alert("File is too large. Please keep it under " + TD_CLAUDE_OCR_MAX_MB + " MB.");
+      return;
+    }
+    if(tdVoiceFillListening || tdVoiceFillKeepAlive){
+      try{ stopTstVoiceInput(); }catch(e){}
+    }
+
+    resetTstClaudeOcrState(false);
+    openTstClaudeModal();
+
+    var chip = document.getElementById("td-claude-file-chip");
+    if(chip){
+      chip.textContent = file.name || (fileKind === "pdf" ? "tst.pdf" : "tst-image");
+      chip.style.display = "inline-flex";
+    }
+
+    setTstClaudeOcrStatus(fileKind === "pdf" ? "Preparing Claude PDF..." : "Preparing Claude image...", "#7ec8f0");
+    setTstClaudeModalStatus(fileKind === "pdf" ? "Loading PDF pages..." : "Loading image preview...", "#7ec8f0");
+
+    if(fileKind === "pdf") await loadTstClaudePdf(file);
+    else await loadTstClaudeImage(file);
+  }catch(err){
+    closeTstClaudeModal();
+    resetTstClaudeOcrState(true);
+    setTstClaudeOcrStatus("Claude OCR failed", "#fca5a5");
+    alert("Could not prepare Claude OCR file: " + (err && err.message ? err.message : err));
+  }finally{
+    if(fileInput) fileInput.value = "";
+  }
 }
 
 function getTstOcrFileKind(file){
@@ -25489,7 +26116,7 @@ async function runTstOcrForImageFile(file){
 async function handleTstPdfOcrSelect(event){
   var fileInput = document.getElementById("td-ocr-pdf-file");
   var file = event && event.target && event.target.files ? event.target.files[0] : null;
-  if(!file || tdPdfOcrBusy){
+  if(!file || isAnyTstOcrBusy()){
     if(fileInput) fileInput.value = "";
     return;
   }
@@ -25507,6 +26134,9 @@ async function handleTstPdfOcrSelect(event){
 
     setTstPdfOcrBusy(true);
     setTstPdfOcrStatus(fileKind === "pdf" ? "Starting PDF OCR..." : "Starting photo OCR...", "#7ec8f0");
+    if(tdVoiceFillListening || tdVoiceFillKeepAlive){
+      try{ stopTstVoiceInput(); }catch(e){}
+    }
 
     var result = (fileKind === "pdf")
       ? await runTstOcrForPdfFile(file)
@@ -25552,7 +26182,9 @@ async function handleTstPdfOcrSelect(event){
     buildTdMobileMatrixIfNeeded();
     syncTdMobileMatrixFromBase();
     applyMobileHorizontalScrollFixes();
-    setTstPdfOcrStatus("OCR idle", "#94a3b8");
+    resetTstClaudeOcrState(false);
+    setTstClaudeOcrStatus("Claude OCR idle", "#94a3b8");
+    setTstPdfOcrStatus("Legacy OCR idle", "#94a3b8");
     setTstVoiceFillButtonState(false);
     if(getTstVoiceRecognitionCtor()){
       setTstVoiceFillStatus("Voice idle", "#94a3b8");
@@ -25563,6 +26195,7 @@ async function handleTstPdfOcrSelect(event){
       noteTdPeepFocusByElement(ev && ev.target ? ev.target : null);
     });
     setTstRampFillStatus("Ramp preset idle", "#94a3b8");
+    renderTstOcrButtonStates();
     updateTstFillRunButtonState();
   });
 })();
