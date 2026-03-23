@@ -3276,7 +3276,7 @@ body.light-theme .cw-nudge{
 
 .scada-app-footer{
   width:min(1380px, calc(100% - 20px));
-  margin:10px auto 4px;
+  margin:10px auto 0;
 }
 .scada-footer-shell{
   position:relative;
@@ -3285,15 +3285,19 @@ body.light-theme .cw-nudge{
   border:0;
   background:transparent;
   box-shadow:none;
-  padding:10px clamp(18px,1.9vw,28px) 6px;
+  padding:10px clamp(18px,1.9vw,28px) 2px;
 }
 .scada-footer-shell::before{
   content:"";
   position:absolute;
   inset:0 auto auto 0;
   width:100%;
-  height:1px;
-  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.28), rgba(255,255,255,0));
+  height:2px;
+  background-image:radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1.55px);
+  background-repeat:repeat-x;
+  background-size:10px 2px;
+  background-position:left top;
+  opacity:0.92;
   pointer-events:none;
 }
 .scada-footer-head{
@@ -3464,6 +3468,9 @@ body.light-theme .scada-footer-shell{
   background:transparent;
   box-shadow:none;
 }
+body.light-theme .scada-footer-shell::before{
+  background-image:radial-gradient(circle, rgba(15,23,42,0.22) 1px, transparent 1.55px);
+}
 body.light-theme .scada-footer-title{ color:#0f172a; }
 body.light-theme .scada-footer-copy{ color:#46576d; }
 body.light-theme .scada-footer-card-copy{ color:#415269; }
@@ -3506,10 +3513,10 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 @media (max-width:900px){
   .scada-app-footer{
     width:calc(100% - 16px);
-    margin:8px auto 4px;
+    margin:8px auto 0;
   }
   .scada-footer-shell{
-    padding:10px 12px 5px;
+    padding:10px 12px 2px;
   }
   .scada-footer-title{
     font-size:16px;
@@ -27781,7 +27788,7 @@ function tempToColorInline(val, minT, maxT){
   --scada-tabbar-gap:0px;
 }
 body{
-  padding-bottom:calc(var(--scada-tabbar-height) + 12px + env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom:calc(var(--scada-tabbar-height) + 2px + env(safe-area-inset-bottom, 0px)) !important;
 }
 .bottom-tab-bar{
   left:var(--scada-tabbar-side) !important;
