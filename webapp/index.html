@@ -1914,11 +1914,13 @@ td select option{background:#1e293b;color:#e2e8f0;}
 #tab-burner .burner-cell-trigger::-moz-focus-inner{
   border:0;
 }
-#tab-burner .burner-cell-trigger-pending{
+#tab-burner .burner-cell-trigger-pending,
+#tab-burner td.burner-editor-open .burner-cell-trigger{
   gap:5px;
   padding-top:8px;
 }
-#tab-burner .burner-cell-trigger-pending::before{
+#tab-burner .burner-cell-trigger-pending::before,
+#tab-burner td.burner-editor-open .burner-cell-trigger::before{
   content:"";
   position:absolute;
   top:0;
@@ -10820,10 +10822,30 @@ html, body, body *, body *::before, body *::after, svg text{
           color:#f5f9ff !important;
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.2),0 0 7px rgba(84,104,128,0.34) !important;
         }
-        body #tab-burner td.B:not(.burner-pending):hover,
-        body #tab-burner td.N:not(.burner-pending):hover,
-        body #tab-burner td.O:not(.burner-pending):hover,
-        body #tab-burner td.C:not(.burner-pending):hover{
+        body #tab-burner td.burner-editor-open.B,
+        body #tab-burner td.burner-pending.B{
+          border-color:rgba(2,6,23,0.96) !important;
+          box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba(15,23,42,0.58),0 0 6px 1px rgba(37,99,235,0.54),inset 0 1px 0 rgba(255,255,255,0.2) !important;
+        }
+        body #tab-burner td.burner-editor-open.N,
+        body #tab-burner td.burner-pending.N{
+          border-color:rgba(2,6,23,0.96) !important;
+          box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba(15,23,42,0.58),0 0 6px 1px rgba(217,119,6,0.56),inset 0 1px 0 rgba(255,255,255,0.25) !important;
+        }
+        body #tab-burner td.burner-editor-open.O,
+        body #tab-burner td.burner-pending.O{
+          border-color:rgba(2,6,23,0.96) !important;
+          box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba(15,23,42,0.54),0 0 6px 1px rgba(22,163,74,0.54),inset 0 1px 0 rgba(255,255,255,0.2) !important;
+        }
+        body #tab-burner td.burner-editor-open.C,
+        body #tab-burner td.burner-pending.C{
+          border-color:rgba(2,6,23,0.96) !important;
+          box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba(15,23,42,0.54),inset 0 1px 0 rgba(255,255,255,0.08) !important;
+        }
+        body #tab-burner td.B:not(.burner-pending):not(.burner-editor-open):hover,
+        body #tab-burner td.N:not(.burner-pending):not(.burner-editor-open):hover,
+        body #tab-burner td.O:not(.burner-pending):not(.burner-editor-open):hover,
+        body #tab-burner td.C:not(.burner-pending):not(.burner-editor-open):hover{
           transform:none !important;
           box-shadow:inset 0 1px 0 rgba(255,255,255,0.26),0 0 0 1px rgba(148,163,184,0.12) !important;
         }
