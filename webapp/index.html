@@ -5573,6 +5573,20 @@ body.light-theme #hm-td-saved-table .td-shift-generic{
   75% {transform:scaleY(1.01) scaleX(0.995);opacity:0.92;}
   100%{transform:scaleY(1)    scaleX(1);    opacity:0.9;}
 }
+@keyframes hmFlamePanelFlicker{
+  0%{transform:translateY(0) scaleY(0.96) scaleX(1.02);opacity:0.84;}
+  18%{transform:translateY(-0.8px) scaleY(1.16) scaleX(0.9);opacity:1;}
+  42%{transform:translateY(0.3px) scaleY(0.88) scaleX(1.08);opacity:0.78;}
+  64%{transform:translateY(-0.45px) scaleY(1.1) scaleX(0.95);opacity:0.94;}
+  82%{transform:translateY(0.12px) scaleY(0.93) scaleX(1.04);opacity:0.86;}
+  100%{transform:translateY(0) scaleY(0.96) scaleX(1.02);opacity:0.84;}
+}
+@keyframes hmFlameGlowPulse{
+  0%,100%{transform:translateX(-50%) scaleX(0.9) scaleY(0.74);opacity:0.34;}
+  28%{transform:translateX(-50%) scaleX(1.14) scaleY(1.05);opacity:0.76;}
+  56%{transform:translateX(-50%) scaleX(0.82) scaleY(0.66);opacity:0.28;}
+  78%{transform:translateX(-50%) scaleX(1.08) scaleY(0.96);opacity:0.64;}
+}
 /* Glow via CSS classes — NO inline filter, no per-element layer promotion */
 .hm-burner-wrap{
   display:flex;flex-direction:column;align-items:center;
@@ -5879,7 +5893,7 @@ body.light-theme .hm-cuboid-heat-text{
 #hm-wall-panel-D .hm-burner-wrap svg{
   width:26px;height:36px;
 }
-/* Bottom wall tables: keep burner icons static (no flame animation) */
+/* Bottom wall tables: keep hover disabled, but run a stronger flame flicker */
 #hm-wall-panel-A .hm-burner-wrap:hover,
 #hm-wall-panel-B .hm-burner-wrap:hover,
 #hm-wall-panel-C .hm-burner-wrap:hover,
@@ -5892,14 +5906,21 @@ body.light-theme .hm-cuboid-heat-text{
 #hm-wall-panel-C .hm-burner-wrap.hm-flame svg,
 #hm-wall-panel-D .hm-burner-wrap.hm-flame svg,
 #hm-wall-panel-ALL .hm-burner-wrap.hm-flame svg{
-  animation:none !important;
+  animation:hmFlamePanelFlicker 1.08s cubic-bezier(0.45,0.05,0.55,0.95) infinite !important;
+  transform-origin:50% 100% !important;
+  opacity:0.96;
 }
 #hm-wall-panel-A .hm-burner-wrap.hm-flame::after,
 #hm-wall-panel-B .hm-burner-wrap.hm-flame::after,
 #hm-wall-panel-C .hm-burner-wrap.hm-flame::after,
 #hm-wall-panel-D .hm-burner-wrap.hm-flame::after,
 #hm-wall-panel-ALL .hm-burner-wrap.hm-flame::after{
-  opacity:0.32;
+  width:16px;
+  height:12px;
+  bottom:2px;
+  opacity:0.64;
+  animation:hmFlameGlowPulse 1.18s ease-in-out infinite;
+  transform-origin:50% 50%;
 }
 /* Peep-hole gradient bar stretches naturally via flex:1, but ensure full width */
 #hm-wall-panel-A .hm-peep-gradient-bar-wrap,
