@@ -2635,11 +2635,11 @@ const MAX_DRAG_DELTA=42;
 const TAP_MOVE_TOLERANCE=10;
 const FACE_STEP=Math.PI/2;
 const ACTIVE_FRAME_MS=16;
-const FOCUSED_IDLE_FRAME_MS=cuboidIsChromeLike ? 110 : 84;
+const FOCUSED_IDLE_FRAME_MS=ACTIVE_FRAME_MS;
 const BACKGROUND_IDLE_FRAME_MS=cuboidIsChromeLike ? 420 : 300;
 const SLEEP_FRAME_MS=900;
 const ACTIVE_OVERLAY_TICK_MS=110;
-const FOCUSED_OVERLAY_TICK_MS=cuboidIsChromeLike ? 260 : 220;
+const FOCUSED_OVERLAY_TICK_MS=ACTIVE_OVERLAY_TICK_MS;
 const BACKGROUND_OVERLAY_TICK_MS=cuboidIsChromeLike ? 920 : 720;
 const ACTIVE_OVERLAY_PHASE_STEP=0.12;
 const IDLE_OVERLAY_PHASE_STEP=0.08;
@@ -2824,9 +2824,9 @@ function animate(t){
   requestAnimationFrame(animate);
   const canRender=cuboidCanRenderNow();
   const rotationActive=cuboidHasRotationMotion();
-  const interactionActive=rotationActive || cuboidIsFullscreen();
+  const uniformMotionActive=canRender && (cuboidIsFullscreen() || hostFocused);
   const targetFrameMs=canRender
-    ? (interactionActive ? ACTIVE_FRAME_MS : (hostFocused ? FOCUSED_IDLE_FRAME_MS : BACKGROUND_IDLE_FRAME_MS))
+    ? (uniformMotionActive ? ACTIVE_FRAME_MS : BACKGROUND_IDLE_FRAME_MS)
     : SLEEP_FRAME_MS;
   if(lastRenderTs && (t-lastRenderTs)<targetFrameMs) return;
   lastRenderTs=t;
@@ -2854,14 +2854,14 @@ function animate(t){
   group.rotation.z=0;
   innerL.intensity=1.0+0.4*Math.sin(t*0.007)+0.15*Math.sin(t*0.013);
   const ts=t*0.001;
-  const overlayTickMs=rotationActive ? ACTIVE_OVERLAY_TICK_MS : (hostFocused ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS);
+  const overlayTickMs=uniformMotionActive ? FOCUSED_OVERLAY_TICK_MS : BACKGROUND_OVERLAY_TICK_MS;
   if(overlayDirty || (t-lastOverlayPaintAt)>=overlayTickMs){
-    overlayAnimPhase=(overlayAnimPhase+(rotationActive ? ACTIVE_OVERLAY_PHASE_STEP : IDLE_OVERLAY_PHASE_STEP))%(Math.PI*2);
+    overlayAnimPhase=(overlayAnimPhase+(uniformMotionActive ? ACTIVE_OVERLAY_PHASE_STEP : IDLE_OVERLAY_PHASE_STEP))%(Math.PI*2);
     syncFaceOverlays(false);
     lastOverlayPaintAt=t;
     frameNeedsRender=true;
   }
-  if(rotationActive && (!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=ACTIVE_FLAME_TICK_MS)){
+  if(uniformMotionActive && (!lastFlameUpdateAt || (t-lastFlameUpdateAt)>=ACTIVE_FLAME_TICK_MS)){
     flameGroups.forEach(function(f){
       const s=f.seed;
       const flk=0.86+0.16*Math.sin(ts*2.3+s)+0.07*Math.sin(ts*5.1+s*1.4);
@@ -2875,7 +2875,7 @@ function animate(t){
     lastFlameUpdateAt=t;
     flameGroupsIdleApplied=false;
     frameNeedsRender=true;
-  }else if(!rotationActive && !flameGroupsIdleApplied){
+  }else if(!uniformMotionActive && !flameGroupsIdleApplied){
     setFlameGroupsIdleState();
     frameNeedsRender=true;
   }
