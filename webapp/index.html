@@ -14962,13 +14962,13 @@ html, body, body *, body *::before, body *::after, svg text{
 
         function hmUploadedDrawPeepBar(ctx, label, vals, left, centerY, width, uiScale){
           var k = Math.max(1, Number(uiScale) || 1);
-          var barHeight = Math.round(46 * k);
+          var barHeight = Math.round(50 * k);
           var barTop = centerY - (barHeight / 2);
           var gridLeft = left;
           var slotW = width / 15;
           var labelLeft = Math.round(20 * k);
-          var labelW = Math.round(106 * k);
-          var labelH = Math.round(52 * k);
+          var labelW = Math.round(122 * k);
+          var labelH = Math.round(60 * k);
           var labelTop = centerY - Math.round(labelH / 2);
           var labelCenterX = labelLeft + Math.round(labelW / 2);
           var positions = [];
@@ -14982,11 +14982,11 @@ html, body, body *, body *::before, body *::after, svg text{
           ctx.fillStyle = "rgba(10,14,24,0.96)";
           hmUploadedRoundRectPath(ctx, labelLeft, labelTop, labelW, labelH, Math.round(12 * k));
           ctx.fill();
-          ctx.strokeStyle = "rgba(188,198,214,0.24)";
-          ctx.lineWidth = 1.2 * k;
+          ctx.strokeStyle = "rgba(248,250,252,0.34)";
+          ctx.lineWidth = 1.5 * k;
           ctx.stroke();
           ctx.fillStyle = "#f8fafc";
-          ctx.font = "700 " + Math.round(26 * k) + "px Times New Roman, serif";
+          ctx.font = "700 " + Math.round(30 * k) + "px Times New Roman, serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(label, labelCenterX, centerY);
@@ -15016,35 +15016,35 @@ html, body, body *, body *::before, body *::after, svg text{
 
           for(var m=0; m<15; m++){
             var mx = gridLeft + slotW * (m + 0.5);
-            ctx.strokeStyle = "rgba(255,255,255,0.50)";
-            ctx.lineWidth = 1.4 * k;
+            ctx.strokeStyle = "rgba(255,255,255,0.58)";
+            ctx.lineWidth = 1.6 * k;
             ctx.beginPath();
-            ctx.moveTo(mx, barTop - (3 * k));
-            ctx.lineTo(mx, barTop + barHeight + (3 * k));
+            ctx.moveTo(mx, barTop - (5 * k));
+            ctx.lineTo(mx, barTop + barHeight + (5 * k));
             ctx.stroke();
             if(positions.length){
               var tempVal = Number(Array.isArray(vals) ? vals[m] : "");
               if(isFinite(tempVal)){
-                var markerR = Math.max(5.8, 6.2 * k);
+                var markerR = Math.max(6.6, 7.4 * k);
                 ctx.beginPath();
                 ctx.arc(mx, centerY, markerR, 0, Math.PI * 2);
                 ctx.fillStyle = hmUploadedTempToColor(tempVal, 860, 1000);
                 ctx.fill();
-                ctx.lineWidth = 2 * k;
+                ctx.lineWidth = 2.2 * k;
                 ctx.strokeStyle = "rgba(255,255,255,0.95)";
                 ctx.stroke();
 
-                var pillW = Math.round(70 * k);
-                var pillH = Math.round(28 * k);
-                var pillTop = barTop - Math.round(38 * k);
-                ctx.fillStyle = "rgba(52,44,34,0.92)";
-                hmUploadedRoundRectPath(ctx, mx - pillW/2, pillTop, pillW, pillH, Math.max(7, Math.round(7 * k)));
+                var pillW = Math.round(90 * k);
+                var pillH = Math.round(38 * k);
+                var pillTop = barTop - Math.round(50 * k);
+                ctx.fillStyle = "rgba(10,14,24,0.96)";
+                hmUploadedRoundRectPath(ctx, mx - pillW/2, pillTop, pillW, pillH, Math.max(9, Math.round(9 * k)));
                 ctx.fill();
-                ctx.strokeStyle = "rgba(255,255,255,0.18)";
-                ctx.lineWidth = 1 * k;
+                ctx.strokeStyle = "rgba(251,191,36,0.50)";
+                ctx.lineWidth = 1.2 * k;
                 ctx.stroke();
                 ctx.fillStyle = "#ffffff";
-                ctx.font = "700 " + Math.round(20 * k) + "px Times New Roman, serif";
+                ctx.font = "700 " + Math.round(26 * k) + "px Times New Roman, serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(tempVal + "°", mx, pillTop + (pillH / 2));
@@ -15235,16 +15235,16 @@ html, body, body *, body *::before, body *::after, svg text{
 
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.font = "700 26px Times New Roman, serif";
+          ctx.font = "700 30px Times New Roman, serif";
           for(var bn=1; bn<=15; bn++){
             var bx = gridLeft + slotW * (bn - 0.5);
-            var bW = 72;
-            var bH = 44;
+            var bW = 82;
+            var bH = 50;
             ctx.fillStyle = "rgba(8,12,22,0.96)";
             hmUploadedRoundRectPath(ctx, bx - (bW / 2), burnerNumY - (bH / 2), bW, bH, 10);
             ctx.fill();
-            ctx.strokeStyle = "rgba(140,160,190,0.34)";
-            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = "rgba(248,250,252,0.30)";
+            ctx.lineWidth = 1.4;
             ctx.stroke();
             ctx.fillStyle = "#ffffff";
             ctx.fillText("B" + bn, bx, burnerNumY + 1);
@@ -15271,20 +15271,20 @@ html, body, body *, body *::before, body *::after, svg text{
               continue;
             }
 
-            var rowW = 104;
-            var rowH = 54;
+            var rowW = 118;
+            var rowH = 60;
             ctx.fillStyle = "rgba(8,12,22,0.96)";
             hmUploadedRoundRectPath(ctx, 20, centerY - Math.round(rowH / 2), rowW, rowH, 14);
             ctx.fill();
-            ctx.strokeStyle = "rgba(140,160,190,0.30)";
-            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = "rgba(248,250,252,0.30)";
+            ctx.lineWidth = 1.4;
             ctx.stroke();
 
             ctx.fillStyle = "#ffffff";
-            ctx.font = "700 24px Times New Roman, serif";
+            ctx.font = "700 28px Times New Roman, serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText("ROW " + item, 20 + Math.round(rowW / 2), centerY);
+            ctx.fillText("ROW " + item, 20 + Math.round(rowW / 2), centerY + 1);
 
             var rowData = Array.isArray(rows[item - 1]) ? rows[item - 1] : [];
             for(var ci=0; ci<15; ci++){
