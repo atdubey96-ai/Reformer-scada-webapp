@@ -12515,6 +12515,147 @@ html, body, body *, body *::before, body *::after, svg text{
           }
         }
       </style>
+      <style id="heatmap-label-visibility-refresh-20260324">
+        .hm-wall-card{
+          --hm-label-chip-bg:linear-gradient(180deg,rgba(17,24,39,0.96),rgba(30,41,59,0.96));
+          --hm-label-chip-border:rgba(148,163,184,0.58);
+          --hm-label-chip-text:#f8fafc;
+          --hm-label-chip-shadow:0 10px 18px rgba(2,6,23,0.34), inset 0 1px 0 rgba(255,255,255,0.08);
+          --hm-temp-chip-bg:linear-gradient(180deg,rgba(2,6,23,0.95),rgba(15,23,42,0.95));
+          --hm-temp-chip-border:rgba(251,191,36,0.68);
+          --hm-temp-chip-text:#fff7ed;
+          --hm-temp-chip-shadow:0 8px 16px rgba(2,6,23,0.4), 0 0 12px rgba(251,191,36,0.12);
+        }
+        body.light-theme .hm-wall-card{
+          --hm-label-chip-bg:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(226,232,240,0.98));
+          --hm-label-chip-border:rgba(59,130,246,0.28);
+          --hm-label-chip-text:#10243b;
+          --hm-label-chip-shadow:0 10px 18px rgba(37,99,235,0.12), inset 0 1px 0 rgba(255,255,255,0.95);
+          --hm-temp-chip-bg:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(241,245,249,0.98));
+          --hm-temp-chip-border:rgba(245,158,11,0.44);
+          --hm-temp-chip-text:#7c2d12;
+          --hm-temp-chip-shadow:0 8px 16px rgba(148,163,184,0.18), inset 0 1px 0 rgba(255,255,255,0.95);
+        }
+        .hm-row-label,
+        .hm-peep-label{
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          min-height:28px;
+          padding:4px 10px;
+          border-radius:10px;
+          border:1px solid var(--hm-label-chip-border);
+          background:var(--hm-label-chip-bg);
+          color:var(--hm-label-chip-text);
+          box-shadow:var(--hm-label-chip-shadow);
+          font-size:12px;
+          font-weight:900;
+          line-height:1;
+          letter-spacing:0.7px;
+          text-transform:uppercase;
+          text-shadow:0 1px 2px rgba(2,6,23,0.9);
+        }
+        body.light-theme .hm-row-label,
+        body.light-theme .hm-peep-label{
+          text-shadow:none;
+        }
+        .hm-burner-nums{
+          padding-bottom:4px;
+        }
+        .hm-bnum{
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          min-height:28px;
+          padding:4px 6px;
+          border-radius:9px;
+          border:1px solid rgba(125,211,252,0.22);
+          background:linear-gradient(180deg,rgba(10,15,24,0.92),rgba(19,31,47,0.92));
+          color:#f8fbff;
+          box-shadow:0 10px 18px rgba(2,6,23,0.26), inset 0 1px 0 rgba(255,255,255,0.08);
+          font-size:12px;
+          font-weight:900;
+          letter-spacing:0.35px;
+          line-height:1;
+          text-shadow:0 1px 2px rgba(2,6,23,0.98);
+        }
+        body.light-theme .hm-bnum{
+          background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(226,232,240,0.98));
+          border-color:rgba(59,130,246,0.22);
+          color:#10243b;
+          box-shadow:0 8px 16px rgba(37,99,235,0.1), inset 0 1px 0 rgba(255,255,255,0.95);
+          text-shadow:none;
+        }
+        .hm-peep-temp-label{
+          min-width:38px;
+          padding:3px 7px;
+          border-radius:999px;
+          border:1px solid var(--hm-temp-chip-border);
+          background:var(--hm-temp-chip-bg);
+          color:var(--hm-temp-chip-text);
+          box-shadow:var(--hm-temp-chip-shadow);
+          font-size:11px;
+          font-weight:900;
+          line-height:1;
+          letter-spacing:0.25px;
+          text-align:center;
+          top:-24px;
+        }
+        #tab-heatmap .cb-face .hm-burner-nums .hm-bnum{
+          width:auto !important;
+          max-width:none !important;
+          min-width:0 !important;
+          flex:1 1 0 !important;
+          padding:3px 4px !important;
+          font-size:clamp(10px,calc(10px * var(--cb-front-scale,1)),15px) !important;
+        }
+        #tab-heatmap .cb-face .hm-row-label,
+        #tab-heatmap .cb-face .hm-peep-label{
+          min-width:clamp(48px,calc(50px * var(--cb-front-scale,1)),92px) !important;
+          font-size:clamp(11px,calc(11px * var(--cb-front-scale,1)),16px) !important;
+          padding:3px clamp(5px,calc(6px * var(--cb-front-scale,1)),10px) !important;
+          transform:translateX(clamp(2px,calc(3px * var(--cb-front-scale,1)),6px)) !important;
+        }
+        #tab-heatmap .cb-face .hm-peep-temp-label{
+          min-width:clamp(32px,calc(36px * var(--cb-front-scale,1)),56px) !important;
+          font-size:clamp(10px,calc(10px * var(--cb-front-scale,1)),14px) !important;
+          padding:2px 6px !important;
+          top:clamp(-24px,calc(-22px * var(--cb-front-scale,1)),-14px) !important;
+          z-index:7 !important;
+        }
+        @media (max-width:900px){
+          .hm-row-label,
+          .hm-peep-label{
+            min-height:24px;
+            padding:3px 8px;
+            font-size:11px;
+          }
+          .hm-bnum{
+            min-height:24px;
+            padding:3px 4px;
+            font-size:10px;
+          }
+          .hm-peep-temp-label{
+            min-width:30px;
+            padding:2px 5px;
+            font-size:10px;
+            top:-18px;
+          }
+          #tab-heatmap .cb-face .hm-row-label,
+          #tab-heatmap .cb-face .hm-peep-label{
+            min-width:clamp(36px,calc(38px * var(--cb-front-scale,1)),72px) !important;
+            font-size:clamp(9px,calc(9px * var(--cb-front-scale,1)),13px) !important;
+          }
+          #tab-heatmap .cb-face .hm-burner-nums .hm-bnum{
+            font-size:clamp(8px,calc(8px * var(--cb-front-scale,1)),12px) !important;
+          }
+          #tab-heatmap .cb-face .hm-peep-temp-label{
+            min-width:clamp(28px,calc(28px * var(--cb-front-scale,1)),44px) !important;
+            font-size:clamp(8px,calc(8px * var(--cb-front-scale,1)),11px) !important;
+            top:clamp(-16px,calc(-16px * var(--cb-front-scale,1)),-10px) !important;
+          }
+        }
+      </style>
       <style id="heatmap-cuboid-rail-grid-final-20260309">
         @media (min-width:901px){
           #tab-heatmap:not(.hm-cuboid-zoom-active) .cb-wrap[data-cuboid]{
