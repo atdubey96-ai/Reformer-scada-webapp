@@ -14967,8 +14967,8 @@ html, body, body *, body *::before, body *::after, svg text{
           var gridLeft = left;
           var slotW = width / 15;
           var labelLeft = Math.round(20 * k);
-          var labelW = Math.round(122 * k);
-          var labelH = Math.round(60 * k);
+          var labelW = Math.round(132 * k);
+          var labelH = Math.round(64 * k);
           var labelTop = centerY - Math.round(labelH / 2);
           var labelCenterX = labelLeft + Math.round(labelW / 2);
           var positions = [];
@@ -14986,7 +14986,7 @@ html, body, body *, body *::before, body *::after, svg text{
           ctx.lineWidth = 1.5 * k;
           ctx.stroke();
           ctx.fillStyle = "#f8fafc";
-          ctx.font = "700 " + Math.round(30 * k) + "px Times New Roman, serif";
+          ctx.font = "700 " + Math.round(34 * k) + "px Times New Roman, serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(label, labelCenterX, centerY);
@@ -15034,9 +15034,9 @@ html, body, body *, body *::before, body *::after, svg text{
                 ctx.strokeStyle = "rgba(255,255,255,0.95)";
                 ctx.stroke();
 
-                var pillW = Math.round(90 * k);
-                var pillH = Math.round(38 * k);
-                var pillTop = barTop - Math.round(50 * k);
+                var pillW = Math.round(98 * k);
+                var pillH = Math.round(42 * k);
+                var pillTop = barTop - Math.round(56 * k);
                 ctx.fillStyle = "rgba(10,14,24,0.96)";
                 hmUploadedRoundRectPath(ctx, mx - pillW/2, pillTop, pillW, pillH, Math.max(9, Math.round(9 * k)));
                 ctx.fill();
@@ -15044,7 +15044,7 @@ html, body, body *, body *::before, body *::after, svg text{
                 ctx.lineWidth = 1.2 * k;
                 ctx.stroke();
                 ctx.fillStyle = "#ffffff";
-                ctx.font = "700 " + Math.round(26 * k) + "px Times New Roman, serif";
+                ctx.font = "700 " + Math.round(30 * k) + "px Times New Roman, serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(tempVal + "°", mx, pillTop + (pillH / 2));
@@ -15056,8 +15056,8 @@ html, body, body *, body *::before, body *::after, svg text{
         function hmUploadedCreateWallOverlay(dims, wallKey, face, renderer){
           if(typeof THREE === "undefined" || !dims) return null;
           var canvas = document.createElement("canvas");
-          canvas.width = 1200;
-          canvas.height = 960;
+          canvas.width = 1600;
+          canvas.height = 1280;
           var texture = new THREE.CanvasTexture(canvas);
           texture.wrapS = THREE.ClampToEdgeWrapping;
           texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -15235,11 +15235,11 @@ html, body, body *, body *::before, body *::after, svg text{
 
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.font = "700 30px Times New Roman, serif";
+          ctx.font = "700 34px Times New Roman, serif";
           for(var bn=1; bn<=15; bn++){
             var bx = gridLeft + slotW * (bn - 0.5);
-            var bW = 82;
-            var bH = 50;
+            var bW = 90;
+            var bH = 54;
             ctx.fillStyle = "rgba(8,12,22,0.96)";
             hmUploadedRoundRectPath(ctx, bx - (bW / 2), burnerNumY - (bH / 2), bW, bH, 10);
             ctx.fill();
@@ -15271,8 +15271,8 @@ html, body, body *, body *::before, body *::after, svg text{
               continue;
             }
 
-            var rowW = 118;
-            var rowH = 60;
+            var rowW = 128;
+            var rowH = 64;
             ctx.fillStyle = "rgba(8,12,22,0.96)";
             hmUploadedRoundRectPath(ctx, 20, centerY - Math.round(rowH / 2), rowW, rowH, 14);
             ctx.fill();
@@ -15281,7 +15281,7 @@ html, body, body *, body *::before, body *::after, svg text{
             ctx.stroke();
 
             ctx.fillStyle = "#ffffff";
-            ctx.font = "700 28px Times New Roman, serif";
+            ctx.font = "700 32px Times New Roman, serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText("ROW " + item, 20 + Math.round(rowW / 2), centerY + 1);
@@ -27947,7 +27947,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260318-cuboid-face-upgrade-1";
+      var swBuild = "20260324-uploaded-overlay-visibility-2";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
