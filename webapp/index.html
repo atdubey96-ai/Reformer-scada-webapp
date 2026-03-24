@@ -3714,6 +3714,7 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 #btab-burner{ --tab-icon-accent:#ffbe67; --tab-icon-glow:rgba(255,190,103,0.28); }
 #btab-cleaning{ --tab-icon-accent:#78dfc8; --tab-icon-glow:rgba(120,223,200,0.24); }
 #btab-cuboid{ --tab-icon-accent:#9abfff; --tab-icon-glow:rgba(154,191,255,0.30); }
+#btab-cuboidstack{ --tab-icon-accent:#7ddcf7; --tab-icon-glow:rgba(125,220,247,0.28); }
 #btab-tempdata{ --tab-icon-accent:#ff9772; --tab-icon-glow:rgba(255,151,114,0.24); }
 #btab-alarms{ --tab-icon-accent:#ff746b; --tab-icon-glow:rgba(255,116,107,0.28); }
 .btab-label{
@@ -3727,11 +3728,13 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 }
 .btab:hover .btab-label{ color:#f6fbff; }
 .btab-active .btab-label{ color:#fff8f1; }
-#tab-cuboid{
+#tab-cuboid,
+#tab-cuboidstack{
   padding:14px 18px 18px;
   background:#07090d;
 }
-#tab-cuboid .cuboid-tab-stack{
+#tab-cuboid .cuboid-tab-stack,
+#tab-cuboidstack .cuboid-tab-stack{
   display:flex;
   flex-direction:column;
   gap:18px;
@@ -3761,7 +3764,8 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
     contain-intrinsic-size:auto;
   }
 }
-#tab-cuboid .cuboid-tab-shell{
+#tab-cuboid .cuboid-tab-shell,
+#tab-cuboidstack .cuboid-tab-shell{
   width:100%;
   border:1px solid rgba(60,100,150,0.4);
   border-radius:8px;
@@ -3771,14 +3775,16 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   position:relative;
   z-index:1;
 }
-#tab-cuboid .cuboid-tab-frame-wrap{
+#tab-cuboid .cuboid-tab-frame-wrap,
+#tab-cuboidstack .cuboid-tab-frame-wrap{
   position:relative;
   height:clamp(700px,calc(100svh - 120px),1240px);
   overflow:hidden;
   background:#07090d;
   isolation:isolate;
 }
-#tab-cuboid .cuboid-tab-frame{
+#tab-cuboid .cuboid-tab-frame,
+#tab-cuboidstack .cuboid-tab-frame{
   display:block;
   width:100%;
   height:100%;
@@ -3788,7 +3794,8 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   background:#07090d;
   contain:layout paint size style;
 }
-#tab-cuboid .cuboid-tab-frame-mask{
+#tab-cuboid .cuboid-tab-frame-mask,
+#tab-cuboidstack .cuboid-tab-frame-mask{
   position:absolute;
   inset:0;
   z-index:2;
@@ -3800,7 +3807,8 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
     radial-gradient(circle at 50% 42%, rgba(52,74,108,0.32) 0%, rgba(18,24,34,0.92) 25%, rgba(7,9,13,0.98) 62%, rgba(4,5,8,1) 100%);
   transition:opacity .26s ease, visibility .26s ease;
 }
-#tab-cuboid .cuboid-tab-frame-mask::before{
+#tab-cuboid .cuboid-tab-frame-mask::before,
+#tab-cuboidstack .cuboid-tab-frame-mask::before{
   content:"";
   position:absolute;
   inset:0;
@@ -3811,7 +3819,8 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   opacity:0.22;
   pointer-events:none;
 }
-#tab-cuboid .cuboid-tab-frame-mask::after{
+#tab-cuboid .cuboid-tab-frame-mask::after,
+#tab-cuboidstack .cuboid-tab-frame-mask::after{
   content:"";
   position:absolute;
   inset:0;
@@ -3820,7 +3829,8 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
     radial-gradient(circle at 50% 86%, rgba(255,177,88,0.12), transparent 26%);
   pointer-events:none;
 }
-#tab-cuboid .cuboid-tab-frame-mask-copy{
+#tab-cuboid .cuboid-tab-frame-mask-copy,
+#tab-cuboidstack .cuboid-tab-frame-mask-copy{
   position:relative;
   display:flex;
   flex-direction:column;
@@ -3830,19 +3840,22 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   text-align:center;
   color:rgba(208,221,241,0.9);
 }
-#tab-cuboid .cuboid-tab-frame-mask-title{
+#tab-cuboid .cuboid-tab-frame-mask-title,
+#tab-cuboidstack .cuboid-tab-frame-mask-title{
   font-size:11px;
   font-weight:700;
   letter-spacing:2.6px;
   text-transform:uppercase;
   color:#e6eef9;
 }
-#tab-cuboid .cuboid-tab-frame-mask-subtitle{
+#tab-cuboid .cuboid-tab-frame-mask-subtitle,
+#tab-cuboidstack .cuboid-tab-frame-mask-subtitle{
   font-size:9px;
   letter-spacing:1.8px;
   color:rgba(154,178,210,0.78);
 }
-#tab-cuboid .cuboid-tab-shell.cuboid-shell-frame-ready .cuboid-tab-frame-mask{
+#tab-cuboid .cuboid-tab-shell.cuboid-shell-frame-ready .cuboid-tab-frame-mask,
+#tab-cuboidstack .cuboid-tab-shell.cuboid-shell-frame-ready .cuboid-tab-frame-mask{
   opacity:0;
   visibility:hidden;
   pointer-events:none;
@@ -4415,7 +4428,8 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   opacity:1;
   pointer-events:auto;
 }
-#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded{
+#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded,
+#tab-cuboidstack .cuboid-tab-shell.cuboid-shell-expanded{
   position:fixed;
   top:12px;
   right:12px;
@@ -4428,7 +4442,9 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   box-shadow:0 28px 70px rgba(0,0,0,0.62);
 }
 #tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame-wrap,
-#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame{
+#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame,
+#tab-cuboidstack .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame-wrap,
+#tab-cuboidstack .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame{
   height:100%;
 }
 body.cuboid-overlay-lock{
@@ -4439,7 +4455,8 @@ body.cuboid-overlay-lock #masterAlarm{
   opacity:0;
   pointer-events:none;
 }
-body.light-theme #tab-cuboid{
+body.light-theme #tab-cuboid,
+body.light-theme #tab-cuboidstack{
   background:#07090d;
 }
 
@@ -4607,8 +4624,9 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
   #btab-burner{order:1;}
   #btab-cleaning{order:2;}
   #btab-cuboid{order:3;}
-  #btab-tempdata{order:4;}
-  #btab-alarms{order:5;}
+  #btab-cuboidstack{order:4;}
+  #btab-tempdata{order:5;}
+  #btab-alarms{order:6;}
   #btab-heatmap .btab-icon{
     width:40px;
     height:40px;
@@ -7941,6 +7959,7 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cleaning .cleaning-section,
   #tab-tempdata > div,
   #tab-cuboid,
+  #tab-cuboidstack,
   #tab-alarms .alarms-section{
     margin:0 !important;
     padding:12px !important;
@@ -7955,21 +7974,26 @@ html, body, body *, body *::before, body *::after, svg text{
     border:1px solid var(--m-border) !important;
     background:linear-gradient(165deg, var(--m-surface) 0%, var(--m-surface-2) 100%) !important;
   }
-  #tab-cuboid{
+  #tab-cuboid,
+  #tab-cuboidstack{
     border:1px solid rgba(60,100,150,0.34) !important;
     background:#07090d !important;
   }
-  #tab-cuboid .cuboid-tab-stack{
+  #tab-cuboid .cuboid-tab-stack,
+  #tab-cuboidstack .cuboid-tab-stack{
     gap:12px;
   }
-  #tab-cuboid .cuboid-tab-shell{
+  #tab-cuboid .cuboid-tab-shell,
+  #tab-cuboidstack .cuboid-tab-shell{
     border-color:rgba(60,100,150,0.4) !important;
     border-radius:14px !important;
   }
-  #tab-cuboid .cuboid-tab-frame-wrap{
+  #tab-cuboid .cuboid-tab-frame-wrap,
+  #tab-cuboidstack .cuboid-tab-frame-wrap{
     height:clamp(640px,calc(100svh - 150px),1040px);
   }
-  #tab-cuboid .cuboid-tab-frame{
+  #tab-cuboid .cuboid-tab-frame,
+  #tab-cuboidstack .cuboid-tab-frame{
     height:100%;
   }
   #tab-cuboid .cuboid-legend-panel{
@@ -8026,7 +8050,8 @@ html, body, body *, body *::before, body *::after, svg text{
     min-height:28px;
     padding:0 9px;
   }
-  #tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded{
+  #tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded,
+  #tab-cuboidstack .cuboid-tab-shell.cuboid-shell-expanded{
     top:8px;
     right:8px;
     bottom:8px;
@@ -17242,7 +17267,7 @@ html, body, body *, body *::before, body *::after, svg text{
   </div>
 
   <!-- TAB 6: Cuboid -->
-  <div id="tab-cuboid" class="tab-panel tab-active">
+  <div id="tab-cuboid" class="tab-panel tab-active" data-cuboid-dashboard="primary">
     <div class="cuboid-tab-stack">
       <div class="cuboid-tab-shell" data-cuboid-shell="ab">
         <div class="cuboid-tab-frame-wrap">
@@ -17643,6 +17668,52 @@ html, body, body *, body *::before, body *::after, svg text{
     </div>
   </div>
 
+  <!-- TAB 7: Twin Cuboid -->
+  <div id="tab-cuboidstack" class="tab-panel" data-cuboid-dashboard="stack">
+    <div class="cuboid-tab-stack">
+      <div class="cuboid-tab-shell" data-cuboid-shell="stack-top">
+        <div class="cuboid-tab-frame-wrap">
+          <div class="cuboid-tab-frame-mask" aria-hidden="true">
+            <div class="cuboid-tab-frame-mask-copy">
+              <div class="cuboid-tab-frame-mask-title">AB Live Dashboard</div>
+              <div class="cuboid-tab-frame-mask-subtitle">Preparing burner walls, TST and cleaning view</div>
+            </div>
+          </div>
+          <iframe
+            id="cuboid-stack-frame-top"
+            class="cuboid-tab-frame"
+            aria-label="Duplicated upper cuboid viewer top"
+            data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260324-01"
+            data-cuboid-load="deferred"
+            loading="lazy"
+            allow="fullscreen"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+      <div class="cuboid-tab-shell" data-cuboid-shell="stack-bottom">
+        <div class="cuboid-tab-frame-wrap">
+          <div class="cuboid-tab-frame-mask" aria-hidden="true">
+            <div class="cuboid-tab-frame-mask-copy">
+              <div class="cuboid-tab-frame-mask-title">AB Live Dashboard</div>
+              <div class="cuboid-tab-frame-mask-subtitle">Preparing burner walls, TST and cleaning view</div>
+            </div>
+          </div>
+          <iframe
+            id="cuboid-stack-frame-bottom"
+            class="cuboid-tab-frame"
+            aria-label="Duplicated upper cuboid viewer bottom"
+            data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260324-01"
+            data-cuboid-load="deferred"
+            loading="lazy"
+            allow="fullscreen"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /tab-panels -->
 
 <footer class="scada-app-footer" aria-label="Dashboard footer">
@@ -17658,6 +17729,7 @@ html, body, body *, body *::before, body *::after, svg text{
           <a href="#tab-tempdata" class="scada-footer-link" onclick="switchTab('tempdata'); window.scrollTo({top:0, behavior:'smooth'}); return false;">TST Data</a>
           <a href="#tab-alarms" class="scada-footer-link" onclick="switchTab('alarms'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Alarms</a>
           <a href="#tab-cuboid" class="scada-footer-link" onclick="switchTab('cuboid'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Cuboid</a>
+          <a href="#tab-cuboidstack" class="scada-footer-link" onclick="switchTab('cuboidstack'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Twin Cuboid</a>
         </div>
       </div>
       <div class="scada-footer-actions">
@@ -17782,6 +17854,26 @@ html, body, body *, body *::before, body *::after, svg text{
     </span>
     <span class="btab-text">
       <span class="btab-label-top">Alarms</span>
+      <span class="btab-label-sub"></span>
+    </span>
+  </button>
+  <button class="btab" id="btab-cuboidstack" onclick="switchTab('cuboidstack')">
+    <span class="btab-icon-wrap" aria-hidden="true">
+      <span class="btab-icon">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <rect class="tab-icon-fill" x="5.3" y="4.6" width="13.4" height="5.4" rx="1.4"></rect>
+          <rect class="tab-icon-stroke" x="5.3" y="4.6" width="13.4" height="5.4" rx="1.4"></rect>
+          <rect class="tab-icon-fill" x="5.3" y="14" width="13.4" height="5.4" rx="1.4"></rect>
+          <rect class="tab-icon-stroke" x="5.3" y="14" width="13.4" height="5.4" rx="1.4"></rect>
+          <path class="tab-icon-stroke" d="M8.2 7.3h7.6"></path>
+          <path class="tab-icon-stroke" d="M8.2 16.7h7.6"></path>
+          <circle class="tab-icon-solid" cx="8.3" cy="9" r=".95"></circle>
+          <circle class="tab-icon-solid" cx="15.7" cy="18.4" r=".95"></circle>
+        </svg>
+      </span>
+    </span>
+    <span class="btab-text">
+      <span class="btab-label-top">Twin View</span>
       <span class="btab-label-sub"></span>
     </span>
   </button>
@@ -21554,6 +21646,16 @@ function syncHeatMapHeaderTools(tab){
   document.body.classList.toggle('heatmap-header-active', tab === 'heatmap');
 }
 
+function isCuboidDashboardTabName(tab){
+  var key = String(tab || "").toLowerCase();
+  return key === "cuboid" || key === "cuboidstack";
+}
+
+function getActiveCuboidDashboardPanel(){
+  var active = document.querySelector(".tab-panel.tab-active");
+  return !!(active && active.hasAttribute("data-cuboid-dashboard")) ? active : null;
+}
+
 function updateGlobalRefreshButtonLabel(tab){
   var btn = document.getElementById("refreshDataBtn");
   if(!btn) return;
@@ -21561,6 +21663,7 @@ function updateGlobalRefreshButtonLabel(tab){
   btn.textContent =
     key === "alarms" ? "↻ Refresh Alarms" :
     key === "cuboid" ? "↻ Refresh Dashboard" :
+    key === "cuboidstack" ? "↻ Refresh Twin Cuboid" :
     "🔄 Refresh Data";
 }
 
@@ -21573,8 +21676,9 @@ function initMobileMetaLogo(){
   if(src) mobileLogo.setAttribute("src", src);
 }
 
-function getCuboidFrames(){
-  return Array.prototype.slice.call(document.querySelectorAll("#tab-cuboid .cuboid-tab-frame"));
+function getCuboidFrames(scope){
+  var root = scope && scope.querySelectorAll ? scope : document;
+  return Array.prototype.slice.call(root.querySelectorAll("[data-cuboid-dashboard] .cuboid-tab-frame"));
 }
 
 function getCuboidFrameByChamber(chamber){
@@ -21583,8 +21687,9 @@ function getCuboidFrameByChamber(chamber){
     : document.getElementById("cuboid-tab-frame");
 }
 
-function getCuboidShells(){
-  return Array.prototype.slice.call(document.querySelectorAll("#tab-cuboid .cuboid-tab-shell"));
+function getCuboidShells(scope){
+  var root = scope && scope.querySelectorAll ? scope : document;
+  return Array.prototype.slice.call(root.querySelectorAll("[data-cuboid-dashboard] .cuboid-tab-shell"));
 }
 
 function getCuboidLegendPanels(){
@@ -21600,8 +21705,7 @@ function getCuboidFollowupStack(){
 }
 
 function isCuboidTabActive(){
-  var active = document.querySelector(".tab-panel.tab-active");
-  return !!(active && active.id === "tab-cuboid");
+  return !!getActiveCuboidDashboardPanel();
 }
 
 function cuboidSafeStringify(value){
@@ -21663,6 +21767,11 @@ function cuboidFrameNeedsLoad(frame){
   return !current || current === "about:blank";
 }
 
+function cuboidIsFrameInActiveDashboard(frame){
+  var activePanel = getActiveCuboidDashboardPanel();
+  return !!(activePanel && frame && activePanel.contains(frame));
+}
+
 function cuboidGetFrameLoadMode(frame){
   return String(frame && frame.getAttribute("data-cuboid-load") || "eager").toLowerCase();
 }
@@ -21672,6 +21781,7 @@ function cuboidShouldLoadFrame(frame){
   if(cuboidGetFrameLoadMode(frame) === "eager") return true;
   if(frame.closest && frame.closest(".cuboid-tab-shell.cuboid-shell-expanded")) return true;
   if(!isCuboidTabActive()) return false;
+  if(cuboidIsFrameInActiveDashboard(frame)) return true;
   var meta = cuboidGetFrameViewMeta(frame);
   return !!(meta.inView || Number(meta.ratio || 0) > 0.02);
 }
@@ -21786,12 +21896,15 @@ function cuboidGetFrameViewMeta(frame){
 }
 
 function cuboidGetFocusedFrame(){
-  var expanded = document.querySelector("#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame");
+  var activePanel = getActiveCuboidDashboardPanel();
+  var expanded = activePanel
+    ? activePanel.querySelector(".cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame")
+    : document.querySelector("[data-cuboid-dashboard] .cuboid-tab-shell.cuboid-shell-expanded .cuboid-tab-frame");
   if(expanded) return expanded;
-  var frames = getCuboidFrames().filter(function(frame){
+  var frames = (activePanel ? getCuboidFrames(activePanel) : getCuboidFrames()).filter(function(frame){
     return cuboidIsFrameReady(frame) || cuboidGetFrameLoadMode(frame) === "eager";
   });
-  if(!frames.length) frames = getCuboidFrames();
+  if(!frames.length) frames = activePanel ? getCuboidFrames(activePanel) : getCuboidFrames();
   var best = null;
   var bestRatio = -1;
   frames.forEach(function(frame){
@@ -22764,8 +22877,9 @@ function notifyCuboidOverlayState(active, frame){
 function setCuboidOverlayActive(active, shell){
   var backdrop = document.getElementById("cuboid-overlay-backdrop");
   if(!backdrop) return;
-  var shells = getCuboidShells();
-  var targetShell = shell || document.querySelector("#tab-cuboid .cuboid-tab-shell.cuboid-shell-expanded") || shells[0] || null;
+  var activePanel = shell && shell.closest ? shell.closest("[data-cuboid-dashboard]") : getActiveCuboidDashboardPanel();
+  var shells = getCuboidShells(activePanel || document);
+  var targetShell = shell || (activePanel ? activePanel.querySelector(".cuboid-tab-shell.cuboid-shell-expanded") : document.querySelector("[data-cuboid-dashboard] .cuboid-tab-shell.cuboid-shell-expanded")) || shells[0] || null;
   if(!targetShell) return;
   var next = !!active;
   shells.forEach(function(item){
@@ -22780,7 +22894,8 @@ function setCuboidOverlayActive(active, shell){
 }
 
 function toggleCuboidOverlay(sourceWindow){
-  var shell = findCuboidShellByWindow(sourceWindow) || document.querySelector("#tab-cuboid .cuboid-tab-shell");
+  var activePanel = getActiveCuboidDashboardPanel();
+  var shell = findCuboidShellByWindow(sourceWindow) || (activePanel ? activePanel.querySelector(".cuboid-tab-shell") : null);
   if(!shell) return;
   setCuboidOverlayActive(!shell.classList.contains("cuboid-shell-expanded"), shell);
 }
@@ -22793,12 +22908,16 @@ function handleGlobalRefreshClick(){
     showToast("↻ Alarm panel refreshed");
     return;
   }
-  if(tab === 'cuboid'){
+  if(isCuboidDashboardTabName(tab)){
     ensureCuboidViewerLoaded(true);
-    refreshCuboidLegendPanels(true);
-    scheduleCuboidExtendedRefresh(60, true);
     scheduleCuboidFrameDataPush(20, true);
-    showToast("↻ Live dashboard refreshed");
+    if(tab === "cuboid"){
+      refreshCuboidLegendPanels(true);
+      scheduleCuboidExtendedRefresh(60, true);
+      showToast("↻ Live dashboard refreshed");
+    }else{
+      showToast("↻ Twin cuboid refreshed");
+    }
     return;
   }
   smartRefresh();
@@ -22826,7 +22945,7 @@ function switchTab(tab){
   if(!document.getElementById('tab-' + tab) || !document.getElementById('btab-' + tab)){
     tab = getDefaultLiveTab();
   }
-  if(tab !== 'cuboid') setCuboidOverlayActive(false);
+  if(!isCuboidDashboardTabName(tab)) setCuboidOverlayActive(false);
   if(exitViewerFullscreenIfNeeded(tab)){
     _pendingTabAfterViewerFullscreen = tab;
     return;
@@ -22874,12 +22993,14 @@ function switchTab(tab){
       applyMobileHorizontalScrollFixes();
     }, 0);
   }
-  if(tab === 'cuboid'){
+  if(isCuboidDashboardTabName(tab)){
     setTimeout(ensureCuboidViewerLoaded, 0);
-    setTimeout(bindCuboidLegendActions, 0);
-    setTimeout(function(){ refreshCuboidLegendPanels(false); }, 0);
-    scheduleCuboidExtendedRefresh(190, false);
     setTimeout(function(){ scheduleCuboidFrameDataPush(20, false); }, 12);
+    if(tab === 'cuboid'){
+      setTimeout(bindCuboidLegendActions, 0);
+      setTimeout(function(){ refreshCuboidLegendPanels(false); }, 0);
+      scheduleCuboidExtendedRefresh(190, false);
+    }
     setTimeout(function(){
       getCuboidFrames().forEach(function(frame){
         notifyCuboidOverlayState(false, frame);
@@ -22995,6 +23116,8 @@ window.addEventListener("fullscreenchange", handlePendingViewerTabSwitch);
 window.addEventListener("webkitfullscreenchange", handlePendingViewerTabSwitch);
 window.addEventListener("storage", function(ev){
   var key = ev && ev.key ? String(ev.key) : "";
+  var active = document.querySelector(".tab-panel.tab-active");
+  var activeTab = active && active.id ? active.id.replace("tab-", "") : "";
   if(key && ["burnerData","burnerOpeningData","tempDataEntries",CLEANING_KEY,CLEANING_HIST].indexOf(key) === -1) return;
   if(!isCuboidTabActive()){
     invalidateCuboidRefreshCaches();
@@ -23002,8 +23125,10 @@ window.addEventListener("storage", function(ev){
   }
   setTimeout(function(){
     invalidateCuboidRefreshCaches();
-    refreshCuboidLegendPanels(true);
-    scheduleCuboidExtendedRefresh(120, true);
+    if(activeTab === "cuboid"){
+      refreshCuboidLegendPanels(true);
+      scheduleCuboidExtendedRefresh(120, true);
+    }
     scheduleCuboidFrameDataPush(0, true);
   }, 0);
 });
