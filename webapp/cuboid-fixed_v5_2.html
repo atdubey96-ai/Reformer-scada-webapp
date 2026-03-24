@@ -115,6 +115,433 @@ const btnFront = document.getElementById("btnFront");
 const btnBack  = document.getElementById("btnBack");
 const btnAuto  = document.getElementById("btnAuto");
 const btnReset = document.getElementById("btnReset");
+const tagTitle = document.querySelector(".vt-title");
+const tagSub   = document.querySelector(".vt-sub");
+
+const params = new URLSearchParams(window.location.search);
+const chamberKey = String(params.get("chamber") || "ab").toLowerCase() === "cd" ? "cd" : "ab";
+const chamberWalls = chamberKey === "cd" ? ["C","D"] : ["A","B"];
+
+if(tagTitle) tagTitle.textContent = chamberKey === "cd" ? "Furnace Cuboid — CD Walls" : "Furnace Cuboid — AB Walls";
+if(tagSub) tagSub.textContent = chamberKey === "cd"
+  ? "Front Wall C · Back Wall D · live burner + TST view"
+  : "Front Wall A · Back Wall B · live burner + TST view";
+document.title = chamberKey === "cd" ? "Cuboid — CD Walls" : "Cuboid — AB Walls";
+
+let pushedCuboidLiveDigest = "";
+let pushedCuboidLiveData = null;
+let liveSnapshot = null;
+let livePresentationDirty = true;
+const liveBurnerObjects = [];
+const liveFaceOverlays = {};
+
+function cuboidGetParentApp(){
+  try{
+    if(window.parent && window.parent !== window && window.parent.location && window.parent.location.origin === window.location.origin){
+      return window.parent;
+    }
+  }catch(_e){}
+  return null;
+}
+
+function cuboidCloneJson(value){
+  try{ return JSON.parse(JSON.stringify(value == null ? null : value)); }catch(_e){}
+  return null;
+}
+
+function cuboidConsumeLiveState(payload, digest){
+  const nextDigest = String(digest || "");
+  const nextPayload = (payload && typeof payload === "object") ? cuboidCloneJson(payload) : null;
+  if(!nextPayload) return false;
+  if(nextDigest && nextDigest === pushedCuboidLiveDigest) return false;
+  pushedCuboidLiveDigest = nextDigest || ("cuboid-live-" + Date.now());
+  pushedCuboidLiveData = nextPayload;
+  livePresentationDirty = true;
+  return true;
+}
+
+function cuboidPrimeLiveDataFromHost(){
+  const appHost = cuboidGetParentApp();
+  if(!appHost || typeof appHost.cuboidHostGetLiveState !== "function") return false;
+  try{
+    const state = appHost.cuboidHostGetLiveState();
+    if(!state || !state.payload) return false;
+    return cuboidConsumeLiveState(state.payload, state.digest);
+  }catch(_e){}
+  return false;
+}
+
+function cuboidNormalizeBurnerState(raw){
+  const s = String(raw == null ? "" : raw).toUpperCase().trim();
+  return (s === "O" || s === "N" || s === "B" || s === "C") ? s : "C";
+}
+
+function cuboidBuildDefaultBurnerData(){
+  const defaultPatterns = [
+    ["N","O","N","B","N","O","N","O","B","N","O","N","O","N","O"],
+    ["O","N","O","N","O","B","O","N","O","N","B","O","N","O","N"],
+    ["B","N","O","N","N","O","N","O","N","O","N","O","B","N","O"],
+    ["N","O","B","O","N","O","N","B","O","N","O","N","O","O","N"],
+    ["O","N","N","O","B","N","O","N","O","B","N","O","N","N","O"],
+    ["N","B","O","N","O","N","O","N","B","O","N","O","N","O","N"]
+  ];
+  const walls = ["A","B","C","D"];
+  const hmData = {};
+  for(let wi = 0; wi < walls.length; wi++){
+    hmData[walls[wi]] = [];
+    for(let ri = 0; ri < 6; ri++){
+      hmData[walls[wi]].push(defaultPatterns[(ri + wi) % defaultPatterns.length].slice());
+    }
+  }
+  return hmData;
+}
+
+function cuboidSanitizeBurnerSnapshot(source){
+  const walls = ["A","B","C","D"];
+  const out = {};
+  const src = source && typeof source === "object" ? source : {};
+  for(let wi = 0; wi < walls.length; wi++){
+    const wall = walls[wi];
+    const srcRows = Array.isArray(src[wall]) ? src[wall] : [];
+    out[wall] = [];
+    for(let ri = 0; ri < 6; ri++){
+      const srcRow = Array.isArray(srcRows[ri]) ? srcRows[ri] : [];
+      const row = [];
+      for(let bi = 0; bi < 15; bi++) row.push(cuboidNormalizeBurnerState(srcRow[bi]));
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
+function cuboidNormalizeOpeningValue(raw, state){
+  const fallback = cuboidNormalizeBurnerState(state) === "C" ? 0 : 100;
+  const hasRaw = !(raw == null || raw === "");
+  let n = Number(raw);
+  if(!hasRaw || !isFinite(n) || n < 0) n = fallback;
+  n = Math.round(n / 25) * 25;
+  return Math.max(0, Math.min(100, n));
+}
+
+function cuboidBuildDefaultOpeningData(stateSource){
+  const states = stateSource && typeof stateSource === "object" ? stateSource : cuboidBuildDefaultBurnerData();
+  const walls = ["A","B","C","D"];
+  const out = {};
+  for(let wi = 0; wi < walls.length; wi++){
+    const wall = walls[wi];
+    const stateRows = Array.isArray(states[wall]) ? states[wall] : [];
+    out[wall] = [];
+    for(let ri = 0; ri < 6; ri++){
+      const stateRow = Array.isArray(stateRows[ri]) ? stateRows[ri] : [];
+      const row = [];
+      for(let bi = 0; bi < 15; bi++) row.push(cuboidNormalizeOpeningValue(null, stateRow[bi]));
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
+function cuboidSanitizeOpeningSnapshot(source, stateSource){
+  const src = source && typeof source === "object" ? source : {};
+  const states = stateSource && typeof stateSource === "object" ? stateSource : cuboidBuildDefaultBurnerData();
+  const walls = ["A","B","C","D"];
+  const out = {};
+  for(let wi = 0; wi < walls.length; wi++){
+    const wall = walls[wi];
+    const srcRows = Array.isArray(src[wall]) ? src[wall] : [];
+    const stateRows = Array.isArray(states[wall]) ? states[wall] : [];
+    out[wall] = [];
+    for(let ri = 0; ri < 6; ri++){
+      const srcRow = Array.isArray(srcRows[ri]) ? srcRows[ri] : [];
+      const stateRow = Array.isArray(stateRows[ri]) ? stateRows[ri] : [];
+      const row = [];
+      for(let bi = 0; bi < 15; bi++){
+        row.push(cuboidNormalizeOpeningValue(srcRow[bi], stateRow[bi]));
+      }
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
+function cuboidSanitizeTstRow(vals){
+  const out = [];
+  const src = Array.isArray(vals) ? vals : [];
+  for(let i = 0; i < 15; i++){
+    const n = Number(src[i]);
+    out.push(isFinite(n) ? n : "");
+  }
+  return out;
+}
+
+function cuboidResolvePeepEntry(){
+  if(!pushedCuboidLiveData) cuboidPrimeLiveDataFromHost();
+  if(pushedCuboidLiveData){
+    return {
+      peepHoles:{
+        "ab-bot": cuboidSanitizeTstRow(pushedCuboidLiveData.abBot || []),
+        "ab-top": cuboidSanitizeTstRow(pushedCuboidLiveData.abTop || []),
+        "cd-bot": cuboidSanitizeTstRow(pushedCuboidLiveData.cdBot || []),
+        "cd-top": cuboidSanitizeTstRow(pushedCuboidLiveData.cdTop || [])
+      },
+      dt: pushedCuboidLiveData.entryDt || "Latest",
+      selectedShift: pushedCuboidLiveData.selectedShift || "All"
+    };
+  }
+  return {
+    peepHoles:{
+      "ab-bot": Array(15).fill(""),
+      "ab-top": Array(15).fill(""),
+      "cd-bot": Array(15).fill(""),
+      "cd-top": Array(15).fill("")
+    },
+    dt:"Latest",
+    selectedShift:"All"
+  };
+}
+
+function cuboidGetPeepRow(entry, key){
+  if(!entry || !entry.peepHoles || !entry.peepHoles[key]) return Array(15).fill("");
+  return cuboidSanitizeTstRow(entry.peepHoles[key]);
+}
+
+function cuboidBuildLiveSnapshot(){
+  if(!pushedCuboidLiveData) cuboidPrimeLiveDataFromHost();
+  const hmData = pushedCuboidLiveData && pushedCuboidLiveData.hmData
+    ? cuboidSanitizeBurnerSnapshot(pushedCuboidLiveData.hmData)
+    : cuboidBuildDefaultBurnerData();
+  const entry = cuboidResolvePeepEntry();
+  return {
+    hmData: hmData,
+    openingData: pushedCuboidLiveData && pushedCuboidLiveData.openingData
+      ? cuboidSanitizeOpeningSnapshot(pushedCuboidLiveData.openingData, hmData)
+      : cuboidBuildDefaultOpeningData(hmData),
+    abBot: cuboidGetPeepRow(entry, "ab-bot"),
+    abTop: cuboidGetPeepRow(entry, "ab-top"),
+    cdBot: cuboidGetPeepRow(entry, "cd-bot"),
+    cdTop: cuboidGetPeepRow(entry, "cd-top"),
+    entryDt: entry.dt || "Latest",
+    selectedShift: entry.selectedShift || "All"
+  };
+}
+
+const burnerStatePalette = {
+  B:{ flame:"#f7b54a", core:"#fff3c4", aura:"#6f5b40", metal:"#d17b1d", ring:"#50321b", glow:"#f59e0b" },
+  N:{ flame:"#61c6ff", core:"#e8f8ff", aura:"#315d79", metal:"#3b82f6", ring:"#17315e", glow:"#38bdf8" },
+  O:{ flame:"#ff8c4b", core:"#ffe0bf", aura:"#704230", metal:"#f97316", ring:"#5a260c", glow:"#fb923c" },
+  C:{ flame:"#76808a", core:"#d9e0e7", aura:"#2b3136", metal:"#9aa4ae", ring:"#353b43", glow:"#94a3b8" }
+};
+
+function cuboidClamp01(value){
+  const n = Number(value);
+  if(!isFinite(n)) return 0;
+  return Math.max(0, Math.min(1, n));
+}
+
+function cuboidRoundRectPath(ctx, x, y, w, h, r){
+  const radius = Math.max(0, Math.min(r, Math.min(w, h) * 0.5));
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + w - radius, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+  ctx.lineTo(x + w, y + h - radius);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+  ctx.lineTo(x + radius, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function cuboidTempCellFill(value){
+  if(value === "" || value == null) return "rgba(42,48,58,0.48)";
+  const n = Number(value);
+  const t = cuboidClamp01((n - 700) / 550);
+  const hue = 208 - (t * 176);
+  const light = 31 + (t * 19);
+  const alpha = 0.52 + (t * 0.22);
+  return "hsla(" + hue.toFixed(1) + ",84%," + light.toFixed(1) + "%," + alpha.toFixed(3) + ")";
+}
+
+function cuboidFormatTemp(value){
+  const n = Number(value);
+  return isFinite(n) ? String(Math.round(n)) : "--";
+}
+
+function cuboidGetTstRowsForWall(snapshot, wallKey){
+  const isAbWall = wallKey === "A" || wallKey === "B";
+  return {
+    top: cuboidSanitizeTstRow(isAbWall ? snapshot.abTop : snapshot.cdTop),
+    bot: cuboidSanitizeTstRow(isAbWall ? snapshot.abBot : snapshot.cdBot)
+  };
+}
+
+function cuboidSetMaterialTone(material, color, emissiveColor, emissiveIntensity){
+  if(!material) return;
+  if(material.color) material.color.set(color);
+  if(material.emissive) material.emissive.set(emissiveColor || color);
+  if(typeof material.emissiveIntensity === "number") material.emissiveIntensity = emissiveIntensity;
+  material.needsUpdate = true;
+}
+
+function cuboidDrawTempStrip(ctx, heading, values, x, y, w, h){
+  cuboidRoundRectPath(ctx, x, y, w, h, 20);
+  const bg = ctx.createLinearGradient(x, y, x, y + h);
+  bg.addColorStop(0, "rgba(5,10,18,0.68)");
+  bg.addColorStop(1, "rgba(8,14,24,0.54)");
+  ctx.fillStyle = bg;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(146,176,208,0.22)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  const labelW = 224;
+  cuboidRoundRectPath(ctx, x + 10, y + 10, labelW, h - 20, 16);
+  const labelGrad = ctx.createLinearGradient(x + 10, y + 10, x + 10 + labelW, y + h - 10);
+  labelGrad.addColorStop(0, "rgba(8,18,30,0.88)");
+  labelGrad.addColorStop(1, "rgba(12,24,38,0.72)");
+  ctx.fillStyle = labelGrad;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(120,164,214,0.34)";
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  ctx.font = "700 34px Georgia, 'Times New Roman', serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#f4f8ff";
+  ctx.fillText(heading, x + 28, y + (h * 0.5) - 6);
+
+  ctx.font = "700 18px Georgia, 'Times New Roman', serif";
+  ctx.fillStyle = "rgba(200,218,236,0.82)";
+  ctx.fillText("15 burners", x + 28, y + (h * 0.5) + 24);
+
+  const cellsX = x + labelW + 22;
+  const cellsW = w - labelW - 34;
+  const gap = 8;
+  const cellW = (cellsW - (gap * 14)) / 15;
+  const cellH = h - 22;
+  const cellY = y + 11;
+
+  for(let i = 0; i < 15; i++){
+    const cellX = cellsX + (i * (cellW + gap));
+    cuboidRoundRectPath(ctx, cellX, cellY, cellW, cellH, 12);
+    ctx.fillStyle = cuboidTempCellFill(values[i]);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    ctx.font = "700 14px 'Courier New', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(227,238,250,0.82)";
+    ctx.fillText("B" + (i + 1), cellX + (cellW * 0.5), cellY + 15);
+
+    ctx.font = "700 23px Georgia, 'Times New Roman', serif";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(cuboidFormatTemp(values[i]), cellX + (cellW * 0.5), cellY + (cellH * 0.62));
+  }
+}
+
+function cuboidRenderFaceOverlay(faceName){
+  const overlay = liveFaceOverlays[faceName];
+  if(!overlay || !overlay.canvas || !overlay.texture) return;
+  const snapshot = liveSnapshot || cuboidBuildLiveSnapshot();
+  const ctx = overlay.canvas.getContext("2d");
+  const w = overlay.canvas.width;
+  const h = overlay.canvas.height;
+  const wallKey = overlay.wallKey;
+  const tstRows = cuboidGetTstRowsForWall(snapshot, wallKey);
+  const shiftLabel = String(snapshot && snapshot.selectedShift ? snapshot.selectedShift : "All");
+  const dtLabel = String(snapshot && snapshot.entryDt ? snapshot.entryDt : "Latest");
+
+  ctx.clearRect(0, 0, w, h);
+
+  const edgeFade = ctx.createLinearGradient(0, 0, 0, h);
+  edgeFade.addColorStop(0, "rgba(6,10,18,0.22)");
+  edgeFade.addColorStop(0.18, "rgba(6,10,18,0)");
+  edgeFade.addColorStop(0.82, "rgba(6,10,18,0)");
+  edgeFade.addColorStop(1, "rgba(6,10,18,0.24)");
+  ctx.fillStyle = edgeFade;
+  ctx.fillRect(0, 0, w, h);
+
+  cuboidRoundRectPath(ctx, 28, 24, 460, 72, 22);
+  const headGrad = ctx.createLinearGradient(28, 24, 488, 96);
+  headGrad.addColorStop(0, "rgba(5,10,18,0.78)");
+  headGrad.addColorStop(1, "rgba(11,18,30,0.62)");
+  ctx.fillStyle = headGrad;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(134,166,204,0.28)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.font = "700 34px Georgia, 'Times New Roman', serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#f6f9ff";
+  ctx.fillText("WALL " + wallKey, 52, 58);
+
+  ctx.font = "700 20px Georgia, 'Times New Roman', serif";
+  ctx.textAlign = "right";
+  ctx.fillStyle = "rgba(232,240,250,0.86)";
+  ctx.fillText(shiftLabel + " · " + dtLabel, w - 42, 58);
+
+  cuboidDrawTempStrip(ctx, "TST TOP", tstRows.top, 28, 112, w - 56, 86);
+  cuboidDrawTempStrip(ctx, "TST BOT", tstRows.bot, 28, h - 110, w - 56, 86);
+
+  overlay.texture.needsUpdate = true;
+}
+
+function cuboidApplyBurnerPresentation(item, snapshot){
+  if(!item || !snapshot || !item.wallKey) return;
+  const rowIndex = Math.max(0, Math.min(5, Number(item.rowNumber || 1) - 1));
+  const burnerIndex = Math.max(0, Math.min(14, Number(item.burnerNumber || 1) - 1));
+  const stateRows = snapshot.hmData && Array.isArray(snapshot.hmData[item.wallKey]) ? snapshot.hmData[item.wallKey] : [];
+  const openingRows = snapshot.openingData && Array.isArray(snapshot.openingData[item.wallKey]) ? snapshot.openingData[item.wallKey] : [];
+  const stateRow = Array.isArray(stateRows[rowIndex]) ? stateRows[rowIndex] : [];
+  const openingRow = Array.isArray(openingRows[rowIndex]) ? openingRows[rowIndex] : [];
+  const state = cuboidNormalizeBurnerState(stateRow[burnerIndex]);
+  const opening = cuboidNormalizeOpeningValue(openingRow[burnerIndex], state);
+  const palette = burnerStatePalette[state] || burnerStatePalette.C;
+  const flameLevel = (state === "C" || opening <= 0) ? 0 : cuboidClamp01(opening / 100);
+  const showFlame = flameLevel > 0.001;
+
+  item.liveState = state;
+  item.liveOpening = opening;
+  item.liveFlameLevel = flameLevel;
+
+  cuboidSetMaterialTone(item.stub && item.stub.material, palette.metal, palette.ring, 0.12 + (flameLevel * 0.18));
+  cuboidSetMaterialTone(item.collar && item.collar.material, palette.metal, palette.glow, 0.06 + (flameLevel * 0.16));
+  cuboidSetMaterialTone(item.lockRing && item.lockRing.material, palette.metal, palette.glow, 0.06 + (flameLevel * 0.14));
+  cuboidSetMaterialTone(item.ring && item.ring.material, palette.ring, palette.glow, 0.08 + (flameLevel * 0.18));
+  cuboidSetMaterialTone(item.port && item.port.material, palette.metal, palette.ring, 0.05 + (flameLevel * 0.12));
+
+  if(item.glow && item.glow.material && item.glow.material.color) item.glow.material.color.set(palette.glow);
+  if(item.auraFlame && item.auraFlame.material && item.auraFlame.material.color) item.auraFlame.material.color.set(palette.aura);
+  if(item.outerFlame && item.outerFlame.material && item.outerFlame.material.color) item.outerFlame.material.color.set(palette.flame);
+  if(item.innerFlame && item.innerFlame.material && item.innerFlame.material.color) item.innerFlame.material.color.set(palette.core);
+  if(item.flameTip && item.flameTip.material && item.flameTip.material.color) item.flameTip.material.color.set(palette.core);
+
+  if(item.flameAnchor) item.flameAnchor.visible = showFlame;
+  if(item.glow) item.glow.visible = showFlame;
+  if(item.auraFlame) item.auraFlame.visible = showFlame;
+  if(item.outerFlame) item.outerFlame.visible = showFlame;
+  if(item.innerFlame) item.innerFlame.visible = showFlame;
+  if(item.flameTip) item.flameTip.visible = showFlame;
+}
+
+function refreshLivePresentation(force){
+  if(!force && !livePresentationDirty && liveSnapshot) return false;
+  liveSnapshot = cuboidBuildLiveSnapshot();
+  liveBurnerObjects.forEach(function(item){
+    cuboidApplyBurnerPresentation(item, liveSnapshot);
+  });
+  cuboidRenderFaceOverlay("front");
+  cuboidRenderFaceOverlay("back");
+  livePresentationDirty = false;
+  return true;
+}
 
 const GW = () => vp.clientWidth;
 const GH = () => vp.clientHeight;
@@ -1094,7 +1521,7 @@ function stampFlameOrder(item){
      faceZ     : Z centre of all pipe geometry
      flameDir  : +1 front face, -1 back face; flames rise upward (+Y)
      ══════════════════════════════════════════════════════════ */
-  function buildFace(faceZ, flameDir){
+  function buildFace(faceZ, flameDir, wallKey){
     const mirrorBackFace = flameDir < 0;
     const faceX = function(x){ return mirrorBackFace ? -x : x; };
 
@@ -1317,18 +1744,23 @@ function stampFlameOrder(item){
         /* seed for per-burner flicker variety */
         const seed = r * 17 + b * 3 + (flameDir > 0 ? 200 : 400);
 
-        burnerPortObjects.push({
+        const burnerItem = {
           seed,
           dir: flameDir,
           verticalRise: true,
+          wallKey,
+          rowNumber: r + 1,
+          burnerNumber: b + 1,
           flameAnchor,
+          stub, collar, lockRing,
           glow, auraFlame, outerFlame, innerFlame, flameTip: null,
           baseLiftAura: auraBaseLift,
           baseLiftOuter: outerBaseLift,
           baseLiftInner: innerBaseLift
-        });
-        stampFlameOrder(burnerPortObjects[burnerPortObjects.length-1]);
-        stampFlameOrder(burnerPortObjects[burnerPortObjects.length-1]);
+        };
+        burnerPortObjects.push(burnerItem);
+        liveBurnerObjects.push(burnerItem);
+        stampFlameOrder(burnerItem);
       }
     }
 
@@ -1345,8 +1777,8 @@ function stampFlameOrder(item){
   }
 
   /* ─── STEP F: BUILD BOTH FACES ────────────────────────────── */
-  buildFace(+FD/2 + PIPE_Z_OFF, +1);   // front face — flames rise toward +Y
-  buildFace(-FD/2 - PIPE_Z_OFF, -1);   // back  face — flames rise toward +Y
+  buildFace(+FD/2 + PIPE_Z_OFF, +1, chamberWalls[0]);   // front face — flames rise toward +Y
+  buildFace(-FD/2 - PIPE_Z_OFF, -1, chamberWalls[1]);   // back  face — flames rise toward +Y
 
 })();
 
@@ -1514,10 +1946,39 @@ function stampFlameOrder(item){
   makeBrickCanvas(-FD/2 + 0.02, true);
 })();
 
+(function addLiveFaceOverlays(){
+  function makeOverlay(faceName, wallKey, zPos, flipY){
+    const canvas = document.createElement("canvas");
+    canvas.width = 2048;
+    canvas.height = 1024;
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    if(typeof texture.colorSpace !== "undefined" && THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(FW, FH), material);
+    mesh.position.z = zPos;
+    if(flipY) mesh.rotation.y = Math.PI;
+    mesh.renderOrder = 0;
+    group.add(mesh);
+    liveFaceOverlays[faceName] = { wallKey, canvas, texture, mesh };
+  }
+
+  makeOverlay("front", chamberWalls[0], FD/2 + 0.012, false);
+  makeOverlay("back", chamberWalls[1], -FD/2 - 0.012, true);
+})();
+
 function createBurnerWallFace(faceName){
   const dir   = faceName === "front" ? -1 : 1;
   const wallZ = faceName === "front" ? ( FD/2 - 0.07) : (-FD/2 + 0.07);
   const mirrorBackFace = faceName === "back";
+  const wallKey = faceName === "front" ? chamberWalls[0] : chamberWalls[1];
   const burnerColumns = [1,3,5,8,11,13,15];
   const cols = burnerColumns.length;
   const rowNumbers = [6,5,4,3,2,1];
@@ -1568,8 +2029,12 @@ function createBurnerWallFace(faceName){
       flameTip.position.set(x, y, wallZ + dir * 0.35);
       group.add(flameTip);
 
-      burnerPortObjects.push({
+      const burnerItem = {
         seed, dir,
+        wallKey,
+        rowNumber: rowNumbers[ri],
+        burnerNumber: burnerColumns[ci],
+        ring, port,
         glow, auraFlame, outerFlame, innerFlame, flameTip,
         baseX: x, baseY: y,
         baseZGlow:  wallZ + dir * 0.06,
@@ -1577,76 +2042,95 @@ function createBurnerWallFace(faceName){
         baseZOuter: wallZ + dir * 0.12,
         baseZInner: wallZ + dir * 0.10,
         baseZTip:   wallZ + dir * 0.20
-      });
-      stampFlameOrder(burnerPortObjects[burnerPortObjects.length-1]);
-        stampFlameOrder(burnerPortObjects[burnerPortObjects.length-1]);
+      };
+      burnerPortObjects.push(burnerItem);
+      liveBurnerObjects.push(burnerItem);
+      stampFlameOrder(burnerItem);
     }
   }
 }
 createBurnerWallFace("front");
 createBurnerWallFace("back");
+refreshLivePresentation(true);
 
 /* ── 3D burner animation function ── */
 function animateBurners(time){
   burnerPortObjects.forEach(function(item){
+    const liveLevel = typeof item.liveFlameLevel === "number" ? item.liveFlameLevel : 1;
+    if(liveLevel <= 0.001){
+      if(item.glow && item.glow.material) item.glow.material.opacity = 0;
+      if(item.auraFlame && item.auraFlame.material) item.auraFlame.material.opacity = 0;
+      if(item.outerFlame && item.outerFlame.material) item.outerFlame.material.opacity = 0;
+      if(item.innerFlame && item.innerFlame.material) item.innerFlame.material.opacity = 0;
+      if(item.flameTip && item.flameTip.material) item.flameTip.material.opacity = 0;
+      return;
+    }
+
     const pulse   = 0.94 + Math.sin(time * 5.4 + item.seed) * 0.10 + Math.sin(time * 8.6 + item.seed * 1.7) * 0.05;
     const sway    = Math.sin(time * 3.1 + item.seed * 0.9) * 0.045;
     const flutter = Math.sin(time * 7.2 + item.seed * 1.4) * 0.03;
     const cross   = Math.cos(time * 4.1 + item.seed * 0.7) * 0.026;
+    const flameScale = 0.36 + (liveLevel * 0.84);
+    const motionScale = 0.42 + (liveLevel * 0.58);
 
     if(item.verticalRise){
-      const auraScaleX = 0.92 + pulse*0.16;
-      const auraScaleY = 1.08 + pulse*0.16;
-      const outerScaleX = 0.84 + pulse*0.14;
-      const outerScaleY = 1.12 + pulse*0.20;
-      const innerScaleX = 0.66 + pulse*0.10;
-      const innerScaleY = 0.94 + pulse*0.14;
+      const auraScaleX = (0.92 + pulse*0.16) * flameScale;
+      const auraScaleY = (1.08 + pulse*0.16) * flameScale;
+      const outerScaleX = (0.84 + pulse*0.14) * flameScale;
+      const outerScaleY = (1.12 + pulse*0.20) * flameScale;
+      const innerScaleX = (0.66 + pulse*0.10) * flameScale;
+      const innerScaleY = (0.94 + pulse*0.14) * flameScale;
 
-      item.flameAnchor.rotation.x = item.dir * (sway*1.10 + flutter*0.36);
-      item.flameAnchor.rotation.z = cross*1.18 + flutter*0.72;
+      item.flameAnchor.rotation.x = item.dir * ((sway*1.10 + flutter*0.36) * motionScale);
+      item.flameAnchor.rotation.z = (cross*1.18 + flutter*0.72) * motionScale;
 
-      item.glow.position.set(cross*0.12, 0.05 + pulse*0.014, 0);
-      item.glow.scale.set(0.42 + pulse*0.14, 0.42 + pulse*0.14, 1);
-      item.glow.material.opacity = 0.12 + pulse*0.08;
+      item.glow.position.set(cross*0.12*motionScale, 0.05 + pulse*0.014*motionScale, 0);
+      item.glow.scale.set((0.42 + pulse*0.14) * flameScale, (0.42 + pulse*0.14) * flameScale, 1);
+      item.glow.material.opacity = (0.12 + pulse*0.08) * liveLevel;
 
       item.auraFlame.position.set(0, item.baseLiftAura * auraScaleY, 0);
       item.auraFlame.scale.set(auraScaleX, auraScaleY, auraScaleX);
-      item.auraFlame.material.opacity = 0.05 + pulse*0.04;
+      item.auraFlame.material.opacity = (0.05 + pulse*0.04) * liveLevel;
       item.auraFlame.rotation.set(0, 0, 0);
 
       item.outerFlame.position.set(0, item.baseLiftOuter * outerScaleY, 0);
       item.outerFlame.scale.set(outerScaleX, outerScaleY, outerScaleX);
+      item.outerFlame.material.opacity = (0.42 + pulse*0.12) * (0.42 + liveLevel*0.58);
       item.outerFlame.rotation.set(0, 0, 0);
 
       item.innerFlame.position.set(0, item.baseLiftInner * innerScaleY, 0);
       item.innerFlame.scale.set(innerScaleX, innerScaleY, innerScaleX);
+      item.innerFlame.material.opacity = (0.56 + pulse*0.14) * (0.40 + liveLevel*0.60);
       item.innerFlame.rotation.set(0, 0, 0);
       return;
     }
 
-    item.glow.position.set(item.baseX + cross*0.22, item.baseY + sway*0.18, item.baseZGlow + item.dir*(0.01 + pulse*0.006));
-    item.glow.scale.set(0.28 + pulse*0.10, 0.28 + pulse*0.10, 1);
-    item.glow.material.opacity = 0.10 + pulse*0.06;
+    item.glow.position.set(item.baseX + cross*0.22*motionScale, item.baseY + sway*0.18*motionScale, item.baseZGlow + item.dir*(0.01 + pulse*0.006*motionScale));
+    item.glow.scale.set((0.28 + pulse*0.10) * flameScale, (0.28 + pulse*0.10) * flameScale, 1);
+    item.glow.material.opacity = (0.10 + pulse*0.06) * liveLevel;
 
-    item.auraFlame.position.set(item.baseX + cross*0.45, item.baseY + sway*0.2, item.baseZAura + item.dir*(0.01 + pulse*0.014));
-    item.auraFlame.scale.set(0.62 + pulse*0.10, 1.0 + pulse*0.16, 0.62 + pulse*0.10);
-    item.auraFlame.material.opacity = 0.05 + pulse*0.04;
-    item.auraFlame.rotation.z = sway*1.34 + flutter*0.5;
-    item.auraFlame.rotation.y = item.dir === -1 ? cross*0.9 : Math.PI + cross*0.9;
+    item.auraFlame.position.set(item.baseX + cross*0.45*motionScale, item.baseY + sway*0.2*motionScale, item.baseZAura + item.dir*(0.01 + pulse*0.014*motionScale));
+    item.auraFlame.scale.set((0.62 + pulse*0.10) * flameScale, (1.0 + pulse*0.16) * flameScale, (0.62 + pulse*0.10) * flameScale);
+    item.auraFlame.material.opacity = (0.05 + pulse*0.04) * liveLevel;
+    item.auraFlame.rotation.z = (sway*1.34 + flutter*0.5) * motionScale;
+    item.auraFlame.rotation.y = item.dir === -1 ? cross*0.9*motionScale : Math.PI + cross*0.9*motionScale;
 
-    item.outerFlame.position.set(item.baseX + cross*0.62, item.baseY + sway*0.28, item.baseZOuter + item.dir*(pulse*0.020));
-    item.outerFlame.scale.set(0.58 + pulse*0.10, 1.0 + pulse*0.22, 0.58 + pulse*0.10);
+    item.outerFlame.position.set(item.baseX + cross*0.62*motionScale, item.baseY + sway*0.28*motionScale, item.baseZOuter + item.dir*(pulse*0.020*motionScale));
+    item.outerFlame.scale.set((0.58 + pulse*0.10) * flameScale, (1.0 + pulse*0.22) * flameScale, (0.58 + pulse*0.10) * flameScale);
+    item.outerFlame.material.opacity = (0.38 + pulse*0.10) * (0.38 + liveLevel*0.62);
 
-    item.innerFlame.position.set(item.baseX + cross*0.34, item.baseY + sway*0.22, item.baseZInner + item.dir*(pulse*0.016));
-    item.innerFlame.scale.set(0.54 + pulse*0.08, 0.92 + pulse*0.18, 0.54 + pulse*0.08);
+    item.innerFlame.position.set(item.baseX + cross*0.34*motionScale, item.baseY + sway*0.22*motionScale, item.baseZInner + item.dir*(pulse*0.016*motionScale));
+    item.innerFlame.scale.set((0.54 + pulse*0.08) * flameScale, (0.92 + pulse*0.18) * flameScale, (0.54 + pulse*0.08) * flameScale);
+    item.innerFlame.material.opacity = (0.52 + pulse*0.12) * (0.38 + liveLevel*0.62);
 
-    item.flameTip.position.set(item.baseX + cross*0.9, item.baseY + sway*0.34 + flutter*0.16, item.baseZTip + item.dir*(pulse*0.024));
-    item.flameTip.scale.setScalar(0.58 + pulse*0.10);
+    item.flameTip.position.set(item.baseX + cross*0.9*motionScale, item.baseY + sway*0.34*motionScale + flutter*0.16*motionScale, item.baseZTip + item.dir*(pulse*0.024*motionScale));
+    item.flameTip.scale.setScalar((0.58 + pulse*0.10) * flameScale);
+    item.flameTip.material.opacity = (0.62 + pulse*0.14) * liveLevel;
 
-    item.outerFlame.rotation.z = sway + flutter*0.9;
-    item.innerFlame.rotation.z = sway*1.22 - flutter*0.84;
-    item.outerFlame.rotation.y = item.dir === -1 ? cross*0.5 : Math.PI + cross*0.5;
-    item.innerFlame.rotation.y = item.dir === -1 ? cross*0.32 : Math.PI + cross*0.32;
+    item.outerFlame.rotation.z = (sway + flutter*0.9) * motionScale;
+    item.innerFlame.rotation.z = (sway*1.22 - flutter*0.84) * motionScale;
+    item.outerFlame.rotation.y = item.dir === -1 ? cross*0.5*motionScale : Math.PI + cross*0.5*motionScale;
+    item.innerFlame.rotation.y = item.dir === -1 ? cross*0.32*motionScale : Math.PI + cross*0.32*motionScale;
   });
 }
 
@@ -1673,6 +2157,13 @@ document.addEventListener("visibilitychange", () => markDirty());
 window.addEventListener("message", function(ev){
   const d = ev && ev.data;
   if(!d) return;
+  if(d.type === "cuboid-live-data"){
+    if(cuboidConsumeLiveState(d.payload, d.digest)){
+      refreshLivePresentation(true);
+      markDirty();
+    }
+    return;
+  }
   if(d.type === "cuboid-host-state"){
     tabActive = !!d.active; inView = d.inView !== false; focused = d.focused !== false; markDirty();
   }
@@ -1772,6 +2263,8 @@ function animate(t){
 
   // gentle inner light pulse
   innerL.intensity = 1.2 + 0.5*Math.sin(t*0.007) + 0.2*Math.sin(t*0.013);
+
+  if(refreshLivePresentation(false)) dirty = true;
 
   // 3D burner flame animation
   animateBurners(t * 0.001);
