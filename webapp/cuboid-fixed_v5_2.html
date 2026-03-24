@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cuboid — Bare Shell</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  width:100%;height:100%;
+  background:#08090d;
+  overflow:hidden;
+  font-family:"Courier New",Courier,monospace;
+}
+body{color:rgba(140,180,220,0.85);}
+#app{
+  width:100vw;height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:8px;padding:10px;
+}
+#topbar{
+  width:min(97vw,1680px);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;
+}
+#viewerTag{
+  display:flex;flex-direction:column;justify-content:center;gap:3px;
+  min-height:44px;
+  width:clamp(300px,32vw,520px);max-width:100%;
+  padding:8px 20px 9px 18px;
+  position:relative;overflow:hidden;border-radius:14px;
+  border:1px solid rgba(110,150,220,0.34);
+  background:linear-gradient(135deg,rgba(20,31,54,0.97) 0%,rgba(25,20,38,0.95) 38%,rgba(9,24,38,0.96) 100%);
+  box-shadow:0 12px 28px rgba(0,0,0,0.24),inset 0 1px 0 rgba(255,255,255,0.08),inset 0 0 28px rgba(74,126,214,0.09);
+}
+#viewerTag::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 16% 18%,rgba(102,180,255,0.16),transparent 42%),
+             radial-gradient(circle at 86% 78%,rgba(255,168,82,0.14),transparent 36%);
+}
+.vt-title{
+  position:relative;font-size:12px;font-weight:700;letter-spacing:1.15px;text-transform:uppercase;
+  background:linear-gradient(90deg,#fff7d2 0%,#cfe5ff 42%,#8ef0d3 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.vt-sub{
+  position:relative;font-size:8px;letter-spacing:0.9px;color:rgba(199,218,242,0.88);white-space:nowrap;
+}
+#vp{
+  position:relative;
+  width:min(97vw,1680px);
+  height:min(calc(100vh - 110px),90vh);
+  overflow:hidden;
+  background:radial-gradient(circle at 50% 42%,rgba(58,78,104,0.52) 0%,rgba(26,33,45,0.88) 22%,rgba(10,13,19,0.97) 54%,#06070b 100%);
+  border:1px solid rgba(60,90,130,0.3);border-radius:10px;
+  box-shadow:inset 0 0 90px rgba(80,115,165,0.12);
+  cursor:grab;touch-action:none;
+}
+#vp:active{cursor:grabbing;}
+#vp canvas{position:absolute;inset:0;width:100%;height:100%;}
+#hint{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  font-size:8px;letter-spacing:2px;color:rgba(100,130,160,0.4);
+  pointer-events:none;white-space:nowrap;
+}
+#ctrls{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center;flex:1 1 400px;}
+.btn{
+  background:rgba(10,18,32,0.92);border:1px solid rgba(50,90,140,0.4);
+  color:rgba(140,180,220,0.85);padding:6px 16px;border-radius:6px;
+  font-family:"Courier New",Courier,monospace;font-size:10px;letter-spacing:1.8px;
+  cursor:pointer;text-transform:uppercase;
+}
+.btn:hover{background:rgba(25,50,90,0.9);border-color:rgba(90,150,220,0.7);}
+@media(max-width:760px){
+  #topbar{width:100%;gap:8px;justify-content:center;}
+  #viewerTag{width:100%;min-height:42px;padding:8px 12px 9px;text-align:center;align-items:center;}
+  .vt-title{font-size:11px;line-height:1.15;}
+  .vt-sub{font-size:7px;letter-spacing:0.8px;white-space:normal;}
+  #vp{width:100%;height:min(calc(100vh - 138px),86vh);}
+  #ctrls{width:100%;gap:6px;justify-content:center;flex:1 1 auto;}
+  .btn{flex:1 1 calc(50% - 6px);min-width:118px;padding:8px 10px;font-size:9px;letter-spacing:1.2px;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div id="viewerTag">
+      <span class="vt-title">Furnace Cuboid — Bare Shell</span>
+      <span class="vt-sub">FW 13.8 · FH 6.08 · FD 1.5 · clean geometry</span>
+    </div>
+    <div id="ctrls">
+      <button class="btn" id="btnFront">Front</button>
+      <button class="btn" id="btnBack">Back</button>
+      <button class="btn" id="btnAuto">Auto Rotate</button>
+      <button class="btn" id="btnReset">Reset View</button>
+    </div>
+  </div>
+  <div id="vp"><div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ── dimensions (exact from original) ─────────────────── */
+const FW = 13.8, FH = 6.08, FD = 1.5;
+
+/* ── DOM refs ─────────────────────────────────────────── */
+const app   = document.getElementById("app");
+const vp    = document.getElementById("vp");
+const hint  = document.getElementById("hint");
+const btnFront = document.getElementById("btnFront");
+const btnBack  = document.getElementById("btnBack");
+const btnAuto  = document.getElementById("btnAuto");
+const btnReset = document.getElementById("btnReset");
+
+const GW = () => vp.clientWidth;
+const GH = () => vp.clientHeight;
+
+/* ── fullscreen helpers ───────────────────────────────── */
+function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function isFs(){ return fsElement() === app; }
+function refreshHint(){ hint.textContent = isFs() ? "DRAG TO ROTATE · DOUBLE-TAP EXIT FULLSCREEN" : "DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN"; }
+function toggleFs(){
+  if(fsElement()){
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  } else {
+    const req = app.requestFullscreen || app.webkitRequestFullscreen;
+    if(req){ const r=req.call(app); if(r && r.catch) r.catch(()=>{}); }
+  }
+}
+document.addEventListener("fullscreenchange", () => { refreshHint(); markDirty(); });
+document.addEventListener("webkitfullscreenchange", () => { refreshHint(); markDirty(); });
+refreshHint();
+
+/* ── renderer ────────────────────────────────────────── */
+const isChrome = /\bChrome\//.test(navigator.userAgent) || /\bCriOS\//.test(navigator.userAgent);
+const renderer = new THREE.WebGLRenderer({
+  antialias: !isChrome, alpha: true,
+  powerPreference: "high-performance",
+  precision: isChrome ? "mediump" : "highp",
+  stencil: false,
+  logarithmicDepthBuffer: false
+});
+renderer.sortObjects = true;
+renderer.setClearColor(0x000000, 0);
+vp.appendChild(renderer.domElement);
+
+let appliedPR = 0;
+function targetPR(){
+  const dr = Math.max(1, window.devicePixelRatio || 1);
+  const active = isFs() || hasMotion();
+  const cap = !canRender() ? 0.65 : active ? (isChrome ? 1.06 : 1.45) : (isChrome ? 0.88 : 1.28);
+  return Math.max(0.62, Math.min(dr, cap));
+}
+function applyQuality(force){
+  const nr = targetPR();
+  if(!force && Math.abs(nr - appliedPR) < 0.02) return false;
+  appliedPR = nr;
+  renderer.setPixelRatio(nr);
+  renderer.setSize(GW(), GH(), false);
+  return true;
+}
+
+/* ── scene ───────────────────────────────────────────── */
+const scene = new THREE.Scene();
+scene.background = null;
+
+const camera = new THREE.PerspectiveCamera(32, GW()/GH(), 0.1, 300);
+function fitCamera(){
+  const asp = GW()/GH();
+  const fov = 32 * Math.PI / 180;
+  const hfov = 2 * Math.atan(Math.tan(fov/2) * asp);
+  const dW = (FW/2) / Math.tan(hfov/2);
+  const dH = (FH/2) / Math.tan(fov/2);
+  camera.aspect = asp;
+  camera.updateProjectionMatrix();
+  camera.position.set(0, 0, Math.max(dW, dH) * 1.18);
+  camera.lookAt(0, 0, 0);
+}
+fitCamera();
+
+const rigGroup = new THREE.Group();
+scene.add(rigGroup);
+const group = new THREE.Group();
+rigGroup.add(group);
+
+/* 25002500 DEPTH OCCLUDER BOX 2500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500
+   Invisible solid box = same shell size. colorWrite:false so
+   never drawn; depthWrite:true so always blocks depth buffer.
+   renderOrder:-1 renders first, flames never bleed through.
+   25002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500250025002500 */
+/* ── PER-FACE DEPTH OCCLUDERS ────────────────────────────────────────
+   One invisible depth-write plane per solid shell face.
+   colorWrite:false → invisible. depthWrite:true → stamps depth buffer.
+   renderOrder:-2 → renders before everything else.
+   Side panels use ShapeGeometry with peephole cutouts so the holes
+   remain transparent (no depth written there = interior visible).
+   ─────────────────────────────────────────────────────────────────── */
+(function buildOccluders(){
+  const mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: true, side: THREE.DoubleSide });
+
+  // Front face occluder
+  const oFront = new THREE.Mesh(new THREE.PlaneGeometry(FW, FH), mat.clone());
+  oFront.position.z = FD/2; oFront.renderOrder = -2; group.add(oFront);
+
+  // Back face occluder
+  const oBack = new THREE.Mesh(new THREE.PlaneGeometry(FW, FH), mat.clone());
+  oBack.position.z = -FD/2; oBack.rotation.y = Math.PI; oBack.renderOrder = -2; group.add(oBack);
+
+  // Top cap occluder
+  const oTop = new THREE.Mesh(new THREE.PlaneGeometry(FW, FD), mat.clone());
+  oTop.rotation.x = -Math.PI/2; oTop.position.y = FH/2; oTop.renderOrder = -2; group.add(oTop);
+
+  // Bottom cap occluder
+  const oBot = new THREE.Mesh(new THREE.PlaneGeometry(FW, FD), mat.clone());
+  oBot.rotation.x = Math.PI/2; oBot.position.y = -FH/2; oBot.renderOrder = -2; group.add(oBot);
+
+  // Side panel occluders — ShapeGeometry with peephole cutouts (mirrors makeSide geometry)
+  [true, false].forEach(function(isLeft){
+    const pw = FD * 0.52, ph = pw;
+    const sh = new THREE.Shape();
+    sh.moveTo(-FD/2, -FH/2); sh.lineTo(FD/2, -FH/2);
+    sh.lineTo(FD/2, FH/2);   sh.lineTo(-FD/2, FH/2); sh.lineTo(-FD/2, -FH/2);
+    [FH*0.18, -FH*0.18].forEach(function(cy){
+      const hole = new THREE.Path();
+      hole.moveTo(-pw/2, cy-ph/2); hole.lineTo(pw/2, cy-ph/2);
+      hole.lineTo(pw/2, cy+ph/2);  hole.lineTo(-pw/2, cy+ph/2); hole.lineTo(-pw/2, cy-ph/2);
+      sh.holes.push(hole);
+    });
+    const oSide = new THREE.Mesh(new THREE.ShapeGeometry(sh), mat.clone());
+    oSide.rotation.y = isLeft ? -Math.PI/2 : Math.PI/2;
+    oSide.position.x = isLeft ? -FW/2 : FW/2;
+    oSide.renderOrder = -2;
+    group.add(oSide);
+  });
+})();
+
+/* ── lighting (exact from original) ─────────────────── */
+scene.add(new THREE.AmbientLight(0xd0d8e0, 1.30));              // cool-neutral ambient
+scene.add(new THREE.HemisphereLight(0xe0e8f0, 0x141c22, 1.00)); // cool sky / dark ground
+const sun = new THREE.DirectionalLight(0xfff8ec, 1.70); sun.position.set(5, 8, 10); scene.add(sun);
+const fill = new THREE.DirectionalLight(0x8090a8, 0.80); fill.position.set(-5, -3, -8); scene.add(fill);
+const rim1 = new THREE.DirectionalLight(0xa8b8cc, 0.90); rim1.position.set(-10, 1.5, 4); scene.add(rim1);
+const rim2 = new THREE.DirectionalLight(0xffecc0, 0.65); rim2.position.set(8, -1.2, 7); scene.add(rim2);
+const innerL = new THREE.PointLight(0xff6600, 1.2, 18);          // furnace glow
+group.add(innerL);
+
+/* ── furnace steel texture — dark iron, rust, heat stain, grime ── */
+function makeMetalCanvas(w, h, opts){
+  const o = opts || {};
+  const ss = Number(o.seedShift) || 0;
+  const mc = document.createElement("canvas");
+  mc.width = w; mc.height = h;
+  const g = mc.getContext("2d");
+
+  function noise(s){ let x = Math.sin(s*127.1 + ss*311.7)*43758.5453123; return x - Math.floor(x); }
+  function clamp(v){ return Math.max(0,Math.min(255,Math.round(v))); }
+  function rgba(r,gg,b,a){ return "rgba("+clamp(r)+","+clamp(gg)+","+clamp(b)+","+a+")"; }
+
+  /* 1 ── STEEL BASE — blue-grey industrial steel tones */
+  const base = g.createLinearGradient(0,0,w,h);
+  base.addColorStop(0.00,"#6e7880");
+  base.addColorStop(0.15,"#7e8a92");
+  base.addColorStop(0.32,"#727e86");
+  base.addColorStop(0.50,"#6a7680");
+  base.addColorStop(0.68,"#788490");
+  base.addColorStop(0.84,"#6c7880");
+  base.addColorStop(1.00,"#606c74");
+  g.fillStyle = base; g.fillRect(0,0,w,h);
+
+  /* 2 ── PLATE PANELS — each plate slightly different steel shade */
+  const pXs=[0,Math.round(w*.26),Math.round(w*.52),Math.round(w*.78),w];
+  const pYs=[0,Math.round(h*.35),Math.round(h*.68),h];
+  for(let py=0;py<pYs.length-1;py++) for(let px=0;px<pXs.length-1;px++){
+    const idx=py*(pXs.length-1)+px;
+    const x0=pXs[px],y0=pYs[py],x1=pXs[px+1],y1=pYs[py+1];
+    const br = -10 + noise(idx*7+1)*22;
+    const blue = noise(idx*3+2)<0.5 ? 6 : -4;  // some plates bluer, some greyer
+    const alpha = 0.09 + noise(idx*11+3)*0.10;
+    g.fillStyle = rgba(108+br, 116+br, 124+br+blue, alpha);
+    g.fillRect(x0,y0,x1-x0,y1-y0);
+    // subtle cross-hatch light/shadow per plate
+    const pg = g.createLinearGradient(x0,y0,x1,y1);
+    pg.addColorStop(0,   rgba(240,244,248, 0.06+noise(idx*5+4)*0.04));
+    pg.addColorStop(0.5, "rgba(0,0,0,0)");
+    pg.addColorStop(1,   rgba(20,22,24,   0.08+noise(idx*9+5)*0.05));
+    g.fillStyle=pg; g.fillRect(x0,y0,x1-x0,y1-y0);
+  }
+
+  /* 3 ── RUST ACCENT PATCHES — moderate, not dominant */
+  const rustPalette=[
+    [158,78,22],[136,58,14],[170,90,28],[118,50,12],[148,68,20]
+  ];
+  for(let r=0;r<32;r++){
+    const rx=noise(r*13+10)*w, ry=noise(r*17+20)*h;
+    const rsz=12+noise(r*23+30)*70;
+    const col=rustPalette[Math.floor(noise(r*7+40)*rustPalette.length)];
+    const alpha=0.10+noise(r*31+50)*0.22;  // kept light — accent only
+    const rg=g.createRadialGradient(rx,ry,0,rx,ry,rsz);
+    rg.addColorStop(0,  rgba(col[0],col[1],col[2],alpha));
+    rg.addColorStop(0.5,rgba(col[0],col[1],col[2],alpha*0.4));
+    rg.addColorStop(1,  "rgba(0,0,0,0)");
+    g.fillStyle=rg;
+    g.beginPath();
+    g.ellipse(rx,ry,rsz,rsz*(0.4+noise(r*19+60)*0.7),noise(r*29+70)*Math.PI,0,Math.PI*2);
+    g.fill();
+  }
+
+  /* 4 ── HEAT TINT — subtle blue-purple oxidation zones */
+  for(let h2=0;h2<6;h2++){
+    const hy=noise(h2*41+80)*h, hspan=50+noise(h2*37+90)*160;
+    const hAlpha=0.03+noise(h2*53+100)*0.06;
+    const hg=g.createRadialGradient(w*0.5,hy,0,w*0.5,hy,hspan);
+    hg.addColorStop(0,  rgba(80,78,120,hAlpha));
+    hg.addColorStop(0.5,rgba(60,58,100,hAlpha*0.3));
+    hg.addColorStop(1,  "rgba(0,0,0,0)");
+    g.fillStyle=hg; g.fillRect(0,0,w,h);
+  }
+
+  /* 5 ── GRIME STREAKS — dark vertical drips */
+  for(let d=0;d<35;d++){
+    const dx=noise(d*61+110)*w, dlen=50+noise(d*47+120)*280;
+    const dy=noise(d*53+130)*(h-dlen), dw=1+noise(d*43+140)*4;
+    const da=0.05+noise(d*37+150)*0.11;
+    const dg=g.createLinearGradient(0,dy,0,dy+dlen);
+    dg.addColorStop(0,  "rgba(14,14,16,0)");
+    dg.addColorStop(0.2,rgba(14,14,16,da));
+    dg.addColorStop(0.8,rgba(10,10,12,da*0.6));
+    dg.addColorStop(1,  "rgba(10,10,12,0)");
+    g.fillStyle=dg; g.fillRect(dx-dw/2,dy,dw,dlen);
+  }
+
+  /* 6 ── SURFACE MICRO-TEXTURE — pitting and scale */
+  for(let s=0;s<280;s++){
+    const sx=noise(s*17+160)*w, sy=noise(s*23+170)*h;
+    const ssz=1.5+noise(s*31+180)*9;
+    const bright=noise(s*41+190)<0.35;
+    const sa=0.03+noise(s*37+200)*0.06;
+    g.fillStyle=bright ? rgba(200,206,212,sa) : rgba(18,20,22,sa);
+    g.beginPath();
+    g.ellipse(sx,sy,ssz,ssz*(0.25+noise(s*29+210)*0.45),noise(s*13+220)*Math.PI,0,Math.PI*2);
+    g.fill();
+  }
+
+  /* 7 ── WELD SEAMS */
+  const hSeams=[Math.round(h*0.35),Math.round(h*0.68)];
+  hSeams.forEach(function(sy){
+    g.strokeStyle="rgba(20,20,22,0.85)"; g.lineWidth=3.5;
+    g.beginPath(); g.moveTo(0,sy); g.lineTo(w,sy); g.stroke();
+    const wg=g.createLinearGradient(0,sy-7,0,sy);
+    wg.addColorStop(0,"rgba(220,210,190,0)");
+    wg.addColorStop(1,"rgba(200,190,160,0.18)");
+    g.fillStyle=wg; g.fillRect(0,sy-7,w,7);
+    const sg=g.createLinearGradient(0,sy,0,sy+8);
+    sg.addColorStop(0,"rgba(10,10,12,0.52)");
+    sg.addColorStop(1,"rgba(10,10,12,0)");
+    g.fillStyle=sg; g.fillRect(0,sy,w,8);
+  });
+  const vSeams=[Math.round(w*0.26),Math.round(w*0.52),Math.round(w*0.78)];
+  vSeams.forEach(function(sx){
+    g.strokeStyle="rgba(18,18,20,0.80)"; g.lineWidth=2.8;
+    g.beginPath(); g.moveTo(sx,0); g.lineTo(sx,h); g.stroke();
+    const lg=g.createLinearGradient(sx,0,sx+6,0);
+    lg.addColorStop(0,"rgba(210,200,180,0.14)");
+    lg.addColorStop(1,"rgba(0,0,0,0)");
+    g.fillStyle=lg; g.fillRect(sx,0,6,h);
+  });
+
+  /* 8 ── BOLTS & NUTS — raised hex-nut style, body + seam positions */
+  // seam intersections
+  const boltPos=[];
+  hSeams.forEach(function(sy){
+    vSeams.forEach(function(sx){ boltPos.push([sx,sy]); });
+    // extra bolts along each horizontal seam
+    for(let b=0;b<7;b++) boltPos.push([Math.round(w*(0.07+b*0.145)),sy]);
+  });
+  // body bolts — scattered on panels between seams
+  const bodyZones=[
+    [0,0,w*0.26,h*0.35],[w*0.26,0,w*0.52,h*0.35],[w*0.52,0,w*0.78,h*0.35],[w*0.78,0,w,h*0.35],
+    [0,h*0.35,w*0.26,h*0.68],[w*0.26,h*0.35,w*0.52,h*0.68],[w*0.52,h*0.35,w*0.78,h*0.68],[w*0.78,h*0.35,w,h*0.68],
+    [0,h*0.68,w*0.26,h],[w*0.26,h*0.68,w*0.52,h],[w*0.52,h*0.68,w*0.78,h],[w*0.78,h*0.68,w,h]
+  ];
+  bodyZones.forEach(function(z,zi){
+    const zx0=z[0],zy0=z[1],zx1=z[2],zy1=z[3];
+    const pad=w*0.04;
+    // 2 corner bolts per panel
+    [[zx0+pad,zy0+pad],[zx1-pad,zy0+pad],[zx0+pad,zy1-pad],[zx1-pad,zy1-pad]].forEach(function(pt,pi){
+      if(noise(zi*31+pi*17+500)>0.45) boltPos.push([pt[0],pt[1]]);
+    });
+  });
+
+  boltPos.forEach(function(bp,idx){
+    const bx=bp[0], by=bp[1];
+    const br=7.5+noise(idx*17+230)*2.0;  // slightly larger for visibility
+
+    /* drop shadow */
+    g.fillStyle="rgba(8,8,10,0.60)";
+    g.beginPath(); g.arc(bx+2,by+2,br,0,Math.PI*2); g.fill();
+
+    /* ── nut body: hexagonal raised steel shape ── */
+    // outer hex border (slightly larger, dark edge)
+    g.fillStyle=rgba(38,40,44,0.95);
+    g.beginPath();
+    for(let i=0;i<6;i++){
+      const a=i*Math.PI/3+Math.PI/6;
+      const px=bx+Math.cos(a)*(br+1.8), py=by+Math.sin(a)*(br+1.8);
+      i===0?g.moveTo(px,py):g.lineTo(px,py);
+    }
+    g.closePath(); g.fill();
+
+    // hex face — steel gradient with specular highlight (top-left lit)
+    const bg=g.createRadialGradient(bx-br*0.35,by-br*0.35,br*0.1,bx,by,br*1.1);
+    bg.addColorStop(0,   rgba(210,216,222,0.98));  // bright steel highlight
+    bg.addColorStop(0.25,rgba(160,168,176,0.98));  // mid steel
+    bg.addColorStop(0.55,rgba(110,118,126,0.98));  // darker steel
+    bg.addColorStop(0.80,rgba(70,76,84,0.98));     // shadow edge
+    bg.addColorStop(1,   rgba(44,48,54,0.98));
+    g.fillStyle=bg;
+    g.beginPath();
+    for(let i=0;i<6;i++){
+      const a=i*Math.PI/3+Math.PI/6;
+      const px=bx+Math.cos(a)*br, py=by+Math.sin(a)*br;
+      i===0?g.moveTo(px,py):g.lineTo(px,py);
+    }
+    g.closePath(); g.fill();
+
+    // hex edge facets — subtle chamfer lines
+    g.strokeStyle=rgba(240,244,248,0.30);
+    g.lineWidth=0.9;
+    g.beginPath();
+    for(let i=0;i<6;i++){
+      const a=i*Math.PI/3+Math.PI/6;
+      const px=bx+Math.cos(a)*(br*0.88), py=by+Math.sin(a)*(br*0.88);
+      i===0?g.moveTo(px,py):g.lineTo(px,py);
+    }
+    g.closePath(); g.stroke();
+
+    // rust staining ring around nut base
+    const rRing=g.createRadialGradient(bx,by,br*0.85,bx,by,br*1.7);
+    rRing.addColorStop(0,rgba(140,62,14,0.22));
+    rRing.addColorStop(1,"rgba(0,0,0,0)");
+    g.fillStyle=rRing;
+    g.beginPath(); g.arc(bx,by,br*1.7,0,Math.PI*2); g.fill();
+
+    // centre bolt hole
+    const hole=g.createRadialGradient(bx-1,by-1,0.5,bx,by,br*0.28);
+    hole.addColorStop(0,"rgba(8,8,10,0.95)");
+    hole.addColorStop(0.6,"rgba(20,20,24,0.80)");
+    hole.addColorStop(1,"rgba(0,0,0,0)");
+    g.fillStyle=hole;
+    g.beginPath(); g.arc(bx,by,br*0.30,0,Math.PI*2); g.fill();
+  });
+
+  /* 9 ── SOOT / SMOKE — top darkening */
+  const sootG=g.createLinearGradient(0,0,0,h*0.38);
+  sootG.addColorStop(0,  "rgba(8,8,10,0.38)");
+  sootG.addColorStop(0.5,"rgba(8,8,10,0.14)");
+  sootG.addColorStop(1,  "rgba(0,0,0,0)");
+  g.fillStyle=sootG; g.fillRect(0,0,w,h*0.38);
+
+  /* 10 ── SPECULAR GLINTS — worn steel high spots */
+  for(let gs=0;gs<28;gs++){
+    const gsx=noise(gs*59+300)*w, gsy=noise(gs*67+310)*h;
+    const gsl=20+noise(gs*71+320)*120;
+    const gsang=-0.15+noise(gs*83+330)*0.3;
+    const gAlpha=0.04+noise(gs*97+340)*0.06;
+    g.strokeStyle=rgba(230,236,242,gAlpha);
+    g.lineWidth=0.7+noise(gs*53+350)*1.4;
+    g.beginPath();
+    g.moveTo(gsx,gsy);
+    g.lineTo(gsx+Math.cos(gsang)*gsl,gsy+Math.sin(gsang)*gsl);
+    g.stroke();
+  }
+
+  return mc;
+}
+
+
+function metalTex(seed, rx, ry){
+  const mc = makeMetalCanvas(1024, 1024, { seedShift: seed });
+  const t = new THREE.CanvasTexture(mc);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(rx || 1, ry || 1);
+  if(typeof t.colorSpace !== "undefined" && THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+  else if(typeof t.encoding !== "undefined" && THREE.sRGBEncoding) t.encoding = THREE.sRGBEncoding;
+  return t;
+}
+
+const texSide   = metalTex(1.1,  0.96, 0.92);
+const texTop    = metalTex(2.3,  1.08, 0.94);
+const texBottom = metalTex(3.7,  1.08, 0.98);
+const texFrame  = metalTex(5.2,  0.86, 0.88);
+
+/* ── paint row + burner labels directly onto face canvas ──────────────
+   The face plane spans FW × FH world units mapped to 1024×1024 px.
+   Outer piping constants are replicated here to get exact UV positions.
+   Row labels R1(bottom)–R6(top) on left edge.
+   Burner labels B1–B15 left→right along bottom.
+   ──────────────────────────────────────────────────────────────────── */
+function paintFaceLabels(mc){
+  const W = mc.width, H = mc.height;
+  const g = mc.getContext("2d");
+
+  /* ── replicate outer piping geometry in UV space ── */
+  /* world → UV: uX = (worldX + FW/2) / FW,  uY = 1 - (worldY + FH/2) / FH */
+  function wx2px(wx){ return ((wx + FW/2) / FW) * W; }
+  function wy2py(wy){ return (1 - (wy + FH/2) / FH) * H; }
+
+  const VERT_R_L  = 0.055;
+  const vertXL_L  = -FW/2 + 0.18 + VERT_R_L;
+  const vertXR_L  =  FW/2 - 0.18 - VERT_R_L;
+  const MAN_R_L   = 0.038;
+  const FLANGE_R_L= VERT_R_L * 1.65;
+  const B_COUNT_L = 15;
+  const EDGE_CLR_L= Math.max(FLANGE_R_L * 2.8, MAN_R_L * 7.0);
+  const bXMin     = vertXL_L + EDGE_CLR_L + 1.0;  // matches 3D geometry shift
+  const bXMax     = vertXR_L - EDGE_CLR_L;
+  const bSpan     = bXMax - bXMin;
+  const bXs       = [];
+  for(let b=0;b<B_COUNT_L;b++) bXs[b] = bXMin + (bSpan/(B_COUNT_L-1))*b;
+
+  const ROW_MAR_BOT = FH * 0.11;
+  const ROW_MAR_TOP = FH * 0.18;
+  const ROW_SP      = FH - ROW_MAR_BOT - ROW_MAR_TOP;
+  const gW        = [1.65,1.00,1.65,1.00,1.00];
+  const totW      = gW.reduce(function(a,b){return a+b;},0);
+  const rY        = [];
+  rY[0] = -FH/2 + ROW_MAR_BOT;
+  let ac=0;
+  for(let i=0;i<5;i++){ ac+=(gW[i]/totW)*ROW_SP; rY[i+1]=-FH/2+ROW_MAR_BOT+ac; }
+
+  /* ── label draw helper ── */
+  function drawLabel(text, cx, cy, opts){
+    const o    = opts || {};
+    const pw   = o.pw || 72;   // pill width px
+    const ph   = o.ph || 32;   // pill height px
+    const rad  = ph * 0.35;
+    const x0   = cx - pw/2, y0 = cy - ph/2;
+
+    /* dark pill background */
+    g.beginPath();
+    g.moveTo(x0+rad,y0); g.lineTo(x0+pw-rad,y0);
+    g.quadraticCurveTo(x0+pw,y0,x0+pw,y0+rad);
+    g.lineTo(x0+pw,y0+ph-rad); g.quadraticCurveTo(x0+pw,y0+ph,x0+pw-rad,y0+ph);
+    g.lineTo(x0+rad,y0+ph); g.quadraticCurveTo(x0,y0+ph,x0,y0+ph-rad);
+    g.lineTo(x0,y0+rad); g.quadraticCurveTo(x0,y0,x0+rad,y0);
+    g.closePath();
+    g.fillStyle   = o.bg || "rgba(6,12,22,0.88)";  g.fill();
+    g.strokeStyle = o.border || "rgba(80,150,230,0.80)";
+    g.lineWidth   = 3.5; g.stroke();
+
+    /* text */
+    const fs = o.fs || Math.round(ph * 0.52);
+    g.font          = "bold " + fs + "px 'Courier New',monospace";
+    g.textAlign     = "center";
+    g.textBaseline  = "middle";
+    g.shadowColor   = o.glow  || "rgba(100,200,255,0.90)";
+    g.shadowBlur    = 7;
+    g.fillStyle     = o.color || "#cce8ff";
+    g.fillText(text, cx, cy);
+    g.shadowBlur = 0;
+  }
+
+  /* ── ROW LABELS R1(bottom) → R6(top) — left of leftmost burner ── */
+  const rowLabelX = wx2px(-FW/2 + 0.72);  // centred in freed left strip
+  const rowLabelLift = 0.12;              // world-unit lift so labels clear the manifold tubes
+  for(let r=0; r<6; r++){
+    const cy = wy2py(rY[r] + rowLabelLift);
+    drawLabel("R"+(r+1), rowLabelX, cy, {
+      pw:190, ph:88,
+      bg:"rgba(6,12,24,0.93)",
+      border:"rgba(70,140,220,0.95)",
+      color:"#cce8ff",
+      glow:"rgba(80,180,255,0.95)",
+      fs:52
+    });
+  }
+
+  /* ── BURNER LABELS B1–B15 — below bottom row ── */
+  const burnerLabelY = wy2py(rY[0] - 0.40);
+  for(let b=0; b<B_COUNT_L; b++){
+    const cx = wx2px(bXs[b]);
+    drawLabel("B"+(b+1), cx, burnerLabelY, {
+      pw:110, ph:76,
+      bg:"rgba(22,8,4,0.93)",
+      border:"rgba(210,110,30,0.95)",
+      color:"#ffd090",
+      glow:"rgba(255,140,30,0.95)",
+      fs:48
+    });
+  }
+}
+
+function metalTexClamped(seed, withLabels){
+  const mc = makeMetalCanvas(2048, 2048, { seedShift: seed });
+  if(withLabels) paintFaceLabels(mc);
+  const t = new THREE.CanvasTexture(mc);
+  t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+  t.repeat.set(1, 1);
+  if(typeof t.colorSpace !== "undefined" && THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+  else if(typeof t.encoding !== "undefined" && THREE.sRGBEncoding) t.encoding = THREE.sRGBEncoding;
+  return t;
+}
+const texFace  = metalTexClamped(7.4, true);
+const texFaceB = metalTexClamped(8.6, true);
+
+/* ── shell material ──────────────────────────────────── */
+function shellM(tex){
+  return new THREE.MeshStandardMaterial({
+    color: 0x8a9aa4,      // industrial steel grey
+    map: tex || texSide,
+    roughness: 0.68,
+    metalness: 0.82,
+    emissive: 0x0e1418,
+    emissiveIntensity: 0.18,
+    side: THREE.DoubleSide
+  });
+}
+
+/* ── TOP CAP ─────────────────────────────────────────── */
+const capTop = new THREE.Mesh(new THREE.PlaneGeometry(FW, FD), shellM(texTop));
+capTop.rotation.x = -Math.PI/2;
+capTop.position.y = FH/2;
+group.add(capTop);
+
+/* ── BOTTOM CAP ──────────────────────────────────────── */
+const capBot = new THREE.Mesh(new THREE.PlaneGeometry(FW, FD), shellM(texBottom));
+capBot.rotation.x = Math.PI/2;
+capBot.position.y = -FH/2;
+group.add(capBot);
+
+/* ── FRONT FACE ──────────────────────────────────────── */
+const faceFront = new THREE.Mesh(
+  new THREE.PlaneGeometry(FW, FH),
+  new THREE.MeshStandardMaterial({
+    color: 0x8896a0,      // steel grey front
+    map: texFace,
+    roughness: 0.66,
+    metalness: 0.80,
+    emissive: 0x0c1218,
+    emissiveIntensity: 0.18,
+    side: THREE.DoubleSide
+  })
+);
+faceFront.position.z = FD/2;
+faceFront.renderOrder = -1;
+group.add(faceFront);
+
+/* ── BACK FACE ───────────────────────────────────────── */
+const faceBack = new THREE.Mesh(
+  new THREE.PlaneGeometry(FW, FH),
+  new THREE.MeshStandardMaterial({
+    color: 0x84929c,      // steel grey back
+    map: texFaceB,
+    roughness: 0.66,
+    metalness: 0.80,
+    emissive: 0x0c1016,
+    emissiveIntensity: 0.18,
+    side: THREE.DoubleSide
+  })
+);
+faceBack.position.z = -FD/2;
+faceBack.rotation.y = Math.PI;
+faceBack.renderOrder = -1;
+group.add(faceBack);
+
+/* ── SIDE PANELS with peep holes (exact from original) ── */
+function makeSide(isLeft){
+  const pw = FD * 0.52, ph = pw;
+  const pms = 1.2; // peepFrameMarginScale
+  const sideX = isLeft ? -FW/2 : FW/2;
+  const inward = isLeft ? 1 : -1;
+  const peepBaffleDepth = Math.min(0.58, FD * 0.38);
+  const peepBaffleThk = Math.max(0.045, pw * 0.055);
+  const peepFrameMat = new THREE.MeshStandardMaterial({
+    color: 0x6e7c88,    // steel frame
+    map: texFrame,
+    roughness: 0.62,
+    metalness: 0.85,
+    emissive: 0x0a1016,
+    emissiveIntensity: 0.16,
+    side: THREE.DoubleSide
+  });
+  const peepBaffleMat = new THREE.MeshStandardMaterial({
+    color: 0x111418,
+    roughness: 0.92,
+    metalness: 0.08,
+    emissive: 0x040608,
+    emissiveIntensity: 0.05
+  });
+
+  // panel shape with two square peep holes
+  const sh = new THREE.Shape();
+  sh.moveTo(-FD/2, -FH/2);
+  sh.lineTo( FD/2, -FH/2);
+  sh.lineTo( FD/2,  FH/2);
+  sh.lineTo(-FD/2,  FH/2);
+  sh.lineTo(-FD/2, -FH/2);
+
+  [FH*0.18, -FH*0.18].forEach(function(cy){
+    const hole = new THREE.Path();
+    hole.moveTo(-pw/2, cy-ph/2);
+    hole.lineTo( pw/2, cy-ph/2);
+    hole.lineTo( pw/2, cy+ph/2);
+    hole.lineTo(-pw/2, cy+ph/2);
+    hole.lineTo(-pw/2, cy-ph/2);
+    sh.holes.push(hole);
+  });
+
+  const panel = new THREE.Mesh(new THREE.ShapeGeometry(sh), shellM(texSide));
+  panel.rotation.y = isLeft ? -Math.PI/2 : Math.PI/2;
+  panel.position.x = sideX;
+  group.add(panel);
+
+  // peep-hole frames + slim side baffles to block cross-face flame bleed
+  [FH*0.18, -FH*0.18].forEach(function(cy){
+    const fmx = pw*0.045*pms, fmy = ph*0.045*pms;
+    const fw = pw + fmx*2, fhh = ph + fmy*2;
+    const fs = new THREE.Shape();
+    fs.moveTo(-fw/2, cy-fhh/2);
+    fs.lineTo( fw/2, cy-fhh/2);
+    fs.lineTo( fw/2, cy+fhh/2);
+    fs.lineTo(-fw/2, cy+fhh/2);
+    fs.lineTo(-fw/2, cy-fhh/2);
+    const fh2 = new THREE.Path();
+    fh2.moveTo(-pw/2, cy-ph/2);
+    fh2.lineTo( pw/2, cy-ph/2);
+    fh2.lineTo( pw/2, cy+ph/2);
+    fh2.lineTo(-pw/2, cy+ph/2);
+    fh2.lineTo(-pw/2, cy-ph/2);
+    fs.holes.push(fh2);
+    const frameMesh = new THREE.Mesh(
+      new THREE.ShapeGeometry(fs),
+      peepFrameMat.clone()
+    );
+    frameMesh.rotation.y = isLeft ? -Math.PI/2 : Math.PI/2;
+    frameMesh.position.x = sideX + (isLeft ? -0.02 : 0.02);
+    group.add(frameMesh);
+
+    const baffleLen = peepBaffleDepth;
+    const baffleCx = sideX + inward * (baffleLen * 0.5 - 0.01);
+    [
+      { size: [baffleLen, ph + peepBaffleThk * 1.2, peepBaffleThk], pos: [baffleCx, cy,  pw * 0.5 + peepBaffleThk * 0.5] },
+      { size: [baffleLen, ph + peepBaffleThk * 1.2, peepBaffleThk], pos: [baffleCx, cy, -pw * 0.5 - peepBaffleThk * 0.5] }
+    ].forEach(function(part){
+      const baffle = new THREE.Mesh(
+        new THREE.BoxGeometry(part.size[0], part.size[1], part.size[2]),
+        peepBaffleMat.clone()
+      );
+      baffle.position.set(part.pos[0], part.pos[1], part.pos[2]);
+      group.add(baffle);
+    });
+  });
+}
+makeSide(true);
+makeSide(false);
+
+/* ═══════════════════════════════════════════════════════════
+   8 TUBES (full height) + TOP COMMON HEADER
+   Tubes run from bottom-face protrusion all the way up through
+   the cuboid body, protrude above top face, and connect to a
+   single horizontal header pipe spanning full FW.
+   ═══════════════════════════════════════════════════════════ */
+
+(function buildTubesAndHeader(){
+
+  /* ── materials ─────────────────────────────────────────── */
+  const mTube = new THREE.MeshStandardMaterial({
+    color: 0x5c6b75,
+    roughness: 0.30,
+    metalness: 0.95,
+    emissive: 0x0a1018,
+    emissiveIntensity: 0.20
+  });
+
+  const mCollar = new THREE.MeshStandardMaterial({
+    color: 0xa8b4be,
+    roughness: 0.14,
+    metalness: 0.98,
+    emissive: 0x16222c,
+    emissiveIntensity: 0.16
+  });
+
+  const mHeader = new THREE.MeshStandardMaterial({
+    color: 0x78909c,
+    roughness: 0.18,
+    metalness: 0.97,
+    emissive: 0x0f1c25,
+    emissiveIntensity: 0.28
+  });
+
+  const mCap = new THREE.MeshStandardMaterial({
+    color: 0x9baebb,
+    roughness: 0.12,
+    metalness: 0.99,
+    emissive: 0x182530,
+    emissiveIntensity: 0.18
+  });
+
+  const mRust = new THREE.MeshStandardMaterial({
+    color: 0x7a3a14,
+    roughness: 0.94,
+    metalness: 0.06,
+    emissive: 0x2a0e04,
+    emissiveIntensity: 0.10,
+    transparent: true,
+    opacity: 0.28
+  });
+
+  /* ── dimensions ─────────────────────────────────────────── */
+  const N          = 8;
+  const TUBE_R     = 0.090;
+  const PROTRUDE_T = 0.40;          // how much tube sticks above top face
+  const PROTRUDE_B = 0.0;           // tube lands flush at bottom face, no protrusion
+  const COLLAR_R   = TUBE_R * 1.38;
+  const COLLAR_H   = 0.072;
+  const HDR_R      = 0.130;
+  const HDR_Y      = FH/2 + PROTRUDE_T + HDR_R * 1.1;  // header centre Y
+
+  // full tube length: protrusion below + full body height + protrusion above
+  const TUBE_TOTAL = PROTRUDE_B + FH + PROTRUDE_T;
+  // tube centre Y: midpoint between bottom protrusion tip and top protrusion tip
+  const TUBE_CY    = -FH/2 - PROTRUDE_B + TUBE_TOTAL/2;
+
+  /* ── even spacing across FW ─────────────────────────────── */
+  const margin = FW * 0.055;
+  const span   = FW - margin * 2;
+
+  function tx(i){ return -FW/2 + margin + (span / (N-1)) * i; }
+
+  for(let i = 0; i < N; i++){
+    const x = tx(i);
+
+    /* tube body — full height */
+    const tube = new THREE.Mesh(
+      new THREE.CylinderGeometry(TUBE_R, TUBE_R, TUBE_TOTAL, 22, 1),
+      mTube.clone()
+    );
+    tube.position.set(x, TUBE_CY, 0);
+    group.add(tube);
+
+    /* rust sleeve — mid-section only */
+    const rustH = TUBE_TOTAL * 0.55;
+    const rust = new THREE.Mesh(
+      new THREE.CylinderGeometry(TUBE_R * 1.045, TUBE_R * 1.06, rustH, 22, 1),
+      mRust.clone()
+    );
+    rust.position.set(x, TUBE_CY + (Math.sin(i * 1.3) * FH * 0.12), 0);
+    group.add(rust);
+
+    /* collar at top face (tube exits top) */
+    const colT = new THREE.Mesh(
+      new THREE.CylinderGeometry(COLLAR_R, COLLAR_R * 0.90, COLLAR_H, 20),
+      mCollar.clone()
+    );
+    colT.position.set(x, FH/2 + COLLAR_H * 0.5, 0);
+    group.add(colT);
+
+    /* tube lands flush at bottom face — no collar needed */
+
+    /* junction ring where tube meets header */
+    const junc = new THREE.Mesh(
+      new THREE.TorusGeometry(HDR_R * 1.08, HDR_R * 0.16, 12, 24),
+      mCollar.clone()
+    );
+    junc.rotation.y = Math.PI/2;
+    junc.position.set(x, HDR_Y, 0);
+    group.add(junc);
+  }
+
+  /* ── header pipe (horizontal, along X) ──────────────────── */
+  const header = new THREE.Mesh(
+    new THREE.CylinderGeometry(HDR_R, HDR_R, FW, 30, 1),
+    mHeader
+  );
+  header.rotation.z = Math.PI/2;
+  header.position.set(0, HDR_Y, 0);
+  group.add(header);
+
+  /* rust patch on header */
+  const hRust = new THREE.Mesh(
+    new THREE.CylinderGeometry(HDR_R * 1.035, HDR_R * 1.025, FW * 0.62, 30, 1),
+    mRust.clone()
+  );
+  hRust.rotation.z = Math.PI/2;
+  hRust.position.set(FW * 0.06, HDR_Y, 0);
+  group.add(hRust);
+
+  /* end caps */
+  [-FW/2, FW/2].forEach(function(ex, side){
+    // hemisphere cap
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(HDR_R * 1.04, 20, 12, 0, Math.PI*2, 0, Math.PI/2),
+      mCap.clone()
+    );
+    cap.rotation.z = side === 0 ? Math.PI/2 : -Math.PI/2;
+    cap.position.set(ex, HDR_Y, 0);
+    group.add(cap);
+
+    // end flange ring
+    const fl = new THREE.Mesh(
+      new THREE.CylinderGeometry(HDR_R * 1.30, HDR_R * 1.30, 0.095, 22),
+      mCap.clone()
+    );
+    fl.rotation.z = Math.PI/2;
+    fl.position.set(ex, HDR_Y, 0);
+    group.add(fl);
+  });
+
+})();
+
+/* ══════════════════════════════════════════════════════════
+   FLAME GEOMETRY + MATERIALS — declared here so both the
+   outer piping system AND the inner face burners can use them
+   ══════════════════════════════════════════════════════════ */
+
+/* ── glow sprite texture ── */
+function makeGlowTex(){
+  const cv = document.createElement("canvas"); cv.width = 128; cv.height = 128;
+  const ctx = cv.getContext("2d");
+  const g = ctx.createRadialGradient(64,64,4,64,64,64);
+  g.addColorStop(0,"rgba(255,255,255,1)"); g.addColorStop(0.28,"rgba(255,255,255,0.8)");
+  g.addColorStop(0.62,"rgba(255,255,255,0.18)"); g.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
+  const t = new THREE.CanvasTexture(cv);
+  t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
+  return t;
+}
+const glowTex = makeGlowTex();
+
+/* ── flame lathe geometry ── */
+function createFlameLathe(radius, height){
+  const pts = [
+    new THREE.Vector2(0.18 *radius, 0),
+    new THREE.Vector2(0.82 *radius, 0.10*height),
+    new THREE.Vector2(1.00 *radius, 0.28*height),
+    new THREE.Vector2(0.96 *radius, 0.42*height),
+    new THREE.Vector2(0.80 *radius, 0.58*height),
+    new THREE.Vector2(0.56 *radius, 0.74*height),
+    new THREE.Vector2(0.36 *radius, 0.88*height),
+    new THREE.Vector2(0.18 *radius, 0.96*height),
+    new THREE.Vector2(0.04 *radius, height)
+  ];
+  const geo = new THREE.LatheGeometry(pts, 28);
+  geo.translate(0, -height * 0.18, 0);
+  return geo;
+}
+const FLAME_AURA_H  = 0.36;
+const FLAME_OUTER_H = 0.29;
+const FLAME_INNER_H = 0.19;
+const FLAME_BASE_SHIFT = 0.18;
+
+const flameAuraGeo  = createFlameLathe(0.130, FLAME_AURA_H);
+const flameOuterGeo = createFlameLathe(0.100, FLAME_OUTER_H);
+const flameInnerGeo = createFlameLathe(0.056, FLAME_INNER_H);
+const tipGeo        = new THREE.SphereGeometry(0.046, 14, 10);
+const ringGeo       = new THREE.TorusGeometry(0.095, 0.026, 10, 26);
+const nozzlePortGeo = new THREE.CylinderGeometry(0.07, 0.078, 0.05, 16);
+const capGeo        = new THREE.CylinderGeometry(0.074, 0.084, 0.05, 16);
+
+/* ── flame colours + materials ── */
+const FLAME_COLOR = 0xffad1f;
+const CORE_COLOR  = 0xfff2bf;
+
+const darkPortMat = new THREE.MeshStandardMaterial({ color: 0x111316, metalness: 0.68, roughness: 0.46 });
+const hotPortMat  = new THREE.MeshStandardMaterial({ color: 0x282c30, metalness: 0.78, roughness: 0.32 });
+
+const flameMats = {
+  outer: new THREE.MeshBasicMaterial({ color: FLAME_COLOR, transparent: true, opacity: 0.42, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true }),
+  aura:  new THREE.MeshBasicMaterial({ color: 0x58504c,    transparent: true, opacity: 0.09, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true }),
+  inner: new THREE.MeshBasicMaterial({ color: CORE_COLOR,  transparent: true, opacity: 0.82, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true }),
+  tip:   new THREE.MeshBasicMaterial({ color: CORE_COLOR,  transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true }),
+  glow:  new THREE.SpriteMaterial({ map: glowTex, color: FLAME_COLOR, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true })
+};
+
+/* ── shared animation array — both outer and inner burners push here ── */
+const burnerPortObjects = [];
+
+/* ── helper: stamp renderOrder on all flame parts after push ── */
+function stampFlameOrder(item){
+  const ORDER = 1;
+  if(item.glow)       item.glow.renderOrder       = ORDER;
+  if(item.auraFlame)  item.auraFlame.renderOrder  = ORDER;
+  if(item.outerFlame) item.outerFlame.renderOrder = ORDER;
+  if(item.innerFlame) item.innerFlame.renderOrder = ORDER;
+  if(item.flameTip)   item.flameTip.renderOrder   = ORDER;
+  if(item.flameAnchor){
+    item.flameAnchor.traverse(function(c){ if(c.isMesh || c.isSprite) c.renderOrder = ORDER; });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   OUTER FACE FUEL PIPING SYSTEM — Steps A through G
+   Step A — Two vertical fuel headers
+   Step B — Six horizontal manifold tubes (one per row)
+   Step C — T-junction fittings at every manifold/vertical intersection
+   Step D — Nozzle stubs × 90 (15 per row × 6 rows) + collar rings
+   Step E — Animated burner flames at each nozzle tip, rising upward
+   Step F — Full mirror on back face (Wall B)
+   ═══════════════════════════════════════════════════════════ */
+(function buildOuterPiping(){
+
+  /* ── constants ──────────────────────────────────────────── */
+  const HDR_R      = 0.130;
+  const HDR_Y      = FH/2 + 0.40 + HDR_R * 1.1;
+  const PIPE_Z_OFF = 0.22;
+
+  /* ── pipe radii ─────────────────────────────────────────── */
+  const VERT_R    = 0.055;
+  const MAN_R     = 0.038;
+  const FLANGE_R  = VERT_R * 1.65;
+  const FLANGE_H  = 0.055;
+  const KNUCKLE_R = VERT_R * 1.20;
+
+  /* nozzle stub dimensions */
+  const NOZ_R     = 0.022;   // nozzle stub radius
+  const NOZ_H     = 0.10;    // stub length (protrudes outward from manifold)
+  const NOZ_COL_R = NOZ_R * 2.0;  // collar torus ring radius
+  const NOZ_COL_T = NOZ_R * 0.55; // collar torus tube thickness
+
+  /* ── materials ──────────────────────────────────────────── */
+  const mVert = new THREE.MeshStandardMaterial({
+    color: 0x3a4650, roughness: 0.28, metalness: 0.94,
+    emissive: 0x0a1218, emissiveIntensity: 0.22
+  });
+  const mManifold = new THREE.MeshStandardMaterial({
+    color: 0x4e5c64, roughness: 0.22, metalness: 0.96,
+    emissive: 0x0c1820, emissiveIntensity: 0.18
+  });
+  const mFlange = new THREE.MeshStandardMaterial({
+    color: 0xb8c8d4, roughness: 0.10, metalness: 0.99,
+    emissive: 0x1a2c38, emissiveIntensity: 0.20
+  });
+  const mKnuckle = new THREE.MeshStandardMaterial({
+    color: 0x7a9aaa, roughness: 0.14, metalness: 0.98,
+    emissive: 0x101c24, emissiveIntensity: 0.24
+  });
+  const mNozzle = new THREE.MeshStandardMaterial({
+    color: 0x2a3238, roughness: 0.32, metalness: 0.92,
+    emissive: 0x080e12, emissiveIntensity: 0.18
+  });
+  const mRustSlv = new THREE.MeshStandardMaterial({
+    color: 0x7a3a14, roughness: 0.92, metalness: 0.04,
+    emissive: 0x280c02, emissiveIntensity: 0.08,
+    transparent: true, opacity: 0.18
+  });
+
+  /* ── row Y positions (custom gap weights, R1 bottom → R6 top) ── */
+  const ROW_MARGIN_BOTTOM = FH * 0.11;
+  const ROW_MARGIN_TOP    = FH * 0.18;
+  const ROW_SPAN          = FH - ROW_MARGIN_BOTTOM - ROW_MARGIN_TOP;
+  const gapWeights = [1.65, 1.00, 1.65, 1.00, 1.00];
+  const totalW     = gapWeights.reduce(function(a,b){ return a+b; }, 0);
+  const rowY = [];
+  rowY[0] = -FH/2 + ROW_MARGIN_BOTTOM;
+  let acc = 0;
+  for(let g = 0; g < 5; g++){
+    acc += (gapWeights[g] / totalW) * ROW_SPAN;
+    rowY[g + 1] = -FH/2 + ROW_MARGIN_BOTTOM + acc;
+  }
+
+  /* ── vertical header extents ────────────────────────────── */
+  const VERT_TOP_Y  = HDR_Y - HDR_R;
+  const VERT_BOT_Y  = rowY[0] - 0.62;
+  const VERT_HEIGHT = VERT_TOP_Y - VERT_BOT_Y;
+  const VERT_CY     = (VERT_TOP_Y + VERT_BOT_Y) * 0.5;
+
+  /* ── vertical header X positions ────────────────────────── */
+  const VERT_X_OFFSET = 0.18;
+  const vertXL = -FW/2 + VERT_X_OFFSET + VERT_R;
+  const vertXR =  FW/2 - VERT_X_OFFSET - VERT_R;
+
+  /* ── manifold span & 15 burner X positions ───────────────── */
+  const MAN_SPAN = vertXR - vertXL;
+  const MAN_CX   = (vertXL + vertXR) * 0.5;
+  const B_COUNT  = 15;
+  const BURNER_EDGE_CLEAR = Math.max(FLANGE_R * 2.8, MAN_R * 7.0);
+  const burnerXMin = vertXL + BURNER_EDGE_CLEAR + 1.0;  // +1.0 shift right: frees left strip for row labels
+  const burnerXMax = vertXR - BURNER_EDGE_CLEAR;
+  const burnerSpan = burnerXMax - burnerXMin;
+  const burnerXs = [];
+  for(let b = 0; b < B_COUNT; b++){
+    burnerXs[b] = burnerXMin + (burnerSpan / (B_COUNT - 1)) * b;
+  }
+
+  /* ── outer burner port objects (for animation, appended to shared array) ── */
+  /* burnerPortObjects already declared above — we push into it */
+
+  /* ══════════════════════════════════════════════════════════
+     BUILD FUNCTION — called for front face and back face
+     faceZ     : Z centre of all pipe geometry
+     flameDir  : +1 front face, -1 back face; flames rise upward (+Y)
+     ══════════════════════════════════════════════════════════ */
+  function buildFace(faceZ, flameDir){
+    const mirrorBackFace = flameDir < 0;
+    const faceX = function(x){ return mirrorBackFace ? -x : x; };
+
+    /* ─── STEP A: VERTICAL FUEL HEADERS ─────────────────────── */
+    [vertXL, vertXR].forEach(function(vx){
+
+      /* main pipe body */
+      const pipe = new THREE.Mesh(
+        new THREE.CylinderGeometry(VERT_R, VERT_R, VERT_HEIGHT, 24, 1),
+        mVert.clone()
+      );
+      pipe.position.set(faceX(vx), VERT_CY, faceZ);
+      group.add(pipe);
+
+      /* heat-stain sleeve — mid section */
+      const sleeve = new THREE.Mesh(
+        new THREE.CylinderGeometry(VERT_R*1.04, VERT_R*1.06, VERT_HEIGHT*0.45, 24, 1),
+        mRustSlv.clone()
+      );
+      sleeve.position.set(faceX(vx), VERT_CY + VERT_HEIGHT*0.05, faceZ);
+      group.add(sleeve);
+
+      /* top flange where pipe meets top header */
+      const topFlange = new THREE.Mesh(
+        new THREE.CylinderGeometry(FLANGE_R, FLANGE_R*0.88, FLANGE_H, 20),
+        mFlange.clone()
+      );
+      topFlange.position.set(faceX(vx), VERT_TOP_Y, faceZ);
+      group.add(topFlange);
+
+      /* top lip ring */
+      const topRing = new THREE.Mesh(
+        new THREE.TorusGeometry(FLANGE_R*0.82, FLANGE_R*0.14, 10, 28),
+        mFlange.clone()
+      );
+      topRing.rotation.x = Math.PI/2;
+      topRing.position.set(faceX(vx), VERT_TOP_Y + FLANGE_H*0.5, faceZ);
+      group.add(topRing);
+
+      /* bottom dome cap */
+      const botCap = new THREE.Mesh(
+        new THREE.SphereGeometry(VERT_R*1.06, 16, 10, 0, Math.PI*2, 0, Math.PI/2),
+        mFlange.clone()
+      );
+      botCap.rotation.x = Math.PI;
+      botCap.position.set(faceX(vx), VERT_BOT_Y, faceZ);
+      group.add(botCap);
+
+      /* bottom drain flange */
+      const botFlange = new THREE.Mesh(
+        new THREE.CylinderGeometry(FLANGE_R*0.92, FLANGE_R*0.78, FLANGE_H*0.7, 20),
+        mFlange.clone()
+      );
+      botFlange.position.set(faceX(vx), VERT_BOT_Y, faceZ);
+      group.add(botFlange);
+
+      /* intermediate collar rings — every ~1.0 unit */
+      const collarCount = Math.floor(VERT_HEIGHT / 1.0);
+      for(let c = 1; c < collarCount; c++){
+        const cy = VERT_BOT_Y + (VERT_HEIGHT / collarCount) * c;
+        const collar = new THREE.Mesh(
+          new THREE.CylinderGeometry(FLANGE_R*0.76, FLANGE_R*0.76, FLANGE_H*0.55, 18),
+          mFlange.clone()
+        );
+        collar.position.set(faceX(vx), cy, faceZ);
+        group.add(collar);
+      }
+    });
+
+    /* ─── STEPS B + C: MANIFOLD TUBES + T-JUNCTIONS ─────────── */
+    for(let r = 0; r < 6; r++){
+      const ry = rowY[r];
+
+      /* manifold pipe */
+      const manifold = new THREE.Mesh(
+        new THREE.CylinderGeometry(MAN_R, MAN_R, MAN_SPAN, 20, 1),
+        mManifold.clone()
+      );
+      manifold.rotation.z = Math.PI/2;
+      manifold.position.set(faceX(MAN_CX), ry, faceZ);
+      group.add(manifold);
+
+      /* heat-stain sleeve on manifold */
+      const mSlv = new THREE.Mesh(
+        new THREE.CylinderGeometry(MAN_R*1.045, MAN_R*1.065, MAN_SPAN*0.35, 20, 1),
+        mRustSlv.clone()
+      );
+      mSlv.rotation.z = Math.PI/2;
+      mSlv.position.set(faceX(MAN_CX + MAN_SPAN*0.08), ry, faceZ);
+      group.add(mSlv);
+
+      /* intermediate bolted flange rings on manifold */
+      [-MAN_SPAN*0.28, MAN_SPAN*0.28].forEach(function(dx){
+        const midFlange = new THREE.Mesh(
+          new THREE.CylinderGeometry(MAN_R*1.48, MAN_R*1.48, MAN_R*0.7, 18),
+          mFlange.clone()
+        );
+        midFlange.rotation.z = Math.PI/2;
+        midFlange.position.set(faceX(MAN_CX + dx), ry, faceZ);
+        group.add(midFlange);
+      });
+
+      /* ── STEP C: T-JUNCTION FITTINGS at both ends ── */
+      [vertXL, vertXR].forEach(function(jx){
+
+        /* OUTER torus — wraps the vertical pipe at the junction level,
+           visible as the body of the T-fitting                          */
+        const tBody = new THREE.Mesh(
+          new THREE.TorusGeometry(VERT_R * 1.55, VERT_R * 0.55, 14, 32),
+          mKnuckle.clone()
+        );
+        tBody.rotation.x = Math.PI/2;   // ring faces outward (in Z)
+        tBody.position.set(faceX(jx), ry, faceZ);
+        group.add(tBody);
+
+        /* INNER fill disc — closes the torus hole, looks like a solid boss */
+        const tDisc = new THREE.Mesh(
+          new THREE.CylinderGeometry(VERT_R * 1.0, VERT_R * 1.0, VERT_R * 0.5, 20),
+          mKnuckle.clone()
+        );
+        tDisc.position.set(faceX(jx), ry, faceZ);
+        group.add(tDisc);
+
+        /* WELD BEAD — thin bright ring where manifold tube meets vertical */
+        const weld = new THREE.Mesh(
+          new THREE.TorusGeometry(MAN_R * 1.55, MAN_R * 0.32, 8, 24),
+          mFlange.clone()
+        );
+        weld.rotation.y = Math.PI/2;   // ring encircles manifold axis
+        weld.position.set(faceX(jx), ry, faceZ);
+        group.add(weld);
+
+        /* BRANCH STUB — short cylinder bridging T-body to manifold end */
+        const branchStub = new THREE.Mesh(
+          new THREE.CylinderGeometry(MAN_R*1.05, MAN_R*1.05, VERT_R * 1.6, 16),
+          mManifold.clone()
+        );
+        branchStub.rotation.z = Math.PI/2;
+        branchStub.position.set(
+          faceX(jx + (jx < 0 ? VERT_R*0.8 : -VERT_R*0.8)),
+          ry,
+          faceZ
+        );
+        group.add(branchStub);
+
+        /* FLANGE RING at T-junction (bolted appearance) */
+        const tFlange = new THREE.Mesh(
+          new THREE.CylinderGeometry(VERT_R*1.90, VERT_R*1.90, FLANGE_H*0.7, 22),
+          mFlange.clone()
+        );
+        tFlange.position.set(faceX(jx), ry, faceZ);
+        group.add(tFlange);
+      });
+
+      /* ─── STEP D: NOZZLE STUBS + COLLAR RINGS (15 per row) ── */
+      for(let b = 0; b < B_COUNT; b++){
+        const bx = faceX(burnerXs[b]);
+        /* nozzle sits exactly on the top tangent of the manifold and points upward (+Y) */
+        const nozzleBaseY = ry + MAN_R;
+        const stubZ = faceZ;
+        const stubY = nozzleBaseY + NOZ_H * 0.5;
+        const collarY = nozzleBaseY + NOZ_COL_T * 0.45;
+        const lockY = nozzleBaseY + NOZ_H * 0.22;
+        const nozzleTipY = nozzleBaseY + NOZ_H;
+        const flameAnchor = new THREE.Group();
+        flameAnchor.position.set(bx, nozzleTipY, stubZ);
+        group.add(flameAnchor);
+
+        /* nozzle stub cylinder */
+        const stub = new THREE.Mesh(
+          new THREE.CylinderGeometry(NOZ_R, NOZ_R*1.1, NOZ_H, 14),
+          mNozzle.clone()
+        );
+        stub.position.set(bx, stubY, stubZ);
+        group.add(stub);
+
+        /* collar torus ring at the manifold/stub junction */
+        const collar = new THREE.Mesh(
+          new THREE.TorusGeometry(NOZ_COL_R, NOZ_COL_T, 8, 20),
+          mFlange.clone()
+        );
+        collar.rotation.x = Math.PI/2;
+        collar.position.set(bx, collarY, stubZ);
+        group.add(collar);
+
+        /* hex-nut style lock ring just above collar */
+        const lockRing = new THREE.Mesh(
+          new THREE.CylinderGeometry(NOZ_COL_R*0.88, NOZ_COL_R*0.88, NOZ_H*0.28, 6),
+          mFlange.clone()
+        );
+        lockRing.position.set(bx, lockY, stubZ);
+        group.add(lockRing);
+
+        /* ─── STEP E: BURNER FLAMES anchored directly at the nozzle tip ─────── */
+        const auraBaseLift = FLAME_AURA_H * FLAME_BASE_SHIFT;
+        const outerBaseLift = FLAME_OUTER_H * FLAME_BASE_SHIFT;
+        const innerBaseLift = FLAME_INNER_H * FLAME_BASE_SHIFT;
+
+        /* outer aura */
+        const auraFlame = new THREE.Mesh(flameAuraGeo, flameMats.aura.clone());
+        auraFlame.position.set(0, auraBaseLift, 0);
+        flameAnchor.add(auraFlame);
+
+        /* outer flame body */
+        const outerFlame = new THREE.Mesh(flameOuterGeo, flameMats.outer.clone());
+        outerFlame.position.set(0, outerBaseLift, 0);
+        flameAnchor.add(outerFlame);
+
+        /* inner hot core */
+        const innerFlame = new THREE.Mesh(flameInnerGeo, flameMats.inner.clone());
+        innerFlame.position.set(0, innerBaseLift, 0);
+        flameAnchor.add(innerFlame);
+
+        /* glow sprite */
+        const glow = new THREE.Sprite(flameMats.glow.clone());
+        glow.scale.set(0.48, 0.48, 1);
+        glow.position.set(0, 0.05, 0);
+        flameAnchor.add(glow);
+
+        /* seed for per-burner flicker variety */
+        const seed = r * 17 + b * 3 + (flameDir > 0 ? 200 : 400);
+
+        burnerPortObjects.push({
+          seed,
+          dir: flameDir,
+          verticalRise: true,
+          flameAnchor,
+          glow, auraFlame, outerFlame, innerFlame, flameTip: null,
+          baseLiftAura: auraBaseLift,
+          baseLiftOuter: outerBaseLift,
+          baseLiftInner: innerBaseLift
+        });
+        stampFlameOrder(burnerPortObjects[burnerPortObjects.length-1]);
+        stampFlameOrder(burnerPortObjects[burnerPortObjects.length-1]);
+      }
+    }
+
+    /* connection stubs: vertical header → top common header */
+    [vertXL, vertXR].forEach(function(vx){
+      const stub = new THREE.Mesh(
+        new THREE.CylinderGeometry(VERT_R*0.88, VERT_R*0.88, 0.30, 16),
+        mVert.clone()
+      );
+      stub.rotation.z = (vx < 0 ? 1 : -1) * 0.32 * (mirrorBackFace ? -1 : 1);
+      stub.position.set(faceX(vx*0.96), HDR_Y - HDR_R*0.6, faceZ*0.82);
+      group.add(stub);
+    });
+  }
+
+  /* ─── STEP F: BUILD BOTH FACES ────────────────────────────── */
+  buildFace(+FD/2 + PIPE_Z_OFF, +1);   // front face — flames rise toward +Y
+  buildFace(-FD/2 - PIPE_Z_OFF, -1);   // back  face — flames rise toward +Y
+
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   INNER FACE BURNER OVERLAYS — 3D GEOMETRY (mac-cuboid style)
+   6 rows × 7 columns (burner cols 1,3,5,8,11,13,15) on each
+   inner face (front & back). Real Three.js mesh burners with
+   lathe-geometry flames, additive-blended, animated per-frame.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── refractory brick canvas overlay (rich layered texture) ── */
+(function addBrickOverlays(){
+  function makeBrickCanvas(zPos, flipY){
+    const cv = document.createElement("canvas");
+    cv.width = 2048; cv.height = 1024;
+    const g = cv.getContext("2d");
+    const W = cv.width, H = cv.height;
+
+    /* 1 — deep dark background base */
+    g.fillStyle = "#0e0904"; g.fillRect(0, 0, W, H);
+
+    /* 2 — brick dimensions: standard stretcher bond layout */
+    const BW = Math.round(W / 11);   // brick width  ~186px
+    const BH = Math.round(H / 13);   // brick height  ~79px
+    const MORTAR = 5;                 // mortar joint thickness px
+
+    /* brick colour palette — dark refractory fire-brick tones */
+    const brickPalettes = [
+      ["#2e1a0a","#3a2010","#2a1608","#321c0c","#3e2414"],  // very dark charred
+      ["#4a2a12","#3c2210","#422614","#4e2e16","#3a2010"],  // dark burnt sienna
+      ["#5a3418","#4c2c14","#523016","#5e3a1c","#4a2a12"],  // medium refractory
+      ["#623c1e","#583618","#6a401e","#5c3618","#6e4422"],  // warm orange-brown
+    ];
+
+    /* noise helper for variation */
+    function nhash(a, b){ let v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); }
+
+    /* 3 — draw each brick row by row (stretcher bond — offset every other row) */
+    const rows = Math.ceil(H / (BH + MORTAR)) + 1;
+    const cols = Math.ceil(W / (BW + MORTAR)) + 2;
+
+    for(let row = 0; row < rows; row++){
+      const by0 = row * (BH + MORTAR);
+      const offset = (row % 2 === 0) ? 0 : Math.round((BW + MORTAR) * 0.5);
+
+      for(let col = -1; col < cols; col++){
+        const bx0 = col * (BW + MORTAR) - offset;
+        const bx1 = bx0 + BW, by1 = by0 + BH;
+
+        /* skip fully off-canvas */
+        if(bx1 < 0 || bx0 > W || by1 < 0 || by0 > H) continue;
+
+        const id  = row * 100 + col + 50;
+        const n1  = nhash(id, 1);
+        const n2  = nhash(id, 2);
+        const n3  = nhash(id, 3);
+
+        /* pick palette row by heat zone (hotter = darker near bottom) */
+        const heatZone = by0 / H;  // 0=top, 1=bottom
+        const pRow = Math.min(3, Math.floor(n1 * 2 + heatZone * 2));
+        const pal  = brickPalettes[pRow];
+        const baseCol = pal[Math.floor(n2 * pal.length)];
+
+        /* brick body fill */
+        g.fillStyle = baseCol;
+        g.fillRect(bx0, by0, BW, BH);
+
+        /* surface gradient — top highlight, bottom shadow (fired brick look) */
+        const brickGrad = g.createLinearGradient(bx0, by0, bx0, by1);
+        const lum = -0.04 + n3 * 0.08;
+        brickGrad.addColorStop(0,   `rgba(255,230,180,${0.07 + n1*0.04})`);
+        brickGrad.addColorStop(0.3, `rgba(0,0,0,0)`);
+        brickGrad.addColorStop(0.7, `rgba(0,0,0,0)`);
+        brickGrad.addColorStop(1,   `rgba(0,0,0,${0.18 + n2*0.08})`);
+        g.fillStyle = brickGrad;
+        g.fillRect(bx0, by0, BW, BH);
+
+        /* side-light sheen — left bright edge, right dark edge */
+        const sideGrad = g.createLinearGradient(bx0, by0, bx1, by0);
+        sideGrad.addColorStop(0,   `rgba(255,220,160,${0.06 + n3*0.04})`);
+        sideGrad.addColorStop(0.12,"rgba(0,0,0,0)");
+        sideGrad.addColorStop(0.88,"rgba(0,0,0,0)");
+        sideGrad.addColorStop(1,   `rgba(0,0,0,${0.12 + n1*0.06})`);
+        g.fillStyle = sideGrad;
+        g.fillRect(bx0, by0, BW, BH);
+
+        /* heat-craze cracks on some bricks */
+        if(n1 > 0.62){
+          const cx1 = bx0 + BW * (0.2 + n2 * 0.5);
+          const cy1 = by0 + BH * (0.1 + n3 * 0.3);
+          const cx2 = cx1 + (-8 + n1 * 16);
+          const cy2 = cy1 + BH * (0.4 + n2 * 0.4);
+          g.strokeStyle = `rgba(8,5,2,${0.25 + n3*0.2})`;
+          g.lineWidth = 0.7 + n2 * 0.6;
+          g.beginPath(); g.moveTo(cx1, cy1); g.lineTo(cx2, cy2); g.stroke();
+        }
+
+        /* soot smudge on top edge of some bricks */
+        if(n2 > 0.55){
+          const sg = g.createLinearGradient(bx0, by0, bx0, by0 + BH * 0.4);
+          sg.addColorStop(0, `rgba(4,3,2,${0.22 + n1*0.14})`);
+          sg.addColorStop(1, "rgba(0,0,0,0)");
+          g.fillStyle = sg;
+          g.fillRect(bx0, by0, BW, Math.round(BH * 0.4));
+        }
+      }
+    }
+
+    /* 4 — mortar joints as slightly lighter recessed lines */
+    g.strokeStyle = "rgba(28,18,8,0.90)";
+    g.lineWidth   = MORTAR;
+    // horizontal joints
+    for(let row = 0; row <= rows; row++){
+      const jy = row * (BH + MORTAR) - MORTAR * 0.5;
+      g.beginPath(); g.moveTo(0, jy); g.lineTo(W, jy); g.stroke();
+    }
+    // vertical joints — two passes for even/odd rows
+    for(let row = 0; row < rows; row++){
+      const by0 = row * (BH + MORTAR);
+      const offset = (row % 2 === 0) ? 0 : Math.round((BW + MORTAR) * 0.5);
+      for(let col = -1; col < cols; col++){
+        const jx = col * (BW + MORTAR) - offset + BW + MORTAR * 0.5;
+        g.beginPath(); g.moveTo(jx, by0); g.lineTo(jx, by0 + BH + MORTAR); g.stroke();
+      }
+    }
+
+    /* 5 — mortar subtle highlight (raised look) */
+    g.strokeStyle = "rgba(50,32,14,0.30)";
+    g.lineWidth   = 1;
+    for(let row = 0; row <= rows; row++){
+      const jy = row * (BH + MORTAR) - MORTAR * 0.5 - 1;
+      g.beginPath(); g.moveTo(0, jy); g.lineTo(W, jy); g.stroke();
+    }
+
+    /* 6 — radial heat glow from centre */
+    const heatGlow = g.createRadialGradient(W*0.5, H*0.62, 0, W*0.5, H*0.62, W*0.52);
+    heatGlow.addColorStop(0,   "rgba(255,110,10,0.13)");
+    heatGlow.addColorStop(0.4, "rgba(200,70,5,0.07)");
+    heatGlow.addColorStop(1,   "rgba(0,0,0,0)");
+    g.fillStyle = heatGlow; g.fillRect(0, 0, W, H);
+
+    /* 7 — vignette darkening at edges */
+    const vign = g.createRadialGradient(W*0.5, H*0.5, H*0.28, W*0.5, H*0.5, W*0.68);
+    vign.addColorStop(0, "rgba(0,0,0,0)");
+    vign.addColorStop(1, "rgba(0,0,0,0.45)");
+    g.fillStyle = vign; g.fillRect(0, 0, W, H);
+
+    /* 8 — overall soot darkening at top */
+    const sootGrad = g.createLinearGradient(0, 0, 0, H * 0.35);
+    sootGrad.addColorStop(0, "rgba(4,3,2,0.50)");
+    sootGrad.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = sootGrad; g.fillRect(0, 0, W, H * 0.35);
+
+    const tex = new THREE.CanvasTexture(cv);
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    if(typeof tex.colorSpace !== "undefined" && THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.FrontSide, depthWrite: true, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(FW, FH), mat);
+    mesh.position.z = zPos;
+    if(flipY) mesh.rotation.y = Math.PI;
+    mesh.renderOrder = -1;
+    group.add(mesh);
+  }
+  makeBrickCanvas( FD/2 - 0.02, false);
+  makeBrickCanvas(-FD/2 + 0.02, true);
+})();
+
+function createBurnerWallFace(faceName){
+  const dir   = faceName === "front" ? -1 : 1;
+  const wallZ = faceName === "front" ? ( FD/2 - 0.07) : (-FD/2 + 0.07);
+  const mirrorBackFace = faceName === "back";
+  const burnerColumns = [1,3,5,8,11,13,15];
+  const cols = burnerColumns.length;
+  const rowNumbers = [6,5,4,3,2,1];
+  const spanX = FW * 0.82;
+  const wallBottomInset = FH * 0.11;
+  const wallTopInset    = FH * 0.18;
+  const topY            = FH/2 - wallTopInset;
+  const bottomY         = -FH/2 + wallBottomInset;
+  const spanY           = topY - bottomY;
+
+  for(let ri = 0; ri < rowNumbers.length; ri++){
+    const y = topY - (spanY/(rowNumbers.length-1)) * ri;
+    for(let ci = 0; ci < cols; ci++){
+      const baseX = -spanX/2 + (spanX/(cols-1)) * ci;
+      const x    = mirrorBackFace ? -baseX : baseX;
+      const seed = ri * 31 + ci * 3 + (faceName === "front" ? 1 : 7);
+
+      const ring = new THREE.Mesh(ringGeo, hotPortMat.clone());
+      ring.position.set(x, y, wallZ + dir * 0.01);
+      group.add(ring);
+
+      const port = new THREE.Mesh(nozzlePortGeo, darkPortMat.clone());
+      port.rotation.x = Math.PI/2;
+      port.position.set(x, y, wallZ + dir * 0.038);
+      group.add(port);
+
+      const glow = new THREE.Sprite(flameMats.glow.clone());
+      glow.scale.set(0.42, 0.42, 1);
+      glow.position.set(x, y, wallZ + dir * 0.08);
+      group.add(glow);
+
+      const auraFlame = new THREE.Mesh(flameAuraGeo, flameMats.aura.clone());
+      auraFlame.rotation.x = dir === -1 ? -Math.PI/2 : Math.PI/2;
+      auraFlame.position.set(x, y, wallZ + dir * 0.22);
+      group.add(auraFlame);
+
+      const outerFlame = new THREE.Mesh(flameOuterGeo, flameMats.outer.clone());
+      outerFlame.rotation.x = dir === -1 ? -Math.PI/2 : Math.PI/2;
+      outerFlame.position.set(x, y, wallZ + dir * 0.19);
+      group.add(outerFlame);
+
+      const innerFlame = new THREE.Mesh(flameInnerGeo, flameMats.inner.clone());
+      innerFlame.rotation.x = dir === -1 ? -Math.PI/2 : Math.PI/2;
+      innerFlame.position.set(x, y, wallZ + dir * 0.17);
+      group.add(innerFlame);
+
+      const flameTip = new THREE.Mesh(tipGeo, flameMats.tip.clone());
+      flameTip.position.set(x, y, wallZ + dir * 0.35);
+      group.add(flameTip);
+
+      burnerPortObjects.push({
+        seed, dir,
+        glow, auraFlame, outerFlame, innerFlame, flameTip,
+        baseX: x, baseY: y,
+        baseZGlow:  wallZ + dir * 0.06,
+        baseZAura:  wallZ + dir * 0.14,
+        baseZOuter: wallZ + dir * 0.12,
+        baseZInner: wallZ + dir * 0.10,
+        baseZTip:   wallZ + dir * 0.20
+      });
+      stampFlameOrder(burnerPortObjects[burnerPortObjects.length-1]);
+        stampFlameOrder(burnerPortObjects[burnerPortObjects.length-1]);
+    }
+  }
+}
+createBurnerWallFace("front");
+createBurnerWallFace("back");
+
+/* ── 3D burner animation function ── */
+function animateBurners(time){
+  burnerPortObjects.forEach(function(item){
+    const pulse   = 0.94 + Math.sin(time * 5.4 + item.seed) * 0.10 + Math.sin(time * 8.6 + item.seed * 1.7) * 0.05;
+    const sway    = Math.sin(time * 3.1 + item.seed * 0.9) * 0.045;
+    const flutter = Math.sin(time * 7.2 + item.seed * 1.4) * 0.03;
+    const cross   = Math.cos(time * 4.1 + item.seed * 0.7) * 0.026;
+
+    if(item.verticalRise){
+      const auraScaleX = 0.92 + pulse*0.16;
+      const auraScaleY = 1.08 + pulse*0.16;
+      const outerScaleX = 0.84 + pulse*0.14;
+      const outerScaleY = 1.12 + pulse*0.20;
+      const innerScaleX = 0.66 + pulse*0.10;
+      const innerScaleY = 0.94 + pulse*0.14;
+
+      item.flameAnchor.rotation.x = item.dir * (sway*1.10 + flutter*0.36);
+      item.flameAnchor.rotation.z = cross*1.18 + flutter*0.72;
+
+      item.glow.position.set(cross*0.12, 0.05 + pulse*0.014, 0);
+      item.glow.scale.set(0.42 + pulse*0.14, 0.42 + pulse*0.14, 1);
+      item.glow.material.opacity = 0.12 + pulse*0.08;
+
+      item.auraFlame.position.set(0, item.baseLiftAura * auraScaleY, 0);
+      item.auraFlame.scale.set(auraScaleX, auraScaleY, auraScaleX);
+      item.auraFlame.material.opacity = 0.05 + pulse*0.04;
+      item.auraFlame.rotation.set(0, 0, 0);
+
+      item.outerFlame.position.set(0, item.baseLiftOuter * outerScaleY, 0);
+      item.outerFlame.scale.set(outerScaleX, outerScaleY, outerScaleX);
+      item.outerFlame.rotation.set(0, 0, 0);
+
+      item.innerFlame.position.set(0, item.baseLiftInner * innerScaleY, 0);
+      item.innerFlame.scale.set(innerScaleX, innerScaleY, innerScaleX);
+      item.innerFlame.rotation.set(0, 0, 0);
+      return;
+    }
+
+    item.glow.position.set(item.baseX + cross*0.22, item.baseY + sway*0.18, item.baseZGlow + item.dir*(0.01 + pulse*0.006));
+    item.glow.scale.set(0.28 + pulse*0.10, 0.28 + pulse*0.10, 1);
+    item.glow.material.opacity = 0.10 + pulse*0.06;
+
+    item.auraFlame.position.set(item.baseX + cross*0.45, item.baseY + sway*0.2, item.baseZAura + item.dir*(0.01 + pulse*0.014));
+    item.auraFlame.scale.set(0.62 + pulse*0.10, 1.0 + pulse*0.16, 0.62 + pulse*0.10);
+    item.auraFlame.material.opacity = 0.05 + pulse*0.04;
+    item.auraFlame.rotation.z = sway*1.34 + flutter*0.5;
+    item.auraFlame.rotation.y = item.dir === -1 ? cross*0.9 : Math.PI + cross*0.9;
+
+    item.outerFlame.position.set(item.baseX + cross*0.62, item.baseY + sway*0.28, item.baseZOuter + item.dir*(pulse*0.020));
+    item.outerFlame.scale.set(0.58 + pulse*0.10, 1.0 + pulse*0.22, 0.58 + pulse*0.10);
+
+    item.innerFlame.position.set(item.baseX + cross*0.34, item.baseY + sway*0.22, item.baseZInner + item.dir*(pulse*0.016));
+    item.innerFlame.scale.set(0.54 + pulse*0.08, 0.92 + pulse*0.18, 0.54 + pulse*0.08);
+
+    item.flameTip.position.set(item.baseX + cross*0.9, item.baseY + sway*0.34 + flutter*0.16, item.baseZTip + item.dir*(pulse*0.024));
+    item.flameTip.scale.setScalar(0.58 + pulse*0.10);
+
+    item.outerFlame.rotation.z = sway + flutter*0.9;
+    item.innerFlame.rotation.z = sway*1.22 - flutter*0.84;
+    item.outerFlame.rotation.y = item.dir === -1 ? cross*0.5 : Math.PI + cross*0.5;
+    item.innerFlame.rotation.y = item.dir === -1 ? cross*0.32 : Math.PI + cross*0.32;
+  });
+}
+
+/* ── render loop state ───────────────────────────────── */
+let rotY = 0, targetRotY = 0, autoSpin = false;
+let activePtr = null, isDrag = false, lastX = 0, dragDist = 0;
+let touchMoved = false, lastTap = 0, lastFrameTs = 0, lastRenderTs = 0;
+let forceRender = true;
+
+const DRAG_SPAN  = Math.PI * 1.5;
+const AUTO_SPEED = 0.34;
+const SETTLE_RATE = 26;
+const SNAP_EPS   = 0.0012;
+const SNAP_INST  = 0.07;
+const MAX_DX     = 42;
+const TAP_TOL    = 10;
+const FACE_STEP  = Math.PI / 2;
+const ACTIVE_MS  = 16;
+const BG_MS      = isChrome ? 420 : 300;
+const SLEEP_MS   = 900;
+
+let tabActive = true, inView = true, focused = true;
+document.addEventListener("visibilitychange", () => markDirty());
+window.addEventListener("message", function(ev){
+  const d = ev && ev.data;
+  if(!d) return;
+  if(d.type === "cuboid-host-state"){
+    tabActive = !!d.active; inView = d.inView !== false; focused = d.focused !== false; markDirty();
+  }
+});
+
+function canRender(){ return !document.hidden && (isFs() || (tabActive && inView)); }
+function hasMotion(){ return isDrag || autoSpin || Math.abs(shortDelta(rotY, targetRotY)) > SNAP_EPS; }
+function markDirty(){ forceRender = true; lastFrameTs = 0; lastRenderTs = 0; }
+
+function norm(a){ const t=Math.PI*2; while(a<=-Math.PI) a+=t; while(a>Math.PI) a-=t; return a; }
+function shortDelta(from, to){ let d=norm(to)-norm(from); if(d>Math.PI) d-=Math.PI*2; if(d<-Math.PI) d+=Math.PI*2; return d; }
+function setTarget(a){ targetRotY = norm(rotY + shortDelta(rotY, a)); }
+
+function settle(dt){
+  const d = shortDelta(rotY, targetRotY);
+  if(Math.abs(d) <= SNAP_EPS){ rotY = targetRotY; return false; }
+  rotY = norm(rotY + d*(1-Math.exp(-SETTLE_RATE*dt)));
+  if(Math.abs(shortDelta(rotY, targetRotY)) <= SNAP_EPS) rotY = targetRotY;
+  return true;
+}
+
+function snapFace(){ setTarget(Math.round(norm(rotY)/FACE_STEP)*FACE_STEP); }
+
+function syncAutoBtn(){ btnAuto.textContent = autoSpin ? "Stop" : "Auto Rotate"; }
+
+/* ── pointer ──────────────────────────────────────────── */
+vp.addEventListener("pointerdown", function(e){
+  if(e.pointerType==="mouse" && e.button!==0) return;
+  activePtr = e.pointerId;
+  if(vp.setPointerCapture) vp.setPointerCapture(e.pointerId);
+  autoSpin = false; syncAutoBtn();
+  isDrag = true; lastX = e.clientX; dragDist = 0; touchMoved = false;
+  targetRotY = rotY; markDirty();
+});
+vp.addEventListener("pointermove", function(e){
+  if(activePtr !== e.pointerId || !isDrag) return;
+  const raw = e.clientX - lastX;
+  const dx = Math.max(-MAX_DX, Math.min(MAX_DX, raw));
+  dragDist += Math.abs(raw);
+  if(Math.abs(raw) > 2) touchMoved = true;
+  rotY = norm(rotY + (dx / Math.max(320, GW())) * DRAG_SPAN);
+  targetRotY = rotY; lastX = e.clientX; markDirty();
+});
+function endPtr(e){
+  if(activePtr !== e.pointerId) return;
+  try{ if(vp.releasePointerCapture) vp.releasePointerCapture(e.pointerId); }catch(_){}
+  activePtr = null;
+  const wasTap = dragDist <= TAP_TOL && !touchMoved;
+  isDrag = false; snapFace();
+  if(Math.abs(shortDelta(rotY, targetRotY)) <= SNAP_INST) rotY = targetRotY;
+  markDirty();
+  if(!wasTap){ lastTap = 0; return; }
+  const now = Date.now();
+  if(now - lastTap < 320){ toggleFs(); lastTap = 0; } else { lastTap = now; }
+}
+vp.addEventListener("pointerup", endPtr);
+vp.addEventListener("pointercancel", endPtr);
+vp.addEventListener("lostpointercapture", function(e){ if(activePtr===e.pointerId){ activePtr=null; isDrag=false; } });
+window.addEventListener("blur", function(){ activePtr=null; isDrag=false; });
+vp.addEventListener("dblclick", function(e){ e.preventDefault(); toggleFs(); });
+
+/* ── buttons ─────────────────────────────────────────── */
+btnFront.addEventListener("click", function(){ autoSpin=false; syncAutoBtn(); setTarget(0); markDirty(); });
+btnBack.addEventListener("click",  function(){ autoSpin=false; syncAutoBtn(); setTarget(Math.PI); markDirty(); });
+btnAuto.addEventListener("click",  function(){
+  autoSpin = !autoSpin;
+  if(!autoSpin) snapFace(); else targetRotY = rotY;
+  syncAutoBtn(); markDirty();
+});
+btnReset.addEventListener("click", function(){ autoSpin=false; syncAutoBtn(); setTarget(0); markDirty(); });
+
+/* ── resize ──────────────────────────────────────────── */
+const ro = new ResizeObserver(function(){ applyQuality(true); fitCamera(); markDirty(); });
+ro.observe(vp);
+applyQuality(true);
+
+/* ── animate ─────────────────────────────────────────── */
+function animate(t){
+  requestAnimationFrame(animate);
+  const ok = canRender();
+  const uni = ok && (isFs() || focused);
+  const targetMs = ok ? (uni ? ACTIVE_MS : BG_MS) : SLEEP_MS;
+  if(lastRenderTs && (t - lastRenderTs) < targetMs) return;
+  lastRenderTs = t;
+  const dt = lastFrameTs ? Math.min(0.05, Math.max(0.001, (t-lastFrameTs)/1000)) : 1/60;
+  lastFrameTs = t;
+  let dirty = forceRender || applyQuality(false);
+  if(!ok) return;
+
+  if(isDrag){
+    targetRotY = rotY; dirty = true;
+  } else if(autoSpin){
+    rotY = norm(rotY + AUTO_SPEED * dt); targetRotY = rotY; dirty = true;
+  } else {
+    dirty = settle(dt) || dirty;
+  }
+
+  // gentle inner light pulse
+  innerL.intensity = 1.2 + 0.5*Math.sin(t*0.007) + 0.2*Math.sin(t*0.013);
+
+  // 3D burner flame animation
+  animateBurners(t * 0.001);
+  dirty = true;
+
+  rigGroup.rotation.y = rotY;
+  if(!dirty) return;
+  renderer.render(scene, camera);
+  forceRender = false;
+}
+requestAnimationFrame(animate);
+
+})();
+</script>
+</body>
+</html>
