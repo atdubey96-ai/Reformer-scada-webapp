@@ -338,6 +338,15 @@ function cuboidClamp01(value){
   return Math.max(0, Math.min(1, n));
 }
 
+function cuboidDarkenColor(color, amount){
+  const base = new THREE.Color(color);
+  const hsl = { h:0, s:0, l:0 };
+  base.getHSL(hsl);
+  hsl.s = Math.max(0, Math.min(1, hsl.s * (1 + amount * 0.28)));
+  hsl.l = Math.max(0, Math.min(1, hsl.l * (1 - amount)));
+  return "#" + (new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l)).getHexString();
+}
+
 function cuboidRoundRectPath(ctx, x, y, w, h, r){
   const radius = Math.max(0, Math.min(r, Math.min(w, h) * 0.5));
   ctx.beginPath();
@@ -374,6 +383,26 @@ function cuboidGetTstRowsForWall(snapshot, wallKey){
     top: cuboidSanitizeTstRow(isAbWall ? snapshot.abTop : snapshot.cdTop),
     bot: cuboidSanitizeTstRow(isAbWall ? snapshot.abBot : snapshot.cdBot)
   };
+}
+
+function cuboidBuildFaceRowCenters(){
+  const rowNumbers = [6,5,4,3,2,1];
+  const wallBottomInset = FH * 0.11;
+  const wallTopInset = FH * 0.18;
+  const topY = FH/2 - wallTopInset;
+  const bottomY = -FH/2 + wallBottomInset;
+  const spanY = topY - bottomY;
+  const centers = {};
+  for(let i = 0; i < rowNumbers.length; i++){
+    centers[rowNumbers[i]] = topY - (spanY / (rowNumbers.length - 1)) * i;
+  }
+  return centers;
+}
+
+const cuboidFaceRowCenters = cuboidBuildFaceRowCenters();
+
+function cuboidWorldYToOverlayPx(worldY, canvasHeight){
+  return (1 - ((worldY + FH/2) / FH)) * canvasHeight;
 }
 
 function cuboidSetMaterialTone(material, color, emissiveColor, emissiveIntensity){
@@ -487,8 +516,11 @@ function cuboidRenderFaceOverlay(faceName){
   ctx.fillStyle = "rgba(232,240,250,0.86)";
   ctx.fillText(shiftLabel + " · " + dtLabel, w - 42, 58);
 
-  cuboidDrawTempStrip(ctx, "TST TOP", tstRows.top, 28, 112, w - 56, 86);
-  cuboidDrawTempStrip(ctx, "TST BOT", tstRows.bot, 28, h - 110, w - 56, 86);
+  const stripH = 84;
+  const topMidY = cuboidWorldYToOverlayPx((cuboidFaceRowCenters[4] + cuboidFaceRowCenters[3]) * 0.5, h);
+  const botMidY = cuboidWorldYToOverlayPx((cuboidFaceRowCenters[2] + cuboidFaceRowCenters[1]) * 0.5, h);
+  cuboidDrawTempStrip(ctx, "TST TOP", tstRows.top, 28, topMidY - (stripH * 0.5), w - 56, stripH);
+  cuboidDrawTempStrip(ctx, "TST BOT", tstRows.bot, 28, botMidY - (stripH * 0.5), w - 56, stripH);
 
   overlay.texture.needsUpdate = true;
 }
@@ -504,6 +536,12 @@ function cuboidApplyBurnerPresentation(item, snapshot){
   const state = cuboidNormalizeBurnerState(stateRow[burnerIndex]);
   const opening = cuboidNormalizeOpeningValue(openingRow[burnerIndex], state);
   const palette = burnerStatePalette[state] || burnerStatePalette.C;
+  const metalTone = cuboidDarkenColor(palette.metal, 0.26);
+  const collarTone = cuboidDarkenColor(palette.metal, 0.12);
+  const ringTone = cuboidDarkenColor(palette.ring, 0.08);
+  const portTone = cuboidDarkenColor(palette.metal, 0.38);
+  const shadowTone = cuboidDarkenColor(palette.ring, 0.32);
+  const glowTone = cuboidDarkenColor(palette.glow, 0.20);
   const flameLevel = (state === "C" || opening <= 0) ? 0 : cuboidClamp01(opening / 100);
   const showFlame = flameLevel > 0.001;
 
@@ -511,11 +549,11 @@ function cuboidApplyBurnerPresentation(item, snapshot){
   item.liveOpening = opening;
   item.liveFlameLevel = flameLevel;
 
-  cuboidSetMaterialTone(item.stub && item.stub.material, palette.metal, palette.ring, 0.12 + (flameLevel * 0.18));
-  cuboidSetMaterialTone(item.collar && item.collar.material, palette.metal, palette.glow, 0.06 + (flameLevel * 0.16));
-  cuboidSetMaterialTone(item.lockRing && item.lockRing.material, palette.metal, palette.glow, 0.06 + (flameLevel * 0.14));
-  cuboidSetMaterialTone(item.ring && item.ring.material, palette.ring, palette.glow, 0.08 + (flameLevel * 0.18));
-  cuboidSetMaterialTone(item.port && item.port.material, palette.metal, palette.ring, 0.05 + (flameLevel * 0.12));
+  cuboidSetMaterialTone(item.stub && item.stub.material, metalTone, shadowTone, 0.08 + (flameLevel * 0.14));
+  cuboidSetMaterialTone(item.collar && item.collar.material, collarTone, glowTone, 0.04 + (flameLevel * 0.10));
+  cuboidSetMaterialTone(item.lockRing && item.lockRing.material, collarTone, glowTone, 0.04 + (flameLevel * 0.08));
+  cuboidSetMaterialTone(item.ring && item.ring.material, ringTone, shadowTone, 0.05 + (flameLevel * 0.10));
+  cuboidSetMaterialTone(item.port && item.port.material, portTone, shadowTone, 0.04 + (flameLevel * 0.08));
 
   if(item.glow && item.glow.material && item.glow.material.color) item.glow.material.color.set(palette.glow);
   if(item.auraFlame && item.auraFlame.material && item.auraFlame.material.color) item.auraFlame.material.color.set(palette.aura);
