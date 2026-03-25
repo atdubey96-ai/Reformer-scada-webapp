@@ -407,6 +407,10 @@ function cuboidWorldYToOverlayPx(worldY, canvasHeight){
   return (1 - ((worldY + FH/2) / FH)) * canvasHeight;
 }
 
+function cuboidWorldXToOverlayPx(worldX, canvasWidth){
+  return ((worldX + FW/2) / FW) * canvasWidth;
+}
+
 function cuboidSetMaterialTone(material, color, emissiveColor, emissiveIntensity){
   if(!material) return;
   if(material.color) material.color.set(color);
@@ -437,6 +441,389 @@ function cuboidDrawCanvasText(ctx, text, x, y, opts){
   ctx.fillStyle = o.fill || "#ffffff";
   ctx.fillText(text, x, y);
   ctx.restore();
+}
+
+function cuboidGetDashboardBurnerPalette(state){
+  return {
+    O:{ flame:"#22c55e", core:"#86efac", inner:"#ecfdf5", stem:"#15803d", glow:"rgba(34,197,94,0.52)"},
+    N:{ flame:"#f59e0b", core:"#fcd34d", inner:"#fef3c7", stem:"#b45309", glow:"rgba(245,158,11,0.54)"},
+    B:{ flame:"#3b82f6", core:"#93c5fd", inner:"#dbeafe", stem:"#1d4ed8", glow:"rgba(59,130,246,0.54)"},
+    C:{ flame:"#6b7280", core:"#d7dde6", inner:"#f8fafc", stem:"#4b5563", glow:"rgba(226,232,240,0.12)"}
+  }[state] || { flame:"#6b7280", core:"#d7dde6", inner:"#f8fafc", stem:"#4b5563", glow:"rgba(226,232,240,0.12)" };
+}
+
+function cuboidDrawDashboardTipFlameGlow(ctx, x, y, state, phase, scale, intensity){
+  const s = String(state || "C").toUpperCase();
+  if(s !== "O" && s !== "N" && s !== "B") return;
+  const palette = cuboidGetDashboardBurnerPalette(s);
+  const glowIntensity = Math.max(0, Math.min(1, Number(intensity == null ? 1 : intensity)));
+  if(glowIntensity <= 0.01) return;
+  const waveA = 0.5 + 0.5 * Math.sin(phase * 1.8);
+  const waveB = 0.5 + 0.5 * Math.sin(phase * 2.45 + 1.3);
+  const waveC = 0.5 + 0.5 * Math.sin(phase * 2.05 + 2.5);
+  const scaleX = scale * 0.88;
+  const scaleY = scale * 1.52;
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = (0.12 + (waveA * 0.10)) * glowIntensity;
+  ctx.fillStyle = palette.glow;
+  ctx.beginPath();
+  ctx.ellipse(x, y - (18 * scaleY), (11.5 * scaleX) + (waveB * 2.4), (14.2 * scaleY) + (waveA * 3.8), 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = (0.08 + (waveC * 0.06)) * glowIntensity;
+  ctx.fillStyle = palette.inner;
+  ctx.beginPath();
+  ctx.ellipse(x, y - (21 * scaleY) - (waveA * 1.4), (2.3 * scaleX) + (waveC * 0.45), (4.1 * scaleY) + (waveB * 0.8), 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function cuboidDrawDashboardOpeningWindow(ctx, x, baseX, baseY, baseW, baseH, state, opening, iconScale, scaleX){
+  const s = cuboidNormalizeBurnerState(state);
+  const palette = cuboidGetDashboardBurnerPalette(s);
+  const openingRatio = Math.max(0, Math.min(1, cuboidNormalizeOpeningValue(opening, s) / 100));
+  const bezelW = Math.min(baseW * 0.86, 19.4 * scaleX);
+  const bezelH = Math.max(baseH * 0.78, 3.15 * iconScale);
+  const bezelX = x - (bezelW / 2);
+  const bezelY = baseY + ((baseH - bezelH) / 2);
+  const bezelGrad = ctx.createLinearGradient(0, bezelY, 0, bezelY + bezelH);
+  bezelGrad.addColorStop(0, "rgba(34,41,49,0.98)");
+  bezelGrad.addColorStop(0.4, "rgba(10,14,19,0.98)");
+  bezelGrad.addColorStop(1, "rgba(58,66,76,0.94)");
+  const innerPad = Math.max(0.78, 0.24 * iconScale);
+  const innerX = bezelX + innerPad;
+  const innerY = bezelY + innerPad;
+  const innerW = bezelW - (innerPad * 2);
+  const innerH = bezelH - (innerPad * 2);
+  const cavityGrad = ctx.createLinearGradient(0, innerY, 0, innerY + innerH);
+  cavityGrad.addColorStop(0, "rgba(2,5,9,0.98)");
+  cavityGrad.addColorStop(0.52, "rgba(10,15,20,0.98)");
+  cavityGrad.addColorStop(1, "rgba(28,34,40,0.94)");
+  const fillW = Math.max(0, innerW * openingRatio);
+
+  ctx.fillStyle = bezelGrad;
+  cuboidRoundRectPath(ctx, bezelX, bezelY, bezelW, bezelH, bezelH / 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(196,203,211,0.24)";
+  ctx.lineWidth = Math.max(0.6, 0.28 * iconScale);
+  ctx.stroke();
+
+  ctx.fillStyle = cavityGrad;
+  cuboidRoundRectPath(ctx, innerX, innerY, innerW, innerH, Math.min(innerH / 2, 0.72 * iconScale));
+  ctx.fill();
+
+  if(fillW > 0.2 && s !== "C"){
+    const fillGrad = ctx.createLinearGradient(innerX, 0, innerX + Math.max(fillW, 0.8), 0);
+    fillGrad.addColorStop(0, palette.flame);
+    fillGrad.addColorStop(0.5, palette.core);
+    fillGrad.addColorStop(1, palette.inner);
+    ctx.save();
+    ctx.shadowBlur = 4.6 * iconScale;
+    ctx.shadowColor = palette.glow;
+    ctx.fillStyle = fillGrad;
+    cuboidRoundRectPath(ctx, innerX, innerY, fillW, innerH, Math.min(innerH / 2, 0.72 * iconScale));
+    ctx.fill();
+    ctx.restore();
+  }
+
+  for(let si = 1; si < 5; si++){
+    const ribX = innerX + ((innerW * si) / 5);
+    ctx.strokeStyle = "rgba(230,236,244,0.16)";
+    ctx.lineWidth = Math.max(0.45, 0.16 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(ribX, innerY + 0.28);
+    ctx.lineTo(ribX, innerY + innerH - 0.28);
+    ctx.stroke();
+  }
+
+  if(fillW > 0.2 && s !== "C"){
+    const capX = innerX + fillW;
+    ctx.strokeStyle = "rgba(255,255,255,0.42)";
+    ctx.lineWidth = Math.max(0.75, 0.24 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(capX, innerY + 0.22);
+    ctx.lineTo(capX, innerY + innerH - 0.22);
+    ctx.stroke();
+  }
+
+  if(s === "C"){
+    ctx.strokeStyle = "rgba(245,158,11,0.72)";
+    ctx.lineWidth = Math.max(0.9, 0.3 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(innerX + (0.9 * iconScale), innerY + innerH - (0.35 * iconScale));
+    ctx.lineTo(innerX + innerW - (0.9 * iconScale), innerY + (0.35 * iconScale));
+    ctx.stroke();
+  }else{
+    const glossGrad = ctx.createLinearGradient(0, innerY, 0, innerY + (innerH * 0.55));
+    glossGrad.addColorStop(0, "rgba(255,255,255,0.34)");
+    glossGrad.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = glossGrad;
+    cuboidRoundRectPath(ctx, innerX + 0.18, innerY + 0.18, innerW - 0.36, innerH * 0.46, Math.min(innerH / 2, 0.64 * iconScale));
+    ctx.fill();
+  }
+}
+
+function cuboidDrawDashboardBurnerGlyph(ctx, x, y, state, cleaned, phase, scale, opening){
+  let s = String(state || "C").toUpperCase();
+  if(s !== "O" && s !== "N" && s !== "B") s = "C";
+  const palette = cuboidGetDashboardBurnerPalette(s);
+  const iconScale = Math.max(1, Number(scale) || 2.7);
+  const scaleX = iconScale * 0.9;
+  const scaleY = iconScale * 1.55;
+  const openingValue = cuboidNormalizeOpeningValue(opening, s);
+  const flameTier = s === "C" ? 0 : (openingValue >= 100 ? 4 : (openingValue >= 75 ? 3 : (openingValue >= 50 ? 2 : (openingValue >= 25 ? 1 : 0))));
+  const flameHeightFactor = s !== "C" ? ([0,0.36,0.58,0.74,0.90][flameTier] || 0) : 1;
+  const flameWidthFactor = s !== "C" ? ([0,0.22,0.42,0.60,0.78][flameTier] || 0) : 1;
+  const glowIntensity = s !== "C" ? ([0,0.05,0.09,0.16,0.24][flameTier] || 0) : 0;
+  const outerScale = flameTier >= 4 ? 0.94 : (flameTier === 3 ? 0.88 : (flameTier === 2 ? 0.80 : 0.72));
+  const midScale = flameTier >= 4 ? 0.84 : (flameTier >= 2 ? 0.76 : 0);
+  const flicker = 0.94 + (Math.sin(phase * 1.95) * 0.11) + (Math.sin(phase * 2.8 + 0.9) * 0.07);
+  const sidePulse = 0.94 + (Math.sin(phase * 2.35 + 0.4) * 0.12);
+  const lift = (s === "C") ? 0 : ((1.8 + (Math.sin(phase * 1.75) * 1.15)) * scaleY * flameHeightFactor);
+  const stemW = 6.6 * scaleX;
+  const stemH = 8.6 * iconScale;
+  const stemX = x - (stemW / 2);
+  const stemY = y + (0.4 * iconScale);
+  const baseW = 20.5 * scaleX;
+  const baseH = 4.25 * iconScale;
+  const baseX = x - (baseW / 2);
+  const baseY = y + (4.7 * iconScale);
+  const baseShadowY = baseY + (baseH * 0.96);
+  const inletPortX = baseX + (1.22 * iconScale);
+  const inletCenterY = baseY + (baseH * 0.57);
+  const inletStubW = Math.max(4.9 * iconScale, baseH * 0.94);
+  const inletStubH = Math.max(2.15 * iconScale, baseH * 0.54);
+  const inletStubX = inletPortX - (inletStubW * 0.58);
+  const inletStubY = inletCenterY - (inletStubH / 2);
+  const inletCapR = Math.max(1.18 * iconScale, inletStubH * 0.56);
+  const baseGrad = ctx.createLinearGradient(0, baseY, 0, baseY + baseH);
+  baseGrad.addColorStop(0, "rgba(207,214,224,0.92)");
+  baseGrad.addColorStop(0.26, "rgba(96,104,115,0.97)");
+  baseGrad.addColorStop(0.62, "rgba(41,47,55,0.99)");
+  baseGrad.addColorStop(1, "rgba(17,22,29,0.98)");
+  const inletGrad = ctx.createLinearGradient(inletStubX, 0, inletStubX + inletStubW, 0);
+  inletGrad.addColorStop(0, "rgba(55,62,70,0.98)");
+  inletGrad.addColorStop(0.26, "rgba(224,231,239,0.94)");
+  inletGrad.addColorStop(0.58, "rgba(118,127,137,0.98)");
+  inletGrad.addColorStop(1, "rgba(34,40,47,0.98)");
+  const collarW = Math.max(11 * scaleX, baseW * 0.58);
+  const collarH = 2.35 * iconScale;
+  const collarX = x - (collarW / 2);
+  const collarY = baseY - (0.68 * iconScale);
+  const collarGrad = ctx.createLinearGradient(0, collarY, 0, collarY + collarH);
+  collarGrad.addColorStop(0, "rgba(224,229,235,0.78)");
+  collarGrad.addColorStop(0.45, "rgba(82,91,102,0.92)");
+  collarGrad.addColorStop(1, "rgba(28,34,41,0.96)");
+
+  ctx.fillStyle = "rgba(0,0,0,0.34)";
+  ctx.beginPath();
+  ctx.ellipse(x, baseShadowY, baseW * 0.62, baseH * 0.44, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = collarGrad;
+  cuboidRoundRectPath(ctx, collarX, collarY, collarW, collarH, collarH / 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(232,236,241,0.18)";
+  ctx.lineWidth = Math.max(0.8, 0.45 * iconScale);
+  ctx.stroke();
+
+  ctx.fillStyle = baseGrad;
+  cuboidRoundRectPath(ctx, baseX, baseY, baseW, baseH, baseH * 0.46);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(236,241,247,0.26)";
+  ctx.lineWidth = Math.max(0.85, 0.42 * iconScale);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = Math.max(0.7, 0.34 * iconScale);
+  ctx.beginPath();
+  ctx.moveTo(baseX + (baseH * 0.42), baseY + 0.9);
+  ctx.lineTo(baseX + baseW - (baseH * 0.42), baseY + 0.9);
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(0,0,0,0.26)";
+  ctx.beginPath();
+  ctx.ellipse(inletPortX - (0.22 * iconScale), inletCenterY + (0.18 * iconScale), inletStubW * 0.58, inletStubH * 0.70, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = inletGrad;
+  cuboidRoundRectPath(ctx, inletStubX, inletStubY, inletStubW, inletStubH, inletStubH / 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(239,244,248,0.34)";
+  ctx.lineWidth = Math.max(0.78, 0.34 * iconScale);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(inletPortX, inletCenterY, inletCapR, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(22,28,34,0.96)";
+  ctx.fill();
+  ctx.lineWidth = Math.max(0.92, 0.42 * iconScale);
+  ctx.strokeStyle = "rgba(232,238,244,0.38)";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(inletPortX - (0.16 * iconScale), inletCenterY - (0.04 * iconScale), Math.max(0.46 * iconScale, 0.7), 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.34)";
+  ctx.fill();
+
+  cuboidDrawDashboardOpeningWindow(ctx, x, baseX, baseY, baseW, baseH, s, opening, iconScale, scaleX);
+
+  if(s === "C"){
+    const closedCapW = 18.5 * scaleX;
+    const closedCapH = 5.9 * iconScale;
+    const closedCapX = x - (closedCapW / 2);
+    const closedCapY = y - (1.8 * iconScale);
+    const closedCapGrad = ctx.createLinearGradient(0, closedCapY, 0, closedCapY + closedCapH);
+    closedCapGrad.addColorStop(0, "rgba(224,228,234,0.95)");
+    closedCapGrad.addColorStop(0.26, "rgba(109,117,127,0.98)");
+    closedCapGrad.addColorStop(0.68, "rgba(53,59,67,1)");
+    closedCapGrad.addColorStop(1, "rgba(24,29,36,0.98)");
+    const closedStemH = 8.9 * iconScale;
+    const closedStemY = y + (0.6 * iconScale);
+
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + (2.3 * iconScale), 8.6 * scaleX, 3.9 * iconScale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = palette.stem;
+    cuboidRoundRectPath(ctx, stemX, closedStemY, stemW, closedStemH, 3.1 * iconScale);
+    ctx.fill();
+    ctx.lineWidth = Math.max(0.95, 0.62 * iconScale);
+    ctx.strokeStyle = "rgba(226,232,240,0.20)";
+    ctx.stroke();
+
+    ctx.fillStyle = closedCapGrad;
+    cuboidRoundRectPath(ctx, closedCapX, closedCapY, closedCapW, closedCapH, 3.4 * iconScale);
+    ctx.fill();
+    ctx.lineWidth = Math.max(1.05, 0.68 * iconScale);
+    ctx.strokeStyle = "rgba(240,244,247,0.34)";
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.42)";
+    ctx.lineWidth = Math.max(0.85, 0.42 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(closedCapX + (closedCapH * 0.46), closedCapY + 1.05);
+    ctx.lineTo(closedCapX + closedCapW - (closedCapH * 0.46), closedCapY + 1.05);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(245,158,11,0.90)";
+    ctx.lineWidth = Math.max(1.5, 0.86 * iconScale);
+    ctx.beginPath();
+    ctx.moveTo(closedCapX + (2.6 * scaleX), closedCapY + (1.4 * iconScale));
+    ctx.lineTo(closedCapX + closedCapW - (2.6 * scaleX), closedCapY + closedCapH - (1.3 * iconScale));
+    ctx.stroke();
+  }else{
+    cuboidDrawDashboardTipFlameGlow(ctx, x, y, s, phase, iconScale, glowIntensity);
+    ctx.fillStyle = palette.stem;
+    cuboidRoundRectPath(ctx, stemX, stemY, stemW, stemH, 3.2 * iconScale);
+    ctx.fill();
+
+    if(flameTier >= 1){
+      ctx.save();
+      ctx.shadowBlur = (flameTier >= 4 ? 6.2 : (flameTier === 1 ? 3.4 : 4.6)) * iconScale;
+      ctx.shadowColor = palette.glow;
+      ctx.globalAlpha = flameTier === 1 ? 0.90 : 0.82;
+      ctx.beginPath();
+      ctx.moveTo(x, y - (12.8 * scaleY * outerScale) - lift);
+      ctx.bezierCurveTo(
+        x + (11 * scaleX) * flicker * flameWidthFactor * outerScale,
+        y - (6.9 * scaleY * outerScale) - (lift * 0.52),
+        x + (8.2 * scaleX) * sidePulse * flameWidthFactor * outerScale,
+        y + (0.9 * iconScale),
+        x,
+        y + (2.4 * iconScale)
+      );
+      ctx.bezierCurveTo(
+        x - (8.2 * scaleX) * sidePulse * flameWidthFactor * outerScale,
+        y + (0.9 * iconScale),
+        x - (11 * scaleX) * flicker * flameWidthFactor * outerScale,
+        y - (6.9 * scaleY * outerScale) - (lift * 0.52),
+        x,
+        y - (12.8 * scaleY * outerScale) - lift
+      );
+      ctx.closePath();
+      ctx.fillStyle = palette.flame;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    if(flameTier >= 2){
+      ctx.beginPath();
+      ctx.moveTo(x, y - (8.5 * scaleY * midScale) - (lift * 0.46));
+      ctx.bezierCurveTo(
+        x + (6.5 * scaleX) * sidePulse * flameWidthFactor * midScale,
+        y - (4.6 * scaleY * midScale) - (lift * 0.18),
+        x + (4.8 * scaleX) * flicker * flameWidthFactor * midScale,
+        y + (0.15 * iconScale),
+        x,
+        y + (1.6 * iconScale)
+      );
+      ctx.bezierCurveTo(
+        x - (4.8 * scaleX) * flicker * flameWidthFactor * midScale,
+        y + (0.15 * iconScale),
+        x - (6.5 * scaleX) * sidePulse * flameWidthFactor * midScale,
+        y - (4.6 * scaleY * midScale) - (lift * 0.18),
+        x,
+        y - (8.5 * scaleY * midScale) - (lift * 0.46)
+      );
+      ctx.closePath();
+      ctx.globalAlpha = flameTier === 2 ? 0.94 : 1;
+      ctx.fillStyle = palette.core;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  const dotScale = Math.min(1.4, 0.92 + (iconScale * 0.22));
+  const dotX = x + (13 * scaleX);
+  const dotY = y - (2 * iconScale);
+  const dotR = 3.8 * dotScale;
+  ctx.beginPath();
+  ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+  ctx.fillStyle = cleaned ? "#4ade80" : "rgba(148,163,184,0.68)";
+  ctx.fill();
+  ctx.lineWidth = 1.4 * dotScale;
+  ctx.strokeStyle = cleaned ? "rgba(187,247,208,0.92)" : "rgba(226,232,240,0.45)";
+  ctx.stroke();
+}
+
+const cuboidDashboardIconColumns = [1,3,5,8,11,13,15];
+const cuboidDashboardIconRows = [6,5,4,3,2,1];
+
+function cuboidDrawDashboardWallIcons(ctx, canvasWidth, canvasHeight, wallKey, snapshot, phaseBase){
+  if(!snapshot || !snapshot.hmData) return;
+  const rows = Array.isArray(snapshot.hmData[wallKey]) ? snapshot.hmData[wallKey] : [];
+  const openingRows = snapshot.openingData && Array.isArray(snapshot.openingData[wallKey]) ? snapshot.openingData[wallKey] : [];
+  const cleaningSource = pushedCuboidLiveData && pushedCuboidLiveData.cleaningLog && typeof pushedCuboidLiveData.cleaningLog === "object"
+    ? pushedCuboidLiveData.cleaningLog
+    : {};
+  const cleaningMap = cleaningSource && typeof cleaningSource[wallKey] === "object" ? cleaningSource[wallKey] : {};
+  const spanX = FW * 0.82;
+  const wallBottomInset = FH * 0.11;
+  const wallTopInset = FH * 0.18;
+  const topY = FH/2 - wallTopInset;
+  const bottomY = -FH/2 + wallBottomInset;
+  const spanY = topY - bottomY;
+  const iconScale = 2.56;
+
+  for(let ri = 0; ri < cuboidDashboardIconRows.length; ri++){
+    const rowNumber = cuboidDashboardIconRows[ri];
+    const worldY = topY - (spanY / (cuboidDashboardIconRows.length - 1)) * ri;
+    const drawY = cuboidWorldYToOverlayPx(worldY, canvasHeight);
+    const rowData = Array.isArray(rows[rowNumber - 1]) ? rows[rowNumber - 1] : [];
+    const openingRow = Array.isArray(openingRows[rowNumber - 1]) ? openingRows[rowNumber - 1] : [];
+
+    for(let ci = 0; ci < cuboidDashboardIconColumns.length; ci++){
+      const burnerNumber = cuboidDashboardIconColumns[ci];
+      const baseX = -spanX/2 + (spanX / (cuboidDashboardIconColumns.length - 1)) * ci;
+      const drawX = cuboidWorldXToOverlayPx(baseX, canvasWidth);
+      const state = cuboidNormalizeBurnerState(rowData[burnerNumber - 1]);
+      const openingVal = cuboidNormalizeOpeningValue(openingRow[burnerNumber - 1], state);
+      const key = "R" + rowNumber + "B" + burnerNumber;
+      const cleaned = !!String(cleaningMap && cleaningMap[key] ? cleaningMap[key] : "").trim();
+      cuboidDrawDashboardBurnerGlyph(ctx, drawX, drawY + 6, state, cleaned, (phaseBase || 0) + (ri * 0.55) + (ci * 0.28), iconScale, openingVal);
+    }
+  }
 }
 
 function cuboidDrawTempStrip(ctx, heading, values, x, y, w, h){
@@ -547,6 +934,7 @@ function cuboidRenderFaceOverlay(faceName){
   const overlay = liveFaceOverlays[faceName];
   if(!overlay || !overlay.canvas || !overlay.texture) return;
   const snapshot = liveSnapshot || cuboidBuildLiveSnapshot();
+  const phaseBase = (Date.now() % 100000) * 0.001;
   const ctx = overlay.canvas.getContext("2d");
   const w = overlay.canvas.width;
   const h = overlay.canvas.height;
@@ -590,6 +978,8 @@ function cuboidRenderFaceOverlay(faceName){
     lineWidth: 4,
     shadowBlur: 6
   });
+
+  cuboidDrawDashboardWallIcons(ctx, w, h, wallKey, snapshot, phaseBase);
 
   const stripH = 74;
   const topMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[4] + cuboidFaceRowCenters[3]) * 0.5) + 0.10, h);
@@ -652,7 +1042,11 @@ function cuboidApplyBurnerPresentation(item, snapshot){
 }
 
 function refreshLivePresentation(force){
-  if(!force && !livePresentationDirty && liveSnapshot) return false;
+  if(!force && !livePresentationDirty && liveSnapshot){
+    cuboidRenderFaceOverlay("front");
+    cuboidRenderFaceOverlay("back");
+    return true;
+  }
   liveSnapshot = cuboidBuildLiveSnapshot();
   liveBurnerObjects.forEach(function(item){
     cuboidApplyBurnerPresentation(item, liveSnapshot);
@@ -2182,8 +2576,8 @@ function createBurnerWallFace(faceName){
     }
   }
 }
-createBurnerWallFace("front");
-createBurnerWallFace("back");
+// Dashboard-style burner glyphs are drawn onto the live wall overlay planes.
+// Keep the old mesh builder around for reference, but do not instantiate it.
 refreshLivePresentation(true);
 
 /* ── 3D burner animation function ── */
