@@ -386,15 +386,17 @@ function cuboidGetTstRowsForWall(snapshot, wallKey){
 }
 
 function cuboidBuildFaceRowCenters(){
-  const rowNumbers = [6,5,4,3,2,1];
-  const wallBottomInset = FH * 0.11;
-  const wallTopInset = FH * 0.18;
-  const topY = FH/2 - wallTopInset;
-  const bottomY = -FH/2 + wallBottomInset;
-  const spanY = topY - bottomY;
+  const rowMarginBottom = FH * 0.11;
+  const rowMarginTop = FH * 0.18;
+  const rowSpan = FH - rowMarginBottom - rowMarginTop;
+  const gapWeights = [1.65, 1.00, 1.65, 1.00, 1.00];
+  const totalW = gapWeights.reduce(function(sum, value){ return sum + value; }, 0);
   const centers = {};
-  for(let i = 0; i < rowNumbers.length; i++){
-    centers[rowNumbers[i]] = topY - (spanY / (rowNumbers.length - 1)) * i;
+  centers[1] = -FH/2 + rowMarginBottom;
+  let acc = 0;
+  for(let i = 0; i < 5; i++){
+    acc += (gapWeights[i] / totalW) * rowSpan;
+    centers[i + 2] = -FH/2 + rowMarginBottom + acc;
   }
   return centers;
 }
@@ -413,63 +415,124 @@ function cuboidSetMaterialTone(material, color, emissiveColor, emissiveIntensity
   material.needsUpdate = true;
 }
 
+function cuboidDrawCanvasText(ctx, text, x, y, opts){
+  const o = opts || {};
+  ctx.save();
+  ctx.font = o.font || "700 24px Georgia, 'Times New Roman', serif";
+  ctx.textAlign = o.align || "left";
+  ctx.textBaseline = o.baseline || "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = o.lineWidth || 4;
+  ctx.strokeStyle = o.stroke || "rgba(5,8,14,0.88)";
+  ctx.shadowColor = o.shadowColor || "rgba(0,0,0,0.38)";
+  ctx.shadowBlur = o.shadowBlur == null ? 8 : o.shadowBlur;
+  ctx.strokeText(text, x, y);
+  ctx.fillStyle = o.fill || "#ffffff";
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
 function cuboidDrawTempStrip(ctx, heading, values, x, y, w, h){
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.34)";
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 6;
   cuboidRoundRectPath(ctx, x, y, w, h, 20);
   const bg = ctx.createLinearGradient(x, y, x, y + h);
-  bg.addColorStop(0, "rgba(5,10,18,0.68)");
-  bg.addColorStop(1, "rgba(8,14,24,0.54)");
+  bg.addColorStop(0, "rgba(5,9,16,0.90)");
+  bg.addColorStop(0.52, "rgba(10,18,28,0.84)");
+  bg.addColorStop(1, "rgba(6,10,18,0.88)");
   ctx.fillStyle = bg;
   ctx.fill();
-  ctx.strokeStyle = "rgba(146,176,208,0.22)";
-  ctx.lineWidth = 2;
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "rgba(176,206,234,0.28)";
+  ctx.lineWidth = 2.4;
   ctx.stroke();
+  ctx.restore();
 
-  const labelW = 224;
+  const gloss = ctx.createLinearGradient(x, y, x, y + h * 0.48);
+  gloss.addColorStop(0, "rgba(255,255,255,0.12)");
+  gloss.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gloss;
+  cuboidRoundRectPath(ctx, x + 2, y + 2, w - 4, Math.max(18, h * 0.42), 18);
+  ctx.fill();
+
+  const labelW = 212;
   cuboidRoundRectPath(ctx, x + 10, y + 10, labelW, h - 20, 16);
   const labelGrad = ctx.createLinearGradient(x + 10, y + 10, x + 10 + labelW, y + h - 10);
-  labelGrad.addColorStop(0, "rgba(8,18,30,0.88)");
-  labelGrad.addColorStop(1, "rgba(12,24,38,0.72)");
+  labelGrad.addColorStop(0, "rgba(10,18,34,0.98)");
+  labelGrad.addColorStop(0.55, "rgba(18,27,48,0.94)");
+  labelGrad.addColorStop(1, "rgba(8,14,24,0.96)");
   ctx.fillStyle = labelGrad;
   ctx.fill();
-  ctx.strokeStyle = "rgba(120,164,214,0.34)";
-  ctx.lineWidth = 1.8;
+  ctx.strokeStyle = "rgba(108,162,224,0.40)";
+  ctx.lineWidth = 1.9;
   ctx.stroke();
 
-  ctx.font = "700 34px Georgia, 'Times New Roman', serif";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "#f4f8ff";
-  ctx.fillText(heading, x + 28, y + (h * 0.5) - 6);
-
-  ctx.font = "700 18px Georgia, 'Times New Roman', serif";
-  ctx.fillStyle = "rgba(200,218,236,0.82)";
-  ctx.fillText("15 burners", x + 28, y + (h * 0.5) + 24);
+  cuboidDrawCanvasText(ctx, heading, x + 28, y + (h * 0.5) - 10, {
+    font: "700 31px Georgia, 'Times New Roman', serif",
+    fill: "#f7fbff",
+    stroke: "rgba(4,8,16,0.94)",
+    lineWidth: 6,
+    shadowBlur: 10
+  });
+  cuboidDrawCanvasText(ctx, "15 burners", x + 28, y + (h * 0.5) + 18, {
+    font: "700 19px Georgia, 'Times New Roman', serif",
+    fill: "rgba(224,236,248,0.94)",
+    stroke: "rgba(4,8,16,0.88)",
+    lineWidth: 4,
+    shadowBlur: 6
+  });
 
   const cellsX = x + labelW + 22;
   const cellsW = w - labelW - 34;
-  const gap = 8;
+  const gap = 9;
   const cellW = (cellsW - (gap * 14)) / 15;
   const cellH = h - 22;
   const cellY = y + 11;
 
   for(let i = 0; i < 15; i++){
     const cellX = cellsX + (i * (cellW + gap));
+    const innerX = cellX + 2;
+    const innerY = cellY + 2;
+    const innerW = cellW - 4;
+    const innerH = cellH - 4;
     cuboidRoundRectPath(ctx, cellX, cellY, cellW, cellH, 12);
+    const shellGrad = ctx.createLinearGradient(cellX, cellY, cellX, cellY + cellH);
+    shellGrad.addColorStop(0, "rgba(6,10,16,0.98)");
+    shellGrad.addColorStop(1, "rgba(10,16,24,0.96)");
+    ctx.fillStyle = shellGrad;
+    ctx.fill();
+    cuboidRoundRectPath(ctx, innerX, innerY, innerW, innerH, 10);
     ctx.fillStyle = cuboidTempCellFill(values[i]);
+    ctx.fill();
+    const capH = Math.max(14, innerH * 0.26);
+    cuboidRoundRectPath(ctx, innerX + 1, innerY + 1, innerW - 2, capH, 10);
+    const capGrad = ctx.createLinearGradient(innerX, innerY, innerX, innerY + capH);
+    capGrad.addColorStop(0, "rgba(255,255,255,0.16)");
+    capGrad.addColorStop(1, "rgba(255,255,255,0.02)");
+    ctx.fillStyle = capGrad;
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.12)";
     ctx.lineWidth = 1.4;
     ctx.stroke();
 
-    ctx.font = "700 14px 'Courier New', monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "rgba(227,238,250,0.82)";
-    ctx.fillText("B" + (i + 1), cellX + (cellW * 0.5), cellY + 15);
-
-    ctx.font = "700 23px Georgia, 'Times New Roman', serif";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(cuboidFormatTemp(values[i]), cellX + (cellW * 0.5), cellY + (cellH * 0.62));
+    cuboidDrawCanvasText(ctx, "B" + (i + 1), cellX + (cellW * 0.5), cellY + 14, {
+      font: "700 15px 'Courier New', monospace",
+      align: "center",
+      fill: "rgba(244,249,255,0.96)",
+      stroke: "rgba(6,10,16,0.86)",
+      lineWidth: 4,
+      shadowBlur: 4
+    });
+    cuboidDrawCanvasText(ctx, cuboidFormatTemp(values[i]), cellX + (cellW * 0.5), cellY + (cellH * 0.63), {
+      font: "700 28px Georgia, 'Times New Roman', serif",
+      align: "center",
+      fill: "#ffffff",
+      stroke: "rgba(4,8,14,0.90)",
+      lineWidth: 6,
+      shadowBlur: 8
+    });
   }
 }
 
@@ -505,20 +568,25 @@ function cuboidRenderFaceOverlay(faceName){
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  ctx.font = "700 34px Georgia, 'Times New Roman', serif";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "#f6f9ff";
-  ctx.fillText("WALL " + wallKey, 52, 58);
+  cuboidDrawCanvasText(ctx, "WALL " + wallKey, 52, 58, {
+    font: "700 34px Georgia, 'Times New Roman', serif",
+    fill: "#f6f9ff",
+    stroke: "rgba(4,8,16,0.92)",
+    lineWidth: 6,
+    shadowBlur: 8
+  });
+  cuboidDrawCanvasText(ctx, shiftLabel + " · " + dtLabel, w - 42, 58, {
+    font: "700 20px Georgia, 'Times New Roman', serif",
+    align: "right",
+    fill: "rgba(244,248,255,0.94)",
+    stroke: "rgba(4,8,14,0.88)",
+    lineWidth: 4,
+    shadowBlur: 6
+  });
 
-  ctx.font = "700 20px Georgia, 'Times New Roman', serif";
-  ctx.textAlign = "right";
-  ctx.fillStyle = "rgba(232,240,250,0.86)";
-  ctx.fillText(shiftLabel + " · " + dtLabel, w - 42, 58);
-
-  const stripH = 84;
-  const topMidY = cuboidWorldYToOverlayPx((cuboidFaceRowCenters[4] + cuboidFaceRowCenters[3]) * 0.5, h);
-  const botMidY = cuboidWorldYToOverlayPx((cuboidFaceRowCenters[2] + cuboidFaceRowCenters[1]) * 0.5, h);
+  const stripH = 74;
+  const topMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[4] + cuboidFaceRowCenters[3]) * 0.5) - 0.03, h);
+  const botMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[2] + cuboidFaceRowCenters[1]) * 0.5) + 0.03, h);
   cuboidDrawTempStrip(ctx, "TST TOP", tstRows.top, 28, topMidY - (stripH * 0.5), w - 56, stripH);
   cuboidDrawTempStrip(ctx, "TST BOT", tstRows.bot, 28, botMidY - (stripH * 0.5), w - 56, stripH);
 
@@ -1384,12 +1452,19 @@ makeSide(false);
 
 /* ── glow sprite texture ── */
 function makeGlowTex(){
-  const cv = document.createElement("canvas"); cv.width = 128; cv.height = 128;
+  const cv = document.createElement("canvas");
+  cv.width = 256;
+  cv.height = 256;
   const ctx = cv.getContext("2d");
-  const g = ctx.createRadialGradient(64,64,4,64,64,64);
-  g.addColorStop(0,"rgba(255,255,255,1)"); g.addColorStop(0.28,"rgba(255,255,255,0.8)");
-  g.addColorStop(0.62,"rgba(255,255,255,0.18)"); g.addColorStop(1,"rgba(255,255,255,0)");
-  ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
+  const c = 128;
+  const g = ctx.createRadialGradient(c, c, 6, c, c, 128);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(0.18, "rgba(255,247,220,0.96)");
+  g.addColorStop(0.44, "rgba(255,195,124,0.46)");
+  g.addColorStop(0.72, "rgba(255,160,82,0.14)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 256, 256);
   const t = new THREE.CanvasTexture(cv);
   t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
   return t;
@@ -1779,6 +1854,10 @@ function stampFlameOrder(item){
         glow.position.set(0, 0.05, 0);
         flameAnchor.add(glow);
 
+        const flameTip = new THREE.Mesh(tipGeo, flameMats.tip.clone());
+        flameTip.position.set(0, outerBaseLift + (FLAME_OUTER_H * 0.82), 0);
+        flameAnchor.add(flameTip);
+
         /* seed for per-burner flicker variety */
         const seed = r * 17 + b * 3 + (flameDir > 0 ? 200 : 400);
 
@@ -1790,8 +1869,9 @@ function stampFlameOrder(item){
           rowNumber: r + 1,
           burnerNumber: b + 1,
           flameAnchor,
+          baseAnchorY: nozzleTipY,
           stub, collar, lockRing,
-          glow, auraFlame, outerFlame, innerFlame, flameTip: null,
+          glow, auraFlame, outerFlame, innerFlame, flameTip,
           baseLiftAura: auraBaseLift,
           baseLiftOuter: outerBaseLift,
           baseLiftInner: innerBaseLift
@@ -1998,18 +2078,19 @@ function stampFlameOrder(item){
       map: texture,
       transparent: true,
       side: THREE.DoubleSide,
-      depthWrite: false
+      depthWrite: false,
+      depthTest: false
     });
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(FW, FH), material);
     mesh.position.z = zPos;
     if(flipY) mesh.rotation.y = Math.PI;
-    mesh.renderOrder = 0;
+    mesh.renderOrder = 0.6;
     group.add(mesh);
     liveFaceOverlays[faceName] = { wallKey, canvas, texture, mesh };
   }
 
-  makeOverlay("front", chamberWalls[0], FD/2 + 0.012, false);
-  makeOverlay("back", chamberWalls[1], -FD/2 - 0.012, true);
+  makeOverlay("front", chamberWalls[0], FD/2 + 0.016, false);
+  makeOverlay("back", chamberWalls[1], -FD/2 - 0.016, true);
 })();
 
 function createBurnerWallFace(faceName){
@@ -2112,34 +2193,44 @@ function animateBurners(time){
     const motionScale = 0.42 + (liveLevel * 0.58);
 
     if(item.verticalRise){
+      const flameLeanX = item.dir * ((sway * 0.18) + (flutter * 0.08)) * motionScale;
+      const flameLeanZ = ((cross * 0.14) + (flutter * 0.05)) * motionScale;
       const auraScaleX = (0.92 + pulse*0.16) * flameScale;
       const auraScaleY = (1.08 + pulse*0.16) * flameScale;
       const outerScaleX = (0.84 + pulse*0.14) * flameScale;
       const outerScaleY = (1.12 + pulse*0.20) * flameScale;
       const innerScaleX = (0.66 + pulse*0.10) * flameScale;
       const innerScaleY = (0.94 + pulse*0.14) * flameScale;
+      const tipLift = (FLAME_OUTER_H * 0.90) * flameScale;
 
-      item.flameAnchor.rotation.x = item.dir * ((sway*1.10 + flutter*0.36) * motionScale);
-      item.flameAnchor.rotation.z = (cross*1.18 + flutter*0.72) * motionScale;
+      item.flameAnchor.position.y = (item.baseAnchorY || item.flameAnchor.position.y) + ((0.006 + pulse*0.006) * liveLevel);
+      item.flameAnchor.rotation.x = flameLeanX;
+      item.flameAnchor.rotation.z = flameLeanZ;
 
-      item.glow.position.set(cross*0.12*motionScale, 0.05 + pulse*0.014*motionScale, 0);
-      item.glow.scale.set((0.42 + pulse*0.14) * flameScale, (0.42 + pulse*0.14) * flameScale, 1);
-      item.glow.material.opacity = (0.12 + pulse*0.08) * liveLevel;
+      item.glow.position.set(0, 0.045 + pulse*0.020*motionScale, 0);
+      item.glow.scale.set((0.46 + pulse*0.12) * flameScale, (0.46 + pulse*0.12) * flameScale, 1);
+      item.glow.material.opacity = (0.14 + pulse*0.08) * liveLevel;
 
       item.auraFlame.position.set(0, item.baseLiftAura * auraScaleY, 0);
       item.auraFlame.scale.set(auraScaleX, auraScaleY, auraScaleX);
-      item.auraFlame.material.opacity = (0.05 + pulse*0.04) * liveLevel;
+      item.auraFlame.material.opacity = (0.06 + pulse*0.04) * liveLevel;
       item.auraFlame.rotation.set(0, 0, 0);
 
       item.outerFlame.position.set(0, item.baseLiftOuter * outerScaleY, 0);
       item.outerFlame.scale.set(outerScaleX, outerScaleY, outerScaleX);
-      item.outerFlame.material.opacity = (0.42 + pulse*0.12) * (0.42 + liveLevel*0.58);
+      item.outerFlame.material.opacity = (0.44 + pulse*0.12) * (0.42 + liveLevel*0.58);
       item.outerFlame.rotation.set(0, 0, 0);
 
       item.innerFlame.position.set(0, item.baseLiftInner * innerScaleY, 0);
       item.innerFlame.scale.set(innerScaleX, innerScaleY, innerScaleX);
       item.innerFlame.material.opacity = (0.56 + pulse*0.14) * (0.40 + liveLevel*0.60);
       item.innerFlame.rotation.set(0, 0, 0);
+
+      if(item.flameTip){
+        item.flameTip.position.set(0, tipLift + (pulse * 0.024), 0);
+        item.flameTip.scale.setScalar((0.60 + pulse * 0.12) * flameScale);
+        item.flameTip.material.opacity = (0.66 + pulse * 0.14) * liveLevel;
+      }
       return;
     }
 
