@@ -563,7 +563,9 @@ function cuboidDrawDashboardOpeningWindow(ctx, x, baseX, baseY, baseW, baseH, st
   }
 }
 
-function cuboidDrawDashboardBurnerGlyph(ctx, x, y, state, cleaned, phase, scale, opening){
+function cuboidDrawDashboardBurnerGlyph(ctx, x, y, state, cleaned, phase, scale, opening, options){
+  const drawOptions = options || {};
+  const hardwareOnly = !!drawOptions.hardwareOnly;
   let s = String(state || "C").toUpperCase();
   if(s !== "O" && s !== "N" && s !== "B") s = "C";
   const palette = cuboidGetDashboardBurnerPalette(s);
@@ -713,64 +715,67 @@ function cuboidDrawDashboardBurnerGlyph(ctx, x, y, state, cleaned, phase, scale,
     ctx.lineTo(closedCapX + closedCapW - (2.6 * scaleX), closedCapY + closedCapH - (1.3 * iconScale));
     ctx.stroke();
   }else{
-    cuboidDrawDashboardTipFlameGlow(ctx, x, y, s, phase, iconScale, glowIntensity);
     ctx.fillStyle = palette.stem;
     cuboidRoundRectPath(ctx, stemX, stemY, stemW, stemH, 3.2 * iconScale);
     ctx.fill();
 
-    if(flameTier >= 1){
-      ctx.save();
-      ctx.shadowBlur = (flameTier >= 4 ? 6.2 : (flameTier === 1 ? 3.4 : 4.6)) * iconScale;
-      ctx.shadowColor = palette.glow;
-      ctx.globalAlpha = flameTier === 1 ? 0.90 : 0.82;
-      ctx.beginPath();
-      ctx.moveTo(x, y - (12.8 * scaleY * outerScale) - lift);
-      ctx.bezierCurveTo(
-        x + (11 * scaleX) * flicker * flameWidthFactor * outerScale,
-        y - (6.9 * scaleY * outerScale) - (lift * 0.52),
-        x + (8.2 * scaleX) * sidePulse * flameWidthFactor * outerScale,
-        y + (0.9 * iconScale),
-        x,
-        y + (2.4 * iconScale)
-      );
-      ctx.bezierCurveTo(
-        x - (8.2 * scaleX) * sidePulse * flameWidthFactor * outerScale,
-        y + (0.9 * iconScale),
-        x - (11 * scaleX) * flicker * flameWidthFactor * outerScale,
-        y - (6.9 * scaleY * outerScale) - (lift * 0.52),
-        x,
-        y - (12.8 * scaleY * outerScale) - lift
-      );
-      ctx.closePath();
-      ctx.fillStyle = palette.flame;
-      ctx.fill();
-      ctx.restore();
-    }
+    if(!hardwareOnly){
+      cuboidDrawDashboardTipFlameGlow(ctx, x, y, s, phase, iconScale, glowIntensity);
 
-    if(flameTier >= 2){
-      ctx.beginPath();
-      ctx.moveTo(x, y - (8.5 * scaleY * midScale) - (lift * 0.46));
-      ctx.bezierCurveTo(
-        x + (6.5 * scaleX) * sidePulse * flameWidthFactor * midScale,
-        y - (4.6 * scaleY * midScale) - (lift * 0.18),
-        x + (4.8 * scaleX) * flicker * flameWidthFactor * midScale,
-        y + (0.15 * iconScale),
-        x,
-        y + (1.6 * iconScale)
-      );
-      ctx.bezierCurveTo(
-        x - (4.8 * scaleX) * flicker * flameWidthFactor * midScale,
-        y + (0.15 * iconScale),
-        x - (6.5 * scaleX) * sidePulse * flameWidthFactor * midScale,
-        y - (4.6 * scaleY * midScale) - (lift * 0.18),
-        x,
-        y - (8.5 * scaleY * midScale) - (lift * 0.46)
-      );
-      ctx.closePath();
-      ctx.globalAlpha = flameTier === 2 ? 0.94 : 1;
-      ctx.fillStyle = palette.core;
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      if(flameTier >= 1){
+        ctx.save();
+        ctx.shadowBlur = (flameTier >= 4 ? 6.2 : (flameTier === 1 ? 3.4 : 4.6)) * iconScale;
+        ctx.shadowColor = palette.glow;
+        ctx.globalAlpha = flameTier === 1 ? 0.90 : 0.82;
+        ctx.beginPath();
+        ctx.moveTo(x, y - (12.8 * scaleY * outerScale) - lift);
+        ctx.bezierCurveTo(
+          x + (11 * scaleX) * flicker * flameWidthFactor * outerScale,
+          y - (6.9 * scaleY * outerScale) - (lift * 0.52),
+          x + (8.2 * scaleX) * sidePulse * flameWidthFactor * outerScale,
+          y + (0.9 * iconScale),
+          x,
+          y + (2.4 * iconScale)
+        );
+        ctx.bezierCurveTo(
+          x - (8.2 * scaleX) * sidePulse * flameWidthFactor * outerScale,
+          y + (0.9 * iconScale),
+          x - (11 * scaleX) * flicker * flameWidthFactor * outerScale,
+          y - (6.9 * scaleY * outerScale) - (lift * 0.52),
+          x,
+          y - (12.8 * scaleY * outerScale) - lift
+        );
+        ctx.closePath();
+        ctx.fillStyle = palette.flame;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      if(flameTier >= 2){
+        ctx.beginPath();
+        ctx.moveTo(x, y - (8.5 * scaleY * midScale) - (lift * 0.46));
+        ctx.bezierCurveTo(
+          x + (6.5 * scaleX) * sidePulse * flameWidthFactor * midScale,
+          y - (4.6 * scaleY * midScale) - (lift * 0.18),
+          x + (4.8 * scaleX) * flicker * flameWidthFactor * midScale,
+          y + (0.15 * iconScale),
+          x,
+          y + (1.6 * iconScale)
+        );
+        ctx.bezierCurveTo(
+          x - (4.8 * scaleX) * flicker * flameWidthFactor * midScale,
+          y + (0.15 * iconScale),
+          x - (6.5 * scaleX) * sidePulse * flameWidthFactor * midScale,
+          y - (4.6 * scaleY * midScale) - (lift * 0.18),
+          x,
+          y - (8.5 * scaleY * midScale) - (lift * 0.46)
+        );
+        ctx.closePath();
+        ctx.globalAlpha = flameTier === 2 ? 0.94 : 1;
+        ctx.fillStyle = palette.core;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     }
   }
 
@@ -785,6 +790,39 @@ function cuboidDrawDashboardBurnerGlyph(ctx, x, y, state, cleaned, phase, scale,
   ctx.lineWidth = 1.4 * dotScale;
   ctx.strokeStyle = cleaned ? "rgba(187,247,208,0.92)" : "rgba(226,232,240,0.45)";
   ctx.stroke();
+}
+
+function cuboidGetDashboardWallBurner3DPalette(state){
+  const s = cuboidNormalizeBurnerState(state);
+  const dashboard = cuboidGetDashboardBurnerPalette(s);
+  return {
+    flame: dashboard.flame,
+    core: dashboard.core,
+    aura: cuboidDarkenColor(dashboard.flame, 0.34),
+    metal: cuboidDarkenColor(dashboard.stem, 0.08),
+    ring: cuboidDarkenColor(dashboard.stem, 0.34),
+    glow: dashboard.flame
+  };
+}
+
+function cuboidRedrawDashboardWallBurnerIcon(item){
+  if(!item || !item.iconCanvas || !item.iconTexture) return;
+  const ctx = item.iconCanvas.getContext("2d");
+  const w = item.iconCanvas.width;
+  const h = item.iconCanvas.height;
+  ctx.clearRect(0, 0, w, h);
+  cuboidDrawDashboardBurnerGlyph(
+    ctx,
+    w * 0.50,
+    h * 0.30,
+    item.liveState || "C",
+    !!item.liveCleaned,
+    (item.seed || 0) * 0.13,
+    2.18,
+    item.liveOpening == null ? 0 : item.liveOpening,
+    { hardwareOnly: true }
+  );
+  item.iconTexture.needsUpdate = true;
 }
 
 const cuboidDashboardIconColumns = [1,3,5,8,11,13,15];
@@ -934,7 +972,6 @@ function cuboidRenderFaceOverlay(faceName){
   const overlay = liveFaceOverlays[faceName];
   if(!overlay || !overlay.canvas || !overlay.texture) return;
   const snapshot = liveSnapshot || cuboidBuildLiveSnapshot();
-  const phaseBase = (Date.now() % 100000) * 0.001;
   const ctx = overlay.canvas.getContext("2d");
   const w = overlay.canvas.width;
   const h = overlay.canvas.height;
@@ -979,8 +1016,6 @@ function cuboidRenderFaceOverlay(faceName){
     shadowBlur: 6
   });
 
-  cuboidDrawDashboardWallIcons(ctx, w, h, wallKey, snapshot, phaseBase);
-
   const stripH = 74;
   const topMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[4] + cuboidFaceRowCenters[3]) * 0.5) + 0.10, h);
   const botMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[2] + cuboidFaceRowCenters[1]) * 0.5) + 0.14, h);
@@ -1000,7 +1035,13 @@ function cuboidApplyBurnerPresentation(item, snapshot){
   const openingRow = Array.isArray(openingRows[rowIndex]) ? openingRows[rowIndex] : [];
   const state = cuboidNormalizeBurnerState(stateRow[burnerIndex]);
   const opening = cuboidNormalizeOpeningValue(openingRow[burnerIndex], state);
-  const palette = burnerStatePalette[state] || burnerStatePalette.C;
+  const cleaningSource = pushedCuboidLiveData && pushedCuboidLiveData.cleaningLog && typeof pushedCuboidLiveData.cleaningLog === "object"
+    ? pushedCuboidLiveData.cleaningLog
+    : {};
+  const cleaningMap = cleaningSource && typeof cleaningSource[item.wallKey] === "object" ? cleaningSource[item.wallKey] : {};
+  const cleaningKey = "R" + (rowIndex + 1) + "B" + (burnerIndex + 1);
+  const cleaned = !!String(cleaningMap && cleaningMap[cleaningKey] ? cleaningMap[cleaningKey] : "").trim();
+  const palette = item.dashboardStyle ? cuboidGetDashboardWallBurner3DPalette(state) : (burnerStatePalette[state] || burnerStatePalette.C);
   const metalTone = cuboidDarkenColor(palette.metal, 0.56);
   const collarTone = cuboidDarkenColor(palette.glow, 0.42);
   const ringTone = cuboidDarkenColor(palette.ring, 0.18);
@@ -1014,6 +1055,7 @@ function cuboidApplyBurnerPresentation(item, snapshot){
   item.liveState = state;
   item.liveOpening = opening;
   item.liveFlameLevel = flameLevel;
+  item.liveCleaned = cleaned;
 
   cuboidSetMaterialTone(item.stub && item.stub.material, metalTone, shadowTone, 0.10 + (flameLevel * 0.18));
   cuboidSetMaterialTone(item.collar && item.collar.material, collarTone, glowTone, 0.08 + (flameLevel * 0.16));
@@ -1032,6 +1074,7 @@ function cuboidApplyBurnerPresentation(item, snapshot){
   if(item.outerFlame && item.outerFlame.material && item.outerFlame.material.color) item.outerFlame.material.color.set(palette.flame);
   if(item.innerFlame && item.innerFlame.material && item.innerFlame.material.color) item.innerFlame.material.color.set(palette.core);
   if(item.flameTip && item.flameTip.material && item.flameTip.material.color) item.flameTip.material.color.set(palette.core);
+  if(item.iconCanvas) cuboidRedrawDashboardWallBurnerIcon(item);
 
   if(item.flameAnchor) item.flameAnchor.visible = showFlame;
   if(item.glow) item.glow.visible = showFlame;
@@ -1042,11 +1085,7 @@ function cuboidApplyBurnerPresentation(item, snapshot){
 }
 
 function refreshLivePresentation(force){
-  if(!force && !livePresentationDirty && liveSnapshot){
-    cuboidRenderFaceOverlay("front");
-    cuboidRenderFaceOverlay("back");
-    return true;
-  }
+  if(!force && !livePresentationDirty && liveSnapshot) return false;
   liveSnapshot = cuboidBuildLiveSnapshot();
   liveBurnerObjects.forEach(function(item){
     cuboidApplyBurnerPresentation(item, liveSnapshot);
@@ -2515,6 +2554,10 @@ function createBurnerWallFace(faceName){
   const topY            = FH/2 - wallTopInset;
   const bottomY         = -FH/2 + wallBottomInset;
   const spanY           = topY - bottomY;
+  const iconPlaneGeo    = new THREE.PlaneGeometry(0.72, 0.50);
+  const auraBaseLift    = FLAME_AURA_H * (FLAME_BASE_SHIFT * 0.70);
+  const outerBaseLift   = FLAME_OUTER_H * (FLAME_BASE_SHIFT * 0.74);
+  const innerBaseLift   = FLAME_INNER_H * (FLAME_BASE_SHIFT * 0.76);
 
   for(let ri = 0; ri < rowNumbers.length; ri++){
     const y = topY - (spanY/(rowNumbers.length-1)) * ri;
@@ -2523,52 +2566,67 @@ function createBurnerWallFace(faceName){
       const x    = mirrorBackFace ? -baseX : baseX;
       const seed = ri * 31 + ci * 3 + (faceName === "front" ? 1 : 7);
 
-      const ring = new THREE.Mesh(ringGeo, hotPortMat.clone());
-      ring.position.set(x, y, wallZ + dir * 0.01);
-      group.add(ring);
+      const iconCanvas = document.createElement("canvas");
+      iconCanvas.width = 160;
+      iconCanvas.height = 112;
+      const iconTexture = new THREE.CanvasTexture(iconCanvas);
+      iconTexture.needsUpdate = true;
 
-      const port = new THREE.Mesh(nozzlePortGeo, darkPortMat.clone());
-      port.rotation.x = Math.PI/2;
-      port.position.set(x, y, wallZ + dir * 0.038);
-      group.add(port);
+      const iconPlane = new THREE.Mesh(
+        iconPlaneGeo,
+        new THREE.MeshBasicMaterial({
+          map: iconTexture,
+          transparent: true,
+          alphaTest: 0.04,
+          depthWrite: false,
+          toneMapped: false,
+          side: THREE.DoubleSide
+        })
+      );
+      iconPlane.position.set(x, y - 0.035, wallZ + dir * 0.015);
+      if(mirrorBackFace) iconPlane.scale.x = -1;
+      group.add(iconPlane);
+
+      const flameAnchor = new THREE.Group();
+      flameAnchor.position.set(x, y + 0.015, wallZ + dir * 0.085);
+      group.add(flameAnchor);
 
       const glow = new THREE.Sprite(flameMats.glow.clone());
-      glow.scale.set(0.42, 0.42, 1);
-      glow.position.set(x, y, wallZ + dir * 0.08);
-      group.add(glow);
+      glow.scale.set(0.36, 0.36, 1);
+      glow.position.set(0, 0.045, 0);
+      flameAnchor.add(glow);
 
       const auraFlame = new THREE.Mesh(flameAuraGeo, flameMats.aura.clone());
-      auraFlame.rotation.x = dir === -1 ? -Math.PI/2 : Math.PI/2;
-      auraFlame.position.set(x, y, wallZ + dir * 0.22);
-      group.add(auraFlame);
+      auraFlame.position.set(0, auraBaseLift, 0);
+      flameAnchor.add(auraFlame);
 
       const outerFlame = new THREE.Mesh(flameOuterGeo, flameMats.outer.clone());
-      outerFlame.rotation.x = dir === -1 ? -Math.PI/2 : Math.PI/2;
-      outerFlame.position.set(x, y, wallZ + dir * 0.19);
-      group.add(outerFlame);
+      outerFlame.position.set(0, outerBaseLift, 0);
+      flameAnchor.add(outerFlame);
 
       const innerFlame = new THREE.Mesh(flameInnerGeo, flameMats.inner.clone());
-      innerFlame.rotation.x = dir === -1 ? -Math.PI/2 : Math.PI/2;
-      innerFlame.position.set(x, y, wallZ + dir * 0.17);
-      group.add(innerFlame);
+      innerFlame.position.set(0, innerBaseLift, 0);
+      flameAnchor.add(innerFlame);
 
       const flameTip = new THREE.Mesh(tipGeo, flameMats.tip.clone());
-      flameTip.position.set(x, y, wallZ + dir * 0.35);
-      group.add(flameTip);
+      flameTip.position.set(0, outerBaseLift + (FLAME_OUTER_H * 0.72), 0);
+      flameAnchor.add(flameTip);
 
       const burnerItem = {
         seed, dir,
+        dashboardStyle: true,
+        verticalRise: true,
         wallKey,
         rowNumber: rowNumbers[ri],
         burnerNumber: burnerColumns[ci],
-        ring, port,
+        iconCanvas, iconTexture, iconPlane,
+        flameAnchor,
         glow, auraFlame, outerFlame, innerFlame, flameTip,
-        baseX: x, baseY: y,
-        baseZGlow:  wallZ + dir * 0.06,
-        baseZAura:  wallZ + dir * 0.14,
-        baseZOuter: wallZ + dir * 0.12,
-        baseZInner: wallZ + dir * 0.10,
-        baseZTip:   wallZ + dir * 0.20
+        baseAnchorY: y + 0.015,
+        baseLiftAura: auraBaseLift,
+        baseLiftOuter: outerBaseLift,
+        baseLiftInner: innerBaseLift,
+        iconFlameScale: 0.82
       };
       burnerPortObjects.push(burnerItem);
       liveBurnerObjects.push(burnerItem);
@@ -2576,8 +2634,8 @@ function createBurnerWallFace(faceName){
     }
   }
 }
-// Dashboard-style burner glyphs are drawn onto the live wall overlay planes.
-// Keep the old mesh builder around for reference, but do not instantiate it.
+createBurnerWallFace("front");
+createBurnerWallFace("back");
 refreshLivePresentation(true);
 
 /* ── 3D burner animation function ── */
@@ -2599,24 +2657,25 @@ function animateBurners(time){
     const cross   = Math.cos(time * 4.1 + item.seed * 0.7) * 0.026;
     const flameScale = 0.36 + (liveLevel * 0.84);
     const motionScale = 0.42 + (liveLevel * 0.58);
+    const iconScaleFactor = typeof item.iconFlameScale === "number" ? item.iconFlameScale : 1;
 
     if(item.verticalRise){
       const flameLeanX = item.dir * ((sway * 0.18) + (flutter * 0.08)) * motionScale;
       const flameLeanZ = ((cross * 0.14) + (flutter * 0.05)) * motionScale;
-      const auraScaleX = (0.92 + pulse*0.16) * flameScale;
-      const auraScaleY = (1.08 + pulse*0.16) * flameScale;
-      const outerScaleX = (0.84 + pulse*0.14) * flameScale;
-      const outerScaleY = (1.12 + pulse*0.20) * flameScale;
-      const innerScaleX = (0.66 + pulse*0.10) * flameScale;
-      const innerScaleY = (0.94 + pulse*0.14) * flameScale;
-      const tipLift = (FLAME_OUTER_H * 0.90) * flameScale;
+      const auraScaleX = (0.92 + pulse*0.16) * flameScale * iconScaleFactor;
+      const auraScaleY = (1.08 + pulse*0.16) * flameScale * iconScaleFactor;
+      const outerScaleX = (0.84 + pulse*0.14) * flameScale * iconScaleFactor;
+      const outerScaleY = (1.12 + pulse*0.20) * flameScale * iconScaleFactor;
+      const innerScaleX = (0.66 + pulse*0.10) * flameScale * iconScaleFactor;
+      const innerScaleY = (0.94 + pulse*0.14) * flameScale * iconScaleFactor;
+      const tipLift = (FLAME_OUTER_H * 0.90) * flameScale * iconScaleFactor;
 
       item.flameAnchor.position.y = (item.baseAnchorY || item.flameAnchor.position.y) + ((0.006 + pulse*0.006) * liveLevel);
       item.flameAnchor.rotation.x = flameLeanX;
       item.flameAnchor.rotation.z = flameLeanZ;
 
       item.glow.position.set(0, 0.045 + pulse*0.020*motionScale, 0);
-      item.glow.scale.set((0.46 + pulse*0.12) * flameScale, (0.46 + pulse*0.12) * flameScale, 1);
+      item.glow.scale.set((0.46 + pulse*0.12) * flameScale * iconScaleFactor, (0.46 + pulse*0.12) * flameScale * iconScaleFactor, 1);
       item.glow.material.opacity = (0.14 + pulse*0.08) * liveLevel;
 
       item.auraFlame.position.set(0, item.baseLiftAura * auraScaleY, 0);
