@@ -585,8 +585,8 @@ function cuboidRenderFaceOverlay(faceName){
   });
 
   const stripH = 74;
-  const topMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[4] + cuboidFaceRowCenters[3]) * 0.5) + 0.03, h);
-  const botMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[2] + cuboidFaceRowCenters[1]) * 0.5) + 0.07, h);
+  const topMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[4] + cuboidFaceRowCenters[3]) * 0.5) + 0.10, h);
+  const botMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[2] + cuboidFaceRowCenters[1]) * 0.5) + 0.14, h);
   cuboidDrawTempStrip(ctx, "TST TOP", tstRows.top, 28, topMidY - (stripH * 0.5), w - 56, stripH);
   cuboidDrawTempStrip(ctx, "TST BOT", tstRows.bot, 28, botMidY - (stripH * 0.5), w - 56, stripH);
 
