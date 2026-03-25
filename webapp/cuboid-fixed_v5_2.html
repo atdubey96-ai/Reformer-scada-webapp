@@ -585,8 +585,8 @@ function cuboidRenderFaceOverlay(faceName){
   });
 
   const stripH = 74;
-  const topMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[4] + cuboidFaceRowCenters[3]) * 0.5) - 0.03, h);
-  const botMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[2] + cuboidFaceRowCenters[1]) * 0.5) + 0.03, h);
+  const topMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[4] + cuboidFaceRowCenters[3]) * 0.5) + 0.03, h);
+  const botMidY = cuboidWorldYToOverlayPx(((cuboidFaceRowCenters[2] + cuboidFaceRowCenters[1]) * 0.5) + 0.07, h);
   cuboidDrawTempStrip(ctx, "TST TOP", tstRows.top, 28, topMidY - (stripH * 0.5), w - 56, stripH);
   cuboidDrawTempStrip(ctx, "TST BOT", tstRows.bot, 28, botMidY - (stripH * 0.5), w - 56, stripH);
 
@@ -2077,20 +2077,20 @@ function stampFlameOrder(item){
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide,
       depthWrite: false,
-      depthTest: false
+      depthTest: true
     });
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(FW, FH), material);
     mesh.position.z = zPos;
     if(flipY) mesh.rotation.y = Math.PI;
-    mesh.renderOrder = 0.6;
+    mesh.renderOrder = 0;
     group.add(mesh);
     liveFaceOverlays[faceName] = { wallKey, canvas, texture, mesh };
   }
 
-  makeOverlay("front", chamberWalls[0], FD/2 + 0.016, false);
-  makeOverlay("back", chamberWalls[1], -FD/2 - 0.016, true);
+  makeOverlay("front", chamberWalls[0], FD/2 + 0.004, false);
+  makeOverlay("back", chamberWalls[1], -FD/2 - 0.004, true);
 })();
 
 function createBurnerWallFace(faceName){
