@@ -326,10 +326,10 @@ function cuboidBuildLiveSnapshot(){
 }
 
 const burnerStatePalette = {
-  B:{ flame:"#f7b54a", core:"#fff3c4", aura:"#6f5b40", metal:"#d17b1d", ring:"#50321b", glow:"#f59e0b" },
-  N:{ flame:"#61c6ff", core:"#e8f8ff", aura:"#315d79", metal:"#3b82f6", ring:"#17315e", glow:"#38bdf8" },
-  O:{ flame:"#ff8c4b", core:"#ffe0bf", aura:"#704230", metal:"#f97316", ring:"#5a260c", glow:"#fb923c" },
-  C:{ flame:"#76808a", core:"#d9e0e7", aura:"#2b3136", metal:"#9aa4ae", ring:"#353b43", glow:"#94a3b8" }
+  B:{ flame:"#f6ae2d", core:"#fff4c8", aura:"#7a5924", metal:"#7f4300", ring:"#2b1500", glow:"#ff9800" },
+  N:{ flame:"#68d4ff", core:"#eefbff", aura:"#1c5672", metal:"#0d4d8f", ring:"#071e3a", glow:"#22c7ff" },
+  O:{ flame:"#ff7b39", core:"#ffe0c4", aura:"#6e3318", metal:"#8d2d00", ring:"#311000", glow:"#ff6a1a" },
+  C:{ flame:"#7a8792", core:"#e4e9ee", aura:"#2d3338", metal:"#4a5661", ring:"#161b1f", glow:"#8b97a3" }
 };
 
 function cuboidClamp01(value){
@@ -412,6 +412,13 @@ function cuboidSetMaterialTone(material, color, emissiveColor, emissiveIntensity
   if(material.color) material.color.set(color);
   if(material.emissive) material.emissive.set(emissiveColor || color);
   if(typeof material.emissiveIntensity === "number") material.emissiveIntensity = emissiveIntensity;
+  material.needsUpdate = true;
+}
+
+function cuboidTuneBurnerMaterial(material, roughness, metalness){
+  if(!material) return;
+  if(typeof material.roughness === "number") material.roughness = roughness;
+  if(typeof material.metalness === "number") material.metalness = metalness;
   material.needsUpdate = true;
 }
 
@@ -604,12 +611,13 @@ function cuboidApplyBurnerPresentation(item, snapshot){
   const state = cuboidNormalizeBurnerState(stateRow[burnerIndex]);
   const opening = cuboidNormalizeOpeningValue(openingRow[burnerIndex], state);
   const palette = burnerStatePalette[state] || burnerStatePalette.C;
-  const metalTone = cuboidDarkenColor(palette.metal, 0.26);
-  const collarTone = cuboidDarkenColor(palette.metal, 0.12);
-  const ringTone = cuboidDarkenColor(palette.ring, 0.08);
-  const portTone = cuboidDarkenColor(palette.metal, 0.38);
-  const shadowTone = cuboidDarkenColor(palette.ring, 0.32);
-  const glowTone = cuboidDarkenColor(palette.glow, 0.20);
+  const metalTone = cuboidDarkenColor(palette.metal, 0.56);
+  const collarTone = cuboidDarkenColor(palette.glow, 0.42);
+  const ringTone = cuboidDarkenColor(palette.ring, 0.18);
+  const portTone = cuboidDarkenColor(palette.metal, 0.72);
+  const shadowTone = cuboidDarkenColor(palette.ring, 0.40);
+  const glowTone = cuboidDarkenColor(palette.glow, 0.06);
+  const hotEdgeTone = cuboidDarkenColor(palette.flame, 0.18);
   const flameLevel = (state === "C" || opening <= 0) ? 0 : cuboidClamp01(opening / 100);
   const showFlame = flameLevel > 0.001;
 
@@ -617,11 +625,17 @@ function cuboidApplyBurnerPresentation(item, snapshot){
   item.liveOpening = opening;
   item.liveFlameLevel = flameLevel;
 
-  cuboidSetMaterialTone(item.stub && item.stub.material, metalTone, shadowTone, 0.08 + (flameLevel * 0.14));
-  cuboidSetMaterialTone(item.collar && item.collar.material, collarTone, glowTone, 0.04 + (flameLevel * 0.10));
-  cuboidSetMaterialTone(item.lockRing && item.lockRing.material, collarTone, glowTone, 0.04 + (flameLevel * 0.08));
-  cuboidSetMaterialTone(item.ring && item.ring.material, ringTone, shadowTone, 0.05 + (flameLevel * 0.10));
-  cuboidSetMaterialTone(item.port && item.port.material, portTone, shadowTone, 0.04 + (flameLevel * 0.08));
+  cuboidSetMaterialTone(item.stub && item.stub.material, metalTone, shadowTone, 0.10 + (flameLevel * 0.18));
+  cuboidSetMaterialTone(item.collar && item.collar.material, collarTone, glowTone, 0.08 + (flameLevel * 0.16));
+  cuboidSetMaterialTone(item.lockRing && item.lockRing.material, hotEdgeTone, glowTone, 0.08 + (flameLevel * 0.14));
+  cuboidSetMaterialTone(item.ring && item.ring.material, ringTone, glowTone, 0.10 + (flameLevel * 0.18));
+  cuboidSetMaterialTone(item.port && item.port.material, portTone, shadowTone, 0.06 + (flameLevel * 0.10));
+
+  cuboidTuneBurnerMaterial(item.stub && item.stub.material, 0.18, 0.96);
+  cuboidTuneBurnerMaterial(item.collar && item.collar.material, 0.14, 0.98);
+  cuboidTuneBurnerMaterial(item.lockRing && item.lockRing.material, 0.16, 0.98);
+  cuboidTuneBurnerMaterial(item.ring && item.ring.material, 0.18, 0.96);
+  cuboidTuneBurnerMaterial(item.port && item.port.material, 0.28, 0.90);
 
   if(item.glow && item.glow.material && item.glow.material.color) item.glow.material.color.set(palette.glow);
   if(item.auraFlame && item.auraFlame.material && item.auraFlame.material.color) item.auraFlame.material.color.set(palette.aura);
