@@ -325,6 +325,8 @@ body{color:rgba(140,180,220,0.85);}
 const FW = 13.8;
 const FH = 6.08;
 const FD = 1.5;
+const INTERIOR_PANEL_INSET = 0.018;
+const INTERIOR_BURNER_SURFACE_GAP = 0.005;
 const PEEPHOLE_SIZE = FD * 0.52;
 const PEEPHOLE_FRAME_MARGIN = PEEPHOLE_SIZE * 0.054 * 1.2;
 const PEEPHOLE_TOP_Y = FH * 0.18;
@@ -379,7 +381,7 @@ const SHELL_FACE_KEYS = [
 ];
 
 if(viewerTagTitle) viewerTagTitle.textContent = chamberZoneKey + " Reformer Structure Study";
-if(viewerTagSummary) viewerTagSummary.textContent = "Face1-12 naming active | X " + FW + " | Y " + FH + " | Z " + FD + " | dashboard camera framing";
+if(viewerTagSummary) viewerTagSummary.textContent = "Face2 layer copied onto Face7 + Face8 | X " + FW + " | Y " + FH + " | Z " + FD + " | dashboard camera framing";
 document.title = chamberZoneKey + " Reformer Structure Study";
 
 let hostTabActive = true;
@@ -405,7 +407,7 @@ function refreshHint(){
     ? "DOUBLE-TAP EXIT FULLSCREEN"
     : "DOUBLE-TAP FULLSCREEN";
   hint.textContent = viewMode === "inside-prep"
-    ? "INSIDE PREP THROUGH UPPER LEFT PEEPHOLE · " + fullscreenText
+    ? "INSIDE PREP · FACE7 + FACE8 THROUGH UPPER LEFT PEEPHOLE · " + fullscreenText
     : "DRAG TO ROTATE · " + fullscreenText;
 }
 
@@ -427,10 +429,16 @@ function nearestShellFaceKey(angle){
 }
 
 function updateFaceLegend(){
-  const activeFaceKey = viewMode === "inside-prep" ? "face9" : nearestShellFaceKey(rotY);
-  if(faceCurrent) faceCurrent.textContent = "Current: " + FACE_LABELS[activeFaceKey];
+  const activeFaceKeys = viewMode === "inside-prep"
+    ? ["face7", "face8"]
+    : [nearestShellFaceKey(rotY)];
+  if(faceCurrent){
+    faceCurrent.textContent = "Current: " + activeFaceKeys.map(function(key){
+      return FACE_LABELS[key];
+    }).join(" + ");
+  }
   faceLegendItems.forEach(function(item){
-    item.classList.toggle("active", item.dataset.faceKey === activeFaceKey);
+    item.classList.toggle("active", activeFaceKeys.indexOf(item.dataset.faceKey) >= 0);
   });
 }
 
@@ -481,7 +489,7 @@ let appliedPixelRatio = 0;
 
 function targetPixelRatio(){
   const deviceRatio = Math.max(1, window.devicePixelRatio || 1);
-  const activeNow = isFullscreen() || hasRotationMotion();
+  const activeNow = isFullscreen() || hasRotationMotion() || hasAnimatedInteriorFlames();
   let cap = 1.25;
   if(!canRenderNow()){
     cap = 0.7;
@@ -540,6 +548,8 @@ const rigGroup = new THREE.Group();
 scene.add(rigGroup);
 const shellGroup = new THREE.Group();
 rigGroup.add(shellGroup);
+const interiorGroup = new THREE.Group();
+rigGroup.add(interiorGroup);
 
 scene.add(new THREE.AmbientLight(0xd5e0ee, 1.18));
 const hemi = new THREE.HemisphereLight(0xe9f1ff, 0x1a2430, 0.92);
@@ -556,6 +566,864 @@ scene.add(rimCool);
 const rimWarm = new THREE.DirectionalLight(0xffddb4, 0.58);
 rimWarm.position.set(8, -1.2, 7);
 scene.add(rimWarm);
+
+function makeBrickTex(W, H) {
+  const cv = document.createElement("canvas");
+  cv.width = W;
+  cv.height = H;
+  const g = cv.getContext("2d");
+
+  function rnd(s) {
+    const x = Math.sin(s * 127.1 + 311.7) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
+  function rnd2(a, b) {
+    const x = Math.sin(a * 91.3 + b * 211.7) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
+  function clamp(v, lo, hi) {
+    return Math.max(lo, Math.min(hi, v));
+  }
+
+  const BW = Math.round(W / 11);
+  const BH = Math.round(H / 13);
+  const MT = 5;
+
+  const base = g.createLinearGradient(0, 0, 0, H);
+  base.addColorStop(0.00, "#0e0603");
+  base.addColorStop(0.30, "#150804");
+  base.addColorStop(0.60, "#1a0a05");
+  base.addColorStop(1.00, "#0c0502");
+  g.fillStyle = base;
+  g.fillRect(0, 0, W, H);
+
+  const pals = [
+    ["#1c0d06", "#180b04", "#200e07", "#160a03", "#1e0c06"],
+    ["#2e1508", "#28110a", "#321608", "#241208", "#2c1408"],
+    ["#4a2210", "#3e1c0e", "#52260e", "#441e0e", "#4e2412"],
+    ["#5e2e14", "#542810", "#663214", "#4e2610", "#5a2c12"],
+    ["#6a3418", "#5e2e14", "#72381a", "#623016", "#6e3618"]
+  ];
+
+  const rows = Math.ceil(H / (BH + MT)) + 1;
+  const cols = Math.ceil(W / (BW + MT)) + 2;
+
+  for (let row = 0; row < rows; row++) {
+    const by = row * (BH + MT);
+    const offset = row % 2 === 0 ? 0 : Math.round((BW + MT) * 0.5);
+
+    for (let col = -1; col < cols; col++) {
+      const bx = col * (BW + MT) - offset;
+      if (bx + BW < 0 || bx > W || by + BH < 0 || by > H) continue;
+
+      const id = row * 200 + col + 50;
+      const n1 = rnd(id * 7 + 1);
+      const n2 = rnd(id * 13 + 2);
+      const n3 = rnd(id * 19 + 3);
+      const n4 = rnd(id * 29 + 4);
+      const n5 = rnd(id * 37 + 5);
+
+      const heatNorm = by / H;
+      const heatZone = clamp(Math.floor(n1 * 1.2 + heatNorm * 3.8), 0, 4);
+      const pal = pals[heatZone];
+
+      g.fillStyle = pal[Math.floor(n2 * pal.length)];
+      g.fillRect(bx, by, BW, BH);
+
+      const hv = g.createRadialGradient(
+        bx + BW * (0.2 + n3 * 0.6), by + BH * (0.2 + n4 * 0.6), 0,
+        bx + BW * 0.5, by + BH * 0.5, BW * 0.8
+      );
+      const hInt = 0.10 + n5 * 0.18;
+      if (n1 > 0.55) {
+        hv.addColorStop(0, "rgba(160,60,10," + hInt + ")");
+        hv.addColorStop(1, "rgba(0,0,0,0)");
+      } else {
+        hv.addColorStop(0, "rgba(4,2,1," + (hInt + 0.08) + ")");
+        hv.addColorStop(1, "rgba(0,0,0,0)");
+      }
+      g.fillStyle = hv;
+      g.fillRect(bx, by, BW, BH);
+
+      if (n2 > 0.38) {
+        const spX = bx + BW * (0.1 + n3 * 0.7);
+        const spY = by + BH * (0.1 + n4 * 0.7);
+        const spR = BH * (0.08 + n5 * 0.18);
+        const spG = g.createRadialGradient(spX, spY, 0, spX, spY, spR);
+        spG.addColorStop(0, "rgba(8,4,2," + (0.55 + n1 * 0.30) + ")");
+        spG.addColorStop(0.5, "rgba(6,3,1," + (0.25 + n2 * 0.20) + ")");
+        spG.addColorStop(1, "rgba(0,0,0,0)");
+        g.fillStyle = spG;
+        g.fillRect(bx, by, BW, BH);
+      }
+
+      if (n3 > 0.65 && heatZone <= 2) {
+        const vg = g.createLinearGradient(bx + BW * 0.1, by + BH * 0.1, bx + BW * 0.5, by + BH * 0.5);
+        vg.addColorStop(0, "rgba(255,180,80," + (0.12 + n4 * 0.10) + ")");
+        vg.addColorStop(0.4, "rgba(200,100,30," + (0.06 + n5 * 0.06) + ")");
+        vg.addColorStop(1, "rgba(0,0,0,0)");
+        g.fillStyle = vg;
+        g.fillRect(bx, by, BW, BH);
+      }
+
+      const te = g.createLinearGradient(bx, by, bx, by + BH * 0.18);
+      te.addColorStop(0, "rgba(200,120,40," + (0.08 + n1 * 0.06) + ")");
+      te.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = te;
+      g.fillRect(bx, by, BW, BH * 0.18);
+
+      const be2 = g.createLinearGradient(bx, by + BH * 0.75, bx, by + BH);
+      be2.addColorStop(0, "rgba(0,0,0,0)");
+      be2.addColorStop(1, "rgba(0,0,0," + (0.35 + n2 * 0.20) + ")");
+      g.fillStyle = be2;
+      g.fillRect(bx, by + BH * 0.75, BW, BH * 0.25);
+
+      if (n4 > 0.72) {
+        const ash = g.createLinearGradient(bx, by, bx, by + BH * 0.30);
+        ash.addColorStop(0, "rgba(160,140,120," + (0.14 + n5 * 0.10) + ")");
+        ash.addColorStop(1, "rgba(0,0,0,0)");
+        g.fillStyle = ash;
+        g.fillRect(bx, by, BW, BH * 0.30);
+      }
+
+      const nCracks = n1 > 0.45 ? (n1 > 0.75 ? 3 : 2) : (n2 > 0.60 ? 1 : 0);
+      for (let c = 0; c < nCracks; c++) {
+        const cx1 = bx + BW * (0.15 + rnd2(id, c * 7 + 1) * 0.65);
+        const cy1 = by + BH * (0.10 + rnd2(id, c * 7 + 2) * 0.25);
+        const cLen = BH * (0.25 + rnd2(id, c * 7 + 3) * 0.45);
+        const cAng = -0.4 + rnd2(id, c * 7 + 4) * 0.8;
+        const cAlpha = 0.25 + rnd2(id, c * 7 + 5) * 0.35;
+        g.strokeStyle = "rgba(6,3,1," + cAlpha + ")";
+        g.lineWidth = 0.5 + rnd2(id, c * 7 + 6) * 0.8;
+        g.beginPath();
+        g.moveTo(cx1, cy1);
+        const mx = cx1 + Math.cos(cAng) * cLen * 0.5 + (-3 + rnd2(id, c * 7 + 7) * 6);
+        const my = cy1 + Math.sin(cAng) * cLen * 0.5 + cLen * 0.3;
+        g.quadraticCurveTo(mx, my, cx1 + Math.cos(cAng) * cLen, cy1 + Math.sin(cAng) * cLen + cLen * 0.6);
+        g.stroke();
+      }
+
+      if (n5 > 0.42) {
+        const sm = g.createLinearGradient(bx, by, bx, by + BH * 0.55);
+        sm.addColorStop(0, "rgba(2,1,0," + (0.35 + n1 * 0.28) + ")");
+        sm.addColorStop(0.6, "rgba(2,1,0," + (0.12 + n2 * 0.10) + ")");
+        sm.addColorStop(1, "rgba(0,0,0,0)");
+        g.fillStyle = sm;
+        g.fillRect(bx, by, BW, BH * 0.55);
+      }
+    }
+  }
+
+  g.strokeStyle = "rgba(8,4,1,0.96)";
+  g.lineWidth = MT;
+  for (let row = 0; row <= rows; row++) {
+    const jy = row * (BH + MT) - MT * 0.5;
+    g.beginPath();
+    g.moveTo(0, jy);
+    g.lineTo(W, jy);
+    g.stroke();
+  }
+  for (let row = 0; row < rows; row++) {
+    const by = row * (BH + MT);
+    const offset = row % 2 === 0 ? 0 : Math.round((BW + MT) * 0.5);
+    for (let col = -1; col < cols; col++) {
+      const jx = col * (BW + MT) - offset + BW + MT * 0.5;
+      g.beginPath();
+      g.moveTo(jx, by);
+      g.lineTo(jx, by + BH + MT);
+      g.stroke();
+    }
+  }
+
+  g.strokeStyle = "rgba(40,20,8,0.22)";
+  g.lineWidth = 1;
+  for (let row = 0; row <= rows; row++) {
+    const jy = row * (BH + MT) - MT * 0.5;
+    g.beginPath();
+    g.moveTo(0, jy);
+    g.lineTo(W, jy);
+    g.stroke();
+  }
+
+  const hg1 = g.createRadialGradient(W * 0.50, H * 0.60, 0, W * 0.50, H * 0.60, W * 0.50);
+  hg1.addColorStop(0, "rgba(255,120,10,0.28)");
+  hg1.addColorStop(0.25, "rgba(220,80,5,0.16)");
+  hg1.addColorStop(0.55, "rgba(160,40,2,0.08)");
+  hg1.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = hg1;
+  g.fillRect(0, 0, W, H);
+
+  const hg2 = g.createRadialGradient(W * 0.28, H * 0.55, 0, W * 0.28, H * 0.55, W * 0.28);
+  hg2.addColorStop(0, "rgba(200,70,5,0.18)");
+  hg2.addColorStop(0.5, "rgba(140,40,2,0.07)");
+  hg2.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = hg2;
+  g.fillRect(0, 0, W, H);
+
+  const hg3 = g.createRadialGradient(W * 0.72, H * 0.65, 0, W * 0.72, H * 0.65, W * 0.24);
+  hg3.addColorStop(0, "rgba(180,60,4,0.16)");
+  hg3.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = hg3;
+  g.fillRect(0, 0, W, H);
+
+  const soot1 = g.createLinearGradient(0, 0, 0, H * 0.38);
+  soot1.addColorStop(0, "rgba(2,1,0,0.82)");
+  soot1.addColorStop(0.5, "rgba(2,1,0,0.35)");
+  soot1.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = soot1;
+  g.fillRect(0, 0, W, H * 0.38);
+
+  [[0, 0], [W, 0], [0, H], [W, H]].forEach(function(corner){
+    const cg2 = g.createRadialGradient(corner[0], corner[1], 0, corner[0], corner[1], W * 0.35);
+    cg2.addColorStop(0, "rgba(0,0,0,0.55)");
+    cg2.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = cg2;
+    g.fillRect(0, 0, W, H);
+  });
+
+  const dark = g.createLinearGradient(0, 0, 0, H);
+  dark.addColorStop(0, "rgba(0,0,0,0.30)");
+  dark.addColorStop(0.50, "rgba(0,0,0,0.10)");
+  dark.addColorStop(1, "rgba(0,0,0,0.45)");
+  g.fillStyle = dark;
+  g.fillRect(0, 0, W, H);
+
+  for (let i = 0; i < 320; i++) {
+    const ax = rnd(i * 17 + 400) * W;
+    const ay = rnd(i * 23 + 410) * H;
+    const ar = 0.8 + rnd(i * 31 + 420) * 2.5;
+    const aa = 0.03 + rnd(i * 37 + 430) * 0.07;
+    g.fillStyle = "rgba(140,120,90," + aa + ")";
+    g.beginPath();
+    g.arc(ax, ay, ar, 0, Math.PI * 2);
+    g.fill();
+  }
+
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  return tex;
+}
+
+function flameHash(a, b, c) {
+  const x = Math.sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453123;
+  return x - Math.floor(x);
+}
+
+function makeFlameAtlas(frameW, frameH, frames, innerCore) {
+  const cv = document.createElement("canvas");
+  cv.width = frameW * frames;
+  cv.height = frameH;
+  const g = cv.getContext("2d");
+
+  for (let f = 0; f < frames; f++) {
+    const ox = f * frameW;
+    const phase = f / frames * Math.PI * 2;
+    const baseY = frameH * 0.96;
+    const flH = frameH * (innerCore ? 0.74 : 0.92);
+    const flW = frameW * (innerCore ? 0.11 : 0.25);
+    const left = [];
+    const right = [];
+
+    for (let i = 0; i <= 28; i++) {
+      const p = i / 28;
+      const y = baseY - flH * p;
+      const taper = Math.max(0.02, Math.pow(1 - p, innerCore ? 0.60 : 0.42));
+      const wobble =
+        Math.sin(phase * 1.18 + p * 10.7) * 0.12 +
+        Math.sin(phase * 2.41 + p * 18.9) * 0.08 +
+        (flameHash(f, i, innerCore ? 7 : 3) - 0.5) * 0.10;
+      const drift =
+        Math.sin(phase * 0.72 + p * 6.1) * frameW * (innerCore ? 0.015 : 0.032) * (1 - p * 0.8) +
+        Math.sin(phase * 1.51 + p * 12.4) * frameW * (innerCore ? 0.010 : 0.018) * (1 - p);
+      const width = flW * taper * (1 + wobble);
+      const cx = ox + frameW * 0.5 + drift;
+      left.push([cx - width, y]);
+      right.push([cx + width, y]);
+    }
+
+    const haze = g.createRadialGradient(
+      ox + frameW * 0.5, baseY - flH * 0.18, frameW * 0.03,
+      ox + frameW * 0.5, baseY - flH * 0.18, frameW * (innerCore ? 0.20 : 0.38)
+    );
+    if (innerCore) {
+      haze.addColorStop(0.00, "rgba(170,210,255,0.34)");
+      haze.addColorStop(0.32, "rgba(120,170,255,0.20)");
+      haze.addColorStop(1.00, "rgba(80,110,255,0)");
+    } else {
+      haze.addColorStop(0.00, "rgba(255,236,180,0.20)");
+      haze.addColorStop(0.38, "rgba(255,176,58,0.14)");
+      haze.addColorStop(1.00, "rgba(255,120,18,0)");
+    }
+    g.fillStyle = haze;
+    g.fillRect(ox, 0, frameW, frameH);
+
+    g.save();
+    g.beginPath();
+    g.moveTo(ox + frameW * 0.5, baseY);
+    for (let li = 0; li < left.length; li++) g.lineTo(left[li][0], left[li][1]);
+    for (let ri = right.length - 1; ri >= 0; ri--) g.lineTo(right[ri][0], right[ri][1]);
+    g.closePath();
+
+    const grad = g.createLinearGradient(0, baseY, 0, baseY - flH);
+    if (innerCore) {
+      grad.addColorStop(0.00, "rgba(122,170,255,0.92)");
+      grad.addColorStop(0.14, "rgba(196,226,255,0.95)");
+      grad.addColorStop(0.36, "rgba(255,255,250,0.92)");
+      grad.addColorStop(0.68, "rgba(255,246,184,0.66)");
+      grad.addColorStop(1.00, "rgba(255,232,120,0)");
+      g.shadowColor = "rgba(130,180,255,0.34)";
+      g.shadowBlur = 16;
+    } else {
+      grad.addColorStop(0.00, "rgba(92,132,255,0.58)");
+      grad.addColorStop(0.10, "rgba(190,220,255,0.84)");
+      grad.addColorStop(0.24, "rgba(255,255,255,0.92)");
+      grad.addColorStop(0.56, "rgba(255,236,120,0.88)");
+      grad.addColorStop(0.84, "rgba(255,184,54,0.66)");
+      grad.addColorStop(1.00, "rgba(255,120,18,0.08)");
+      g.shadowColor = "rgba(255,178,48,0.32)";
+      g.shadowBlur = 18;
+    }
+    g.fillStyle = grad;
+    g.fill();
+    g.restore();
+
+    if (!innerCore) {
+      g.save();
+      g.globalCompositeOperation = "lighter";
+      const spine = g.createLinearGradient(0, baseY, 0, baseY - flH * 0.80);
+      spine.addColorStop(0.00, "rgba(136,180,255,0.36)");
+      spine.addColorStop(0.18, "rgba(255,255,255,0.54)");
+      spine.addColorStop(0.52, "rgba(255,244,170,0.30)");
+      spine.addColorStop(1.00, "rgba(255,208,120,0)");
+      g.fillStyle = spine;
+      g.beginPath();
+      g.ellipse(
+        ox + frameW * 0.5 + Math.sin(phase) * frameW * 0.03,
+        baseY - flH * 0.32,
+        frameW * 0.075,
+        flH * 0.32,
+        0, 0, Math.PI * 2
+      );
+      g.fill();
+      g.restore();
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
+function makeFlameGlowTex(w, h) {
+  const cv = document.createElement("canvas");
+  cv.width = w;
+  cv.height = h;
+  const g = cv.getContext("2d");
+  const gl = g.createRadialGradient(w * 0.5, h * 0.72, w * 0.03, w * 0.5, h * 0.72, w * 0.42);
+  gl.addColorStop(0.00, "rgba(220,235,255,0.96)");
+  gl.addColorStop(0.14, "rgba(122,166,255,0.88)");
+  gl.addColorStop(0.32, "rgba(255,246,200,0.68)");
+  gl.addColorStop(0.62, "rgba(255,178,60,0.30)");
+  gl.addColorStop(1.00, "rgba(255,90,0,0)");
+  g.fillStyle = gl;
+  g.fillRect(0, 0, w, h);
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  return tex;
+}
+
+const FLAME_FRAMES = 24;
+const flameOuterAtlas = makeFlameAtlas(128, 256, FLAME_FRAMES, false);
+const flameInnerAtlas = makeFlameAtlas(128, 256, FLAME_FRAMES, true);
+
+const flameOuterAtlasAxial = (function() {
+  const fw = 128;
+  const fh = 256;
+  const cv = document.createElement("canvas");
+  cv.width = fw * FLAME_FRAMES;
+  cv.height = fh;
+  const g = cv.getContext("2d");
+  for (let f = 0; f < FLAME_FRAMES; f++) {
+    const ox = f * fw;
+    const phase = f / FLAME_FRAMES * Math.PI * 2;
+    const baseY = fh * 0.96;
+    const flH = fh * 0.44;
+    const flW = fw * 0.42;
+    const left = [];
+    const right = [];
+    for (let i = 0; i <= 28; i++) {
+      const p = i / 28;
+      const y = baseY - flH * p;
+      const taper = Math.max(0.10, 1.04 - p * 0.72);
+      const wobble = Math.sin(phase * 1.18 + p * 10.7) * 0.08 +
+        Math.sin(phase * 2.41 + p * 18.9) * 0.05 +
+        (flameHash(f, i, 3) - 0.5) * 0.06;
+      const drift = Math.sin(phase * 0.72 + p * 6.1) * fw * 0.012 * (1 - p * 0.8) +
+        Math.sin(phase * 1.51 + p * 12.4) * fw * 0.008 * (1 - p);
+      const widthProfile = 1.08 * (1 + Math.sin(Math.min(p, 0.70) / 0.70 * Math.PI * 0.5) * 0.18) * taper;
+      const width = flW * widthProfile * (1 + wobble);
+      const cx = ox + fw * 0.5 + drift;
+      left.push([cx - width, y]);
+      right.push([cx + width, y]);
+    }
+    const haze = g.createRadialGradient(ox + fw * 0.5, baseY - flH * 0.18, fw * 0.03, ox + fw * 0.5, baseY - flH * 0.18, fw * 0.38);
+    haze.addColorStop(0.00, "rgba(255,236,180,0.26)");
+    haze.addColorStop(0.38, "rgba(255,176,58,0.18)");
+    haze.addColorStop(1.00, "rgba(255,120,18,0)");
+    g.fillStyle = haze;
+    g.fillRect(ox, 0, fw, fh);
+    g.save();
+    g.beginPath();
+    g.moveTo(ox + fw * 0.5, baseY);
+    for (let li = 0; li < left.length; li++) g.lineTo(left[li][0], left[li][1]);
+    for (let ri = right.length - 1; ri >= 0; ri--) g.lineTo(right[ri][0], right[ri][1]);
+    g.closePath();
+    const grad = g.createLinearGradient(0, baseY, 0, baseY - flH);
+    grad.addColorStop(0.00, "rgba(92,132,255,0.58)");
+    grad.addColorStop(0.10, "rgba(190,220,255,0.84)");
+    grad.addColorStop(0.24, "rgba(255,255,255,0.92)");
+    grad.addColorStop(0.56, "rgba(255,236,120,0.88)");
+    grad.addColorStop(0.84, "rgba(255,184,54,0.66)");
+    grad.addColorStop(1.00, "rgba(255,120,18,0.08)");
+    g.shadowColor = "rgba(255,178,48,0.32)";
+    g.shadowBlur = 18;
+    g.fillStyle = grad;
+    g.fill();
+    g.restore();
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+})();
+
+const flameInnerAtlasAxial = (function() {
+  const fw = 128;
+  const fh = 256;
+  const cv = document.createElement("canvas");
+  cv.width = fw * FLAME_FRAMES;
+  cv.height = fh;
+  const g = cv.getContext("2d");
+  for (let f = 0; f < FLAME_FRAMES; f++) {
+    const ox = f * fw;
+    const phase = f / FLAME_FRAMES * Math.PI * 2;
+    const baseY = fh * 0.96;
+    const flH = fh * 0.38;
+    const flW = fw * 0.22;
+    const left = [];
+    const right = [];
+    for (let i = 0; i <= 28; i++) {
+      const p = i / 28;
+      const y = baseY - flH * p;
+      const taper = Math.max(0.10, 1.04 - p * 0.78);
+      const wobble = Math.sin(phase * 1.18 + p * 10.7) * 0.08 +
+        Math.sin(phase * 2.41 + p * 18.9) * 0.05 +
+        (flameHash(f, i, 7) - 0.5) * 0.06;
+      const drift = Math.sin(phase * 0.72 + p * 6.1) * fw * 0.008 * (1 - p * 0.8) +
+        Math.sin(phase * 1.51 + p * 12.4) * fw * 0.005 * (1 - p);
+      const widthProfile = 0.96 * (1 + Math.sin(Math.min(p, 0.70) / 0.70 * Math.PI * 0.5) * 0.12) * taper;
+      const width = flW * widthProfile * (1 + wobble);
+      const cx = ox + fw * 0.5 + drift;
+      left.push([cx - width, y]);
+      right.push([cx + width, y]);
+    }
+    const haze = g.createRadialGradient(ox + fw * 0.5, baseY - flH * 0.18, fw * 0.03, ox + fw * 0.5, baseY - flH * 0.18, fw * 0.20);
+    haze.addColorStop(0.00, "rgba(170,210,255,0.42)");
+    haze.addColorStop(0.32, "rgba(132,180,255,0.26)");
+    haze.addColorStop(1.00, "rgba(80,110,255,0)");
+    g.fillStyle = haze;
+    g.fillRect(ox, 0, fw, fh);
+    g.save();
+    g.beginPath();
+    g.moveTo(ox + fw * 0.5, baseY);
+    for (let li = 0; li < left.length; li++) g.lineTo(left[li][0], left[li][1]);
+    for (let ri = right.length - 1; ri >= 0; ri--) g.lineTo(right[ri][0], right[ri][1]);
+    g.closePath();
+    const grad = g.createLinearGradient(0, baseY, 0, baseY - flH);
+    grad.addColorStop(0.00, "rgba(104,154,255,0.96)");
+    grad.addColorStop(0.14, "rgba(188,224,255,0.98)");
+    grad.addColorStop(0.36, "rgba(255,255,250,0.94)");
+    grad.addColorStop(0.68, "rgba(255,244,172,0.58)");
+    grad.addColorStop(1.00, "rgba(255,232,120,0)");
+    g.shadowColor = "rgba(130,180,255,0.34)";
+    g.shadowBlur = 16;
+    g.fillStyle = grad;
+    g.fill();
+    g.restore();
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+})();
+
+const flameOuterMat = new THREE.MeshBasicMaterial({
+  map: flameOuterAtlas,
+  transparent: true,
+  opacity: 0.90,
+  depthWrite: false,
+  side: THREE.DoubleSide,
+  alphaTest: 0.02
+});
+const flameInnerMat = new THREE.MeshBasicMaterial({
+  map: flameInnerAtlas,
+  transparent: true,
+  opacity: 0.84,
+  depthWrite: false,
+  side: THREE.DoubleSide,
+  alphaTest: 0.02,
+  blending: THREE.AdditiveBlending
+});
+const flameGlowTex = makeFlameGlowTex(192, 128);
+const flameGlowMat = new THREE.MeshBasicMaterial({
+  map: flameGlowTex,
+  transparent: true,
+  opacity: 0.56,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  side: THREE.DoubleSide
+});
+
+const flameOuterGeo = new THREE.PlaneGeometry(0.28, 0.48);
+flameOuterGeo.translate(0, 0.24, 0);
+const flameInnerGeo = new THREE.PlaneGeometry(0.12, 0.30);
+flameInnerGeo.translate(0, 0.15, 0);
+const flameGlowGeo = new THREE.PlaneGeometry(0.20, 0.14);
+flameGlowGeo.translate(0, 0.07, 0);
+const flameOuterGeoAxial = new THREE.PlaneGeometry(0.44, 0.30);
+flameOuterGeoAxial.translate(0, 0.15, 0);
+const flameInnerGeoAxial = new THREE.PlaneGeometry(0.22, 0.18);
+flameInnerGeoAxial.translate(0, 0.09, 0);
+
+const flameActors = [];
+
+function hasAnimatedInteriorFlames() {
+  return flameActors.length > 0;
+}
+
+function addAnimatedFlame(parent, seed, posX, posY, posZ, matA, matB, profile) {
+  profile = profile || "front";
+  const axial = profile === "axial";
+  const useOuterAtlas = axial ? flameOuterAtlasAxial : flameOuterAtlas;
+  const useInnerAtlas = axial ? flameInnerAtlasAxial : flameInnerAtlas;
+  const useOuterGeo = axial ? flameOuterGeoAxial : flameOuterGeo;
+  const useInnerGeo = axial ? flameInnerGeoAxial : flameInnerGeo;
+  const baseRotX = axial ? 0 : -0.02;
+  const baseRotZ = axial ? -Math.PI / 2 : 0;
+
+  const flame = new THREE.Group();
+  flame.position.set(posX, posY, posZ);
+  flame.rotation.set(baseRotX, 0, baseRotZ);
+  flame.userData.baseX = posX;
+  flame.userData.baseY = posY;
+  flame.userData.baseZ = posZ;
+  flame.userData.baseRotX = baseRotX;
+  flame.userData.baseRotY = 0;
+  flame.userData.baseRotZ = baseRotZ;
+
+  const oTex = useOuterAtlas.clone();
+  oTex.needsUpdate = true;
+  oTex.repeat.set(1 / FLAME_FRAMES, 1);
+  oTex.offset.set(0, 0);
+  const oMat = flameOuterMat.clone();
+  oMat.map = oTex;
+  const oA = new THREE.Mesh(useOuterGeo, oMat);
+  flame.add(oA);
+  const oB = new THREE.Mesh(useOuterGeo, oMat);
+  const oC = new THREE.Mesh(useOuterGeo, oMat);
+  if (axial) {
+    oB.rotation.x = Math.PI / 3;
+    oC.rotation.x = -Math.PI / 3;
+  } else {
+    oB.rotation.y = Math.PI / 3;
+    oC.rotation.y = -Math.PI / 3;
+  }
+  flame.add(oB, oC);
+
+  const iTex = useInnerAtlas.clone();
+  iTex.needsUpdate = true;
+  iTex.repeat.set(1 / FLAME_FRAMES, 1);
+  iTex.offset.set(0, 0);
+  const iMat = flameInnerMat.clone();
+  iMat.map = iTex;
+  let innerFlame;
+  if (axial) {
+    innerFlame = new THREE.Group();
+    const iA = new THREE.Mesh(useInnerGeo, iMat);
+    const iB = new THREE.Mesh(useInnerGeo, iMat);
+    iB.rotation.x = Math.PI / 2;
+    innerFlame.add(iA, iB);
+  } else {
+    innerFlame = new THREE.Mesh(useInnerGeo, iMat);
+  }
+  innerFlame.position.set(0, axial ? 0.004 : 0.014, axial ? 0.004 : 0.006);
+  flame.add(innerFlame);
+
+  const gMat = flameGlowMat.clone();
+  let glow;
+  if (axial) {
+    glow = new THREE.Group();
+    const gA = new THREE.Mesh(flameGlowGeo, gMat);
+    const gB = new THREE.Mesh(flameGlowGeo, gMat);
+    gB.rotation.x = Math.PI / 2;
+    glow.add(gA, gB);
+  } else {
+    glow = new THREE.Mesh(flameGlowGeo, gMat);
+  }
+  glow.position.set(0, axial ? -0.006 : 0.002, axial ? 0 : -0.004);
+  flame.add(glow);
+
+  parent.add(flame);
+
+  flameActors.push({
+    flame: flame,
+    outerMat: oMat,
+    outerTex: oTex,
+    innerFlame: innerFlame,
+    innerMat: iMat,
+    innerTex: iTex,
+    glow: glow,
+    glowMat: gMat,
+    hotPrimaryMat: matA || null,
+    hotSecondaryMat: matB || null,
+    profile: profile,
+    phase: seed * 0.17,
+    speedA: 5.4 + (seed % 0.9),
+    speedB: 8.7 + (seed % 1.3),
+    speedC: 13.1 + (seed % 1.8),
+    frameRate: 15.5 + (seed % 5.0),
+    sway: 0.005 + (seed % 0.003),
+    lift: 0.004 + (seed % 0.003),
+    widthPulse: 0.028 + (seed % 0.012)
+  });
+}
+
+function animateInteriorFlames(t) {
+  for (let i = 0; i < flameActors.length; i++) {
+    const actor = flameActors[i];
+    const f1 = Math.sin(t * actor.speedA + actor.phase);
+    const f2 = Math.sin(t * actor.speedB + actor.phase * 1.37);
+    const f3 = Math.sin(t * actor.speedC + actor.phase * 2.11);
+    const flicker = 0.58 + f1 * 0.18 + f2 * 0.12 + f3 * 0.06;
+    const flare = Math.max(0, f2) * 0.16;
+    const axial = actor.profile === "axial";
+    const height = 0.76 + flicker * 0.14 + flare * 0.08;
+    const width = 0.76 - (height - 0.86) * 0.10 + f3 * actor.widthPulse * 0.7;
+    const depth = 0.90 + flicker * 0.08;
+    const swayX = f2 * actor.sway;
+    const lift = actor.lift * (0.6 + flicker);
+    const frame = Math.floor((t * actor.frameRate + actor.phase * 7.0) % FLAME_FRAMES);
+    const innerFrame = (frame + 5) % FLAME_FRAMES;
+
+    actor.flame.position.x = actor.flame.userData.baseX;
+    actor.flame.position.y = actor.flame.userData.baseY;
+    actor.flame.position.z = actor.flame.userData.baseZ;
+    actor.flame.rotation.x = actor.flame.userData.baseRotX + f1 * (axial ? 0.006 : 0.012);
+    actor.flame.rotation.z = actor.flame.userData.baseRotZ + f2 * (axial ? 0.012 : 0.030);
+    actor.flame.rotation.y = actor.flame.userData.baseRotY + f3 * (axial ? 0.016 : 0.042);
+    actor.flame.scale.set(
+      axial ? (1.18 + flicker * 0.18 + f3 * actor.widthPulse * 0.3) : width,
+      axial ? (0.29 + flicker * 0.04 + flare * 0.02) : height,
+      axial ? (0.94 + flicker * 0.05) : depth
+    );
+
+    actor.outerTex.offset.x = frame / FLAME_FRAMES;
+    actor.innerTex.offset.x = innerFrame / FLAME_FRAMES;
+
+    actor.innerFlame.position.y = axial ? 0.001 + lift * 0.2 : 0.010 + lift;
+    actor.innerFlame.position.x = swayX * (axial ? 0.08 : 0.14);
+    actor.innerFlame.scale.set(
+      axial ? (1.06 + flicker * 0.10) : (0.90 + flicker * 0.05),
+      axial ? (0.30 + flicker * 0.05) : (0.82 + flicker * 0.12),
+      1
+    );
+
+    actor.glow.position.y = axial ? -0.006 : 0;
+    actor.glow.scale.set(
+      axial ? (1.16 + flicker * 0.16) : (0.88 + flicker * 0.22),
+      axial ? (0.40 + flicker * 0.05) : (0.74 + flicker * 0.12),
+      1
+    );
+
+    actor.outerMat.opacity = 0.88 + flicker * 0.08;
+    actor.innerMat.opacity = 0.72 + flicker * 0.16 + flare * 0.06;
+    actor.glowMat.opacity = 0.28 + flicker * 0.42 + flare * 0.18;
+    if (actor.hotPrimaryMat) actor.hotPrimaryMat.emissiveIntensity = 0.08 + flicker * 0.10 + flare * 0.08;
+    if (actor.hotSecondaryMat) actor.hotSecondaryMat.emissiveIntensity = 0.05 + flicker * 0.08;
+  }
+}
+
+function makeBurnerDiscTex(size) {
+  const cv = document.createElement("canvas");
+  cv.width = size;
+  cv.height = size;
+  const g = cv.getContext("2d");
+  const cx = size * 0.5;
+  const cy = size * 0.5;
+  const base = g.createRadialGradient(cx, cy, size * 0.10, cx, cy, size * 0.42);
+  base.addColorStop(0.00, "#2a1c10");
+  base.addColorStop(0.16, "#5a3718");
+  base.addColorStop(0.34, "#c78c2a");
+  base.addColorStop(0.68, "#e5b65a");
+  base.addColorStop(1.00, "#8a5f1d");
+  g.fillStyle = base;
+  g.beginPath();
+  g.arc(cx, cy, size * 0.34, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = "#161112";
+  g.beginPath();
+  g.arc(cx, cy, size * 0.12, 0, Math.PI * 2);
+  g.fill();
+  const rs = g.createLinearGradient(0, 0, size, size);
+  rs.addColorStop(0.00, "rgba(255,236,168,0.90)");
+  rs.addColorStop(1.00, "rgba(116,78,24,0.88)");
+  g.strokeStyle = rs;
+  g.lineWidth = size * 0.03;
+  g.beginPath();
+  g.arc(cx, cy, size * 0.24, 0, Math.PI * 2);
+  g.stroke();
+  for (let ring = 0; ring < 2; ring++) {
+    const rad = size * (ring === 0 ? 0.20 : 0.29);
+    const n = ring === 0 ? 18 : 26;
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2 + (ring === 0 ? 0 : Math.PI / n);
+      g.fillStyle = ring === 0 ? "#2b1a0e" : "#3a2410";
+      g.beginPath();
+      g.arc(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad, size * (ring === 0 ? 0.010 : 0.009), 0, Math.PI * 2);
+      g.fill();
+    }
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  return tex;
+}
+
+const interiorBrickTex = makeBrickTex(2048, 1024);
+const interiorFaceMaterial = new THREE.MeshStandardMaterial({
+  map: interiorBrickTex,
+  roughness: 0.92,
+  metalness: 0.02,
+  color: 0xffffff,
+  side: THREE.DoubleSide
+});
+const burnerDiscTex = makeBurnerDiscTex(512);
+const burnerDiscBaseMat = new THREE.MeshStandardMaterial({
+  map: burnerDiscTex,
+  color: 0xffffff,
+  roughness: 0.42,
+  metalness: 0.78
+});
+const burnerBowlMat = new THREE.MeshStandardMaterial({
+  color: 0xc7ccd2,
+  roughness: 0.24,
+  metalness: 0.94
+});
+const burnerIronMat = new THREE.MeshStandardMaterial({
+  color: 0x101114,
+  roughness: 0.88,
+  metalness: 0.18
+});
+const burnerCoreBaseMat = new THREE.MeshStandardMaterial({
+  color: 0x1a1718,
+  roughness: 0.90,
+  metalness: 0.14
+});
+const burnerBowlGeo = new THREE.CylinderGeometry(0.075, 0.090, 0.018, 28, 1, false);
+const burnerRingGeo = new THREE.TorusGeometry(0.10, 0.012, 10, 32);
+const burnerArmGeo = new THREE.BoxGeometry(0.070, 0.012, 0.021);
+const burnerDiscBodyGeo = new THREE.CylinderGeometry(0.045, 0.054, 0.018, 28, 1, false);
+const burnerDiscFaceGeo = new THREE.CircleGeometry(0.050, 32);
+const burnerCoreGeo = new THREE.CylinderGeometry(0.017, 0.020, 0.022, 20, 1, false);
+
+function buildInteriorFace2Layer(faceKey, faceZ, burnerRotationY) {
+  const faceLayerGroup = new THREE.Group();
+  faceLayerGroup.name = faceKey + "-layer";
+  interiorGroup.add(faceLayerGroup);
+
+  const panel = new THREE.Mesh(
+    new THREE.PlaneGeometry(FW, FH),
+    interiorFaceMaterial.clone()
+  );
+  panel.position.z = faceZ;
+  if (faceKey === "face7") panel.rotation.y = Math.PI;
+  faceLayerGroup.add(panel);
+
+  const cols = 8;
+  const rows = 6;
+  const xInset = 1.20;
+  const yInset = 0.90;
+  const bXs = [];
+  const bYs = [];
+  for (let c = 0; c < cols; c++) {
+    bXs.push(-FW / 2 + xInset + ((FW - xInset * 2) / (cols - 1)) * c);
+  }
+  for (let r = 0; r < rows; r++) {
+    bYs.push(FH / 2 - yInset - ((FH - yInset * 2) / (rows - 1)) * r);
+  }
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const bx = bXs[col];
+      const by = bYs[row];
+      const burner = new THREE.Group();
+      burner.position.set(bx, by, faceZ);
+      burner.rotation.y = burnerRotationY;
+
+      const bowl = new THREE.Mesh(burnerBowlGeo, burnerBowlMat);
+      bowl.rotation.z = Math.PI / 2;
+      bowl.position.x = 0.010;
+      burner.add(bowl);
+
+      const ring = new THREE.Mesh(burnerRingGeo, burnerIronMat);
+      ring.rotation.y = Math.PI / 2;
+      ring.position.x = 0.022;
+      burner.add(ring);
+
+      for (let s = 0; s < 4; s++) {
+        const sa = s * Math.PI / 2;
+        const arm = new THREE.Mesh(burnerArmGeo, burnerIronMat);
+        arm.position.set(0.026, Math.cos(sa) * 0.068, Math.sin(sa) * 0.068);
+        arm.rotation.x = sa;
+        arm.rotation.z = s % 2 === 0 ? 0.10 : -0.10;
+        burner.add(arm);
+      }
+
+      const dMat = burnerDiscBaseMat.clone();
+      const discBody = new THREE.Mesh(burnerDiscBodyGeo, dMat);
+      discBody.rotation.z = Math.PI / 2;
+      discBody.position.x = 0.030;
+      burner.add(discBody);
+
+      const discFace = new THREE.Mesh(burnerDiscFaceGeo, dMat);
+      discFace.rotation.y = Math.PI / 2;
+      discFace.position.x = 0.042;
+      burner.add(discFace);
+
+      const cMat = burnerCoreBaseMat.clone();
+      const core = new THREE.Mesh(burnerCoreGeo, cMat);
+      core.rotation.z = Math.PI / 2;
+      core.position.x = 0.035;
+      burner.add(core);
+
+      faceLayerGroup.add(burner);
+
+      const seed = Math.abs(Math.sin(bx * 2.31 + by * 3.17)) * 1000;
+      addAnimatedFlame(burner, seed, 0.048, 0, 0, dMat, cMat, "axial");
+    }
+  }
+}
 
 function shellMaterial(color){
   return new THREE.MeshStandardMaterial({
@@ -596,6 +1464,9 @@ const faceBack = new THREE.Mesh(
 faceBack.position.z = -FD / 2;
 faceBack.rotation.y = Math.PI;
 shellGroup.add(faceBack);
+
+buildInteriorFace2Layer("face7", (FD / 2) - INTERIOR_BURNER_SURFACE_GAP - INTERIOR_PANEL_INSET, Math.PI / 2);
+buildInteriorFace2Layer("face8", -(FD / 2) + INTERIOR_BURNER_SURFACE_GAP + INTERIOR_PANEL_INSET, -Math.PI / 2);
 
 function addSidePanel(isLeft){
   const shape = new THREE.Shape();
@@ -747,7 +1618,7 @@ function syncAutoRotateButton(){
 
 function applyInsidePrepTargets(){
   targetCameraPos.set(-(FW / 2) - 0.62, PEEPHOLE_TOP_Y, 0);
-  targetLookAt.set((-FW / 2) + Math.max(0.22, FD * 0.24), PEEPHOLE_TOP_Y, 0);
+  targetLookAt.set(0, Math.max(0.22, PEEPHOLE_TOP_Y * 0.58), 0);
 }
 
 function setShellView(angle){
@@ -908,13 +1779,14 @@ function animate(now){
   requestAnimationFrame(animate);
 
   const canRender = canRenderNow();
+  const hasAnimatedFlames = hasAnimatedInteriorFlames();
   const frameBudget = !canRender
     ? SLEEP_FRAME_MS
-    : hostFocused
+    : (hostFocused || hasAnimatedFlames)
       ? FOCUSED_IDLE_FRAME_MS
       : BACKGROUND_IDLE_FRAME_MS;
 
-  if(lastRenderTs && (now - lastRenderTs) < frameBudget && !forceNextRender && !hasRotationMotion()) return;
+  if(lastRenderTs && (now - lastRenderTs) < frameBudget && !forceNextRender && !hasRotationMotion() && !hasAnimatedFlames) return;
   lastRenderTs = now;
 
   const dt = lastFrameTs ? Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000)) : (1 / 60);
@@ -932,6 +1804,11 @@ function animate(now){
     frameNeedsRender = true;
   }else{
     frameNeedsRender = settleRotationTowardTarget(dt) || frameNeedsRender;
+  }
+
+  if(hasAnimatedFlames){
+    animateInteriorFlames(now * 0.001);
+    frameNeedsRender = true;
   }
 
   const cameraLerp = 1 - Math.exp(-CAMERA_LERP_RATE * dt);
