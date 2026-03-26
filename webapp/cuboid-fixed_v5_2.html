@@ -1402,7 +1402,7 @@ const flameInnerAtlasAxial = (function() {
 const flameOuterMat = new THREE.MeshBasicMaterial({
   map: flameOuterAtlas,
   transparent: true,
-  opacity: 0.94,
+  opacity: 0.90,
   depthWrite: false,
   side: THREE.DoubleSide,
   alphaTest: 0.02
@@ -1410,7 +1410,7 @@ const flameOuterMat = new THREE.MeshBasicMaterial({
 const flameInnerMat = new THREE.MeshBasicMaterial({
   map: flameInnerAtlas,
   transparent: true,
-  opacity: 0.90,
+  opacity: 0.84,
   depthWrite: false,
   side: THREE.DoubleSide,
   alphaTest: 0.02,
@@ -1420,7 +1420,7 @@ const flameGlowTex = makeFlameGlowTex(192, 128);
 const flameGlowMat = new THREE.MeshBasicMaterial({
   map: flameGlowTex,
   transparent: true,
-  opacity: 0.64,
+  opacity: 0.56,
   blending: THREE.AdditiveBlending,
   depthWrite: false,
   side: THREE.DoubleSide
@@ -1587,11 +1587,11 @@ function animateInteriorFlames(t) {
       1
     );
 
-    actor.outerMat.opacity = 0.90 + flicker * 0.10;
-    actor.innerMat.opacity = 0.77 + flicker * 0.15 + flare * 0.06;
-    actor.glowMat.opacity = 0.34 + flicker * 0.44 + flare * 0.18;
-    if (actor.hotPrimaryMat) actor.hotPrimaryMat.emissiveIntensity = 0.12 + flicker * 0.14 + flare * 0.10;
-    if (actor.hotSecondaryMat) actor.hotSecondaryMat.emissiveIntensity = 0.08 + flicker * 0.11 + flare * 0.07;
+    actor.outerMat.opacity = 0.88 + flicker * 0.08;
+    actor.innerMat.opacity = 0.72 + flicker * 0.16 + flare * 0.06;
+    actor.glowMat.opacity = 0.28 + flicker * 0.42 + flare * 0.18;
+    if (actor.hotPrimaryMat) actor.hotPrimaryMat.emissiveIntensity = 0.08 + flicker * 0.10 + flare * 0.08;
+    if (actor.hotSecondaryMat) actor.hotSecondaryMat.emissiveIntensity = 0.05 + flicker * 0.08;
   }
 }
 
@@ -1647,8 +1647,6 @@ const interiorFaceMaterial = new THREE.MeshStandardMaterial({
   roughness: 0.92,
   metalness: 0.02,
   color: 0xffffff,
-  emissive: 0x120804,
-  emissiveIntensity: 0.04,
   side: THREE.DoubleSide
 });
 const interiorTopBrickTex = makeBrickTex(2048, 512);
@@ -1658,7 +1656,7 @@ const interiorTopCapMaterial = new THREE.MeshStandardMaterial({
   metalness: 0.02,
   color: 0xffffff,
   emissive: 0x160d06,
-  emissiveIntensity: 0.08,
+  emissiveIntensity: 0.05,
   side: THREE.DoubleSide
 });
 const interiorBottomBrickTex = makeBrickTex(2048, 512);
@@ -1668,7 +1666,7 @@ const interiorBottomCapMaterial = new THREE.MeshStandardMaterial({
   metalness: 0.01,
   color: 0xf3ede2,
   emissive: 0x0e0804,
-  emissiveIntensity: 0.05,
+  emissiveIntensity: 0.03,
   side: THREE.DoubleSide
 });
 const burnerDiscTex = makeBurnerDiscTex(512);
@@ -1676,9 +1674,7 @@ const burnerDiscBaseMat = new THREE.MeshStandardMaterial({
   map: burnerDiscTex,
   color: 0xffffff,
   roughness: 0.42,
-  metalness: 0.78,
-  emissive: 0x6a2f0e,
-  emissiveIntensity: 0.04
+  metalness: 0.78
 });
 const burnerBowlMat = new THREE.MeshStandardMaterial({
   color: 0xc7ccd2,
@@ -1693,9 +1689,7 @@ const burnerIronMat = new THREE.MeshStandardMaterial({
 const burnerCoreBaseMat = new THREE.MeshStandardMaterial({
   color: 0x1a1718,
   roughness: 0.90,
-  metalness: 0.14,
-  emissive: 0x8f3a0e,
-  emissiveIntensity: 0.06
+  metalness: 0.14
 });
 const burnerBowlGeo = new THREE.CylinderGeometry(0.075, 0.090, 0.018, 28, 1, false);
 const burnerRingGeo = new THREE.TorusGeometry(0.10, 0.012, 10, 32);
