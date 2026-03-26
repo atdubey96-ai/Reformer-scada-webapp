@@ -381,7 +381,7 @@ const SHELL_FACE_KEYS = [
 ];
 
 if(viewerTagTitle) viewerTagTitle.textContent = chamberZoneKey + " Reformer Structure Study";
-if(viewerTagSummary) viewerTagSummary.textContent = "Face2 layer copied onto Face7 + Face8 | X " + FW + " | Y " + FH + " | Z " + FD + " | dashboard camera framing";
+if(viewerTagSummary) viewerTagSummary.textContent = "Face7 + Face8 interior active | 8 vertical tubes + top header added | X " + FW + " | Y " + FH + " | Z " + FD;
 document.title = chamberZoneKey + " Reformer Structure Study";
 
 let hostTabActive = true;
@@ -550,6 +550,8 @@ const shellGroup = new THREE.Group();
 rigGroup.add(shellGroup);
 const interiorGroup = new THREE.Group();
 rigGroup.add(interiorGroup);
+const tubeAssemblyGroup = new THREE.Group();
+rigGroup.add(tubeAssemblyGroup);
 
 scene.add(new THREE.AmbientLight(0xd5e0ee, 1.18));
 const hemi = new THREE.HemisphereLight(0xe9f1ff, 0x1a2430, 0.92);
@@ -1788,6 +1790,129 @@ function buildInteriorCapFaces() {
   interiorGroup.add(face12);
 }
 
+function buildTubeAssembly() {
+  const mT = new THREE.MeshStandardMaterial({
+    color: 0x5c6b75,
+    roughness: 0.30,
+    metalness: 0.95,
+    emissive: 0x0a1018,
+    emissiveIntensity: 0.20
+  });
+  const mC = new THREE.MeshStandardMaterial({
+    color: 0xa8b4be,
+    roughness: 0.14,
+    metalness: 0.98,
+    emissive: 0x16222c,
+    emissiveIntensity: 0.16
+  });
+  const mH = new THREE.MeshStandardMaterial({
+    color: 0x78909c,
+    roughness: 0.18,
+    metalness: 0.97,
+    emissive: 0x0f1c25,
+    emissiveIntensity: 0.28
+  });
+  const mCap = new THREE.MeshStandardMaterial({
+    color: 0x9baebb,
+    roughness: 0.12,
+    metalness: 0.99,
+    emissive: 0x182530,
+    emissiveIntensity: 0.18
+  });
+  const mR = new THREE.MeshStandardMaterial({
+    color: 0x7a3a14,
+    roughness: 0.94,
+    metalness: 0.06,
+    emissive: 0x2a0e04,
+    emissiveIntensity: 0.10,
+    transparent: true,
+    opacity: 0.28
+  });
+
+  const N = 8;
+  const TR = 0.090;
+  const PT = 0.40;
+  const CR = TR * 1.38;
+  const CH = 0.072;
+  const HR = 0.130;
+  const HDR_Y = FH / 2 + PT + HR * 1.1;
+  const TT = FH + PT;
+  const TCY = -FH / 2 + TT / 2;
+  const margin = FW * 0.055;
+  const span = FW - margin * 2;
+
+  function tx(i) {
+    return -FW / 2 + margin + (span / (N - 1)) * i;
+  }
+
+  for (let i = 0; i < N; i++) {
+    const x = tx(i);
+
+    const tube = new THREE.Mesh(
+      new THREE.CylinderGeometry(TR, TR, TT, 22, 1),
+      mT.clone()
+    );
+    tube.position.set(x, TCY, 0);
+    tubeAssemblyGroup.add(tube);
+
+    const rust = new THREE.Mesh(
+      new THREE.CylinderGeometry(TR * 1.045, TR * 1.06, TT * 0.55, 22, 1),
+      mR.clone()
+    );
+    rust.position.set(x, TCY + (Math.sin(i * 1.3) * FH * 0.12), 0);
+    tubeAssemblyGroup.add(rust);
+
+    const colT = new THREE.Mesh(
+      new THREE.CylinderGeometry(CR, CR * 0.90, CH, 20),
+      mC.clone()
+    );
+    colT.position.set(x, FH / 2 + CH * 0.5, 0);
+    tubeAssemblyGroup.add(colT);
+
+    const junc = new THREE.Mesh(
+      new THREE.TorusGeometry(HR * 1.08, HR * 0.16, 12, 24),
+      mC.clone()
+    );
+    junc.rotation.y = Math.PI / 2;
+    junc.position.set(x, HDR_Y, 0);
+    tubeAssemblyGroup.add(junc);
+  }
+
+  const header = new THREE.Mesh(
+    new THREE.CylinderGeometry(HR, HR, FW, 30, 1),
+    mH
+  );
+  header.rotation.z = Math.PI / 2;
+  header.position.set(0, HDR_Y, 0);
+  tubeAssemblyGroup.add(header);
+
+  const hRust = new THREE.Mesh(
+    new THREE.CylinderGeometry(HR * 1.035, HR * 1.025, FW * 0.62, 30, 1),
+    mR.clone()
+  );
+  hRust.rotation.z = Math.PI / 2;
+  hRust.position.set(FW * 0.06, HDR_Y, 0);
+  tubeAssemblyGroup.add(hRust);
+
+  [-FW / 2, FW / 2].forEach(function(ex, side) {
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(HR * 1.04, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+      mCap.clone()
+    );
+    cap.rotation.z = side === 0 ? Math.PI / 2 : -Math.PI / 2;
+    cap.position.set(ex, HDR_Y, 0);
+    tubeAssemblyGroup.add(cap);
+
+    const fl = new THREE.Mesh(
+      new THREE.CylinderGeometry(HR * 1.30, HR * 1.30, 0.095, 22),
+      mCap.clone()
+    );
+    fl.rotation.z = Math.PI / 2;
+    fl.position.set(ex, HDR_Y, 0);
+    tubeAssemblyGroup.add(fl);
+  });
+}
+
 function shellMaterial(color){
   return new THREE.MeshStandardMaterial({
     color:color,
@@ -1831,6 +1956,7 @@ shellGroup.add(faceBack);
 buildInteriorFace2Layer("face7", (FD / 2) - INTERIOR_BURNER_SURFACE_GAP - INTERIOR_PANEL_INSET, Math.PI / 2);
 buildInteriorFace2Layer("face8", -(FD / 2) + INTERIOR_BURNER_SURFACE_GAP + INTERIOR_PANEL_INSET, -Math.PI / 2);
 buildInteriorCapFaces();
+buildTubeAssembly();
 
 function addSidePanel(isLeft){
   const shape = new THREE.Shape();
