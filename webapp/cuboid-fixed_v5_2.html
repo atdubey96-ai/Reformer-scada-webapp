@@ -1770,14 +1770,14 @@ shellGroup.add(capBot);
 
 const faceFront = new THREE.Mesh(
   new THREE.PlaneGeometry(FW, FH),
-  shellMaterial(0xf4f6f9)
+  face34PanelMaterial.clone()
 );
 faceFront.position.z = FD / 2;
 shellGroup.add(faceFront);
 
 const faceBack = new THREE.Mesh(
   new THREE.PlaneGeometry(FW, FH),
-  shellMaterial(0xf4f6f9)
+  face34PanelMaterial.clone()
 );
 faceBack.position.z = -FD / 2;
 faceBack.rotation.y = Math.PI;
