@@ -180,8 +180,8 @@ body{color:rgba(140,180,220,0.85);}
     flex:1 1 auto;
   }
   .btn{
-    flex:1 1 calc(50% - 6px);
-    min-width:118px;
+    flex:1 1 calc(33.333% - 6px);
+    min-width:104px;
     padding:8px 10px;
     font-size:9px;
     letter-spacing:1.2px;
@@ -197,10 +197,13 @@ body{color:rgba(140,180,220,0.85);}
       <span class="viewer-tag-summary" id="viewerTagSummary">Dashboard shell dimensions and camera framing | shell only</span>
     </div>
     <div id="ctrls">
-      <button class="btn" id="btnPrimary">Face A</button>
-      <button class="btn" id="btnSecondary">Face B</button>
+      <button class="btn" id="btnFront">Front</button>
+      <button class="btn" id="btnBack">Back</button>
+      <button class="btn" id="btnLeft">Left</button>
+      <button class="btn" id="btnRight">Right</button>
+      <button class="btn" id="btnPeep">Inside Prep</button>
       <button class="btn" id="btnAuto">Auto Rotate</button>
-      <button class="btn" id="btnResetView">Reset Front View</button>
+      <button class="btn" id="btnResetView">Reset</button>
     </div>
   </div>
   <div id="vp"><div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div></div>
@@ -235,16 +238,17 @@ const app = document.getElementById("app");
 const viewerTagTitle = document.getElementById("viewerTagTitle");
 const viewerTagSummary = document.getElementById("viewerTagSummary");
 const hint = document.getElementById("hint");
-const btnPrimary = document.getElementById("btnPrimary");
-const btnSecondary = document.getElementById("btnSecondary");
+const btnFront = document.getElementById("btnFront");
+const btnBack = document.getElementById("btnBack");
+const btnLeft = document.getElementById("btnLeft");
+const btnRight = document.getElementById("btnRight");
+const btnPeep = document.getElementById("btnPeep");
 const btnAuto = document.getElementById("btnAuto");
 const btnResetView = document.getElementById("btnResetView");
 const vp = document.getElementById("vp");
 
 if(viewerTagTitle) viewerTagTitle.textContent = chamberZoneKey + " Reformer Structure Study";
 if(viewerTagSummary) viewerTagSummary.textContent = "X " + FW + " | Y " + FH + " | Z " + FD + " | dashboard camera framing";
-if(btnPrimary) btnPrimary.textContent = "Face " + chamberWalls[0];
-if(btnSecondary) btnSecondary.textContent = "Face " + chamberWalls[1];
 document.title = chamberZoneKey + " Reformer Structure Study";
 
 let hostTabActive = true;
@@ -252,6 +256,7 @@ let hostInView = true;
 let hostFocused = true;
 let lastRenderTs = 0;
 let forceNextRender = true;
+let viewMode = "shell";
 
 function viewportWidth(){ return vp.clientWidth; }
 function viewportHeight(){ return vp.clientHeight; }
@@ -265,9 +270,12 @@ function isFullscreen(){
 }
 
 function refreshHint(){
-  hint.textContent = isFullscreen()
-    ? "DRAG TO ROTATE · DOUBLE-TAP EXIT FULLSCREEN"
-    : "DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN";
+  const fullscreenText = isFullscreen()
+    ? "DOUBLE-TAP EXIT FULLSCREEN"
+    : "DOUBLE-TAP FULLSCREEN";
+  hint.textContent = viewMode === "inside-prep"
+    ? "INSIDE PREP THROUGH UPPER LEFT PEEPHOLE · " + fullscreenText
+    : "DRAG TO ROTATE · " + fullscreenText;
 }
 
 function canRenderNow(){
@@ -348,6 +356,13 @@ const scene = new THREE.Scene();
 scene.background = null;
 
 const camera = new THREE.PerspectiveCamera(32, viewportWidth() / viewportHeight(), 0.1, 300);
+const shellCameraPos = new THREE.Vector3();
+const shellLookAt = new THREE.Vector3(0, 0, 0);
+const currentCameraPos = new THREE.Vector3();
+const targetCameraPos = new THREE.Vector3();
+const currentLookAt = new THREE.Vector3();
+const targetLookAt = new THREE.Vector3();
+const CAMERA_LERP_RATE = 9;
 
 function fitCamera(){
   const asp = viewportWidth() / viewportHeight();
@@ -357,8 +372,15 @@ function fitCamera(){
   const dH = (FH / 2) / Math.tan(fov / 2);
   camera.aspect = asp;
   camera.updateProjectionMatrix();
-  camera.position.set(0, 0, Math.max(dW, dH) * 1.18);
-  camera.lookAt(0, 0, 0);
+  shellCameraPos.set(0, 0, Math.max(dW, dH) * 1.18);
+  camera.position.copy(shellCameraPos);
+  camera.lookAt(shellLookAt);
+  if(viewMode !== "inside-prep"){
+    currentCameraPos.copy(shellCameraPos);
+    targetCameraPos.copy(shellCameraPos);
+    currentLookAt.copy(shellLookAt);
+    targetLookAt.copy(shellLookAt);
+  }
 }
 fitCamera();
 
@@ -571,6 +593,32 @@ function syncAutoRotateButton(){
   btnAuto.textContent = autoSpin ? "Stop" : "Auto Rotate";
 }
 
+function applyInsidePrepTargets(){
+  targetCameraPos.set(-(FW / 2) - 0.62, PEEPHOLE_TOP_Y, 0);
+  targetLookAt.set((-FW / 2) + Math.max(0.22, FD * 0.24), PEEPHOLE_TOP_Y, 0);
+}
+
+function setShellView(angle){
+  viewMode = "shell";
+  autoSpin = false;
+  syncAutoRotateButton();
+  setRotationTarget(angle);
+  targetCameraPos.copy(shellCameraPos);
+  targetLookAt.copy(shellLookAt);
+  refreshHint();
+  markDirty();
+}
+
+function setInsidePrepView(){
+  viewMode = "inside-prep";
+  autoSpin = false;
+  syncAutoRotateButton();
+  setRotationTarget(0);
+  applyInsidePrepTargets();
+  refreshHint();
+  markDirty();
+}
+
 function startDrag(clientX){
   autoSpin = false;
   syncAutoRotateButton();
@@ -610,6 +658,7 @@ function stopDrag(){
 
 vp.addEventListener("pointerdown", function(event){
   if(event.pointerType === "mouse" && event.button !== 0) return;
+  if(viewMode === "inside-prep") return;
   activePointerId = event.pointerId;
   if(vp.setPointerCapture) vp.setPointerCapture(event.pointerId);
   startDrag(event.clientX);
@@ -659,21 +708,19 @@ vp.addEventListener("dblclick", function(event){
   toggleFullscreen();
 });
 
-btnPrimary.addEventListener("click", function(){
-  autoSpin = false;
-  syncAutoRotateButton();
-  setRotationTarget(0);
-  markDirty();
-});
-
-btnSecondary.addEventListener("click", function(){
-  autoSpin = false;
-  syncAutoRotateButton();
-  setRotationTarget(Math.PI);
-  markDirty();
-});
+btnFront.addEventListener("click", function(){ setShellView(0); });
+btnBack.addEventListener("click", function(){ setShellView(Math.PI); });
+btnLeft.addEventListener("click", function(){ setShellView(-Math.PI / 2); });
+btnRight.addEventListener("click", function(){ setShellView(Math.PI / 2); });
+btnPeep.addEventListener("click", function(){ setInsidePrepView(); });
 
 btnAuto.addEventListener("click", function(){
+  if(viewMode === "inside-prep"){
+    viewMode = "shell";
+    targetCameraPos.copy(shellCameraPos);
+    targetLookAt.copy(shellLookAt);
+    refreshHint();
+  }
   autoSpin = !autoSpin;
   if(!autoSpin){
     snapToNearestFace();
@@ -685,20 +732,24 @@ btnAuto.addEventListener("click", function(){
 });
 
 btnResetView.addEventListener("click", function(){
-  autoSpin = false;
-  syncAutoRotateButton();
-  setRotationTarget(0);
-  markDirty();
+  setShellView(0);
 });
 
 const resizeObserver = new ResizeObserver(function(){
   applyRendererQuality(true);
   fitCamera();
+  if(viewMode === "inside-prep"){
+    applyInsidePrepTargets();
+  }else{
+    targetCameraPos.copy(shellCameraPos);
+    targetLookAt.copy(shellLookAt);
+  }
   markDirty();
 });
 resizeObserver.observe(vp);
 applyRendererQuality(true);
 syncAutoRotateButton();
+refreshHint();
 
 function animate(now){
   requestAnimationFrame(animate);
@@ -728,6 +779,19 @@ function animate(now){
     frameNeedsRender = true;
   }else{
     frameNeedsRender = settleRotationTowardTarget(dt) || frameNeedsRender;
+  }
+
+  const cameraLerp = 1 - Math.exp(-CAMERA_LERP_RATE * dt);
+  currentCameraPos.lerp(targetCameraPos, cameraLerp);
+  currentLookAt.lerp(targetLookAt, cameraLerp);
+  camera.position.copy(currentCameraPos);
+  camera.lookAt(currentLookAt);
+
+  if(
+    currentCameraPos.distanceToSquared(targetCameraPos) > 0.00001 ||
+    currentLookAt.distanceToSquared(targetLookAt) > 0.00001
+  ){
+    frameNeedsRender = true;
   }
 
   rigGroup.rotation.y = rotY;
