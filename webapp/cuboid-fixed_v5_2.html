@@ -1598,6 +1598,26 @@ const interiorFaceMaterial = new THREE.MeshStandardMaterial({
   color: 0xffffff,
   side: THREE.DoubleSide
 });
+const interiorTopBrickTex = makeBrickTex(2048, 512);
+const interiorTopCapMaterial = new THREE.MeshStandardMaterial({
+  map: interiorTopBrickTex,
+  roughness: 0.94,
+  metalness: 0.02,
+  color: 0xffffff,
+  emissive: 0x160d06,
+  emissiveIntensity: 0.05,
+  side: THREE.DoubleSide
+});
+const interiorBottomBrickTex = makeBrickTex(2048, 512);
+const interiorBottomCapMaterial = new THREE.MeshStandardMaterial({
+  map: interiorBottomBrickTex,
+  roughness: 0.96,
+  metalness: 0.01,
+  color: 0xf3ede2,
+  emissive: 0x0e0804,
+  emissiveIntensity: 0.03,
+  side: THREE.DoubleSide
+});
 const burnerDiscTex = makeBurnerDiscTex(512);
 const burnerDiscBaseMat = new THREE.MeshStandardMaterial({
   map: burnerDiscTex,
@@ -1705,6 +1725,24 @@ function buildInteriorFace2Layer(faceKey, faceZ, burnerRotationY) {
   }
 }
 
+function buildInteriorCapFaces() {
+  const face11 = new THREE.Mesh(
+    new THREE.PlaneGeometry(FW, FD),
+    interiorTopCapMaterial
+  );
+  face11.rotation.x = Math.PI / 2;
+  face11.position.y = (FH / 2) - INTERIOR_PANEL_INSET;
+  interiorGroup.add(face11);
+
+  const face12 = new THREE.Mesh(
+    new THREE.PlaneGeometry(FW, FD),
+    interiorBottomCapMaterial
+  );
+  face12.rotation.x = -Math.PI / 2;
+  face12.position.y = -(FH / 2) + INTERIOR_PANEL_INSET;
+  interiorGroup.add(face12);
+}
+
 function shellMaterial(color){
   return new THREE.MeshStandardMaterial({
     color:color,
@@ -1747,6 +1785,7 @@ shellGroup.add(faceBack);
 
 buildInteriorFace2Layer("face7", (FD / 2) - INTERIOR_BURNER_SURFACE_GAP - INTERIOR_PANEL_INSET, Math.PI / 2);
 buildInteriorFace2Layer("face8", -(FD / 2) + INTERIOR_BURNER_SURFACE_GAP + INTERIOR_PANEL_INSET, -Math.PI / 2);
+buildInteriorCapFaces();
 
 function addSidePanel(isLeft){
   const shape = new THREE.Shape();
