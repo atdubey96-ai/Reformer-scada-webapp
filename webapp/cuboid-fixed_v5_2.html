@@ -381,7 +381,7 @@ const SHELL_FACE_KEYS = [
 ];
 
 if(viewerTagTitle) viewerTagTitle.textContent = chamberZoneKey + " Reformer Structure Study";
-if(viewerTagSummary) viewerTagSummary.textContent = "Face1 + Face2 manifold assembly active | top header assembly kept | X " + FW + " | Y " + FH + " | Z " + FD;
+if(viewerTagSummary) viewerTagSummary.textContent = "Face1 + Face2 manifolds + nozzles active | top header assembly kept | X " + FW + " | Y " + FH + " | Z " + FD;
 document.title = chamberZoneKey + " Reformer Structure Study";
 
 let hostTabActive = true;
@@ -554,6 +554,8 @@ const tubeAssemblyGroup = new THREE.Group();
 rigGroup.add(tubeAssemblyGroup);
 const wallTubeAssemblyGroup = new THREE.Group();
 rigGroup.add(wallTubeAssemblyGroup);
+const wallNozzleAssemblyGroup = new THREE.Group();
+rigGroup.add(wallNozzleAssemblyGroup);
 
 scene.add(new THREE.AmbientLight(0xd5e0ee, 1.18));
 const hemi = new THREE.HemisphereLight(0xe9f1ff, 0x1a2430, 0.92);
@@ -2125,6 +2127,138 @@ function buildWallTubeAssembly(faceKey, faceZ) {
   });
 }
 
+function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
+  const faceGroup = new THREE.Group();
+  faceGroup.name = faceKey + "-nozzle-assembly";
+  wallNozzleAssemblyGroup.add(faceGroup);
+
+  const dir = outwardDir >= 0 ? 1 : -1;
+  const PIPE_R = 0.055;
+  const MAN_R = 0.038;
+  const PIPE_Z = faceZ;
+  const X_OFFSET = 0.18;
+  const pipeXL = -FW / 2 + X_OFFSET + PIPE_R;
+  const pipeXR = FW / 2 - X_OFFSET - PIPE_R;
+
+  const BOT_MARGIN = 0.30;
+  const TOP_MARGIN = 0.60;
+  const usable = FH - BOT_MARGIN - TOP_MARGIN;
+  const gapW = [1.7, 1.3, 1.7, 1.3, 1.3];
+  const totalW = gapW.reduce(function(a, b) { return a + b; }, 0);
+  const unitGap = usable / totalW;
+  const rowY = [];
+  let y = -FH / 2 + BOT_MARGIN;
+  for (let i = 0; i < 6; i++) {
+    rowY.push(y);
+    if (i < 5) y += unitGap * gapW[i];
+  }
+
+  const NUM_B = 15;
+  const LEFT_PAD = 0.90;
+  const RIGHT_PAD = 0.20;
+  const spanStart = pipeXL + LEFT_PAD;
+  const spanEnd = pipeXR - RIGHT_PAD;
+  const bSpacing = (spanEnd - spanStart) / (NUM_B - 1);
+
+  const CLAMP_R = 0.028;
+  const CLAMP_L = 0.13;
+  const SADDLE_W = 0.10;
+  const SADDLE_H = 0.038;
+  const SADDLE_D = 0.070;
+  const STEM_RB = 0.028;
+  const STEM_RT = 0.020;
+  const STEM_H = 0.042;
+  const QUARL_RB = 0.088;
+  const QUARL_RT = 0.078;
+  const QUARL_H = 0.040;
+  const THROAT_RT = 0.035;
+  const THROAT_RB = 0.044;
+  const THROAT_H = 0.044;
+  const CROWN_W = 0.040;
+  const CROWN_H = 0.030;
+  const CROWN_D = 0.026;
+  const CROWN_N = 6;
+  const CROWN_RAD = 0.055;
+
+  const mClamp = new THREE.MeshStandardMaterial({
+    color: 0x181c22,
+    roughness: 0.42,
+    metalness: 0.96
+  });
+  const mBody = new THREE.MeshStandardMaterial({
+    color: 0x59626d,
+    roughness: 0.34,
+    metalness: 0.90
+  });
+  const mQuarl = new THREE.MeshStandardMaterial({
+    color: 0x6a584d,
+    roughness: 0.58,
+    metalness: 0.72,
+    emissive: 0x2a1106,
+    emissiveIntensity: 0.12
+  });
+  const mThroat = new THREE.MeshStandardMaterial({
+    color: 0x231a1c,
+    roughness: 0.78,
+    metalness: 0.28,
+    emissive: 0x170804,
+    emissiveIntensity: 0.08
+  });
+
+  const gClamp = new THREE.CylinderGeometry(CLAMP_R, CLAMP_R, CLAMP_L, 14, 1, false);
+  const gSaddle = new THREE.BoxGeometry(SADDLE_W, SADDLE_H, SADDLE_D);
+  const gStem = new THREE.CylinderGeometry(STEM_RT, STEM_RB, STEM_H, 14, 1, false);
+  const gQuarl = new THREE.CylinderGeometry(QUARL_RT, QUARL_RB, QUARL_H, 24, 1, false);
+  const gThroat = new THREE.CylinderGeometry(THROAT_RT, THROAT_RB, THROAT_H, 24, 1, false);
+  const gCrown = new THREE.BoxGeometry(CROWN_W, CROWN_H, CROWN_D);
+
+  rowY.forEach(function(ry) {
+    const topOfPipe = ry + MAN_R;
+
+    for (let b = 0; b < NUM_B; b++) {
+      const bx = spanStart + b * bSpacing;
+      let yOff = topOfPipe;
+
+      const clamp = new THREE.Mesh(gClamp, mClamp);
+      clamp.rotation.z = Math.PI / 2;
+      clamp.position.set(bx, yOff + 0.004, PIPE_Z);
+      faceGroup.add(clamp);
+
+      const saddle = new THREE.Mesh(gSaddle, mBody);
+      saddle.position.set(bx, yOff + SADDLE_H / 2 + 0.008, PIPE_Z + dir * 0.016);
+      faceGroup.add(saddle);
+      yOff += SADDLE_H + 0.008;
+
+      const stem = new THREE.Mesh(gStem, mBody);
+      stem.position.set(bx, yOff + STEM_H / 2, PIPE_Z + dir * 0.018);
+      faceGroup.add(stem);
+      yOff += STEM_H;
+
+      const quarl = new THREE.Mesh(gQuarl, mQuarl);
+      quarl.position.set(bx, yOff + QUARL_H / 2, PIPE_Z + dir * 0.050);
+      faceGroup.add(quarl);
+
+      const throat = new THREE.Mesh(gThroat, mThroat);
+      throat.position.set(bx, yOff + QUARL_H * 0.15 + THROAT_H / 2, PIPE_Z + dir * 0.052);
+      faceGroup.add(throat);
+
+      const crownY = yOff + QUARL_H * 0.65;
+      for (let c = 0; c < CROWN_N; c++) {
+        const a = c / CROWN_N * Math.PI * 2;
+        const crown = new THREE.Mesh(gCrown, mQuarl);
+        crown.position.set(
+          bx + Math.cos(a) * CROWN_RAD,
+          crownY,
+          PIPE_Z + dir * 0.052 + Math.sin(a) * CROWN_RAD
+        );
+        crown.rotation.y = -a * dir;
+        crown.rotation.z = Math.sin(a) * 0.05;
+        faceGroup.add(crown);
+      }
+    }
+  });
+}
+
 function shellMaterial(color){
   return new THREE.MeshStandardMaterial({
     color:color,
@@ -2171,6 +2305,8 @@ buildInteriorCapFaces();
 buildTubeAssembly();
 buildWallTubeAssembly("face1", (FD / 2) + 0.02);
 buildWallTubeAssembly("face2", -(FD / 2) - 0.02);
+buildWallNozzleAssembly("face1", (FD / 2) + 0.02, 1);
+buildWallNozzleAssembly("face2", -(FD / 2) - 0.02, -1);
 
 function addSidePanel(isLeft){
   const shape = new THREE.Shape();
