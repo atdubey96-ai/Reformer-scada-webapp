@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Reformer Shell Study</title>
+<title>Reformer Shell Viewer</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{
   width:100%;
   height:100%;
-  background:#06080b;
+  background:#08090d;
   overflow:hidden;
   font-family:"Courier New",Courier,monospace;
 }
-body{color:#d9dfe6;}
+body{color:rgba(140,180,220,0.85);}
 #app{
   width:100vw;
   height:100vh;
@@ -21,7 +21,7 @@ body{color:#d9dfe6;}
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:10px;
+  gap:8px;
   padding:10px;
 }
 #topbar{
@@ -29,77 +29,70 @@ body{color:#d9dfe6;}
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap:12px;
   flex-wrap:wrap;
 }
 #viewerTag{
-  width:clamp(320px,36vw,620px);
-  max-width:100%;
-  min-height:46px;
   display:flex;
   flex-direction:column;
   justify-content:center;
-  gap:4px;
-  padding:9px 16px 10px;
-  border:1px solid rgba(180,192,205,0.22);
-  border-radius:12px;
-  background:linear-gradient(180deg,rgba(17,20,24,0.98),rgba(10,12,15,0.98));
-  box-shadow:0 10px 28px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.05);
+  gap:3px;
+  min-height:44px;
+  width:clamp(430px,40vw,640px);
+  max-width:100%;
+  padding:8px 20px 9px 18px;
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  border:1px solid rgba(110,150,220,0.34);
+  background:
+    linear-gradient(135deg,rgba(20,31,54,0.97) 0%,rgba(25,20,38,0.95) 38%,rgba(9,24,38,0.96) 100%);
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 0 28px rgba(74,126,214,0.09);
+  text-align:left;
+  flex:0 1 auto;
 }
-.vt-title{
+#viewerTag::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(102,180,255,0.16), transparent 42%),
+    radial-gradient(circle at 86% 78%, rgba(255,168,82,0.14), transparent 36%);
+  pointer-events:none;
+}
+.viewer-tag-title{
+  position:relative;
   font-size:12px;
   font-weight:700;
-  letter-spacing:1px;
+  letter-spacing:1.15px;
   text-transform:uppercase;
-  color:#f3f6fa;
+  color:#eaf2ff;
+  background:linear-gradient(90deg,#fff7d2 0%,#cfe5ff 42%,#8ef0d3 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 0 16px rgba(104,156,232,0.16);
 }
-.vt-sub{
+.viewer-tag-summary{
+  position:relative;
   font-size:8px;
-  letter-spacing:0.8px;
-  color:#9ea8b4;
+  letter-spacing:0.9px;
+  color:rgba(199,218,242,0.88);
   white-space:nowrap;
-}
-.vt-mode{
-  font-size:8px;
-  letter-spacing:1px;
-  color:#d8e0e8;
-  text-transform:uppercase;
-}
-#ctrls{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-  align-items:center;
-  flex:1 1 520px;
-}
-.btn{
-  min-width:92px;
-  padding:7px 12px;
-  border:1px solid rgba(180,192,205,0.22);
-  border-radius:8px;
-  background:#12161a;
-  color:#e9edf2;
-  font-family:"Courier New",Courier,monospace;
-  font-size:10px;
-  letter-spacing:1.2px;
-  text-transform:uppercase;
-  cursor:pointer;
-}
-.btn:hover{
-  background:#1a2025;
-  border-color:rgba(225,231,238,0.38);
 }
 #vp{
   position:relative;
   width:min(97vw,1680px);
-  height:min(calc(100vh - 118px),90vh);
+  height:min(calc(100vh - 110px),90vh);
   overflow:hidden;
   background:
-    radial-gradient(circle at 50% 40%, rgba(46,54,64,0.26) 0%, rgba(16,20,25,0.78) 34%, rgba(8,10,12,0.96) 70%, #040506 100%);
-  border:1px solid rgba(180,192,205,0.16);
-  border-radius:14px;
-  box-shadow:inset 0 0 70px rgba(255,255,255,0.03);
+    radial-gradient(circle at 50% 42%, rgba(58,78,104,0.52) 0%, rgba(26,33,45,0.88) 22%, rgba(10,13,19,0.97) 54%, #06070b 100%);
+  border:1px solid rgba(60,90,130,0.3);
+  border-radius:10px;
+  box-shadow:inset 0 0 90px rgba(80,115,165,0.12);
   cursor:grab;
   touch-action:none;
 }
@@ -112,46 +105,86 @@ body{color:#d9dfe6;}
 }
 #hint{
   position:absolute;
-  left:50%;
   bottom:8px;
+  left:50%;
   transform:translateX(-50%);
   font-size:8px;
-  letter-spacing:1.8px;
-  color:rgba(160,170,180,0.56);
-  white-space:nowrap;
+  letter-spacing:2px;
+  color:rgba(100,130,160,0.4);
   pointer-events:none;
-  text-align:center;
+  white-space:nowrap;
+}
+#ctrls{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  align-items:center;
+  flex:1 1 520px;
+}
+.btn{
+  background:rgba(10,18,32,0.92);
+  border:1px solid rgba(50,90,140,0.4);
+  color:rgba(140,180,220,0.85);
+  padding:6px 16px;
+  border-radius:6px;
+  font-family:"Courier New",Courier,monospace;
+  font-size:10px;
+  letter-spacing:1.8px;
+  cursor:pointer;
+  text-transform:uppercase;
+}
+.btn:hover{
+  background:rgba(25,50,90,0.9);
+  border-color:rgba(90,150,220,0.7);
 }
 @media (max-width:760px){
+  #app{
+    gap:8px;
+    padding:8px;
+  }
   #topbar{
     width:100%;
+    gap:8px;
     justify-content:center;
   }
   #viewerTag{
     width:100%;
+    min-height:42px;
+    padding:8px 12px 9px;
     text-align:center;
     align-items:center;
   }
-  .vt-title{font-size:11px;line-height:1.18;}
-  .vt-sub{font-size:7px;white-space:normal;}
-  .vt-mode{font-size:7px;}
+  .viewer-tag-title{
+    font-size:11px;
+    line-height:1.15;
+  }
+  .viewer-tag-summary{
+    font-size:7px;
+    letter-spacing:0.8px;
+    white-space:normal;
+  }
+  #vp{
+    width:100%;
+    height:min(calc(100vh - 138px),86vh);
+  }
+  #hint{
+    font-size:7px;
+    letter-spacing:1.4px;
+    bottom:6px;
+  }
   #ctrls{
     width:100%;
+    gap:6px;
     justify-content:center;
     flex:1 1 auto;
   }
   .btn{
-    flex:1 1 calc(33.333% - 8px);
-    min-width:104px;
-  }
-  #vp{
-    width:100%;
-    height:min(calc(100vh - 158px),86vh);
-  }
-  #hint{
-    width:calc(100% - 20px);
-    white-space:normal;
-    line-height:1.45;
+    flex:1 1 calc(50% - 6px);
+    min-width:118px;
+    padding:8px 10px;
+    font-size:9px;
+    letter-spacing:1.2px;
   }
 }
 </style>
@@ -160,273 +193,90 @@ body{color:#d9dfe6;}
 <div id="app">
   <div id="topbar">
     <div id="viewerTag">
-      <span class="vt-title" id="viewerTagTitle">AB Reformer Shell Study</span>
-      <span class="vt-sub" id="viewerTagSub">X 13.8 | Y 6.08 | Z 1.5 | shell + peephole study</span>
-      <span class="vt-mode" id="viewerModeTag">Mode: Front Study</span>
+      <span class="viewer-tag-title" id="viewerTagTitle">AB Reformer Structure Study</span>
+      <span class="viewer-tag-summary" id="viewerTagSummary">Dashboard shell dimensions and camera framing | shell only</span>
     </div>
     <div id="ctrls">
-      <button class="btn" id="btnFront">Front</button>
-      <button class="btn" id="btnBack">Back</button>
-      <button class="btn" id="btnLeft">Left</button>
-      <button class="btn" id="btnRight">Right</button>
-      <button class="btn" id="btnPeep">Inside Prep</button>
+      <button class="btn" id="btnPrimary">Face A</button>
+      <button class="btn" id="btnSecondary">Face B</button>
       <button class="btn" id="btnAuto">Auto Rotate</button>
-      <button class="btn" id="btnReset">Reset</button>
+      <button class="btn" id="btnResetView">Reset Front View</button>
     </div>
   </div>
-  <div id="vp"><div id="hint">DRAG TO ORBIT THE SHELL | INSIDE PREP LOCKS TO THE UPPER PEEPHOLE CAMERA</div></div>
+  <div id="vp"><div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
 "use strict";
 
-const BOX_WIDTH_X = 13.8;
-const BOX_HEIGHT_Y = 6.08;
-const BOX_DEPTH_Z = 1.5;
-const STUDY_PADDING_X = 0.1;
-const STUDY_PADDING_Y = 0.1;
-const STUDY_PADDING_Z = 0.12;
-const FUTURE_MARGIN_X = 1.1;
-const FUTURE_MARGIN_Y = 0.8;
-const FUTURE_MARGIN_Z = 1.35;
-const PEEPHOLE_SIZE = BOX_DEPTH_Z * 0.52;
-const PEEPHOLE_FRAME_MARGIN = PEEPHOLE_SIZE * 0.054;
-const PEEPHOLE_CENTER_TOP_Y = BOX_HEIGHT_Y * 0.18;
-const PEEPHOLE_CENTER_BOTTOM_Y = -BOX_HEIGHT_Y * 0.18;
-const PEEPHOLE_FRAME_OFFSET = 0.018;
-const AUTO_ROTATE_SPEED = 0.34;
-const DRAG_ROTATION_SPAN = Math.PI * 1.5;
-const MAX_DRAG_DELTA = 42;
-const SNAP_EPSILON = 0.0012;
-const SNAP_SETTLE_RATE = 24;
-const TRANSITION_RATE = 8.5;
-const TAP_MOVE_TOLERANCE = 10;
-const STUDY_CAMERA_FOV = 26;
-const PEEP_CAMERA_FOV = 24;
-const STUDY_FRAME_LIMIT_X = 0.93;
-const STUDY_FRAME_LIMIT_Y = 0.9;
-const STUDY_CAMERA_DIRECTION = new THREE.Vector3(0.28, 0.16, 1).normalize();
-const STUDY_LOOKAT_Y = BOX_HEIGHT_Y * 0.03;
-const BOX_CENTER = new THREE.Vector3(0, 0, 0);
+const FW = 13.8;
+const FH = 6.08;
+const FD = 1.5;
+const PEEPHOLE_SIZE = FD * 0.52;
+const PEEPHOLE_FRAME_MARGIN = PEEPHOLE_SIZE * 0.054 * 1.2;
+const PEEPHOLE_TOP_Y = FH * 0.18;
+const PEEPHOLE_BOTTOM_Y = -FH * 0.18;
+
+const chamberParam = (function(){
+  try{
+    const q = new URLSearchParams(window.location.search || "");
+    const raw = String(q.get("chamber") || "ab").toLowerCase().trim();
+    return raw === "cd" ? "cd" : "ab";
+  }catch(_e){
+    return "ab";
+  }
+})();
+
+const chamberWalls = chamberParam === "cd" ? ["C", "D"] : ["A", "B"];
+const chamberZoneKey = chamberParam === "cd" ? "CD" : "AB";
 
 const app = document.getElementById("app");
-const vp = document.getElementById("vp");
-const hint = document.getElementById("hint");
 const viewerTagTitle = document.getElementById("viewerTagTitle");
-const viewerTagSub = document.getElementById("viewerTagSub");
-const viewerModeTag = document.getElementById("viewerModeTag");
-const btnFront = document.getElementById("btnFront");
-const btnBack = document.getElementById("btnBack");
-const btnLeft = document.getElementById("btnLeft");
-const btnRight = document.getElementById("btnRight");
-const btnPeep = document.getElementById("btnPeep");
+const viewerTagSummary = document.getElementById("viewerTagSummary");
+const hint = document.getElementById("hint");
+const btnPrimary = document.getElementById("btnPrimary");
+const btnSecondary = document.getElementById("btnSecondary");
 const btnAuto = document.getElementById("btnAuto");
-const btnReset = document.getElementById("btnReset");
+const btnResetView = document.getElementById("btnResetView");
+const vp = document.getElementById("vp");
 
-const params = new URLSearchParams(window.location.search);
-const chamberKey = String(params.get("chamber") || "ab").toLowerCase() === "cd" ? "cd" : "ab";
-const chamberLabel = chamberKey === "cd" ? "CD" : "AB";
-const chamberWalls = chamberKey === "cd" ? ["C", "D"] : ["A", "B"];
-
-if(viewerTagTitle) viewerTagTitle.textContent = chamberLabel + " Reformer Shell Study";
-if(viewerTagSub) viewerTagSub.textContent =
-  "Walls " + chamberWalls[0] + " + " + chamberWalls[1] + " | X " + BOX_WIDTH_X + " | Y " + BOX_HEIGHT_Y + " | Z " + BOX_DEPTH_Z;
-document.title = chamberLabel + " Reformer Shell Study";
+if(viewerTagTitle) viewerTagTitle.textContent = chamberZoneKey + " Reformer Structure Study";
+if(viewerTagSummary) viewerTagSummary.textContent = "X " + FW + " | Y " + FH + " | Z " + FD + " | dashboard camera framing";
+if(btnPrimary) btnPrimary.textContent = "Face " + chamberWalls[0];
+if(btnSecondary) btnSecondary.textContent = "Face " + chamberWalls[1];
+document.title = chamberZoneKey + " Reformer Structure Study";
 
 let hostTabActive = true;
 let hostInView = true;
-let needsRender = true;
+let hostFocused = true;
+let lastRenderTs = 0;
+let forceNextRender = true;
 
-function viewportWidth(){ return Math.max(1, vp.clientWidth || 1); }
-function viewportHeight(){ return Math.max(1, vp.clientHeight || 1); }
-
-function normalizeAngle(angle){
-  let next = angle;
-  const turn = Math.PI * 2;
-  while(next <= -Math.PI) next += turn;
-  while(next > Math.PI) next -= turn;
-  return next;
-}
-
-function shortestAngleDelta(fromAngle, toAngle){
-  let delta = normalizeAngle(toAngle) - normalizeAngle(fromAngle);
-  if(delta > Math.PI) delta -= Math.PI * 2;
-  if(delta < -Math.PI) delta += Math.PI * 2;
-  return delta;
-}
-
-function requestRender(){
-  needsRender = true;
-}
-
-function canRender(){
-  return !document.hidden && hostTabActive && hostInView;
-}
-
-const renderer = new THREE.WebGLRenderer({
-  antialias:true,
-  alpha:true,
-  powerPreference:"high-performance"
-});
-renderer.setClearColor(0x000000, 0);
-vp.appendChild(renderer.domElement);
-
-const scene = new THREE.Scene();
-scene.background = null;
-
-const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 180);
-const rigGroup = new THREE.Group();
-const shellGroup = new THREE.Group();
-scene.add(rigGroup);
-rigGroup.add(shellGroup);
-
-scene.add(new THREE.AmbientLight(0xffffff, 1.22));
-const hemiLight = new THREE.HemisphereLight(0xe8edf2, 0x1c2228, 0.82);
-scene.add(hemiLight);
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
-keyLight.position.set(7, 8, 10);
-scene.add(keyLight);
-const fillLight = new THREE.DirectionalLight(0xcfd6de, 0.44);
-fillLight.position.set(-9, -2, -6);
-scene.add(fillLight);
-
-function createShellMaterial(color){
-  return new THREE.MeshStandardMaterial({
-    color:color,
-    roughness:0.72,
-    metalness:0.16,
-    side:THREE.DoubleSide
-  });
-}
-
-function buildPeepholeShape(frameWidth, frameHeight, holeWidth, holeHeight, centerY){
-  const shape = new THREE.Shape();
-  shape.moveTo(-frameWidth / 2, centerY - frameHeight / 2);
-  shape.lineTo(frameWidth / 2, centerY - frameHeight / 2);
-  shape.lineTo(frameWidth / 2, centerY + frameHeight / 2);
-  shape.lineTo(-frameWidth / 2, centerY + frameHeight / 2);
-  shape.lineTo(-frameWidth / 2, centerY - frameHeight / 2);
-
-  const hole = new THREE.Path();
-  hole.moveTo(-holeWidth / 2, centerY - holeHeight / 2);
-  hole.lineTo(holeWidth / 2, centerY - holeHeight / 2);
-  hole.lineTo(holeWidth / 2, centerY + holeHeight / 2);
-  hole.lineTo(-holeWidth / 2, centerY + holeHeight / 2);
-  hole.lineTo(-holeWidth / 2, centerY - holeHeight / 2);
-  shape.holes.push(hole);
-  return shape;
-}
-
-function createSidePanel(isLeft){
-  const panelShape = new THREE.Shape();
-  panelShape.moveTo(-BOX_DEPTH_Z / 2, -BOX_HEIGHT_Y / 2);
-  panelShape.lineTo(BOX_DEPTH_Z / 2, -BOX_HEIGHT_Y / 2);
-  panelShape.lineTo(BOX_DEPTH_Z / 2, BOX_HEIGHT_Y / 2);
-  panelShape.lineTo(-BOX_DEPTH_Z / 2, BOX_HEIGHT_Y / 2);
-  panelShape.lineTo(-BOX_DEPTH_Z / 2, -BOX_HEIGHT_Y / 2);
-
-  [PEEPHOLE_CENTER_TOP_Y, PEEPHOLE_CENTER_BOTTOM_Y].forEach(function(centerY){
-    const holeShape = new THREE.Path();
-    holeShape.moveTo(-PEEPHOLE_SIZE / 2, centerY - PEEPHOLE_SIZE / 2);
-    holeShape.lineTo(PEEPHOLE_SIZE / 2, centerY - PEEPHOLE_SIZE / 2);
-    holeShape.lineTo(PEEPHOLE_SIZE / 2, centerY + PEEPHOLE_SIZE / 2);
-    holeShape.lineTo(-PEEPHOLE_SIZE / 2, centerY + PEEPHOLE_SIZE / 2);
-    holeShape.lineTo(-PEEPHOLE_SIZE / 2, centerY - PEEPHOLE_SIZE / 2);
-    panelShape.holes.push(holeShape);
-  });
-
-  const panelMesh = new THREE.Mesh(
-    new THREE.ShapeGeometry(panelShape),
-    createShellMaterial(0xa5adb5)
-  );
-  panelMesh.rotation.y = isLeft ? -Math.PI / 2 : Math.PI / 2;
-  panelMesh.position.x = isLeft ? -BOX_WIDTH_X / 2 : BOX_WIDTH_X / 2;
-  shellGroup.add(panelMesh);
-
-  [PEEPHOLE_CENTER_TOP_Y, PEEPHOLE_CENTER_BOTTOM_Y].forEach(function(centerY){
-    const frameShape = buildPeepholeShape(
-      PEEPHOLE_SIZE + (PEEPHOLE_FRAME_MARGIN * 2),
-      PEEPHOLE_SIZE + (PEEPHOLE_FRAME_MARGIN * 2),
-      PEEPHOLE_SIZE,
-      PEEPHOLE_SIZE,
-      centerY
-    );
-
-    [-PEEPHOLE_FRAME_OFFSET, PEEPHOLE_FRAME_OFFSET].forEach(function(frameOffset){
-      const frameMesh = new THREE.Mesh(
-        new THREE.ShapeGeometry(frameShape),
-        createShellMaterial(frameOffset < 0 ? 0x7a838c : 0x8d96a0)
-      );
-      frameMesh.rotation.y = isLeft ? -Math.PI / 2 : Math.PI / 2;
-      frameMesh.position.x = (isLeft ? -BOX_WIDTH_X / 2 : BOX_WIDTH_X / 2) + (isLeft ? -frameOffset : frameOffset);
-      shellGroup.add(frameMesh);
-    });
-  });
-}
-
-const frontFace = new THREE.Mesh(
-  new THREE.PlaneGeometry(BOX_WIDTH_X, BOX_HEIGHT_Y),
-  createShellMaterial(0xb9c0c8)
-);
-frontFace.position.z = BOX_DEPTH_Z / 2;
-shellGroup.add(frontFace);
-
-const backFace = new THREE.Mesh(
-  new THREE.PlaneGeometry(BOX_WIDTH_X, BOX_HEIGHT_Y),
-  createShellMaterial(0xb9c0c8)
-);
-backFace.position.z = -BOX_DEPTH_Z / 2;
-backFace.rotation.y = Math.PI;
-shellGroup.add(backFace);
-
-const topCap = new THREE.Mesh(
-  new THREE.PlaneGeometry(BOX_WIDTH_X, BOX_DEPTH_Z),
-  createShellMaterial(0xc7ced6)
-);
-topCap.rotation.x = -Math.PI / 2;
-topCap.position.y = BOX_HEIGHT_Y / 2;
-shellGroup.add(topCap);
-
-const bottomCap = new THREE.Mesh(
-  new THREE.PlaneGeometry(BOX_WIDTH_X, BOX_DEPTH_Z),
-  createShellMaterial(0x9199a2)
-);
-bottomCap.rotation.x = Math.PI / 2;
-bottomCap.position.y = -BOX_HEIGHT_Y / 2;
-shellGroup.add(bottomCap);
-
-createSidePanel(true);
-createSidePanel(false);
-
-const outerEdges = new THREE.LineSegments(
-  new THREE.EdgesGeometry(new THREE.BoxGeometry(BOX_WIDTH_X, BOX_HEIGHT_Y, BOX_DEPTH_Z)),
-  new THREE.LineBasicMaterial({
-    color:0x252a30,
-    transparent:true,
-    opacity:0.96
-  })
-);
-shellGroup.add(outerEdges);
-
-const floorShadow = new THREE.Mesh(
-  new THREE.PlaneGeometry(BOX_WIDTH_X * 0.96, BOX_WIDTH_X * 0.34),
-  new THREE.MeshBasicMaterial({
-    color:0x000000,
-    transparent:true,
-    opacity:0.08
-  })
-);
-floorShadow.rotation.x = -Math.PI / 2;
-floorShadow.position.y = -(BOX_HEIGHT_Y * 0.5) - 0.9;
-shellGroup.add(floorShadow);
+function viewportWidth(){ return vp.clientWidth; }
+function viewportHeight(){ return vp.clientHeight; }
 
 function fullscreenElement(){
   return document.fullscreenElement || document.webkitFullscreenElement || null;
 }
 
+function isFullscreen(){
+  return fullscreenElement() === app;
+}
+
+function refreshHint(){
+  hint.textContent = isFullscreen()
+    ? "DRAG TO ROTATE · DOUBLE-TAP EXIT FULLSCREEN"
+    : "DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN";
+}
+
+function canRenderNow(){
+  return !document.hidden && (isFullscreen() || (hostTabActive && hostInView));
+}
+
 function toggleFullscreen(){
-  if(fullscreenElement()){
+  const currentFs = fullscreenElement();
+  if(currentFs){
     const exit = document.exitFullscreen || document.webkitExitFullscreen;
     if(exit) exit.call(document);
     return;
@@ -438,247 +288,346 @@ function toggleFullscreen(){
   }
 }
 
-const currentCameraPos = new THREE.Vector3();
-const targetCameraPos = new THREE.Vector3();
-const currentLookAt = new THREE.Vector3();
-const targetLookAt = new THREE.Vector3();
+document.addEventListener("fullscreenchange", function(){
+  refreshHint();
+  markDirty();
+});
+document.addEventListener("webkitfullscreenchange", function(){
+  refreshHint();
+  markDirty();
+});
+refreshHint();
 
-let currentFov = 30;
-let targetFov = 30;
+window.addEventListener("message", function(event){
+  const data = event && event.data;
+  if(!data || typeof data !== "object") return;
+  if(data.type === "cuboid-host-state"){
+    hostTabActive = !!data.active;
+    hostInView = data.inView !== false;
+    hostFocused = data.focused !== false;
+    markDirty();
+  }
+});
+
+const renderer = new THREE.WebGLRenderer({
+  antialias:true,
+  alpha:true,
+  powerPreference:"high-performance"
+});
+renderer.setClearColor(0x000000, 0);
+vp.appendChild(renderer.domElement);
+
+let appliedPixelRatio = 0;
+
+function targetPixelRatio(){
+  const deviceRatio = Math.max(1, window.devicePixelRatio || 1);
+  const activeNow = isFullscreen() || hasRotationMotion();
+  let cap = 1.25;
+  if(!canRenderNow()){
+    cap = 0.7;
+  }else if(activeNow){
+    cap = 1.35;
+  }else if(hostFocused){
+    cap = 1.18;
+  }else{
+    cap = 1.0;
+  }
+  return Math.max(0.7, Math.min(deviceRatio, cap));
+}
+
+function applyRendererQuality(force){
+  const nextRatio = targetPixelRatio();
+  if(!force && Math.abs(nextRatio - appliedPixelRatio) < 0.02) return false;
+  appliedPixelRatio = nextRatio;
+  renderer.setPixelRatio(nextRatio);
+  renderer.setSize(viewportWidth(), viewportHeight(), false);
+  return true;
+}
+
+const scene = new THREE.Scene();
+scene.background = null;
+
+const camera = new THREE.PerspectiveCamera(32, viewportWidth() / viewportHeight(), 0.1, 300);
+
+function fitCamera(){
+  const asp = viewportWidth() / viewportHeight();
+  const fov = 32 * Math.PI / 180;
+  const hfov = 2 * Math.atan(Math.tan(fov / 2) * asp);
+  const dW = (FW / 2) / Math.tan(hfov / 2);
+  const dH = (FH / 2) / Math.tan(fov / 2);
+  camera.aspect = asp;
+  camera.updateProjectionMatrix();
+  camera.position.set(0, 0, Math.max(dW, dH) * 1.18);
+  camera.lookAt(0, 0, 0);
+}
+fitCamera();
+
+const rigGroup = new THREE.Group();
+scene.add(rigGroup);
+const shellGroup = new THREE.Group();
+rigGroup.add(shellGroup);
+
+scene.add(new THREE.AmbientLight(0xd5e0ee, 1.18));
+const hemi = new THREE.HemisphereLight(0xe9f1ff, 0x1a2430, 0.92);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff5e0, 1.34);
+sun.position.set(5, 8, 10);
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x9ab3d8, 0.82);
+fill.position.set(-8, -2, -6);
+scene.add(fill);
+const rimCool = new THREE.DirectionalLight(0xbad1ff, 0.96);
+rimCool.position.set(-10, 1.5, 4);
+scene.add(rimCool);
+const rimWarm = new THREE.DirectionalLight(0xffddb4, 0.58);
+rimWarm.position.set(8, -1.2, 7);
+scene.add(rimWarm);
+
+function shellMaterial(color){
+  return new THREE.MeshStandardMaterial({
+    color:color,
+    roughness:0.46,
+    metalness:0.22,
+    side:THREE.DoubleSide
+  });
+}
+
+const capTop = new THREE.Mesh(
+  new THREE.PlaneGeometry(FW, FD),
+  shellMaterial(0xcfd6de)
+);
+capTop.rotation.x = -Math.PI / 2;
+capTop.position.y = FH / 2;
+shellGroup.add(capTop);
+
+const capBot = new THREE.Mesh(
+  new THREE.PlaneGeometry(FW, FD),
+  shellMaterial(0x98a1aa)
+);
+capBot.rotation.x = Math.PI / 2;
+capBot.position.y = -FH / 2;
+shellGroup.add(capBot);
+
+const faceFront = new THREE.Mesh(
+  new THREE.PlaneGeometry(FW, FH),
+  shellMaterial(0xf4f6f9)
+);
+faceFront.position.z = FD / 2;
+shellGroup.add(faceFront);
+
+const faceBack = new THREE.Mesh(
+  new THREE.PlaneGeometry(FW, FH),
+  shellMaterial(0xf4f6f9)
+);
+faceBack.position.z = -FD / 2;
+faceBack.rotation.y = Math.PI;
+shellGroup.add(faceBack);
+
+function addSidePanel(isLeft){
+  const shape = new THREE.Shape();
+  shape.moveTo(-FD / 2, -FH / 2);
+  shape.lineTo(FD / 2, -FH / 2);
+  shape.lineTo(FD / 2, FH / 2);
+  shape.lineTo(-FD / 2, FH / 2);
+  shape.lineTo(-FD / 2, -FH / 2);
+
+  [PEEPHOLE_TOP_Y, PEEPHOLE_BOTTOM_Y].forEach(function(centerY){
+    const hole = new THREE.Path();
+    hole.moveTo(-PEEPHOLE_SIZE / 2, centerY - PEEPHOLE_SIZE / 2);
+    hole.lineTo(PEEPHOLE_SIZE / 2, centerY - PEEPHOLE_SIZE / 2);
+    hole.lineTo(PEEPHOLE_SIZE / 2, centerY + PEEPHOLE_SIZE / 2);
+    hole.lineTo(-PEEPHOLE_SIZE / 2, centerY + PEEPHOLE_SIZE / 2);
+    hole.lineTo(-PEEPHOLE_SIZE / 2, centerY - PEEPHOLE_SIZE / 2);
+    shape.holes.push(hole);
+  });
+
+  const sideMesh = new THREE.Mesh(
+    new THREE.ShapeGeometry(shape),
+    shellMaterial(0xb8c0c8)
+  );
+  sideMesh.rotation.y = isLeft ? -Math.PI / 2 : Math.PI / 2;
+  sideMesh.position.x = isLeft ? -FW / 2 : FW / 2;
+  shellGroup.add(sideMesh);
+
+  [PEEPHOLE_TOP_Y, PEEPHOLE_BOTTOM_Y].forEach(function(centerY){
+    const fw = PEEPHOLE_SIZE + (PEEPHOLE_FRAME_MARGIN * 2);
+    const fh = PEEPHOLE_SIZE + (PEEPHOLE_FRAME_MARGIN * 2);
+
+    const frameShape = new THREE.Shape();
+    frameShape.moveTo(-fw / 2, centerY - fh / 2);
+    frameShape.lineTo(fw / 2, centerY - fh / 2);
+    frameShape.lineTo(fw / 2, centerY + fh / 2);
+    frameShape.lineTo(-fw / 2, centerY + fh / 2);
+    frameShape.lineTo(-fw / 2, centerY - fh / 2);
+
+    const frameHole = new THREE.Path();
+    frameHole.moveTo(-PEEPHOLE_SIZE / 2, centerY - PEEPHOLE_SIZE / 2);
+    frameHole.lineTo(PEEPHOLE_SIZE / 2, centerY - PEEPHOLE_SIZE / 2);
+    frameHole.lineTo(PEEPHOLE_SIZE / 2, centerY + PEEPHOLE_SIZE / 2);
+    frameHole.lineTo(-PEEPHOLE_SIZE / 2, centerY + PEEPHOLE_SIZE / 2);
+    frameHole.lineTo(-PEEPHOLE_SIZE / 2, centerY - PEEPHOLE_SIZE / 2);
+    frameShape.holes.push(frameHole);
+
+    const frameMesh = new THREE.Mesh(
+      new THREE.ShapeGeometry(frameShape),
+      shellMaterial(0x8a949f)
+    );
+    frameMesh.rotation.y = isLeft ? -Math.PI / 2 : Math.PI / 2;
+    frameMesh.position.x = (isLeft ? -FW / 2 : FW / 2) + (isLeft ? -0.016 : 0.016);
+    shellGroup.add(frameMesh);
+  });
+}
+
+addSidePanel(true);
+addSidePanel(false);
+
+const shellEdges = new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(FW, FH, FD)),
+  new THREE.LineBasicMaterial({
+    color:0x303740,
+    transparent:true,
+    opacity:0.92
+  })
+);
+shellGroup.add(shellEdges);
+
+const floorShadow = new THREE.Mesh(
+  new THREE.PlaneGeometry(FW * 0.96, FW * 0.32),
+  new THREE.MeshBasicMaterial({
+    color:0x000000,
+    transparent:true,
+    opacity:0.08
+  })
+);
+floorShadow.rotation.x = -Math.PI / 2;
+floorShadow.position.y = -(FH * 0.5) - 0.84;
+shellGroup.add(floorShadow);
+
+const DRAG_ROTATION_SPAN = Math.PI * 1.5;
+const MAX_DRAG_DELTA = 42;
+const SNAP_EPSILON = 0.0012;
+const SNAP_SETTLE_RATE = 24;
+const FACE_STEP = Math.PI / 2;
+const ACTIVE_FRAME_MS = 16;
+const FOCUSED_IDLE_FRAME_MS = ACTIVE_FRAME_MS;
+const BACKGROUND_IDLE_FRAME_MS = 320;
+const SLEEP_FRAME_MS = 900;
+const TAP_MOVE_TOLERANCE = 10;
+
 let rotY = 0;
 let targetRotY = 0;
-let autoRotate = false;
-let activeViewKey = "front";
+let autoSpin = false;
 let activePointerId = null;
 let isDragging = false;
-let lastPointerX = 0;
+let lastX = 0;
 let dragDistance = 0;
 let touchMoved = false;
 let lastTapAt = 0;
-let lastFrameAt = 0;
+let lastFrameTs = 0;
 
-const studyFitCamera = new THREE.PerspectiveCamera(STUDY_CAMERA_FOV, 1, 0.05, 180);
-const studyLookAtTarget = new THREE.Vector3(0, STUDY_LOOKAT_Y, 0);
-const studyFitCorners = [
-  new THREE.Vector3(-1, -1, -1),
-  new THREE.Vector3(-1, -1, 1),
-  new THREE.Vector3(-1, 1, -1),
-  new THREE.Vector3(-1, 1, 1),
-  new THREE.Vector3(1, -1, -1),
-  new THREE.Vector3(1, -1, 1),
-  new THREE.Vector3(1, 1, -1),
-  new THREE.Vector3(1, 1, 1)
-];
-
-function getStudyShellCorners(viewYaw){
-  const halfX = (BOX_WIDTH_X / 2) + STUDY_PADDING_X;
-  const halfY = (BOX_HEIGHT_Y / 2) + STUDY_PADDING_Y;
-  const halfZ = (BOX_DEPTH_Z / 2) + STUDY_PADDING_Z;
-  const rotY = new THREE.Matrix4().makeRotationY(viewYaw || 0);
-  return studyFitCorners.map(function(unitCorner){
-    return new THREE.Vector3(
-      unitCorner.x * halfX,
-      unitCorner.y * halfY,
-      unitCorner.z * halfZ
-    ).applyMatrix4(rotY);
-  });
+function normalizeAngle(angle){
+  let a = angle;
+  const tau = Math.PI * 2;
+  while(a <= -Math.PI) a += tau;
+  while(a > Math.PI) a -= tau;
+  return a;
 }
 
-function projectedCornersFit(cameraToTest, corners){
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-
-  corners.forEach(function(corner){
-    const projected = corner.clone().project(cameraToTest);
-    minX = Math.min(minX, projected.x);
-    maxX = Math.max(maxX, projected.x);
-    minY = Math.min(minY, projected.y);
-    maxY = Math.max(maxY, projected.y);
-  });
-
-  const extentX = Math.max(Math.abs(minX), Math.abs(maxX));
-  const extentY = Math.max(Math.abs(minY), Math.abs(maxY));
-  return extentX <= STUDY_FRAME_LIMIT_X && extentY <= STUDY_FRAME_LIMIT_Y;
+function shortestAngleDelta(fromAngle, toAngle){
+  let delta = normalizeAngle(toAngle) - normalizeAngle(fromAngle);
+  if(delta > Math.PI) delta -= Math.PI * 2;
+  if(delta < -Math.PI) delta += Math.PI * 2;
+  return delta;
 }
 
-function getStudyCameraDistanceForYaw(viewYaw){
-  const corners = getStudyShellCorners(viewYaw);
-  studyFitCamera.fov = STUDY_CAMERA_FOV;
-  studyFitCamera.aspect = viewportWidth() / viewportHeight();
-  studyFitCamera.near = 0.05;
-  studyFitCamera.far = 180;
-  studyFitCamera.updateProjectionMatrix();
-
-  let low = 2;
-  let high = 8;
-  while(high < 120){
-    studyFitCamera.position.copy(studyLookAtTarget).addScaledVector(STUDY_CAMERA_DIRECTION, high);
-    studyFitCamera.up.set(0, 1, 0);
-    studyFitCamera.lookAt(studyLookAtTarget);
-    studyFitCamera.updateMatrixWorld(true);
-    if(projectedCornersFit(studyFitCamera, corners)) break;
-    high *= 1.35;
-  }
-
-  for(let i = 0; i < 28; i++){
-    const mid = (low + high) * 0.5;
-    studyFitCamera.position.copy(studyLookAtTarget).addScaledVector(STUDY_CAMERA_DIRECTION, mid);
-    studyFitCamera.up.set(0, 1, 0);
-    studyFitCamera.lookAt(studyLookAtTarget);
-    studyFitCamera.updateMatrixWorld(true);
-    if(projectedCornersFit(studyFitCamera, corners)){
-      high = mid;
-    }else{
-      low = mid;
-    }
-  }
-
-  return high;
+function setRotationTarget(targetAngle){
+  targetRotY = normalizeAngle(rotY + shortestAngleDelta(rotY, targetAngle));
 }
 
-function setStudyCameraTarget(viewYaw){
-  const fitDistance = getStudyCameraDistanceForYaw(viewYaw);
-  targetFov = STUDY_CAMERA_FOV;
-  targetCameraPos.copy(studyLookAtTarget).addScaledVector(STUDY_CAMERA_DIRECTION, fitDistance);
-  targetLookAt.copy(studyLookAtTarget);
+function hasRotationMotion(){
+  return isDragging || autoSpin || Math.abs(shortestAngleDelta(rotY, targetRotY)) > SNAP_EPSILON;
 }
 
-function setHintText(text){
-  if(hint) hint.textContent = text;
-}
-
-function syncAutoButton(){
-  btnAuto.textContent = autoRotate ? "Stop Rotate" : "Auto Rotate";
-}
-
-function syncModeLabel(){
-  const labels = {
-    front:"Mode: Front Study",
-    back:"Mode: Back Study",
-    left:"Mode: Left Side Study",
-    right:"Mode: Right Side Study",
-    peep:"Mode: Inside Prep Through Upper Peephole"
-  };
-  if(viewerModeTag) viewerModeTag.textContent = labels[activeViewKey] || "Mode: Study";
-}
-
-function snapToNearestFace(){
-  const faceStep = Math.PI / 2;
-  const snapped = Math.round(normalizeAngle(rotY) / faceStep) * faceStep;
-  targetRotY = normalizeAngle(snapped);
-}
-
-function applyView(viewKey, instant){
-  const immediate = !!instant;
-  activeViewKey = viewKey;
-  autoRotate = false;
-  syncAutoButton();
-  syncModeLabel();
-
-  if(viewKey === "peep"){
-    targetRotY = 0;
-    targetFov = PEEP_CAMERA_FOV;
-    targetCameraPos.set(-(BOX_WIDTH_X / 2) - 0.95, PEEPHOLE_CENTER_TOP_Y, 0);
-    targetLookAt.set(0.35, PEEPHOLE_CENTER_TOP_Y, 0);
-    setHintText("INSIDE PREP VIEW | CAMERA ALIGNED TO THE UPPER LEFT PEEPHOLE FOR FUTURE BURNER STUDY");
-  }else{
-    const viewYaw = {
-      front:0,
-      back:Math.PI,
-      left:-Math.PI / 2,
-      right:Math.PI / 2
-    }[viewKey] || 0;
-    targetRotY = normalizeAngle(viewYaw);
-    setStudyCameraTarget(viewYaw);
-    setHintText("DRAG TO ORBIT THE SHELL | INSIDE PREP LOCKS TO THE UPPER PEEPHOLE CAMERA");
-  }
-
-  if(immediate){
-    rotY = targetRotY;
-    currentFov = targetFov;
-    currentCameraPos.copy(targetCameraPos);
-    currentLookAt.copy(targetLookAt);
-  }
-  requestRender();
-}
-
-function applyAutoRotate(){
-  if(activeViewKey === "peep"){
-    applyView("front", false);
-  }
-  autoRotate = !autoRotate;
-  syncAutoButton();
-  requestRender();
-}
-
-function settleRotation(dt){
-  const delta = shortestAngleDelta(rotY, targetRotY);
-  if(Math.abs(delta) <= SNAP_EPSILON){
+function settleRotationTowardTarget(dt){
+  const diff = shortestAngleDelta(rotY, targetRotY);
+  if(Math.abs(diff) <= SNAP_EPSILON){
     rotY = targetRotY;
     return false;
   }
-  rotY = normalizeAngle(rotY + delta * (1 - Math.exp(-SNAP_SETTLE_RATE * dt)));
+  rotY = normalizeAngle(rotY + (diff * (1 - Math.exp(-SNAP_SETTLE_RATE * dt))));
   if(Math.abs(shortestAngleDelta(rotY, targetRotY)) <= SNAP_EPSILON){
     rotY = targetRotY;
   }
   return true;
 }
 
-function setPointerDragStart(clientX){
-  if(activeViewKey === "peep") return;
-  autoRotate = false;
-  syncAutoButton();
+function markDirty(){
+  forceNextRender = true;
+  lastRenderTs = 0;
+  lastFrameTs = 0;
+}
+
+function syncAutoRotateButton(){
+  btnAuto.textContent = autoSpin ? "Stop" : "Auto Rotate";
+}
+
+function startDrag(clientX){
+  autoSpin = false;
+  syncAutoRotateButton();
   isDragging = true;
-  lastPointerX = clientX;
+  lastX = clientX;
+  targetRotY = rotY;
   dragDistance = 0;
   touchMoved = false;
-  targetRotY = rotY;
-  requestRender();
+  markDirty();
 }
 
-function movePointerDrag(clientX){
-  if(!isDragging || activeViewKey === "peep") return;
-  const rawDelta = clientX - lastPointerX;
-  const clampedDelta = Math.max(-MAX_DRAG_DELTA, Math.min(MAX_DRAG_DELTA, rawDelta));
-  dragDistance += Math.abs(rawDelta);
-  if(Math.abs(rawDelta) > 2) touchMoved = true;
+function moveDrag(clientX){
+  if(!isDragging) return;
+  const rawDx = clientX - lastX;
+  const dx = Math.max(-MAX_DRAG_DELTA, Math.min(MAX_DRAG_DELTA, rawDx));
+  dragDistance += Math.abs(rawDx);
+  if(Math.abs(rawDx) > 2) touchMoved = true;
   const width = Math.max(320, viewportWidth());
-  rotY = normalizeAngle(rotY + ((clampedDelta / width) * DRAG_ROTATION_SPAN));
+  const deltaRot = (dx / width) * DRAG_ROTATION_SPAN;
+  rotY = normalizeAngle(rotY + deltaRot);
   targetRotY = rotY;
-  lastPointerX = clientX;
-  requestRender();
+  lastX = clientX;
+  markDirty();
 }
 
-function stopPointerDrag(){
+function snapToNearestFace(){
+  const snapped = Math.round(normalizeAngle(rotY) / FACE_STEP) * FACE_STEP;
+  setRotationTarget(snapped);
+}
+
+function stopDrag(){
   if(!isDragging) return;
   isDragging = false;
   snapToNearestFace();
-  requestRender();
+  markDirty();
 }
 
 vp.addEventListener("pointerdown", function(event){
   if(event.pointerType === "mouse" && event.button !== 0) return;
-  if(activeViewKey === "peep") return;
   activePointerId = event.pointerId;
   if(vp.setPointerCapture) vp.setPointerCapture(event.pointerId);
-  setPointerDragStart(event.clientX);
+  startDrag(event.clientX);
 });
 
 vp.addEventListener("pointermove", function(event){
   if(activePointerId !== event.pointerId) return;
-  movePointerDrag(event.clientX);
+  moveDrag(event.clientX);
 });
 
 function endPointerGesture(event){
   if(activePointerId !== event.pointerId) return;
-  try{
-    if(vp.releasePointerCapture) vp.releasePointerCapture(event.pointerId);
-  }catch(_e){}
+  if(vp.releasePointerCapture){
+    try{ vp.releasePointerCapture(event.pointerId); }catch(_e){}
+  }
   activePointerId = null;
   const wasTapCandidate = dragDistance <= TAP_MOVE_TOLERANCE && !touchMoved;
-  stopPointerDrag();
+  stopDrag();
   if(!wasTapCandidate){
     lastTapAt = 0;
     return;
@@ -687,9 +636,9 @@ function endPointerGesture(event){
   if(now - lastTapAt < 320){
     toggleFullscreen();
     lastTapAt = 0;
-  }else{
-    lastTapAt = now;
+    return;
   }
+  lastTapAt = now;
 }
 
 vp.addEventListener("pointerup", endPointerGesture);
@@ -697,12 +646,12 @@ vp.addEventListener("pointercancel", endPointerGesture);
 vp.addEventListener("lostpointercapture", function(event){
   if(activePointerId !== event.pointerId) return;
   activePointerId = null;
-  stopPointerDrag();
+  stopDrag();
 });
 
 window.addEventListener("blur", function(){
   activePointerId = null;
-  stopPointerDrag();
+  stopDrag();
 });
 
 vp.addEventListener("dblclick", function(event){
@@ -710,91 +659,82 @@ vp.addEventListener("dblclick", function(event){
   toggleFullscreen();
 });
 
-btnFront.addEventListener("click", function(){ applyView("front", false); });
-btnBack.addEventListener("click", function(){ applyView("back", false); });
-btnLeft.addEventListener("click", function(){ applyView("left", false); });
-btnRight.addEventListener("click", function(){ applyView("right", false); });
-btnPeep.addEventListener("click", function(){ applyView("peep", false); });
-btnAuto.addEventListener("click", applyAutoRotate);
-btnReset.addEventListener("click", function(){ applyView("front", false); });
+btnPrimary.addEventListener("click", function(){
+  autoSpin = false;
+  syncAutoRotateButton();
+  setRotationTarget(0);
+  markDirty();
+});
 
-document.addEventListener("visibilitychange", requestRender);
-window.addEventListener("message", function(event){
-  const data = event && event.data;
-  if(!data || typeof data !== "object") return;
-  if(data.type === "cuboid-host-state"){
-    hostTabActive = !!data.active;
-    hostInView = data.inView !== false;
-    requestRender();
+btnSecondary.addEventListener("click", function(){
+  autoSpin = false;
+  syncAutoRotateButton();
+  setRotationTarget(Math.PI);
+  markDirty();
+});
+
+btnAuto.addEventListener("click", function(){
+  autoSpin = !autoSpin;
+  if(!autoSpin){
+    snapToNearestFace();
+  }else{
+    targetRotY = rotY;
   }
+  syncAutoRotateButton();
+  markDirty();
+});
+
+btnResetView.addEventListener("click", function(){
+  autoSpin = false;
+  syncAutoRotateButton();
+  setRotationTarget(0);
+  markDirty();
 });
 
 const resizeObserver = new ResizeObserver(function(){
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-  renderer.setSize(viewportWidth(), viewportHeight(), false);
-  camera.aspect = viewportWidth() / viewportHeight();
-  camera.updateProjectionMatrix();
-
-  if(activeViewKey === "peep"){
-    targetFov = PEEP_CAMERA_FOV;
-    targetCameraPos.set(-(BOX_WIDTH_X / 2) - 0.95, PEEPHOLE_CENTER_TOP_Y, 0);
-  }else{
-    setStudyCameraTarget(targetRotY);
-  }
-  requestRender();
+  applyRendererQuality(true);
+  fitCamera();
+  markDirty();
 });
 resizeObserver.observe(vp);
-
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-renderer.setSize(viewportWidth(), viewportHeight(), false);
-camera.aspect = viewportWidth() / viewportHeight();
-camera.updateProjectionMatrix();
-syncAutoButton();
-syncModeLabel();
-applyView("front", true);
+applyRendererQuality(true);
+syncAutoRotateButton();
 
 function animate(now){
   requestAnimationFrame(animate);
-  const dt = lastFrameAt ? Math.min(0.05, Math.max(0.001, (now - lastFrameAt) / 1000)) : (1 / 60);
-  lastFrameAt = now;
-  if(!canRender()) return;
 
-  let dirty = needsRender;
+  const canRender = canRenderNow();
+  const frameBudget = !canRender
+    ? SLEEP_FRAME_MS
+    : hostFocused
+      ? FOCUSED_IDLE_FRAME_MS
+      : BACKGROUND_IDLE_FRAME_MS;
 
-  if(autoRotate){
-    rotY = normalizeAngle(rotY + (AUTO_ROTATE_SPEED * dt));
+  if(lastRenderTs && (now - lastRenderTs) < frameBudget && !forceNextRender && !hasRotationMotion()) return;
+  lastRenderTs = now;
+
+  const dt = lastFrameTs ? Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000)) : (1 / 60);
+  lastFrameTs = now;
+
+  let frameNeedsRender = forceNextRender || applyRendererQuality(false);
+  if(!canRender) return;
+
+  if(isDragging){
     targetRotY = rotY;
-    dirty = true;
+    frameNeedsRender = true;
+  }else if(autoSpin){
+    rotY = normalizeAngle(rotY + (0.34 * dt));
+    targetRotY = rotY;
+    frameNeedsRender = true;
   }else{
-    dirty = settleRotation(dt) || dirty;
+    frameNeedsRender = settleRotationTowardTarget(dt) || frameNeedsRender;
   }
-
-  const transitionFactor = 1 - Math.exp(-TRANSITION_RATE * dt);
-  const previousFov = currentFov;
-  currentFov += (targetFov - currentFov) * transitionFactor;
-  currentCameraPos.lerp(targetCameraPos, transitionFactor);
-  currentLookAt.lerp(targetLookAt, transitionFactor);
 
   rigGroup.rotation.y = rotY;
-  camera.position.copy(currentCameraPos);
-  if(Math.abs(currentFov - previousFov) > 0.0005){
-    camera.fov = currentFov;
-    camera.updateProjectionMatrix();
-    dirty = true;
-  }
-  camera.lookAt(currentLookAt);
+  if(!frameNeedsRender) return;
 
-  if(
-    currentCameraPos.distanceToSquared(targetCameraPos) > 0.00001 ||
-    currentLookAt.distanceToSquared(targetLookAt) > 0.00001 ||
-    Math.abs(currentFov - targetFov) > 0.0005
-  ){
-    dirty = true;
-  }
-
-  if(!dirty) return;
   renderer.render(scene, camera);
-  needsRender = false;
+  forceNextRender = false;
 }
 
 requestAnimationFrame(animate);
