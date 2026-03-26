@@ -184,9 +184,9 @@ body{color:#d9dfe6;}
 const BOX_WIDTH_X = 13.8;
 const BOX_HEIGHT_Y = 6.08;
 const BOX_DEPTH_Z = 1.5;
-const STUDY_MARGIN_X = 0.34;
-const STUDY_MARGIN_Y = 0.26;
-const STUDY_MARGIN_Z = 0.42;
+const STUDY_PADDING_X = 0.1;
+const STUDY_PADDING_Y = 0.1;
+const STUDY_PADDING_Z = 0.12;
 const FUTURE_MARGIN_X = 1.1;
 const FUTURE_MARGIN_Y = 0.8;
 const FUTURE_MARGIN_Z = 1.35;
@@ -204,10 +204,10 @@ const TRANSITION_RATE = 8.5;
 const TAP_MOVE_TOLERANCE = 10;
 const STUDY_CAMERA_FOV = 26;
 const PEEP_CAMERA_FOV = 24;
-const STUDY_CAMERA_X_OFFSET_FACTOR = 0.22;
-const STUDY_CAMERA_Z_FACTOR = 0.92;
-const STUDY_CAMERA_Y = BOX_HEIGHT_Y * 0.22;
-const STUDY_LOOKAT_Y = BOX_HEIGHT_Y * 0.04;
+const STUDY_FRAME_LIMIT_X = 0.93;
+const STUDY_FRAME_LIMIT_Y = 0.9;
+const STUDY_CAMERA_DIRECTION = new THREE.Vector3(0.28, 0.16, 1).normalize();
+const STUDY_LOOKAT_Y = BOX_HEIGHT_Y * 0.03;
 const BOX_CENTER = new THREE.Vector3(0, 0, 0);
 
 const app = document.getElementById("app");
@@ -457,32 +457,92 @@ let touchMoved = false;
 let lastTapAt = 0;
 let lastFrameAt = 0;
 
-function getFitDistance(fovDegrees, margins){
-  const spacing = margins || {x:0, y:0, z:0};
-  const width = BOX_WIDTH_X + ((spacing.x || 0) * 2);
-  const height = BOX_HEIGHT_Y + ((spacing.y || 0) * 2);
-  const depth = BOX_DEPTH_Z + ((spacing.z || 0) * 2);
-  const radius = 0.5 * Math.sqrt((width * width) + (height * height) + (depth * depth));
-  const aspect = viewportWidth() / viewportHeight();
-  const verticalHalf = THREE.MathUtils.degToRad(fovDegrees) / 2;
-  const horizontalHalf = Math.atan(Math.tan(verticalHalf) * aspect);
-  const fitHalfAngle = Math.min(verticalHalf, horizontalHalf);
-  return (radius / Math.sin(Math.max(0.001, fitHalfAngle))) * 1.06;
+const studyFitCamera = new THREE.PerspectiveCamera(STUDY_CAMERA_FOV, 1, 0.05, 180);
+const studyLookAtTarget = new THREE.Vector3(0, STUDY_LOOKAT_Y, 0);
+const studyFitCorners = [
+  new THREE.Vector3(-1, -1, -1),
+  new THREE.Vector3(-1, -1, 1),
+  new THREE.Vector3(-1, 1, -1),
+  new THREE.Vector3(-1, 1, 1),
+  new THREE.Vector3(1, -1, -1),
+  new THREE.Vector3(1, -1, 1),
+  new THREE.Vector3(1, 1, -1),
+  new THREE.Vector3(1, 1, 1)
+];
+
+function getStudyShellCorners(viewYaw){
+  const halfX = (BOX_WIDTH_X / 2) + STUDY_PADDING_X;
+  const halfY = (BOX_HEIGHT_Y / 2) + STUDY_PADDING_Y;
+  const halfZ = (BOX_DEPTH_Z / 2) + STUDY_PADDING_Z;
+  const rotY = new THREE.Matrix4().makeRotationY(viewYaw || 0);
+  return studyFitCorners.map(function(unitCorner){
+    return new THREE.Vector3(
+      unitCorner.x * halfX,
+      unitCorner.y * halfY,
+      unitCorner.z * halfZ
+    ).applyMatrix4(rotY);
+  });
 }
 
-function setStudyCameraTarget(){
-  const fitDistance = getFitDistance(STUDY_CAMERA_FOV, {
-    x:STUDY_MARGIN_X,
-    y:STUDY_MARGIN_Y,
-    z:STUDY_MARGIN_Z
+function projectedCornersFit(cameraToTest, corners){
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  corners.forEach(function(corner){
+    const projected = corner.clone().project(cameraToTest);
+    minX = Math.min(minX, projected.x);
+    maxX = Math.max(maxX, projected.x);
+    minY = Math.min(minY, projected.y);
+    maxY = Math.max(maxY, projected.y);
   });
+
+  const extentX = Math.max(Math.abs(minX), Math.abs(maxX));
+  const extentY = Math.max(Math.abs(minY), Math.abs(maxY));
+  return extentX <= STUDY_FRAME_LIMIT_X && extentY <= STUDY_FRAME_LIMIT_Y;
+}
+
+function getStudyCameraDistanceForYaw(viewYaw){
+  const corners = getStudyShellCorners(viewYaw);
+  studyFitCamera.fov = STUDY_CAMERA_FOV;
+  studyFitCamera.aspect = viewportWidth() / viewportHeight();
+  studyFitCamera.near = 0.05;
+  studyFitCamera.far = 180;
+  studyFitCamera.updateProjectionMatrix();
+
+  let low = 2;
+  let high = 8;
+  while(high < 120){
+    studyFitCamera.position.copy(studyLookAtTarget).addScaledVector(STUDY_CAMERA_DIRECTION, high);
+    studyFitCamera.up.set(0, 1, 0);
+    studyFitCamera.lookAt(studyLookAtTarget);
+    studyFitCamera.updateMatrixWorld(true);
+    if(projectedCornersFit(studyFitCamera, corners)) break;
+    high *= 1.35;
+  }
+
+  for(let i = 0; i < 28; i++){
+    const mid = (low + high) * 0.5;
+    studyFitCamera.position.copy(studyLookAtTarget).addScaledVector(STUDY_CAMERA_DIRECTION, mid);
+    studyFitCamera.up.set(0, 1, 0);
+    studyFitCamera.lookAt(studyLookAtTarget);
+    studyFitCamera.updateMatrixWorld(true);
+    if(projectedCornersFit(studyFitCamera, corners)){
+      high = mid;
+    }else{
+      low = mid;
+    }
+  }
+
+  return high;
+}
+
+function setStudyCameraTarget(viewYaw){
+  const fitDistance = getStudyCameraDistanceForYaw(viewYaw);
   targetFov = STUDY_CAMERA_FOV;
-  targetCameraPos.set(
-    fitDistance * STUDY_CAMERA_X_OFFSET_FACTOR,
-    STUDY_CAMERA_Y,
-    fitDistance * STUDY_CAMERA_Z_FACTOR
-  );
-  targetLookAt.set(0, STUDY_LOOKAT_Y, 0);
+  targetCameraPos.copy(studyLookAtTarget).addScaledVector(STUDY_CAMERA_DIRECTION, fitDistance);
+  targetLookAt.copy(studyLookAtTarget);
 }
 
 function setHintText(text){
@@ -531,7 +591,7 @@ function applyView(viewKey, instant){
       right:Math.PI / 2
     }[viewKey] || 0;
     targetRotY = normalizeAngle(viewYaw);
-    setStudyCameraTarget();
+    setStudyCameraTarget(viewYaw);
     setHintText("DRAG TO ORBIT THE SHELL | INSIDE PREP LOCKS TO THE UPPER PEEPHOLE CAMERA");
   }
 
@@ -679,7 +739,7 @@ const resizeObserver = new ResizeObserver(function(){
     targetFov = PEEP_CAMERA_FOV;
     targetCameraPos.set(-(BOX_WIDTH_X / 2) - 0.95, PEEPHOLE_CENTER_TOP_Y, 0);
   }else{
-    setStudyCameraTarget();
+    setStudyCameraTarget(targetRotY);
   }
   requestRender();
 });
