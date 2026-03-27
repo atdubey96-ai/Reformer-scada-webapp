@@ -393,6 +393,7 @@ let viewMode = "shell";
 let pushedCuboidLiveData = null;
 let pushedCuboidLiveDigest = "";
 let pendingWallBurnerColorSync = false;
+let pendingWallTstBarSync = false;
 
 function cuboidGetParentApp(){
   try{
@@ -481,6 +482,31 @@ function cuboidLoadBurnerData(){
     return cuboidSanitizeBurnerSnapshot(pushedCuboidLiveData.hmData);
   }
   return cuboidBuildDefaultBurnerData();
+}
+
+function cuboidSanitizeTstRow(vals){
+  const out = [];
+  const src = Array.isArray(vals) ? vals : [];
+  for(let i = 0; i < 15; i++){
+    const n = Number(src[i]);
+    out.push(isFinite(n) ? n : "");
+  }
+  return out;
+}
+
+function cuboidLoadZoneTstRows(){
+  if(!pushedCuboidLiveData) cuboidPrimeLiveDataFromHost();
+  const empty = Array(15).fill("");
+  if(chamberZoneKey === "CD"){
+    return {
+      top: cuboidSanitizeTstRow(pushedCuboidLiveData && pushedCuboidLiveData.cdTop ? pushedCuboidLiveData.cdTop : empty),
+      bot: cuboidSanitizeTstRow(pushedCuboidLiveData && pushedCuboidLiveData.cdBot ? pushedCuboidLiveData.cdBot : empty)
+    };
+  }
+  return {
+    top: cuboidSanitizeTstRow(pushedCuboidLiveData && pushedCuboidLiveData.abTop ? pushedCuboidLiveData.abTop : empty),
+    bot: cuboidSanitizeTstRow(pushedCuboidLiveData && pushedCuboidLiveData.abBot ? pushedCuboidLiveData.abBot : empty)
+  };
 }
 
 function cuboidGetWallKeyForFace(faceKey){
@@ -577,6 +603,7 @@ window.addEventListener("message", function(event){
   if(data.type === "cuboid-live-data"){
     if(cuboidConsumeLiveState(data.payload, data.digest)){
       pendingWallBurnerColorSync = true;
+      pendingWallTstBarSync = true;
       markDirty();
     }
   }
@@ -663,6 +690,8 @@ const wallTubeAssemblyGroup = new THREE.Group();
 rigGroup.add(wallTubeAssemblyGroup);
 const wallNozzleAssemblyGroup = new THREE.Group();
 rigGroup.add(wallNozzleAssemblyGroup);
+const wallTstBarGroup = new THREE.Group();
+rigGroup.add(wallTstBarGroup);
 const wallLabelGroup = new THREE.Group();
 rigGroup.add(wallLabelGroup);
 
@@ -2094,6 +2123,347 @@ function createWallLabelMesh(text, variant, dir, width, height) {
   return mesh;
 }
 
+function cuboidTempToColor(value){
+  const n = Number(value);
+  if(!isFinite(n)) return "#64748b";
+  const lo = 860;
+  const hi = 1000;
+  let ratio = (n - lo) / Math.max(1, hi - lo);
+  ratio = Math.max(0, Math.min(1, ratio));
+  if(ratio < 0.5){
+    const g = Math.round(197 + (58 * (ratio / 0.5)));
+    return "rgb(34," + g + ",94)";
+  }
+  const hotRatio = (ratio - 0.5) / 0.5;
+  const green = Math.round(215 - (131 * hotRatio));
+  return "rgb(251," + green + ",60)";
+}
+
+const wallTstBarActors = [];
+
+function cuboidDrawCanvasText(ctx, text, x, y, options) {
+  const opts = options || {};
+  ctx.save();
+  ctx.font = opts.font || "700 30px Georgia";
+  ctx.textAlign = opts.align || "center";
+  ctx.textBaseline = opts.baseline || "middle";
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.strokeStyle = opts.stroke || "rgba(10,12,18,0.90)";
+  ctx.lineWidth = opts.lineWidth == null ? 4 : opts.lineWidth;
+  ctx.shadowColor = opts.shadow || "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = opts.shadowBlur == null ? 8 : opts.shadowBlur;
+  ctx.shadowOffsetY = opts.shadowOffsetY == null ? 2 : opts.shadowOffsetY;
+  if(opts.stroke !== null && ctx.lineWidth > 0){
+    ctx.strokeText(text, x, y);
+  }
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.fillStyle = opts.fill || "#ffffff";
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function paintWallTstBarCanvas(canvas, part, values) {
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  const vals = cuboidSanitizeTstRow(values);
+  const finiteTemps = vals.filter(function(v){ return isFinite(Number(v)); }).map(function(v){ return Number(v); });
+  const minTemp = finiteTemps.length ? Math.min.apply(null, finiteTemps) : null;
+  const maxTemp = finiteTemps.length ? Math.max.apply(null, finiteTemps) : null;
+  const isTop = part === "top";
+  const partLabel = isTop ? "TOP TST" : "BOT TST";
+  const toneLabel = isTop ? "ABOVE ROW 3 / BELOW ROW 4" : "ABOVE ROW 1 / BELOW ROW 2";
+
+  ctx.clearRect(0, 0, w, h);
+
+  roundedRectPath(ctx, 16, 18, w - 32, h - 36, 54);
+  const bodyGrad = ctx.createLinearGradient(0, 0, 0, h);
+  bodyGrad.addColorStop(0.00, "rgba(28,36,48,0.98)");
+  bodyGrad.addColorStop(0.46, "rgba(14,18,25,0.98)");
+  bodyGrad.addColorStop(1.00, "rgba(7,9,14,0.99)");
+  ctx.fillStyle = bodyGrad;
+  ctx.fill();
+
+  const haze = ctx.createRadialGradient(w * 0.24, h * 0.10, 0, w * 0.24, h * 0.10, w * 0.46);
+  haze.addColorStop(0.00, isTop ? "rgba(126,200,240,0.20)" : "rgba(243,112,34,0.18)");
+  haze.addColorStop(1.00, "rgba(255,255,255,0.00)");
+  ctx.fillStyle = haze;
+  roundedRectPath(ctx, 16, 18, w - 32, h - 36, 54);
+  ctx.fill();
+
+  const topSheen = ctx.createLinearGradient(0, 20, 0, h * 0.44);
+  topSheen.addColorStop(0.00, "rgba(255,255,255,0.15)");
+  topSheen.addColorStop(1.00, "rgba(255,255,255,0.00)");
+  ctx.fillStyle = topSheen;
+  roundedRectPath(ctx, 28, 28, w - 56, h * 0.26, 38);
+  ctx.fill();
+
+  const frameGrad = ctx.createLinearGradient(0, 0, w, h);
+  frameGrad.addColorStop(0.00, "rgba(248,209,135,0.92)");
+  frameGrad.addColorStop(0.38, "rgba(209,138,65,0.88)");
+  frameGrad.addColorStop(0.72, "rgba(91,131,175,0.80)");
+  frameGrad.addColorStop(1.00, "rgba(235,184,112,0.90)");
+  ctx.strokeStyle = frameGrad;
+  ctx.lineWidth = 10;
+  roundedRectPath(ctx, 16, 18, w - 32, h - 36, 54);
+  ctx.stroke();
+
+  roundedRectPath(ctx, 52, 42, 312, 92, 26);
+  const chipGrad = ctx.createLinearGradient(0, 42, 0, 134);
+  chipGrad.addColorStop(0.00, "rgba(44,53,67,0.96)");
+  chipGrad.addColorStop(1.00, "rgba(13,17,24,0.98)");
+  ctx.fillStyle = chipGrad;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.15)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  cuboidDrawCanvasText(ctx, partLabel, 208, 88, {
+    font: "900 44px Georgia",
+    fill: "#fff1cf",
+    stroke: "rgba(18,10,4,0.82)",
+    lineWidth: 7,
+    shadowBlur: 10
+  });
+  cuboidDrawCanvasText(ctx, toneLabel, 392, 88, {
+    font: "700 28px Georgia",
+    align: "left",
+    fill: "rgba(219,229,241,0.92)",
+    stroke: "rgba(10,14,18,0.70)",
+    lineWidth: 4,
+    shadowBlur: 4
+  });
+
+  const laneLeft = 86;
+  const laneRight = w - 86;
+  const laneW = laneRight - laneLeft;
+  const laneTop = 172;
+  const laneH = 86;
+  const slotW = laneW / 15;
+  const positions = [];
+  for(let i = 0; i < 15; i++){
+    const n = Number(vals[i]);
+    if(isFinite(n)) positions.push({ idx: i, val: n, x: laneLeft + slotW * (i + 0.5) });
+  }
+
+  roundedRectPath(ctx, laneLeft, laneTop, laneW, laneH, 28);
+  const laneShell = ctx.createLinearGradient(0, laneTop, 0, laneTop + laneH);
+  laneShell.addColorStop(0.00, "rgba(11,15,22,0.98)");
+  laneShell.addColorStop(0.52, "rgba(26,34,45,0.96)");
+  laneShell.addColorStop(1.00, "rgba(12,16,23,0.98)");
+  ctx.fillStyle = laneShell;
+  ctx.fill();
+
+  ctx.save();
+  roundedRectPath(ctx, laneLeft + 5, laneTop + 5, laneW - 10, laneH - 10, 22);
+  ctx.clip();
+  if(positions.length){
+    const grad = ctx.createLinearGradient(laneLeft, 0, laneRight, 0);
+    grad.addColorStop(0, cuboidTempToColor(positions[0].val));
+    for(let p = 0; p < positions.length; p++){
+      const stop = (positions[p].idx + 0.5) / 15;
+      grad.addColorStop(Math.max(0, Math.min(1, stop)), cuboidTempToColor(positions[p].val));
+    }
+    grad.addColorStop(1, cuboidTempToColor(positions[positions.length - 1].val));
+    ctx.fillStyle = grad;
+  } else {
+    ctx.fillStyle = "rgba(71,85,105,0.86)";
+  }
+  ctx.fillRect(laneLeft + 5, laneTop + 5, laneW - 10, laneH - 10);
+  const hotGlow = ctx.createLinearGradient(laneLeft, laneTop, laneLeft, laneTop + laneH);
+  hotGlow.addColorStop(0.00, "rgba(255,255,255,0.20)");
+  hotGlow.addColorStop(0.48, "rgba(255,255,255,0.04)");
+  hotGlow.addColorStop(1.00, "rgba(0,0,0,0.10)");
+  ctx.fillStyle = hotGlow;
+  ctx.fillRect(laneLeft + 5, laneTop + 5, laneW - 10, laneH - 10);
+  ctx.restore();
+
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = 3;
+  roundedRectPath(ctx, laneLeft, laneTop, laneW, laneH, 28);
+  ctx.stroke();
+
+  for(let i = 0; i < 15; i++){
+    const markerX = laneLeft + slotW * (i + 0.5);
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(markerX, laneTop + 12);
+    ctx.lineTo(markerX, laneTop + laneH - 12);
+    ctx.stroke();
+
+    const tempVal = Number(vals[i]);
+    const chipW = 90;
+    const chipH = 36;
+    const chipY = 118;
+    roundedRectPath(ctx, markerX - chipW / 2, chipY, chipW, chipH, 14);
+    const chipFill = isFinite(tempVal)
+      ? "rgba(58,44,27,0.94)"
+      : "rgba(36,43,55,0.88)";
+    ctx.fillStyle = chipFill;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.16)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    cuboidDrawCanvasText(ctx, isFinite(tempVal) ? (Math.round(tempVal) + "°") : "--", markerX, chipY + chipH / 2 + 1, {
+      font: "800 26px Georgia",
+      fill: isFinite(tempVal) ? "#fff0cb" : "#dbe3ee",
+      stroke: "rgba(20,12,7,0.86)",
+      lineWidth: 4,
+      shadowBlur: 4
+    });
+
+    const markerR = isFinite(tempVal) ? 12 : 9;
+    ctx.beginPath();
+    ctx.arc(markerX, laneTop + laneH / 2, markerR, 0, Math.PI * 2);
+    ctx.fillStyle = isFinite(tempVal) ? cuboidTempToColor(tempVal) : "rgba(100,116,139,0.92)";
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255,255,255,0.86)";
+    ctx.stroke();
+  }
+
+  const footerY = 304;
+  cuboidDrawCanvasText(ctx, "15-point live temperature gradient", laneLeft, footerY, {
+    font: "700 28px Georgia",
+    align: "left",
+    fill: "rgba(208,220,236,0.92)",
+    stroke: "rgba(10,14,18,0.70)",
+    lineWidth: 4,
+    shadowBlur: 3
+  });
+  cuboidDrawCanvasText(ctx, (minTemp != null ? Math.round(minTemp) + "°" : "--") + "  MIN", laneRight - 220, footerY, {
+    font: "800 28px Georgia",
+    fill: "rgba(208,235,219,0.94)",
+    stroke: "rgba(10,14,18,0.72)",
+    lineWidth: 4,
+    shadowBlur: 3
+  });
+  cuboidDrawCanvasText(ctx, (maxTemp != null ? Math.round(maxTemp) + "°" : "--") + "  MAX", laneRight, footerY, {
+    font: "800 28px Georgia",
+    align: "right",
+    fill: "rgba(255,222,188,0.96)",
+    stroke: "rgba(10,14,18,0.72)",
+    lineWidth: 4,
+    shadowBlur: 3
+  });
+}
+
+function addWallTstBar(faceGroup, faceKey, part, centerY, panelW, panelH, centerX, panelZ, dir) {
+  const plate = new THREE.Mesh(
+    new THREE.BoxGeometry(panelW, panelH, 0.034),
+    new THREE.MeshStandardMaterial({
+      color: 0x18202b,
+      roughness: 0.34,
+      metalness: 0.82
+    })
+  );
+  plate.position.set(centerX, centerY, panelZ);
+  faceGroup.add(plate);
+
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(panelW * 1.01, panelH * 1.01, 0.014),
+    new THREE.MeshStandardMaterial({
+      color: 0x816139,
+      roughness: 0.42,
+      metalness: 0.78,
+      emissive: 0x1c1006,
+      emissiveIntensity: 0.12
+    })
+  );
+  frame.position.set(centerX, centerY, panelZ + dir * 0.011);
+  faceGroup.add(frame);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 2048;
+  canvas.height = 360;
+  const texture = new THREE.CanvasTexture(canvas);
+  if (THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.needsUpdate = true;
+
+  const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(panelW * 0.992, panelH * 0.992),
+    new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      alphaTest: 0.04,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -2
+    })
+  );
+  plane.position.set(centerX, centerY, panelZ + dir * 0.023);
+  if (dir < 0) plane.rotation.y = Math.PI;
+  faceGroup.add(plane);
+
+  wallTstBarActors.push({
+    faceKey: faceKey,
+    part: part,
+    canvas: canvas,
+    texture: texture
+  });
+}
+
+function buildWallTstBars(faceKey, faceZ, outwardDir) {
+  const faceGroup = new THREE.Group();
+  faceGroup.name = faceKey + "-tst-bars";
+  wallTstBarGroup.add(faceGroup);
+
+  const dir = outwardDir >= 0 ? 1 : -1;
+  const faceXDir = dir;
+  const PIPE_R = 0.055;
+  const PIPE_Z = faceZ;
+  const X_OFFSET = 0.10;
+  const pipeXL = -FW / 2 + X_OFFSET + PIPE_R;
+  const pipeXR = FW / 2 - X_OFFSET - PIPE_R;
+  const BOT_MARGIN = 0.30;
+  const TOP_MARGIN = 0.60;
+  const usable = FH - BOT_MARGIN - TOP_MARGIN;
+  const gapW = [1.7, 1.3, 1.7, 1.3, 1.3];
+  const totalW = gapW.reduce(function(a, b) { return a + b; }, 0);
+  const unitGap = usable / totalW;
+  const rowY = [];
+  let y = -FH / 2 + BOT_MARGIN;
+  for (let i = 0; i < 6; i++) {
+    rowY.push(y);
+    if (i < 5) y += unitGap * gapW[i];
+  }
+
+  const LEFT_PAD = 0.90;
+  const RIGHT_PAD = 0.46;
+  const spanStart = pipeXL + LEFT_PAD;
+  const spanEnd = pipeXR - RIGHT_PAD;
+  const laneMargin = 0.18;
+  const panelLeft = spanStart - laneMargin;
+  const panelRight = spanEnd + laneMargin;
+  const panelW = panelRight - panelLeft;
+  const panelCenterLocalX = (panelLeft + panelRight) * 0.5;
+  const panelCenterX = faceXDir * panelCenterLocalX;
+  const bottomGap = rowY[1] - rowY[0];
+  const topGap = rowY[3] - rowY[2];
+  const panelHBot = Math.min(0.46, Math.max(0.30, bottomGap * 0.44));
+  const panelHTop = Math.min(0.46, Math.max(0.30, topGap * 0.44));
+  const panelZ = PIPE_Z + dir * 0.268;
+
+  addWallTstBar(faceGroup, faceKey, "top", (rowY[2] + rowY[3]) * 0.5, panelW, panelHTop, panelCenterX, panelZ, dir);
+  addWallTstBar(faceGroup, faceKey, "bot", (rowY[0] + rowY[1]) * 0.5, panelW, panelHBot, panelCenterX, panelZ, dir);
+}
+
+function applyWallTstBarTextures() {
+  const zoneRows = cuboidLoadZoneTstRows();
+  for (let i = 0; i < wallTstBarActors.length; i++) {
+    const actor = wallTstBarActors[i];
+    if (!actor || !actor.canvas || !actor.texture) continue;
+    paintWallTstBarCanvas(actor.canvas, actor.part, actor.part === "top" ? zoneRows.top : zoneRows.bot);
+    actor.texture.needsUpdate = true;
+  }
+}
+
 function makeBurnerDiscTex(size) {
   const cv = document.createElement("canvas");
   cv.width = size;
@@ -2886,8 +3256,12 @@ buildWallTubeAssembly("face1", (FD / 2) + 0.02);
 buildWallTubeAssembly("face2", -(FD / 2) - 0.02);
 buildWallNozzleAssembly("face1", (FD / 2) + 0.02, 1);
 buildWallNozzleAssembly("face2", -(FD / 2) - 0.02, -1);
+buildWallTstBars("face1", (FD / 2) + 0.02, 1);
+buildWallTstBars("face2", -(FD / 2) - 0.02, -1);
 applyWallBurnerStateColors();
 pendingWallBurnerColorSync = false;
+applyWallTstBarTextures();
+pendingWallTstBarSync = false;
 buildWallLabelOverlay("face1", (FD / 2) + 0.02, 1);
 buildWallLabelOverlay("face2", -(FD / 2) - 0.02, -1);
 
@@ -3238,6 +3612,12 @@ function animate(now){
   if(pendingWallBurnerColorSync){
     applyWallBurnerStateColors();
     pendingWallBurnerColorSync = false;
+    frameNeedsRender = true;
+  }
+
+  if(pendingWallTstBarSync){
+    applyWallTstBarTextures();
+    pendingWallTstBarSync = false;
     frameNeedsRender = true;
   }
 
