@@ -381,7 +381,7 @@ const SHELL_FACE_KEYS = [
 ];
 
 if(viewerTagTitle) viewerTagTitle.textContent = chamberZoneKey + " Reformer Structure Study";
-if(viewerTagSummary) viewerTagSummary.textContent = "Face1 + Face2 manifolds + nozzles active | top header assembly kept | X " + FW + " | Y " + FH + " | Z " + FD;
+if(viewerTagSummary) viewerTagSummary.textContent = "Face1 + Face2 manifolds + nozzles + flame icons active | top header assembly kept | X " + FW + " | Y " + FH + " | Z " + FD;
 document.title = chamberZoneKey + " Reformer Structure Study";
 
 let hostTabActive = true;
@@ -1595,6 +1595,197 @@ function animateInteriorFlames(t) {
   }
 }
 
+function makeNozzleFireIconTex(width, height) {
+  const cv = document.createElement("canvas");
+  cv.width = width;
+  cv.height = height;
+  const g = cv.getContext("2d");
+  const w = width;
+  const h = height;
+
+  function drawFlamePath(cx, by, fw, fh) {
+    g.beginPath();
+    g.moveTo(cx - fw * 0.44, by);
+    g.bezierCurveTo(cx - fw * 0.66, by - fh * 0.10, cx - fw * 0.56, by - fh * 0.44, cx - fw * 0.22, by - fh * 0.68);
+    g.bezierCurveTo(cx - fw * 0.08, by - fh * 0.90, cx - fw * 0.02, by - fh * 0.98, cx + fw * 0.02, by - fh * 1.14);
+    g.bezierCurveTo(cx + fw * 0.10, by - fh * 0.92, cx + fw * 0.22, by - fh * 0.74, cx + fw * 0.30, by - fh * 0.58);
+    g.bezierCurveTo(cx + fw * 0.40, by - fh * 0.76, cx + fw * 0.58, by - fh * 0.70, cx + fw * 0.50, by - fh * 0.38);
+    g.bezierCurveTo(cx + fw * 0.68, by - fh * 0.18, cx + fw * 0.58, by + fh * 0.01, cx + fw * 0.34, by + fh * 0.04);
+    g.bezierCurveTo(cx + fw * 0.10, by + fh * 0.08, cx - fw * 0.16, by + fh * 0.05, cx - fw * 0.44, by);
+    g.closePath();
+  }
+
+  function drawDrop(cx, cy, rx, ry, color) {
+    g.beginPath();
+    g.moveTo(cx, cy - ry);
+    g.bezierCurveTo(cx + rx, cy - ry * 0.55, cx + rx * 0.82, cy + ry * 0.45, cx, cy + ry);
+    g.bezierCurveTo(cx - rx * 0.82, cy + ry * 0.45, cx - rx, cy - ry * 0.55, cx, cy - ry);
+    g.closePath();
+    g.fillStyle = color;
+    g.fill();
+  }
+
+  g.clearRect(0, 0, w, h);
+  g.shadowColor = "rgba(255,124,32,0.28)";
+  g.shadowBlur = h * 0.05;
+
+  drawFlamePath(w * 0.50, h * 0.80, w * 0.62, h * 0.56);
+  const outerGrad = g.createLinearGradient(0, h * 0.10, 0, h * 0.92);
+  outerGrad.addColorStop(0.00, "#ffbf2f");
+  outerGrad.addColorStop(0.24, "#ff8a22");
+  outerGrad.addColorStop(0.62, "#f85d20");
+  outerGrad.addColorStop(1.00, "#c81d0a");
+  g.fillStyle = outerGrad;
+  g.fill();
+  g.lineWidth = w * 0.018;
+  g.strokeStyle = "rgba(179,34,0,0.55)";
+  g.stroke();
+
+  g.shadowBlur = h * 0.03;
+  drawFlamePath(w * 0.50, h * 0.83, w * 0.42, h * 0.40);
+  const midGrad = g.createLinearGradient(0, h * 0.22, 0, h * 0.88);
+  midGrad.addColorStop(0.00, "#ffe15f");
+  midGrad.addColorStop(0.32, "#ffbd32");
+  midGrad.addColorStop(0.74, "#ff8a20");
+  midGrad.addColorStop(1.00, "#f0641e");
+  g.fillStyle = midGrad;
+  g.fill();
+
+  g.shadowBlur = h * 0.02;
+  drawFlamePath(w * 0.50, h * 0.86, w * 0.24, h * 0.24);
+  const coreGrad = g.createLinearGradient(0, h * 0.36, 0, h * 0.90);
+  coreGrad.addColorStop(0.00, "#fffef8");
+  coreGrad.addColorStop(0.38, "#fff4aa");
+  coreGrad.addColorStop(1.00, "#ffd35a");
+  g.fillStyle = coreGrad;
+  g.fill();
+
+  g.shadowBlur = 0;
+  drawDrop(w * 0.24, h * 0.18, w * 0.030, h * 0.050, "rgba(222,79,38,0.95)");
+  drawDrop(w * 0.76, h * 0.22, w * 0.026, h * 0.043, "rgba(230,96,42,0.92)");
+  drawDrop(w * 0.15, h * 0.33, w * 0.020, h * 0.036, "rgba(240,122,48,0.88)");
+  drawDrop(w * 0.86, h * 0.36, w * 0.020, h * 0.034, "rgba(238,112,44,0.88)");
+
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function makeNozzleFireGlowTex(size) {
+  const cv = document.createElement("canvas");
+  cv.width = size;
+  cv.height = size;
+  const g = cv.getContext("2d");
+  const grad = g.createRadialGradient(size * 0.5, size * 0.68, size * 0.04, size * 0.5, size * 0.68, size * 0.46);
+  grad.addColorStop(0.00, "rgba(255,245,192,0.94)");
+  grad.addColorStop(0.28, "rgba(255,189,80,0.76)");
+  grad.addColorStop(0.62, "rgba(255,108,34,0.30)");
+  grad.addColorStop(1.00, "rgba(255,108,34,0.00)");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+const nozzleFireIconTex = makeNozzleFireIconTex(256, 320);
+const nozzleFireGlowTex = makeNozzleFireGlowTex(192);
+const nozzleFireIconMat = new THREE.MeshBasicMaterial({
+  map: nozzleFireIconTex,
+  transparent: true,
+  opacity: 0.86,
+  depthWrite: false,
+  side: THREE.DoubleSide,
+  alphaTest: 0.03
+});
+const nozzleFireGlowMat = new THREE.MeshBasicMaterial({
+  map: nozzleFireGlowTex,
+  transparent: true,
+  opacity: 0.34,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  side: THREE.DoubleSide
+});
+const nozzleFireIconGeo = new THREE.PlaneGeometry(0.20, 0.30);
+nozzleFireIconGeo.translate(0, 0.15, 0);
+const nozzleFireGlowGeo = new THREE.PlaneGeometry(0.18, 0.14);
+nozzleFireGlowGeo.translate(0, 0.07, 0);
+const wallNozzleFlameActors = [];
+
+function hasAnimatedWallNozzleFlames() {
+  return wallNozzleFlameActors.length > 0;
+}
+
+function addWallNozzleFireIcon(parent, seed, posX, posY, posZ, dir) {
+  const flame = new THREE.Group();
+  flame.position.set(posX, posY, posZ);
+  flame.rotation.y = dir > 0 ? 0 : Math.PI;
+  flame.userData.baseX = posX;
+  flame.userData.baseY = posY;
+  flame.userData.baseZ = posZ;
+  flame.userData.baseRotY = flame.rotation.y;
+  flame.userData.baseRotZ = 0;
+
+  const iconMat = nozzleFireIconMat.clone();
+  const frontPlane = new THREE.Mesh(nozzleFireIconGeo, iconMat);
+  const crossPlane = new THREE.Mesh(nozzleFireIconGeo, iconMat);
+  crossPlane.rotation.y = Math.PI / 2;
+  flame.add(frontPlane, crossPlane);
+
+  const glowMat = nozzleFireGlowMat.clone();
+  const glow = new THREE.Mesh(nozzleFireGlowGeo, glowMat);
+  glow.position.y = -0.006;
+  flame.add(glow);
+
+  parent.add(flame);
+
+  wallNozzleFlameActors.push({
+    flame: flame,
+    iconMat: iconMat,
+    glowMat: glowMat,
+    glow: glow,
+    phase: seed * 0.21,
+    speedA: 4.8 + (seed % 0.8),
+    speedB: 7.6 + (seed % 1.1),
+    speedC: 11.8 + (seed % 1.5),
+    sway: 0.004 + (seed % 0.002),
+    lift: 0.006 + (seed % 0.003),
+    widthPulse: 0.040 + (seed % 0.012)
+  });
+}
+
+function animateWallNozzleFlames(t) {
+  for (let i = 0; i < wallNozzleFlameActors.length; i++) {
+    const actor = wallNozzleFlameActors[i];
+    const f1 = Math.sin(t * actor.speedA + actor.phase);
+    const f2 = Math.sin(t * actor.speedB + actor.phase * 1.41);
+    const f3 = Math.sin(t * actor.speedC + actor.phase * 2.07);
+    const flicker = 0.60 + f1 * 0.16 + f2 * 0.11 + f3 * 0.05;
+    const flare = Math.max(0, f2) * 0.18;
+    actor.flame.position.x = actor.flame.userData.baseX + f2 * actor.sway;
+    actor.flame.position.y = actor.flame.userData.baseY + actor.lift * (0.45 + flicker);
+    actor.flame.position.z = actor.flame.userData.baseZ;
+    actor.flame.rotation.y = actor.flame.userData.baseRotY + f3 * 0.04;
+    actor.flame.rotation.z = actor.flame.userData.baseRotZ + f1 * 0.03;
+    actor.flame.scale.set(
+      0.94 + flicker * 0.10 + f3 * actor.widthPulse * 0.5,
+      0.92 + flicker * 0.18 + flare * 0.08,
+      0.96 + flicker * 0.06
+    );
+    actor.iconMat.opacity = 0.76 + flicker * 0.16 + flare * 0.08;
+    actor.glowMat.opacity = 0.18 + flicker * 0.18 + flare * 0.08;
+    actor.glow.scale.set(
+      0.92 + flicker * 0.22,
+      0.82 + flicker * 0.14,
+      1
+    );
+  }
+}
+
 function makeBurnerDiscTex(size) {
   const cv = document.createElement("canvas");
   cv.width = size;
@@ -2257,6 +2448,16 @@ function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
         crown.rotation.z = Math.sin(a) * 0.05;
         faceGroup.add(crown);
       }
+
+      const flameSeed = Math.abs(Math.sin((bx * 2.17) + (yOff * 3.11) + (dir * 1.73))) * 1000;
+      addWallNozzleFireIcon(
+        faceGroup,
+        flameSeed,
+        bx,
+        yOff + QUARL_H + 0.004,
+        PIPE_Z + dir * 0.058,
+        dir
+      );
     }
   });
 }
@@ -2621,7 +2822,7 @@ function animate(now){
   requestAnimationFrame(animate);
 
   const canRender = canRenderNow();
-  const hasAnimatedFlames = hasAnimatedInteriorFlames();
+  const hasAnimatedFlames = hasAnimatedInteriorFlames() || hasAnimatedWallNozzleFlames();
   const frameBudget = !canRender
     ? SLEEP_FRAME_MS
     : (hostFocused || hasAnimatedFlames)
@@ -2650,6 +2851,7 @@ function animate(now){
 
   if(hasAnimatedFlames){
     animateInteriorFlames(now * 0.001);
+    animateWallNozzleFlames(now * 0.001);
     frameNeedsRender = true;
   }
 
