@@ -390,6 +390,104 @@ let hostFocused = true;
 let lastRenderTs = 0;
 let forceNextRender = true;
 let viewMode = "shell";
+let pushedCuboidLiveData = null;
+let pushedCuboidLiveDigest = "";
+let pendingWallBurnerColorSync = false;
+
+function cuboidGetParentApp(){
+  try{
+    if(window.parent && window.parent !== window && window.parent.location && window.parent.location.origin === window.location.origin){
+      return window.parent;
+    }
+  }catch(_e){}
+  return null;
+}
+
+function cuboidCloneJson(value){
+  try{
+    return JSON.parse(JSON.stringify(value == null ? null : value));
+  }catch(_e){}
+  return null;
+}
+
+function cuboidConsumeLiveState(payload, digest){
+  const nextDigest = String(digest || "");
+  const nextPayload = (payload && typeof payload === "object") ? cuboidCloneJson(payload) : null;
+  if(!nextPayload) return false;
+  if(nextDigest && nextDigest === pushedCuboidLiveDigest) return false;
+  pushedCuboidLiveDigest = nextDigest || ("cuboid-live-" + Date.now());
+  pushedCuboidLiveData = nextPayload;
+  return true;
+}
+
+function cuboidPrimeLiveDataFromHost(){
+  const hostApp = cuboidGetParentApp();
+  if(!hostApp || typeof hostApp.cuboidHostGetLiveState !== "function") return false;
+  try{
+    const state = hostApp.cuboidHostGetLiveState();
+    if(!state || !state.payload) return false;
+    return cuboidConsumeLiveState(state.payload, state.digest);
+  }catch(_e){}
+  return false;
+}
+
+function cuboidNormalizeBurnerState(raw){
+  const s = String(raw == null ? "" : raw).toUpperCase().trim();
+  if(s === "O" || s === "N" || s === "B" || s === "C") return s;
+  return "C";
+}
+
+function cuboidSanitizeBurnerSnapshot(source){
+  const walls = ["A", "B", "C", "D"];
+  const out = {};
+  const src = source && typeof source === "object" ? source : {};
+  for(let wi = 0; wi < walls.length; wi++){
+    const wall = walls[wi];
+    const srcRows = Array.isArray(src[wall]) ? src[wall] : [];
+    out[wall] = [];
+    for(let ri = 0; ri < 6; ri++){
+      const srcRow = Array.isArray(srcRows[ri]) ? srcRows[ri] : [];
+      const row = [];
+      for(let bi = 0; bi < 15; bi++) row.push(cuboidNormalizeBurnerState(srcRow[bi]));
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
+function cuboidBuildDefaultBurnerData(){
+  const defaultPatterns = [
+    ["N", "O", "N", "B", "N", "O", "N", "O", "B", "N", "O", "N", "O", "N", "O"],
+    ["O", "N", "O", "N", "O", "B", "O", "N", "O", "N", "B", "O", "N", "O", "N"],
+    ["B", "N", "O", "N", "N", "O", "N", "O", "N", "O", "N", "O", "B", "N", "O"],
+    ["N", "O", "B", "O", "N", "O", "N", "B", "O", "N", "O", "N", "O", "O", "N"],
+    ["O", "N", "N", "O", "B", "N", "O", "N", "O", "B", "N", "O", "N", "N", "O"],
+    ["N", "B", "O", "N", "O", "N", "O", "N", "B", "O", "N", "O", "N", "O", "N"]
+  ];
+  const walls = ["A", "B", "C", "D"];
+  const hmData = {};
+  for(let wi = 0; wi < walls.length; wi++){
+    hmData[walls[wi]] = [];
+    for(let ri = 0; ri < 6; ri++){
+      hmData[walls[wi]].push(defaultPatterns[(ri + wi) % defaultPatterns.length].slice());
+    }
+  }
+  return hmData;
+}
+
+function cuboidLoadBurnerData(){
+  if(!pushedCuboidLiveData) cuboidPrimeLiveDataFromHost();
+  if(pushedCuboidLiveData && pushedCuboidLiveData.hmData){
+    return cuboidSanitizeBurnerSnapshot(pushedCuboidLiveData.hmData);
+  }
+  return cuboidBuildDefaultBurnerData();
+}
+
+function cuboidGetWallKeyForFace(faceKey){
+  if(faceKey === "face1") return chamberZoneKey === "CD" ? "C" : "A";
+  if(faceKey === "face2") return chamberZoneKey === "CD" ? "D" : "B";
+  return chamberZoneKey === "CD" ? "C" : "A";
+}
 
 function viewportWidth(){ return vp.clientWidth; }
 function viewportHeight(){ return vp.clientHeight; }
@@ -474,8 +572,17 @@ window.addEventListener("message", function(event){
     hostInView = data.inView !== false;
     hostFocused = data.focused !== false;
     markDirty();
+    return;
+  }
+  if(data.type === "cuboid-live-data"){
+    if(cuboidConsumeLiveState(data.payload, data.digest)){
+      pendingWallBurnerColorSync = true;
+      markDirty();
+    }
   }
 });
+
+cuboidPrimeLiveDataFromHost();
 
 const renderer = new THREE.WebGLRenderer({
   antialias:true,
@@ -1597,13 +1704,49 @@ function animateInteriorFlames(t) {
   }
 }
 
-function makeNozzleFireIconTex(width, height) {
+function cuboidGetBurnerPalette(state){
+  return {
+    O:{flame:"#22c55e", core:"#86efac", inner:"#ecfdf5", stem:"#15803d", glow:"rgba(34,197,94,0.52)"},
+    N:{flame:"#f59e0b", core:"#fcd34d", inner:"#fef3c7", stem:"#b45309", glow:"rgba(245,158,11,0.54)"},
+    B:{flame:"#3b82f6", core:"#93c5fd", inner:"#dbeafe", stem:"#1d4ed8", glow:"rgba(59,130,246,0.54)"},
+    C:{flame:"#6b7280", core:"#d7dde6", inner:"#f8fafc", stem:"#4b5563", glow:"rgba(226,232,240,0.12)"}
+  }[state] || {flame:"#6b7280", core:"#d7dde6", inner:"#f8fafc", stem:"#4b5563", glow:"rgba(226,232,240,0.12)"};
+}
+
+function cuboidColorToRgba(hex, alpha){
+  const c = new THREE.Color(hex);
+  return "rgba(" +
+    Math.round(c.r * 255) + "," +
+    Math.round(c.g * 255) + "," +
+    Math.round(c.b * 255) + "," +
+    Math.max(0, Math.min(1, alpha)) +
+  ")";
+}
+
+function cuboidBlendHex(a, b, t){
+  const ca = new THREE.Color(a);
+  const cb = new THREE.Color(b);
+  const cc = ca.clone().lerp(cb, Math.max(0, Math.min(1, t)));
+  return "#" + cc.getHexString();
+}
+
+function makeNozzleFireIconTex(width, height, paletteInput) {
   const cv = document.createElement("canvas");
   cv.width = width;
   cv.height = height;
   const g = cv.getContext("2d");
   const w = width;
   const h = height;
+  const palette = paletteInput || cuboidGetBurnerPalette("N");
+  const outerHot = cuboidBlendHex(palette.flame, palette.core, 0.16);
+  const outerMid = cuboidBlendHex(palette.flame, "#f0641e", 0.10);
+  const outerLow = cuboidBlendHex(palette.flame, palette.stem, 0.22);
+  const outline = cuboidBlendHex(palette.stem, "#250b05", 0.26);
+  const midHot = cuboidBlendHex(palette.core, palette.inner, 0.28);
+  const midLow = cuboidBlendHex(palette.flame, palette.core, 0.48);
+  const coreMid = cuboidBlendHex(palette.inner, palette.core, 0.36);
+  const emberA = cuboidBlendHex(palette.flame, palette.stem, 0.34);
+  const emberB = cuboidBlendHex(palette.core, palette.flame, 0.44);
 
   function drawFlamePath(cx, by, fw, fh) {
     g.beginPath();
@@ -1628,28 +1771,28 @@ function makeNozzleFireIconTex(width, height) {
   }
 
   g.clearRect(0, 0, w, h);
-  g.shadowColor = "rgba(255,124,32,0.28)";
+  g.shadowColor = cuboidColorToRgba(outerMid, 0.28);
   g.shadowBlur = h * 0.05;
 
   drawFlamePath(w * 0.50, h * 0.80, w * 0.62, h * 0.56);
   const outerGrad = g.createLinearGradient(0, h * 0.10, 0, h * 0.92);
-  outerGrad.addColorStop(0.00, "#ffbf2f");
-  outerGrad.addColorStop(0.24, "#ff8a22");
-  outerGrad.addColorStop(0.62, "#f85d20");
-  outerGrad.addColorStop(1.00, "#c81d0a");
+  outerGrad.addColorStop(0.00, outerHot);
+  outerGrad.addColorStop(0.24, outerMid);
+  outerGrad.addColorStop(0.62, outerLow);
+  outerGrad.addColorStop(1.00, palette.stem);
   g.fillStyle = outerGrad;
   g.fill();
   g.lineWidth = w * 0.018;
-  g.strokeStyle = "rgba(179,34,0,0.55)";
+  g.strokeStyle = cuboidColorToRgba(outline, 0.55);
   g.stroke();
 
   g.shadowBlur = h * 0.03;
   drawFlamePath(w * 0.50, h * 0.83, w * 0.42, h * 0.40);
   const midGrad = g.createLinearGradient(0, h * 0.22, 0, h * 0.88);
-  midGrad.addColorStop(0.00, "#ffe15f");
-  midGrad.addColorStop(0.32, "#ffbd32");
-  midGrad.addColorStop(0.74, "#ff8a20");
-  midGrad.addColorStop(1.00, "#f0641e");
+  midGrad.addColorStop(0.00, midHot);
+  midGrad.addColorStop(0.32, palette.core);
+  midGrad.addColorStop(0.74, midLow);
+  midGrad.addColorStop(1.00, cuboidBlendHex(palette.flame, palette.stem, 0.14));
   g.fillStyle = midGrad;
   g.fill();
 
@@ -1657,16 +1800,16 @@ function makeNozzleFireIconTex(width, height) {
   drawFlamePath(w * 0.50, h * 0.86, w * 0.24, h * 0.24);
   const coreGrad = g.createLinearGradient(0, h * 0.36, 0, h * 0.90);
   coreGrad.addColorStop(0.00, "#fffef8");
-  coreGrad.addColorStop(0.38, "#fff4aa");
-  coreGrad.addColorStop(1.00, "#ffd35a");
+  coreGrad.addColorStop(0.38, palette.inner);
+  coreGrad.addColorStop(1.00, coreMid);
   g.fillStyle = coreGrad;
   g.fill();
 
   g.shadowBlur = 0;
-  drawDrop(w * 0.24, h * 0.18, w * 0.030, h * 0.050, "rgba(222,79,38,0.95)");
-  drawDrop(w * 0.76, h * 0.22, w * 0.026, h * 0.043, "rgba(230,96,42,0.92)");
-  drawDrop(w * 0.15, h * 0.33, w * 0.020, h * 0.036, "rgba(240,122,48,0.88)");
-  drawDrop(w * 0.86, h * 0.36, w * 0.020, h * 0.034, "rgba(238,112,44,0.88)");
+  drawDrop(w * 0.24, h * 0.18, w * 0.030, h * 0.050, cuboidColorToRgba(emberA, 0.95));
+  drawDrop(w * 0.76, h * 0.22, w * 0.026, h * 0.043, cuboidColorToRgba(emberB, 0.92));
+  drawDrop(w * 0.15, h * 0.33, w * 0.020, h * 0.036, cuboidColorToRgba(midLow, 0.88));
+  drawDrop(w * 0.86, h * 0.36, w * 0.020, h * 0.034, cuboidColorToRgba(outerMid, 0.88));
 
   const tex = new THREE.CanvasTexture(cv);
   if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
@@ -1675,16 +1818,17 @@ function makeNozzleFireIconTex(width, height) {
   return tex;
 }
 
-function makeNozzleFireGlowTex(size) {
+function makeNozzleFireGlowTex(size, paletteInput) {
   const cv = document.createElement("canvas");
   cv.width = size;
   cv.height = size;
   const g = cv.getContext("2d");
+  const palette = paletteInput || cuboidGetBurnerPalette("N");
   const grad = g.createRadialGradient(size * 0.5, size * 0.68, size * 0.04, size * 0.5, size * 0.68, size * 0.46);
-  grad.addColorStop(0.00, "rgba(255,245,192,0.94)");
-  grad.addColorStop(0.28, "rgba(255,189,80,0.76)");
-  grad.addColorStop(0.62, "rgba(255,108,34,0.30)");
-  grad.addColorStop(1.00, "rgba(255,108,34,0.00)");
+  grad.addColorStop(0.00, cuboidColorToRgba(palette.inner, 0.94));
+  grad.addColorStop(0.28, cuboidColorToRgba(palette.core, 0.76));
+  grad.addColorStop(0.62, cuboidColorToRgba(palette.flame, 0.30));
+  grad.addColorStop(1.00, cuboidColorToRgba(palette.flame, 0.00));
   g.fillStyle = grad;
   g.fillRect(0, 0, size, size);
   const tex = new THREE.CanvasTexture(cv);
@@ -1694,8 +1838,23 @@ function makeNozzleFireGlowTex(size) {
   return tex;
 }
 
-const nozzleFireIconTex = makeNozzleFireIconTex(256, 320);
-const nozzleFireGlowTex = makeNozzleFireGlowTex(192);
+const nozzleFireStateMapCache = Object.create(null);
+
+function getNozzleFireStateMaps(state){
+  const liveState = cuboidNormalizeBurnerState(state);
+  if(nozzleFireStateMapCache[liveState]) return nozzleFireStateMapCache[liveState];
+  const palette = cuboidGetBurnerPalette(liveState);
+  const maps = {
+    palette: palette,
+    iconTex: makeNozzleFireIconTex(256, 320, palette),
+    glowTex: makeNozzleFireGlowTex(192, palette)
+  };
+  nozzleFireStateMapCache[liveState] = maps;
+  return maps;
+}
+
+const nozzleFireIconTex = getNozzleFireStateMaps("N").iconTex;
+const nozzleFireGlowTex = getNozzleFireStateMaps("N").glowTex;
 const nozzleFireIconMat = new THREE.MeshBasicMaterial({
   map: nozzleFireIconTex,
   transparent: true,
@@ -1722,7 +1881,7 @@ function hasAnimatedWallNozzleFlames() {
   return wallNozzleFlameActors.length > 0;
 }
 
-function addWallNozzleFireIcon(parent, seed, posX, posY, posZ, dir) {
+function addWallNozzleFireIcon(parent, seed, posX, posY, posZ, dir, liveMeta) {
   const flame = new THREE.Group();
   flame.position.set(posX, posY, posZ);
   flame.rotation.y = dir > 0 ? 0 : Math.PI;
@@ -1751,6 +1910,14 @@ function addWallNozzleFireIcon(parent, seed, posX, posY, posZ, dir) {
     iconMat: iconMat,
     glowMat: glowMat,
     glow: glow,
+    faceKey: liveMeta && liveMeta.faceKey ? liveMeta.faceKey : "",
+    rowIndex: liveMeta && Number.isFinite(liveMeta.rowIndex) ? liveMeta.rowIndex : -1,
+    burnerIndex: liveMeta && Number.isFinite(liveMeta.burnerIndex) ? liveMeta.burnerIndex : -1,
+    liveState: "N",
+    iconBaseOpacity: 0.84,
+    glowBaseOpacity: 0.22,
+    glowIntensity: 1,
+    scaleBias: 1,
     phase: seed * 0.21,
     speedA: 4.8 + (seed % 0.8),
     speedB: 7.6 + (seed % 1.1),
@@ -1776,17 +1943,58 @@ function animateWallNozzleFlames(t) {
     actor.flame.rotation.y = actor.flame.userData.baseRotY + f3 * 0.04;
     actor.flame.rotation.z = actor.flame.userData.baseRotZ + f1 * 0.03;
     actor.flame.scale.set(
-      0.94 + flicker * 0.10 + f3 * actor.widthPulse * 0.5,
-      0.92 + flicker * 0.18 + flare * 0.08,
-      0.96 + flicker * 0.06
+      (0.94 + flicker * 0.10 + f3 * actor.widthPulse * 0.5) * actor.scaleBias,
+      (0.92 + flicker * 0.18 + flare * 0.08) * actor.scaleBias,
+      (0.96 + flicker * 0.06) * actor.scaleBias
     );
-    actor.iconMat.opacity = 0.76 + flicker * 0.16 + flare * 0.08;
-    actor.glowMat.opacity = 0.18 + flicker * 0.18 + flare * 0.08;
+    actor.iconMat.opacity = actor.iconBaseOpacity + ((flicker * 0.14) + (flare * 0.06)) * actor.glowIntensity;
+    actor.glowMat.opacity = actor.glowBaseOpacity + ((flicker * 0.16) + (flare * 0.07)) * actor.glowIntensity;
     actor.glow.scale.set(
       0.92 + flicker * 0.22,
       0.82 + flicker * 0.14,
       1
     );
+  }
+}
+
+function applyWallBurnerStateColors() {
+  const hmData = cuboidLoadBurnerData();
+  for (let i = 0; i < wallNozzleFlameActors.length; i++) {
+    const actor = wallNozzleFlameActors[i];
+    if (!actor || !actor.faceKey || actor.rowIndex < 0 || actor.burnerIndex < 0) continue;
+    const wallKey = cuboidGetWallKeyForFace(actor.faceKey);
+    const wallRows = hmData && hmData[wallKey] ? hmData[wallKey] : [];
+    const row = Array.isArray(wallRows[actor.rowIndex]) ? wallRows[actor.rowIndex] : [];
+    const liveState = cuboidNormalizeBurnerState(row[actor.burnerIndex]);
+    const maps = getNozzleFireStateMaps(liveState);
+    actor.liveState = liveState;
+    actor.iconMat.map = maps.iconTex;
+    actor.iconMat.color.set(0xffffff);
+    actor.iconMat.needsUpdate = true;
+    actor.glowMat.map = maps.glowTex;
+    actor.glowMat.color.set(maps.palette.core);
+    actor.glowMat.needsUpdate = true;
+    if (liveState === "C") {
+      actor.iconBaseOpacity = 0.50;
+      actor.glowBaseOpacity = 0.05;
+      actor.glowIntensity = 0.34;
+      actor.scaleBias = 0.92;
+    } else if (liveState === "B") {
+      actor.iconBaseOpacity = 0.83;
+      actor.glowBaseOpacity = 0.20;
+      actor.glowIntensity = 0.98;
+      actor.scaleBias = 1.00;
+    } else if (liveState === "O") {
+      actor.iconBaseOpacity = 0.87;
+      actor.glowBaseOpacity = 0.24;
+      actor.glowIntensity = 1.05;
+      actor.scaleBias = 1.03;
+    } else {
+      actor.iconBaseOpacity = 0.85;
+      actor.glowBaseOpacity = 0.22;
+      actor.glowIntensity = 1.00;
+      actor.scaleBias = 1.01;
+    }
   }
 }
 
@@ -2510,7 +2718,7 @@ function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
   const gCrown = new THREE.BoxGeometry(CROWN_W, CROWN_H, CROWN_D);
   const gFeed = new THREE.CylinderGeometry(FEED_R, FEED_R * 1.08, FEED_L, 16, 1, false);
 
-  rowY.forEach(function(ry) {
+  rowY.forEach(function(ry, rowIndex) {
     const topOfPipe = ry + MAN_R;
 
     for (let b = 0; b < NUM_B; b++) {
@@ -2571,7 +2779,8 @@ function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
         bx,
         yOff + QUARL_H - 0.002,
         PIPE_Z + dir * 0.196,
-        dir
+        dir,
+        { faceKey: faceKey, rowIndex: rowIndex, burnerIndex: b }
       );
     }
   });
@@ -2677,6 +2886,8 @@ buildWallTubeAssembly("face1", (FD / 2) + 0.02);
 buildWallTubeAssembly("face2", -(FD / 2) - 0.02);
 buildWallNozzleAssembly("face1", (FD / 2) + 0.02, 1);
 buildWallNozzleAssembly("face2", -(FD / 2) - 0.02, -1);
+applyWallBurnerStateColors();
+pendingWallBurnerColorSync = false;
 buildWallLabelOverlay("face1", (FD / 2) + 0.02, 1);
 buildWallLabelOverlay("face2", -(FD / 2) - 0.02, -1);
 
@@ -3021,6 +3232,12 @@ function animate(now){
   if(hasAnimatedFlames){
     animateInteriorFlames(now * 0.001);
     animateWallNozzleFlames(now * 0.001);
+    frameNeedsRender = true;
+  }
+
+  if(pendingWallBurnerColorSync){
+    applyWallBurnerStateColors();
+    pendingWallBurnerColorSync = false;
     frameNeedsRender = true;
   }
 
