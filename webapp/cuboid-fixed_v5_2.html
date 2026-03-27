@@ -2159,126 +2159,165 @@ function cuboidTempToColor(value){
 }
 
 const wallTstBarActors = [];
-const wallTstValueTextureCache = new Map();
 
-function makeWallTstValueTexture(text) {
-  const key = String(text || "--");
-  if (wallTstValueTextureCache.has(key)) return wallTstValueTextureCache.get(key);
-
-  const cv = document.createElement("canvas");
-  cv.width = 512;
-  cv.height = 160;
-  const g = cv.getContext("2d");
-  const w = cv.width;
-  const h = cv.height;
-
-  g.clearRect(0, 0, w, h);
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.lineJoin = "round";
-  g.shadowColor = "rgba(0,0,0,0.36)";
-  g.shadowBlur = 10;
-  g.shadowOffsetY = 2;
-  g.font = "900 92px Georgia";
-  g.strokeStyle = "rgba(10,14,22,0.86)";
-  g.lineWidth = 16;
-  g.strokeText(key, w * 0.5, h * 0.56);
-  g.shadowBlur = 0;
-  const fillGrad = g.createLinearGradient(0, h * 0.20, 0, h * 0.84);
-  fillGrad.addColorStop(0.00, "#fff8e1");
-  fillGrad.addColorStop(1.00, "#fff2bf");
-  g.fillStyle = fillGrad;
-  g.fillText(key, w * 0.5, h * 0.56);
-
-  const tex = new THREE.CanvasTexture(cv);
-  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
-  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-  tex.needsUpdate = true;
-  wallTstValueTextureCache.set(key, tex);
-  return tex;
+function cuboidDrawTstBarText(ctx, text, x, y, options) {
+  const opts = options || {};
+  ctx.save();
+  ctx.font = opts.font || "900 44px 'Courier New', monospace";
+  ctx.textAlign = opts.align || "center";
+  ctx.textBaseline = opts.baseline || "middle";
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.strokeStyle = opts.stroke || "rgba(12,10,8,0.88)";
+  ctx.lineWidth = opts.lineWidth == null ? 8 : opts.lineWidth;
+  ctx.shadowColor = opts.shadow || "rgba(0,0,0,0.40)";
+  ctx.shadowBlur = opts.shadowBlur == null ? 7 : opts.shadowBlur;
+  ctx.shadowOffsetY = opts.shadowOffsetY == null ? 2 : opts.shadowOffsetY;
+  if(opts.stroke !== null && ctx.lineWidth > 0){
+    ctx.strokeText(text, x, y);
+  }
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.fillStyle = opts.fill || "#fff4cf";
+  ctx.fillText(text, x, y);
+  ctx.restore();
 }
 
-function createWallTstValueMesh(text, dir, width, height) {
-  const mat = new THREE.MeshBasicMaterial({
-    map: makeWallTstValueTexture(text),
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    alphaTest: 0.04,
-    polygonOffset: true,
-    polygonOffsetFactor: -1,
-    polygonOffsetUnits: -2
-  });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), mat);
-  if (dir < 0) mesh.rotation.y = Math.PI;
-  return { mesh: mesh, mat: mat };
+function paintWallTstBarCanvas(canvas, values) {
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  const vals = cuboidSanitizeTstRow(values);
+  const barLeft = 36;
+  const barTop = 52;
+  const barW = w - 72;
+  const barH = h - 104;
+  const slotW = barW / 15;
+  const barCenterY = barTop + barH * 0.5;
+  const positions = [];
+
+  ctx.clearRect(0, 0, w, h);
+
+  for(let i = 0; i < 15; i++){
+    const n = Number(vals[i]);
+    if(isFinite(n)) positions.push({ idx: i, val: n });
+  }
+
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  roundedRectPath(ctx, barLeft, barTop + 10, barW, barH, barH * 0.48);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  roundedRectPath(ctx, barLeft, barTop, barW, barH, barH * 0.48);
+  ctx.clip();
+  const fillGrad = ctx.createLinearGradient(barLeft, 0, barLeft + barW, 0);
+  if(positions.length){
+    fillGrad.addColorStop(0, cuboidTempToColor(positions[0].val));
+    for(let p = 0; p < positions.length; p++){
+      const stop = (positions[p].idx + 0.5) / 15;
+      fillGrad.addColorStop(Math.max(0, Math.min(1, stop)), cuboidTempToColor(positions[p].val));
+    }
+    fillGrad.addColorStop(1, cuboidTempToColor(positions[positions.length - 1].val));
+  }else{
+    fillGrad.addColorStop(0, "#f0b544");
+    fillGrad.addColorStop(1, "#f0b544");
+  }
+  ctx.fillStyle = fillGrad;
+  ctx.fillRect(barLeft, barTop, barW, barH);
+
+  const sheen = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
+  sheen.addColorStop(0.00, "rgba(255,255,255,0.24)");
+  sheen.addColorStop(0.26, "rgba(255,255,255,0.08)");
+  sheen.addColorStop(0.62, "rgba(255,255,255,0.00)");
+  sheen.addColorStop(1.00, "rgba(0,0,0,0.08)");
+  ctx.fillStyle = sheen;
+  ctx.fillRect(barLeft, barTop, barW, barH);
+  ctx.restore();
+
+  ctx.strokeStyle = "rgba(255,238,190,0.78)";
+  ctx.lineWidth = 5;
+  roundedRectPath(ctx, barLeft, barTop, barW, barH, barH * 0.48);
+  ctx.stroke();
+
+  for(let i = 0; i < 15; i++){
+    const markerX = barLeft + slotW * (i + 0.5);
+    ctx.strokeStyle = "rgba(255,248,210,0.34)";
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(markerX, barTop + 10);
+    ctx.lineTo(markerX, barTop + barH - 10);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(markerX, barCenterY, barH * 0.17, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,239,178,0.16)";
+    ctx.fill();
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "rgba(255,244,188,0.72)";
+    ctx.stroke();
+
+    const tempVal = Number(vals[i]);
+    cuboidDrawTstBarText(
+      ctx,
+      isFinite(tempVal) ? (Math.round(tempVal) + "°") : "--",
+      markerX,
+      barTop + barH * 0.28,
+      {
+        font: "900 40px 'Courier New', monospace",
+        fill: isFinite(tempVal) ? "#fff4cf" : "rgba(255,244,207,0.74)",
+        stroke: "rgba(26,18,10,0.84)",
+        lineWidth: 8,
+        shadowBlur: 6
+      }
+    );
+  }
 }
 
 function addWallTstBar(faceGroup, faceKey, part, centerY, panelW, panelH, centerX, panelZ, dir) {
-  const trackRadius = panelH * 0.5;
-  const track = new THREE.Mesh(
-    new THREE.CylinderGeometry(trackRadius, trackRadius, panelW, 32, 1, false),
+  const backPlate = new THREE.Mesh(
+    new THREE.BoxGeometry(panelW, panelH, 0.014),
     new THREE.MeshStandardMaterial({
-      color: 0x1c2127,
-      roughness: 0.30,
-      metalness: 0.18
+      color: 0x1a1410,
+      roughness: 0.38,
+      metalness: 0.10
     })
   );
-  track.rotation.z = Math.PI / 2;
-  track.scale.z = 0.18;
-  track.position.set(centerX, centerY, panelZ);
-  faceGroup.add(track);
+  backPlate.position.set(centerX, centerY, panelZ);
+  faceGroup.add(backPlate);
 
-  const sheen = new THREE.Mesh(
-    new THREE.CylinderGeometry(trackRadius * 0.94, trackRadius * 0.94, panelW * 0.985, 32, 1, false),
+  const canvas = document.createElement("canvas");
+  canvas.width = 2048;
+  canvas.height = 300;
+  const texture = new THREE.CanvasTexture(canvas);
+  if (THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.needsUpdate = true;
+
+  const barPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(panelW, panelH),
     new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+      map: texture,
       transparent: true,
-      opacity: 0.06,
-      depthWrite: false
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      alphaTest: 0.04,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -2
     })
   );
-  sheen.rotation.z = Math.PI / 2;
-  sheen.scale.z = 0.03;
-  sheen.position.set(centerX, centerY + (panelH * 0.18), panelZ + dir * 0.010);
-  faceGroup.add(sheen);
+  barPlane.position.set(centerX, centerY, panelZ + dir * 0.010);
+  if (dir < 0) barPlane.rotation.y = Math.PI;
+  faceGroup.add(barPlane);
 
-  const innerW = panelW - panelH * 0.34;
-  const innerH = panelH * 0.72;
-  const slotW = innerW / 15;
-  const startX = centerX - innerW * 0.5 + slotW * 0.5;
-  const segmentZ = panelZ + dir * 0.006;
-  const labelZ = panelZ + dir * 0.020;
-  const actor = {
+  wallTstBarActors.push({
     faceKey: faceKey,
     part: part,
-    segmentMats: [],
-    labelMats: []
-  };
-
-  for (let i = 0; i < 15; i++) {
-    const segMat = new THREE.MeshStandardMaterial({
-      color: 0x64748b,
-      roughness: 0.24,
-      metalness: 0.10,
-      emissive: 0x000000,
-      emissiveIntensity: 0.00
-    });
-    const seg = new THREE.Mesh(
-      new THREE.BoxGeometry(slotW + 0.028, innerH, 0.018),
-      segMat
-    );
-    seg.position.set(startX + slotW * i, centerY, segmentZ);
-    faceGroup.add(seg);
-    actor.segmentMats.push(segMat);
-
-    const tempLabel = createWallTstValueMesh("--", dir, Math.min(slotW * 0.84, 0.46), innerH * 0.30);
-    tempLabel.mesh.position.set(startX + slotW * i, centerY, labelZ);
-    faceGroup.add(tempLabel.mesh);
-    actor.labelMats.push(tempLabel.mat);
-  }
-
-  wallTstBarActors.push(actor);
+    canvas: canvas,
+    texture: texture
+  });
 }
 
 function buildWallTstBars(faceKey, faceZ, outwardDir) {
@@ -2306,16 +2345,16 @@ function buildWallTstBars(faceKey, faceZ, outwardDir) {
     if (i < 5) y += unitGap * gapW[i];
   }
 
-  const panelLeft = pipeXL + 0.16;
-  const panelRight = pipeXR - 0.12;
+  const panelLeft = pipeXL + 0.08;
+  const panelRight = pipeXR - 0.06;
   const panelW = panelRight - panelLeft;
   const panelCenterLocalX = (panelLeft + panelRight) * 0.5;
   const panelCenterX = faceXDir * panelCenterLocalX;
   const bottomGap = rowY[1] - rowY[0];
   const topGap = rowY[3] - rowY[2];
-  const panelHBot = Math.min(0.64, Math.max(0.44, bottomGap * 0.58));
-  const panelHTop = Math.min(0.64, Math.max(0.44, topGap * 0.58));
-  const panelZ = PIPE_Z + dir * 0.308;
+  const panelHBot = Math.min(0.56, Math.max(0.40, bottomGap * 0.50));
+  const panelHTop = Math.min(0.56, Math.max(0.40, topGap * 0.50));
+  const panelZ = PIPE_Z + dir * 0.298;
 
   addWallTstBar(faceGroup, faceKey, "top", (rowY[2] + rowY[3]) * 0.5, panelW, panelHTop, panelCenterX, panelZ, dir);
   addWallTstBar(faceGroup, faceKey, "bot", (rowY[0] + rowY[1]) * 0.5, panelW, panelHBot, panelCenterX, panelZ, dir);
@@ -2325,25 +2364,9 @@ function applyWallTstBarTextures() {
   const zoneRows = cuboidLoadZoneTstRows();
   for (let i = 0; i < wallTstBarActors.length; i++) {
     const actor = wallTstBarActors[i];
-    if (!actor) continue;
-    const vals = actor.part === "top" ? zoneRows.top : zoneRows.bot;
-    for (let j = 0; j < 15; j++) {
-      const tempVal = Number(Array.isArray(vals) ? vals[j] : "");
-      const tempColor = isFinite(tempVal) ? cuboidTempToColor(tempVal) : "#64748b";
-      const tempText = isFinite(tempVal) ? String(Math.round(tempVal)) : "--";
-      const segMat = actor.segmentMats[j];
-      if (segMat) {
-        segMat.color.set(tempColor);
-        segMat.emissive.set(tempColor);
-        segMat.emissiveIntensity = isFinite(tempVal) ? 0.12 : 0.02;
-      }
-      const labelMat = actor.labelMats[j];
-      if (labelMat) {
-        labelMat.map = makeWallTstValueTexture(tempText);
-        labelMat.opacity = isFinite(tempVal) ? 0.98 : 0.72;
-        labelMat.needsUpdate = true;
-      }
-    }
+    if (!actor || !actor.canvas || !actor.texture) continue;
+    paintWallTstBarCanvas(actor.canvas, actor.part === "top" ? zoneRows.top : zoneRows.bot);
+    actor.texture.needsUpdate = true;
   }
 }
 
