@@ -2215,20 +2215,6 @@ function paintWallTstBarCanvas(canvas, values) {
     const x = barLeft + (i * slotW);
     ctx.fillStyle = fill;
     ctx.fillRect(x, barTop, Math.ceil(slotW) + 1, barH);
-    cuboidDrawTstBarText(
-      ctx,
-      isFinite(tempVal) ? (Math.round(tempVal) + "°C") : "--",
-      x + (slotW * 0.5),
-      barTop + (barH * 0.5),
-      {
-        font: "900 42px 'Segoe UI', 'Arial Narrow', sans-serif",
-        fill: "rgba(0,0,0,0.82)",
-        stroke: null,
-        shadow: "rgba(255,255,255,0.10)",
-        shadowBlur: 1,
-        shadowOffsetY: 0
-      }
-    );
     if(i > 0){
       ctx.fillStyle = "rgba(255,255,255,0.06)";
       ctx.fillRect(x, barTop, 1, barH);
@@ -2236,10 +2222,10 @@ function paintWallTstBarCanvas(canvas, values) {
   }
 
   const glass = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
-  glass.addColorStop(0.00, "rgba(255,255,255,0.30)");
-  glass.addColorStop(0.35, "rgba(255,255,255,0.08)");
+  glass.addColorStop(0.00, "rgba(255,255,255,0.20)");
+  glass.addColorStop(0.35, "rgba(255,255,255,0.05)");
   glass.addColorStop(0.50, "rgba(0,0,0,0.02)");
-  glass.addColorStop(1.00, "rgba(0,0,0,0.12)");
+  glass.addColorStop(1.00, "rgba(0,0,0,0.08)");
   ctx.fillStyle = glass;
   ctx.fillRect(barLeft, barTop, barW, barH);
 
@@ -2249,13 +2235,32 @@ function paintWallTstBarCanvas(canvas, values) {
   const specH = Math.max(8, barH * 0.18);
   const specGrad = ctx.createLinearGradient(specLeft, 0, specLeft + specW, 0);
   specGrad.addColorStop(0.00, "rgba(255,255,255,0.00)");
-  specGrad.addColorStop(0.20, "rgba(255,255,255,0.18)");
-  specGrad.addColorStop(0.50, "rgba(255,255,255,0.25)");
-  specGrad.addColorStop(0.80, "rgba(255,255,255,0.18)");
+  specGrad.addColorStop(0.20, "rgba(255,255,255,0.10)");
+  specGrad.addColorStop(0.50, "rgba(255,255,255,0.16)");
+  specGrad.addColorStop(0.80, "rgba(255,255,255,0.10)");
   specGrad.addColorStop(1.00, "rgba(255,255,255,0.00)");
   roundedRectPath(ctx, specLeft, specTop, specW, specH, specH);
   ctx.fillStyle = specGrad;
   ctx.fill();
+
+  for(let i = 0; i < 15; i++){
+    const tempVal = Number(vals[i]);
+    const x = barLeft + (i * slotW);
+    cuboidDrawTstBarText(
+      ctx,
+      isFinite(tempVal) ? (Math.round(tempVal) + "°C") : "--",
+      x + (slotW * 0.5),
+      barTop + (barH * 0.51),
+      {
+        font: "900 50px 'Segoe UI', 'Arial Narrow', sans-serif",
+        fill: "rgba(8,8,8,0.94)",
+        stroke: null,
+        shadow: "rgba(255,255,255,0.18)",
+        shadowBlur: 1,
+        shadowOffsetY: 0
+      }
+    );
+  }
   ctx.restore();
 
   ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -2266,11 +2271,18 @@ function paintWallTstBarCanvas(canvas, values) {
 
 function addWallTstBar(faceGroup, faceKey, part, centerY, panelW, panelH, centerX, panelZ, dir) {
   const canvas = document.createElement("canvas");
-  canvas.width = 2048;
-  canvas.height = 320;
+  canvas.width = 3072;
+  canvas.height = 420;
   const texture = new THREE.CanvasTexture(canvas);
   if (THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  if (renderer && renderer.capabilities && typeof renderer.capabilities.getMaxAnisotropy === "function") {
+    try{
+      texture.anisotropy = Math.max(1, Math.min(16, renderer.capabilities.getMaxAnisotropy() || 1));
+    }catch(_e){}
+  }
   texture.needsUpdate = true;
 
   const barPlane = new THREE.Mesh(
