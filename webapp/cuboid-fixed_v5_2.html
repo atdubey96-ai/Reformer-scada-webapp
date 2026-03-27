@@ -2611,7 +2611,7 @@ function buildWallLabelOverlay(faceKey, faceZ, outwardDir) {
   const labelZ = PIPE_Z + dir * 0.315;
   const rowLabelLocalX = pipeXL + 0.40;
   const rowLabelX = faceXDir * rowLabelLocalX;
-  const burnerLabelY = Math.min((FH / 2) - 0.18, rowY[rowY.length - 1] + 0.38);
+  const burnerLabelY = (-FH / 2) + 0.18;
 
   for (let i = 0; i < rowY.length; i++) {
     const rowLabel = createWallLabelMesh("ROW " + (i + 1), "row", dir, 0.72, 0.19);
