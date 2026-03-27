@@ -2045,58 +2045,77 @@ function makeWallLabelTexture(text, variant) {
   if (wallLabelTextureCache.has(key)) return wallLabelTextureCache.get(key);
 
   const isRow = variant === "row";
+  const isBurner = variant === "burner";
   const cv = document.createElement("canvas");
-  cv.width = isRow ? 1040 : 680;
-  cv.height = isRow ? 320 : 260;
+  cv.width = isRow ? 1040 : 760;
+  cv.height = isRow ? 320 : 520;
   const g = cv.getContext("2d");
   const w = cv.width;
   const h = cv.height;
 
   g.clearRect(0, 0, w, h);
-  roundedRectPath(g, w * 0.04, h * 0.12, w * 0.92, h * 0.76, h * 0.18);
-  const plate = g.createLinearGradient(0, h * 0.12, 0, h * 0.88);
-  plate.addColorStop(0.00, "rgba(34,38,46,0.94)");
-  plate.addColorStop(0.30, "rgba(18,20,26,0.96)");
-  plate.addColorStop(1.00, "rgba(8,10,14,0.98)");
-  g.fillStyle = plate;
-  g.fill();
+  if (isBurner) {
+    roundedRectPath(g, w * 0.09, h * 0.20, w * 0.82, h * 0.58, h * 0.18);
+    g.fillStyle = "rgba(22,8,4,0.93)";
+    g.fill();
+    g.strokeStyle = "rgba(210,110,30,0.95)";
+    g.lineWidth = 18;
+    g.stroke();
 
-  const topSheen = g.createLinearGradient(0, h * 0.12, 0, h * 0.48);
-  topSheen.addColorStop(0.00, "rgba(255,255,255,0.14)");
-  topSheen.addColorStop(1.00, "rgba(255,255,255,0.00)");
-  g.fillStyle = topSheen;
-  roundedRectPath(g, w * 0.05, h * 0.14, w * 0.90, h * 0.30, h * 0.16);
-  g.fill();
+    g.shadowColor = "rgba(255,140,30,0.95)";
+    g.shadowBlur = 20;
+    g.shadowOffsetY = 0;
+    g.fillStyle = "#ffd090";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.font = "900 162px 'Courier New', monospace";
+    g.fillText(text, w * 0.50, h * 0.50);
+  } else {
+    roundedRectPath(g, w * 0.04, h * 0.12, w * 0.92, h * 0.76, h * 0.18);
+    const plate = g.createLinearGradient(0, h * 0.12, 0, h * 0.88);
+    plate.addColorStop(0.00, "rgba(34,38,46,0.94)");
+    plate.addColorStop(0.30, "rgba(18,20,26,0.96)");
+    plate.addColorStop(1.00, "rgba(8,10,14,0.98)");
+    g.fillStyle = plate;
+    g.fill();
 
-  roundedRectPath(g, w * 0.04, h * 0.12, w * 0.92, h * 0.76, h * 0.18);
-  const frame = g.createLinearGradient(0, 0, w, h);
-  frame.addColorStop(0.00, "rgba(250,230,170,0.94)");
-  frame.addColorStop(0.45, "rgba(196,147,80,0.90)");
-  frame.addColorStop(1.00, "rgba(96,66,30,0.94)");
-  g.strokeStyle = frame;
-  g.lineWidth = isRow ? 10 : 8;
-  g.stroke();
+    const topSheen = g.createLinearGradient(0, h * 0.12, 0, h * 0.48);
+    topSheen.addColorStop(0.00, "rgba(255,255,255,0.14)");
+    topSheen.addColorStop(1.00, "rgba(255,255,255,0.00)");
+    g.fillStyle = topSheen;
+    roundedRectPath(g, w * 0.05, h * 0.14, w * 0.90, h * 0.30, h * 0.16);
+    g.fill();
 
-  g.shadowColor = "rgba(0,0,0,0.55)";
-  g.shadowBlur = 20;
-  g.shadowOffsetY = 6;
-  const textGrad = g.createLinearGradient(0, h * 0.20, 0, h * 0.82);
-  textGrad.addColorStop(0.00, "#fff6db");
-  textGrad.addColorStop(0.34, "#f7d98e");
-  textGrad.addColorStop(1.00, "#d09a44");
-  g.fillStyle = textGrad;
-  g.strokeStyle = "rgba(30,16,6,0.82)";
-  g.lineJoin = "round";
-  g.lineWidth = isRow ? 16 : 13;
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.font = (isRow ? "900 132px Georgia" : "900 112px Georgia");
-  g.strokeText(text, w * 0.50, h * 0.55);
-  g.fillText(text, w * 0.50, h * 0.55);
+    roundedRectPath(g, w * 0.04, h * 0.12, w * 0.92, h * 0.76, h * 0.18);
+    const frame = g.createLinearGradient(0, 0, w, h);
+    frame.addColorStop(0.00, "rgba(250,230,170,0.94)");
+    frame.addColorStop(0.45, "rgba(196,147,80,0.90)");
+    frame.addColorStop(1.00, "rgba(96,66,30,0.94)");
+    g.strokeStyle = frame;
+    g.lineWidth = 10;
+    g.stroke();
 
-  g.shadowBlur = 0;
-  g.fillStyle = "rgba(255,244,220,0.18)";
-  g.fillRect(w * 0.10, h * 0.18, w * 0.80, h * 0.02);
+    g.shadowColor = "rgba(0,0,0,0.55)";
+    g.shadowBlur = 20;
+    g.shadowOffsetY = 6;
+    const textGrad = g.createLinearGradient(0, h * 0.20, 0, h * 0.82);
+    textGrad.addColorStop(0.00, "#fff6db");
+    textGrad.addColorStop(0.34, "#f7d98e");
+    textGrad.addColorStop(1.00, "#d09a44");
+    g.fillStyle = textGrad;
+    g.strokeStyle = "rgba(30,16,6,0.82)";
+    g.lineJoin = "round";
+    g.lineWidth = 16;
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.font = "900 132px Georgia";
+    g.strokeText(text, w * 0.50, h * 0.55);
+    g.fillText(text, w * 0.50, h * 0.55);
+
+    g.shadowBlur = 0;
+    g.fillStyle = "rgba(255,244,220,0.18)";
+    g.fillRect(w * 0.10, h * 0.18, w * 0.80, h * 0.02);
+  }
 
   const tex = new THREE.CanvasTexture(cv);
   if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
@@ -3066,7 +3085,7 @@ function buildWallLabelOverlay(faceKey, faceZ, outwardDir) {
   for (let b = 0; b < NUM_B; b++) {
     const localX = spanStart + b * bSpacing;
     const bx = faceXDir * localX;
-    const burnerLabel = createWallLabelMesh("B" + (b + 1), "burner", dir, 0.42, 0.18);
+    const burnerLabel = createWallLabelMesh("B" + (b + 1), "burner", dir, 0.42, 0.28);
     burnerLabel.position.set(bx, burnerLabelY, labelZ + dir * 0.010);
     faceGroup.add(burnerLabel);
   }
