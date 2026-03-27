@@ -2373,6 +2373,11 @@ function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
   const CROWN_D = 0.026;
   const CROWN_N = 6;
   const CROWN_RAD = 0.055;
+  const NOZZLE_Z_SHIFT = 0.142;
+  const FEED_R = 0.020;
+  const FEED_START_Z = 0.010;
+  const FEED_END_Z = 0.016 + NOZZLE_Z_SHIFT;
+  const FEED_L = FEED_END_Z - FEED_START_Z;
 
   const mClamp = new THREE.MeshStandardMaterial({
     color: 0x181c22,
@@ -2405,6 +2410,7 @@ function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
   const gQuarl = new THREE.CylinderGeometry(QUARL_RT, QUARL_RB, QUARL_H, 24, 1, false);
   const gThroat = new THREE.CylinderGeometry(THROAT_RT, THROAT_RB, THROAT_H, 24, 1, false);
   const gCrown = new THREE.BoxGeometry(CROWN_W, CROWN_H, CROWN_D);
+  const gFeed = new THREE.CylinderGeometry(FEED_R, FEED_R * 1.08, FEED_L, 16, 1, false);
 
   rowY.forEach(function(ry) {
     const topOfPipe = ry + MAN_R;
@@ -2419,22 +2425,31 @@ function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
       clamp.position.set(bx, yOff + 0.004, PIPE_Z);
       faceGroup.add(clamp);
 
+      const feed = new THREE.Mesh(gFeed, mBody);
+      feed.rotation.x = Math.PI / 2;
+      feed.position.set(
+        bx,
+        yOff + SADDLE_H / 2 + 0.008,
+        PIPE_Z + dir * (FEED_START_Z + FEED_L / 2)
+      );
+      faceGroup.add(feed);
+
       const saddle = new THREE.Mesh(gSaddle, mBody);
-      saddle.position.set(bx, yOff + SADDLE_H / 2 + 0.008, PIPE_Z + dir * 0.016);
+      saddle.position.set(bx, yOff + SADDLE_H / 2 + 0.008, PIPE_Z + dir * (0.016 + NOZZLE_Z_SHIFT));
       faceGroup.add(saddle);
       yOff += SADDLE_H + 0.008;
 
       const stem = new THREE.Mesh(gStem, mBody);
-      stem.position.set(bx, yOff + STEM_H / 2, PIPE_Z + dir * 0.018);
+      stem.position.set(bx, yOff + STEM_H / 2, PIPE_Z + dir * (0.018 + NOZZLE_Z_SHIFT));
       faceGroup.add(stem);
       yOff += STEM_H;
 
       const quarl = new THREE.Mesh(gQuarl, mQuarl);
-      quarl.position.set(bx, yOff + QUARL_H / 2, PIPE_Z + dir * 0.050);
+      quarl.position.set(bx, yOff + QUARL_H / 2, PIPE_Z + dir * (0.050 + NOZZLE_Z_SHIFT));
       faceGroup.add(quarl);
 
       const throat = new THREE.Mesh(gThroat, mThroat);
-      throat.position.set(bx, yOff + QUARL_H * 0.15 + THROAT_H / 2, PIPE_Z + dir * 0.052);
+      throat.position.set(bx, yOff + QUARL_H * 0.15 + THROAT_H / 2, PIPE_Z + dir * (0.052 + NOZZLE_Z_SHIFT));
       faceGroup.add(throat);
 
       const crownY = yOff + QUARL_H * 0.65;
@@ -2444,7 +2459,7 @@ function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
         crown.position.set(
           bx + faceXDir * Math.cos(a) * CROWN_RAD,
           crownY,
-          PIPE_Z + dir * (0.052 + Math.sin(a) * CROWN_RAD)
+          PIPE_Z + dir * (0.052 + NOZZLE_Z_SHIFT + Math.sin(a) * CROWN_RAD)
         );
         crown.rotation.y = dir > 0 ? -a : Math.PI - a;
         crown.rotation.z = Math.sin(a) * 0.05;
