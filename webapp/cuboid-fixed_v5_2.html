@@ -2188,94 +2188,66 @@ function paintWallTstBarCanvas(canvas, values) {
   const w = canvas.width;
   const h = canvas.height;
   const vals = cuboidSanitizeTstRow(values);
-  const barLeft = 28;
-  const barTop = 54;
-  const barW = w - 56;
-  const barH = h - 108;
+  const barLeft = 20;
+  const barTop = 48;
+  const barW = w - 40;
+  const barH = h - 96;
   const slotW = barW / 15;
-  const barCenterY = barTop + barH * 0.5;
-  const positions = [];
+  const radius = barH * 0.5;
 
   ctx.clearRect(0, 0, w, h);
 
-  for(let i = 0; i < 15; i++){
-    const n = Number(vals[i]);
-    if(isFinite(n)) positions.push({ idx: i, val: n });
-  }
-
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.34)";
+  ctx.shadowColor = "rgba(0,0,0,0.52)";
   ctx.shadowBlur = 18;
-  ctx.shadowOffsetY = 6;
-  roundedRectPath(ctx, barLeft, barTop, barW, barH, barH * 0.26);
-  ctx.fillStyle = "rgba(16,20,30,0.28)";
+  ctx.shadowOffsetY = 4;
+  roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
+  ctx.fillStyle = "rgba(15,17,23,0.92)";
   ctx.fill();
   ctx.restore();
 
   ctx.save();
-  roundedRectPath(ctx, barLeft, barTop, barW, barH, barH * 0.26);
+  roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
   ctx.clip();
-  const fillGrad = ctx.createLinearGradient(barLeft, 0, barLeft + barW, 0);
-  if(positions.length){
-    fillGrad.addColorStop(0, cuboidTempToColor(positions[0].val));
-    for(let p = 0; p < positions.length; p++){
-      const stop = (positions[p].idx + 0.5) / 15;
-      fillGrad.addColorStop(Math.max(0, Math.min(1, stop)), cuboidTempToColor(positions[p].val));
+  for(let i = 0; i < 15; i++){
+    const tempVal = Number(vals[i]);
+    const fill = isFinite(tempVal) ? cuboidTempToColor(tempVal) : "#334155";
+    const x = barLeft + (i * slotW);
+    ctx.fillStyle = fill;
+    ctx.fillRect(x, barTop, Math.ceil(slotW) + 1, barH);
+    if(i > 0){
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.fillRect(x, barTop, 1, barH);
     }
-    fillGrad.addColorStop(1, cuboidTempToColor(positions[positions.length - 1].val));
-  }else{
-    fillGrad.addColorStop(0, "#f0b544");
-    fillGrad.addColorStop(1, "#f0b544");
   }
-  ctx.fillStyle = fillGrad;
+
+  const glass = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
+  glass.addColorStop(0.00, "rgba(255,255,255,0.30)");
+  glass.addColorStop(0.35, "rgba(255,255,255,0.08)");
+  glass.addColorStop(0.50, "rgba(0,0,0,0.02)");
+  glass.addColorStop(1.00, "rgba(0,0,0,0.12)");
+  ctx.fillStyle = glass;
   ctx.fillRect(barLeft, barTop, barW, barH);
 
-  const sheen = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
-  sheen.addColorStop(0.00, "rgba(255,255,255,0.24)");
-  sheen.addColorStop(0.20, "rgba(255,255,255,0.10)");
-  sheen.addColorStop(0.36, "rgba(255,255,255,0.00)");
-  sheen.addColorStop(1.00, "rgba(0,0,0,0.05)");
-  ctx.fillStyle = sheen;
-  ctx.fillRect(barLeft, barTop, barW, barH);
+  const specLeft = barLeft + 16;
+  const specTop = barTop + 4;
+  const specW = barW - 32;
+  const specH = Math.max(8, barH * 0.18);
+  const specGrad = ctx.createLinearGradient(specLeft, 0, specLeft + specW, 0);
+  specGrad.addColorStop(0.00, "rgba(255,255,255,0.00)");
+  specGrad.addColorStop(0.20, "rgba(255,255,255,0.18)");
+  specGrad.addColorStop(0.50, "rgba(255,255,255,0.25)");
+  specGrad.addColorStop(0.80, "rgba(255,255,255,0.18)");
+  specGrad.addColorStop(1.00, "rgba(255,255,255,0.00)");
+  roundedRectPath(ctx, specLeft, specTop, specW, specH, specH);
+  ctx.fillStyle = specGrad;
+  ctx.fill();
   ctx.restore();
 
-  ctx.strokeStyle = "rgba(255,255,255,0.32)";
-  ctx.lineWidth = 3;
-  roundedRectPath(ctx, barLeft, barTop, barW, barH, barH * 0.26);
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth = 2;
+  roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
   ctx.stroke();
-
-  for(let i = 0; i < 15; i++){
-    const markerX = barLeft + slotW * (i + 0.5);
-    ctx.strokeStyle = "rgba(255,255,255,0.56)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(markerX, barTop - 10);
-    ctx.lineTo(markerX, barTop + barH + 10);
-    ctx.stroke();
-
-    const tempVal = Number(vals[i]);
-    ctx.beginPath();
-    ctx.arc(markerX, barCenterY, barH * 0.135, 0, Math.PI * 2);
-    ctx.fillStyle = isFinite(tempVal) ? cuboidTempToColor(tempVal) : "rgba(255,250,232,0.12)";
-    ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = "rgba(255,255,255,0.94)";
-    ctx.stroke();
-
-    cuboidDrawTstBarText(
-      ctx,
-      isFinite(tempVal) ? (Math.round(tempVal) + "°") : "--",
-      markerX,
-      barTop + barH * 0.19,
-      {
-        font: "900 68px 'Rajdhani', 'Arial Narrow', sans-serif",
-        fill: isFinite(tempVal) ? "#fffaf0" : "rgba(255,250,240,0.72)",
-        stroke: "rgba(30,24,18,0.88)",
-        lineWidth: 7,
-        shadowBlur: 4
-      }
-    );
-  }
 }
 
 function addWallTstBar(faceGroup, faceKey, part, centerY, panelW, panelH, centerX, panelZ, dir) {
