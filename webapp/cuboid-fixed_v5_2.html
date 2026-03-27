@@ -2183,159 +2183,65 @@ function cuboidDrawTstBarText(ctx, text, x, y, options) {
   ctx.restore();
 }
 
-function cuboidTstStripColor(value){
-  const n = Number(value);
-  if(!isFinite(n)) return "hsl(215, 24%, 32%)";
-  let ratio = (n - 860) / 140;
-  ratio = Math.max(0, Math.min(1, ratio));
-  const hue = 220 - (220 * ratio);
-  const saturation = 88;
-  const lightness = 50 - (ratio * 4);
-  return "hsl(" + hue + ", " + saturation + "%, " + lightness + "%)";
-}
-
-function cuboidTstStripGlow(value){
-  const n = Number(value);
-  if(!isFinite(n)) return "rgba(148,163,184,0.16)";
-  let ratio = (n - 860) / 140;
-  ratio = Math.max(0, Math.min(1, ratio));
-  if(ratio < 0.20) return "rgba(59,130,246,0.25)";
-  if(ratio < 0.40) return "rgba(6,182,212,0.22)";
-  if(ratio < 0.60) return "rgba(34,197,94,0.20)";
-  if(ratio < 0.75) return "rgba(250,204,21,0.24)";
-  if(ratio < 0.90) return "rgba(249,115,22,0.28)";
-  return "rgba(239,68,68,0.34)";
-}
-
-function paintWallTstBarCanvas(canvas, values, phaseInput) {
+function paintWallTstBarCanvas(canvas, values) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width;
   const h = canvas.height;
   const vals = cuboidSanitizeTstRow(values);
-  const phase = Number.isFinite(phaseInput) ? phaseInput : 0;
-  const shellLeft = 14;
-  const shellTop = 26;
-  const shellW = w - 28;
-  const shellH = h - 52;
-  const shellRadius = shellH * 0.5;
-  const stripPad = 18;
-  const barLeft = shellLeft + stripPad;
-  const barTop = shellTop + stripPad;
-  const barW = shellW - stripPad * 2;
-  const barH = shellH - stripPad * 2;
+  const barLeft = 20;
+  const barTop = 48;
+  const barW = w - 40;
+  const barH = h - 96;
   const slotW = barW / 15;
+  const radius = barH * 0.5;
 
   ctx.clearRect(0, 0, w, h);
 
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.35)";
-  ctx.shadowBlur = 20;
-  ctx.shadowOffsetY = 6;
-  roundedRectPath(ctx, shellLeft, shellTop, shellW, shellH, shellRadius);
-  const shellGrad = ctx.createLinearGradient(0, shellTop, 0, shellTop + shellH);
-  shellGrad.addColorStop(0.00, "rgba(255,255,255,0.10)");
-  shellGrad.addColorStop(1.00, "rgba(255,255,255,0.02)");
-  ctx.fillStyle = shellGrad;
-  ctx.fill();
-  const shellCross = ctx.createLinearGradient(shellLeft, 0, shellLeft + shellW, 0);
-  shellCross.addColorStop(0.00, "rgba(255,255,255,0.04)");
-  shellCross.addColorStop(1.00, "rgba(255,255,255,0.02)");
-  ctx.fillStyle = shellCross;
-  roundedRectPath(ctx, shellLeft, shellTop, shellW, shellH, shellRadius);
+  ctx.shadowColor = "rgba(0,0,0,0.52)";
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 4;
+  roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
+  ctx.fillStyle = "rgba(15,17,23,0.92)";
   ctx.fill();
   ctx.restore();
 
   ctx.save();
-  roundedRectPath(ctx, shellLeft, shellTop, shellW, shellH, shellRadius);
-  const stripGlow = ctx.createLinearGradient(shellLeft, 0, shellLeft + shellW, 0);
-  stripGlow.addColorStop(0.00, "rgba(59,130,246,0.05)");
-  stripGlow.addColorStop(0.25, "rgba(34,197,94,0.04)");
-  stripGlow.addColorStop(0.50, "rgba(250,204,21,0.05)");
-  stripGlow.addColorStop(0.75, "rgba(249,115,22,0.06)");
-  stripGlow.addColorStop(1.00, "rgba(239,68,68,0.08)");
-  ctx.fillStyle = stripGlow;
-  ctx.fill();
-  ctx.restore();
-
-  ctx.save();
-  roundedRectPath(ctx, barLeft, barTop, barW, barH, barH * 0.5);
+  roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
   ctx.clip();
   for(let i = 0; i < 15; i++){
     const tempVal = Number(vals[i]);
-    const segLeft = barLeft + (i * slotW);
-    const segRight = segLeft + slotW;
-    const fill = isFinite(tempVal) ? cuboidTstStripColor(tempVal) : "hsl(215, 24%, 32%)";
-    const glow = isFinite(tempVal) ? cuboidTstStripGlow(tempVal) : "rgba(148,163,184,0.16)";
-
-    ctx.save();
-    ctx.shadowColor = glow;
-    ctx.shadowBlur = 16;
-    const segGrad = ctx.createLinearGradient(segLeft, 0, segRight, 0);
-    segGrad.addColorStop(0.00, "rgba(255,255,255,0.05)");
-    segGrad.addColorStop(0.18, fill);
-    segGrad.addColorStop(0.55, fill);
-    segGrad.addColorStop(1.00, "rgba(255,180,80,0.18)");
-    ctx.fillStyle = segGrad;
-    ctx.fillRect(segLeft, barTop, Math.ceil(slotW) + 1, barH);
-    ctx.restore();
-
-    const segGlass = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
-    segGlass.addColorStop(0.00, "rgba(255,255,255,0.30)");
-    segGlass.addColorStop(0.18, "rgba(255,255,255,0.12)");
-    segGlass.addColorStop(0.42, "rgba(255,255,255,0.03)");
-    segGlass.addColorStop(1.00, "rgba(0,0,0,0.10)");
-    ctx.fillStyle = segGlass;
-    ctx.fillRect(segLeft, barTop, Math.ceil(slotW) + 1, barH);
-
-    const pulse = 0.10 + (0.10 * (0.5 + 0.5 * Math.sin((phase * 2.8) + (i * 0.55))));
-    const pulseGrad = ctx.createRadialGradient(
-      segLeft + slotW * 0.5,
-      barTop + barH * 0.5,
-      0,
-      segLeft + slotW * 0.5,
-      barTop + barH * 0.5,
-      slotW * 0.6
-    );
-    pulseGrad.addColorStop(0.00, "rgba(255,255,255," + pulse.toFixed(3) + ")");
-    pulseGrad.addColorStop(1.00, "rgba(255,255,255,0.00)");
-    ctx.fillStyle = pulseGrad;
-    ctx.fillRect(segLeft, barTop, Math.ceil(slotW) + 1, barH);
-
+    const fill = isFinite(tempVal) ? cuboidTempToColor(tempVal) : "#334155";
+    const x = barLeft + (i * slotW);
+    ctx.fillStyle = fill;
+    ctx.fillRect(x, barTop, Math.ceil(slotW) + 1, barH);
     cuboidDrawTstBarText(
       ctx,
       isFinite(tempVal) ? (Math.round(tempVal) + "°C") : "--",
-      segLeft + slotW * 0.5,
-      barTop + barH * 0.5,
+      x + (slotW * 0.5),
+      barTop + (barH * 0.5),
       {
-        font: "900 44px 'Segoe UI', 'Arial Narrow', sans-serif",
-        fill: "#ffffff",
-        stroke: "rgba(0,0,0,0.45)",
-        lineWidth: 5,
-        shadow: "rgba(255,255,255,0.08)",
-        shadowBlur: 2,
-        shadowOffsetY: 1
+        font: "900 42px 'Segoe UI', 'Arial Narrow', sans-serif",
+        fill: "rgba(0,0,0,0.82)",
+        stroke: null,
+        shadow: "rgba(255,255,255,0.10)",
+        shadowBlur: 1,
+        shadowOffsetY: 0
       }
     );
-
     if(i > 0){
-      ctx.fillStyle = "rgba(255,255,255,0.08)";
-      ctx.fillRect(segLeft, barTop, 1, barH);
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.fillRect(x, barTop, 1, barH);
     }
   }
-  ctx.restore();
 
-  ctx.save();
-  roundedRectPath(ctx, shellLeft, shellTop, shellW, shellH, shellRadius);
-  ctx.clip();
-  const shimmerWidth = shellW * 0.30;
-  const shimmerLeft = shellLeft - (shellW * 0.30) + (((phase * 220) % (shellW * 1.40)));
-  const shimmerGrad = ctx.createLinearGradient(shimmerLeft, 0, shimmerLeft + shimmerWidth, 0);
-  shimmerGrad.addColorStop(0.00, "rgba(255,255,255,0.00)");
-  shimmerGrad.addColorStop(0.45, "rgba(255,255,255,0.16)");
-  shimmerGrad.addColorStop(0.68, "rgba(255,255,255,0.05)");
-  shimmerGrad.addColorStop(1.00, "rgba(255,255,255,0.00)");
-  ctx.fillStyle = shimmerGrad;
-  ctx.fillRect(shimmerLeft, shellTop, shimmerWidth, shellH);
+  const glass = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
+  glass.addColorStop(0.00, "rgba(255,255,255,0.30)");
+  glass.addColorStop(0.35, "rgba(255,255,255,0.08)");
+  glass.addColorStop(0.50, "rgba(0,0,0,0.02)");
+  glass.addColorStop(1.00, "rgba(0,0,0,0.12)");
+  ctx.fillStyle = glass;
+  ctx.fillRect(barLeft, barTop, barW, barH);
 
   const specLeft = barLeft + 16;
   const specTop = barTop + 4;
@@ -2352,12 +2258,9 @@ function paintWallTstBarCanvas(canvas, values, phaseInput) {
   ctx.fill();
   ctx.restore();
 
-  ctx.strokeStyle = "rgba(255,255,255,0.10)";
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
   ctx.lineWidth = 2;
-  roundedRectPath(ctx, shellLeft, shellTop, shellW, shellH, shellRadius);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(255,255,255,0.10)";
-  roundedRectPath(ctx, barLeft, barTop, barW, barH, barH * 0.5);
+  roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
   ctx.stroke();
 }
 
@@ -2391,8 +2294,7 @@ function addWallTstBar(faceGroup, faceKey, part, centerY, panelW, panelH, center
     faceKey: faceKey,
     part: part,
     canvas: canvas,
-    texture: texture,
-    phaseOffset: faceKey === "face1" ? 0.0 : 0.7
+    texture: texture
   });
 }
 
@@ -2439,22 +2341,11 @@ function buildWallTstBars(faceKey, faceZ, outwardDir) {
 }
 
 function applyWallTstBarTextures() {
-  const nowSec = (typeof performance !== "undefined" && performance.now) ? (performance.now() * 0.001) : 0;
   const zoneRows = cuboidLoadZoneTstRows();
   for (let i = 0; i < wallTstBarActors.length; i++) {
     const actor = wallTstBarActors[i];
     if (!actor || !actor.canvas || !actor.texture) continue;
-    paintWallTstBarCanvas(actor.canvas, actor.part === "top" ? zoneRows.top : zoneRows.bot, nowSec + (actor.phaseOffset || 0));
-    actor.texture.needsUpdate = true;
-  }
-}
-
-function animateWallTstBars(nowSec) {
-  const zoneRows = cuboidLoadZoneTstRows();
-  for (let i = 0; i < wallTstBarActors.length; i++) {
-    const actor = wallTstBarActors[i];
-    if (!actor || !actor.canvas || !actor.texture) continue;
-    paintWallTstBarCanvas(actor.canvas, actor.part === "top" ? zoneRows.top : zoneRows.bot, nowSec + (actor.phaseOffset || 0));
+    paintWallTstBarCanvas(actor.canvas, actor.part === "top" ? zoneRows.top : zoneRows.bot);
     actor.texture.needsUpdate = true;
   }
 }
@@ -3572,15 +3463,13 @@ function animate(now){
 
   const canRender = canRenderNow();
   const hasAnimatedFlames = hasAnimatedInteriorFlames() || hasAnimatedWallNozzleFlames();
-  const hasAnimatedBars = wallTstBarActors.length > 0;
-  const hasAnimatedScene = hasAnimatedFlames || hasAnimatedBars;
   const frameBudget = !canRender
     ? SLEEP_FRAME_MS
-    : (hostFocused || hasAnimatedScene)
+    : (hostFocused || hasAnimatedFlames)
       ? FOCUSED_IDLE_FRAME_MS
       : BACKGROUND_IDLE_FRAME_MS;
 
-  if(lastRenderTs && (now - lastRenderTs) < frameBudget && !forceNextRender && !hasRotationMotion() && !hasAnimatedScene) return;
+  if(lastRenderTs && (now - lastRenderTs) < frameBudget && !forceNextRender && !hasRotationMotion() && !hasAnimatedFlames) return;
   lastRenderTs = now;
 
   const dt = lastFrameTs ? Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000)) : (1 / 60);
@@ -3603,11 +3492,6 @@ function animate(now){
   if(hasAnimatedFlames){
     animateInteriorFlames(now * 0.001);
     animateWallNozzleFlames(now * 0.001);
-    frameNeedsRender = true;
-  }
-
-  if(hasAnimatedBars){
-    animateWallTstBars(now * 0.001);
     frameNeedsRender = true;
   }
 
