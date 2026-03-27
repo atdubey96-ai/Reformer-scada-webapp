@@ -1809,8 +1809,8 @@ function makeWallLabelTexture(text, variant) {
 
   const isRow = variant === "row";
   const cv = document.createElement("canvas");
-  cv.width = isRow ? 900 : 520;
-  cv.height = isRow ? 280 : 220;
+  cv.width = isRow ? 1040 : 680;
+  cv.height = isRow ? 320 : 260;
   const g = cv.getContext("2d");
   const w = cv.width;
   const h = cv.height;
@@ -1850,10 +1850,10 @@ function makeWallLabelTexture(text, variant) {
   g.fillStyle = textGrad;
   g.strokeStyle = "rgba(30,16,6,0.82)";
   g.lineJoin = "round";
-  g.lineWidth = isRow ? 15 : 12;
+  g.lineWidth = isRow ? 16 : 13;
   g.textAlign = "center";
   g.textBaseline = "middle";
-  g.font = (isRow ? "900 118px Georgia" : "900 92px Georgia");
+  g.font = (isRow ? "900 132px Georgia" : "900 112px Georgia");
   g.strokeText(text, w * 0.50, h * 0.55);
   g.fillText(text, w * 0.50, h * 0.55);
 
@@ -2608,21 +2608,22 @@ function buildWallLabelOverlay(faceKey, faceZ, outwardDir) {
   const spanStart = pipeXL + LEFT_PAD;
   const spanEnd = pipeXR - RIGHT_PAD;
   const bSpacing = (spanEnd - spanStart) / (NUM_B - 1);
-  const labelZ = PIPE_Z + dir * 0.315;
+  const labelZ = PIPE_Z + dir * 0.345;
   const rowLabelLocalX = pipeXL + 0.40;
   const rowLabelX = faceXDir * rowLabelLocalX;
-  const burnerLabelY = (-FH / 2) + 0.18;
+  const rowLabelYOffset = 0.12;
+  const burnerLabelY = (-FH / 2) + 0.22;
 
   for (let i = 0; i < rowY.length; i++) {
-    const rowLabel = createWallLabelMesh("ROW " + (i + 1), "row", dir, 0.72, 0.19);
-    rowLabel.position.set(rowLabelX, rowY[i], labelZ);
+    const rowLabel = createWallLabelMesh("ROW " + (i + 1), "row", dir, 0.90, 0.24);
+    rowLabel.position.set(rowLabelX, rowY[i] + rowLabelYOffset, labelZ);
     faceGroup.add(rowLabel);
   }
 
   for (let b = 0; b < NUM_B; b++) {
     const localX = spanStart + b * bSpacing;
     const bx = faceXDir * localX;
-    const burnerLabel = createWallLabelMesh("B" + (b + 1), "burner", dir, 0.30, 0.14);
+    const burnerLabel = createWallLabelMesh("B" + (b + 1), "burner", dir, 0.42, 0.18);
     burnerLabel.position.set(bx, burnerLabelY, labelZ + dir * 0.010);
     faceGroup.add(burnerLabel);
   }
