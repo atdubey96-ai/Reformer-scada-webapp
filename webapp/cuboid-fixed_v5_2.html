@@ -2045,24 +2045,45 @@ function makeWallLabelTexture(text, variant) {
   if (wallLabelTextureCache.has(key)) return wallLabelTextureCache.get(key);
 
   const isRow = variant === "row";
-  const isBurner = variant === "burner";
   const cv = document.createElement("canvas");
-  cv.width = isRow ? 960 : 860;
-  cv.height = isRow ? 620 : 420;
+  cv.width = isRow ? 920 : 760;
+  cv.height = isRow ? 340 : 420;
   const g = cv.getContext("2d");
   const w = cv.width;
   const h = cv.height;
 
   g.clearRect(0, 0, w, h);
+  roundedRectPath(g, w * 0.04, h * 0.14, w * 0.92, h * 0.72, h * 0.24);
+  const plate = g.createLinearGradient(0, h * 0.14, 0, h * 0.86);
+  plate.addColorStop(0.00, "rgba(30,34,42,0.96)");
+  plate.addColorStop(0.22, "rgba(16,18,24,0.97)");
+  plate.addColorStop(1.00, "rgba(6,7,10,0.99)");
+  g.fillStyle = plate;
+  g.fill();
+
+  const topSheen = g.createLinearGradient(0, h * 0.16, 0, h * 0.44);
+  topSheen.addColorStop(0.00, "rgba(255,255,255,0.18)");
+  topSheen.addColorStop(1.00, "rgba(255,255,255,0.00)");
+  g.fillStyle = topSheen;
+  roundedRectPath(g, w * 0.06, h * 0.18, w * 0.88, h * 0.18, h * 0.16);
+  g.fill();
+
+  roundedRectPath(g, w * 0.04, h * 0.14, w * 0.92, h * 0.72, h * 0.24);
+  const frame = g.createLinearGradient(0, 0, w, h);
+  frame.addColorStop(0.00, "rgba(255,221,150,0.94)");
+  frame.addColorStop(0.45, "rgba(198,137,58,0.94)");
+  frame.addColorStop(1.00, "rgba(92,58,18,0.96)");
+  g.strokeStyle = frame;
+  g.lineWidth = isRow ? 10 : 9;
+  g.stroke();
 
   g.shadowColor = "rgba(0,0,0,0.55)";
-  g.shadowBlur = isRow ? 28 : 22;
-  g.shadowOffsetY = isRow ? 7 : 5;
+  g.shadowBlur = isRow ? 20 : 18;
+  g.shadowOffsetY = isRow ? 6 : 5;
   const textGrad = g.createLinearGradient(0, h * 0.20, 0, h * 0.82);
-  textGrad.addColorStop(0.00, "#fff8e1");
-  textGrad.addColorStop(0.26, "#f8e2a8");
-  textGrad.addColorStop(0.70, "#d8a14e");
-  textGrad.addColorStop(1.00, "#8e5d21");
+  textGrad.addColorStop(0.00, "#fff6db");
+  textGrad.addColorStop(0.34, "#f7d98e");
+  textGrad.addColorStop(1.00, "#d09a44");
   g.fillStyle = textGrad;
   g.strokeStyle = "rgba(30,16,6,0.82)";
   g.lineJoin = "round";
@@ -2070,32 +2091,20 @@ function makeWallLabelTexture(text, variant) {
   g.textBaseline = "middle";
 
   if (isRow) {
-    const parts = String(text).split("\n");
-    const topText = parts[0] || "";
-    const bottomText = parts[1] || "";
-    g.lineWidth = 18;
-    g.font = "900 150px Georgia";
-    g.strokeText(topText, w * 0.50, h * 0.36);
-    g.fillText(topText, w * 0.50, h * 0.36);
-    g.font = "900 232px Georgia";
-    g.strokeText(bottomText, w * 0.50, h * 0.67);
-    g.fillText(bottomText, w * 0.50, h * 0.67);
+    g.lineWidth = 14;
+    g.font = "900 138px Georgia";
+    g.strokeText(text, w * 0.50, h * 0.56);
+    g.fillText(text, w * 0.50, h * 0.56);
   } else {
-    g.lineWidth = 18;
-    g.font = "900 178px Georgia";
+    g.lineWidth = 16;
+    g.font = "900 170px 'Courier New', monospace";
     g.strokeText(text, w * 0.50, h * 0.56);
     g.fillText(text, w * 0.50, h * 0.56);
   }
 
   g.shadowBlur = 0;
-  g.strokeStyle = "rgba(255,249,228,0.18)";
-  g.lineWidth = isRow ? 4 : 3;
-  if (isRow) {
-    g.strokeText("ROW", w * 0.50, h * 0.36);
-    g.strokeText(String(text).split("\n")[1] || "", w * 0.50, h * 0.67);
-  } else {
-    g.strokeText(text, w * 0.50, h * 0.56);
-  }
+  g.fillStyle = "rgba(255,244,220,0.18)";
+  g.fillRect(w * 0.10, h * 0.21, w * 0.80, h * 0.02);
 
   const tex = new THREE.CanvasTexture(cv);
   if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
@@ -3235,15 +3244,15 @@ function buildWallLabelOverlay(faceKey, faceZ, outwardDir) {
   const bSpacing = (spanEnd - spanStart) / (NUM_B - 1);
   const labelZ = PIPE_Z - dir * 0.012;
   const rowLaneW = spanStart - pipeXL;
-  const rowLabelLocalX = pipeXL + (rowLaneW * 0.54);
+  const rowLabelLocalX = pipeXL + (rowLaneW * 0.50);
   const rowLabelX = faceXDir * rowLabelLocalX;
-  const rowLabelYOffset = 0.24;
-  const rowLabelW = Math.max(0.40, Math.min(0.48, rowLaneW * 0.54));
-  const rowLabelH = 0.34;
-  const burnerLabelY = (-FH / 2) + 0.16;
+  const rowLabelYOffset = 0.14;
+  const rowLabelW = Math.max(0.56, Math.min(0.64, rowLaneW * 0.68));
+  const rowLabelH = 0.24;
+  const burnerLabelY = (-FH / 2) + 0.22;
 
   for (let i = 0; i < rowY.length; i++) {
-    const rowLabel = createWallLabelMesh("ROW\n" + (i + 1), "row", dir, rowLabelW, rowLabelH);
+    const rowLabel = createWallLabelMesh("ROW " + (i + 1), "row", dir, rowLabelW, rowLabelH);
     rowLabel.position.set(rowLabelX, rowY[i] + rowLabelYOffset, labelZ);
     faceGroup.add(rowLabel);
   }
