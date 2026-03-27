@@ -2163,22 +2163,22 @@ const wallTstBarActors = [];
 function cuboidDrawTstBarText(ctx, text, x, y, options) {
   const opts = options || {};
   ctx.save();
-  ctx.font = opts.font || "900 44px 'Courier New', monospace";
+  ctx.font = opts.font || "900 60px 'Rajdhani', 'Arial Narrow', sans-serif";
   ctx.textAlign = opts.align || "center";
   ctx.textBaseline = opts.baseline || "middle";
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
-  ctx.strokeStyle = opts.stroke || "rgba(12,10,8,0.88)";
-  ctx.lineWidth = opts.lineWidth == null ? 8 : opts.lineWidth;
-  ctx.shadowColor = opts.shadow || "rgba(0,0,0,0.40)";
-  ctx.shadowBlur = opts.shadowBlur == null ? 7 : opts.shadowBlur;
-  ctx.shadowOffsetY = opts.shadowOffsetY == null ? 2 : opts.shadowOffsetY;
+  ctx.strokeStyle = opts.stroke || "rgba(255,244,218,0.52)";
+  ctx.lineWidth = opts.lineWidth == null ? 5 : opts.lineWidth;
+  ctx.shadowColor = opts.shadow || "rgba(0,0,0,0.22)";
+  ctx.shadowBlur = opts.shadowBlur == null ? 4 : opts.shadowBlur;
+  ctx.shadowOffsetY = opts.shadowOffsetY == null ? 1 : opts.shadowOffsetY;
   if(opts.stroke !== null && ctx.lineWidth > 0){
     ctx.strokeText(text, x, y);
   }
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  ctx.fillStyle = opts.fill || "#fff4cf";
+  ctx.fillStyle = opts.fill || "#5d5240";
   ctx.fillText(text, x, y);
   ctx.restore();
 }
@@ -2188,10 +2188,18 @@ function paintWallTstBarCanvas(canvas, values) {
   const w = canvas.width;
   const h = canvas.height;
   const vals = cuboidSanitizeTstRow(values);
-  const barLeft = 36;
-  const barTop = 52;
-  const barW = w - 72;
-  const barH = h - 104;
+  const railPadX = 28;
+  const railPadY = 28;
+  const railLeft = railPadX;
+  const railTop = railPadY;
+  const railW = w - railPadX * 2;
+  const railH = h - railPadY * 2;
+  const barInsetX = 18;
+  const barInsetY = 10;
+  const barLeft = railLeft + barInsetX;
+  const barTop = railTop + barInsetY;
+  const barW = railW - barInsetX * 2;
+  const barH = railH - barInsetY * 2;
   const slotW = barW / 15;
   const barCenterY = barTop + barH * 0.5;
   const positions = [];
@@ -2204,8 +2212,15 @@ function paintWallTstBarCanvas(canvas, values) {
   }
 
   ctx.save();
-  ctx.fillStyle = "rgba(0,0,0,0.18)";
-  roundedRectPath(ctx, barLeft, barTop + 10, barW, barH, barH * 0.48);
+  ctx.shadowColor = "rgba(0,0,0,0.26)";
+  ctx.shadowBlur = 16;
+  ctx.shadowOffsetY = 5;
+  roundedRectPath(ctx, railLeft, railTop, railW, railH, railH * 0.50);
+  const railGrad = ctx.createLinearGradient(0, railTop, 0, railTop + railH);
+  railGrad.addColorStop(0.00, "rgba(124,90,46,0.96)");
+  railGrad.addColorStop(0.50, "rgba(88,62,34,0.98)");
+  railGrad.addColorStop(1.00, "rgba(60,40,21,0.98)");
+  ctx.fillStyle = railGrad;
   ctx.fill();
   ctx.restore();
 
@@ -2228,34 +2243,27 @@ function paintWallTstBarCanvas(canvas, values) {
   ctx.fillRect(barLeft, barTop, barW, barH);
 
   const sheen = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
-  sheen.addColorStop(0.00, "rgba(255,255,255,0.24)");
-  sheen.addColorStop(0.26, "rgba(255,255,255,0.08)");
-  sheen.addColorStop(0.62, "rgba(255,255,255,0.00)");
-  sheen.addColorStop(1.00, "rgba(0,0,0,0.08)");
+  sheen.addColorStop(0.00, "rgba(255,255,255,0.26)");
+  sheen.addColorStop(0.18, "rgba(255,255,255,0.08)");
+  sheen.addColorStop(0.32, "rgba(255,255,255,0.00)");
+  sheen.addColorStop(1.00, "rgba(0,0,0,0.04)");
   ctx.fillStyle = sheen;
   ctx.fillRect(barLeft, barTop, barW, barH);
   ctx.restore();
 
-  ctx.strokeStyle = "rgba(255,238,190,0.78)";
-  ctx.lineWidth = 5;
+  ctx.strokeStyle = "rgba(255,236,178,0.92)";
+  ctx.lineWidth = 4;
   roundedRectPath(ctx, barLeft, barTop, barW, barH, barH * 0.48);
   ctx.stroke();
 
   for(let i = 0; i < 15; i++){
     const markerX = barLeft + slotW * (i + 0.5);
-    ctx.strokeStyle = "rgba(255,248,210,0.34)";
-    ctx.lineWidth = 2.4;
     ctx.beginPath();
-    ctx.moveTo(markerX, barTop + 10);
-    ctx.lineTo(markerX, barTop + barH - 10);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(markerX, barCenterY, barH * 0.17, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,239,178,0.16)";
+    ctx.arc(markerX, barCenterY, barH * 0.135, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,250,232,0.08)";
     ctx.fill();
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = "rgba(255,244,188,0.72)";
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "rgba(255,247,215,0.86)";
     ctx.stroke();
 
     const tempVal = Number(vals[i]);
@@ -2263,33 +2271,22 @@ function paintWallTstBarCanvas(canvas, values) {
       ctx,
       isFinite(tempVal) ? (Math.round(tempVal) + "°") : "--",
       markerX,
-      barTop + barH * 0.28,
+      barTop + barH * 0.20,
       {
-        font: "900 40px 'Courier New', monospace",
-        fill: isFinite(tempVal) ? "#fff4cf" : "rgba(255,244,207,0.74)",
-        stroke: "rgba(26,18,10,0.84)",
-        lineWidth: 8,
-        shadowBlur: 6
+        font: "900 68px 'Rajdhani', 'Arial Narrow', sans-serif",
+        fill: isFinite(tempVal) ? "#5d5240" : "rgba(95,82,62,0.66)",
+        stroke: "rgba(255,245,220,0.54)",
+        lineWidth: 5,
+        shadowBlur: 4
       }
     );
   }
 }
 
 function addWallTstBar(faceGroup, faceKey, part, centerY, panelW, panelH, centerX, panelZ, dir) {
-  const backPlate = new THREE.Mesh(
-    new THREE.BoxGeometry(panelW, panelH, 0.014),
-    new THREE.MeshStandardMaterial({
-      color: 0x1a1410,
-      roughness: 0.38,
-      metalness: 0.10
-    })
-  );
-  backPlate.position.set(centerX, centerY, panelZ);
-  faceGroup.add(backPlate);
-
   const canvas = document.createElement("canvas");
   canvas.width = 2048;
-  canvas.height = 300;
+  canvas.height = 240;
   const texture = new THREE.CanvasTexture(canvas);
   if (THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -2308,7 +2305,7 @@ function addWallTstBar(faceGroup, faceKey, part, centerY, panelW, panelH, center
       polygonOffsetUnits: -2
     })
   );
-  barPlane.position.set(centerX, centerY, panelZ + dir * 0.010);
+  barPlane.position.set(centerX, centerY, panelZ);
   if (dir < 0) barPlane.rotation.y = Math.PI;
   faceGroup.add(barPlane);
 
@@ -2346,15 +2343,15 @@ function buildWallTstBars(faceKey, faceZ, outwardDir) {
   }
 
   const panelLeft = pipeXL + 0.08;
-  const panelRight = pipeXR - 0.06;
+  const panelRight = pipeXR - 0.04;
   const panelW = panelRight - panelLeft;
   const panelCenterLocalX = (panelLeft + panelRight) * 0.5;
   const panelCenterX = faceXDir * panelCenterLocalX;
   const bottomGap = rowY[1] - rowY[0];
   const topGap = rowY[3] - rowY[2];
-  const panelHBot = Math.min(0.56, Math.max(0.40, bottomGap * 0.50));
-  const panelHTop = Math.min(0.56, Math.max(0.40, topGap * 0.50));
-  const panelZ = PIPE_Z + dir * 0.298;
+  const panelHBot = Math.min(0.38, Math.max(0.30, bottomGap * 0.24));
+  const panelHTop = Math.min(0.38, Math.max(0.30, topGap * 0.24));
+  const panelZ = PIPE_Z - dir * 0.012;
 
   addWallTstBar(faceGroup, faceKey, "top", (rowY[2] + rowY[3]) * 0.5, panelW, panelHTop, panelCenterX, panelZ, dir);
   addWallTstBar(faceGroup, faceKey, "bot", (rowY[0] + rowY[1]) * 0.5, panelW, panelHBot, panelCenterX, panelZ, dir);
