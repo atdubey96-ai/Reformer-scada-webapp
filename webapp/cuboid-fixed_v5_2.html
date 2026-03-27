@@ -3250,11 +3250,11 @@ function buildWallLabelOverlay(faceKey, faceZ, outwardDir) {
   const bSpacing = (spanEnd - spanStart) / (NUM_B - 1);
   const labelZ = PIPE_Z - dir * 0.012;
   const rowLaneW = spanStart - pipeXL;
-  const rowLabelLocalX = pipeXL + (rowLaneW * 0.50);
+  const rowLabelLocalX = pipeXL + (rowLaneW * 0.36);
   const rowLabelX = faceXDir * rowLabelLocalX;
   const rowLabelYOffset = 0.22;
-  const rowLabelW = Math.max(0.60, Math.min(0.68, rowLaneW * 0.72));
-  const rowLabelH = 0.48;
+  const rowLabelW = Math.max(0.45, Math.min(0.51, rowLaneW * 0.54));
+  const rowLabelH = 0.36;
   const burnerLabelY = (-FH / 2) + 0.22;
 
   for (let i = 0; i < rowY.length; i++) {
