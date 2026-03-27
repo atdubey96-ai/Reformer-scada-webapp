@@ -3147,7 +3147,7 @@ function buildWallLabelOverlay(faceKey, faceZ, outwardDir) {
   for (let b = 0; b < NUM_B; b++) {
     const localX = spanStart + b * bSpacing;
     const bx = faceXDir * localX;
-    const burnerLabel = createWallLabelMesh("B" + (b + 1), "burner", dir, 0.42, 0.28);
+    const burnerLabel = createWallLabelMesh("B" + (b + 1), "burner", dir, 0.84, 0.56);
     burnerLabel.position.set(bx, burnerLabelY, labelZ + dir * 0.010);
     faceGroup.add(burnerLabel);
   }
