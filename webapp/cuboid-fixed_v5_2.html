@@ -2193,7 +2193,8 @@ function paintWallTstBarCanvas(canvas, values) {
   const barW = w - 40;
   const barH = h - 96;
   const slotW = barW / 15;
-  const radius = barH * 0.5;
+  const radius = Math.min(barH * 0.5, slotW * 0.5);
+  const barCenterY = barTop + (barH * 0.5);
 
   ctx.clearRect(0, 0, w, h);
 
@@ -2243,6 +2244,46 @@ function paintWallTstBarCanvas(canvas, values) {
   ctx.fillStyle = specGrad;
   ctx.fill();
 
+  ctx.save();
+  roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
+  ctx.clip();
+  const endCapL = ctx.createRadialGradient(
+    barLeft + radius * 0.84,
+    barCenterY,
+    radius * 0.12,
+    barLeft + radius * 0.84,
+    barCenterY,
+    radius * 1.06
+  );
+  endCapL.addColorStop(0.00, "rgba(255,255,255,0.12)");
+  endCapL.addColorStop(0.48, "rgba(255,255,255,0.03)");
+  endCapL.addColorStop(1.00, "rgba(0,0,0,0.08)");
+  ctx.fillStyle = endCapL;
+  ctx.fillRect(barLeft, barTop, radius * 1.25, barH);
+
+  const endCapR = ctx.createRadialGradient(
+    barLeft + barW - (radius * 0.84),
+    barCenterY,
+    radius * 0.12,
+    barLeft + barW - (radius * 0.84),
+    barCenterY,
+    radius * 1.06
+  );
+  endCapR.addColorStop(0.00, "rgba(255,255,255,0.12)");
+  endCapR.addColorStop(0.48, "rgba(255,255,255,0.03)");
+  endCapR.addColorStop(1.00, "rgba(0,0,0,0.08)");
+  ctx.fillStyle = endCapR;
+  ctx.fillRect(barLeft + barW - (radius * 1.25), barTop, radius * 1.25, barH);
+  ctx.restore();
+
+  for(let i = 1; i < 15; i++){
+    const sx = barLeft + (i * slotW);
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.fillRect(sx - 1, barTop + 4, 1, barH - 8);
+    ctx.fillStyle = "rgba(0,0,0,0.16)";
+    ctx.fillRect(sx, barTop + 4, 1, barH - 8);
+  }
+
   for(let i = 0; i < 15; i++){
     const tempVal = Number(vals[i]);
     const x = barLeft + (i * slotW);
@@ -2250,12 +2291,12 @@ function paintWallTstBarCanvas(canvas, values) {
       ctx,
       isFinite(tempVal) ? (Math.round(tempVal) + "°C") : "--",
       x + (slotW * 0.5),
-      barTop + (barH * 0.51),
+      barTop + (barH * 0.515),
       {
-        font: "900 50px 'Segoe UI', 'Arial Narrow', sans-serif",
-        fill: "rgba(8,8,8,0.94)",
+        font: "900 58px 'Segoe UI', 'Arial Narrow', sans-serif",
+        fill: "rgba(6,6,6,0.95)",
         stroke: null,
-        shadow: "rgba(255,255,255,0.18)",
+        shadow: "rgba(255,255,255,0.20)",
         shadowBlur: 1,
         shadowOffsetY: 0
       }
@@ -2322,6 +2363,9 @@ function buildWallTstBars(faceKey, faceZ, outwardDir) {
   const X_OFFSET = 0.10;
   const pipeXL = -FW / 2 + X_OFFSET + PIPE_R;
   const pipeXR = FW / 2 - X_OFFSET - PIPE_R;
+  const NUM_B = 15;
+  const LEFT_PAD = 0.90;
+  const RIGHT_PAD = 0.46;
   const BOT_MARGIN = 0.30;
   const TOP_MARGIN = 0.60;
   const usable = FH - BOT_MARGIN - TOP_MARGIN;
@@ -2335,8 +2379,11 @@ function buildWallTstBars(faceKey, faceZ, outwardDir) {
     if (i < 5) y += unitGap * gapW[i];
   }
 
-  const panelLeft = pipeXL + 0.08;
-  const panelRight = pipeXR - 0.04;
+  const burnerSpanStart = pipeXL + LEFT_PAD;
+  const burnerSpanEnd = pipeXR - RIGHT_PAD;
+  const burnerSpacing = (burnerSpanEnd - burnerSpanStart) / (NUM_B - 1);
+  const panelLeft = burnerSpanStart - (burnerSpacing * 0.5);
+  const panelRight = burnerSpanEnd + (burnerSpacing * 0.5);
   const panelW = panelRight - panelLeft;
   const panelCenterLocalX = (panelLeft + panelRight) * 0.5;
   const panelCenterX = faceXDir * panelCenterLocalX;
