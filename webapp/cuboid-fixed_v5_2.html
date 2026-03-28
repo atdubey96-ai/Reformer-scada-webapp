@@ -711,11 +711,11 @@ scene.add(rimCool);
 const rimWarm = new THREE.DirectionalLight(0xffddb4, 0.58);
 rimWarm.position.set(8, -1.2, 7);
 scene.add(rimWarm);
-const frontAccentCool = new THREE.DirectionalLight(0xcfe2ff, 0);
-frontAccentCool.position.set(-6.2, 2.8, 9.8);
+const frontAccentCool = new THREE.PointLight(0xcfe2ff, 0, 22, 1.9);
+frontAccentCool.position.set(-4.8, 2.4, 6.8);
 scene.add(frontAccentCool);
-const frontAccentWarm = new THREE.DirectionalLight(0xffe0b8, 0);
-frontAccentWarm.position.set(6.0, 1.3, 9.6);
+const frontAccentWarm = new THREE.PointLight(0xffd8b5, 0, 22, 1.9);
+frontAccentWarm.position.set(4.8, 1.1, 6.6);
 scene.add(frontAccentWarm);
 let lastFrontPresentationBlend = -1;
 
@@ -3389,11 +3389,16 @@ addSidePanel(true);
 addSidePanel(false);
 
 const frontPresentationMaterials = [
-  { material: face34PanelMaterial, baseEmissiveIntensity: 0.18 },
-  { material: face34FrameMaterial, baseEmissiveIntensity: 0.16 },
-  { material: faceFrontMaterial, baseEmissiveIntensity: 0.11 },
-  { material: faceBackMaterial, baseEmissiveIntensity: 0.11 }
+  { material: face34PanelMaterial, baseEmissiveIntensity: 0.18, baseRoughness: 0.68, baseMetalness: 0.82 },
+  { material: face34FrameMaterial, baseEmissiveIntensity: 0.16, baseRoughness: 0.62, baseMetalness: 0.85 },
+  { material: faceFrontMaterial, baseEmissiveIntensity: 0.11, baseRoughness: 0.56, baseMetalness: 0.88 },
+  { material: faceBackMaterial, baseEmissiveIntensity: 0.11, baseRoughness: 0.56, baseMetalness: 0.88 }
 ];
+
+const frontAccentUp = new THREE.Vector3(0, 1, 0);
+const frontAccentViewDir = new THREE.Vector3();
+const frontAccentRight = new THREE.Vector3();
+const frontAccentBase = new THREE.Vector3();
 
 function applyFrontViewRichnessBoost() {
   const axisAlign = Math.abs(Math.cos(rotY));
@@ -3403,21 +3408,44 @@ function applyFrontViewRichnessBoost() {
   if (Math.abs(blend - lastFrontPresentationBlend) < 0.001) return false;
   lastFrontPresentationBlend = blend;
 
-  ambient.intensity = 1.18 - (0.16 * blend);
-  hemi.intensity = 0.92 - (0.12 * blend);
-  sun.intensity = 1.34 + (0.16 * blend);
-  fill.intensity = 0.82 + (0.26 * blend);
-  rimCool.intensity = 0.96 + (0.26 * blend);
-  rimWarm.intensity = 0.58 + (0.18 * blend);
-  frontAccentCool.intensity = 0.58 * blend;
-  frontAccentWarm.intensity = 0.50 * blend;
+  ambient.intensity = 1.18 - (0.22 * blend);
+  hemi.intensity = 0.92 - (0.18 * blend);
+  sun.intensity = 1.34 + (0.18 * blend);
+  fill.intensity = 0.82 + (0.20 * blend);
+  rimCool.intensity = 0.96 + (0.18 * blend);
+  rimWarm.intensity = 0.58 + (0.16 * blend);
+  frontAccentCool.intensity = 1.55 * blend;
+  frontAccentWarm.intensity = 1.35 * blend;
 
   for (let i = 0; i < frontPresentationMaterials.length; i++) {
     const item = frontPresentationMaterials[i];
     if (!item || !item.material) continue;
     item.material.emissiveIntensity = item.baseEmissiveIntensity + (0.11 * blend);
+    if (typeof item.baseRoughness === "number") {
+      item.material.roughness = Math.max(0.16, item.baseRoughness - (0.16 * blend));
+    }
+    if (typeof item.baseMetalness === "number") {
+      item.material.metalness = Math.min(1, item.baseMetalness + (0.08 * blend));
+    }
   }
 
+  return true;
+}
+
+function updateFrontAccentLightPositions() {
+  if (lastFrontPresentationBlend <= 0.001) return false;
+  frontAccentViewDir.copy(currentCameraPos).sub(currentLookAt);
+  if (frontAccentViewDir.lengthSq() < 0.000001) return false;
+  frontAccentViewDir.normalize();
+  frontAccentRight.crossVectors(frontAccentUp, frontAccentViewDir);
+  if (frontAccentRight.lengthSq() < 0.000001) {
+    frontAccentRight.set(1, 0, 0);
+  } else {
+    frontAccentRight.normalize();
+  }
+  frontAccentBase.copy(currentLookAt).addScaledVector(frontAccentViewDir, 3.6);
+  frontAccentCool.position.copy(frontAccentBase).addScaledVector(frontAccentRight, -4.2).addScaledVector(frontAccentUp, 1.9);
+  frontAccentWarm.position.copy(frontAccentBase).addScaledVector(frontAccentRight, 4.0).addScaledVector(frontAccentUp, 1.1);
   return true;
 }
 
@@ -3726,6 +3754,7 @@ function animate(now){
   currentLookAt.lerp(targetLookAt, cameraLerp);
   camera.position.copy(currentCameraPos);
   camera.lookAt(currentLookAt);
+  frameNeedsRender = updateFrontAccentLightPositions() || frameNeedsRender;
 
   if(
     currentCameraPos.distanceToSquared(targetCameraPos) > 0.00001 ||
