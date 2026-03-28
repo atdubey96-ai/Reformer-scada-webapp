@@ -2243,23 +2243,33 @@ const wallTstBarActors = [];
 function cuboidDrawTstBarText(ctx, text, x, y, options) {
   const opts = options || {};
   ctx.save();
-  ctx.font = opts.font || "800 60px 'Rajdhani', 'Arial Black', 'Segoe UI', Arial, sans-serif";
+  ctx.font = opts.font || "800 60px 'Rajdhani', 'Segoe UI', Arial, sans-serif";
   ctx.textAlign = opts.align || "center";
   ctx.textBaseline = opts.baseline || "middle";
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
-  ctx.strokeStyle = opts.stroke || "rgba(255,246,214,0.20)";
-  ctx.lineWidth = opts.lineWidth == null ? 2.4 : opts.lineWidth;
-  ctx.shadowColor = opts.shadow || "rgba(0,0,0,0.14)";
+  ctx.strokeStyle = opts.stroke || "rgba(255,246,214,0.14)";
+  ctx.lineWidth = opts.lineWidth == null ? 1.8 : opts.lineWidth;
+  ctx.shadowColor = opts.shadow || "rgba(0,0,0,0.00)";
   ctx.shadowBlur = opts.shadowBlur == null ? 0 : opts.shadowBlur;
-  ctx.shadowOffsetY = opts.shadowOffsetY == null ? 1 : opts.shadowOffsetY;
+  ctx.shadowOffsetY = opts.shadowOffsetY == null ? 0 : opts.shadowOffsetY;
+  const maxWidth = Math.max(0, Number(opts.maxWidth) || 0);
+  const measured = ctx.measureText(text || "");
+  const naturalWidth = measured && measured.width ? measured.width : 0;
+  const scaleX = maxWidth > 0 && naturalWidth > maxWidth ? (maxWidth / naturalWidth) : 1;
+  const lineWidth = ctx.lineWidth;
+  ctx.translate(x, y);
+  if(scaleX !== 1){
+    ctx.scale(scaleX, 1);
+    ctx.lineWidth = lineWidth / scaleX;
+  }
   if(opts.stroke !== null && ctx.lineWidth > 0){
-    ctx.strokeText(text, x, y);
+    ctx.strokeText(text, 0, 0);
   }
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  ctx.fillStyle = opts.fill || "rgba(4,4,4,0.99)";
-  ctx.fillText(text, x, y);
+  ctx.fillStyle = opts.fill || "rgba(6,7,9,0.995)";
+  ctx.fillText(text, 0, 0);
   ctx.restore();
 }
 
@@ -2425,19 +2435,20 @@ function paintWallTstBarCanvas(canvas, values) {
   for(let i = 0; i < 15; i++){
     const tempVal = Number(vals[i]);
     const x = barLeft + (i * slotW);
-    cuboidDrawTstBarText(
+      cuboidDrawTstBarText(
       ctx,
       isFinite(tempVal) ? (Math.round(tempVal) + "°C") : "--",
       x + (slotW * 0.5),
       barTop + (barH * 0.52),
       {
-        font: "800 82px 'Rajdhani', 'Arial Black', 'Segoe UI', Arial, sans-serif",
-        fill: "rgba(4,4,4,0.995)",
-        stroke: "rgba(255,246,214,0.18)",
-        lineWidth: 1.8,
-        shadow: "rgba(0,0,0,0.10)",
+        font: "800 78px 'Rajdhani', 'Segoe UI', Arial, sans-serif",
+        fill: "rgba(6,7,9,0.995)",
+        stroke: "rgba(255,248,220,0.12)",
+        lineWidth: 1.2,
+        shadow: "rgba(0,0,0,0.00)",
         shadowBlur: 0,
-        shadowOffsetY: 0
+        shadowOffsetY: 0,
+        maxWidth: slotW * 0.76
       }
     );
   }
