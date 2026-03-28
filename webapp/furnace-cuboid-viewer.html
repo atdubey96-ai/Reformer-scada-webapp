@@ -1238,6 +1238,7 @@ function cuboidDrawPeepBar(ctx,label,vals,left,centerY,width,scale){
   const k=Math.max(1,Number(scale)||1);
   const barHeight=Math.round(46*k);
   const barTop=centerY-(barHeight/2);
+  const barRadius=Math.round(barHeight/2);
   const slotW=width/15;
   const labelLeft=Math.round(16*k);
   const labelW=Math.round(94*k);
@@ -1263,26 +1264,61 @@ function cuboidDrawPeepBar(ctx,label,vals,left,centerY,width,scale){
   });
 
   ctx.save();
-  cuboidRoundRectPath(ctx,left,barTop,width,barHeight,Math.round(12*k));
+  cuboidRoundRectPath(ctx,left,barTop,width,barHeight,barRadius);
   ctx.clip();
   if(positions.length){
     const grad=ctx.createLinearGradient(left,0,left+width,0);
+    grad.addColorStop(0,cuboidTempToColor(positions[0].val));
     for(let p=0;p<positions.length;p++){
       const stop=(positions[p].idx+0.5)/15;
       grad.addColorStop(Math.max(0,Math.min(1,stop)),cuboidTempToColor(positions[p].val));
     }
-    grad.addColorStop(0,cuboidTempToColor(positions[0].val));
     grad.addColorStop(1,cuboidTempToColor(positions[positions.length-1].val));
     ctx.fillStyle=grad;
   }else{
     ctx.fillStyle="rgba(31,41,55,0.88)";
   }
   ctx.fillRect(left,barTop,width,barHeight);
+  const gloss=ctx.createLinearGradient(0,barTop,0,barTop+(barHeight*0.58));
+  gloss.addColorStop(0,"rgba(255,255,255,0.20)");
+  gloss.addColorStop(0.46,"rgba(255,255,255,0.07)");
+  gloss.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle=gloss;
+  ctx.fillRect(left,barTop,width,barHeight);
+  const capWidth=Math.max(barHeight*0.68,20*k);
+  const leftCap=ctx.createRadialGradient(
+    left+(barHeight*0.22),
+    centerY,
+    barHeight*0.12,
+    left+(barHeight*0.54),
+    centerY,
+    capWidth
+  );
+  leftCap.addColorStop(0,"rgba(255,255,255,0.32)");
+  leftCap.addColorStop(0.36,"rgba(255,255,255,0.14)");
+  leftCap.addColorStop(0.72,"rgba(16,24,38,0.08)");
+  leftCap.addColorStop(1,"rgba(6,10,18,0.28)");
+  ctx.fillStyle=leftCap;
+  ctx.fillRect(left,barTop,capWidth,barHeight);
+  const rightCap=ctx.createRadialGradient(
+    left+width-(barHeight*0.22),
+    centerY,
+    barHeight*0.12,
+    left+width-(barHeight*0.54),
+    centerY,
+    capWidth
+  );
+  rightCap.addColorStop(0,"rgba(255,255,255,0.32)");
+  rightCap.addColorStop(0.36,"rgba(255,255,255,0.14)");
+  rightCap.addColorStop(0.72,"rgba(16,24,38,0.08)");
+  rightCap.addColorStop(1,"rgba(6,10,18,0.28)");
+  ctx.fillStyle=rightCap;
+  ctx.fillRect(left+width-capWidth,barTop,capWidth,barHeight);
   ctx.restore();
 
   ctx.lineWidth=1.2*k;
   ctx.strokeStyle="rgba(255,255,255,0.30)";
-  cuboidRoundRectPath(ctx,left,barTop,width,barHeight,Math.round(12*k));
+  cuboidRoundRectPath(ctx,left,barTop,width,barHeight,barRadius);
   ctx.stroke();
 
   for(let m=0;m<15;m++){
