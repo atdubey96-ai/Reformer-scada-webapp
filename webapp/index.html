@@ -17460,6 +17460,34 @@ html, body, body *, body *::before, body *::after, svg text{
         <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);">
           ⚙️ Process Temperatures
         </div>
+        <div id="td-plant-config-bar" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;">
+          Live plant import is not configured. Set the plant data Supabase URL and key.
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+          <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;min-width:220px;">
+            <span id="td-plant-status-dot" style="width:10px;height:10px;border-radius:999px;background:#64748b;box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;flex:0 0 auto;"></span>
+            <span id="td-plant-status-text" style="font-size:12px;font-weight:700;color:#e2e8f0;letter-spacing:0.3px;">Plant import idle</span>
+          </div>
+          <div class="td-toolbar-pill"><span class="td-toolbar-label">Active Tags:</span><span id="td-plant-stat-tags" style="color:#f8fafc;font-weight:800;">—</span></div>
+          <div class="td-toolbar-pill"><span class="td-toolbar-label">Mapped:</span><span id="td-plant-stat-mapped" style="color:#f8fafc;font-weight:800;">—</span></div>
+          <div class="td-toolbar-pill"><span class="td-toolbar-label">Last Sync:</span><span id="td-plant-stat-sync" style="color:#f8fafc;font-weight:800;">—</span></div>
+          <div class="td-toolbar-pill"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" style="color:#f8fafc;font-weight:800;">30 sec</span></div>
+        </div>
+        <div class="td-toolbar-row" style="justify-content:space-between;gap:10px;margin-bottom:16px;align-items:center;">
+          <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;">
+            <span class="td-toolbar-label">Auto-refresh:</span>
+            <select id="td-plant-refresh-interval" class="td-toolbar-select">
+              <option value="10" style="background:#1e293b;color:#e2e8f0;">10 sec</option>
+              <option value="30" selected style="background:#1e293b;color:#e2e8f0;">30 sec</option>
+              <option value="60" style="background:#1e293b;color:#e2e8f0;">1 min</option>
+              <option value="0" style="background:#1e293b;color:#e2e8f0;">Off</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="button" onclick="refreshTdPlantImportManual()" class="td-toolbar-btn td-toolbar-btn-soft" title="Fetch the latest mapped plant tags and fill the process fields">↻ Refresh Plant Data</button>
+            <button type="button" onclick="downloadTdPlantImportSnapshot()" class="td-toolbar-btn td-toolbar-btn-muted" title="Download the latest imported mapped plant values">⬇ Download Snapshot</button>
+          </div>
+        </div>
         <div class="td-manual-grid">
 
           <!-- HGU Load -->
@@ -17508,6 +17536,46 @@ html, body, body *, body *::before, body *::after, svg text{
           <div class="td-field-group">
             <label class="td-label">Methane Slip <span class="td-unit">(%Vol)</span></label>
             <input type="number" id="td-methane-slip" class="td-input" placeholder="Enter value" step="0.01">
+          </div>
+
+          <div class="td-field-group">
+            <label class="td-label">PSA-1 Off Gas</label>
+            <input type="number" id="td-psa1-og" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
+          <div class="td-field-group">
+            <label class="td-label">PSA-2 Off Gas</label>
+            <input type="number" id="td-psa2-og" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
+          <div class="td-field-group">
+            <label class="td-label">Naphtha Fuel</label>
+            <input type="number" id="td-naphtha-fuel" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
+          <div class="td-field-group">
+            <label class="td-label">PSA-1 Off Gas Tip Pressure</label>
+            <input type="number" id="td-psa1-tip-p" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
+          <div class="td-field-group">
+            <label class="td-label">Natural Gas Tip Pressure</label>
+            <input type="number" id="td-ng-tip-p" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
+          <div class="td-field-group">
+            <label class="td-label">Naphtha Tip Pressure</label>
+            <input type="number" id="td-naphtha-tip-p" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
+          <div class="td-field-group">
+            <label class="td-label">NG Fuel Temp <span class="td-unit">(°C)</span></label>
+            <input type="number" id="td-ng-fuel-temp" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
+          <div class="td-field-group">
+            <label class="td-label">GJA.2041tic2411 <span class="td-unit">(Unassigned)</span></label>
+            <input type="number" id="td-tag-2411" class="td-input" placeholder="Enter value" step="0.1">
           </div>
 
         </div>
@@ -20497,11 +20565,21 @@ async function exportToExcel(options){
   XLSX.utils.book_append_sheet(wb, wsTip, "Tip Damage Log");
 
   /* Sheet: Temp Data */
-  var tdHeaders = [
-    "Date/Time","Shift","HGU Load (%)",
-    "AB Side COT (°C)","CD Side COT (°C)","Flue Gas (°C)","Excess O2 (%Vol)",
-    "Pre-ref Max (°C)","Pre-ref Min (°C)","Methane Slip (%Vol)"
-  ];
+  var tdProcessHeaders = (Array.isArray(TD_PROCESS_FIELD_BINDINGS) && TD_PROCESS_FIELD_BINDINGS.length)
+    ? TD_PROCESS_FIELD_BINDINGS.map(function(binding){
+        return binding.exportLabel || binding.label || binding.key || "";
+      })
+    : [
+        "HGU Load (%)",
+        "AB Side COT (°C)",
+        "CD Side COT (°C)",
+        "Flue Gas (°C)",
+        "Excess O2 (%Vol)",
+        "Pre-ref Max (°C)",
+        "Pre-ref Min (°C)",
+        "Methane Slip (%Vol)"
+      ];
+  var tdHeaders = ["Date/Time","Shift"].concat(tdProcessHeaders);
   var phRowKeys   = ["ab-bot","cd-bot","ab-top","cd-top"];
   var phRowLabels = {"ab-bot":"AB Bot","cd-bot":"CD Bot","ab-top":"AB Top","cd-top":"CD Top"};
   phRowKeys.forEach(function(rk){
@@ -20511,8 +20589,23 @@ async function exportToExcel(options){
   var tdRows = [tdHeaders];
   if(Array.isArray(tempDataEntries) && tempDataEntries.length){
     tempDataEntries.forEach(function(e){
-      var row=[e.dt||"", e.shift||"", e.hguLoad||"", e.abCot||"", e.cdCot||"", e.flueGas||"",
-               e.excessO2||"", e.preRefMax||"", e.preRefMin||"", e.methaneSlip||""];
+      var row=[e.dt||"", e.shift||""];
+      if(Array.isArray(TD_PROCESS_FIELD_BINDINGS) && TD_PROCESS_FIELD_BINDINGS.length){
+        TD_PROCESS_FIELD_BINDINGS.forEach(function(binding){
+          row.push(e && e[binding.key] != null ? e[binding.key] : "");
+        });
+      }else{
+        row.push(
+          e.hguLoad||"",
+          e.abCot||"",
+          e.cdCot||"",
+          e.flueGas||"",
+          e.excessO2||"",
+          e.preRefMax||"",
+          e.preRefMin||"",
+          e.methaneSlip||""
+        );
+      }
       phRowKeys.forEach(function(rk){
         var vals=(e.peepHoles&&e.peepHoles[rk])?e.peepHoles[rk]:[];
         for(var ph=0;ph<15;ph++) row.push(vals[ph]!==undefined?vals[ph]:"");
@@ -20814,13 +20907,27 @@ function _doImport(file, onDone, silent){
             var idxAbCot      = colIdx(["ab side cot","ab cot"], idxHguLoad>=0 ? 3 : 2);
             var idxCdCot      = colIdx(["cd side cot","cd cot"], idxHguLoad>=0 ? 4 : 3);
             var idxFlue       = colIdx(["flue gas"], idxHguLoad>=0 ? 5 : 4);
-            var idxExcessO2   = colIdx(["excess o2","o2"], idxHguLoad>=0 ? 6 : 5);
+            var idxExcessO2   = colIdx(["excess o2","o2 excess","o2"], idxHguLoad>=0 ? 6 : 5);
             var idxPreMax     = colIdx(["pre-ref max","prereformer max"], idxHguLoad>=0 ? 7 : 6);
             var idxPreMin     = colIdx(["pre-ref min","prereformer min"], idxHguLoad>=0 ? 8 : 7);
-            var idxMethane    = colIdx(["methane slip"], -1);
+            var idxMethane    = colIdx(["methane slip","ch4 slip"], -1);
+            var idxPsa1Og     = colIdx(["psa-1 off gas","psa-1 og","psa1 og"], -1);
+            var idxPsa2Og     = colIdx(["psa-2 off gas","psa-2 og","psa2 og"], -1);
+            var idxNaphthaFuel = colIdx(["naphtha fuel"], -1);
+            var idxPsa1TipP   = colIdx(["psa-1 off gas tip pressure","psa-1 tip p","psa1 tip p"], -1);
+            var idxNgTipP     = colIdx(["natural gas tip pressure","ng tip p"], -1);
+            var idxNaphthaTipP = colIdx(["naphtha tip pressure","naphtha tip p"], -1);
+            var idxNgFuelTemp = colIdx(["ng fuel temp","ng fuel temperature"], -1);
+            var idxTag2411    = colIdx(["gja.2041tic2411","tag 2411","unknown"], -1);
             var idxSnapshot   = colIdx(["burner snapshot json","burner snapshot","snapshot"], -1);
             var phRowKeys2    = ["ab-bot","cd-bot","ab-top","cd-top"];
-            var colOffsetStart = idxMethane>=0 ? idxMethane + 1 : (idxHguLoad>=0 ? 10 : 8);
+            var scalarIndexes = [
+              idxHguLoad, idxAbCot, idxCdCot, idxFlue, idxExcessO2, idxPreMax, idxPreMin, idxMethane,
+              idxPsa1Og, idxPsa2Og, idxNaphthaFuel, idxPsa1TipP, idxNgTipP, idxNaphthaTipP, idxNgFuelTemp, idxTag2411
+            ].filter(function(idx){ return idx >= 0; });
+            var colOffsetStart = scalarIndexes.length
+              ? (Math.max.apply(null, scalarIndexes) + 1)
+              : (idxHguLoad>=0 ? 10 : 8);
 
             tempDataEntries = [];
             tdData.slice(1).forEach(function(row){
@@ -20836,6 +20943,14 @@ function _doImport(file, onDone, silent){
                 preRefMax:  row[idxPreMax]||"",
                 preRefMin:  row[idxPreMin]||"",
                 methaneSlip: idxMethane>=0 ? (row[idxMethane]||"") : "",
+                psa1Og:     idxPsa1Og>=0 ? (row[idxPsa1Og]||"") : "",
+                psa2Og:     idxPsa2Og>=0 ? (row[idxPsa2Og]||"") : "",
+                naphthaFuel: idxNaphthaFuel>=0 ? (row[idxNaphthaFuel]||"") : "",
+                psa1TipP:   idxPsa1TipP>=0 ? (row[idxPsa1TipP]||"") : "",
+                ngTipP:     idxNgTipP>=0 ? (row[idxNgTipP]||"") : "",
+                naphthaTipP: idxNaphthaTipP>=0 ? (row[idxNaphthaTipP]||"") : "",
+                ngFuelTemp: idxNgFuelTemp>=0 ? (row[idxNgFuelTemp]||"") : "",
+                tag2411:    idxTag2411>=0 ? (row[idxTag2411]||"") : "",
                 peepHoles:  {}
               };
               var colOffset = colOffsetStart;
@@ -25575,13 +25690,29 @@ var tempDataEntries = [];
 var tdEditingIndex = -1;
 var TD_PLANT_DATA_SUPABASE_URL = "https://mozuuowwdfyqqvpiyetk.supabase.co";
 var TD_PLANT_DATA_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1venV1b3d3ZGZ5cXF2cGl5ZXRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTU3NjksImV4cCI6MjA5MDE5MTc2OX0.SqSAoPwxgPi6cVrYeIQC8xBebbVINZEaPw-odWdqUPo";
-var TD_HGU_LOAD_TAG_ID = "GJA.2041fic2405.pv";
-var TD_PLANT_DATA_REFRESH_MS = 30000;
+var TD_PROCESS_FIELD_BINDINGS = [
+  { key:"hguLoad", inputId:"td-hgu-load", exportLabel:"HGU Load (%)", importLabels:["hgu load"], plantTagId:"GJA.2041fic2405.pv" },
+  { key:"abCot", inputId:"td-ab-cot", exportLabel:"AB Side COT (degC)", importLabels:["ab side cot","ab cot"], plantTagId:"GJA.2041ti2501.pv" },
+  { key:"cdCot", inputId:"td-cd-cot", exportLabel:"CD Side COT (degC)", importLabels:["cd side cot","cd cot"], plantTagId:"GJA.2041ti2502.pv" },
+  { key:"flueGas", inputId:"td-flue-gas", exportLabel:"Flue Gas (degC)", importLabels:["flue gas","flue gas temp","reformer flue gas"], plantTagId:"GJA.2041ti2408.pv" },
+  { key:"excessO2", inputId:"td-excess-o2", exportLabel:"Excess O2 (%Vol)", importLabels:["excess o2","o2 excess","o2"], plantTagId:"GJA.2041ai2401.pv" },
+  { key:"preRefMax", inputId:"td-prereformer-max", exportLabel:"Pre-ref Max (degC)", importLabels:["pre-ref max","prereformer max"] },
+  { key:"preRefMin", inputId:"td-prereformer-min", exportLabel:"Pre-ref Min (degC)", importLabels:["pre-ref min","prereformer min"] },
+  { key:"methaneSlip", inputId:"td-methane-slip", exportLabel:"Methane Slip (%Vol)", importLabels:["methane slip","ch4 slip"], plantTagId:"GJA.2041ai2601.pv" },
+  { key:"psa1Og", inputId:"td-psa1-og", exportLabel:"PSA-1 Off Gas", importLabels:["psa-1 og","psa1 og","psa-1 off gas"], plantTagId:"GJA.2041fic2904.pv" },
+  { key:"psa2Og", inputId:"td-psa2-og", exportLabel:"PSA-2 Off Gas", importLabels:["psa-2 og","psa2 og","psa-2 off gas"], plantTagId:"GJA.2041fic3009.pv" },
+  { key:"naphthaFuel", inputId:"td-naphtha-fuel", exportLabel:"Naphtha Fuel", importLabels:["naphtha fuel"], plantTagId:"GJA.2041fic6303a.pv" },
+  { key:"psa1TipP", inputId:"td-psa1-tip-p", exportLabel:"PSA-1 Off Gas Tip Pressure", importLabels:["psa-1 tip p","psa1 tip p","psa-1 off gas tip pressure"], plantTagId:"GJA.2041pi2501a.pv" },
+  { key:"ngTipP", inputId:"td-ng-tip-p", exportLabel:"Natural Gas Tip Pressure", importLabels:["ng tip p","natural gas tip pressure"], plantTagId:"GJA.2041pi2504a.pv" },
+  { key:"naphthaTipP", inputId:"td-naphtha-tip-p", exportLabel:"Naphtha Tip Pressure", importLabels:["naphtha tip p","naphtha tip pressure"], plantTagId:"GJA.2041pi2507a.pv" },
+  { key:"ngFuelTemp", inputId:"td-ng-fuel-temp", exportLabel:"NG Fuel Temp (degC)", importLabels:["ng fuel temp","ng fuel temperature"], plantTagId:"GJA.2041ti2412.pv" },
+  { key:"tag2411", inputId:"td-tag-2411", exportLabel:"GJA.2041tic2411 (Unassigned)", importLabels:["gja.2041tic2411","tag 2411","unknown"], plantTagId:"GJA.2041tic2411.pv" }
+];
 var tdPlantDataRefreshTimer = null;
-var tdPlantHguFetchInFlight = null;
-var tdPlantHguLastRow = null;
-var tdPlantHguManualOverride = false;
-var tdPlantHguApplyingValue = false;
+var tdPlantFetchInFlight = null;
+var tdPlantLatestByTag = new Map();
+var tdPlantSnapshotRows = [];
+var tdPlantControlsBound = false;
 
 function updateTempSaveButtonLabel(){
   var btn = document.getElementById("td-save-btn");
@@ -25592,10 +25723,13 @@ function updateTempSaveButtonLabel(){
 function setTempEditMode(idx){
   tdEditingIndex = (typeof idx === "number" && idx >= 0) ? idx : -1;
   updateTempSaveButtonLabel();
+  if(tdEditingIndex >= 0 && isTempDataTabActive()){
+    setTdPlantImportStatus("online", "Live sync paused during edit");
+  }
 }
 
-function getTdHguLoadInput(){
-  return document.getElementById("td-hgu-load");
+function getTdProcessFieldInput(binding){
+  return binding ? document.getElementById(binding.inputId) : null;
 }
 
 function isTempDataTabActive(){
@@ -25603,48 +25737,150 @@ function isTempDataTabActive(){
   return !!(panel && panel.classList.contains("tab-active"));
 }
 
+function readTdProcessFieldInputs(){
+  var values = {};
+  TD_PROCESS_FIELD_BINDINGS.forEach(function(binding){
+    var input = getTdProcessFieldInput(binding);
+    values[binding.key] = input ? input.value : "";
+  });
+  return values;
+}
+
+function writeTdProcessFieldInputs(entry){
+  TD_PROCESS_FIELD_BINDINGS.forEach(function(binding){
+    var input = getTdProcessFieldInput(binding);
+    if(input) input.value = entry && entry[binding.key] != null ? entry[binding.key] : "";
+  });
+}
+
+function clearTdProcessFieldInputs(){
+  TD_PROCESS_FIELD_BINDINGS.forEach(function(binding){
+    var input = getTdProcessFieldInput(binding);
+    if(input) input.value = "";
+  });
+}
+
+function getTdPlantRefreshSelect(){
+  return document.getElementById("td-plant-refresh-interval");
+}
+
+function getTdPlantMappedBindings(){
+  return TD_PROCESS_FIELD_BINDINGS.filter(function(binding){
+    return !!binding.plantTagId;
+  });
+}
+
+function setTdPlantConfigBarVisible(show, text){
+  var bar = document.getElementById("td-plant-config-bar");
+  if(!bar) return;
+  bar.style.display = show ? "block" : "none";
+  if(text) bar.textContent = text;
+}
+
+function setTdPlantImportStatus(state, text){
+  var dot = document.getElementById("td-plant-status-dot");
+  var label = document.getElementById("td-plant-status-text");
+  if(dot){
+    var color = "#64748b";
+    var glow = "0 0 0 1px rgba(255,255,255,0.18) inset";
+    if(state === "online"){
+      color = "#34d399";
+      glow = "0 0 14px rgba(52,211,153,0.45), 0 0 0 1px rgba(255,255,255,0.22) inset";
+    }else if(state === "syncing"){
+      color = "#fbbf24";
+      glow = "0 0 14px rgba(251,191,36,0.35), 0 0 0 1px rgba(255,255,255,0.22) inset";
+    }else if(state === "offline"){
+      color = "#f87171";
+      glow = "0 0 14px rgba(248,113,113,0.28), 0 0 0 1px rgba(255,255,255,0.16) inset";
+    }
+    dot.style.background = color;
+    dot.style.boxShadow = glow;
+  }
+  if(label) label.textContent = text || "";
+}
+
+function updateTdPlantImportRateStat(){
+  var stat = document.getElementById("td-plant-stat-rate");
+  var select = getTdPlantRefreshSelect();
+  if(!stat || !select) return;
+  var sec = parseInt(select.value, 10);
+  stat.textContent = sec > 0 ? (sec + " sec") : "Off";
+}
+
+function updateTdPlantImportStats(latestMap, mappedCount){
+  var tagsEl = document.getElementById("td-plant-stat-tags");
+  var mappedEl = document.getElementById("td-plant-stat-mapped");
+  var syncEl = document.getElementById("td-plant-stat-sync");
+  if(tagsEl) tagsEl.textContent = latestMap && latestMap.size ? String(latestMap.size) : "0";
+  if(mappedEl) mappedEl.textContent = String(mappedCount || 0) + " / " + String(getTdPlantMappedBindings().length);
+  if(syncEl){
+    if(latestMap && latestMap.size){
+      var newest = null;
+      latestMap.forEach(function(row){
+        if(!row || !row.synced_at) return;
+        if(!newest || new Date(row.synced_at) > new Date(newest.synced_at)) newest = row;
+      });
+      syncEl.textContent = newest && newest.synced_at ? new Date(newest.synced_at).toLocaleTimeString() : "—";
+    }else{
+      syncEl.textContent = "—";
+    }
+  }
+  updateTdPlantImportRateStat();
+}
+
+function checkTdPlantImportConfig(){
+  var ok = !!(TD_PLANT_DATA_SUPABASE_URL && TD_PLANT_DATA_SUPABASE_KEY
+    && TD_PLANT_DATA_SUPABASE_URL.indexOf("YOUR_PROJECT_ID") === -1
+    && TD_PLANT_DATA_SUPABASE_KEY.indexOf("YOUR_ANON") === -1);
+  setTdPlantConfigBarVisible(!ok, "Live plant import is not configured. Set the plant data Supabase URL and key.");
+  if(!ok){
+    setTdPlantImportStatus("offline", "Plant import not configured");
+    updateTdPlantImportStats(new Map(), 0);
+  }
+  return ok;
+}
+
 function normalizeTdPlantNumericValue(raw){
   if(raw === null || raw === undefined) return "";
-  var token = String(raw).trim();
+  var token = String(raw).trim().replace(/,/g, "");
   if(!token) return "";
   var n = Number(token);
-  if(!isFinite(n)) return token;
+  if(!isFinite(n)) return "";
   if(Math.abs(n - Math.round(n)) < 0.000001) return String(Math.round(n));
   return String(Number(n.toFixed(2)));
 }
 
-function canAutoApplyTdHguLoad(){
-  var input = getTdHguLoadInput();
-  if(!input) return false;
-  if(tdEditingIndex >= 0) return false;
-  if(tdPlantHguManualOverride) return false;
-  return true;
+function pulseTdPlantProcessField(input){
+  if(!input) return;
+  input.style.transition = "box-shadow 180ms ease, border-color 180ms ease";
+  input.style.borderColor = "rgba(52,211,153,0.88)";
+  input.style.boxShadow = "0 0 0 3px rgba(52,211,153,0.18)";
+  setTimeout(function(){
+    input.style.borderColor = "";
+    input.style.boxShadow = "";
+  }, 520);
 }
 
-function applyTdHguLoadFromPlantRow(row){
-  tdPlantHguLastRow = row || null;
-  if(!row || !canAutoApplyTdHguLoad()) return false;
-  var input = getTdHguLoadInput();
-  if(!input) return false;
-  var nextValue = normalizeTdPlantNumericValue(row.value);
-  tdPlantHguApplyingValue = true;
-  input.value = nextValue;
-  input.setAttribute("data-live-tag-id", row.tag_id || TD_HGU_LOAD_TAG_ID);
-  input.setAttribute("data-live-synced-at", row.synced_at || "");
-  input.title = row.synced_at
-    ? ("Live HGU Load from " + TD_HGU_LOAD_TAG_ID + " · " + new Date(row.synced_at).toLocaleString())
-    : ("Live HGU Load from " + TD_HGU_LOAD_TAG_ID);
-  tdPlantHguApplyingValue = false;
-  return true;
+function collectTdPlantLatestRows(rows){
+  var latest = new Map();
+  (Array.isArray(rows) ? rows : []).forEach(function(row){
+    if(row && row.tag_id && !latest.has(row.tag_id)){
+      latest.set(row.tag_id, row);
+    }
+  });
+  return latest;
 }
 
-async function fetchLatestTdPlantTagRow(tagId){
+async function fetchTdPlantImportRows(){
   if(!TD_PLANT_DATA_SUPABASE_URL || !TD_PLANT_DATA_SUPABASE_KEY || typeof fetch !== "function") return null;
+  var wantedTags = getTdPlantMappedBindings().map(function(binding){
+    return String(binding.plantTagId || "").trim();
+  }).filter(Boolean);
   var url = TD_PLANT_DATA_SUPABASE_URL + "/rest/v1/plant_data"
-    + "?select=tag_id,value,synced_at"
-    + "&tag_id=eq." + encodeURIComponent(String(tagId || ""))
+    + "?select=tag_id,label,value,unit,synced_at"
+    + (wantedTags.length ? ("&tag_id=in.(" + wantedTags.join(",") + ")") : "")
     + "&order=synced_at.desc"
-    + "&limit=1";
+    + "&limit=200";
   var res = await fetchWithTimeout(url, {
     method: "GET",
     cache: "no-store",
@@ -25656,36 +25892,77 @@ async function fetchLatestTdPlantTagRow(tagId){
     }
   }, 9000);
   if(!res || !res.ok) return null;
-  var rows = await res.json();
-  return Array.isArray(rows) && rows.length ? rows[0] : null;
+  return await res.json();
 }
 
-async function refreshTdHguLoadLive(force){
-  if(!force && !isTempDataTabActive()) return tdPlantHguLastRow;
-  if(tdPlantHguFetchInFlight) return tdPlantHguFetchInFlight;
-  tdPlantHguFetchInFlight = (async function(){
+function applyTdPlantImportToInputs(latestMap){
+  var mappedRows = [];
+  getTdPlantMappedBindings().forEach(function(binding){
+    var row = latestMap && latestMap.get ? latestMap.get(binding.plantTagId) : null;
+    if(!row) return;
+    mappedRows.push({
+      key: binding.key,
+      label: binding.exportLabel,
+      tag_id: row.tag_id || binding.plantTagId,
+      source_label: row.label || "",
+      value: row.value,
+      unit: row.unit || "",
+      synced_at: row.synced_at || ""
+    });
+    if(tdEditingIndex >= 0) return;
+    var input = getTdProcessFieldInput(binding);
+    if(!input) return;
+    var nextValue = normalizeTdPlantNumericValue(row.value);
+    if(nextValue === "") return;
+    var prevValue = String(input.value || "");
+    input.value = nextValue;
+    input.setAttribute("data-plant-tag-id", row.tag_id || binding.plantTagId);
+    input.setAttribute("data-plant-synced-at", row.synced_at || "");
+    input.title = (row.label || binding.exportLabel || binding.key) + (row.unit ? (" [" + row.unit + "]") : "")
+      + (row.synced_at ? (" · " + new Date(row.synced_at).toLocaleString()) : "");
+    if(prevValue !== nextValue) pulseTdPlantProcessField(input);
+  });
+  tdPlantSnapshotRows = mappedRows;
+  return mappedRows.length;
+}
+
+async function refreshTdPlantImportNow(force){
+  if(!force && !isTempDataTabActive()) return tdPlantLatestByTag;
+  if(!checkTdPlantImportConfig()) return null;
+  if(tdPlantFetchInFlight) return tdPlantFetchInFlight;
+  setTdPlantImportStatus("syncing", tdEditingIndex >= 0 ? "Syncing plant data while edit is paused" : "Syncing plant data...");
+  tdPlantFetchInFlight = (async function(){
     try{
-      var row = await fetchLatestTdPlantTagRow(TD_HGU_LOAD_TAG_ID);
-      if(row) applyTdHguLoadFromPlantRow(row);
-      return row;
+      var rows = await fetchTdPlantImportRows();
+      tdPlantLatestByTag = collectTdPlantLatestRows(rows);
+      var mappedCount = applyTdPlantImportToInputs(tdPlantLatestByTag);
+      updateTdPlantImportStats(tdPlantLatestByTag, mappedCount);
+      if(tdPlantLatestByTag.size){
+        setTdPlantImportStatus("online", tdEditingIndex >= 0 ? "Live synced · process fields paused during edit" : "Live plant data imported to process fields");
+      }else{
+        setTdPlantImportStatus("offline", "No plant data found");
+      }
+      return tdPlantLatestByTag;
     }catch(e){
-      console.warn("TST HGU load live fetch failed:", e);
+      console.warn("TST plant import failed:", e);
+      setTdPlantImportStatus("offline", "Plant import error");
       return null;
     }finally{
-      tdPlantHguFetchInFlight = null;
+      tdPlantFetchInFlight = null;
     }
   })();
-  return tdPlantHguFetchInFlight;
+  return tdPlantFetchInFlight;
 }
 
-function restoreTdHguLoadLiveValue(){
+function restoreTdPlantImportedValues(){
   if(!isTempDataTabActive()) return;
-  if(tdEditingIndex >= 0 || tdPlantHguManualOverride) return;
-  if(tdPlantHguLastRow){
-    applyTdHguLoadFromPlantRow(tdPlantHguLastRow);
+  if(tdEditingIndex >= 0) return;
+  if(tdPlantLatestByTag && tdPlantLatestByTag.size){
+    var mappedCount = applyTdPlantImportToInputs(tdPlantLatestByTag);
+    updateTdPlantImportStats(tdPlantLatestByTag, mappedCount);
     return;
   }
-  refreshTdHguLoadLive(true).catch(function(){});
+  refreshTdPlantImportNow(true).catch(function(){});
 }
 
 function stopTdPlantDataRefresh(){
@@ -25698,29 +25975,62 @@ function stopTdPlantDataRefresh(){
 function startTdPlantDataRefresh(){
   stopTdPlantDataRefresh();
   if(!isTempDataTabActive()) return;
-  refreshTdHguLoadLive(true).catch(function(){});
+  refreshTdPlantImportNow(true).catch(function(){});
+  var select = getTdPlantRefreshSelect();
+  var sec = select ? parseInt(select.value, 10) : 30;
+  updateTdPlantImportRateStat();
+  if(!(sec > 0)) return;
   tdPlantDataRefreshTimer = setInterval(function(){
     if(!isTempDataTabActive()){
       stopTdPlantDataRefresh();
       return;
     }
-    refreshTdHguLoadLive(false).catch(function(){});
-  }, TD_PLANT_DATA_REFRESH_MS);
+    refreshTdPlantImportNow(false).catch(function(){});
+  }, sec * 1000);
 }
 
 function bindTdPlantLiveInputs(){
-  var input = getTdHguLoadInput();
-  if(!input || input.getAttribute("data-live-bound") === "1") return;
-  input.setAttribute("data-live-bound", "1");
-  input.addEventListener("input", function(){
-    if(tdPlantHguApplyingValue) return;
-    if(String(input.value || "").trim()){
-      tdPlantHguManualOverride = true;
-      return;
-    }
-    tdPlantHguManualOverride = false;
-    restoreTdHguLoadLiveValue();
-  });
+  if(tdPlantControlsBound) return;
+  tdPlantControlsBound = true;
+  var refreshSelect = getTdPlantRefreshSelect();
+  if(refreshSelect){
+    refreshSelect.addEventListener("change", function(){
+      updateTdPlantImportRateStat();
+      startTdPlantDataRefresh();
+    });
+  }
+  updateTdPlantImportRateStat();
+  checkTdPlantImportConfig();
+}
+
+function refreshTdPlantImportManual(){
+  refreshTdPlantImportNow(true).catch(function(){});
+}
+
+function downloadTdPlantImportSnapshot(){
+  if(!tdPlantSnapshotRows.length){
+    showToast("⚠ Refresh plant data first.");
+    return;
+  }
+  try{
+    var payload = {
+      downloaded_at: new Date().toISOString(),
+      mapped_tags: tdPlantSnapshotRows
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "tst-plant-import-snapshot.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast("⬇ Plant snapshot downloaded");
+  }catch(e){
+    console.warn("Plant snapshot download failed:", e);
+    showToast("⚠ Could not download plant snapshot");
+  }
 }
 
 var TST_FORMAT_XLSX_B64 =
@@ -27854,14 +28164,7 @@ function editTempEntry(idx){
 
   document.getElementById("td-datetime").value = ent.dt || "";
   document.getElementById("td-shift").value = ent.shift || "";
-  document.getElementById("td-hgu-load").value = ent.hguLoad || "";
-  document.getElementById("td-ab-cot").value = ent.abCot || "";
-  document.getElementById("td-cd-cot").value = ent.cdCot || "";
-  document.getElementById("td-flue-gas").value = ent.flueGas || "";
-  document.getElementById("td-excess-o2").value = ent.excessO2 || "";
-  document.getElementById("td-prereformer-max").value = ent.preRefMax || "";
-  document.getElementById("td-prereformer-min").value = ent.preRefMin || "";
-  document.getElementById("td-methane-slip").value = ent.methaneSlip || "";
+  writeTdProcessFieldInputs(ent);
 
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
     var vals = (ent.peepHoles && ent.peepHoles[rowKey]) ? ent.peepHoles[rowKey] : [];
@@ -27884,20 +28187,12 @@ async function saveTempData(){
   if(!dt){ alert("Please select a date and time."); return; }
   if(!shift){ alert("Please select a shift (Morning / Evening / Night)."); return; }
 
-  var entry = {
+  var entry = Object.assign({
     dt: dt,
     shift: shift,
-    hguLoad: document.getElementById("td-hgu-load").value,
-    abCot:  document.getElementById("td-ab-cot").value,
-    cdCot:  document.getElementById("td-cd-cot").value,
-    flueGas: document.getElementById("td-flue-gas").value,
-    excessO2: document.getElementById("td-excess-o2").value,
-    preRefMax: document.getElementById("td-prereformer-max").value,
-    preRefMin: document.getElementById("td-prereformer-min").value,
-    methaneSlip: document.getElementById("td-methane-slip").value,
     burnerSnapshot: captureCurrentBurnerSnapshot(),
     peepHoles: {}
-  };
+  }, readTdProcessFieldInputs());
 
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
     entry.peepHoles[rowKey] = [];
@@ -27955,12 +28250,10 @@ function deleteTempEntry(idx){
 
 function clearTempData(){
   setTempEditMode(-1);
-  tdPlantHguManualOverride = false;
   tdVoiceFillCellIndex = 0;
   tdVoiceLastFocusedIndex = -1;
   tdVoiceLastFocusedAt = 0;
-  var fields = ["td-hgu-load","td-ab-cot","td-cd-cot","td-flue-gas","td-excess-o2","td-prereformer-max","td-prereformer-min","td-methane-slip"];
-  fields.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=""; });
+  clearTdProcessFieldInputs();
   ["ab-bot","cd-bot","ab-top","cd-top"].forEach(function(rowKey){
     for(var ph=1;ph<=15;ph++){
       var inp=document.getElementById("td-ph-"+rowKey+"-"+ph);
@@ -27975,7 +28268,7 @@ function clearTempData(){
   }
   syncTdMobileMatrixFromBase();
   setTimeout(function(){
-    restoreTdHguLoadLiveValue();
+    restoreTdPlantImportedValues();
   }, 20);
 }
 
