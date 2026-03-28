@@ -5339,30 +5339,374 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   font-size:13px;
   padding:8px 10px;
 }
-#tab-tempdata .td-plant-source-path-pill{
-  flex:1 1 340px;
-  min-width:260px;
+#tab-tempdata .td-plant-excel-path-bar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+  padding:10px 14px;
+  border-radius:10px;
+  min-width:0;
 }
-#tab-tempdata .td-plant-source-controls{
+#tab-tempdata .td-plant-excel-path-bar.hidden{
+  display:none;
+}
+#tab-tempdata .td-plant-path-label{
+  flex:0 0 auto;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+#tab-tempdata .td-plant-path-value{
+  flex:1 1 auto;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:'JetBrains Mono','Rajdhani',monospace;
+  font-size:11px;
+}
+#tab-tempdata .td-plant-path-clear{
+  flex:0 0 auto;
+  font-family:'Rajdhani',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.7px;
+  border-radius:8px;
+  padding:5px 10px;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+#tab-tempdata .td-plant-excel-controls{
   justify-content:space-between;
   gap:10px;
   margin-bottom:16px;
   align-items:center;
 }
-#tab-tempdata .td-plant-source-controls .td-toolbar-pill{
+#tab-tempdata .td-plant-excel-controls .td-toolbar-pill{
   min-height:38px;
 }
-#tab-tempdata .td-plant-source-actions{
+#tab-tempdata .td-plant-controls-right{
   display:flex;
-  gap:10px;
+  align-items:center;
+  gap:8px;
   flex-wrap:wrap;
+  margin-left:auto;
 }
-#tab-tempdata .td-plant-source-main{
+#tab-tempdata .td-plant-action-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'JetBrains Mono','Rajdhani',monospace;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.8px;
+  text-transform:uppercase;
+  padding:8px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .18s ease;
+  white-space:nowrap;
+}
+#tab-tempdata .td-plant-settings-btn{
+  padding:8px 11px;
+  min-width:42px;
+}
+#tab-tempdata .td-plant-modal-overlay{
+  position:fixed;
+  inset:0;
   display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .22s ease;
+  z-index:2200;
+}
+#tab-tempdata .td-plant-modal-overlay.show{
+  opacity:1;
+  pointer-events:auto;
+}
+#tab-tempdata .td-plant-modal-card{
+  width:min(560px, 100%);
+  border-radius:18px;
+  padding:30px;
+  transform:translateY(10px);
+  transition:transform .22s ease;
+}
+#tab-tempdata .td-plant-modal-overlay.show .td-plant-modal-card{
+  transform:translateY(0);
+}
+#tab-tempdata .td-plant-modal-icon{
+  font-size:30px;
+  margin-bottom:12px;
+}
+#tab-tempdata .td-plant-modal-title{
+  font-family:'JetBrains Mono','Rajdhani',monospace;
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+#tab-tempdata .td-plant-modal-subtitle{
+  font-size:13px;
+  line-height:1.65;
+  margin-bottom:20px;
+}
+#tab-tempdata .td-plant-modal-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1.1px;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+#tab-tempdata .td-plant-modal-input{
+  width:100%;
+  font-family:'JetBrains Mono','Rajdhani',monospace;
+  font-size:12px;
+  padding:12px 14px;
+  border-radius:10px;
+  outline:none;
+  transition:border-color .18s ease, box-shadow .18s ease;
+}
+#tab-tempdata .td-plant-modal-input.error{
+  border-color:#f87171 !important;
+}
+#tab-tempdata .td-plant-modal-error{
+  display:none;
+  font-size:11px;
+  color:#fca5a5;
+  margin-top:8px;
+}
+#tab-tempdata .td-plant-modal-error.show{
+  display:block;
+}
+#tab-tempdata .td-plant-modal-hint{
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:10px;
+  font-family:'JetBrains Mono','Rajdhani',monospace;
+  font-size:11px;
+  line-height:1.8;
+}
+#tab-tempdata .td-plant-modal-actions{
+  display:flex;
+  justify-content:flex-end;
   gap:10px;
-  flex-wrap:wrap;
-  flex:1 1 920px;
-  min-width:0;
+  margin-top:22px;
+}
+#tab-tempdata .td-plant-modal-btn{
+  font-family:'JetBrains Mono','Rajdhani',monospace;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.8px;
+  text-transform:uppercase;
+  padding:10px 20px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-excel-path-bar{
+  background:rgba(52,211,153,0.05);
+  border:1px solid rgba(52,211,153,0.16);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-path-label{
+  color:#64748b;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-path-value{
+  color:#34d399;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-path-clear{
+  color:#94a3b8;
+  border:1px solid rgba(148,163,184,0.18);
+  background:rgba(15,23,42,0.5);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-path-clear:hover{
+  color:#fbbf24;
+  border-color:rgba(251,191,36,0.45);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-open-btn{
+  border:1px solid rgba(52,211,153,0.45);
+  background:rgba(52,211,153,0.08);
+  color:#34d399;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-open-btn:hover{
+  background:rgba(52,211,153,0.16);
+  box-shadow:0 0 12px rgba(52,211,153,0.16);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-open-btn.td-plant-btn-no-path{
+  border-color:rgba(251,191,36,0.5);
+  background:rgba(251,191,36,0.08);
+  color:#fbbf24;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-open-btn.td-plant-btn-no-path:hover{
+  background:rgba(251,191,36,0.15);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-settings-btn{
+  border:1px solid rgba(148,163,184,0.18);
+  background:rgba(15,23,42,0.45);
+  color:#94a3b8;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-settings-btn:hover{
+  color:#7dd3fc;
+  border-color:rgba(56,189,248,0.4);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-download-btn{
+  border:1px solid rgba(34,211,238,0.45);
+  background:rgba(34,211,238,0.08);
+  color:#22d3ee;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-download-btn:hover{
+  background:rgba(34,211,238,0.16);
+  box-shadow:0 0 12px rgba(34,211,238,0.16);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-refresh-btn{
+  border:1px solid rgba(56,189,248,0.45);
+  background:rgba(56,189,248,0.08);
+  color:#38bdf8;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-refresh-btn:hover{
+  background:rgba(56,189,248,0.16);
+  box-shadow:0 0 12px rgba(56,189,248,0.16);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-overlay{
+  background:rgba(2,6,23,0.78);
+  backdrop-filter:blur(8px);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-card{
+  background:#131820;
+  border:1px solid rgba(56,189,248,0.22);
+  box-shadow:0 24px 80px rgba(0,0,0,0.55);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-title{
+  color:#38bdf8;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-subtitle,
+body:not(.light-theme) #tab-tempdata .td-plant-modal-label{
+  color:#94a3b8;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-input{
+  background:#1a2030;
+  border:1px solid rgba(56,189,248,0.12);
+  color:#e2e8f0;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-input:focus{
+  border-color:#38bdf8;
+  box-shadow:0 0 0 3px rgba(56,189,248,0.12);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-hint{
+  background:#1a2030;
+  border-left:3px solid #38bdf8;
+  color:#94a3b8;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-hint b{
+  color:#fbbf24;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-btn-cancel{
+  border:1px solid rgba(148,163,184,0.2);
+  background:transparent;
+  color:#94a3b8;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-btn-cancel:hover{
+  color:#e2e8f0;
+  border-color:rgba(226,232,240,0.25);
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-btn-save{
+  border:none;
+  background:#38bdf8;
+  color:#0b0e14;
+}
+body:not(.light-theme) #tab-tempdata .td-plant-modal-btn-save:hover{
+  background:#67e8f9;
+  box-shadow:0 0 16px rgba(56,189,248,0.24);
+}
+body.light-theme #tab-tempdata .td-plant-excel-path-bar{
+  background:rgba(14,165,233,0.06);
+  border:1px solid rgba(14,165,233,0.18);
+}
+body.light-theme #tab-tempdata .td-plant-path-label{
+  color:#64748b;
+}
+body.light-theme #tab-tempdata .td-plant-path-value{
+  color:#0f766e;
+}
+body.light-theme #tab-tempdata .td-plant-path-clear{
+  color:#475569;
+  border:1px solid rgba(148,163,184,0.28);
+  background:#ffffff;
+}
+body.light-theme #tab-tempdata .td-plant-path-clear:hover{
+  color:#b45309;
+  border-color:rgba(217,119,6,0.35);
+}
+body.light-theme #tab-tempdata .td-plant-open-btn{
+  border:1px solid rgba(5,150,105,0.35);
+  background:rgba(16,185,129,0.08);
+  color:#047857;
+}
+body.light-theme #tab-tempdata .td-plant-open-btn.td-plant-btn-no-path{
+  border-color:rgba(217,119,6,0.35);
+  background:rgba(245,158,11,0.08);
+  color:#b45309;
+}
+body.light-theme #tab-tempdata .td-plant-settings-btn{
+  border:1px solid rgba(148,163,184,0.3);
+  background:#ffffff;
+  color:#475569;
+}
+body.light-theme #tab-tempdata .td-plant-download-btn{
+  border:1px solid rgba(6,182,212,0.35);
+  background:rgba(34,211,238,0.08);
+  color:#0f766e;
+}
+body.light-theme #tab-tempdata .td-plant-refresh-btn{
+  border:1px solid rgba(59,130,246,0.35);
+  background:rgba(59,130,246,0.08);
+  color:#1d4ed8;
+}
+body.light-theme #tab-tempdata .td-plant-modal-overlay{
+  background:rgba(226,232,240,0.72);
+  backdrop-filter:blur(8px);
+}
+body.light-theme #tab-tempdata .td-plant-modal-card{
+  background:#ffffff;
+  border:1px solid rgba(148,163,184,0.28);
+  box-shadow:0 24px 80px rgba(15,23,42,0.18);
+}
+body.light-theme #tab-tempdata .td-plant-modal-title{
+  color:#0f766e;
+}
+body.light-theme #tab-tempdata .td-plant-modal-subtitle,
+body.light-theme #tab-tempdata .td-plant-modal-label{
+  color:#475569;
+}
+body.light-theme #tab-tempdata .td-plant-modal-input{
+  background:#f8fafc;
+  border:1px solid rgba(148,163,184,0.28);
+  color:#0f172a;
+}
+body.light-theme #tab-tempdata .td-plant-modal-input:focus{
+  border-color:#0ea5e9;
+  box-shadow:0 0 0 3px rgba(14,165,233,0.12);
+}
+body.light-theme #tab-tempdata .td-plant-modal-hint{
+  background:#f8fafc;
+  border-left:3px solid #0ea5e9;
+  color:#475569;
+}
+body.light-theme #tab-tempdata .td-plant-modal-hint b{
+  color:#b45309;
+}
+body.light-theme #tab-tempdata .td-plant-modal-btn-cancel{
+  border:1px solid rgba(148,163,184,0.32);
+  background:#ffffff;
+  color:#475569;
+}
+body.light-theme #tab-tempdata .td-plant-modal-btn-save{
+  border:none;
+  background:#0ea5e9;
+  color:#ffffff;
 }
 @media (max-width:1350px){
   #tab-tempdata #td-process-manual-grid{
@@ -5377,6 +5721,27 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 @media (max-width:640px){
   #tab-tempdata #td-process-manual-grid{
     grid-template-columns:1fr !important;
+  }
+  #tab-tempdata .td-plant-controls-right{
+    width:100%;
+    margin-left:0;
+  }
+  #tab-tempdata .td-plant-action-btn{
+    flex:1 1 calc(50% - 8px);
+    justify-content:center;
+    text-align:center;
+  }
+  #tab-tempdata .td-plant-excel-path-bar{
+    align-items:flex-start;
+    flex-wrap:wrap;
+  }
+  #tab-tempdata .td-plant-path-value{
+    min-width:100%;
+    white-space:normal;
+    word-break:break-word;
+  }
+  #tab-tempdata .td-plant-modal-card{
+    padding:22px;
   }
 }
 .td-ph-input{
@@ -17538,34 +17903,26 @@ html, body, body *, body *::before, body *::after, svg text{
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Last Sync:</span><span id="td-plant-stat-sync" style="color:#f8fafc;font-weight:800;">—</span></div>
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" style="color:#f8fafc;font-weight:800;">30 sec</span></div>
         </div>
-        <input type="file" id="td-plant-excel-file" accept=".xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" style="display:none;" onchange="handleTdPlantExcelSelect(event)">
-        <div class="td-toolbar-row td-plant-source-controls">
-          <div class="td-plant-source-main">
-            <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;">
-              <span class="td-toolbar-label">Source:</span>
-              <select id="td-plant-source-mode" class="td-toolbar-select">
-                <option value="live" selected style="background:#1e293b;color:#e2e8f0;">Hardcoded Live</option>
-                <option value="excel" style="background:#1e293b;color:#e2e8f0;">Selected Excel</option>
-              </select>
-            </div>
-            <div class="td-toolbar-pill td-plant-source-path-pill" style="display:flex;align-items:center;gap:10px;">
-              <span class="td-toolbar-label">Path:</span>
-              <input type="text" id="td-plant-source-path" class="td-toolbar-text" readonly value="">
-            </div>
-            <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;">
-              <span class="td-toolbar-label">Auto-refresh:</span>
-              <select id="td-plant-refresh-interval" class="td-toolbar-select">
-                <option value="10" style="background:#1e293b;color:#e2e8f0;">10 sec</option>
-                <option value="30" selected style="background:#1e293b;color:#e2e8f0;">30 sec</option>
-                <option value="60" style="background:#1e293b;color:#e2e8f0;">1 min</option>
-                <option value="0" style="background:#1e293b;color:#e2e8f0;">Off</option>
-              </select>
-            </div>
+        <div id="td-plant-excel-path-bar" class="td-plant-excel-path-bar hidden">
+          <span class="td-plant-path-label">Excel Path</span>
+          <span id="td-plant-excel-path-display" class="td-plant-path-value"></span>
+          <button type="button" id="td-plant-change-path-btn" class="td-plant-path-clear">Change</button>
+        </div>
+        <div class="td-toolbar-row td-plant-excel-controls">
+          <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;">
+            <span class="td-toolbar-label">Auto-refresh:</span>
+            <select id="td-plant-refresh-interval" class="td-toolbar-select">
+              <option value="10" style="background:#1e293b;color:#e2e8f0;">10 sec</option>
+              <option value="30" selected style="background:#1e293b;color:#e2e8f0;">30 sec</option>
+              <option value="60" style="background:#1e293b;color:#e2e8f0;">1 min</option>
+              <option value="0" style="background:#1e293b;color:#e2e8f0;">Off</option>
+            </select>
           </div>
-          <div class="td-plant-source-actions">
-            <button type="button" onclick="refreshTdPlantImportManual()" class="td-toolbar-btn td-toolbar-btn-soft" title="Fetch the latest mapped plant tags or re-import the selected Excel file">↻ Import Now</button>
-            <button type="button" onclick="openTdPlantExcelPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Select and import an Excel file for mapped process values">📂 Open Excel</button>
-            <button type="button" onclick="downloadTdPlantImportSnapshot()" class="td-toolbar-btn td-toolbar-btn-muted" title="Download the latest imported mapped plant values">⬇ Download Snapshot</button>
+          <div class="td-plant-controls-right">
+            <button type="button" id="td-plant-open-excel-btn" class="td-plant-action-btn td-plant-open-btn td-plant-btn-no-path" title="Open the remembered Excel workbook or set its full path">Set Excel Path</button>
+            <button type="button" id="td-plant-set-path-btn" class="td-plant-action-btn td-plant-settings-btn" title="Set Excel file path">⚙</button>
+            <button type="button" id="td-plant-download-btn" class="td-plant-action-btn td-plant-download-btn" title="Download the dedicated Excel workbook">⬇ Download Excel</button>
+            <button type="button" id="td-plant-refresh-btn" class="td-plant-action-btn td-plant-refresh-btn" title="Fetch the latest mapped plant tags into the TST cells">↻ Refresh Now</button>
           </div>
         </div>
         <div id="td-process-manual-grid" class="td-manual-grid">
@@ -17829,6 +18186,26 @@ html, body, body *, body *::before, body *::after, svg text{
         </div>
       </div>
 
+    </div>
+    <div id="td-plant-path-modal" class="td-plant-modal-overlay" onclick="handleTdPlantPathModalBackdrop(event)">
+      <div class="td-plant-modal-card" onclick="event.stopPropagation()">
+        <div class="td-plant-modal-icon">📁</div>
+        <div class="td-plant-modal-title">Set Excel File Path</div>
+        <div class="td-plant-modal-subtitle">Enter the full path to your <strong>Data_website2.xlsm</strong> file. The path is saved in your browser and remembered every time you return.</div>
+        <div class="td-plant-modal-label">Full File Path</div>
+        <input id="td-plant-path-input" class="td-plant-modal-input" type="text" placeholder="C:\Users\YourName\Downloads\Data_website2.xlsm" spellcheck="false">
+        <div id="td-plant-path-error" class="td-plant-modal-error">Path must end in .xlsm, .xlsx, .xlsb, or .xls.</div>
+        <div class="td-plant-modal-hint">
+          <b>How to copy the exact path:</b><br>
+          1. Open File Explorer or Finder and locate the Excel file.<br>
+          2. Copy the full file path.<br>
+          3. Paste it here. Any wrapping quotes will be removed automatically.
+        </div>
+        <div class="td-plant-modal-actions">
+          <button type="button" id="td-plant-modal-cancel" class="td-plant-modal-btn td-plant-modal-btn-cancel">Cancel</button>
+          <button type="button" id="td-plant-modal-save" class="td-plant-modal-btn td-plant-modal-btn-save">Save Path</button>
+        </div>
+      </div>
     </div>
   </div><!-- /tab-tempdata -->
 
@@ -25793,74 +26170,188 @@ var tdPlantFetchInFlight = null;
 var tdPlantLatestByTag = new Map();
 var tdPlantSnapshotRows = [];
 var tdPlantControlsBound = false;
-var tdPlantSourceMode = "live";
-var tdPlantSelectedExcelFile = null;
+var tdPlantPathPrompted = false;
+var TD_PLANT_EXCEL_PATH_STORAGE_KEY = "bms_excel_path";
+var TD_PLANT_EXCEL_FILE_NAME = "Data_website2.xlsm";
+var TD_PLANT_EXCEL_DOWNLOAD_PATH = "./Data_website2.xlsm";
 
-function normalizeTdPlantSourceMode(raw){
-  return String(raw || "").toLowerCase() === "excel" ? "excel" : "live";
+function normalizeTdPlantExcelPath(raw){
+  return String(raw || "").trim().replace(/^["']|["']$/g, "").trim();
 }
 
-function getTdPlantSourceModeSelect(){
-  return document.getElementById("td-plant-source-mode");
-}
-
-function getTdPlantSourcePathInput(){
-  return document.getElementById("td-plant-source-path");
-}
-
-function getTdPlantExcelInput(){
-  return document.getElementById("td-plant-excel-file");
-}
-
-function getTdPlantSourceMode(){
-  var select = getTdPlantSourceModeSelect();
-  return normalizeTdPlantSourceMode(select ? select.value : tdPlantSourceMode);
-}
-
-function getTdPlantLiveSourcePath(){
-  return TD_PLANT_DATA_SUPABASE_URL ? (TD_PLANT_DATA_SUPABASE_URL + "/rest/v1/plant_data") : "";
-}
-
-function updateTdPlantSourceUi(){
-  var mode = getTdPlantSourceMode();
-  var select = getTdPlantSourceModeSelect();
-  var pathInput = getTdPlantSourcePathInput();
-  var refreshSelect = getTdPlantRefreshSelect();
-  tdPlantSourceMode = mode;
-  if(select && select.value !== mode) select.value = mode;
-  if(pathInput){
-    if(mode === "excel"){
-      pathInput.value = tdPlantSelectedExcelFile ? tdPlantSelectedExcelFile.name : "No Excel file selected";
-      pathInput.title = tdPlantSelectedExcelFile ? tdPlantSelectedExcelFile.name : "Select an Excel file for process-value import";
-    }else{
-      var livePath = getTdPlantLiveSourcePath();
-      pathInput.value = livePath || "Live plant source not configured";
-      pathInput.title = pathInput.value;
-    }
+function getTdPlantExcelPath(){
+  try{
+    return normalizeTdPlantExcelPath(localStorage.getItem(TD_PLANT_EXCEL_PATH_STORAGE_KEY) || "");
+  }catch(e){
+    return "";
   }
-  if(refreshSelect){
-    refreshSelect.disabled = (mode === "excel");
-    refreshSelect.style.opacity = mode === "excel" ? "0.55" : "1";
-    refreshSelect.style.cursor = mode === "excel" ? "not-allowed" : "pointer";
-  }
-  updateTdPlantImportRateStat();
 }
 
-function setTdPlantSourceMode(mode){
-  tdPlantSourceMode = normalizeTdPlantSourceMode(mode);
-  updateTdPlantSourceUi();
-  if(tdPlantSourceMode === "excel"){
-    stopTdPlantDataRefresh();
-    setTdPlantConfigBarVisible(false, "");
-    if(tdPlantSelectedExcelFile){
-      importTdPlantExcelWorkbook(tdPlantSelectedExcelFile).catch(function(){});
+function saveTdPlantExcelPath(path){
+  var clean = normalizeTdPlantExcelPath(path);
+  try{
+    if(clean){
+      localStorage.setItem(TD_PLANT_EXCEL_PATH_STORAGE_KEY, clean);
     }else{
-      setTdPlantImportStatus("offline", "Select Excel file");
-      updateTdPlantImportStats(tdPlantLatestByTag, tdPlantSnapshotRows.length);
+      localStorage.removeItem(TD_PLANT_EXCEL_PATH_STORAGE_KEY);
     }
+  }catch(e){}
+  return clean;
+}
+
+function isValidTdPlantExcelPath(path){
+  return /\.(xlsm|xlsx|xlsb|xls)$/i.test(normalizeTdPlantExcelPath(path));
+}
+
+function toTdPlantExcelFileUrl(path){
+  var clean = normalizeTdPlantExcelPath(path);
+  if(!clean) return "";
+  if(/^file:\/\//i.test(clean)) return clean;
+  clean = clean.replace(/\\/g, "/");
+  if(/^[a-zA-Z]:\//.test(clean)) return "file:///" + clean;
+  if(clean.charAt(0) === "/") return "file://" + clean;
+  return "file:///" + clean.replace(/^\/+/, "");
+}
+
+function updateTdPlantExcelUi(){
+  var path = getTdPlantExcelPath();
+  var hasValidPath = !!(path && isValidTdPlantExcelPath(path));
+  var btn = document.getElementById("td-plant-open-excel-btn");
+  var bar = document.getElementById("td-plant-excel-path-bar");
+  var display = document.getElementById("td-plant-excel-path-display");
+  if(btn){
+    btn.textContent = hasValidPath ? "Open Excel" : "Set Excel Path";
+    btn.classList.toggle("td-plant-btn-no-path", !hasValidPath);
+    btn.title = hasValidPath ? "Open the remembered Excel workbook" : "Set the full path to the dedicated Excel workbook";
+  }
+  if(bar) bar.classList.toggle("hidden", !hasValidPath);
+  if(display){
+    display.textContent = hasValidPath ? path : "";
+    display.title = hasValidPath ? path : "";
+  }
+}
+
+function getTdPlantPathModal(){
+  return document.getElementById("td-plant-path-modal");
+}
+
+function getTdPlantPathInput(){
+  return document.getElementById("td-plant-path-input");
+}
+
+function getTdPlantPathError(){
+  return document.getElementById("td-plant-path-error");
+}
+
+function openTdPlantPathModal(){
+  var modal = getTdPlantPathModal();
+  var input = getTdPlantPathInput();
+  var error = getTdPlantPathError();
+  if(input){
+    input.value = getTdPlantExcelPath();
+    input.classList.remove("error");
+  }
+  if(error) error.classList.remove("show");
+  if(modal) modal.classList.add("show");
+  setTimeout(function(){
+    if(input) input.focus();
+  }, 120);
+}
+
+function closeTdPlantPathModal(){
+  var modal = getTdPlantPathModal();
+  if(modal) modal.classList.remove("show");
+}
+
+function handleTdPlantPathModalBackdrop(event){
+  if(event && event.target === getTdPlantPathModal()){
+    closeTdPlantPathModal();
+  }
+}
+
+function saveTdPlantPathFromModal(){
+  var input = getTdPlantPathInput();
+  var error = getTdPlantPathError();
+  var clean = normalizeTdPlantExcelPath(input ? input.value : "");
+  if(!clean || !isValidTdPlantExcelPath(clean)){
+    if(input){
+      input.classList.add("error");
+      input.focus();
+    }
+    if(error) error.classList.add("show");
+    return false;
+  }
+  saveTdPlantExcelPath(clean);
+  if(input) input.classList.remove("error");
+  if(error) error.classList.remove("show");
+  closeTdPlantPathModal();
+  updateTdPlantExcelUi();
+  showToast("✅ Excel path saved");
+  return true;
+}
+
+function maybePromptTdPlantExcelPath(){
+  if(tdPlantPathPrompted || isValidTdPlantExcelPath(getTdPlantExcelPath()) || !isTempDataTabActive()) return;
+  tdPlantPathPrompted = true;
+  setTimeout(function(){
+    if(!isValidTdPlantExcelPath(getTdPlantExcelPath()) && isTempDataTabActive()){
+      openTdPlantPathModal();
+    }
+  }, 850);
+}
+
+function openTdPlantExcelPath(path){
+  var clean = normalizeTdPlantExcelPath(path);
+  if(!clean || !isValidTdPlantExcelPath(clean)){
+    openTdPlantPathModal();
     return;
   }
-  if(isTempDataTabActive()) startTdPlantDataRefresh();
+  var fileUrl = toTdPlantExcelFileUrl(clean);
+  try{
+    var msUrl = "ms-excel:ofe|u|" + fileUrl;
+    var a1 = document.createElement("a");
+    a1.href = msUrl;
+    a1.style.display = "none";
+    document.body.appendChild(a1);
+    a1.click();
+    a1.remove();
+  }catch(ignoreMsExcel){}
+  setTimeout(function(){
+    try{
+      var a2 = document.createElement("a");
+      a2.href = fileUrl;
+      a2.style.display = "none";
+      document.body.appendChild(a2);
+      a2.click();
+      a2.remove();
+    }catch(ignoreFileLink){}
+  }, 280);
+  showToast("📂 Opening Excel workbook");
+}
+
+function handleTdPlantOpenExcel(){
+  var path = getTdPlantExcelPath();
+  if(!path){
+    openTdPlantPathModal();
+    return;
+  }
+  openTdPlantExcelPath(path);
+}
+
+function downloadTdPlantExcelWorkbook(){
+  try{
+    var link = document.createElement("a");
+    link.href = TD_PLANT_EXCEL_DOWNLOAD_PATH;
+    link.download = TD_PLANT_EXCEL_FILE_NAME;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    showToast("⬇ Excel workbook downloaded");
+  }catch(e){
+    console.warn("TST workbook download failed:", e);
+    showToast("⚠ Could not download Excel workbook");
+  }
 }
 
 function updateTempSaveButtonLabel(){
@@ -25952,10 +26443,6 @@ function updateTdPlantImportRateStat(){
   var stat = document.getElementById("td-plant-stat-rate");
   var select = getTdPlantRefreshSelect();
   if(!stat) return;
-  if(getTdPlantSourceMode() === "excel"){
-    stat.textContent = tdPlantSelectedExcelFile ? "Manual" : "Await file";
-    return;
-  }
   if(!select) return;
   var sec = parseInt(select.value, 10);
   stat.textContent = sec > 0 ? (sec + " sec") : "Off";
@@ -25983,11 +26470,6 @@ function updateTdPlantImportStats(latestMap, mappedCount){
 }
 
 function checkTdPlantImportConfig(){
-  if(getTdPlantSourceMode() === "excel"){
-    setTdPlantConfigBarVisible(false, "");
-    updateTdPlantSourceUi();
-    return true;
-  }
   var ok = !!(TD_PLANT_DATA_SUPABASE_URL && TD_PLANT_DATA_SUPABASE_KEY
     && TD_PLANT_DATA_SUPABASE_URL.indexOf("YOUR_PROJECT_ID") === -1
     && TD_PLANT_DATA_SUPABASE_KEY.indexOf("YOUR_ANON") === -1);
@@ -26073,89 +26555,6 @@ async function fetchTdPlantImportRows(){
   return await res.json();
 }
 
-function parseTdPlantExcelRowsFromSheet(sheet){
-  if(!sheet || typeof XLSX === "undefined" || !XLSX.utils) return [];
-  var rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, defval:""});
-  if(!Array.isArray(rows) || !rows.length) return [];
-  var header = rows[0] || [];
-  var low = header.map(function(cell){ return String(cell || "").trim().toLowerCase(); });
-  function idx(matchers){
-    for(var i = 0; i < low.length; i++){
-      for(var j = 0; j < matchers.length; j++){
-        if(low[i].indexOf(matchers[j]) >= 0) return i;
-      }
-    }
-    return -1;
-  }
-  var idxTag = idx(["tag id","tag_id","tag"]);
-  var idxLabel = idx(["label","description","name"]);
-  var idxValue = idx(["value","pv","reading"]);
-  var idxUnit = idx(["unit","units"]);
-  var idxSyncedAt = idx(["synced at","synced_at","timestamp","time"]);
-  var out = [];
-  var importedAt = new Date().toISOString();
-  if(idxValue < 0) return out;
-  rows.slice(1).forEach(function(row){
-    if(!Array.isArray(row)) return;
-    var tagId = idxTag >= 0 ? String(row[idxTag] || "").trim() : "";
-    var label = idxLabel >= 0 ? String(row[idxLabel] || "").trim() : "";
-    var value = row[idxValue];
-    if((!tagId && !label) || value === "" || value == null) return;
-    out.push({
-      tag_id: tagId,
-      label: label,
-      value: value,
-      unit: idxUnit >= 0 ? String(row[idxUnit] || "").trim() : "",
-      synced_at: idxSyncedAt >= 0 && row[idxSyncedAt] ? String(row[idxSyncedAt]).trim() : importedAt
-    });
-  });
-  return out;
-}
-
-async function importTdPlantExcelWorkbook(file){
-  if(!file || typeof XLSX === "undefined") return null;
-  setTdPlantImportStatus("syncing", tdEditingIndex >= 0 ? "Reading Excel while edit is paused" : "Reading Excel import...");
-  try{
-    var buffer = await file.arrayBuffer();
-    var wb = XLSX.read(buffer, {type:"array"});
-    var sheetName = wb && wb.SheetNames && wb.SheetNames.length ? wb.SheetNames[0] : "";
-    var sheet = sheetName ? wb.Sheets[sheetName] : null;
-    var rows = parseTdPlantExcelRowsFromSheet(sheet);
-    tdPlantLatestByTag = collectTdPlantLatestRows(rows);
-    var mappedCount = applyTdPlantImportToInputs(tdPlantLatestByTag);
-    updateTdPlantImportStats(tdPlantLatestByTag, mappedCount);
-    if(tdPlantLatestByTag.size){
-      setTdPlantImportStatus("online", tdEditingIndex >= 0 ? "Excel imported · process fields paused during edit" : "Excel values imported to process fields");
-      showToast("📂 Excel values imported");
-    }else{
-      setTdPlantImportStatus("offline", "No mapped values found in Excel");
-      showToast("⚠ No mapped values found in Excel");
-    }
-    return tdPlantLatestByTag;
-  }catch(e){
-    console.warn("Excel plant import failed:", e);
-    setTdPlantImportStatus("offline", "Excel import failed");
-    showToast("⚠ Could not read Excel file");
-    return null;
-  }
-}
-
-function openTdPlantExcelPicker(){
-  var input = getTdPlantExcelInput();
-  if(input){
-    input.value = "";
-    input.click();
-  }
-}
-
-function handleTdPlantExcelSelect(event){
-  var input = event && event.target ? event.target : getTdPlantExcelInput();
-  var file = input && input.files && input.files[0] ? input.files[0] : null;
-  if(!file) return;
-  tdPlantSelectedExcelFile = file;
-  setTdPlantSourceMode("excel");
-}
-
 function applyTdPlantImportToInputs(latestMap){
   var mappedRows = [];
   getTdPlantMappedBindings().forEach(function(binding){
@@ -26189,13 +26588,6 @@ function applyTdPlantImportToInputs(latestMap){
 
 async function refreshTdPlantImportNow(force){
   if(!force && !isTempDataTabActive()) return tdPlantLatestByTag;
-  if(getTdPlantSourceMode() === "excel"){
-    if(!tdPlantSelectedExcelFile){
-      setTdPlantImportStatus("offline", "Select Excel file");
-      return null;
-    }
-    return importTdPlantExcelWorkbook(tdPlantSelectedExcelFile);
-  }
   if(!checkTdPlantImportConfig()) return null;
   if(tdPlantFetchInFlight) return tdPlantFetchInFlight;
   setTdPlantImportStatus("syncing", tdEditingIndex >= 0 ? "Syncing plant data while edit is paused" : "Syncing plant data...");
@@ -26243,13 +26635,7 @@ function stopTdPlantDataRefresh(){
 function startTdPlantDataRefresh(){
   stopTdPlantDataRefresh();
   if(!isTempDataTabActive()) return;
-  if(getTdPlantSourceMode() === "excel"){
-    updateTdPlantImportRateStat();
-    if(tdPlantSelectedExcelFile && (!tdPlantLatestByTag || !tdPlantLatestByTag.size)){
-      importTdPlantExcelWorkbook(tdPlantSelectedExcelFile).catch(function(){});
-    }
-    return;
-  }
+  maybePromptTdPlantExcelPath();
   refreshTdPlantImportNow(true).catch(function(){});
   var select = getTdPlantRefreshSelect();
   var sec = select ? parseInt(select.value, 10) : 30;
@@ -26267,55 +26653,52 @@ function startTdPlantDataRefresh(){
 function bindTdPlantLiveInputs(){
   if(tdPlantControlsBound) return;
   tdPlantControlsBound = true;
-  var sourceSelect = getTdPlantSourceModeSelect();
   var refreshSelect = getTdPlantRefreshSelect();
-  if(sourceSelect){
-    sourceSelect.addEventListener("change", function(){
-      setTdPlantSourceMode(sourceSelect.value);
-    });
-  }
+  var openBtn = document.getElementById("td-plant-open-excel-btn");
+  var setPathBtn = document.getElementById("td-plant-set-path-btn");
+  var changePathBtn = document.getElementById("td-plant-change-path-btn");
+  var downloadBtn = document.getElementById("td-plant-download-btn");
+  var refreshBtn = document.getElementById("td-plant-refresh-btn");
+  var modalCancelBtn = document.getElementById("td-plant-modal-cancel");
+  var modalSaveBtn = document.getElementById("td-plant-modal-save");
+  var pathInput = getTdPlantPathInput();
   if(refreshSelect){
     refreshSelect.addEventListener("change", function(){
       updateTdPlantImportRateStat();
       startTdPlantDataRefresh();
     });
   }
-  updateTdPlantSourceUi();
+  if(openBtn) openBtn.addEventListener("click", handleTdPlantOpenExcel);
+  if(setPathBtn) setPathBtn.addEventListener("click", openTdPlantPathModal);
+  if(changePathBtn) changePathBtn.addEventListener("click", openTdPlantPathModal);
+  if(downloadBtn) downloadBtn.addEventListener("click", downloadTdPlantExcelWorkbook);
+  if(refreshBtn) refreshBtn.addEventListener("click", refreshTdPlantImportManual);
+  if(modalCancelBtn) modalCancelBtn.addEventListener("click", closeTdPlantPathModal);
+  if(modalSaveBtn) modalSaveBtn.addEventListener("click", saveTdPlantPathFromModal);
+  if(pathInput){
+    pathInput.addEventListener("input", function(){
+      pathInput.classList.remove("error");
+      var error = getTdPlantPathError();
+      if(error) error.classList.remove("show");
+    });
+    pathInput.addEventListener("keydown", function(ev){
+      if(!ev) return;
+      if(ev.key === "Enter"){
+        ev.preventDefault();
+        saveTdPlantPathFromModal();
+      }else if(ev.key === "Escape"){
+        ev.preventDefault();
+        closeTdPlantPathModal();
+      }
+    });
+  }
+  updateTdPlantExcelUi();
   checkTdPlantImportConfig();
+  maybePromptTdPlantExcelPath();
 }
 
 function refreshTdPlantImportManual(){
-  if(getTdPlantSourceMode() === "excel" && !tdPlantSelectedExcelFile){
-    openTdPlantExcelPicker();
-    return;
-  }
   refreshTdPlantImportNow(true).catch(function(){});
-}
-
-function downloadTdPlantImportSnapshot(){
-  if(!tdPlantSnapshotRows.length){
-    showToast("⚠ Refresh plant data first.");
-    return;
-  }
-  try{
-    var payload = {
-      downloaded_at: new Date().toISOString(),
-      mapped_tags: tdPlantSnapshotRows
-    };
-    var blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = "tst-plant-import-snapshot.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    showToast("⬇ Plant snapshot downloaded");
-  }catch(e){
-    console.warn("Plant snapshot download failed:", e);
-    showToast("⚠ Could not download plant snapshot");
-  }
 }
 
 var TST_FORMAT_XLSX_B64 =
