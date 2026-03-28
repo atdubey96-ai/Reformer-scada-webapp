@@ -104,66 +104,6 @@ body{color:rgba(140,180,220,0.85);}
   width:100%;
   height:100%;
 }
-#faceLegend{
-  position:absolute;
-  top:12px;
-  left:12px;
-  width:min(320px,calc(100% - 24px));
-  padding:10px 12px 11px;
-  border:1px solid rgba(86,122,176,0.34);
-  border-radius:12px;
-  background:
-    linear-gradient(135deg,rgba(9,16,27,0.9) 0%,rgba(14,18,30,0.84) 42%,rgba(8,12,20,0.9) 100%);
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.24),
-    inset 0 1px 0 rgba(255,255,255,0.05);
-  pointer-events:none;
-  backdrop-filter:blur(8px);
-}
-.face-legend-title{
-  font-size:9px;
-  letter-spacing:2px;
-  color:rgba(234,242,255,0.92);
-  text-transform:uppercase;
-}
-.face-legend-current{
-  margin-top:6px;
-  font-size:8px;
-  letter-spacing:1px;
-  color:rgba(194,214,241,0.84);
-}
-.face-legend-grid{
-  margin-top:8px;
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:8px 12px;
-}
-.face-legend-section{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-.face-legend-heading{
-  font-size:7px;
-  letter-spacing:1.6px;
-  color:rgba(128,166,214,0.74);
-  text-transform:uppercase;
-}
-.face-legend-item{
-  padding:4px 6px;
-  border-radius:7px;
-  border:1px solid rgba(60,84,114,0.36);
-  background:rgba(10,15,24,0.56);
-  font-size:7px;
-  letter-spacing:0.85px;
-  color:rgba(184,202,224,0.78);
-  transition:background 140ms ease,border-color 140ms ease,color 140ms ease;
-}
-.face-legend-item.active{
-  border-color:rgba(122,180,255,0.72);
-  background:rgba(25,52,84,0.62);
-  color:rgba(242,248,255,0.98);
-}
 #hint{
   position:absolute;
   bottom:8px;
@@ -182,6 +122,24 @@ body{color:rgba(140,180,220,0.85);}
   justify-content:flex-end;
   align-items:center;
   flex:1 1 520px;
+}
+.face-current-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:32px;
+  padding:7px 14px 8px;
+  border-radius:999px;
+  border:1px solid rgba(92,132,196,0.42);
+  background:
+    linear-gradient(135deg,rgba(13,22,36,0.96) 0%,rgba(17,26,43,0.94) 48%,rgba(10,19,32,0.96) 100%);
+  box-shadow:
+    0 8px 22px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  color:rgba(232,241,255,0.92);
+  font-size:9px;
+  letter-spacing:1.35px;
+  text-transform:uppercase;
+  white-space:nowrap;
 }
 .btn{
   background:rgba(10,18,32,0.92);
@@ -229,29 +187,6 @@ body{color:rgba(140,180,220,0.85);}
     width:100%;
     height:min(calc(100vh - 138px),86vh);
   }
-  #faceLegend{
-    top:8px;
-    left:8px;
-    width:min(100%,calc(100% - 16px));
-    padding:8px 9px 9px;
-  }
-  .face-legend-title{
-    font-size:8px;
-    letter-spacing:1.5px;
-  }
-  .face-legend-current{
-    margin-top:5px;
-    font-size:7px;
-  }
-  .face-legend-grid{
-    margin-top:7px;
-    gap:6px 8px;
-  }
-  .face-legend-item{
-    padding:4px 5px;
-    font-size:6px;
-    letter-spacing:0.6px;
-  }
   #hint{
     font-size:7px;
     letter-spacing:1.4px;
@@ -262,6 +197,14 @@ body{color:rgba(140,180,220,0.85);}
     gap:6px;
     justify-content:center;
     flex:1 1 auto;
+  }
+  .face-current-pill{
+    width:100%;
+    justify-content:center;
+    min-height:30px;
+    padding:7px 10px 8px;
+    font-size:8px;
+    letter-spacing:1.0px;
   }
   .btn{
     flex:1 1 calc(33.333% - 6px);
@@ -281,6 +224,7 @@ body{color:rgba(140,180,220,0.85);}
       <span class="viewer-tag-summary" id="viewerTagSummary">Dashboard shell dimensions and camera framing | shell only</span>
     </div>
     <div id="ctrls">
+      <div class="face-current-pill" id="faceCurrent">Face1 Front Outside</div>
       <button class="btn" id="btnFront">Front</button>
       <button class="btn" id="btnBack">Back</button>
       <button class="btn" id="btnLeft">Left</button>
@@ -291,30 +235,6 @@ body{color:rgba(140,180,220,0.85);}
     </div>
   </div>
   <div id="vp">
-    <div id="faceLegend">
-      <div class="face-legend-title">Face Naming Study</div>
-      <div class="face-legend-current" id="faceCurrent">Current: Face1 Front Outside</div>
-      <div class="face-legend-grid">
-        <div class="face-legend-section">
-          <div class="face-legend-heading">Outside</div>
-          <div class="face-legend-item active" data-face-key="face1">Face1 Front Outside</div>
-          <div class="face-legend-item" data-face-key="face2">Face2 Back Outside</div>
-          <div class="face-legend-item" data-face-key="face3">Face3 Left Outside</div>
-          <div class="face-legend-item" data-face-key="face4">Face4 Right Outside</div>
-          <div class="face-legend-item" data-face-key="face5">Face5 Top Outside</div>
-          <div class="face-legend-item" data-face-key="face6">Face6 Bottom Outside</div>
-        </div>
-        <div class="face-legend-section">
-          <div class="face-legend-heading">Inside</div>
-          <div class="face-legend-item" data-face-key="face7">Face7 Front Inside</div>
-          <div class="face-legend-item" data-face-key="face8">Face8 Back Inside</div>
-          <div class="face-legend-item" data-face-key="face9">Face9 Left Inside</div>
-          <div class="face-legend-item" data-face-key="face10">Face10 Right Inside</div>
-          <div class="face-legend-item" data-face-key="face11">Face11 Top Inside</div>
-          <div class="face-legend-item" data-face-key="face12">Face12 Bottom Inside</div>
-        </div>
-      </div>
-    </div>
     <div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div>
   </div>
 </div>
@@ -350,7 +270,6 @@ const app = document.getElementById("app");
 const viewerTagTitle = document.getElementById("viewerTagTitle");
 const viewerTagSummary = document.getElementById("viewerTagSummary");
 const faceCurrent = document.getElementById("faceCurrent");
-const faceLegendItems = Array.from(document.querySelectorAll(".face-legend-item"));
 const hint = document.getElementById("hint");
 const btnFront = document.getElementById("btnFront");
 const btnBack = document.getElementById("btnBack");
@@ -558,13 +477,10 @@ function updateFaceLegend(){
     ? ["face7", "face8"]
     : [nearestShellFaceKey(rotY)];
   if(faceCurrent){
-    faceCurrent.textContent = "Current: " + activeFaceKeys.map(function(key){
+    faceCurrent.textContent = activeFaceKeys.map(function(key){
       return FACE_LABELS[key];
     }).join(" + ");
   }
-  faceLegendItems.forEach(function(item){
-    item.classList.toggle("active", activeFaceKeys.indexOf(item.dataset.faceKey) >= 0);
-  });
 }
 
 function toggleFullscreen(){
