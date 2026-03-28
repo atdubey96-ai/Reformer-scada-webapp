@@ -4349,7 +4349,7 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   max-width:none;
   overflow:hidden;
   isolation:isolate;
-  border-radius:999px;
+  border-radius:5px;
   background:linear-gradient(90deg,#32d061 0%,#ffe227 48%,#ff7e2e 76%,#ff5252 100%);
   border:1px solid rgba(255,255,255,0.12);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.20), inset 0 -1px 0 rgba(0,0,0,0.18);
@@ -4360,17 +4360,17 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   position:absolute;
   top:1px;
   bottom:1px;
-  width:18px;
-  border-radius:999px;
+  width:8px;
+  border-radius:4px;
   pointer-events:none;
 }
 #tab-cuboid .cuboid-legend-tst-bar::before{
   left:1px;
-  background:radial-gradient(125% 110% at 0% 50%,rgba(255,255,255,0.30) 0%,rgba(255,255,255,0.12) 34%,rgba(11,17,29,0.08) 70%,rgba(11,17,29,0.24) 100%);
+  background:linear-gradient(90deg,rgba(255,255,255,0.18) 0%,rgba(255,255,255,0.08) 44%,rgba(255,255,255,0) 100%);
 }
 #tab-cuboid .cuboid-legend-tst-bar::after{
   right:1px;
-  background:radial-gradient(125% 110% at 100% 50%,rgba(255,255,255,0.30) 0%,rgba(255,255,255,0.12) 34%,rgba(11,17,29,0.08) 70%,rgba(11,17,29,0.24) 100%);
+  background:linear-gradient(90deg,rgba(11,17,29,0) 0%,rgba(11,17,29,0.08) 56%,rgba(11,17,29,0.2) 100%);
 }
 #tab-cuboid .cuboid-legend-tst-limits{
   display:grid;
@@ -17301,8 +17301,8 @@ html, body, body *, body *::before, body *::after, svg text{
             id="cuboid-tab-frame"
             class="cuboid-tab-frame"
             aria-label="AB live burner wall cuboid viewer"
-            src="./furnace-cuboid-viewer.html?chamber=ab&build=20260328-01"
-            data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260328-01"
+            src="./furnace-cuboid-viewer.html?chamber=ab&build=20260328-02"
+            data-src="./furnace-cuboid-viewer.html?chamber=ab&build=20260328-02"
             data-cuboid-load="eager"
             loading="eager"
             allow="fullscreen"
@@ -17415,7 +17415,7 @@ html, body, body *, body *::before, body *::after, svg text{
             id="cuboid-tab-frame-2"
             class="cuboid-tab-frame"
             aria-label="CD live burner wall cuboid viewer"
-            data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260328-01"
+            data-src="./furnace-cuboid-viewer.html?chamber=cd&build=20260328-02"
             data-cuboid-load="deferred"
             loading="lazy"
             allow="fullscreen"
