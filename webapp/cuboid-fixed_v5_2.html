@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Reformer Shell Viewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{
@@ -2242,22 +2243,22 @@ const wallTstBarActors = [];
 function cuboidDrawTstBarText(ctx, text, x, y, options) {
   const opts = options || {};
   ctx.save();
-  ctx.font = opts.font || "900 60px 'Rajdhani', 'Arial Narrow', sans-serif";
+  ctx.font = opts.font || "800 60px 'Rajdhani', 'Arial Black', 'Segoe UI', Arial, sans-serif";
   ctx.textAlign = opts.align || "center";
   ctx.textBaseline = opts.baseline || "middle";
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
-  ctx.strokeStyle = opts.stroke || "rgba(255,244,218,0.52)";
-  ctx.lineWidth = opts.lineWidth == null ? 5 : opts.lineWidth;
-  ctx.shadowColor = opts.shadow || "rgba(0,0,0,0.22)";
-  ctx.shadowBlur = opts.shadowBlur == null ? 4 : opts.shadowBlur;
+  ctx.strokeStyle = opts.stroke || "rgba(255,246,214,0.20)";
+  ctx.lineWidth = opts.lineWidth == null ? 2.4 : opts.lineWidth;
+  ctx.shadowColor = opts.shadow || "rgba(0,0,0,0.14)";
+  ctx.shadowBlur = opts.shadowBlur == null ? 0 : opts.shadowBlur;
   ctx.shadowOffsetY = opts.shadowOffsetY == null ? 1 : opts.shadowOffsetY;
   if(opts.stroke !== null && ctx.lineWidth > 0){
     ctx.strokeText(text, x, y);
   }
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  ctx.fillStyle = opts.fill || "#5d5240";
+  ctx.fillStyle = opts.fill || "rgba(4,4,4,0.99)";
   ctx.fillText(text, x, y);
   ctx.restore();
 }
@@ -2430,12 +2431,12 @@ function paintWallTstBarCanvas(canvas, values) {
       x + (slotW * 0.5),
       barTop + (barH * 0.52),
       {
-        font: "800 84px 'Rajdhani', 'Arial Narrow', sans-serif",
-        fill: "rgba(6,6,6,0.98)",
-        stroke: "rgba(255,244,196,0.16)",
-        lineWidth: 2.5,
-        shadow: "rgba(255,255,255,0.12)",
-        shadowBlur: 1.8,
+        font: "800 82px 'Rajdhani', 'Arial Black', 'Segoe UI', Arial, sans-serif",
+        fill: "rgba(4,4,4,0.995)",
+        stroke: "rgba(255,246,214,0.18)",
+        lineWidth: 1.8,
+        shadow: "rgba(0,0,0,0.10)",
+        shadowBlur: 0,
         shadowOffsetY: 0
       }
     );
