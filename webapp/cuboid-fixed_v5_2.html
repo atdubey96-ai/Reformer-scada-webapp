@@ -2518,6 +2518,27 @@ function addWallTstBar(faceGroup, faceKey, part, centerY, panelW, panelH, center
   });
 }
 
+function getWallRowYPositions() {
+  const BOT_MARGIN = 0.30;
+  const TOP_MARGIN = 0.60;
+  const usable = FH - BOT_MARGIN - TOP_MARGIN;
+  const gapW = [1.7, 1.3, 1.7, 1.3, 1.3];
+  const totalW = gapW.reduce(function(a, b) { return a + b; }, 0);
+  const unitGap = usable / totalW;
+  const rowY = [];
+  let y = -FH / 2 + BOT_MARGIN;
+  for (let i = 0; i < 6; i++) {
+    rowY.push(y);
+    if (i < 5) y += unitGap * gapW[i];
+  }
+
+  rowY[0] += 0.10;
+  rowY[1] += 0.10;
+  rowY[4] -= 0.08;
+  rowY[5] -= 0.12;
+  return rowY;
+}
+
 function buildWallTstBars(faceKey, faceZ, outwardDir) {
   const faceGroup = new THREE.Group();
   faceGroup.name = faceKey + "-tst-bars";
@@ -2533,18 +2554,7 @@ function buildWallTstBars(faceKey, faceZ, outwardDir) {
   const NUM_B = 15;
   const LEFT_PAD = 0.90;
   const RIGHT_PAD = 0.46;
-  const BOT_MARGIN = 0.30;
-  const TOP_MARGIN = 0.60;
-  const usable = FH - BOT_MARGIN - TOP_MARGIN;
-  const gapW = [1.7, 1.3, 1.7, 1.3, 1.3];
-  const totalW = gapW.reduce(function(a, b) { return a + b; }, 0);
-  const unitGap = usable / totalW;
-  const rowY = [];
-  let y = -FH / 2 + BOT_MARGIN;
-  for (let i = 0; i < 6; i++) {
-    rowY.push(y);
-    if (i < 5) y += unitGap * gapW[i];
-  }
+  const rowY = getWallRowYPositions();
 
   const burnerSpanStart = pipeXL + LEFT_PAD;
   const burnerSpanEnd = pipeXR - RIGHT_PAD;
@@ -3009,19 +3019,7 @@ function buildWallTubeAssembly(faceKey, faceZ) {
   const MAN_R = 0.038;
   const MAN_SPAN = pipeXR - pipeXL;
   const MAN_CX = (pipeXL + pipeXR) / 2;
-  const wallBottom = -FH / 2;
-  const BOT_MARGIN = 0.30;
-  const TOP_MARGIN = 0.60;
-  const usable = FH - BOT_MARGIN - TOP_MARGIN;
-  const gapW = [1.7, 1.3, 1.7, 1.3, 1.3];
-  const totalW = gapW.reduce(function(a, b) { return a + b; }, 0);
-  const unitGap = usable / totalW;
-  const rowY = [];
-  let y = wallBottom + BOT_MARGIN;
-  for (let i = 0; i < 6; i++) {
-    rowY.push(y);
-    if (i < 5) y += unitGap * gapW[i];
-  }
+  const rowY = getWallRowYPositions();
 
   const mMan = new THREE.MeshStandardMaterial({
     color: 0x4a5a64,
@@ -3122,19 +3120,7 @@ function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
   const X_OFFSET = 0.10;
   const pipeXL = -FW / 2 + X_OFFSET + PIPE_R;
   const pipeXR = FW / 2 - X_OFFSET - PIPE_R;
-
-  const BOT_MARGIN = 0.30;
-  const TOP_MARGIN = 0.60;
-  const usable = FH - BOT_MARGIN - TOP_MARGIN;
-  const gapW = [1.7, 1.3, 1.7, 1.3, 1.3];
-  const totalW = gapW.reduce(function(a, b) { return a + b; }, 0);
-  const unitGap = usable / totalW;
-  const rowY = [];
-  let y = -FH / 2 + BOT_MARGIN;
-  for (let i = 0; i < 6; i++) {
-    rowY.push(y);
-    if (i < 5) y += unitGap * gapW[i];
-  }
+  const rowY = getWallRowYPositions();
 
   const NUM_B = 15;
   const LEFT_PAD = 0.90;
@@ -3281,18 +3267,7 @@ function buildWallLabelOverlay(faceKey, faceZ, outwardDir) {
   const X_OFFSET = 0.10;
   const pipeXL = -FW / 2 + X_OFFSET + PIPE_R;
   const pipeXR = FW / 2 - X_OFFSET - PIPE_R;
-  const BOT_MARGIN = 0.30;
-  const TOP_MARGIN = 0.60;
-  const usable = FH - BOT_MARGIN - TOP_MARGIN;
-  const gapW = [1.7, 1.3, 1.7, 1.3, 1.3];
-  const totalW = gapW.reduce(function(a, b) { return a + b; }, 0);
-  const unitGap = usable / totalW;
-  const rowY = [];
-  let y = -FH / 2 + BOT_MARGIN;
-  for (let i = 0; i < 6; i++) {
-    rowY.push(y);
-    if (i < 5) y += unitGap * gapW[i];
-  }
+  const rowY = getWallRowYPositions();
 
   const NUM_B = 15;
   const LEFT_PAD = 0.90;
