@@ -3767,9 +3767,17 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   position:relative;
   display:flex;
   align-items:center;
-  justify-content:flex-start;
+  justify-content:space-between;
   gap:8px;
   flex-wrap:wrap;
+}
+#tab-cuboidstack .cuboid-twin-control-head-right{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-left:auto;
 }
 #tab-cuboidstack .cuboid-twin-control-title{
   color:#eef6ff;
@@ -3787,19 +3795,20 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   max-width:820px;
 }
 #tab-cuboidstack .cuboid-twin-control-badge{
-  display:none;
+  display:inline-flex;
   align-items:center;
-  gap:8px;
-  min-height:36px;
-  padding:8px 14px;
+  gap:7px;
+  min-height:34px;
+  padding:0 12px;
   border-radius:999px;
   border:1px solid rgba(59,130,246,0.28);
   background:rgba(15,23,42,0.78);
   color:#dbeafe;
-  font-size:12px;
+  font-size:11px;
   font-weight:700;
-  letter-spacing:0.45px;
+  letter-spacing:0.35px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
+  white-space:nowrap;
 }
 #tab-cuboidstack .cuboid-twin-control-badge.is-empty{
   border-color:rgba(248,113,113,0.34);
@@ -8442,6 +8451,11 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cuboidstack .cuboid-twin-control-chip.is-wide{
     min-width:min(100%,160px);
     flex:1 1 160px;
+  }
+  #tab-cuboidstack .cuboid-twin-control-head-right{
+    width:100%;
+    margin-left:0;
+    justify-content:flex-start;
   }
   #tab-cuboidstack .cuboid-twin-control-actions{
     width:100%;
@@ -18164,6 +18178,13 @@ html, body, body *, body *::before, body *::after, svg text{
       <div class="cuboid-twin-control-panel">
         <div class="cuboid-twin-control-head">
           <div class="cuboid-twin-control-title">Twin Cuboid Data Controls</div>
+          <div class="cuboid-twin-control-head-right">
+            <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Latest Saved</div>
+            <div class="cuboid-twin-control-actions">
+              <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Saved</button>
+              <button type="button" class="cuboid-twin-control-btn is-secondary" onclick="requestTwinCuboidFilterApply(0, true)">Refresh Cuboids</button>
+            </div>
+          </div>
         </div>
         <div class="cuboid-twin-control-grid">
           <div class="cuboid-twin-control-chip">
@@ -18178,10 +18199,6 @@ html, body, body *, body *::before, body *::after, svg text{
           <div class="cuboid-twin-control-chip is-wide">
             <label class="cuboid-twin-control-label" for="stack-cuboid-date-input">Date</label>
             <input type="date" id="stack-cuboid-date-input" class="cuboid-twin-control-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
-          </div>
-          <div class="cuboid-twin-control-actions">
-            <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Saved</button>
-            <button type="button" class="cuboid-twin-control-btn is-secondary" onclick="requestTwinCuboidFilterApply(0, true)">Refresh Cuboids</button>
           </div>
         </div>
       </div>
