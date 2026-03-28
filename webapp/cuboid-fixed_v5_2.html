@@ -712,10 +712,10 @@ const rimWarm = new THREE.DirectionalLight(0xffddb4, 0.58);
 rimWarm.position.set(8, -1.2, 7);
 scene.add(rimWarm);
 const frontAccentCool = new THREE.DirectionalLight(0xcfe2ff, 0);
-frontAccentCool.position.set(-11, 2.6, 7);
+frontAccentCool.position.set(-6.2, 2.8, 9.8);
 scene.add(frontAccentCool);
 const frontAccentWarm = new THREE.DirectionalLight(0xffe0b8, 0);
-frontAccentWarm.position.set(11, 1.2, 7);
+frontAccentWarm.position.set(6.0, 1.3, 9.6);
 scene.add(frontAccentWarm);
 let lastFrontPresentationBlend = -1;
 
@@ -2316,6 +2316,50 @@ function paintWallTstBarCanvas(canvas, values) {
     ctx.fillRect(x, barTop + (barH * 0.55), slotW, barH * 0.45);
   }
 
+  const leftCapColor = isFinite(Number(vals[0])) ? cuboidTempToColor(Number(vals[0])) : "#334155";
+  const rightCapColor = isFinite(Number(vals[14])) ? cuboidTempToColor(Number(vals[14])) : "#334155";
+  const leftCapCx = barLeft + radius;
+  const rightCapCx = barLeft + barW - radius;
+  const capInset = Math.max(2, radius * 0.06);
+
+  const leftCapGrad = ctx.createRadialGradient(
+    leftCapCx - radius * 0.18,
+    barCenterY - radius * 0.08,
+    radius * 0.12,
+    leftCapCx,
+    barCenterY,
+    radius * 1.04
+  );
+  leftCapGrad.addColorStop(0.00, cuboidTint(leftCapColor, 0.42, 1));
+  leftCapGrad.addColorStop(0.42, cuboidTint(leftCapColor, 0.18, 1));
+  leftCapGrad.addColorStop(0.78, cuboidShade(leftCapColor, 0.04, 1));
+  leftCapGrad.addColorStop(1.00, cuboidShade(leftCapColor, 0.16, 1));
+  ctx.fillStyle = leftCapGrad;
+  ctx.beginPath();
+  ctx.moveTo(leftCapCx, barTop + capInset);
+  ctx.arc(leftCapCx, barCenterY, radius - capInset, -Math.PI / 2, Math.PI / 2, true);
+  ctx.closePath();
+  ctx.fill();
+
+  const rightCapGrad = ctx.createRadialGradient(
+    rightCapCx + radius * 0.18,
+    barCenterY - radius * 0.08,
+    radius * 0.12,
+    rightCapCx,
+    barCenterY,
+    radius * 1.04
+  );
+  rightCapGrad.addColorStop(0.00, cuboidTint(rightCapColor, 0.42, 1));
+  rightCapGrad.addColorStop(0.42, cuboidTint(rightCapColor, 0.18, 1));
+  rightCapGrad.addColorStop(0.78, cuboidShade(rightCapColor, 0.04, 1));
+  rightCapGrad.addColorStop(1.00, cuboidShade(rightCapColor, 0.16, 1));
+  ctx.fillStyle = rightCapGrad;
+  ctx.beginPath();
+  ctx.moveTo(rightCapCx, barTop + capInset);
+  ctx.arc(rightCapCx, barCenterY, radius - capInset, -Math.PI / 2, Math.PI / 2, false);
+  ctx.closePath();
+  ctx.fill();
+
   const glass = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
   glass.addColorStop(0.00, "rgba(255,255,255,0.18)");
   glass.addColorStop(0.20, "rgba(255,255,255,0.07)");
@@ -3409,24 +3453,24 @@ const frontPresentationMaterials = [
 function applyFrontViewRichnessBoost() {
   const axisAlign = Math.abs(Math.cos(rotY));
   const blend = viewMode === "shell"
-    ? Math.pow(Math.max(0, (axisAlign - 0.55) / 0.45), 1.65)
+    ? Math.pow(Math.max(0, (axisAlign - 0.42) / 0.58), 1.35)
     : 0;
   if (Math.abs(blend - lastFrontPresentationBlend) < 0.001) return false;
   lastFrontPresentationBlend = blend;
 
-  ambient.intensity = 1.18 - (0.10 * blend);
-  hemi.intensity = 0.92 - (0.08 * blend);
-  sun.intensity = 1.34 + (0.08 * blend);
-  fill.intensity = 0.82 + (0.14 * blend);
-  rimCool.intensity = 0.96 + (0.16 * blend);
-  rimWarm.intensity = 0.58 + (0.12 * blend);
-  frontAccentCool.intensity = 0.30 * blend;
-  frontAccentWarm.intensity = 0.26 * blend;
+  ambient.intensity = 1.18 - (0.16 * blend);
+  hemi.intensity = 0.92 - (0.12 * blend);
+  sun.intensity = 1.34 + (0.16 * blend);
+  fill.intensity = 0.82 + (0.26 * blend);
+  rimCool.intensity = 0.96 + (0.26 * blend);
+  rimWarm.intensity = 0.58 + (0.18 * blend);
+  frontAccentCool.intensity = 0.58 * blend;
+  frontAccentWarm.intensity = 0.50 * blend;
 
   for (let i = 0; i < frontPresentationMaterials.length; i++) {
     const item = frontPresentationMaterials[i];
     if (!item || !item.material) continue;
-    item.material.emissiveIntensity = item.baseEmissiveIntensity + (0.06 * blend);
+    item.material.emissiveIntensity = item.baseEmissiveIntensity + (0.11 * blend);
   }
 
   return true;
