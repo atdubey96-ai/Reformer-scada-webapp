@@ -2360,6 +2360,8 @@ function paintWallTstBarCanvas(canvas, values) {
   ctx.closePath();
   ctx.fill();
 
+  const bodyInset = Math.max(14, radius * 0.72);
+
   const glass = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
   glass.addColorStop(0.00, "rgba(255,255,255,0.18)");
   glass.addColorStop(0.20, "rgba(255,255,255,0.07)");
@@ -2367,11 +2369,11 @@ function paintWallTstBarCanvas(canvas, values) {
   glass.addColorStop(0.76, "rgba(0,0,0,0.04)");
   glass.addColorStop(1.00, "rgba(0,0,0,0.10)");
   ctx.fillStyle = glass;
-  ctx.fillRect(barLeft, barTop, barW, barH);
+  ctx.fillRect(barLeft + bodyInset, barTop, barW - bodyInset * 2, barH);
 
-  const specLeft = barLeft + 16;
+  const specLeft = barLeft + Math.max(16, radius * 0.88);
   const specTop = barTop + 4;
-  const specW = barW - 32;
+  const specW = barW - ((specLeft - barLeft) * 2);
   const specH = Math.max(10, barH * 0.20);
   const specGrad = ctx.createLinearGradient(specLeft, 0, specLeft + specW, 0);
   specGrad.addColorStop(0.00, "rgba(255,255,255,0.00)");
@@ -2388,7 +2390,7 @@ function paintWallTstBarCanvas(canvas, values) {
   topRim.addColorStop(0.55, "rgba(255,255,255,0.10)");
   topRim.addColorStop(1.00, "rgba(255,255,255,0.00)");
   ctx.fillStyle = topRim;
-  ctx.fillRect(barLeft + 6, barTop + 2, barW - 12, barH * 0.18);
+  ctx.fillRect(barLeft + bodyInset * 0.72, barTop + 2, barW - bodyInset * 1.44, barH * 0.18);
 
   const centerBand = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
   centerBand.addColorStop(0.00, "rgba(255,255,255,0.00)");
@@ -2397,7 +2399,45 @@ function paintWallTstBarCanvas(canvas, values) {
   centerBand.addColorStop(0.70, "rgba(255,255,255,0.02)");
   centerBand.addColorStop(1.00, "rgba(255,255,255,0.00)");
   ctx.fillStyle = centerBand;
-  ctx.fillRect(barLeft, barTop, barW, barH);
+  ctx.fillRect(barLeft + bodyInset * 0.55, barTop, barW - bodyInset * 1.10, barH);
+
+  const leftCapGlass = ctx.createRadialGradient(
+    leftCapCx - radius * 0.14,
+    barCenterY - radius * 0.10,
+    radius * 0.08,
+    leftCapCx,
+    barCenterY,
+    radius * 0.94
+  );
+  leftCapGlass.addColorStop(0.00, "rgba(255,255,255,0.18)");
+  leftCapGlass.addColorStop(0.42, "rgba(255,255,255,0.08)");
+  leftCapGlass.addColorStop(0.82, "rgba(0,0,0,0.03)");
+  leftCapGlass.addColorStop(1.00, "rgba(0,0,0,0.10)");
+  ctx.fillStyle = leftCapGlass;
+  ctx.beginPath();
+  ctx.moveTo(leftCapCx, barTop + capInset);
+  ctx.arc(leftCapCx, barCenterY, radius - capInset, -Math.PI / 2, Math.PI / 2, true);
+  ctx.closePath();
+  ctx.fill();
+
+  const rightCapGlass = ctx.createRadialGradient(
+    rightCapCx + radius * 0.14,
+    barCenterY - radius * 0.10,
+    radius * 0.08,
+    rightCapCx,
+    barCenterY,
+    radius * 0.94
+  );
+  rightCapGlass.addColorStop(0.00, "rgba(255,255,255,0.18)");
+  rightCapGlass.addColorStop(0.42, "rgba(255,255,255,0.08)");
+  rightCapGlass.addColorStop(0.82, "rgba(0,0,0,0.03)");
+  rightCapGlass.addColorStop(1.00, "rgba(0,0,0,0.10)");
+  ctx.fillStyle = rightCapGlass;
+  ctx.beginPath();
+  ctx.moveTo(rightCapCx, barTop + capInset);
+  ctx.arc(rightCapCx, barCenterY, radius - capInset, -Math.PI / 2, Math.PI / 2, false);
+  ctx.closePath();
+  ctx.fill();
 
   ctx.save();
   roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
@@ -2534,8 +2574,8 @@ function getWallRowYPositions() {
 
   rowY[0] += 0.10;
   rowY[1] += 0.10;
-  rowY[4] -= 0.08;
-  rowY[5] -= 0.12;
+  rowY[4] -= 0.13;
+  rowY[5] -= 0.19;
   return rowY;
 }
 
