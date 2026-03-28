@@ -2264,7 +2264,7 @@ function paintWallTstBarCanvas(canvas, values) {
   const barW = w - 40;
   const barH = h - 96;
   const slotW = barW / 15;
-  const radius = Math.min(barH * 0.5, slotW * 0.5);
+  const radius = barH * 0.5;
   const barCenterY = barTop + (barH * 0.5);
 
   ctx.clearRect(0, 0, w, h);
@@ -2574,8 +2574,8 @@ function getWallRowYPositions() {
 
   rowY[0] += 0.10;
   rowY[1] += 0.10;
-  rowY[4] -= 0.13;
-  rowY[5] -= 0.19;
+  rowY[4] -= 0.17;
+  rowY[5] -= 0.25;
   return rowY;
 }
 
