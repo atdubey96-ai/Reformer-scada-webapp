@@ -5321,6 +5321,64 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 }
 .td-input:focus{border-color:#F37022;box-shadow:0 0 0 3px rgba(243,112,34,0.18);}
 .td-input::placeholder{color:#475569;font-size:13px;}
+#tab-tempdata #td-process-manual-grid{
+  grid-template-columns:repeat(8,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+#tab-tempdata #td-process-manual-grid .td-field-group{
+  gap:5px;
+  min-width:0;
+}
+#tab-tempdata #td-process-manual-grid .td-label{
+  font-size:10px;
+  line-height:1.16;
+  letter-spacing:0.45px;
+}
+#tab-tempdata #td-process-manual-grid .td-input{
+  min-height:40px;
+  font-size:13px;
+  padding:8px 10px;
+}
+#tab-tempdata .td-plant-source-path-pill{
+  flex:1 1 340px;
+  min-width:260px;
+}
+#tab-tempdata .td-plant-source-controls{
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:16px;
+  align-items:center;
+}
+#tab-tempdata .td-plant-source-controls .td-toolbar-pill{
+  min-height:38px;
+}
+#tab-tempdata .td-plant-source-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#tab-tempdata .td-plant-source-main{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  flex:1 1 920px;
+  min-width:0;
+}
+@media (max-width:1350px){
+  #tab-tempdata #td-process-manual-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width:920px){
+  #tab-tempdata #td-process-manual-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width:640px){
+  #tab-tempdata #td-process-manual-grid{
+    grid-template-columns:1fr !important;
+  }
+}
 .td-ph-input{
   background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.1);
@@ -5495,6 +5553,11 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 .td-toolbar-datetime{
   background:transparent;border:none;color:#e2e8f0;
   font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;outline:none;cursor:pointer;
+}
+.td-toolbar-text{
+  background:transparent;border:none;color:#e2e8f0;
+  font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;outline:none;
+  min-width:220px;width:100%;
 }
 .td-toolbar-btn{
   border:1px solid rgba(255,255,255,0.14);border-radius:7px;
@@ -10351,6 +10414,7 @@ html, body, body *, body *::before, body *::after, svg text{
         body.light-theme .td-ph-input,
         body.light-theme .td-fill-select,
         body.light-theme .td-toolbar-select,
+        body.light-theme .td-toolbar-text,
         body.light-theme .td-toolbar-datetime,
         body.light-theme .hm-icon-picker-btn,
         body.light-theme .hm-icon-menu,
@@ -12260,6 +12324,7 @@ html, body, body *, body *::before, body *::after, svg text{
         body.light-theme .td-ph-input,
         body.light-theme .td-fill-select,
         body.light-theme .td-toolbar-select,
+        body.light-theme .td-toolbar-text,
         body.light-theme .td-toolbar-datetime,
         body.light-theme #cleaningMonthSelect,
         body.light-theme .hm-icon-picker-btn,
@@ -17473,22 +17538,37 @@ html, body, body *, body *::before, body *::after, svg text{
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Last Sync:</span><span id="td-plant-stat-sync" style="color:#f8fafc;font-weight:800;">—</span></div>
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" style="color:#f8fafc;font-weight:800;">30 sec</span></div>
         </div>
-        <div class="td-toolbar-row" style="justify-content:space-between;gap:10px;margin-bottom:16px;align-items:center;">
-          <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;">
-            <span class="td-toolbar-label">Auto-refresh:</span>
-            <select id="td-plant-refresh-interval" class="td-toolbar-select">
-              <option value="10" style="background:#1e293b;color:#e2e8f0;">10 sec</option>
-              <option value="30" selected style="background:#1e293b;color:#e2e8f0;">30 sec</option>
-              <option value="60" style="background:#1e293b;color:#e2e8f0;">1 min</option>
-              <option value="0" style="background:#1e293b;color:#e2e8f0;">Off</option>
-            </select>
+        <input type="file" id="td-plant-excel-file" accept=".xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" style="display:none;" onchange="handleTdPlantExcelSelect(event)">
+        <div class="td-toolbar-row td-plant-source-controls">
+          <div class="td-plant-source-main">
+            <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;">
+              <span class="td-toolbar-label">Source:</span>
+              <select id="td-plant-source-mode" class="td-toolbar-select">
+                <option value="live" selected style="background:#1e293b;color:#e2e8f0;">Hardcoded Live</option>
+                <option value="excel" style="background:#1e293b;color:#e2e8f0;">Selected Excel</option>
+              </select>
+            </div>
+            <div class="td-toolbar-pill td-plant-source-path-pill" style="display:flex;align-items:center;gap:10px;">
+              <span class="td-toolbar-label">Path:</span>
+              <input type="text" id="td-plant-source-path" class="td-toolbar-text" readonly value="">
+            </div>
+            <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;">
+              <span class="td-toolbar-label">Auto-refresh:</span>
+              <select id="td-plant-refresh-interval" class="td-toolbar-select">
+                <option value="10" style="background:#1e293b;color:#e2e8f0;">10 sec</option>
+                <option value="30" selected style="background:#1e293b;color:#e2e8f0;">30 sec</option>
+                <option value="60" style="background:#1e293b;color:#e2e8f0;">1 min</option>
+                <option value="0" style="background:#1e293b;color:#e2e8f0;">Off</option>
+              </select>
+            </div>
           </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button type="button" onclick="refreshTdPlantImportManual()" class="td-toolbar-btn td-toolbar-btn-soft" title="Fetch the latest mapped plant tags and fill the process fields">↻ Refresh Plant Data</button>
+          <div class="td-plant-source-actions">
+            <button type="button" onclick="refreshTdPlantImportManual()" class="td-toolbar-btn td-toolbar-btn-soft" title="Fetch the latest mapped plant tags or re-import the selected Excel file">↻ Import Now</button>
+            <button type="button" onclick="openTdPlantExcelPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Select and import an Excel file for mapped process values">📂 Open Excel</button>
             <button type="button" onclick="downloadTdPlantImportSnapshot()" class="td-toolbar-btn td-toolbar-btn-muted" title="Download the latest imported mapped plant values">⬇ Download Snapshot</button>
           </div>
         </div>
-        <div class="td-manual-grid">
+        <div id="td-process-manual-grid" class="td-manual-grid">
 
           <!-- HGU Load -->
           <div class="td-field-group">
@@ -25713,6 +25793,75 @@ var tdPlantFetchInFlight = null;
 var tdPlantLatestByTag = new Map();
 var tdPlantSnapshotRows = [];
 var tdPlantControlsBound = false;
+var tdPlantSourceMode = "live";
+var tdPlantSelectedExcelFile = null;
+
+function normalizeTdPlantSourceMode(raw){
+  return String(raw || "").toLowerCase() === "excel" ? "excel" : "live";
+}
+
+function getTdPlantSourceModeSelect(){
+  return document.getElementById("td-plant-source-mode");
+}
+
+function getTdPlantSourcePathInput(){
+  return document.getElementById("td-plant-source-path");
+}
+
+function getTdPlantExcelInput(){
+  return document.getElementById("td-plant-excel-file");
+}
+
+function getTdPlantSourceMode(){
+  var select = getTdPlantSourceModeSelect();
+  return normalizeTdPlantSourceMode(select ? select.value : tdPlantSourceMode);
+}
+
+function getTdPlantLiveSourcePath(){
+  return TD_PLANT_DATA_SUPABASE_URL ? (TD_PLANT_DATA_SUPABASE_URL + "/rest/v1/plant_data") : "";
+}
+
+function updateTdPlantSourceUi(){
+  var mode = getTdPlantSourceMode();
+  var select = getTdPlantSourceModeSelect();
+  var pathInput = getTdPlantSourcePathInput();
+  var refreshSelect = getTdPlantRefreshSelect();
+  tdPlantSourceMode = mode;
+  if(select && select.value !== mode) select.value = mode;
+  if(pathInput){
+    if(mode === "excel"){
+      pathInput.value = tdPlantSelectedExcelFile ? tdPlantSelectedExcelFile.name : "No Excel file selected";
+      pathInput.title = tdPlantSelectedExcelFile ? tdPlantSelectedExcelFile.name : "Select an Excel file for process-value import";
+    }else{
+      var livePath = getTdPlantLiveSourcePath();
+      pathInput.value = livePath || "Live plant source not configured";
+      pathInput.title = pathInput.value;
+    }
+  }
+  if(refreshSelect){
+    refreshSelect.disabled = (mode === "excel");
+    refreshSelect.style.opacity = mode === "excel" ? "0.55" : "1";
+    refreshSelect.style.cursor = mode === "excel" ? "not-allowed" : "pointer";
+  }
+  updateTdPlantImportRateStat();
+}
+
+function setTdPlantSourceMode(mode){
+  tdPlantSourceMode = normalizeTdPlantSourceMode(mode);
+  updateTdPlantSourceUi();
+  if(tdPlantSourceMode === "excel"){
+    stopTdPlantDataRefresh();
+    setTdPlantConfigBarVisible(false, "");
+    if(tdPlantSelectedExcelFile){
+      importTdPlantExcelWorkbook(tdPlantSelectedExcelFile).catch(function(){});
+    }else{
+      setTdPlantImportStatus("offline", "Select Excel file");
+      updateTdPlantImportStats(tdPlantLatestByTag, tdPlantSnapshotRows.length);
+    }
+    return;
+  }
+  if(isTempDataTabActive()) startTdPlantDataRefresh();
+}
 
 function updateTempSaveButtonLabel(){
   var btn = document.getElementById("td-save-btn");
@@ -25802,7 +25951,12 @@ function setTdPlantImportStatus(state, text){
 function updateTdPlantImportRateStat(){
   var stat = document.getElementById("td-plant-stat-rate");
   var select = getTdPlantRefreshSelect();
-  if(!stat || !select) return;
+  if(!stat) return;
+  if(getTdPlantSourceMode() === "excel"){
+    stat.textContent = tdPlantSelectedExcelFile ? "Manual" : "Await file";
+    return;
+  }
+  if(!select) return;
   var sec = parseInt(select.value, 10);
   stat.textContent = sec > 0 ? (sec + " sec") : "Off";
 }
@@ -25829,6 +25983,11 @@ function updateTdPlantImportStats(latestMap, mappedCount){
 }
 
 function checkTdPlantImportConfig(){
+  if(getTdPlantSourceMode() === "excel"){
+    setTdPlantConfigBarVisible(false, "");
+    updateTdPlantSourceUi();
+    return true;
+  }
   var ok = !!(TD_PLANT_DATA_SUPABASE_URL && TD_PLANT_DATA_SUPABASE_KEY
     && TD_PLANT_DATA_SUPABASE_URL.indexOf("YOUR_PROJECT_ID") === -1
     && TD_PLANT_DATA_SUPABASE_KEY.indexOf("YOUR_ANON") === -1);
@@ -25863,9 +26022,28 @@ function pulseTdPlantProcessField(input){
 
 function collectTdPlantLatestRows(rows){
   var latest = new Map();
+  var bindings = getTdPlantMappedBindings();
   (Array.isArray(rows) ? rows : []).forEach(function(row){
-    if(row && row.tag_id && !latest.has(row.tag_id)){
-      latest.set(row.tag_id, row);
+    if(!row) return;
+    var tagId = String(row.tag_id || "").trim();
+    if(!tagId){
+      var labelLow = String(row.label || row.name || "").trim().toLowerCase();
+      if(labelLow){
+        for(var i=0; i<bindings.length; i++){
+          var binding = bindings[i];
+          var matches = (binding.importLabels || []).some(function(token){
+            return labelLow.indexOf(String(token || "").toLowerCase()) >= 0;
+          }) || labelLow.indexOf(String(binding.exportLabel || "").toLowerCase()) >= 0;
+          if(matches){
+            tagId = binding.plantTagId;
+            break;
+          }
+        }
+      }
+    }
+    if(tagId && !latest.has(tagId)){
+      row.tag_id = tagId;
+      latest.set(tagId, row);
     }
   });
   return latest;
@@ -25893,6 +26071,89 @@ async function fetchTdPlantImportRows(){
   }, 9000);
   if(!res || !res.ok) return null;
   return await res.json();
+}
+
+function parseTdPlantExcelRowsFromSheet(sheet){
+  if(!sheet || typeof XLSX === "undefined" || !XLSX.utils) return [];
+  var rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, defval:""});
+  if(!Array.isArray(rows) || !rows.length) return [];
+  var header = rows[0] || [];
+  var low = header.map(function(cell){ return String(cell || "").trim().toLowerCase(); });
+  function idx(matchers){
+    for(var i = 0; i < low.length; i++){
+      for(var j = 0; j < matchers.length; j++){
+        if(low[i].indexOf(matchers[j]) >= 0) return i;
+      }
+    }
+    return -1;
+  }
+  var idxTag = idx(["tag id","tag_id","tag"]);
+  var idxLabel = idx(["label","description","name"]);
+  var idxValue = idx(["value","pv","reading"]);
+  var idxUnit = idx(["unit","units"]);
+  var idxSyncedAt = idx(["synced at","synced_at","timestamp","time"]);
+  var out = [];
+  var importedAt = new Date().toISOString();
+  if(idxValue < 0) return out;
+  rows.slice(1).forEach(function(row){
+    if(!Array.isArray(row)) return;
+    var tagId = idxTag >= 0 ? String(row[idxTag] || "").trim() : "";
+    var label = idxLabel >= 0 ? String(row[idxLabel] || "").trim() : "";
+    var value = row[idxValue];
+    if((!tagId && !label) || value === "" || value == null) return;
+    out.push({
+      tag_id: tagId,
+      label: label,
+      value: value,
+      unit: idxUnit >= 0 ? String(row[idxUnit] || "").trim() : "",
+      synced_at: idxSyncedAt >= 0 && row[idxSyncedAt] ? String(row[idxSyncedAt]).trim() : importedAt
+    });
+  });
+  return out;
+}
+
+async function importTdPlantExcelWorkbook(file){
+  if(!file || typeof XLSX === "undefined") return null;
+  setTdPlantImportStatus("syncing", tdEditingIndex >= 0 ? "Reading Excel while edit is paused" : "Reading Excel import...");
+  try{
+    var buffer = await file.arrayBuffer();
+    var wb = XLSX.read(buffer, {type:"array"});
+    var sheetName = wb && wb.SheetNames && wb.SheetNames.length ? wb.SheetNames[0] : "";
+    var sheet = sheetName ? wb.Sheets[sheetName] : null;
+    var rows = parseTdPlantExcelRowsFromSheet(sheet);
+    tdPlantLatestByTag = collectTdPlantLatestRows(rows);
+    var mappedCount = applyTdPlantImportToInputs(tdPlantLatestByTag);
+    updateTdPlantImportStats(tdPlantLatestByTag, mappedCount);
+    if(tdPlantLatestByTag.size){
+      setTdPlantImportStatus("online", tdEditingIndex >= 0 ? "Excel imported · process fields paused during edit" : "Excel values imported to process fields");
+      showToast("📂 Excel values imported");
+    }else{
+      setTdPlantImportStatus("offline", "No mapped values found in Excel");
+      showToast("⚠ No mapped values found in Excel");
+    }
+    return tdPlantLatestByTag;
+  }catch(e){
+    console.warn("Excel plant import failed:", e);
+    setTdPlantImportStatus("offline", "Excel import failed");
+    showToast("⚠ Could not read Excel file");
+    return null;
+  }
+}
+
+function openTdPlantExcelPicker(){
+  var input = getTdPlantExcelInput();
+  if(input){
+    input.value = "";
+    input.click();
+  }
+}
+
+function handleTdPlantExcelSelect(event){
+  var input = event && event.target ? event.target : getTdPlantExcelInput();
+  var file = input && input.files && input.files[0] ? input.files[0] : null;
+  if(!file) return;
+  tdPlantSelectedExcelFile = file;
+  setTdPlantSourceMode("excel");
 }
 
 function applyTdPlantImportToInputs(latestMap){
@@ -25928,6 +26189,13 @@ function applyTdPlantImportToInputs(latestMap){
 
 async function refreshTdPlantImportNow(force){
   if(!force && !isTempDataTabActive()) return tdPlantLatestByTag;
+  if(getTdPlantSourceMode() === "excel"){
+    if(!tdPlantSelectedExcelFile){
+      setTdPlantImportStatus("offline", "Select Excel file");
+      return null;
+    }
+    return importTdPlantExcelWorkbook(tdPlantSelectedExcelFile);
+  }
   if(!checkTdPlantImportConfig()) return null;
   if(tdPlantFetchInFlight) return tdPlantFetchInFlight;
   setTdPlantImportStatus("syncing", tdEditingIndex >= 0 ? "Syncing plant data while edit is paused" : "Syncing plant data...");
@@ -25975,6 +26243,13 @@ function stopTdPlantDataRefresh(){
 function startTdPlantDataRefresh(){
   stopTdPlantDataRefresh();
   if(!isTempDataTabActive()) return;
+  if(getTdPlantSourceMode() === "excel"){
+    updateTdPlantImportRateStat();
+    if(tdPlantSelectedExcelFile && (!tdPlantLatestByTag || !tdPlantLatestByTag.size)){
+      importTdPlantExcelWorkbook(tdPlantSelectedExcelFile).catch(function(){});
+    }
+    return;
+  }
   refreshTdPlantImportNow(true).catch(function(){});
   var select = getTdPlantRefreshSelect();
   var sec = select ? parseInt(select.value, 10) : 30;
@@ -25992,18 +26267,28 @@ function startTdPlantDataRefresh(){
 function bindTdPlantLiveInputs(){
   if(tdPlantControlsBound) return;
   tdPlantControlsBound = true;
+  var sourceSelect = getTdPlantSourceModeSelect();
   var refreshSelect = getTdPlantRefreshSelect();
+  if(sourceSelect){
+    sourceSelect.addEventListener("change", function(){
+      setTdPlantSourceMode(sourceSelect.value);
+    });
+  }
   if(refreshSelect){
     refreshSelect.addEventListener("change", function(){
       updateTdPlantImportRateStat();
       startTdPlantDataRefresh();
     });
   }
-  updateTdPlantImportRateStat();
+  updateTdPlantSourceUi();
   checkTdPlantImportConfig();
 }
 
 function refreshTdPlantImportManual(){
+  if(getTdPlantSourceMode() === "excel" && !tdPlantSelectedExcelFile){
+    openTdPlantExcelPicker();
+    return;
+  }
   refreshTdPlantImportNow(true).catch(function(){});
 }
 
