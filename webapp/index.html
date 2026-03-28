@@ -8015,10 +8015,17 @@ function renderTwinCuboidFilterUi(snapshot){
   var noDataMsg = selectedDate
     ? (selectedShift === "All" ? ("No saved cuboid data for " + selectedDate) : ("No " + selectedShift + " shift cuboid data for " + selectedDate))
     : (selectedShift === "All" ? "No saved cuboid data available yet." : ("No saved " + selectedShift + " shift cuboid data."));
+  var noDataDateLabel = selectedDate ? formatTwinCuboidEntryStamp(selectedDate) : "";
 
   if(badge){
     badge.classList.add("is-empty");
-    badge.textContent = "No Saved Entry";
+    if(selectedShift !== "All" || noDataDateLabel){
+      badge.innerHTML = '<span>No Data</span>'
+        + (selectedShift !== "All" ? ('<span style="opacity:0.72;">•</span><span style="font-weight:800;">' + selectedShift + '</span>') : '')
+        + (noDataDateLabel ? ('<span style="opacity:0.72;">•</span><span>' + noDataDateLabel + '</span>') : '');
+    }else{
+      badge.textContent = "No Saved Data";
+    }
   }
   if(banner){
     banner.classList.add("is-empty");
