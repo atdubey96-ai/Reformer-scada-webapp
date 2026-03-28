@@ -3741,6 +3741,213 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   flex-direction:column;
   gap:18px;
 }
+#tab-cuboidstack .cuboid-twin-control-panel{
+  width:min(100%,1680px);
+  margin:0 auto;
+  padding:14px 18px 16px;
+  border:1px solid rgba(98,127,180,0.34);
+  border-radius:14px;
+  background:
+    linear-gradient(180deg,rgba(12,17,28,0.96),rgba(7,10,16,0.98)),
+    radial-gradient(circle at top left,rgba(78,138,255,0.12),transparent 52%);
+  box-shadow:0 16px 36px rgba(0,0,0,0.32);
+  position:relative;
+  overflow:hidden;
+}
+#tab-cuboidstack .cuboid-twin-control-panel::before{
+  content:"";
+  position:absolute;
+  inset:0 auto auto 0;
+  width:240px;
+  height:140px;
+  background:radial-gradient(circle,rgba(125,220,247,0.14),transparent 70%);
+  pointer-events:none;
+}
+#tab-cuboidstack .cuboid-twin-control-head{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+#tab-cuboidstack .cuboid-twin-control-title{
+  color:#eef6ff;
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+}
+#tab-cuboidstack .cuboid-twin-control-sub{
+  margin-top:5px;
+  color:#94a3b8;
+  font-size:12px;
+  line-height:1.55;
+  max-width:820px;
+}
+#tab-cuboidstack .cuboid-twin-control-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:36px;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid rgba(59,130,246,0.28);
+  background:rgba(15,23,42,0.78);
+  color:#dbeafe;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.45px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
+}
+#tab-cuboidstack .cuboid-twin-control-badge.is-empty{
+  border-color:rgba(248,113,113,0.34);
+  background:rgba(69,10,10,0.42);
+  color:#fecaca;
+}
+#tab-cuboidstack .cuboid-twin-control-grid{
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+#tab-cuboidstack .cuboid-twin-control-chip{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:160px;
+}
+#tab-cuboidstack .cuboid-twin-control-chip.is-wide{
+  min-width:190px;
+}
+#tab-cuboidstack .cuboid-twin-control-label{
+  color:#8da2c2;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+}
+#tab-cuboidstack .cuboid-twin-control-input{
+  min-height:40px;
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid rgba(71,85,105,0.72);
+  background:linear-gradient(180deg,rgba(12,18,30,0.94),rgba(8,12,20,0.98));
+  color:#e2e8f0;
+  font-family:'Rajdhani',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  outline:none;
+  cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+#tab-cuboidstack .cuboid-twin-control-input:focus{
+  border-color:rgba(96,165,250,0.74);
+  box-shadow:0 0 0 3px rgba(37,99,235,0.16);
+}
+#tab-cuboidstack .cuboid-twin-control-input option{
+  background:#0f172a;
+  color:#e2e8f0;
+}
+#tab-cuboidstack .cuboid-twin-control-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#tab-cuboidstack .cuboid-twin-control-btn{
+  min-height:40px;
+  padding:0 14px;
+  border-radius:10px;
+  border:1px solid rgba(59,130,246,0.42);
+  background:linear-gradient(180deg,rgba(30,64,175,0.2),rgba(15,23,42,0.88));
+  color:#bfdbfe;
+  font-family:'Rajdhani',sans-serif;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:0.8px;
+  cursor:pointer;
+}
+#tab-cuboidstack .cuboid-twin-control-btn:hover{
+  border-color:rgba(96,165,250,0.62);
+  color:#eff6ff;
+}
+#tab-cuboidstack .cuboid-twin-control-btn.is-secondary{
+  border-color:rgba(100,116,139,0.4);
+  background:linear-gradient(180deg,rgba(30,41,59,0.72),rgba(15,23,42,0.88));
+  color:#cbd5e1;
+}
+#tab-cuboidstack .cuboid-twin-control-banner{
+  display:none;
+  align-items:center;
+  gap:10px;
+  flex:1 1 360px;
+  min-height:40px;
+  padding:8px 14px;
+  border-radius:12px;
+  border:1px solid rgba(125,211,252,0.22);
+  background:rgba(15,23,42,0.5);
+  color:#dbeafe;
+  font-size:12px;
+  font-weight:700;
+  flex-wrap:wrap;
+}
+#tab-cuboidstack .cuboid-twin-control-banner.is-empty{
+  border-color:rgba(248,113,113,0.28);
+  background:rgba(69,10,10,0.26);
+  color:#fecaca;
+}
+#tab-cuboidstack .cuboid-twin-control-banner strong{
+  font-weight:800;
+  letter-spacing:0.4px;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-panel{
+  border-color:rgba(148,163,184,0.3);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,0.98),rgba(238,244,252,0.96)),
+    radial-gradient(circle at top left,rgba(59,130,246,0.08),transparent 54%);
+  box-shadow:0 14px 34px rgba(15,23,42,0.12);
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-title{ color:#0f172a; }
+body.light-theme #tab-cuboidstack .cuboid-twin-control-sub{ color:#475569; }
+body.light-theme #tab-cuboidstack .cuboid-twin-control-badge{
+  border-color:rgba(59,130,246,0.2);
+  background:rgba(255,255,255,0.9);
+  color:#1e3a8a;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-badge.is-empty{
+  border-color:rgba(239,68,68,0.24);
+  background:rgba(254,242,242,0.95);
+  color:#b91c1c;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-label{ color:#475569; }
+body.light-theme #tab-cuboidstack .cuboid-twin-control-input{
+  border-color:rgba(148,163,184,0.58);
+  background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(241,245,249,0.98));
+  color:#0f172a;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-btn{
+  background:linear-gradient(180deg,rgba(219,234,254,0.95),rgba(239,246,255,0.98));
+  color:#1d4ed8;
+  border-color:rgba(59,130,246,0.28);
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-btn.is-secondary{
+  background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(241,245,249,0.98));
+  color:#334155;
+  border-color:rgba(148,163,184,0.34);
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-banner{
+  border-color:rgba(59,130,246,0.18);
+  background:rgba(255,255,255,0.88);
+  color:#334155;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-banner.is-empty{
+  border-color:rgba(239,68,68,0.2);
+  background:rgba(254,242,242,0.92);
+  color:#b91c1c;
+}
 #tab-cuboid .cuboid-followup-stack,
 #tab-cuboidstack .cuboid-followup-stack{
   display:flex;
@@ -7688,6 +7895,165 @@ function clearHeatMapDateFilter(){
   if(inp) inp.value = "";
   requestHeatMapRender(90);
 }
+
+var _twinCuboidFilterTimer = null;
+
+function normalizeTwinCuboidShift(raw){
+  var s = String(raw || "All").trim();
+  if(s === "Morning" || s === "Evening" || s === "Night") return s;
+  return "All";
+}
+
+function getTwinCuboidSelectedShift(){
+  var sel = document.getElementById("stack-cuboid-shift-select");
+  return normalizeTwinCuboidShift(sel ? sel.value : "All");
+}
+
+function getTwinCuboidSelectedDate(){
+  var input = document.getElementById("stack-cuboid-date-input");
+  var value = input ? String(input.value || "").trim() : "";
+  if(input){
+    var todayIso = new Date().toISOString().slice(0, 10);
+    input.max = todayIso;
+    if(value && value > todayIso){
+      input.value = todayIso;
+      value = todayIso;
+    }
+  }
+  return value;
+}
+
+function cuboidGetSortedTempEntries(){
+  var list = Array.isArray(tempDataEntries) && tempDataEntries.length
+    ? tempDataEntries.slice()
+    : getAllTempEntries().slice();
+  list.sort(function(a, b){
+    var ta = Date.parse(String(a && (a.dt || a.date || a.createdAt || a.created_at) || ""));
+    var tb = Date.parse(String(b && (b.dt || b.date || b.createdAt || b.created_at) || ""));
+    ta = isFinite(ta) ? ta : 0;
+    tb = isFinite(tb) ? tb : 0;
+    return tb - ta;
+  });
+  return list;
+}
+
+function cuboidResolveConfiguredTempEntry(){
+  var selectedShift = getTwinCuboidSelectedShift();
+  var selectedDate = getTwinCuboidSelectedDate();
+  var list = cuboidGetSortedTempEntries();
+  if(selectedShift !== "All"){
+    list = list.filter(function(entry){
+      return String((entry && entry.shift) || "") === selectedShift;
+    });
+  }
+  return {
+    selectedShift: selectedShift,
+    selectedDate: selectedDate,
+    entry: resolveHeatMapEntryByDateValue(list, selectedDate || "latest"),
+    entries: list
+  };
+}
+
+function formatTwinCuboidEntryStamp(rawDt){
+  var parts = (typeof formatTempEntryDateTime === "function")
+    ? formatTempEntryDateTime(rawDt)
+    : { date:String(rawDt || "").trim(), time:"" };
+  if(!parts || !parts.date) return "Latest";
+  return parts.time ? (parts.date + " · " + parts.time) : parts.date;
+}
+
+function renderTwinCuboidFilterUi(snapshot){
+  var badge = document.getElementById("stack-cuboid-filter-badge");
+  var banner = document.getElementById("stack-cuboid-filter-banner");
+  if(!badge && !banner) return;
+
+  var view = (snapshot && typeof snapshot === "object") ? snapshot : null;
+  if(!view){
+    var resolved = cuboidResolveConfiguredTempEntry();
+    var resolvedEntry = resolved.entry || null;
+    view = {
+      filterShift: resolved.selectedShift,
+      filterDate: resolved.selectedDate,
+      entryFound: !!resolvedEntry,
+      entryShift: resolvedEntry && (resolvedEntry.selectedShift || resolvedEntry.shift) ? (resolvedEntry.selectedShift || resolvedEntry.shift) : resolved.selectedShift,
+      entryDt: resolvedEntry && resolvedEntry.dt ? resolvedEntry.dt : ((resolved.selectedDate || resolved.selectedShift !== "All") ? "No Saved Data" : "Latest")
+    };
+  }
+
+  var selectedShift = normalizeTwinCuboidShift(view.filterShift || "All");
+  var selectedDate = String(view.filterDate || "").trim();
+  var entryFound = !!view.entryFound;
+  var actualShift = normalizeTwinCuboidShift(view.entryShift || view.selectedShift || selectedShift);
+  var entryStamp = (entryFound && view.entryDt && view.entryDt !== "No Saved Data")
+    ? formatTwinCuboidEntryStamp(view.entryDt)
+    : "";
+
+  var shiftColors = {Morning:"#34d399", Evening:"#fb923c", Night:"#818cf8", All:"#7dd3fc"};
+  var shiftIcons = {Morning:"🌅", Evening:"🌆", Night:"🌙", All:"🕘"};
+  var shiftText = actualShift !== "All" ? actualShift : selectedShift;
+  var shiftColor = shiftColors[shiftText] || shiftColors.All;
+  var shiftIcon = shiftIcons[shiftText] || shiftIcons.All;
+
+  if(entryFound){
+    var latestLabel = (!selectedDate && selectedShift === "All") ? "Latest Saved" : "Saved Snapshot";
+    if(badge){
+      badge.classList.remove("is-empty");
+      badge.innerHTML = '<span>' + latestLabel + '</span><span style="opacity:0.76;">•</span><span style="color:' + shiftColor + ';font-weight:800;">' + shiftText + '</span><span style="opacity:0.76;">•</span><span>' + entryStamp + '</span>';
+    }
+    if(banner){
+      banner.classList.remove("is-empty");
+      banner.style.display = "flex";
+      banner.innerHTML =
+        '<span style="font-size:14px;">' + shiftIcon + '</span>' +
+        '<span>Both cuboids are showing <strong style="color:' + shiftColor + ';">' + shiftText + ' shift</strong> data from <strong>' + entryStamp + '</strong>.</span>';
+    }
+    return;
+  }
+
+  var noDataMsg = selectedDate
+    ? (selectedShift === "All" ? ("No saved cuboid data for " + selectedDate) : ("No " + selectedShift + " shift cuboid data for " + selectedDate))
+    : (selectedShift === "All" ? "No saved cuboid data available yet." : ("No saved " + selectedShift + " shift cuboid data."));
+
+  if(badge){
+    badge.classList.add("is-empty");
+    badge.textContent = "No Saved Entry";
+  }
+  if(banner){
+    banner.classList.add("is-empty");
+    banner.style.display = "flex";
+    banner.innerHTML = '<span style="font-size:14px;">⚠️</span><span>' + noDataMsg + '</span>';
+  }
+}
+
+function requestTwinCuboidFilterApply(delayMs, force){
+  var wait = (typeof delayMs === "number" && delayMs >= 0) ? delayMs : 90;
+  if(_twinCuboidFilterTimer) clearTimeout(_twinCuboidFilterTimer);
+  _twinCuboidFilterTimer = setTimeout(function(){
+    _twinCuboidFilterTimer = null;
+    if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches();
+    var snapshot = (typeof refreshCuboidRenderSnapshot === "function") ? refreshCuboidRenderSnapshot(!!force) : null;
+    renderTwinCuboidFilterUi(snapshot);
+    if(typeof ensureCuboidViewerLoaded === "function" && typeof isCuboidTabActive === "function" && isCuboidTabActive()){
+      ensureCuboidViewerLoaded(false);
+    }
+    if(typeof scheduleCuboidFrameDataPush === "function") scheduleCuboidFrameDataPush(0, true);
+    if(typeof scheduleCuboidPanelRefresh === "function") scheduleCuboidPanelRefresh(20, true);
+  }, wait);
+}
+
+function onTwinCuboidShiftChanged(){
+  requestTwinCuboidFilterApply(90, true);
+}
+
+function onTwinCuboidDateChanged(){
+  requestTwinCuboidFilterApply(90, true);
+}
+
+function clearTwinCuboidDateFilter(){
+  var input = document.getElementById("stack-cuboid-date-input");
+  if(input) input.value = "";
+  requestTwinCuboidFilterApply(0, true);
+}
 </script>
 <style id="global-font-times-new-roman-2026">
 html, body, body *, body *::before, body *::after, svg text{
@@ -8063,6 +8429,24 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cuboid .cuboid-tab-stack,
   #tab-cuboidstack .cuboid-tab-stack{
     gap:12px;
+  }
+  #tab-cuboidstack .cuboid-twin-control-panel{
+    padding:12px 14px 14px;
+    border-radius:12px;
+  }
+  #tab-cuboidstack .cuboid-twin-control-grid{
+    gap:10px;
+  }
+  #tab-cuboidstack .cuboid-twin-control-chip,
+  #tab-cuboidstack .cuboid-twin-control-chip.is-wide{
+    min-width:min(100%,180px);
+    flex:1 1 180px;
+  }
+  #tab-cuboidstack .cuboid-twin-control-actions{
+    width:100%;
+  }
+  #tab-cuboidstack .cuboid-twin-control-banner{
+    flex-basis:100%;
   }
   #tab-cuboid .cuboid-tab-shell,
   #tab-cuboidstack .cuboid-tab-shell{
@@ -17776,6 +18160,35 @@ html, body, body *, body *::before, body *::after, svg text{
   <!-- TAB 7: Twin Cuboid -->
   <div id="tab-cuboidstack" class="tab-panel" data-cuboid-dashboard="stack">
     <div class="cuboid-tab-stack">
+      <div class="cuboid-twin-control-panel">
+        <div class="cuboid-twin-control-head">
+          <div>
+            <div class="cuboid-twin-control-title">Twin Cuboid Data Controls</div>
+            <div class="cuboid-twin-control-sub">This shared selector sits above the AB cuboid and drives both AB and CD cuboids together. Leave date blank to show the latest saved TST and burner snapshot.</div>
+          </div>
+          <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Latest saved data</div>
+        </div>
+        <div class="cuboid-twin-control-grid">
+          <div class="cuboid-twin-control-chip">
+            <label class="cuboid-twin-control-label" for="stack-cuboid-shift-select">Shift</label>
+            <select id="stack-cuboid-shift-select" class="cuboid-twin-control-input" onchange="onTwinCuboidShiftChanged()" aria-label="Twin cuboid shift selector">
+              <option value="All">🔁 All Shifts</option>
+              <option value="Morning">🌅 Morning</option>
+              <option value="Evening">🌆 Evening</option>
+              <option value="Night">🌙 Night</option>
+            </select>
+          </div>
+          <div class="cuboid-twin-control-chip is-wide">
+            <label class="cuboid-twin-control-label" for="stack-cuboid-date-input">Date</label>
+            <input type="date" id="stack-cuboid-date-input" class="cuboid-twin-control-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
+          </div>
+          <div class="cuboid-twin-control-actions">
+            <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Saved</button>
+            <button type="button" class="cuboid-twin-control-btn is-secondary" onclick="requestTwinCuboidFilterApply(0, true)">Refresh Cuboids</button>
+          </div>
+          <div id="stack-cuboid-filter-banner" class="cuboid-twin-control-banner" aria-live="polite"></div>
+        </div>
+      </div>
       <div class="cuboid-tab-shell" data-cuboid-shell="stack-top">
         <div class="cuboid-tab-frame-wrap">
           <div class="cuboid-tab-frame-mask" aria-hidden="true">
@@ -20172,6 +20585,83 @@ function renderBurnerAnalysisMirror(targetId, chartStore, canvasPrefix, wallEntr
   chartStore["_wallSummary"] = createAnalyticsSummaryChart(document.getElementById(summaryCanvasId), wallLabels, cntBoth, cntNG, cntOG, cntCold);
 }
 
+function buildBurnerAnalysisPayloadFromHmData(sourceHmData){
+  var hmData = cuboidLegendSanitizeHmData(sourceHmData || cuboidLegendDefaultHmData());
+  var wallLabels = [];
+  var cntBoth = [];
+  var cntNG = [];
+  var cntOG = [];
+  var cntCold = [];
+  var wallEntries = [];
+
+  Object.entries(hmData).forEach(function(entry){
+    var wallName = entry[0];
+    var rows = Array.isArray(entry[1]) ? entry[1] : [];
+    var N = 0, O = 0, B = 0, C = 0;
+    rows.flat().forEach(function(cell){
+      if(cell === "N") N++;
+      else if(cell === "O") O++;
+      else if(cell === "B") B++;
+      else C++;
+    });
+    var imb = Math.abs(N - O);
+    var sev = "normal";
+    if(imb > 5 && imb <= 10) sev = "warning";
+    if(imb > 10 && imb <= 20) sev = "major";
+    if(imb > 20) sev = "critical";
+    var sc = sev === "normal" ? "#4ade80" : sev === "warning" ? "#facc15" : sev === "major" ? "#fb923c" : "#f87171";
+    var displayName = "Wall " + wallName;
+    var info = getImbalanceInfo(N, O, imb, sev, displayName);
+
+    wallLabels.push(displayName);
+    cntBoth.push(B);
+    cntNG.push(N);
+    cntOG.push(O);
+    cntCold.push(C);
+    wallEntries.push({
+      wallName: wallName,
+      displayName: displayName,
+      B: B,
+      N: N,
+      O: O,
+      C: C,
+      imb: imb,
+      sev: sev,
+      sc: sc,
+      direction: info.direction,
+      dirColor: info.dirColor,
+      desc: info.desc,
+      action: info.action
+    });
+  });
+
+  return {
+    wallEntries: wallEntries,
+    wallLabels: wallLabels,
+    cntBoth: cntBoth,
+    cntNG: cntNG,
+    cntOG: cntOG,
+    cntCold: cntCold
+  };
+}
+
+function renderCuboidTwinAnalysisFromSnapshot(snapshot){
+  var target = document.getElementById("stack-analysisContainer");
+  if(!target) return;
+  var payload = buildBurnerAnalysisPayloadFromHmData(snapshot && snapshot.hmData ? snapshot.hmData : (typeof data === "object" ? data : null));
+  renderBurnerAnalysisMirror(
+    "stack-analysisContainer",
+    stackChartInstances,
+    "stack",
+    payload.wallEntries,
+    payload.wallLabels,
+    payload.cntBoth,
+    payload.cntNG,
+    payload.cntOG,
+    payload.cntCold
+  );
+}
+
 function mirrorBurnerAnalysisToHeatMap(wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold){
   renderBurnerAnalysisMirror("hm-analysisContainer", hmChartInstances, "hm", wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
   renderBurnerAnalysisMirror("stack-analysisContainer", stackChartInstances, "stack", wallEntries, wallLabels, cntBoth, cntNG, cntOG, cntCold);
@@ -22317,11 +22807,18 @@ function cuboidPickLatestTempEntry(){
 }
 
 function cuboidBuildRenderSnapshot(){
-  var entry = cuboidPickLatestTempEntry();
+  var resolved = cuboidResolveConfiguredTempEntry();
+  var entry = resolved.entry || null;
+  var filterShift = resolved.selectedShift || "All";
+  var filterDate = resolved.selectedDate || "";
+  var entryShift = entry && (entry.selectedShift || entry.shift) ? (entry.selectedShift || entry.shift) : filterShift;
+  var fallbackEntryLabel = (filterDate || filterShift !== "All") ? "No Saved Data" : "Latest";
   var hmData = cuboidLegendSanitizeHmData(
-    (typeof captureCurrentBurnerSnapshot === "function")
+    getEntryBurnerSnapshot(entry) ||
+    ((typeof captureCurrentBurnerSnapshot === "function")
       ? captureCurrentBurnerSnapshot()
       : cuboidLegendDefaultHmData()
+    )
   );
   return {
     hmData: hmData,
@@ -22329,8 +22826,12 @@ function cuboidBuildRenderSnapshot(){
     abTop: cuboidBuildPeepRow(entry, "ab-top"),
     cdBot: cuboidBuildPeepRow(entry, "cd-bot"),
     cdTop: cuboidBuildPeepRow(entry, "cd-top"),
-    entryDt: entry && entry.dt ? entry.dt : "Latest",
-    selectedShift: entry && (entry.selectedShift || entry.shift) ? (entry.selectedShift || entry.shift) : "All"
+    entryDt: entry && entry.dt ? entry.dt : fallbackEntryLabel,
+    selectedShift: entryShift || "All",
+    entryShift: entryShift || "All",
+    filterShift: filterShift,
+    filterDate: filterDate,
+    entryFound: !!entry
   };
 }
 
@@ -22338,10 +22839,12 @@ function refreshCuboidRenderSnapshot(force){
   var snapshot = cuboidBuildRenderSnapshot();
   var digest = hashStringFNV1a(cuboidSafeStringify(snapshot));
   if(!force && window._cuboidRenderSnapshot && digest === _cuboidRenderSnapshotDigest){
+    if(typeof renderTwinCuboidFilterUi === "function") renderTwinCuboidFilterUi(window._cuboidRenderSnapshot);
     return window._cuboidRenderSnapshot;
   }
   window._cuboidRenderSnapshot = snapshot;
   _cuboidRenderSnapshotDigest = digest;
+  if(typeof renderTwinCuboidFilterUi === "function") renderTwinCuboidFilterUi(snapshot);
   return snapshot;
 }
 
@@ -22506,7 +23009,11 @@ function cuboidBuildLivePayload(){
     cdBot:[],
     cdTop:[],
     entryDt:"Latest",
-    selectedShift:"All"
+    selectedShift:"All",
+    entryShift:"All",
+    filterShift:"All",
+    filterDate:"",
+    entryFound:false
   };
 
   try{
@@ -22535,6 +23042,10 @@ function cuboidBuildLivePayload(){
     payload.cdTop = cuboidLegendGetPeepRow({ peepHoles:{ "cd-top":snap.cdTop || [] } }, "cd-top");
     payload.entryDt = snap.entryDt || payload.entryDt;
     payload.selectedShift = snap.selectedShift || payload.selectedShift;
+    payload.entryShift = snap.entryShift || payload.entryShift;
+    payload.filterShift = snap.filterShift || payload.filterShift;
+    payload.filterDate = snap.filterDate || payload.filterDate;
+    payload.entryFound = !!snap.entryFound;
     return payload;
   }
   return payload;
@@ -23293,6 +23804,9 @@ function refreshCuboidExtendedPanels(force){
     generateAnalysis();
     _cuboidExtendedDigests.analysis = digests.analysis;
   }
+  if(document.getElementById("stack-analysisContainer")){
+    renderCuboidTwinAnalysisFromSnapshot(snapshot);
+  }
   if(typeof buildCleaningTable === "function" && (force || digests.cleaning !== _cuboidExtendedDigests.cleaning)){
     buildCleaningTable();
     _cuboidExtendedDigests.cleaning = digests.cleaning;
@@ -23471,6 +23985,11 @@ function switchTab(tab){
     setTimeout(function(){ scheduleCuboidFrameDataPush(20, false); }, 12);
     setTimeout(bindCuboidLegendActions, 0);
     setTimeout(function(){ refreshCuboidLegendPanels(false); }, 0);
+    if(tab === "cuboidstack"){
+      setTimeout(function(){
+        renderTwinCuboidFilterUi(getCuboidRenderSnapshot(false));
+      }, 0);
+    }
     scheduleCuboidExtendedRefresh(190, tab === "cuboidstack");
     setTimeout(function(){
       getCuboidFrames().forEach(function(frame){
@@ -23571,6 +24090,10 @@ function handlePendingViewerTabSwitch(){
 (function initCuboidLegendUi(){
   bindCuboidLegendActions();
   refreshCuboidLegendPanels(true);
+})();
+
+(function initTwinCuboidFilterUi(){
+  renderTwinCuboidFilterUi(getCuboidRenderSnapshot(false));
 })();
 
 (function initHeatMapHeaderTools(){
