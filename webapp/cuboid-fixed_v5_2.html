@@ -313,6 +313,7 @@ let viewMode = "shell";
 let pushedCuboidLiveData = null;
 let pushedCuboidLiveDigest = "";
 let pendingWallBurnerColorSync = false;
+let pendingWallCleaningSync = false;
 let pendingWallTstBarSync = false;
 
 function cuboidGetParentApp(){
@@ -402,6 +403,34 @@ function cuboidLoadBurnerData(){
     return cuboidSanitizeBurnerSnapshot(pushedCuboidLiveData.hmData);
   }
   return cuboidBuildDefaultBurnerData();
+}
+
+function cuboidBuildDefaultCleaningLog(){
+  return { A:{}, B:{}, C:{}, D:{} };
+}
+
+function cuboidSanitizeCleaningLog(source){
+  const walls = ["A", "B", "C", "D"];
+  const out = cuboidBuildDefaultCleaningLog();
+  const src = source && typeof source === "object" ? source : {};
+  for(let wi = 0; wi < walls.length; wi++){
+    const wall = walls[wi];
+    const wallSrc = src[wall] && typeof src[wall] === "object" ? src[wall] : {};
+    const nextWall = {};
+    Object.keys(wallSrc).forEach(function(key){
+      if(/^R\d+B\d+$/i.test(key) && wallSrc[key]) nextWall[key.toUpperCase()] = String(wallSrc[key]);
+    });
+    out[wall] = nextWall;
+  }
+  return out;
+}
+
+function cuboidLoadCleaningLog(){
+  if(!pushedCuboidLiveData) cuboidPrimeLiveDataFromHost();
+  if(pushedCuboidLiveData && pushedCuboidLiveData.cleaningLog){
+    return cuboidSanitizeCleaningLog(pushedCuboidLiveData.cleaningLog);
+  }
+  return cuboidBuildDefaultCleaningLog();
 }
 
 function cuboidSanitizeTstRow(vals){
@@ -520,6 +549,7 @@ window.addEventListener("message", function(event){
   if(data.type === "cuboid-live-data"){
     if(cuboidConsumeLiveState(data.payload, data.digest)){
       pendingWallBurnerColorSync = true;
+      pendingWallCleaningSync = true;
       pendingWallTstBarSync = true;
       markDirty();
     }
@@ -1802,6 +1832,93 @@ function makeNozzleFireGlowTex(size, paletteInput) {
   return tex;
 }
 
+function makeNozzleColdIconTex(width, height) {
+  const cv = document.createElement("canvas");
+  cv.width = width;
+  cv.height = height;
+  const g = cv.getContext("2d");
+  const w = width;
+  const h = height;
+
+  g.clearRect(0, 0, w, h);
+
+  const barrelX = w * 0.20;
+  const barrelY = h * 0.46;
+  const barrelW = w * 0.60;
+  const barrelH = h * 0.10;
+  const stemX = w * 0.45;
+  const stemY = h * 0.57;
+  const stemW = w * 0.10;
+  const stemH = h * 0.11;
+  const baseX = w * 0.29;
+  const baseY = h * 0.70;
+  const baseW = w * 0.42;
+  const baseH = h * 0.09;
+
+  g.shadowColor = "rgba(5,10,16,0.34)";
+  g.shadowBlur = h * 0.028;
+  g.shadowOffsetY = h * 0.018;
+
+  roundedRectPath(g, barrelX, barrelY, barrelW, barrelH, barrelH * 0.5);
+  const barrelGrad = g.createLinearGradient(0, barrelY, 0, barrelY + barrelH);
+  barrelGrad.addColorStop(0.00, "#e7eef6");
+  barrelGrad.addColorStop(0.18, "#cbd6e2");
+  barrelGrad.addColorStop(0.52, "#8693a6");
+  barrelGrad.addColorStop(0.84, "#566274");
+  barrelGrad.addColorStop(1.00, "#3a4350");
+  g.fillStyle = barrelGrad;
+  g.fill();
+  g.lineWidth = Math.max(2, w * 0.014);
+  g.strokeStyle = "rgba(230,238,248,0.22)";
+  g.stroke();
+
+  g.shadowBlur = 0;
+  g.fillStyle = "rgba(255,255,255,0.34)";
+  roundedRectPath(g, barrelX + w * 0.02, barrelY + h * 0.012, barrelW - w * 0.04, barrelH * 0.28, barrelH * 0.18);
+  g.fill();
+
+  g.fillStyle = "rgba(16,23,34,0.68)";
+  g.beginPath();
+  g.ellipse(barrelX + barrelW * 0.18, barrelY + barrelH * 0.54, w * 0.030, h * 0.022, 0, 0, Math.PI * 2);
+  g.fill();
+  g.beginPath();
+  g.ellipse(barrelX + barrelW * 0.82, barrelY + barrelH * 0.54, w * 0.030, h * 0.022, 0, 0, Math.PI * 2);
+  g.fill();
+
+  const accentGrad = g.createRadialGradient(w * 0.50, h * 0.52, 0, w * 0.50, h * 0.52, w * 0.08);
+  accentGrad.addColorStop(0.00, "rgba(251,191,36,0.95)");
+  accentGrad.addColorStop(0.42, "rgba(245,158,11,0.76)");
+  accentGrad.addColorStop(1.00, "rgba(245,158,11,0.00)");
+  g.fillStyle = accentGrad;
+  g.fillRect(w * 0.40, h * 0.44, w * 0.20, h * 0.14);
+
+  const stemGrad = g.createLinearGradient(0, stemY, 0, stemY + stemH);
+  stemGrad.addColorStop(0.00, "#b4c1d2");
+  stemGrad.addColorStop(0.42, "#7b889b");
+  stemGrad.addColorStop(1.00, "#505c6e");
+  roundedRectPath(g, stemX, stemY, stemW, stemH, stemW * 0.46);
+  g.fillStyle = stemGrad;
+  g.fill();
+
+  const baseGrad = g.createLinearGradient(0, baseY, 0, baseY + baseH);
+  baseGrad.addColorStop(0.00, "rgba(232,238,244,0.96)");
+  baseGrad.addColorStop(0.30, "rgba(110,119,131,0.98)");
+  baseGrad.addColorStop(0.64, "rgba(33,40,52,1)");
+  baseGrad.addColorStop(1.00, "rgba(10,13,18,1)");
+  roundedRectPath(g, baseX, baseY, baseW, baseH, baseH * 0.52);
+  g.fillStyle = baseGrad;
+  g.fill();
+  g.lineWidth = Math.max(1.5, w * 0.010);
+  g.strokeStyle = "rgba(236,242,248,0.20)";
+  g.stroke();
+
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.needsUpdate = true;
+  return tex;
+}
+
 const nozzleFireStateMapCache = Object.create(null);
 
 function getNozzleFireStateMaps(state){
@@ -1810,7 +1927,9 @@ function getNozzleFireStateMaps(state){
   const palette = cuboidGetBurnerPalette(liveState);
   const maps = {
     palette: palette,
-    iconTex: makeNozzleFireIconTex(256, 320, palette),
+    iconTex: liveState === "C"
+      ? makeNozzleColdIconTex(256, 320)
+      : makeNozzleFireIconTex(256, 320, palette),
     glowTex: makeNozzleFireGlowTex(192, palette)
   };
   nozzleFireStateMapCache[liveState] = maps;
@@ -1840,6 +1959,10 @@ nozzleFireIconGeo.translate(0, 0.30, 0);
 const nozzleFireGlowGeo = new THREE.PlaneGeometry(0.28, 0.20);
 nozzleFireGlowGeo.translate(0, 0.10, 0);
 const wallNozzleFlameActors = [];
+const wallCleaningDotActors = [];
+const cleaningDotOuterGeo = new THREE.CircleGeometry(0.041, 22);
+const cleaningDotInnerGeo = new THREE.CircleGeometry(0.028, 22);
+const cleaningDotFillGeo = new THREE.CircleGeometry(0.023, 22);
 
 function hasAnimatedWallNozzleFlames() {
   return wallNozzleFlameActors.length > 0;
@@ -1893,6 +2016,64 @@ function addWallNozzleFireIcon(parent, seed, posX, posY, posZ, dir, liveMeta) {
   });
 }
 
+function addWallCleaningDot(parent, posX, posY, posZ, dir, liveMeta){
+  const dot = new THREE.Group();
+  dot.position.set(posX, posY, posZ);
+  dot.rotation.y = dir > 0 ? 0 : Math.PI;
+
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0x9aa7bb,
+    transparent: true,
+    opacity: 0.52,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    toneMapped: false
+  });
+  const ring = new THREE.Mesh(cleaningDotOuterGeo, ringMat);
+  ring.renderOrder = 12;
+  dot.add(ring);
+
+  const holeMat = new THREE.MeshBasicMaterial({
+    color: 0x0c121a,
+    transparent: true,
+    opacity: 0.94,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    toneMapped: false
+  });
+  const hole = new THREE.Mesh(cleaningDotInnerGeo, holeMat);
+  hole.position.z = 0.0008;
+  hole.renderOrder = 13;
+  dot.add(hole);
+
+  const fillMat = new THREE.MeshBasicMaterial({
+    color: 0x71f8a4,
+    transparent: true,
+    opacity: 0.96,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    toneMapped: false
+  });
+  const fill = new THREE.Mesh(cleaningDotFillGeo, fillMat);
+  fill.position.z = 0.0016;
+  fill.renderOrder = 14;
+  dot.add(fill);
+
+  parent.add(dot);
+
+  wallCleaningDotActors.push({
+    dot: dot,
+    ringMat: ringMat,
+    hole: hole,
+    holeMat: holeMat,
+    fill: fill,
+    fillMat: fillMat,
+    faceKey: liveMeta && liveMeta.faceKey ? liveMeta.faceKey : "",
+    rowIndex: liveMeta && Number.isFinite(liveMeta.rowIndex) ? liveMeta.rowIndex : -1,
+    burnerIndex: liveMeta && Number.isFinite(liveMeta.burnerIndex) ? liveMeta.burnerIndex : -1
+  });
+}
+
 function animateWallNozzleFlames(t) {
   for (let i = 0; i < wallNozzleFlameActors.length; i++) {
     const actor = wallNozzleFlameActors[i];
@@ -1905,6 +2086,23 @@ function animateWallNozzleFlames(t) {
     const f3 = Math.sin(t * actor.speedC + actor.phase * 2.07);
     const flicker = 0.60 + f1 * 0.16 + f2 * 0.11 + f3 * 0.05;
     const flare = Math.max(0, f2) * 0.18;
+    if (actor.liveState === "C") {
+      actor.flame.position.x = actor.flame.userData.baseX;
+      actor.flame.position.y = actor.flame.userData.baseY;
+      actor.flame.position.z = actor.flame.userData.baseZ;
+      actor.flame.rotation.y = actor.flame.userData.baseRotY;
+      actor.flame.rotation.z = actor.flame.userData.baseRotZ;
+      actor.flame.scale.set(
+        actor.scaleBias * (1 + frontRich * 0.04),
+        actor.scaleBias * (1 + frontRich * 0.05),
+        actor.scaleBias
+      );
+      actor.iconMat.opacity = Math.min(1, actor.iconBaseOpacity * (1 + frontRich * 0.04));
+      actor.glowMat.opacity = 0;
+      actor.glow.visible = false;
+      actor.glow.scale.set(1, 1, 1);
+      continue;
+    }
     actor.flame.position.x = actor.flame.userData.baseX + f2 * actor.sway;
     actor.flame.position.y = actor.flame.userData.baseY + actor.lift * (0.12 + Math.max(0, flicker - 0.48));
     actor.flame.position.z = actor.flame.userData.baseZ + actor.flame.userData.dir * actor.forwardLift * (0.16 + flare);
@@ -1917,6 +2115,7 @@ function animateWallNozzleFlames(t) {
     );
     actor.iconMat.opacity = Math.min(1, (actor.iconBaseOpacity + ((flicker * 0.14) + (flare * 0.06)) * actor.glowIntensity) * iconPunch);
     actor.glowMat.opacity = Math.min(1, (actor.glowBaseOpacity + ((flicker * 0.16) + (flare * 0.07)) * actor.glowIntensity) * glowPunch);
+    actor.glow.visible = true;
     actor.glow.scale.set(
       (0.92 + flicker * 0.22) * (1 + frontRich * 0.18),
       (0.82 + flicker * 0.14) * (1 + frontRich * 0.12),
@@ -1943,25 +2142,57 @@ function applyWallBurnerStateColors() {
     actor.glowMat.color.set(maps.palette.core);
     actor.glowMat.needsUpdate = true;
     if (liveState === "C") {
-      actor.iconBaseOpacity = 0.50;
-      actor.glowBaseOpacity = 0.05;
-      actor.glowIntensity = 0.34;
-      actor.scaleBias = 0.92;
+      actor.iconBaseOpacity = 0.94;
+      actor.glowBaseOpacity = 0.00;
+      actor.glowIntensity = 0.00;
+      actor.scaleBias = 0.88;
+      actor.glow.visible = false;
     } else if (liveState === "B") {
       actor.iconBaseOpacity = 0.83;
       actor.glowBaseOpacity = 0.20;
       actor.glowIntensity = 0.98;
       actor.scaleBias = 1.00;
+      actor.glow.visible = true;
     } else if (liveState === "O") {
       actor.iconBaseOpacity = 0.87;
       actor.glowBaseOpacity = 0.24;
       actor.glowIntensity = 1.05;
       actor.scaleBias = 1.03;
+      actor.glow.visible = true;
     } else {
       actor.iconBaseOpacity = 0.85;
       actor.glowBaseOpacity = 0.22;
       actor.glowIntensity = 1.00;
       actor.scaleBias = 1.01;
+      actor.glow.visible = true;
+    }
+  }
+}
+
+function applyWallCleaningDots() {
+  const cleaningLog = cuboidLoadCleaningLog();
+  for (let i = 0; i < wallCleaningDotActors.length; i++) {
+    const actor = wallCleaningDotActors[i];
+    if (!actor || !actor.faceKey || actor.rowIndex < 0 || actor.burnerIndex < 0) continue;
+    const wallKey = cuboidGetWallKeyForFace(actor.faceKey);
+    const wallLog = cleaningLog && cleaningLog[wallKey] ? cleaningLog[wallKey] : {};
+    const entryKey = "R" + (actor.rowIndex + 1) + "B" + (actor.burnerIndex + 1);
+    const cleaned = !!(wallLog && wallLog[entryKey]);
+    if (cleaned) {
+      actor.ringMat.color.set(0xcfffe1);
+      actor.ringMat.opacity = 0.92;
+      actor.hole.visible = false;
+      actor.fill.visible = true;
+      actor.fillMat.color.set(0x6ff59f);
+      actor.fillMat.opacity = 0.98;
+    } else {
+      actor.ringMat.color.set(0x97a5ba);
+      actor.ringMat.opacity = 0.56;
+      actor.hole.visible = true;
+      actor.holeMat.color.set(0x0c121a);
+      actor.holeMat.opacity = 0.94;
+      actor.fill.visible = false;
+      actor.fillMat.opacity = 0;
     }
   }
 }
@@ -3159,12 +3390,23 @@ function buildWallNozzleAssembly(faceKey, faceZ, outwardDir) {
       }
 
       const flameSeed = Math.abs(Math.sin((bx * 2.17) + (yOff * 3.11) + (dir * 1.73))) * 1000;
+      const dotX = bx + faceXDir * 0.16;
+      const dotY = yOff + QUARL_H * 0.34;
+      const dotZ = PIPE_Z + dir * (0.150 + NOZZLE_Z_SHIFT * 0.70);
       addWallNozzleFireIcon(
         faceGroup,
         flameSeed,
         bx,
         yOff + QUARL_H - 0.002,
         PIPE_Z + dir * 0.196,
+        dir,
+        { faceKey: faceKey, rowIndex: rowIndex, burnerIndex: b }
+      );
+      addWallCleaningDot(
+        faceGroup,
+        dotX,
+        dotY,
+        dotZ,
         dir,
         { faceKey: faceKey, rowIndex: rowIndex, burnerIndex: b }
       );
@@ -3272,6 +3514,8 @@ buildWallTstBars("face1", (FD / 2) + 0.02, 1);
 buildWallTstBars("face2", -(FD / 2) - 0.02, -1);
 applyWallBurnerStateColors();
 pendingWallBurnerColorSync = false;
+applyWallCleaningDots();
+pendingWallCleaningSync = false;
 applyWallTstBarTextures();
 pendingWallTstBarSync = false;
 buildWallLabelOverlay("face1", (FD / 2) + 0.02, 1);
@@ -3695,6 +3939,12 @@ function animate(now){
   if(pendingWallBurnerColorSync){
     applyWallBurnerStateColors();
     pendingWallBurnerColorSync = false;
+    frameNeedsRender = true;
+  }
+
+  if(pendingWallCleaningSync){
+    applyWallCleaningDots();
+    pendingWallCleaningSync = false;
     frameNeedsRender = true;
   }
 
