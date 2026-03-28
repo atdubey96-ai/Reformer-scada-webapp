@@ -711,12 +711,20 @@ scene.add(rimCool);
 const rimWarm = new THREE.DirectionalLight(0xffddb4, 0.58);
 rimWarm.position.set(8, -1.2, 7);
 scene.add(rimWarm);
-const frontAccentCool = new THREE.PointLight(0xcfe2ff, 0, 22, 1.9);
-frontAccentCool.position.set(-4.8, 2.4, 6.8);
+const frontAccentCool = new THREE.DirectionalLight(0xcfe2ff, 0);
+frontAccentCool.position.set(-7.2, 2.8, 10.4);
 scene.add(frontAccentCool);
-const frontAccentWarm = new THREE.PointLight(0xffd8b5, 0, 22, 1.9);
-frontAccentWarm.position.set(4.8, 1.1, 6.6);
+const frontAccentWarm = new THREE.DirectionalLight(0xffd8b5, 0);
+frontAccentWarm.position.set(7.0, 1.4, 10.0);
 scene.add(frontAccentWarm);
+const frontAccentCoolTarget = new THREE.Object3D();
+frontAccentCoolTarget.position.set(-0.8, 0.3, 0);
+scene.add(frontAccentCoolTarget);
+frontAccentCool.target = frontAccentCoolTarget;
+const frontAccentWarmTarget = new THREE.Object3D();
+frontAccentWarmTarget.position.set(0.8, -0.1, 0);
+scene.add(frontAccentWarmTarget);
+frontAccentWarm.target = frontAccentWarmTarget;
 let lastFrontPresentationBlend = -1;
 
 function makeFace34MetalCanvas(w, h, opts) {
@@ -3399,6 +3407,7 @@ const frontAccentUp = new THREE.Vector3(0, 1, 0);
 const frontAccentViewDir = new THREE.Vector3();
 const frontAccentRight = new THREE.Vector3();
 const frontAccentBase = new THREE.Vector3();
+const frontAccentTargetBase = new THREE.Vector3();
 
 function applyFrontViewRichnessBoost() {
   const axisAlign = Math.abs(Math.cos(rotY));
@@ -3414,8 +3423,8 @@ function applyFrontViewRichnessBoost() {
   fill.intensity = 0.82 + (0.20 * blend);
   rimCool.intensity = 0.96 + (0.18 * blend);
   rimWarm.intensity = 0.58 + (0.16 * blend);
-  frontAccentCool.intensity = 1.55 * blend;
-  frontAccentWarm.intensity = 1.35 * blend;
+  frontAccentCool.intensity = 0.92 * blend;
+  frontAccentWarm.intensity = 0.76 * blend;
 
   for (let i = 0; i < frontPresentationMaterials.length; i++) {
     const item = frontPresentationMaterials[i];
@@ -3444,8 +3453,11 @@ function updateFrontAccentLightPositions() {
     frontAccentRight.normalize();
   }
   frontAccentBase.copy(currentLookAt).addScaledVector(frontAccentViewDir, 3.6);
-  frontAccentCool.position.copy(frontAccentBase).addScaledVector(frontAccentRight, -4.2).addScaledVector(frontAccentUp, 1.9);
-  frontAccentWarm.position.copy(frontAccentBase).addScaledVector(frontAccentRight, 4.0).addScaledVector(frontAccentUp, 1.1);
+  frontAccentCool.position.copy(frontAccentBase).addScaledVector(frontAccentRight, -5.4).addScaledVector(frontAccentUp, 2.2);
+  frontAccentWarm.position.copy(frontAccentBase).addScaledVector(frontAccentRight, 5.2).addScaledVector(frontAccentUp, 1.2);
+  frontAccentTargetBase.copy(currentLookAt).addScaledVector(frontAccentViewDir, -0.4);
+  frontAccentCoolTarget.position.copy(frontAccentTargetBase).addScaledVector(frontAccentRight, -0.9).addScaledVector(frontAccentUp, 0.5);
+  frontAccentWarmTarget.position.copy(frontAccentTargetBase).addScaledVector(frontAccentRight, 0.8).addScaledVector(frontAccentUp, -0.1);
   return true;
 }
 
