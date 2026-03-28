@@ -3766,14 +3766,14 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 #tab-cuboidstack .cuboid-twin-control-head{
   position:relative;
   display:flex;
-  align-items:center;
+  align-items:flex-end;
   justify-content:space-between;
   gap:8px;
   flex-wrap:wrap;
 }
 #tab-cuboidstack .cuboid-twin-control-head-right{
   display:flex;
-  align-items:center;
+  align-items:flex-end;
   justify-content:flex-end;
   gap:8px;
   flex-wrap:wrap;
@@ -3815,22 +3815,14 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   background:rgba(69,10,10,0.42);
   color:#fecaca;
 }
-#tab-cuboidstack .cuboid-twin-control-grid{
-  position:relative;
-  display:flex;
-  align-items:flex-end;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-top:6px;
-}
 #tab-cuboidstack .cuboid-twin-control-chip{
   display:flex;
   flex-direction:column;
   gap:4px;
-  min-width:145px;
+  min-width:140px;
 }
 #tab-cuboidstack .cuboid-twin-control-chip.is-wide{
-  min-width:174px;
+  min-width:170px;
 }
 #tab-cuboidstack .cuboid-twin-control-label{
   color:#8da2c2;
@@ -8443,9 +8435,6 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cuboidstack .cuboid-twin-control-panel{
     padding:8px 10px 9px;
     border-radius:12px;
-  }
-  #tab-cuboidstack .cuboid-twin-control-grid{
-    gap:8px;
   }
   #tab-cuboidstack .cuboid-twin-control-chip,
   #tab-cuboidstack .cuboid-twin-control-chip.is-wide{
@@ -18179,26 +18168,24 @@ html, body, body *, body *::before, body *::after, svg text{
         <div class="cuboid-twin-control-head">
           <div class="cuboid-twin-control-title">Twin Cuboid Data Controls</div>
           <div class="cuboid-twin-control-head-right">
+            <div class="cuboid-twin-control-chip">
+              <label class="cuboid-twin-control-label" for="stack-cuboid-shift-select">Shift</label>
+              <select id="stack-cuboid-shift-select" class="cuboid-twin-control-input" onchange="onTwinCuboidShiftChanged()" aria-label="Twin cuboid shift selector">
+                <option value="All">🔁 All Shifts</option>
+                <option value="Morning">🌅 Morning</option>
+                <option value="Evening">🌆 Evening</option>
+                <option value="Night">🌙 Night</option>
+              </select>
+            </div>
+            <div class="cuboid-twin-control-chip is-wide">
+              <label class="cuboid-twin-control-label" for="stack-cuboid-date-input">Date</label>
+              <input type="date" id="stack-cuboid-date-input" class="cuboid-twin-control-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
+            </div>
             <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Latest Saved</div>
             <div class="cuboid-twin-control-actions">
               <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Saved</button>
               <button type="button" class="cuboid-twin-control-btn is-secondary" onclick="requestTwinCuboidFilterApply(0, true)">Refresh Cuboids</button>
             </div>
-          </div>
-        </div>
-        <div class="cuboid-twin-control-grid">
-          <div class="cuboid-twin-control-chip">
-            <label class="cuboid-twin-control-label" for="stack-cuboid-shift-select">Shift</label>
-            <select id="stack-cuboid-shift-select" class="cuboid-twin-control-input" onchange="onTwinCuboidShiftChanged()" aria-label="Twin cuboid shift selector">
-              <option value="All">🔁 All Shifts</option>
-              <option value="Morning">🌅 Morning</option>
-              <option value="Evening">🌆 Evening</option>
-              <option value="Night">🌙 Night</option>
-            </select>
-          </div>
-          <div class="cuboid-twin-control-chip is-wide">
-            <label class="cuboid-twin-control-label" for="stack-cuboid-date-input">Date</label>
-            <input type="date" id="stack-cuboid-date-input" class="cuboid-twin-control-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
           </div>
         </div>
       </div>
