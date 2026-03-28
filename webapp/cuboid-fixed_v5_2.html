@@ -695,7 +695,8 @@ rigGroup.add(wallTstBarGroup);
 const wallLabelGroup = new THREE.Group();
 rigGroup.add(wallLabelGroup);
 
-scene.add(new THREE.AmbientLight(0xd5e0ee, 1.18));
+const ambient = new THREE.AmbientLight(0xd5e0ee, 1.18);
+scene.add(ambient);
 const hemi = new THREE.HemisphereLight(0xe9f1ff, 0x1a2430, 0.92);
 scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff5e0, 1.34);
@@ -710,6 +711,13 @@ scene.add(rimCool);
 const rimWarm = new THREE.DirectionalLight(0xffddb4, 0.58);
 rimWarm.position.set(8, -1.2, 7);
 scene.add(rimWarm);
+const frontAccentCool = new THREE.DirectionalLight(0xcfe2ff, 0);
+frontAccentCool.position.set(-11, 2.6, 7);
+scene.add(frontAccentCool);
+const frontAccentWarm = new THREE.DirectionalLight(0xffe0b8, 0);
+frontAccentWarm.position.set(11, 1.2, 7);
+scene.add(frontAccentWarm);
+let lastFrontPresentationBlend = -1;
 
 function makeFace34MetalCanvas(w, h, opts) {
   const o = opts || {};
@@ -3281,32 +3289,36 @@ function shellMaterial(color){
   });
 }
 
+const capTopMaterial = shellMaterial(0xcfd6de);
 const capTop = new THREE.Mesh(
   new THREE.PlaneGeometry(FW, FD),
-  shellMaterial(0xcfd6de)
+  capTopMaterial
 );
 capTop.rotation.x = -Math.PI / 2;
 capTop.position.y = FH / 2;
 shellGroup.add(capTop);
 
+const capBotMaterial = shellMaterial(0x98a1aa);
 const capBot = new THREE.Mesh(
   new THREE.PlaneGeometry(FW, FD),
-  shellMaterial(0x98a1aa)
+  capBotMaterial
 );
 capBot.rotation.x = Math.PI / 2;
 capBot.position.y = -FH / 2;
 shellGroup.add(capBot);
 
+const faceFrontMaterial = face12SilverMaterial.clone();
 const faceFront = new THREE.Mesh(
   new THREE.PlaneGeometry(FW, FH),
-  face12SilverMaterial.clone()
+  faceFrontMaterial
 );
 faceFront.position.z = FD / 2;
 shellGroup.add(faceFront);
 
+const faceBackMaterial = face12SilverMaterial.clone();
 const faceBack = new THREE.Mesh(
   new THREE.PlaneGeometry(FW, FH),
-  face12SilverMaterial.clone()
+  faceBackMaterial
 );
 faceBack.position.z = -FD / 2;
 faceBack.rotation.y = Math.PI;
@@ -3386,6 +3398,39 @@ function addSidePanel(isLeft){
 
 addSidePanel(true);
 addSidePanel(false);
+
+const frontPresentationMaterials = [
+  { material: face34PanelMaterial, baseEmissiveIntensity: 0.18 },
+  { material: face34FrameMaterial, baseEmissiveIntensity: 0.16 },
+  { material: faceFrontMaterial, baseEmissiveIntensity: 0.11 },
+  { material: faceBackMaterial, baseEmissiveIntensity: 0.11 }
+];
+
+function applyFrontViewRichnessBoost() {
+  const axisAlign = Math.abs(Math.cos(rotY));
+  const blend = viewMode === "shell"
+    ? Math.pow(Math.max(0, (axisAlign - 0.55) / 0.45), 1.65)
+    : 0;
+  if (Math.abs(blend - lastFrontPresentationBlend) < 0.001) return false;
+  lastFrontPresentationBlend = blend;
+
+  ambient.intensity = 1.18 - (0.10 * blend);
+  hemi.intensity = 0.92 - (0.08 * blend);
+  sun.intensity = 1.34 + (0.08 * blend);
+  fill.intensity = 0.82 + (0.14 * blend);
+  rimCool.intensity = 0.96 + (0.16 * blend);
+  rimWarm.intensity = 0.58 + (0.12 * blend);
+  frontAccentCool.intensity = 0.30 * blend;
+  frontAccentWarm.intensity = 0.26 * blend;
+
+  for (let i = 0; i < frontPresentationMaterials.length; i++) {
+    const item = frontPresentationMaterials[i];
+    if (!item || !item.material) continue;
+    item.material.emissiveIntensity = item.baseEmissiveIntensity + (0.06 * blend);
+  }
+
+  return true;
+}
 
 const shellEdges = new THREE.LineSegments(
   new THREE.EdgesGeometry(new THREE.BoxGeometry(FW, FH, FD)),
@@ -3684,6 +3729,8 @@ function animate(now){
     pendingWallTstBarSync = false;
     frameNeedsRender = true;
   }
+
+  frameNeedsRender = applyFrontViewRichnessBoost() || frameNeedsRender;
 
   const cameraLerp = 1 - Math.exp(-CAMERA_LERP_RATE * dt);
   currentCameraPos.lerp(targetCameraPos, cameraLerp);
