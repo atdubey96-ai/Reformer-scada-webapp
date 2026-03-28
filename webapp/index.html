@@ -1603,7 +1603,8 @@ td.C{background:linear-gradient(155deg,#334155 0%,#1e293b 58%,#0f172a 100%);}
 @media(max-width:900px){
   .wall-container{grid-template-columns:1fr;padding:12px;}
   #analysisContainer,
-  #hm-analysisContainer{grid-template-columns:1fr;}
+  #hm-analysisContainer,
+  #stack-analysisContainer{grid-template-columns:1fr;}
   .analytics{margin:12px;padding:14px;}
 }
 .wall{background:#1e293b;padding:14px;border-radius:8px;border:1px solid #334155;overflow:hidden;}
@@ -2127,7 +2128,8 @@ body.light-theme .burner-cell-editor-state-btn{
 .analytics{background:#1e293b;margin:20px;padding:20px;border-radius:8px;border:1px solid #334155;}
 .analytics h2{margin:0 0 16px;color:#f97316;font-size:17px;}
 #analysisContainer,
-#hm-analysisContainer{
+#hm-analysisContainer,
+#stack-analysisContainer{
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
   gap:20px;
@@ -7895,7 +7897,8 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-burner #walls .wall{min-width:860px !important;}
   #analysisContainer,
-  #hm-analysisContainer{
+  #hm-analysisContainer,
+  #stack-analysisContainer{
     grid-template-columns:1fr !important;
     gap:10px !important;
   }
@@ -8282,6 +8285,7 @@ html, body, body *, body *::before, body *::after, svg text{
   /* Keep dark/light mobile analytics fully inside viewport */
   #tab-heatmap .analytics,
   #tab-cuboid .analytics,
+  #tab-cuboidstack .analytics,
   #tab-burner .analytics{
     margin:0 !important;
     padding:12px !important;
@@ -8293,6 +8297,7 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-heatmap #hm-analysisContainer,
   #tab-cuboid #hm-analysisContainer,
+  #tab-cuboidstack #stack-analysisContainer,
   #tab-burner #analysisContainer{
     display:grid !important;
     grid-template-columns:1fr !important;
@@ -8303,14 +8308,16 @@ html, body, body *, body *::before, body *::after, svg text{
     overflow-x:hidden !important;
   }
   #tab-heatmap .hm-bottom-series,
-  #tab-cuboid .hm-bottom-series{
+  #tab-cuboid .hm-bottom-series,
+  #tab-cuboidstack .hm-bottom-series{
     width:100% !important;
     max-width:100% !important;
     min-width:0 !important;
     overflow-x:hidden !important;
   }
   #tab-heatmap .hm-bottom-series > *,
-  #tab-cuboid .hm-bottom-series > *{
+  #tab-cuboid .hm-bottom-series > *,
+  #tab-cuboidstack .hm-bottom-series > *{
     width:100% !important;
     max-width:100% !important;
     min-width:0 !important;
@@ -8318,6 +8325,7 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-heatmap .analysis-block,
   #tab-cuboid .analysis-block,
+  #tab-cuboidstack .analysis-block,
   #tab-burner .analysis-block{
     width:100% !important;
     max-width:100% !important;
@@ -8327,9 +8335,11 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-heatmap .chart-wrap,
   #tab-cuboid .chart-wrap,
+  #tab-cuboidstack .chart-wrap,
   #tab-burner .chart-wrap,
   #tab-heatmap .chart-wrap-pie,
   #tab-cuboid .chart-wrap-pie,
+  #tab-cuboidstack .chart-wrap-pie,
   #tab-burner .chart-wrap-pie{
     width:100% !important;
     max-width:100% !important;
@@ -8339,6 +8349,7 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-heatmap .chart-wrap canvas,
   #tab-cuboid .chart-wrap canvas,
+  #tab-cuboidstack .chart-wrap canvas,
   #tab-burner .chart-wrap canvas{
     width:100% !important;
     max-width:100% !important;
@@ -8346,9 +8357,11 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-heatmap .analysis-block h3,
   #tab-cuboid .analysis-block h3,
+  #tab-cuboidstack .analysis-block h3,
   #tab-burner .analysis-block h3,
   #tab-heatmap .analysis-block p,
   #tab-cuboid .analysis-block p,
+  #tab-cuboidstack .analysis-block p,
   #tab-burner .analysis-block p{
     overflow-wrap:anywhere !important;
     word-break:break-word !important;
