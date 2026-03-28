@@ -727,6 +727,8 @@ frontAccentWarmTarget.position.set(0.8, -0.1, 0);
 scene.add(frontAccentWarmTarget);
 frontAccentWarm.target = frontAccentWarmTarget;
 let lastFrontPresentationBlend = -1;
+let frontPresentationBlendLive = 0;
+let lastWallPresentationBlendBucket = -1;
 
 function makeFace34MetalCanvas(w, h, opts) {
   const o = opts || {};
@@ -1978,6 +1980,10 @@ function addWallNozzleFireIcon(parent, seed, posX, posY, posZ, dir, liveMeta) {
 function animateWallNozzleFlames(t) {
   for (let i = 0; i < wallNozzleFlameActors.length; i++) {
     const actor = wallNozzleFlameActors[i];
+    const frontRich = frontPresentationBlendLive;
+    const scalePunch = 1 + (frontRich * 0.10);
+    const iconPunch = 1 + (frontRich * 0.18);
+    const glowPunch = 1 + (frontRich * 0.42);
     const f1 = Math.sin(t * actor.speedA + actor.phase);
     const f2 = Math.sin(t * actor.speedB + actor.phase * 1.41);
     const f3 = Math.sin(t * actor.speedC + actor.phase * 2.07);
@@ -1989,15 +1995,15 @@ function animateWallNozzleFlames(t) {
     actor.flame.rotation.y = actor.flame.userData.baseRotY + f3 * 0.04;
     actor.flame.rotation.z = actor.flame.userData.baseRotZ + f1 * 0.03;
     actor.flame.scale.set(
-      (0.94 + flicker * 0.10 + f3 * actor.widthPulse * 0.5) * actor.scaleBias,
-      (0.92 + flicker * 0.18 + flare * 0.08) * actor.scaleBias,
+      (0.94 + flicker * 0.10 + f3 * actor.widthPulse * 0.5) * actor.scaleBias * scalePunch,
+      (0.92 + flicker * 0.18 + flare * 0.08) * actor.scaleBias * (1 + frontRich * 0.14),
       (0.96 + flicker * 0.06) * actor.scaleBias
     );
-    actor.iconMat.opacity = actor.iconBaseOpacity + ((flicker * 0.14) + (flare * 0.06)) * actor.glowIntensity;
-    actor.glowMat.opacity = actor.glowBaseOpacity + ((flicker * 0.16) + (flare * 0.07)) * actor.glowIntensity;
+    actor.iconMat.opacity = Math.min(1, (actor.iconBaseOpacity + ((flicker * 0.14) + (flare * 0.06)) * actor.glowIntensity) * iconPunch);
+    actor.glowMat.opacity = Math.min(1, (actor.glowBaseOpacity + ((flicker * 0.16) + (flare * 0.07)) * actor.glowIntensity) * glowPunch);
     actor.glow.scale.set(
-      0.92 + flicker * 0.22,
-      0.82 + flicker * 0.14,
+      (0.92 + flicker * 0.22) * (1 + frontRich * 0.18),
+      (0.82 + flicker * 0.14) * (1 + frontRich * 0.12),
       1
     );
   }
@@ -2273,11 +2279,12 @@ function cuboidDrawTstBarText(ctx, text, x, y, options) {
   ctx.restore();
 }
 
-function paintWallTstBarCanvas(canvas, values) {
+function paintWallTstBarCanvas(canvas, values, presentationBlend) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width;
   const h = canvas.height;
   const vals = cuboidSanitizeTstRow(values);
+  const rich = Math.max(0, Math.min(1, Number(presentationBlend) || 0));
   const barLeft = 20;
   const barTop = 48;
   const barW = w - 40;
@@ -2289,9 +2296,9 @@ function paintWallTstBarCanvas(canvas, values) {
   ctx.clearRect(0, 0, w, h);
 
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.52)";
-  ctx.shadowBlur = 18;
-  ctx.shadowOffsetY = 4;
+  ctx.shadowColor = "rgba(0,0,0," + (0.52 + rich * 0.16).toFixed(3) + ")";
+  ctx.shadowBlur = 18 + (rich * 8);
+  ctx.shadowOffsetY = 4 + (rich * 1.4);
   roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
   ctx.fillStyle = "rgba(15,17,23,0.92)";
   ctx.fill();
@@ -2305,11 +2312,11 @@ function paintWallTstBarCanvas(canvas, values) {
     const fill = isFinite(tempVal) ? cuboidTempToColor(tempVal) : "#334155";
     const x = barLeft + (i * slotW);
     const sectionGrad = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
-    sectionGrad.addColorStop(0.00, cuboidTint(fill, 0.34, 1));
-    sectionGrad.addColorStop(0.18, cuboidTint(fill, 0.12, 1));
+    sectionGrad.addColorStop(0.00, cuboidTint(fill, 0.34 + rich * 0.12, 1));
+    sectionGrad.addColorStop(0.18, cuboidTint(fill, 0.12 + rich * 0.08, 1));
     sectionGrad.addColorStop(0.50, fill);
-    sectionGrad.addColorStop(0.72, cuboidShade(fill, 0.08, 1));
-    sectionGrad.addColorStop(1.00, cuboidShade(fill, 0.24, 1));
+    sectionGrad.addColorStop(0.72, cuboidShade(fill, 0.08 + rich * 0.04, 1));
+    sectionGrad.addColorStop(1.00, cuboidShade(fill, 0.24 + rich * 0.08, 1));
     ctx.fillStyle = sectionGrad;
     ctx.fillRect(x, barTop, Math.ceil(slotW) + 1, barH);
 
@@ -2321,8 +2328,8 @@ function paintWallTstBarCanvas(canvas, values) {
       barTop + (barH * 0.48),
       Math.max(slotW * 0.72, barH * 0.92)
     );
-    midGlow.addColorStop(0.00, cuboidTint(fill, 0.42, 0.28));
-    midGlow.addColorStop(0.58, cuboidTint(fill, 0.12, 0.10));
+    midGlow.addColorStop(0.00, cuboidTint(fill, 0.42 + rich * 0.08, 0.28 + rich * 0.18));
+    midGlow.addColorStop(0.58, cuboidTint(fill, 0.12 + rich * 0.05, 0.10 + rich * 0.10));
     midGlow.addColorStop(1.00, cuboidTint(fill, 0.00, 0.00));
     ctx.fillStyle = midGlow;
     ctx.fillRect(x, barTop, slotW, barH);
@@ -2336,8 +2343,8 @@ function paintWallTstBarCanvas(canvas, values) {
   }
 
   const glass = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
-  glass.addColorStop(0.00, "rgba(255,255,255,0.18)");
-  glass.addColorStop(0.20, "rgba(255,255,255,0.07)");
+  glass.addColorStop(0.00, "rgba(255,255,255," + (0.18 - rich * 0.05).toFixed(3) + ")");
+  glass.addColorStop(0.20, "rgba(255,255,255," + (0.07 - rich * 0.02).toFixed(3) + ")");
   glass.addColorStop(0.48, "rgba(255,255,255,0.01)");
   glass.addColorStop(0.76, "rgba(0,0,0,0.04)");
   glass.addColorStop(1.00, "rgba(0,0,0,0.10)");
@@ -2350,25 +2357,25 @@ function paintWallTstBarCanvas(canvas, values) {
   const specH = Math.max(10, barH * 0.20);
   const specGrad = ctx.createLinearGradient(specLeft, 0, specLeft + specW, 0);
   specGrad.addColorStop(0.00, "rgba(255,255,255,0.00)");
-  specGrad.addColorStop(0.16, "rgba(255,255,255,0.12)");
-  specGrad.addColorStop(0.50, "rgba(255,255,255,0.20)");
-  specGrad.addColorStop(0.84, "rgba(255,255,255,0.12)");
+  specGrad.addColorStop(0.16, "rgba(255,255,255," + (0.12 + rich * 0.08).toFixed(3) + ")");
+  specGrad.addColorStop(0.50, "rgba(255,255,255," + (0.20 + rich * 0.12).toFixed(3) + ")");
+  specGrad.addColorStop(0.84, "rgba(255,255,255," + (0.12 + rich * 0.08).toFixed(3) + ")");
   specGrad.addColorStop(1.00, "rgba(255,255,255,0.00)");
   roundedRectPath(ctx, specLeft, specTop, specW, specH, specH);
   ctx.fillStyle = specGrad;
   ctx.fill();
 
   const topRim = ctx.createLinearGradient(0, barTop, 0, barTop + (barH * 0.18));
-  topRim.addColorStop(0.00, "rgba(255,255,255,0.26)");
-  topRim.addColorStop(0.55, "rgba(255,255,255,0.10)");
+  topRim.addColorStop(0.00, "rgba(255,255,255," + (0.26 + rich * 0.10).toFixed(3) + ")");
+  topRim.addColorStop(0.55, "rgba(255,255,255," + (0.10 + rich * 0.06).toFixed(3) + ")");
   topRim.addColorStop(1.00, "rgba(255,255,255,0.00)");
   ctx.fillStyle = topRim;
   ctx.fillRect(barLeft + 8, barTop + 2, barW - 16, barH * 0.18);
 
   const centerBand = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
   centerBand.addColorStop(0.00, "rgba(255,255,255,0.00)");
-  centerBand.addColorStop(0.42, "rgba(255,255,255,0.06)");
-  centerBand.addColorStop(0.56, "rgba(255,255,255,0.11)");
+  centerBand.addColorStop(0.42, "rgba(255,255,255," + (0.06 + rich * 0.06).toFixed(3) + ")");
+  centerBand.addColorStop(0.56, "rgba(255,255,255," + (0.11 + rich * 0.10).toFixed(3) + ")");
   centerBand.addColorStop(0.70, "rgba(255,255,255,0.02)");
   centerBand.addColorStop(1.00, "rgba(255,255,255,0.00)");
   ctx.fillStyle = centerBand;
@@ -2422,11 +2429,11 @@ function paintWallTstBarCanvas(canvas, values) {
 
   for(let i = 1; i < 15; i++){
     const sx = barLeft + (i * slotW);
-    ctx.fillStyle = "rgba(255,255,255,0.26)";
+    ctx.fillStyle = "rgba(255,255,255," + (0.26 + rich * 0.10).toFixed(3) + ")";
     ctx.fillRect(sx - 2, barTop + 10, 1, barH - 20);
-    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.fillStyle = "rgba(255,255,255," + (0.12 + rich * 0.06).toFixed(3) + ")";
     ctx.fillRect(sx - 1, barTop + 10, 1, barH - 20);
-    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.fillStyle = "rgba(0,0,0," + (0.18 + rich * 0.04).toFixed(3) + ")";
     ctx.fillRect(sx, barTop + 10, 1, barH - 20);
     ctx.fillStyle = "rgba(0,0,0,0.08)";
     ctx.fillRect(sx + 1, barTop + 10, 1, barH - 20);
@@ -2442,13 +2449,13 @@ function paintWallTstBarCanvas(canvas, values) {
       barTop + (barH * 0.52),
       {
         font: "800 78px 'Rajdhani', 'Segoe UI', Arial, sans-serif",
-        fill: "rgba(6,7,9,0.995)",
-        stroke: "rgba(255,248,220,0.12)",
-        lineWidth: 1.2,
+        fill: "rgba(7,9,12,0.995)",
+        stroke: "rgba(255,248,220," + (0.12 + rich * 0.03).toFixed(3) + ")",
+        lineWidth: 1.2 + rich * 0.2,
         shadow: "rgba(0,0,0,0.00)",
         shadowBlur: 0,
         shadowOffsetY: 0,
-        maxWidth: slotW * 0.76
+        maxWidth: slotW * 0.74
       }
     );
   }
@@ -2572,7 +2579,11 @@ function applyWallTstBarTextures() {
   for (let i = 0; i < wallTstBarActors.length; i++) {
     const actor = wallTstBarActors[i];
     if (!actor || !actor.canvas || !actor.texture) continue;
-    paintWallTstBarCanvas(actor.canvas, actor.part === "top" ? zoneRows.top : zoneRows.bot);
+    paintWallTstBarCanvas(
+      actor.canvas,
+      actor.part === "top" ? zoneRows.top : zoneRows.bot,
+      frontPresentationBlendLive
+    );
     actor.texture.needsUpdate = true;
   }
 }
@@ -3426,27 +3437,33 @@ function applyFrontViewRichnessBoost() {
   const blend = viewMode === "shell"
     ? Math.pow(Math.max(0, (axisAlign - 0.42) / 0.58), 1.35)
     : 0;
+  frontPresentationBlendLive = blend;
+  const wallBlendBucket = Math.round(blend * 10) / 10;
+  if (wallBlendBucket !== lastWallPresentationBlendBucket) {
+    lastWallPresentationBlendBucket = wallBlendBucket;
+    pendingWallTstBarSync = true;
+  }
   if (Math.abs(blend - lastFrontPresentationBlend) < 0.001) return false;
   lastFrontPresentationBlend = blend;
 
-  ambient.intensity = 1.18 - (0.22 * blend);
-  hemi.intensity = 0.92 - (0.18 * blend);
-  sun.intensity = 1.34 + (0.18 * blend);
-  fill.intensity = 0.82 + (0.20 * blend);
-  rimCool.intensity = 0.96 + (0.18 * blend);
-  rimWarm.intensity = 0.58 + (0.16 * blend);
-  frontAccentCool.intensity = 0.92 * blend;
-  frontAccentWarm.intensity = 0.76 * blend;
+  ambient.intensity = 1.18 - (0.28 * blend);
+  hemi.intensity = 0.92 - (0.16 * blend);
+  sun.intensity = 1.34 + (0.26 * blend);
+  fill.intensity = 0.82 + (0.24 * blend);
+  rimCool.intensity = 0.96 + (0.24 * blend);
+  rimWarm.intensity = 0.58 + (0.22 * blend);
+  frontAccentCool.intensity = 1.10 * blend;
+  frontAccentWarm.intensity = 0.92 * blend;
 
   for (let i = 0; i < frontPresentationMaterials.length; i++) {
     const item = frontPresentationMaterials[i];
     if (!item || !item.material) continue;
-    item.material.emissiveIntensity = item.baseEmissiveIntensity + (0.11 * blend);
+    item.material.emissiveIntensity = item.baseEmissiveIntensity + (0.14 * blend);
     if (typeof item.baseRoughness === "number") {
-      item.material.roughness = Math.max(0.16, item.baseRoughness - (0.16 * blend));
+      item.material.roughness = Math.max(0.16, item.baseRoughness - (0.18 * blend));
     }
     if (typeof item.baseMetalness === "number") {
-      item.material.metalness = Math.min(1, item.baseMetalness + (0.08 * blend));
+      item.material.metalness = Math.min(1, item.baseMetalness + (0.10 * blend));
     }
   }
 
