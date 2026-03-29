@@ -8511,7 +8511,7 @@ function renderTwinCuboidFilterUi(snapshot){
       filterDate: resolved.selectedDate,
       entryFound: !!resolvedEntry,
       entryShift: resolvedEntry && (resolvedEntry.selectedShift || resolvedEntry.shift) ? (resolvedEntry.selectedShift || resolvedEntry.shift) : resolved.selectedShift,
-      entryDt: resolvedEntry && resolvedEntry.dt ? resolvedEntry.dt : ((resolved.selectedDate || resolved.selectedShift !== "All") ? "No Saved Data" : "Latest")
+      entryDt: resolvedEntry && resolvedEntry.dt ? resolvedEntry.dt : ((resolved.selectedDate || resolved.selectedShift !== "All") ? "No Saved TST" : "Latest")
     };
   }
 
@@ -8519,7 +8519,7 @@ function renderTwinCuboidFilterUi(snapshot){
   var selectedDate = String(view.filterDate || "").trim();
   var entryFound = !!view.entryFound;
   var actualShift = normalizeTwinCuboidShift(view.entryShift || view.selectedShift || selectedShift);
-  var entryStamp = (entryFound && view.entryDt && view.entryDt !== "No Saved Data")
+  var entryStamp = (entryFound && view.entryDt && view.entryDt !== "No Saved TST")
     ? formatTwinCuboidEntryStamp(view.entryDt)
     : "";
 
@@ -8530,7 +8530,7 @@ function renderTwinCuboidFilterUi(snapshot){
   var shiftIcon = shiftIcons[shiftText] || shiftIcons.All;
 
   if(entryFound){
-    var latestLabel = (!selectedDate && selectedShift === "All") ? "Latest Saved" : "Saved Snapshot";
+    var latestLabel = (!selectedDate && selectedShift === "All") ? "Latest Saved TST" : "Saved TST";
     if(badge){
       badge.classList.remove("is-empty");
       badge.innerHTML = '<span>' + latestLabel + '</span><span style="opacity:0.76;">•</span><span style="color:' + shiftColor + ';font-weight:800;">' + shiftText + '</span><span style="opacity:0.76;">•</span><span>' + entryStamp + '</span>';
@@ -8540,24 +8540,24 @@ function renderTwinCuboidFilterUi(snapshot){
       banner.style.display = "flex";
       banner.innerHTML =
         '<span style="font-size:14px;">' + shiftIcon + '</span>' +
-        '<span>Both cuboids are showing <strong style="color:' + shiftColor + ';">' + shiftText + ' shift</strong> data from <strong>' + entryStamp + '</strong>.</span>';
+        '<span>Both cuboids are showing live burner state, opening, and cleaning with <strong style="color:' + shiftColor + ';">' + shiftText + ' shift</strong> TST from <strong>' + entryStamp + '</strong>.</span>';
     }
     return;
   }
 
   var noDataMsg = selectedDate
-    ? (selectedShift === "All" ? ("No saved cuboid data for " + selectedDate) : ("No " + selectedShift + " shift cuboid data for " + selectedDate))
-    : (selectedShift === "All" ? "No saved cuboid data available yet." : ("No saved " + selectedShift + " shift cuboid data."));
+    ? (selectedShift === "All" ? ("No saved TST data for " + selectedDate + ". Burner state, opening, and cleaning are still live.") : ("No " + selectedShift + " shift TST data for " + selectedDate + ". Burner state, opening, and cleaning are still live."))
+    : (selectedShift === "All" ? "No saved TST data available yet. Burner state, opening, and cleaning are still live." : ("No saved " + selectedShift + " shift TST data. Burner state, opening, and cleaning are still live."));
   var noDataDateLabel = selectedDate ? formatTwinCuboidEntryStamp(selectedDate) : "";
 
   if(badge){
     badge.classList.add("is-empty");
     if(selectedShift !== "All" || noDataDateLabel){
-      badge.innerHTML = '<span>No Data</span>'
+      badge.innerHTML = '<span>No TST Data</span>'
         + (selectedShift !== "All" ? ('<span style="opacity:0.72;">•</span><span style="font-weight:800;">' + selectedShift + '</span>') : '')
         + (noDataDateLabel ? ('<span style="opacity:0.72;">•</span><span>' + noDataDateLabel + '</span>') : '');
     }else{
-      badge.textContent = "No Saved Data";
+      badge.textContent = "No Saved TST";
     }
   }
   if(banner){
@@ -18419,7 +18419,7 @@ html, body, body *, body *::before, body *::after, svg text{
         <div class="cuboid-twin-control-head">
           <div>
             <div class="cuboid-twin-control-title">Twin View Data Controls</div>
-            <div class="cuboid-twin-control-sub">Choose the saved cuboid snapshot by shift and date, similar to the TST data selector.</div>
+            <div class="cuboid-twin-control-sub">Choose the saved TST data by shift and date while burner state, opening, and cleaning stay live.</div>
           </div>
         </div>
         <div class="cuboid-twin-control-grid">
@@ -18445,9 +18445,9 @@ html, body, body *, body *::before, body *::after, svg text{
             </div>
         </div>
         <div class="cuboid-twin-control-meta">
-          <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Latest Saved</div>
+          <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Latest Saved TST</div>
           <div class="cuboid-twin-control-actions">
-            <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Saved</button>
+            <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Saved TST</button>
             <button type="button" class="cuboid-twin-control-btn is-secondary" onclick="requestTwinCuboidFilterApply(0, true)">Refresh Cuboids</button>
           </div>
         </div>
@@ -23094,20 +23094,22 @@ function cuboidPickLatestTempEntry(){
   return list[0] || null;
 }
 
+function cuboidBuildCurrentBurnerHmData(){
+  return cuboidLegendSanitizeHmData(
+    (typeof captureCurrentBurnerSnapshot === "function")
+      ? captureCurrentBurnerSnapshot()
+      : cuboidLegendDefaultHmData()
+  );
+}
+
 function cuboidBuildRenderSnapshot(){
   var resolved = cuboidResolveConfiguredTempEntry();
   var entry = resolved.entry || null;
   var filterShift = resolved.selectedShift || "All";
   var filterDate = resolved.selectedDate || "";
   var entryShift = entry && (entry.selectedShift || entry.shift) ? (entry.selectedShift || entry.shift) : filterShift;
-  var fallbackEntryLabel = (filterDate || filterShift !== "All") ? "No Saved Data" : "Latest";
-  var hmData = cuboidLegendSanitizeHmData(
-    getEntryBurnerSnapshot(entry) ||
-    ((typeof captureCurrentBurnerSnapshot === "function")
-      ? captureCurrentBurnerSnapshot()
-      : cuboidLegendDefaultHmData()
-    )
-  );
+  var fallbackEntryLabel = (filterDate || filterShift !== "All") ? "No Saved TST" : "Latest";
+  var hmData = cuboidBuildCurrentBurnerHmData();
   return {
     hmData: hmData,
     abBot: cuboidBuildPeepRow(entry, "ab-bot"),
