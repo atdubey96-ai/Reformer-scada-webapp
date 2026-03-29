@@ -2581,14 +2581,18 @@ function cuboidDrawTstBarText(ctx, text, x, y, options) {
   ctx.shadowBlur = opts.shadowBlur == null ? 0 : opts.shadowBlur;
   ctx.shadowOffsetY = opts.shadowOffsetY == null ? 0 : opts.shadowOffsetY;
   const maxWidth = Math.max(0, Number(opts.maxWidth) || 0);
+  const requestedScaleX = Math.max(0.1, Number(opts.scaleX) || 1);
+  const requestedScaleY = Math.max(0.1, Number(opts.scaleY) || 1);
   const measured = ctx.measureText(text || "");
   const naturalWidth = measured && measured.width ? measured.width : 0;
-  const scaleX = maxWidth > 0 && naturalWidth > maxWidth ? (maxWidth / naturalWidth) : 1;
+  const scaledNaturalWidth = naturalWidth * requestedScaleX;
+  const fitScaleX = maxWidth > 0 && scaledNaturalWidth > maxWidth ? (maxWidth / scaledNaturalWidth) : 1;
   const lineWidth = ctx.lineWidth;
   ctx.translate(x, y);
-  if(scaleX !== 1){
-    ctx.scale(scaleX, 1);
-    ctx.lineWidth = lineWidth / scaleX;
+  if(requestedScaleX !== 1 || requestedScaleY !== 1 || fitScaleX !== 1){
+    const finalScaleX = requestedScaleX * fitScaleX;
+    ctx.scale(finalScaleX, requestedScaleY);
+    ctx.lineWidth = lineWidth / Math.max(finalScaleX, requestedScaleY, 0.1);
   }
   if(opts.stroke !== null && ctx.lineWidth > 0){
     ctx.strokeText(text, 0, 0);
@@ -2776,6 +2780,8 @@ function paintWallTstBarCanvas(canvas, values, presentationBlend) {
         shadow: "rgba(0,0,0,0.00)",
         shadowBlur: 0,
         shadowOffsetY: 0,
+        scaleX: 1.25,
+        scaleY: 2,
         maxWidth: slotW * 0.74
       }
     );
