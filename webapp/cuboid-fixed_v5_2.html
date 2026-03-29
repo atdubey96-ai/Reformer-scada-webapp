@@ -1843,17 +1843,17 @@ function makeNozzleColdIconTex(width, height) {
   g.clearRect(0, 0, w, h);
 
   const barrelX = w * 0.20;
-  const barrelY = h * 0.46;
+  const barrelY = h * 0.58;
   const barrelW = w * 0.60;
-  const barrelH = h * 0.10;
+  const barrelH = h * 0.092;
   const stemX = w * 0.45;
-  const stemY = h * 0.57;
+  const stemY = h * 0.69;
   const stemW = w * 0.10;
-  const stemH = h * 0.11;
+  const stemH = h * 0.10;
   const baseX = w * 0.29;
-  const baseY = h * 0.70;
+  const baseY = h * 0.81;
   const baseW = w * 0.42;
-  const baseH = h * 0.09;
+  const baseH = h * 0.085;
 
   g.shadowColor = "rgba(5,10,16,0.34)";
   g.shadowBlur = h * 0.028;
@@ -1885,12 +1885,12 @@ function makeNozzleColdIconTex(width, height) {
   g.ellipse(barrelX + barrelW * 0.82, barrelY + barrelH * 0.54, w * 0.030, h * 0.022, 0, 0, Math.PI * 2);
   g.fill();
 
-  const accentGrad = g.createRadialGradient(w * 0.50, h * 0.52, 0, w * 0.50, h * 0.52, w * 0.08);
+  const accentGrad = g.createRadialGradient(w * 0.50, h * 0.64, 0, w * 0.50, h * 0.64, w * 0.08);
   accentGrad.addColorStop(0.00, "rgba(251,191,36,0.95)");
   accentGrad.addColorStop(0.42, "rgba(245,158,11,0.76)");
   accentGrad.addColorStop(1.00, "rgba(245,158,11,0.00)");
   g.fillStyle = accentGrad;
-  g.fillRect(w * 0.40, h * 0.44, w * 0.20, h * 0.14);
+  g.fillRect(w * 0.40, h * 0.55, w * 0.20, h * 0.16);
 
   const stemGrad = g.createLinearGradient(0, stemY, 0, stemY + stemH);
   stemGrad.addColorStop(0.00, "#b4c1d2");
@@ -1960,9 +1960,10 @@ const nozzleFireGlowGeo = new THREE.PlaneGeometry(0.28, 0.20);
 nozzleFireGlowGeo.translate(0, 0.10, 0);
 const wallNozzleFlameActors = [];
 const wallCleaningDotActors = [];
-const cleaningDotOuterGeo = new THREE.CircleGeometry(0.041, 22);
-const cleaningDotInnerGeo = new THREE.CircleGeometry(0.028, 22);
-const cleaningDotFillGeo = new THREE.CircleGeometry(0.023, 22);
+const cleaningDotOuterGeo = new THREE.CircleGeometry(0.056, 26);
+const cleaningDotInnerGeo = new THREE.CircleGeometry(0.036, 26);
+const cleaningDotFillGeo = new THREE.CircleGeometry(0.031, 26);
+const cleaningDotGlowGeo = new THREE.CircleGeometry(0.092, 30);
 
 function hasAnimatedWallNozzleFlames() {
   return wallNozzleFlameActors.length > 0;
@@ -2012,7 +2013,9 @@ function addWallNozzleFireIcon(parent, seed, posX, posY, posZ, dir, liveMeta) {
     sway: 0.002 + (seed % 0.0012),
     lift: 0.0015 + (seed % 0.0010),
     forwardLift: 0.002 + (seed % 0.0010),
-    widthPulse: 0.040 + (seed % 0.012)
+    widthPulse: 0.040 + (seed % 0.012),
+    coldDrop: 0.011,
+    coldPull: 0.008
   });
 }
 
@@ -2020,6 +2023,20 @@ function addWallCleaningDot(parent, posX, posY, posZ, dir, liveMeta){
   const dot = new THREE.Group();
   dot.position.set(posX, posY, posZ);
   dot.rotation.y = dir > 0 ? 0 : Math.PI;
+
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0x32ff88,
+    transparent: true,
+    opacity: 0,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    toneMapped: false,
+    blending: THREE.AdditiveBlending
+  });
+  const glow = new THREE.Mesh(cleaningDotGlowGeo, glowMat);
+  glow.position.z = -0.0012;
+  glow.renderOrder = 11;
+  dot.add(glow);
 
   const ringMat = new THREE.MeshBasicMaterial({
     color: 0x9aa7bb,
@@ -2063,6 +2080,8 @@ function addWallCleaningDot(parent, posX, posY, posZ, dir, liveMeta){
 
   wallCleaningDotActors.push({
     dot: dot,
+    glow: glow,
+    glowMat: glowMat,
     ringMat: ringMat,
     hole: hole,
     holeMat: holeMat,
@@ -2088,8 +2107,8 @@ function animateWallNozzleFlames(t) {
     const flare = Math.max(0, f2) * 0.18;
     if (actor.liveState === "C") {
       actor.flame.position.x = actor.flame.userData.baseX;
-      actor.flame.position.y = actor.flame.userData.baseY;
-      actor.flame.position.z = actor.flame.userData.baseZ;
+      actor.flame.position.y = actor.flame.userData.baseY - actor.coldDrop;
+      actor.flame.position.z = actor.flame.userData.baseZ - actor.flame.userData.dir * actor.coldPull;
       actor.flame.rotation.y = actor.flame.userData.baseRotY;
       actor.flame.rotation.z = actor.flame.userData.baseRotZ;
       actor.flame.scale.set(
@@ -2179,15 +2198,22 @@ function applyWallCleaningDots() {
     const entryKey = "R" + (actor.rowIndex + 1) + "B" + (actor.burnerIndex + 1);
     const cleaned = !!(wallLog && wallLog[entryKey]);
     if (cleaned) {
-      actor.ringMat.color.set(0xcfffe1);
-      actor.ringMat.opacity = 0.92;
+      actor.dot.scale.setScalar(1.06);
+      actor.glow.visible = true;
+      actor.glowMat.color.set(0x32ff88);
+      actor.glowMat.opacity = 0.36;
+      actor.ringMat.color.set(0xf3fff8);
+      actor.ringMat.opacity = 1.00;
       actor.hole.visible = false;
       actor.fill.visible = true;
-      actor.fillMat.color.set(0x6ff59f);
-      actor.fillMat.opacity = 0.98;
+      actor.fillMat.color.set(0x30ff7d);
+      actor.fillMat.opacity = 1.00;
     } else {
-      actor.ringMat.color.set(0x97a5ba);
-      actor.ringMat.opacity = 0.56;
+      actor.dot.scale.setScalar(0.96);
+      actor.glow.visible = false;
+      actor.glowMat.opacity = 0;
+      actor.ringMat.color.set(0xb0bccd);
+      actor.ringMat.opacity = 0.70;
       actor.hole.visible = true;
       actor.holeMat.color.set(0x0c121a);
       actor.holeMat.opacity = 0.94;
