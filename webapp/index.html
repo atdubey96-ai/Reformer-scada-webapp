@@ -3744,13 +3744,13 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 #tab-cuboidstack .cuboid-twin-control-panel{
   width:min(100%,1680px);
   margin:0 auto;
-  padding:8px 12px 9px;
-  border:1px solid rgba(98,127,180,0.34);
-  border-radius:12px;
+  padding:18px 18px 16px;
+  border:1px solid rgba(98,127,180,0.28);
+  border-radius:22px;
   background:
     linear-gradient(180deg,rgba(12,17,28,0.96),rgba(7,10,16,0.98)),
     radial-gradient(circle at top left,rgba(78,138,255,0.12),transparent 52%);
-  box-shadow:0 12px 26px rgba(0,0,0,0.24);
+  box-shadow:0 16px 34px rgba(0,0,0,0.24);
   position:relative;
   overflow:hidden;
 }
@@ -3766,100 +3766,142 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 #tab-cuboidstack .cuboid-twin-control-head{
   position:relative;
   display:flex;
-  align-items:flex-end;
+  align-items:flex-start;
   justify-content:space-between;
-  gap:8px;
+  gap:12px;
   flex-wrap:wrap;
-}
-#tab-cuboidstack .cuboid-twin-control-head-right{
-  display:flex;
-  align-items:flex-end;
-  justify-content:flex-end;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-left:auto;
 }
 #tab-cuboidstack .cuboid-twin-control-title{
   color:#eef6ff;
   font-size:11px;
   font-weight:800;
-  letter-spacing:1.2px;
+  letter-spacing:1.4px;
   text-transform:uppercase;
 }
 #tab-cuboidstack .cuboid-twin-control-sub{
-  display:none;
-  margin-top:0;
+  display:block;
+  margin-top:4px;
   color:#94a3b8;
   font-size:12px;
-  line-height:1.55;
+  line-height:1.5;
   max-width:820px;
+}
+#tab-cuboidstack .cuboid-twin-control-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(240px,1fr));
+  gap:16px 18px;
+  margin-top:12px;
+}
+#tab-cuboidstack .cuboid-twin-control-field{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:0;
 }
 #tab-cuboidstack .cuboid-twin-control-badge{
   display:inline-flex;
   align-items:center;
   gap:7px;
-  min-height:34px;
-  padding:0 12px;
+  min-height:46px;
+  padding:8px 16px;
   border-radius:999px;
   border:1px solid rgba(59,130,246,0.28);
   background:rgba(15,23,42,0.78);
   color:#dbeafe;
-  font-size:11px;
+  font-size:13px;
   font-weight:700;
   letter-spacing:0.35px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
-  white-space:nowrap;
+  white-space:normal;
 }
 #tab-cuboidstack .cuboid-twin-control-badge.is-empty{
   border-color:rgba(248,113,113,0.34);
   background:rgba(69,10,10,0.42);
   color:#fecaca;
 }
-#tab-cuboidstack .cuboid-twin-control-chip{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  min-width:140px;
-}
-#tab-cuboidstack .cuboid-twin-control-chip.is-wide{
-  min-width:170px;
-}
 #tab-cuboidstack .cuboid-twin-control-label{
-  color:#8da2c2;
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:1px;
+  color:#9fb0c6;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:2px;
   text-transform:uppercase;
 }
+#tab-cuboidstack .cuboid-twin-control-field-shell{
+  position:relative;
+  display:flex;
+  align-items:center;
+  min-height:66px;
+  padding:0 18px;
+  border-radius:18px;
+  border:1px solid rgba(125,143,170,0.34);
+  background:linear-gradient(180deg,rgba(20,27,41,0.92),rgba(11,16,25,0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 10px 20px rgba(0,0,0,0.18);
+}
+#tab-cuboidstack .cuboid-twin-control-field-shell.is-select{
+  padding-left:14px;
+  padding-right:48px;
+}
+#tab-cuboidstack .cuboid-twin-control-field-shell.is-date{
+  padding-right:54px;
+}
+#tab-cuboidstack .cuboid-twin-control-field-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:36px;
+  margin-right:10px;
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(147,197,253,0.16),rgba(59,130,246,0.08));
+  color:#bfdbfe;
+  font-size:18px;
+  flex:0 0 auto;
+}
+#tab-cuboidstack .cuboid-twin-control-field-caret,
+#tab-cuboidstack .cuboid-twin-control-field-dateicon{
+  position:absolute;
+  right:18px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#c8d3e5;
+  font-size:18px;
+  pointer-events:none;
+}
 #tab-cuboidstack .cuboid-twin-control-input{
-  min-height:34px;
-  padding:6px 10px;
-  border-radius:8px;
-  border:1px solid rgba(71,85,105,0.72);
-  background:linear-gradient(180deg,rgba(12,18,30,0.94),rgba(8,12,20,0.98));
+  width:100%;
+  min-height:64px;
+  padding:0;
+  border:none;
+  background:transparent;
   color:#e2e8f0;
   font-family:'Rajdhani',sans-serif;
-  font-size:13px;
-  font-weight:700;
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:0.2px;
   outline:none;
   cursor:pointer;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+  box-shadow:none;
+  appearance:none;
+  -webkit-appearance:none;
 }
-#tab-cuboidstack .cuboid-twin-control-input:focus{
+#tab-cuboidstack .cuboid-twin-control-field-shell:focus-within{
   border-color:rgba(96,165,250,0.74);
-  box-shadow:0 0 0 3px rgba(37,99,235,0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 0 0 4px rgba(59,130,246,0.14);
 }
 #tab-cuboidstack .cuboid-twin-control-input option{
   background:#0f172a;
   color:#e2e8f0;
 }
+#tab-cuboidstack select.cuboid-twin-control-input{
+  padding-right:18px;
+}
 #tab-cuboidstack input[type="date"].cuboid-twin-control-input{
   color-scheme:dark;
-  padding-right:38px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23f8fafc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='16' rx='2.25' ry='2.25'/%3E%3Cline x1='16' y1='2.75' x2='16' y2='6.25'/%3E%3Cline x1='8' y1='2.75' x2='8' y2='6.25'/%3E%3Cline x1='3' y1='9' x2='21' y2='9'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;
-  background-position:right 12px center;
-  background-size:18px 18px;
+  padding-right:18px;
 }
 #tab-cuboidstack input[type="date"].cuboid-twin-control-input::-webkit-calendar-picker-indicator{
   opacity:0.01;
@@ -3870,23 +3912,32 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 #tab-cuboidstack input[type="date"].cuboid-twin-control-input::-webkit-calendar-picker-indicator:hover{
   opacity:0.01;
 }
+#tab-cuboidstack .cuboid-twin-control-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
 #tab-cuboidstack .cuboid-twin-control-actions{
   display:flex;
   align-items:center;
-  gap:8px;
+  justify-content:flex-end;
+  gap:10px;
   flex-wrap:wrap;
 }
 #tab-cuboidstack .cuboid-twin-control-btn{
-  min-height:34px;
-  padding:0 12px;
-  border-radius:8px;
+  min-height:46px;
+  padding:0 16px;
+  border-radius:14px;
   border:1px solid rgba(59,130,246,0.42);
   background:linear-gradient(180deg,rgba(30,64,175,0.2),rgba(15,23,42,0.88));
   color:#bfdbfe;
   font-family:'Rajdhani',sans-serif;
-  font-size:12px;
+  font-size:13px;
   font-weight:800;
-  letter-spacing:0.6px;
+  letter-spacing:0.7px;
   cursor:pointer;
 }
 #tab-cuboidstack .cuboid-twin-control-btn:hover{
@@ -3930,7 +3981,7 @@ body.light-theme #tab-cuboidstack .cuboid-twin-control-panel{
   box-shadow:0 10px 22px rgba(15,23,42,0.1);
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-title{ color:#0f172a; }
-body.light-theme #tab-cuboidstack .cuboid-twin-control-sub{ color:#475569; }
+body.light-theme #tab-cuboidstack .cuboid-twin-control-sub{ color:#64748b; }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-badge{
   border-color:rgba(59,130,246,0.2);
   background:rgba(255,255,255,0.9);
@@ -3941,16 +3992,28 @@ body.light-theme #tab-cuboidstack .cuboid-twin-control-badge.is-empty{
   background:rgba(254,242,242,0.95);
   color:#b91c1c;
 }
-body.light-theme #tab-cuboidstack .cuboid-twin-control-label{ color:#475569; }
+body.light-theme #tab-cuboidstack .cuboid-twin-control-label{ color:#54627a; }
+body.light-theme #tab-cuboidstack .cuboid-twin-control-field-shell{
+  border-color:rgba(191,203,221,0.95);
+  background:linear-gradient(180deg,rgba(255,255,255,0.99),rgba(244,247,252,0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    0 10px 24px rgba(148,163,184,0.18);
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-field-icon{
+  background:linear-gradient(180deg,rgba(219,234,254,0.95),rgba(239,246,255,0.98));
+  color:#4f6b91;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-control-field-caret,
+body.light-theme #tab-cuboidstack .cuboid-twin-control-field-dateicon{
+  color:#475569;
+}
 body.light-theme #tab-cuboidstack .cuboid-twin-control-input{
-  border-color:rgba(148,163,184,0.58);
-  background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(241,245,249,0.98));
   color:#0f172a;
 }
 body.light-theme #tab-cuboidstack input[type="date"].cuboid-twin-control-input{
   color-scheme:light;
-  padding-right:10px;
-  background-image:none;
+  padding-right:18px;
 }
 body.light-theme #tab-cuboidstack input[type="date"].cuboid-twin-control-input::-webkit-calendar-picker-indicator{
   filter:none;
@@ -8910,21 +8973,38 @@ html, body, body *, body *::before, body *::after, svg text{
     gap:12px;
   }
   #tab-cuboidstack .cuboid-twin-control-panel{
-    padding:8px 10px 9px;
-    border-radius:12px;
+    padding:14px;
+    border-radius:18px;
   }
-  #tab-cuboidstack .cuboid-twin-control-chip,
-  #tab-cuboidstack .cuboid-twin-control-chip.is-wide{
-    min-width:min(100%,160px);
-    flex:1 1 160px;
+  #tab-cuboidstack .cuboid-twin-control-grid{
+    grid-template-columns:1fr;
+    gap:14px;
   }
-  #tab-cuboidstack .cuboid-twin-control-head-right{
+  #tab-cuboidstack .cuboid-twin-control-field-shell{
+    min-height:60px;
+    padding-inline:15px;
+    border-radius:16px;
+  }
+  #tab-cuboidstack .cuboid-twin-control-field-shell.is-select{
+    padding-right:44px;
+  }
+  #tab-cuboidstack .cuboid-twin-control-field-shell.is-date{
+    padding-right:50px;
+  }
+  #tab-cuboidstack .cuboid-twin-control-input{
+    min-height:58px;
+    font-size:20px;
+  }
+  #tab-cuboidstack .cuboid-twin-control-meta{
     width:100%;
-    margin-left:0;
     justify-content:flex-start;
+  }
+  #tab-cuboidstack .cuboid-twin-control-badge{
+    width:100%;
   }
   #tab-cuboidstack .cuboid-twin-control-actions{
     width:100%;
+    justify-content:flex-start;
   }
   #tab-cuboidstack .cuboid-twin-control-banner{
     flex-basis:100%;
@@ -18337,26 +18417,38 @@ html, body, body *, body *::before, body *::after, svg text{
     <div class="cuboid-tab-stack">
       <div class="cuboid-twin-control-panel">
         <div class="cuboid-twin-control-head">
-          <div class="cuboid-twin-control-title">Twin View Data Controls</div>
-          <div class="cuboid-twin-control-head-right">
-            <div class="cuboid-twin-control-chip">
+          <div>
+            <div class="cuboid-twin-control-title">Twin View Data Controls</div>
+            <div class="cuboid-twin-control-sub">Choose the saved cuboid snapshot by shift and date, similar to the TST data selector.</div>
+          </div>
+        </div>
+        <div class="cuboid-twin-control-grid">
+            <div class="cuboid-twin-control-field">
               <label class="cuboid-twin-control-label" for="stack-cuboid-shift-select">Shift</label>
-              <select id="stack-cuboid-shift-select" class="cuboid-twin-control-input" onchange="onTwinCuboidShiftChanged()" aria-label="Twin cuboid shift selector">
-                <option value="All">🔁 All Shifts</option>
-                <option value="Morning">🌅 Morning</option>
-                <option value="Evening">🌆 Evening</option>
-                <option value="Night">🌙 Night</option>
-              </select>
+              <div class="cuboid-twin-control-field-shell is-select">
+                <span class="cuboid-twin-control-field-icon" aria-hidden="true">↻</span>
+                <select id="stack-cuboid-shift-select" class="cuboid-twin-control-input" onchange="onTwinCuboidShiftChanged()" aria-label="Twin cuboid shift selector">
+                  <option value="All">All Shifts</option>
+                  <option value="Morning">Morning</option>
+                  <option value="Evening">Evening</option>
+                  <option value="Night">Night</option>
+                </select>
+                <span class="cuboid-twin-control-field-caret" aria-hidden="true">⌄</span>
+              </div>
             </div>
-            <div class="cuboid-twin-control-chip is-wide">
+            <div class="cuboid-twin-control-field">
               <label class="cuboid-twin-control-label" for="stack-cuboid-date-input">Date</label>
-              <input type="date" id="stack-cuboid-date-input" class="cuboid-twin-control-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
+              <div class="cuboid-twin-control-field-shell is-date">
+                <input type="date" id="stack-cuboid-date-input" class="cuboid-twin-control-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
+                <span class="cuboid-twin-control-field-dateicon" aria-hidden="true">📅</span>
+              </div>
             </div>
-            <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Latest Saved</div>
-            <div class="cuboid-twin-control-actions">
-              <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Saved</button>
-              <button type="button" class="cuboid-twin-control-btn is-secondary" onclick="requestTwinCuboidFilterApply(0, true)">Refresh Cuboids</button>
-            </div>
+        </div>
+        <div class="cuboid-twin-control-meta">
+          <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Latest Saved</div>
+          <div class="cuboid-twin-control-actions">
+            <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Saved</button>
+            <button type="button" class="cuboid-twin-control-btn is-secondary" onclick="requestTwinCuboidFilterApply(0, true)">Refresh Cuboids</button>
           </div>
         </div>
       </div>
