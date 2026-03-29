@@ -1847,14 +1847,14 @@ function makeNozzleFireIconTex(width, height, paletteInput, openingValue) {
   }
 
   g.clearRect(0, 0, w, h);
-  const outerScale = [0.18, 0.72, 0.66, 0.84, 1.00][tier];
-  const midScale = [0.00, 0.20, 0.44, 0.74, 1.00][tier];
-  const innerScale = [0.00, 0.00, 0.00, 0.72, 1.00][tier];
-  const outerAlpha = [0.16, 0.82, 0.78, 0.90, 1.00][tier];
-  const midAlpha = [0.00, 0.34, 0.66, 0.82, 0.94][tier];
-  const innerAlpha = [0.00, 0.00, 0.00, 0.78, 0.96][tier];
-  const emberAlpha = [0.00, 0.14, 0.00, 0.48, 0.92][tier];
-  const hotSpotAlpha = [0.00, 0.10, 0.00, 0.22, 0.56][tier];
+  const outerScale = [0.18, 0.62, 0.82, 0.96, 1.08][tier];
+  const midScale = [0.00, 0.10, 0.46, 0.74, 1.00][tier];
+  const innerScale = [0.00, 0.00, 0.10, 0.68, 0.96][tier];
+  const outerAlpha = [0.16, 0.72, 0.82, 0.92, 1.00][tier];
+  const midAlpha = [0.00, 0.14, 0.48, 0.78, 0.94][tier];
+  const innerAlpha = [0.00, 0.00, 0.12, 0.58, 0.96][tier];
+  const emberAlpha = [0.00, 0.06, 0.18, 0.52, 0.92][tier];
+  const hotSpotAlpha = [0.00, 0.04, 0.12, 0.26, 0.56][tier];
 
   if(outerScale > 0){
     const outerBy = h * (0.80 + ((1 - outerScale) * 0.14));
@@ -1944,10 +1944,10 @@ function makeNozzleFireGlowTex(size, paletteInput, openingValue) {
   const g = cv.getContext("2d");
   const palette = paletteInput || cuboidGetBurnerPalette("N");
   const tier = Math.max(0, Math.min(4, cuboidGetOpeningTier(openingValue, "N")));
-  const innerAlpha = [0.18, 0.64, 0.68, 0.82, 0.94][tier];
-  const midAlpha = [0.00, 0.30, 0.34, 0.52, 0.76][tier];
-  const outerAlpha = [0.00, 0.16, 0.14, 0.22, 0.30][tier];
-  const outerRadius = size * ([0.16, 0.32, 0.30, 0.38, 0.46][tier]);
+  const innerAlpha = [0.18, 0.54, 0.68, 0.84, 0.94][tier];
+  const midAlpha = [0.00, 0.18, 0.34, 0.56, 0.76][tier];
+  const outerAlpha = [0.00, 0.10, 0.16, 0.24, 0.32][tier];
+  const outerRadius = size * ([0.16, 0.26, 0.34, 0.42, 0.48][tier]);
   const grad = g.createRadialGradient(size * 0.5, size * 0.68, size * 0.04, size * 0.5, size * 0.68, outerRadius);
   grad.addColorStop(0.00, cuboidColorToRgba(palette.inner, innerAlpha));
   grad.addColorStop(0.28, cuboidColorToRgba(palette.core, midAlpha));
@@ -2237,7 +2237,7 @@ function animateWallNozzleFlames(t) {
     const glowPunch = 1 + (frontRich * 0.42);
     const tierMotion = actor.liveState === "C"
       ? 0
-      : ([0.10, 0.58, 0.62, 0.84, 1.00][actor.openingTier] || 0.62);
+      : ([0.10, 0.42, 0.64, 0.84, 1.00][actor.openingTier] || 0.64);
     const f1 = Math.sin(t * actor.speedA + actor.phase);
     const f2 = Math.sin(t * actor.speedB + actor.phase * 1.41);
     const f3 = Math.sin(t * actor.speedC + actor.phase * 2.07);
@@ -2296,9 +2296,9 @@ function applyWallBurnerStateColors() {
     const openingValue = cuboidNormalizeBurnerOpeningValue(openingRow[actor.burnerIndex], liveState);
     const openingTier = cuboidGetOpeningTier(openingValue, liveState);
     const maps = getNozzleFireStateMaps(liveState, openingValue);
-    const tierScaleBias = [0.42, 0.88, 0.84, 0.96, 1.05][openingTier];
-    const tierGlowBias = [0.00, 0.52, 0.52, 0.78, 1.00][openingTier];
-    const tierIconBias = [0.20, 0.82, 0.72, 0.88, 1.00][openingTier];
+    const tierScaleBias = [0.42, 0.74, 0.90, 1.00, 1.08][openingTier];
+    const tierGlowBias = [0.00, 0.34, 0.56, 0.80, 1.00][openingTier];
+    const tierIconBias = [0.20, 0.70, 0.84, 0.92, 1.00][openingTier];
     actor.liveState = liveState;
     actor.openingValue = openingValue;
     actor.openingTier = openingTier;
