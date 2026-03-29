@@ -2604,7 +2604,7 @@ function cuboidDrawTstBarText(ctx, text, x, y, options) {
   ctx.restore();
 }
 
-function paintWallTstBarCanvas(canvas, values, presentationBlend) {
+function paintWallTstBarCanvas(canvas, values, presentationBlend, part) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width;
   const h = canvas.height;
@@ -2614,7 +2614,12 @@ function paintWallTstBarCanvas(canvas, values, presentationBlend) {
   const barTop = 48;
   const barW = w - 40;
   const barH = h - 96;
-  const slotW = barW / 15;
+  const labelKey = String(part || "").toLowerCase() === "bot" ? "BOT" : "TOP";
+  const labelLaneW = Math.max(150, Math.min(190, barW * 0.046));
+  const labelGap = Math.max(12, Math.min(22, barW * 0.0045));
+  const dataLeft = barLeft + labelLaneW + labelGap;
+  const dataW = Math.max(1, barW - labelLaneW - labelGap);
+  const slotW = dataW / 15;
   const radius = Math.max(18, Math.min(barH * 0.07, slotW * 0.12));
   const barCenterY = barTop + (barH * 0.5);
 
@@ -2632,10 +2637,38 @@ function paintWallTstBarCanvas(canvas, values, presentationBlend) {
   ctx.save();
   roundedRectPath(ctx, barLeft, barTop, barW, barH, radius);
   ctx.clip();
+
+  const labelChipX = barLeft + 16;
+  const labelChipY = barTop + 16;
+  const labelChipW = Math.max(96, labelLaneW - 28);
+  const labelChipH = barH - 32;
+  const labelChipR = Math.min(labelChipH * 0.34, 28);
+  const labelChipGrad = ctx.createLinearGradient(labelChipX, labelChipY, labelChipX + labelChipW, labelChipY + labelChipH);
+  labelChipGrad.addColorStop(0.00, "rgba(12,18,28,0.84)");
+  labelChipGrad.addColorStop(0.52, "rgba(22,32,44,0.76)");
+  labelChipGrad.addColorStop(1.00, "rgba(8,12,20,0.88)");
+  roundedRectPath(ctx, labelChipX, labelChipY, labelChipW, labelChipH, labelChipR);
+  ctx.fillStyle = labelChipGrad;
+  ctx.fill();
+
+  const labelChipGlass = ctx.createLinearGradient(0, labelChipY, 0, labelChipY + labelChipH);
+  labelChipGlass.addColorStop(0.00, "rgba(255,255,255,0.20)");
+  labelChipGlass.addColorStop(0.22, "rgba(255,255,255,0.10)");
+  labelChipGlass.addColorStop(0.65, "rgba(255,255,255,0.02)");
+  labelChipGlass.addColorStop(1.00, "rgba(0,0,0,0.10)");
+  roundedRectPath(ctx, labelChipX, labelChipY, labelChipW, labelChipH, labelChipR);
+  ctx.fillStyle = labelChipGlass;
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,255,255," + (0.18 + rich * 0.06).toFixed(3) + ")";
+  ctx.fillRect(dataLeft - Math.max(6, labelGap * 0.55), barTop + 14, 1, barH - 28);
+  ctx.fillStyle = "rgba(0,0,0,0.12)";
+  ctx.fillRect(dataLeft - Math.max(5, labelGap * 0.48), barTop + 14, 1, barH - 28);
+
   for(let i = 0; i < 15; i++){
     const tempVal = Number(vals[i]);
     const fill = isFinite(tempVal) ? cuboidTempToColor(tempVal) : "#334155";
-    const x = barLeft + (i * slotW);
+    const x = dataLeft + (i * slotW);
     const sectionGrad = ctx.createLinearGradient(0, barTop, 0, barTop + barH);
     sectionGrad.addColorStop(0.00, cuboidTint(fill, 0.34 + rich * 0.12, 1));
     sectionGrad.addColorStop(0.18, cuboidTint(fill, 0.12 + rich * 0.08, 1));
@@ -2753,7 +2786,7 @@ function paintWallTstBarCanvas(canvas, values, presentationBlend) {
   ctx.restore();
 
   for(let i = 1; i < 15; i++){
-    const sx = barLeft + (i * slotW);
+    const sx = dataLeft + (i * slotW);
     ctx.fillStyle = "rgba(255,255,255," + (0.26 + rich * 0.10).toFixed(3) + ")";
     ctx.fillRect(sx - 2, barTop + 10, 1, barH - 20);
     ctx.fillStyle = "rgba(255,255,255," + (0.12 + rich * 0.06).toFixed(3) + ")";
@@ -2766,7 +2799,7 @@ function paintWallTstBarCanvas(canvas, values, presentationBlend) {
 
   for(let i = 0; i < 15; i++){
     const tempVal = Number(vals[i]);
-    const x = barLeft + (i * slotW);
+    const x = dataLeft + (i * slotW);
       cuboidDrawTstBarText(
       ctx,
       isFinite(tempVal) ? (Math.round(tempVal) + "°C") : "--",
@@ -2786,6 +2819,37 @@ function paintWallTstBarCanvas(canvas, values, presentationBlend) {
       }
     );
   }
+
+  cuboidDrawTstBarText(
+    ctx,
+    "TST",
+    labelChipX + (labelChipW * 0.5),
+    labelChipY + (labelChipH * 0.34),
+    {
+      font: "900 76px 'Rajdhani', 'Segoe UI', Arial, sans-serif",
+      fill: "rgba(244,248,255,0.96)",
+      stroke: "rgba(0,0,0,0.22)",
+      lineWidth: 2,
+      scaleX: 1.02,
+      scaleY: 1.28,
+      maxWidth: labelChipW * 0.68
+    }
+  );
+  cuboidDrawTstBarText(
+    ctx,
+    labelKey,
+    labelChipX + (labelChipW * 0.5),
+    labelChipY + (labelChipH * 0.68),
+    {
+      font: "900 84px 'Rajdhani', 'Segoe UI', Arial, sans-serif",
+      fill: "rgba(255,252,236,0.98)",
+      stroke: "rgba(0,0,0,0.28)",
+      lineWidth: 2.2,
+      scaleX: 1.06,
+      scaleY: 1.46,
+      maxWidth: labelChipW * 0.74
+    }
+  );
   ctx.restore();
 
   ctx.strokeStyle = "rgba(255,255,255,0.18)";
@@ -2909,7 +2973,8 @@ function applyWallTstBarTextures() {
     paintWallTstBarCanvas(
       actor.canvas,
       actor.part === "top" ? zoneRows.top : zoneRows.bot,
-      frontPresentationBlendLive
+      frontPresentationBlendLive,
+      actor.part
     );
     actor.texture.needsUpdate = true;
   }
