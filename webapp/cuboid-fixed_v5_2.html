@@ -359,6 +359,78 @@ function cuboidNormalizeBurnerState(raw){
   return "C";
 }
 
+const CUBOID_LIVE_WALLS = ["A", "B", "C", "D"];
+const CUBOID_LIVE_ROWS = 6;
+const CUBOID_LIVE_BURNERS = 15;
+const CUBOID_BURNER_OPENING_MIN = 0;
+const CUBOID_BURNER_OPENING_MAX = 100;
+const CUBOID_BURNER_OPENING_STEP = 25;
+const CUBOID_BURNER_OPENING_ACTIVE_MIN = 0;
+
+function cuboidNormalizeBurnerOpeningValue(raw, state){
+  const liveState = cuboidNormalizeBurnerState(state);
+  const fallback = liveState === "C" ? 0 : 100;
+  const hasRaw = !(raw == null || raw === "");
+  let n = Number(raw);
+  if(!hasRaw || !isFinite(n) || n < 0) n = fallback;
+  n = Math.round(n / CUBOID_BURNER_OPENING_STEP) * CUBOID_BURNER_OPENING_STEP;
+  n = Math.max(
+    liveState === "C" ? CUBOID_BURNER_OPENING_MIN : CUBOID_BURNER_OPENING_ACTIVE_MIN,
+    Math.min(CUBOID_BURNER_OPENING_MAX, n)
+  );
+  return n;
+}
+
+function cuboidGetOpeningTier(opening, state){
+  const liveState = cuboidNormalizeBurnerState(state);
+  if(liveState === "C") return 0;
+  const value = cuboidNormalizeBurnerOpeningValue(opening, liveState);
+  if(value >= 100) return 4;
+  if(value >= 75) return 3;
+  if(value >= 50) return 2;
+  if(value >= 25) return 1;
+  return 0;
+}
+
+function cuboidBuildDefaultOpeningData(sourceData){
+  const src = (sourceData && typeof sourceData === "object") ? sourceData : cuboidBuildDefaultBurnerData();
+  const out = {};
+  for(let wi = 0; wi < CUBOID_LIVE_WALLS.length; wi++){
+    const wall = CUBOID_LIVE_WALLS[wi];
+    out[wall] = [];
+    for(let ri = 0; ri < CUBOID_LIVE_ROWS; ri++){
+      const srcRow = Array.isArray(src[wall] && src[wall][ri]) ? src[wall][ri] : [];
+      const row = [];
+      for(let bi = 0; bi < CUBOID_LIVE_BURNERS; bi++){
+        row.push(cuboidNormalizeBurnerOpeningValue(null, srcRow[bi]));
+      }
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
+function cuboidSanitizeOpeningData(source, stateSource){
+  const src = (source && typeof source === "object") ? source : {};
+  const states = (stateSource && typeof stateSource === "object") ? stateSource : cuboidBuildDefaultBurnerData();
+  const out = {};
+  for(let wi = 0; wi < CUBOID_LIVE_WALLS.length; wi++){
+    const wall = CUBOID_LIVE_WALLS[wi];
+    const srcRows = Array.isArray(src[wall]) ? src[wall] : [];
+    out[wall] = [];
+    for(let ri = 0; ri < CUBOID_LIVE_ROWS; ri++){
+      const srcRow = Array.isArray(srcRows[ri]) ? srcRows[ri] : [];
+      const stateRow = Array.isArray(states[wall] && states[wall][ri]) ? states[wall][ri] : [];
+      const row = [];
+      for(let bi = 0; bi < CUBOID_LIVE_BURNERS; bi++){
+        row.push(cuboidNormalizeBurnerOpeningValue(srcRow[bi], stateRow[bi]));
+      }
+      out[wall].push(row);
+    }
+  }
+  return out;
+}
+
 function cuboidSanitizeBurnerSnapshot(source){
   const walls = ["A", "B", "C", "D"];
   const out = {};
@@ -403,6 +475,15 @@ function cuboidLoadBurnerData(){
     return cuboidSanitizeBurnerSnapshot(pushedCuboidLiveData.hmData);
   }
   return cuboidBuildDefaultBurnerData();
+}
+
+function cuboidLoadBurnerOpeningData(stateSnapshot){
+  if(!pushedCuboidLiveData) cuboidPrimeLiveDataFromHost();
+  const states = (stateSnapshot && typeof stateSnapshot === "object") ? stateSnapshot : cuboidLoadBurnerData();
+  if(pushedCuboidLiveData && pushedCuboidLiveData.openingData){
+    return cuboidSanitizeOpeningData(pushedCuboidLiveData.openingData, states);
+  }
+  return cuboidBuildDefaultOpeningData(states);
 }
 
 function cuboidBuildDefaultCleaningLog(){
@@ -1724,7 +1805,7 @@ function cuboidBlendHex(a, b, t){
   return "#" + cc.getHexString();
 }
 
-function makeNozzleFireIconTex(width, height, paletteInput) {
+function makeNozzleFireIconTex(width, height, paletteInput, openingValue) {
   const cv = document.createElement("canvas");
   cv.width = width;
   cv.height = height;
@@ -1732,6 +1813,7 @@ function makeNozzleFireIconTex(width, height, paletteInput) {
   const w = width;
   const h = height;
   const palette = paletteInput || cuboidGetBurnerPalette("N");
+  const tier = Math.max(0, Math.min(4, cuboidGetOpeningTier(openingValue, "N")));
   const outerHot = cuboidBlendHex(palette.flame, palette.core, 0.16);
   const outerMid = cuboidBlendHex(palette.flame, "#f0641e", 0.10);
   const outerLow = cuboidBlendHex(palette.flame, palette.stem, 0.22);
@@ -1765,45 +1847,88 @@ function makeNozzleFireIconTex(width, height, paletteInput) {
   }
 
   g.clearRect(0, 0, w, h);
-  g.shadowColor = cuboidColorToRgba(outerMid, 0.28);
-  g.shadowBlur = h * 0.05;
+  const outerScale = [0.18, 0.42, 0.66, 0.84, 1.00][tier];
+  const midScale = [0.00, 0.00, 0.44, 0.74, 1.00][tier];
+  const innerScale = [0.00, 0.00, 0.00, 0.72, 1.00][tier];
+  const outerAlpha = [0.16, 0.56, 0.78, 0.90, 1.00][tier];
+  const midAlpha = [0.00, 0.00, 0.66, 0.82, 0.94][tier];
+  const innerAlpha = [0.00, 0.00, 0.00, 0.78, 0.96][tier];
+  const emberAlpha = [0.00, 0.00, 0.00, 0.48, 0.92][tier];
+  const hotSpotAlpha = [0.00, 0.00, 0.00, 0.22, 0.56][tier];
 
-  drawFlamePath(w * 0.50, h * 0.80, w * 0.62, h * 0.56);
-  const outerGrad = g.createLinearGradient(0, h * 0.10, 0, h * 0.92);
-  outerGrad.addColorStop(0.00, outerHot);
-  outerGrad.addColorStop(0.24, outerMid);
-  outerGrad.addColorStop(0.62, outerLow);
-  outerGrad.addColorStop(1.00, palette.stem);
-  g.fillStyle = outerGrad;
-  g.fill();
-  g.lineWidth = w * 0.018;
-  g.strokeStyle = cuboidColorToRgba(outline, 0.55);
-  g.stroke();
+  if(outerScale > 0){
+    const outerBy = h * (0.80 + ((1 - outerScale) * 0.14));
+    const outerGrad = g.createLinearGradient(0, outerBy - h * (0.72 * outerScale), 0, outerBy + h * (0.10 * outerScale));
+    outerGrad.addColorStop(0.00, outerHot);
+    outerGrad.addColorStop(0.24, outerMid);
+    outerGrad.addColorStop(0.62, outerLow);
+    outerGrad.addColorStop(1.00, palette.stem);
+    g.save();
+    g.globalAlpha = outerAlpha;
+    g.shadowColor = cuboidColorToRgba(outerMid, 0.10 + outerAlpha * 0.24);
+    g.shadowBlur = h * (0.018 + outerScale * 0.032);
+    drawFlamePath(w * 0.50, outerBy, w * 0.62 * outerScale, h * 0.56 * outerScale);
+    g.fillStyle = outerGrad;
+    g.fill();
+    g.lineWidth = Math.max(w * 0.008, w * 0.018 * outerScale);
+    g.strokeStyle = cuboidColorToRgba(outline, 0.28 + outerAlpha * 0.26);
+    g.stroke();
+    g.restore();
+  }
 
-  g.shadowBlur = h * 0.03;
-  drawFlamePath(w * 0.50, h * 0.83, w * 0.42, h * 0.40);
-  const midGrad = g.createLinearGradient(0, h * 0.22, 0, h * 0.88);
-  midGrad.addColorStop(0.00, midHot);
-  midGrad.addColorStop(0.32, palette.core);
-  midGrad.addColorStop(0.74, midLow);
-  midGrad.addColorStop(1.00, cuboidBlendHex(palette.flame, palette.stem, 0.14));
-  g.fillStyle = midGrad;
-  g.fill();
+  if(midScale > 0){
+    const midBy = h * (0.83 + ((1 - midScale) * 0.08));
+    const midGrad = g.createLinearGradient(0, midBy - h * (0.60 * midScale), 0, midBy + h * (0.10 * midScale));
+    midGrad.addColorStop(0.00, midHot);
+    midGrad.addColorStop(0.32, palette.core);
+    midGrad.addColorStop(0.74, midLow);
+    midGrad.addColorStop(1.00, cuboidBlendHex(palette.flame, palette.stem, 0.14));
+    g.save();
+    g.globalAlpha = midAlpha;
+    g.shadowColor = cuboidColorToRgba(palette.core, 0.08 + midAlpha * 0.18);
+    g.shadowBlur = h * (0.010 + midScale * 0.020);
+    drawFlamePath(w * 0.50, midBy, w * 0.42 * midScale, h * 0.40 * midScale);
+    g.fillStyle = midGrad;
+    g.fill();
+    g.restore();
+  }
 
-  g.shadowBlur = h * 0.02;
-  drawFlamePath(w * 0.50, h * 0.86, w * 0.24, h * 0.24);
-  const coreGrad = g.createLinearGradient(0, h * 0.36, 0, h * 0.90);
-  coreGrad.addColorStop(0.00, "#fffef8");
-  coreGrad.addColorStop(0.38, palette.inner);
-  coreGrad.addColorStop(1.00, coreMid);
-  g.fillStyle = coreGrad;
-  g.fill();
+  if(innerScale > 0){
+    const innerBy = h * (0.86 + ((1 - innerScale) * 0.05));
+    const coreGrad = g.createLinearGradient(0, innerBy - h * (0.52 * innerScale), 0, innerBy + h * (0.08 * innerScale));
+    coreGrad.addColorStop(0.00, "#fffef8");
+    coreGrad.addColorStop(0.38, palette.inner);
+    coreGrad.addColorStop(1.00, coreMid);
+    g.save();
+    g.globalAlpha = innerAlpha;
+    g.shadowColor = cuboidColorToRgba(palette.inner, 0.08 + innerAlpha * 0.14);
+    g.shadowBlur = h * (0.008 + innerScale * 0.014);
+    drawFlamePath(w * 0.50, innerBy, w * 0.24 * innerScale, h * 0.24 * innerScale);
+    g.fillStyle = coreGrad;
+    g.fill();
+    g.restore();
+  }
 
-  g.shadowBlur = 0;
-  drawDrop(w * 0.24, h * 0.18, w * 0.030, h * 0.050, cuboidColorToRgba(emberA, 0.95));
-  drawDrop(w * 0.76, h * 0.22, w * 0.026, h * 0.043, cuboidColorToRgba(emberB, 0.92));
-  drawDrop(w * 0.15, h * 0.33, w * 0.020, h * 0.036, cuboidColorToRgba(midLow, 0.88));
-  drawDrop(w * 0.86, h * 0.36, w * 0.020, h * 0.034, cuboidColorToRgba(outerMid, 0.88));
+  if(hotSpotAlpha > 0){
+    g.save();
+    g.globalAlpha = hotSpotAlpha;
+    g.fillStyle = cuboidColorToRgba(palette.inner, 0.95);
+    g.beginPath();
+    g.ellipse(w * 0.50, h * 0.67, w * 0.028, h * 0.050, 0, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+  }
+
+  if(emberAlpha > 0){
+    g.save();
+    g.globalAlpha = emberAlpha;
+    g.shadowBlur = 0;
+    drawDrop(w * 0.24, h * 0.18, w * 0.030, h * 0.050, cuboidColorToRgba(emberA, 0.95));
+    drawDrop(w * 0.76, h * 0.22, w * 0.026, h * 0.043, cuboidColorToRgba(emberB, 0.92));
+    drawDrop(w * 0.15, h * 0.33, w * 0.020, h * 0.036, cuboidColorToRgba(midLow, 0.88));
+    drawDrop(w * 0.86, h * 0.36, w * 0.020, h * 0.034, cuboidColorToRgba(outerMid, 0.88));
+    g.restore();
+  }
 
   const tex = new THREE.CanvasTexture(cv);
   if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
@@ -1812,16 +1937,21 @@ function makeNozzleFireIconTex(width, height, paletteInput) {
   return tex;
 }
 
-function makeNozzleFireGlowTex(size, paletteInput) {
+function makeNozzleFireGlowTex(size, paletteInput, openingValue) {
   const cv = document.createElement("canvas");
   cv.width = size;
   cv.height = size;
   const g = cv.getContext("2d");
   const palette = paletteInput || cuboidGetBurnerPalette("N");
-  const grad = g.createRadialGradient(size * 0.5, size * 0.68, size * 0.04, size * 0.5, size * 0.68, size * 0.46);
-  grad.addColorStop(0.00, cuboidColorToRgba(palette.inner, 0.94));
-  grad.addColorStop(0.28, cuboidColorToRgba(palette.core, 0.76));
-  grad.addColorStop(0.62, cuboidColorToRgba(palette.flame, 0.30));
+  const tier = Math.max(0, Math.min(4, cuboidGetOpeningTier(openingValue, "N")));
+  const innerAlpha = [0.18, 0.52, 0.68, 0.82, 0.94][tier];
+  const midAlpha = [0.00, 0.18, 0.34, 0.52, 0.76][tier];
+  const outerAlpha = [0.00, 0.06, 0.14, 0.22, 0.30][tier];
+  const outerRadius = size * ([0.16, 0.22, 0.30, 0.38, 0.46][tier]);
+  const grad = g.createRadialGradient(size * 0.5, size * 0.68, size * 0.04, size * 0.5, size * 0.68, outerRadius);
+  grad.addColorStop(0.00, cuboidColorToRgba(palette.inner, innerAlpha));
+  grad.addColorStop(0.28, cuboidColorToRgba(palette.core, midAlpha));
+  grad.addColorStop(0.62, cuboidColorToRgba(palette.flame, outerAlpha));
   grad.addColorStop(1.00, cuboidColorToRgba(palette.flame, 0.00));
   g.fillStyle = grad;
   g.fillRect(0, 0, size, size);
@@ -1921,23 +2051,26 @@ function makeNozzleColdIconTex(width, height) {
 
 const nozzleFireStateMapCache = Object.create(null);
 
-function getNozzleFireStateMaps(state){
+function getNozzleFireStateMaps(state, openingValue){
   const liveState = cuboidNormalizeBurnerState(state);
-  if(nozzleFireStateMapCache[liveState]) return nozzleFireStateMapCache[liveState];
+  const openingTier = cuboidGetOpeningTier(openingValue, liveState);
+  const cacheKey = liveState === "C" ? "C" : (liveState + ":" + openingTier);
+  if(nozzleFireStateMapCache[cacheKey]) return nozzleFireStateMapCache[cacheKey];
   const palette = cuboidGetBurnerPalette(liveState);
   const maps = {
     palette: palette,
+    openingTier: openingTier,
     iconTex: liveState === "C"
       ? makeNozzleColdIconTex(256, 320)
-      : makeNozzleFireIconTex(256, 320, palette),
-    glowTex: makeNozzleFireGlowTex(192, palette)
+      : makeNozzleFireIconTex(256, 320, palette, openingValue),
+    glowTex: makeNozzleFireGlowTex(192, palette, openingValue)
   };
-  nozzleFireStateMapCache[liveState] = maps;
+  nozzleFireStateMapCache[cacheKey] = maps;
   return maps;
 }
 
-const nozzleFireIconTex = getNozzleFireStateMaps("N").iconTex;
-const nozzleFireGlowTex = getNozzleFireStateMaps("N").glowTex;
+const nozzleFireIconTex = getNozzleFireStateMaps("N", 100).iconTex;
+const nozzleFireGlowTex = getNozzleFireStateMaps("N", 100).glowTex;
 const nozzleFireIconMat = new THREE.MeshBasicMaterial({
   map: nozzleFireIconTex,
   transparent: true,
@@ -2002,6 +2135,8 @@ function addWallNozzleFireIcon(parent, seed, posX, posY, posZ, dir, liveMeta) {
     rowIndex: liveMeta && Number.isFinite(liveMeta.rowIndex) ? liveMeta.rowIndex : -1,
     burnerIndex: liveMeta && Number.isFinite(liveMeta.burnerIndex) ? liveMeta.burnerIndex : -1,
     liveState: "N",
+    openingValue: 100,
+    openingTier: 4,
     iconBaseOpacity: 0.84,
     glowBaseOpacity: 0.22,
     glowIntensity: 1,
@@ -2100,6 +2235,9 @@ function animateWallNozzleFlames(t) {
     const scalePunch = 1 + (frontRich * 0.10);
     const iconPunch = 1 + (frontRich * 0.18);
     const glowPunch = 1 + (frontRich * 0.42);
+    const tierMotion = actor.liveState === "C"
+      ? 0
+      : ([0.10, 0.38, 0.62, 0.84, 1.00][actor.openingTier] || 0.62);
     const f1 = Math.sin(t * actor.speedA + actor.phase);
     const f2 = Math.sin(t * actor.speedB + actor.phase * 1.41);
     const f3 = Math.sin(t * actor.speedC + actor.phase * 2.07);
@@ -2122,22 +2260,22 @@ function animateWallNozzleFlames(t) {
       actor.glow.scale.set(1, 1, 1);
       continue;
     }
-    actor.flame.position.x = actor.flame.userData.baseX + f2 * actor.sway;
-    actor.flame.position.y = actor.flame.userData.baseY + actor.lift * (0.12 + Math.max(0, flicker - 0.48));
-    actor.flame.position.z = actor.flame.userData.baseZ + actor.flame.userData.dir * actor.forwardLift * (0.16 + flare);
-    actor.flame.rotation.y = actor.flame.userData.baseRotY + f3 * 0.04;
-    actor.flame.rotation.z = actor.flame.userData.baseRotZ + f1 * 0.03;
+    actor.flame.position.x = actor.flame.userData.baseX + f2 * actor.sway * tierMotion;
+    actor.flame.position.y = actor.flame.userData.baseY + actor.lift * tierMotion * (0.12 + Math.max(0, flicker - 0.48));
+    actor.flame.position.z = actor.flame.userData.baseZ + actor.flame.userData.dir * actor.forwardLift * tierMotion * (0.16 + flare);
+    actor.flame.rotation.y = actor.flame.userData.baseRotY + f3 * 0.04 * tierMotion;
+    actor.flame.rotation.z = actor.flame.userData.baseRotZ + f1 * 0.03 * tierMotion;
     actor.flame.scale.set(
-      (0.94 + flicker * 0.10 + f3 * actor.widthPulse * 0.5) * actor.scaleBias * scalePunch,
-      (0.92 + flicker * 0.18 + flare * 0.08) * actor.scaleBias * (1 + frontRich * 0.14),
-      (0.96 + flicker * 0.06) * actor.scaleBias
+      (0.94 + (flicker * 0.10 + f3 * actor.widthPulse * 0.5) * tierMotion) * actor.scaleBias * scalePunch,
+      (0.92 + (flicker * 0.18 + flare * 0.08) * tierMotion) * actor.scaleBias * (1 + frontRich * 0.14),
+      (0.96 + flicker * 0.06 * tierMotion) * actor.scaleBias
     );
     actor.iconMat.opacity = Math.min(1, (actor.iconBaseOpacity + ((flicker * 0.14) + (flare * 0.06)) * actor.glowIntensity) * iconPunch);
     actor.glowMat.opacity = Math.min(1, (actor.glowBaseOpacity + ((flicker * 0.16) + (flare * 0.07)) * actor.glowIntensity) * glowPunch);
-    actor.glow.visible = true;
+    actor.glow.visible = actor.openingTier > 0;
     actor.glow.scale.set(
-      (0.92 + flicker * 0.22) * (1 + frontRich * 0.18),
-      (0.82 + flicker * 0.14) * (1 + frontRich * 0.12),
+      (0.92 + flicker * 0.22 * tierMotion) * (1 + frontRich * 0.18),
+      (0.82 + flicker * 0.14 * tierMotion) * (1 + frontRich * 0.12),
       1
     );
   }
@@ -2145,15 +2283,25 @@ function animateWallNozzleFlames(t) {
 
 function applyWallBurnerStateColors() {
   const hmData = cuboidLoadBurnerData();
+  const openingData = cuboidLoadBurnerOpeningData(hmData);
   for (let i = 0; i < wallNozzleFlameActors.length; i++) {
     const actor = wallNozzleFlameActors[i];
     if (!actor || !actor.faceKey || actor.rowIndex < 0 || actor.burnerIndex < 0) continue;
     const wallKey = cuboidGetWallKeyForFace(actor.faceKey);
     const wallRows = hmData && hmData[wallKey] ? hmData[wallKey] : [];
     const row = Array.isArray(wallRows[actor.rowIndex]) ? wallRows[actor.rowIndex] : [];
+    const openingRows = openingData && openingData[wallKey] ? openingData[wallKey] : [];
+    const openingRow = Array.isArray(openingRows[actor.rowIndex]) ? openingRows[actor.rowIndex] : [];
     const liveState = cuboidNormalizeBurnerState(row[actor.burnerIndex]);
-    const maps = getNozzleFireStateMaps(liveState);
+    const openingValue = cuboidNormalizeBurnerOpeningValue(openingRow[actor.burnerIndex], liveState);
+    const openingTier = cuboidGetOpeningTier(openingValue, liveState);
+    const maps = getNozzleFireStateMaps(liveState, openingValue);
+    const tierScaleBias = [0.42, 0.68, 0.84, 0.96, 1.05][openingTier];
+    const tierGlowBias = [0.00, 0.26, 0.52, 0.78, 1.00][openingTier];
+    const tierIconBias = [0.20, 0.54, 0.72, 0.88, 1.00][openingTier];
     actor.liveState = liveState;
+    actor.openingValue = openingValue;
+    actor.openingTier = openingTier;
     actor.iconMat.map = maps.iconTex;
     actor.iconMat.color.set(0xffffff);
     actor.iconMat.needsUpdate = true;
@@ -2167,23 +2315,23 @@ function applyWallBurnerStateColors() {
       actor.scaleBias = 0.88;
       actor.glow.visible = false;
     } else if (liveState === "B") {
-      actor.iconBaseOpacity = 0.83;
-      actor.glowBaseOpacity = 0.20;
-      actor.glowIntensity = 0.98;
-      actor.scaleBias = 1.00;
-      actor.glow.visible = true;
+      actor.iconBaseOpacity = 0.10 + (0.83 * tierIconBias);
+      actor.glowBaseOpacity = 0.20 * tierGlowBias;
+      actor.glowIntensity = 0.98 * tierGlowBias;
+      actor.scaleBias = 1.00 * tierScaleBias;
+      actor.glow.visible = openingTier > 0;
     } else if (liveState === "O") {
-      actor.iconBaseOpacity = 0.87;
-      actor.glowBaseOpacity = 0.24;
-      actor.glowIntensity = 1.05;
-      actor.scaleBias = 1.03;
-      actor.glow.visible = true;
+      actor.iconBaseOpacity = 0.10 + (0.87 * tierIconBias);
+      actor.glowBaseOpacity = 0.24 * tierGlowBias;
+      actor.glowIntensity = 1.05 * tierGlowBias;
+      actor.scaleBias = 1.03 * tierScaleBias;
+      actor.glow.visible = openingTier > 0;
     } else {
-      actor.iconBaseOpacity = 0.85;
-      actor.glowBaseOpacity = 0.22;
-      actor.glowIntensity = 1.00;
-      actor.scaleBias = 1.01;
-      actor.glow.visible = true;
+      actor.iconBaseOpacity = 0.10 + (0.85 * tierIconBias);
+      actor.glowBaseOpacity = 0.22 * tierGlowBias;
+      actor.glowIntensity = 1.00 * tierGlowBias;
+      actor.scaleBias = 1.01 * tierScaleBias;
+      actor.glow.visible = openingTier > 0;
     }
   }
 }
