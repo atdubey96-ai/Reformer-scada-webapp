@@ -37,11 +37,11 @@ body{color:rgba(140,180,220,0.85);}
   display:flex;
   flex-direction:column;
   justify-content:center;
-  gap:3px;
-  min-height:44px;
+  gap:0;
+  min-height:38px;
   width:clamp(430px,40vw,640px);
   max-width:100%;
-  padding:8px 20px 9px 18px;
+  padding:9px 20px 10px 18px;
   position:relative;
   overflow:hidden;
   border-radius:14px;
@@ -76,13 +76,6 @@ body{color:rgba(140,180,220,0.85);}
   background-clip:text;
   -webkit-text-fill-color:transparent;
   text-shadow:0 0 16px rgba(104,156,232,0.16);
-}
-.viewer-tag-summary{
-  position:relative;
-  font-size:8px;
-  letter-spacing:0.9px;
-  color:rgba(199,218,242,0.88);
-  white-space:nowrap;
 }
 #vp{
   position:relative;
@@ -169,19 +162,14 @@ body{color:rgba(140,180,220,0.85);}
   }
   #viewerTag{
     width:100%;
-    min-height:42px;
-    padding:8px 12px 9px;
+    min-height:38px;
+    padding:9px 12px 10px;
     text-align:center;
     align-items:center;
   }
   .viewer-tag-title{
     font-size:11px;
     line-height:1.15;
-  }
-  .viewer-tag-summary{
-    font-size:7px;
-    letter-spacing:0.8px;
-    white-space:normal;
   }
   #vp{
     width:100%;
@@ -221,7 +209,6 @@ body{color:rgba(140,180,220,0.85);}
   <div id="topbar">
     <div id="viewerTag">
       <span class="viewer-tag-title" id="viewerTagTitle">AB Reformer Structure Study</span>
-      <span class="viewer-tag-summary" id="viewerTagSummary">Dashboard shell dimensions and camera framing | shell only</span>
     </div>
     <div id="ctrls">
       <div class="face-current-pill" id="faceCurrent">Face1 Front Outside</div>
@@ -268,7 +255,6 @@ const chamberZoneKey = chamberParam === "cd" ? "CD" : "AB";
 
 const app = document.getElementById("app");
 const viewerTagTitle = document.getElementById("viewerTagTitle");
-const viewerTagSummary = document.getElementById("viewerTagSummary");
 const faceCurrent = document.getElementById("faceCurrent");
 const hint = document.getElementById("hint");
 const btnFront = document.getElementById("btnFront");
@@ -301,7 +287,6 @@ const SHELL_FACE_KEYS = [
 ];
 
 if(viewerTagTitle) viewerTagTitle.textContent = chamberZoneKey + " Reformer Structure Study";
-if(viewerTagSummary) viewerTagSummary.textContent = "Face1 + Face2 manifolds + nozzles + flame icons + labels active | top header assembly kept | X " + FW + " | Y " + FH + " | Z " + FD;
 document.title = chamberZoneKey + " Reformer Structure Study";
 
 let hostTabActive = true;
