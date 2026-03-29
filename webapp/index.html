@@ -14688,6 +14688,8 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-cuboid #stack-adjust-card .hm-adjust-grid,
         #tab-cuboidstack #stack-adjust-card .hm-adjust-grid{
           margin-top:14px !important;
+          grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+          align-items:start !important;
           gap:14px !important;
         }
         #tab-cuboid #stack-adjust-card .hm-adjust-item,
@@ -14720,9 +14722,9 @@ html, body, body *, body *::before, body *::after, svg text{
         #tab-cuboid #stack-adjust-card .hm-adjust-suggest-row,
         #tab-cuboidstack #stack-adjust-card .hm-adjust-suggest-row{
           display:flex;
-          align-items:center;
+          align-items:flex-start;
           gap:10px;
-          flex-wrap:nowrap;
+          flex-wrap:wrap;
           min-width:0;
         }
         #tab-cuboid #stack-adjust-card .hm-adjust-suggest-ph,
@@ -14747,20 +14749,20 @@ html, body, body *, body *::before, body *::after, svg text{
           display:inline-flex;
           align-items:center;
           min-width:0;
-          flex:1 1 auto;
+          flex:1 1 180px;
           min-height:30px;
           padding:5px 14px;
           border-radius:999px;
           background:rgba(15,23,42,0.46);
           border:1px solid rgba(148,163,184,0.22);
           color:#f8fafc;
-          font-size:13.5px;
+          font-size:12.5px;
           font-weight:800;
           letter-spacing:0.12px;
           line-height:1.25;
-          white-space:nowrap;
-          overflow:hidden;
-          text-overflow:ellipsis;
+          white-space:normal;
+          overflow:visible;
+          text-overflow:clip;
         }
         #tab-cuboid #stack-adjust-card .hm-adjust-suggest.is-unavailable .hm-adjust-suggest-action-pill,
         #tab-cuboidstack #stack-adjust-card .hm-adjust-suggest.is-unavailable .hm-adjust-suggest-action-pill{
@@ -14838,6 +14840,10 @@ html, body, body *, body *::before, body *::after, svg text{
           color:#991b1b;
         }
         @media (max-width: 900px){
+          #tab-cuboid #stack-adjust-card .hm-adjust-grid,
+          #tab-cuboidstack #stack-adjust-card .hm-adjust-grid{
+            grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+          }
           #tab-cuboid #stack-adjust-card .hm-adjust-suggest-row,
           #tab-cuboidstack #stack-adjust-card .hm-adjust-suggest-row{
             flex-wrap:wrap;
@@ -14898,6 +14904,12 @@ html, body, body *, body *::before, body *::after, svg text{
           #tab-cuboid #stack-adjust-card .hm-adjust-suggest-action-pill,
           #tab-cuboidstack #stack-adjust-card .hm-adjust-suggest-action-pill{
             font-size:13px !important;
+          }
+        }
+        @media (max-width:640px){
+          #tab-cuboid #stack-adjust-card .hm-adjust-grid,
+          #tab-cuboidstack #stack-adjust-card .hm-adjust-grid{
+            grid-template-columns:1fr !important;
           }
         }
       </style>
