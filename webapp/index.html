@@ -3744,13 +3744,13 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 #tab-cuboidstack .cuboid-twin-control-panel{
   width:min(100%,1680px);
   margin:0 auto;
-  padding:18px 18px 16px;
-  border:1px solid rgba(98,127,180,0.28);
-  border-radius:22px;
+  padding:12px 14px 10px;
+  border:1px solid rgba(148,163,184,0.26);
+  border-radius:18px;
   background:
-    linear-gradient(180deg,rgba(12,17,28,0.96),rgba(7,10,16,0.98)),
-    radial-gradient(circle at top left,rgba(78,138,255,0.12),transparent 52%);
-  box-shadow:0 16px 34px rgba(0,0,0,0.24);
+    linear-gradient(180deg,rgba(13,18,28,0.96),rgba(8,12,20,0.98)),
+    radial-gradient(circle at top left,rgba(125,211,252,0.08),transparent 55%);
+  box-shadow:0 12px 28px rgba(2,8,23,0.22);
   position:relative;
   overflow:hidden;
 }
@@ -3758,59 +3758,61 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   content:"";
   position:absolute;
   inset:0 auto auto 0;
-  width:200px;
-  height:90px;
-  background:radial-gradient(circle,rgba(125,220,247,0.14),transparent 70%);
+  width:150px;
+  height:68px;
+  background:radial-gradient(circle,rgba(125,220,247,0.1),transparent 72%);
   pointer-events:none;
 }
 #tab-cuboidstack .cuboid-twin-control-head{
   position:relative;
   display:flex;
-  align-items:flex-start;
+  align-items:flex-end;
   justify-content:space-between;
-  gap:12px;
+  gap:10px 18px;
   flex-wrap:wrap;
 }
 #tab-cuboidstack .cuboid-twin-control-title{
   color:#eef6ff;
-  font-size:11px;
+  font-size:10px;
   font-weight:800;
-  letter-spacing:1.4px;
+  letter-spacing:1.5px;
   text-transform:uppercase;
 }
 #tab-cuboidstack .cuboid-twin-control-sub{
   display:block;
-  margin-top:4px;
+  margin-top:3px;
   color:#94a3b8;
-  font-size:12px;
-  line-height:1.5;
-  max-width:820px;
+  font-size:11px;
+  line-height:1.35;
+  max-width:560px;
 }
 #tab-cuboidstack .cuboid-twin-control-grid{
   display:grid;
-  grid-template-columns:repeat(2,minmax(240px,1fr));
-  gap:16px 18px;
-  margin-top:12px;
+  grid-template-columns:repeat(2,minmax(250px,340px));
+  justify-content:end;
+  gap:10px 12px;
+  margin-top:0;
+  flex:1 1 640px;
 }
 #tab-cuboidstack .cuboid-twin-control-field{
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:5px;
   min-width:0;
 }
 #tab-cuboidstack .cuboid-twin-control-badge{
   display:inline-flex;
   align-items:center;
-  gap:7px;
-  min-height:46px;
-  padding:8px 16px;
+  gap:6px;
+  min-height:34px;
+  padding:6px 12px;
   border-radius:999px;
-  border:1px solid rgba(59,130,246,0.28);
-  background:rgba(15,23,42,0.78);
+  border:1px solid rgba(96,165,250,0.24);
+  background:rgba(15,23,42,0.72);
   color:#dbeafe;
-  font-size:13px;
+  font-size:12px;
   font-weight:700;
-  letter-spacing:0.35px;
+  letter-spacing:0.28px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
   white-space:normal;
 }
@@ -3821,65 +3823,65 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 }
 #tab-cuboidstack .cuboid-twin-control-label{
   color:#9fb0c6;
-  font-size:13px;
+  font-size:10px;
   font-weight:800;
-  letter-spacing:2px;
+  letter-spacing:1.6px;
   text-transform:uppercase;
 }
 #tab-cuboidstack .cuboid-twin-control-field-shell{
   position:relative;
   display:flex;
   align-items:center;
-  min-height:66px;
-  padding:0 18px;
-  border-radius:18px;
-  border:1px solid rgba(125,143,170,0.34);
-  background:linear-gradient(180deg,rgba(20,27,41,0.92),rgba(11,16,25,0.98));
+  min-height:50px;
+  padding:0 14px;
+  border-radius:15px;
+  border:1px solid rgba(148,163,184,0.34);
+  background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03));
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.04),
-    0 10px 20px rgba(0,0,0,0.18);
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 8px 18px rgba(2,8,23,0.16);
 }
 #tab-cuboidstack .cuboid-twin-control-field-shell.is-select{
-  padding-left:14px;
-  padding-right:48px;
+  padding-left:11px;
+  padding-right:40px;
 }
 #tab-cuboidstack .cuboid-twin-control-field-shell.is-date{
-  padding-right:54px;
+  padding-right:42px;
 }
 #tab-cuboidstack .cuboid-twin-control-field-icon{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:36px;
-  height:36px;
-  margin-right:10px;
-  border-radius:12px;
-  background:linear-gradient(180deg,rgba(147,197,253,0.16),rgba(59,130,246,0.08));
+  width:28px;
+  height:28px;
+  margin-right:8px;
+  border-radius:9px;
+  background:linear-gradient(180deg,rgba(191,219,254,0.22),rgba(96,165,250,0.12));
   color:#bfdbfe;
-  font-size:18px;
+  font-size:15px;
   flex:0 0 auto;
 }
 #tab-cuboidstack .cuboid-twin-control-field-caret,
 #tab-cuboidstack .cuboid-twin-control-field-dateicon{
   position:absolute;
-  right:18px;
+  right:14px;
   top:50%;
   transform:translateY(-50%);
   color:#c8d3e5;
-  font-size:18px;
+  font-size:16px;
   pointer-events:none;
 }
 #tab-cuboidstack .cuboid-twin-control-input{
   width:100%;
-  min-height:64px;
+  min-height:48px;
   padding:0;
   border:none;
   background:transparent;
   color:#e2e8f0;
   font-family:'Rajdhani',sans-serif;
-  font-size:24px;
-  font-weight:800;
-  letter-spacing:0.2px;
+  font-size:16px;
+  font-weight:700;
+  letter-spacing:0.12px;
   outline:none;
   cursor:pointer;
   box-shadow:none;
@@ -3916,37 +3918,37 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
-  margin-top:14px;
+  gap:8px 12px;
+  margin-top:8px;
   flex-wrap:wrap;
 }
 #tab-cuboidstack .cuboid-twin-control-actions{
   display:flex;
   align-items:center;
   justify-content:flex-end;
-  gap:10px;
+  gap:8px;
   flex-wrap:wrap;
 }
 #tab-cuboidstack .cuboid-twin-control-btn{
-  min-height:46px;
-  padding:0 16px;
-  border-radius:14px;
-  border:1px solid rgba(59,130,246,0.42);
-  background:linear-gradient(180deg,rgba(30,64,175,0.2),rgba(15,23,42,0.88));
-  color:#bfdbfe;
+  min-height:34px;
+  padding:0 14px;
+  border-radius:11px;
+  border:1px solid rgba(148,163,184,0.34);
+  background:linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04));
+  color:#e2e8f0;
   font-family:'Rajdhani',sans-serif;
-  font-size:13px;
-  font-weight:800;
-  letter-spacing:0.7px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.35px;
   cursor:pointer;
 }
 #tab-cuboidstack .cuboid-twin-control-btn:hover{
-  border-color:rgba(96,165,250,0.62);
-  color:#eff6ff;
+  border-color:rgba(125,211,252,0.48);
+  color:#ffffff;
 }
 #tab-cuboidstack .cuboid-twin-control-btn.is-secondary{
   border-color:rgba(100,116,139,0.4);
-  background:linear-gradient(180deg,rgba(30,41,59,0.72),rgba(15,23,42,0.88));
+  background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));
   color:#cbd5e1;
 }
 #tab-cuboidstack .cuboid-twin-control-banner{
@@ -3974,42 +3976,42 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   letter-spacing:0.4px;
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-panel{
-  border-color:rgba(148,163,184,0.3);
+  border-color:#d3dde9;
   background:
-    linear-gradient(180deg,rgba(255,255,255,0.98),rgba(238,244,252,0.96)),
-    radial-gradient(circle at top left,rgba(59,130,246,0.08),transparent 54%);
-  box-shadow:0 10px 22px rgba(15,23,42,0.1);
+    linear-gradient(180deg,rgba(255,255,255,0.99),rgba(245,248,252,0.97)),
+    radial-gradient(circle at top left,rgba(59,130,246,0.05),transparent 54%);
+  box-shadow:0 8px 18px rgba(15,23,42,0.08);
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-title{ color:#0f172a; }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-sub{ color:#64748b; }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-badge{
-  border-color:rgba(59,130,246,0.2);
-  background:rgba(255,255,255,0.9);
-  color:#1e3a8a;
+  border-color:#d5dee9;
+  background:linear-gradient(180deg,#ffffff,#f4f7fb);
+  color:#1f3b5b;
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-badge.is-empty{
   border-color:rgba(239,68,68,0.24);
   background:rgba(254,242,242,0.95);
   color:#b91c1c;
 }
-body.light-theme #tab-cuboidstack .cuboid-twin-control-label{ color:#54627a; }
+body.light-theme #tab-cuboidstack .cuboid-twin-control-label{ color:#536175; }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-field-shell{
-  border-color:rgba(191,203,221,0.95);
-  background:linear-gradient(180deg,rgba(255,255,255,0.99),rgba(244,247,252,0.98));
+  border-color:#c8d3e0;
+  background:linear-gradient(180deg,#ffffff,#f6f8fb);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.9),
-    0 10px 24px rgba(148,163,184,0.18);
+    inset 0 1px 0 rgba(255,255,255,0.96),
+    0 4px 12px rgba(148,163,184,0.14);
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-field-icon{
-  background:linear-gradient(180deg,rgba(219,234,254,0.95),rgba(239,246,255,0.98));
-  color:#4f6b91;
+  background:linear-gradient(180deg,#ddebf9,#c6dbf4);
+  color:#56718f;
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-field-caret,
 body.light-theme #tab-cuboidstack .cuboid-twin-control-field-dateicon{
-  color:#475569;
+  color:#1f2937;
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-input{
-  color:#0f172a;
+  color:#14233b;
 }
 body.light-theme #tab-cuboidstack input[type="date"].cuboid-twin-control-input{
   color-scheme:light;
@@ -4022,14 +4024,14 @@ body.light-theme #tab-cuboidstack input[type="date"].cuboid-twin-control-input::
   height:auto;
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-btn{
-  background:linear-gradient(180deg,rgba(219,234,254,0.95),rgba(239,246,255,0.98));
-  color:#1d4ed8;
-  border-color:rgba(59,130,246,0.28);
+  background:linear-gradient(180deg,#ffffff,#f4f7fb);
+  color:#1f2937;
+  border-color:#d2dbe6;
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-btn.is-secondary{
-  background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(241,245,249,0.98));
+  background:linear-gradient(180deg,#fbfcfe,#eef2f7);
   color:#334155;
-  border-color:rgba(148,163,184,0.34);
+  border-color:#d2dbe6;
 }
 body.light-theme #tab-cuboidstack .cuboid-twin-control-banner{
   border-color:rgba(59,130,246,0.18);
@@ -7379,6 +7381,46 @@ function getEntryBurnerSnapshot(entry){
   return null;
 }
 
+function captureCurrentBurnerOpeningSnapshot(stateSource){
+  var states = (stateSource && typeof stateSource === "object")
+    ? stateSource
+    : (typeof data === "object" ? data : null);
+  try{
+    return sanitizeBurnerOpeningShape(
+      (burnerOpeningData && typeof burnerOpeningData === "object") ? burnerOpeningData : null,
+      states
+    );
+  }catch(e){
+    return buildDefaultBurnerOpeningData(states);
+  }
+}
+
+function getEntryBurnerOpeningSnapshot(entry, stateSource){
+  if(!entry || typeof entry !== "object") return null;
+  var states = (stateSource && typeof stateSource === "object")
+    ? stateSource
+    : getEntryBurnerSnapshot(entry);
+  var candidates = [
+    entry.openingSnapshot,
+    entry.opening_snapshot,
+    entry.burnerOpeningSnapshot,
+    entry.burnerOpeningSnapshotJson,
+    entry.burnerOpeningData,
+    entry.openingData
+  ];
+  for(var i=0; i<candidates.length; i++){
+    var snap = candidates[i];
+    if(!snap) continue;
+    if(typeof snap === "string"){
+      try{ snap = JSON.parse(snap); }catch(e){ snap = null; }
+    }
+    if(snap && typeof snap === "object"){
+      return sanitizeBurnerOpeningShape(snap, states || data);
+    }
+  }
+  return null;
+}
+
 function ensureTempEntriesHaveSnapshots(){
   if(!Array.isArray(tempDataEntries) || !tempDataEntries.length) return false;
   var fallback = captureCurrentBurnerSnapshot();
@@ -8439,6 +8481,10 @@ function normalizeTwinCuboidShift(raw){
   return "All";
 }
 
+function twinCuboidHasSpecificSelection(shift, date){
+  return normalizeTwinCuboidShift(shift || "All") !== "All" || !!String(date || "").trim();
+}
+
 function getTwinCuboidSelectedShift(){
   var sel = document.getElementById("stack-cuboid-shift-select");
   return normalizeTwinCuboidShift(sel ? sel.value : "All");
@@ -8484,6 +8530,7 @@ function cuboidResolveConfiguredTempEntry(){
   return {
     selectedShift: selectedShift,
     selectedDate: selectedDate,
+    filterActive: twinCuboidHasSpecificSelection(selectedShift, selectedDate),
     entry: resolveHeatMapEntryByDateValue(list, selectedDate || "latest"),
     entries: list
   };
@@ -8509,17 +8556,22 @@ function renderTwinCuboidFilterUi(snapshot){
     view = {
       filterShift: resolved.selectedShift,
       filterDate: resolved.selectedDate,
+      filterActive: !!resolved.filterActive,
       entryFound: !!resolvedEntry,
       entryShift: resolvedEntry && (resolvedEntry.selectedShift || resolvedEntry.shift) ? (resolvedEntry.selectedShift || resolvedEntry.shift) : resolved.selectedShift,
-      entryDt: resolvedEntry && resolvedEntry.dt ? resolvedEntry.dt : ((resolved.selectedDate || resolved.selectedShift !== "All") ? "No Saved TST" : "Latest")
+      entryDt: resolvedEntry && resolvedEntry.dt ? resolvedEntry.dt : (resolved.filterActive ? "No Saved Snapshot" : "No Saved TST"),
+      burnerSource: resolved.filterActive ? "saved" : "live",
+      openingSource: resolved.filterActive ? "saved" : "live",
+      cleaningSource: "live"
     };
   }
 
   var selectedShift = normalizeTwinCuboidShift(view.filterShift || "All");
   var selectedDate = String(view.filterDate || "").trim();
+  var filterActive = !!view.filterActive;
   var entryFound = !!view.entryFound;
   var actualShift = normalizeTwinCuboidShift(view.entryShift || view.selectedShift || selectedShift);
-  var entryStamp = (entryFound && view.entryDt && view.entryDt !== "No Saved TST")
+  var entryStamp = (entryFound && view.entryDt && view.entryDt !== "No Saved TST" && view.entryDt !== "No Saved Snapshot")
     ? formatTwinCuboidEntryStamp(view.entryDt)
     : "";
 
@@ -8530,7 +8582,7 @@ function renderTwinCuboidFilterUi(snapshot){
   var shiftIcon = shiftIcons[shiftText] || shiftIcons.All;
 
   if(entryFound){
-    var latestLabel = (!selectedDate && selectedShift === "All") ? "Latest Saved TST" : "Saved TST";
+    var latestLabel = filterActive ? "Saved Burner + TST" : "Live Burners + Latest TST";
     if(badge){
       badge.classList.remove("is-empty");
       badge.innerHTML = '<span>' + latestLabel + '</span><span style="opacity:0.76;">•</span><span style="color:' + shiftColor + ';font-weight:800;">' + shiftText + '</span><span style="opacity:0.76;">•</span><span>' + entryStamp + '</span>';
@@ -8540,24 +8592,30 @@ function renderTwinCuboidFilterUi(snapshot){
       banner.style.display = "flex";
       banner.innerHTML =
         '<span style="font-size:14px;">' + shiftIcon + '</span>' +
-        '<span>Both cuboids are showing live burner state, opening, and cleaning with <strong style="color:' + shiftColor + ';">' + shiftText + ' shift</strong> TST from <strong>' + entryStamp + '</strong>.</span>';
+        (filterActive
+          ? ('<span>Both cuboids are showing saved burner state and opening with <strong style="color:' + shiftColor + ';">' + shiftText + ' shift</strong> TST from <strong>' + entryStamp + '</strong>. Cleaning stays live.</span>')
+          : ('<span>Both cuboids are showing live burner state, opening, and cleaning with latest saved <strong style="color:' + shiftColor + ';">' + shiftText + ' shift</strong> TST from <strong>' + entryStamp + '</strong>.</span>'));
     }
     return;
   }
 
-  var noDataMsg = selectedDate
-    ? (selectedShift === "All" ? ("No saved TST data for " + selectedDate + ". Burner state, opening, and cleaning are still live.") : ("No " + selectedShift + " shift TST data for " + selectedDate + ". Burner state, opening, and cleaning are still live."))
-    : (selectedShift === "All" ? "No saved TST data available yet. Burner state, opening, and cleaning are still live." : ("No saved " + selectedShift + " shift TST data. Burner state, opening, and cleaning are still live."));
+  var noDataMsg = filterActive
+    ? (selectedDate
+        ? (selectedShift === "All" ? ("No saved cuboid snapshot for " + selectedDate + ". Live burner state, opening, and cleaning are still shown.") : ("No saved " + selectedShift + " shift cuboid snapshot for " + selectedDate + ". Live burner state, opening, and cleaning are still shown."))
+        : (selectedShift === "All" ? "No saved cuboid snapshot found. Live burner state, opening, and cleaning are still shown." : ("No saved " + selectedShift + " shift cuboid snapshot found. Live burner state, opening, and cleaning are still shown.")))
+    : (selectedDate
+        ? (selectedShift === "All" ? ("No saved TST data for " + selectedDate + ". Live burner state, opening, and cleaning are still shown.") : ("No " + selectedShift + " shift TST data for " + selectedDate + ". Live burner state, opening, and cleaning are still shown."))
+        : (selectedShift === "All" ? "No saved TST data available yet. Live burner state, opening, and cleaning are still shown." : ("No saved " + selectedShift + " shift TST data. Live burner state, opening, and cleaning are still shown.")));
   var noDataDateLabel = selectedDate ? formatTwinCuboidEntryStamp(selectedDate) : "";
 
   if(badge){
     badge.classList.add("is-empty");
     if(selectedShift !== "All" || noDataDateLabel){
-      badge.innerHTML = '<span>No TST Data</span>'
+      badge.innerHTML = '<span>' + (filterActive ? 'Live Burners • No Snapshot' : 'Live Burners • No TST') + '</span>'
         + (selectedShift !== "All" ? ('<span style="opacity:0.72;">•</span><span style="font-weight:800;">' + selectedShift + '</span>') : '')
         + (noDataDateLabel ? ('<span style="opacity:0.72;">•</span><span>' + noDataDateLabel + '</span>') : '');
     }else{
-      badge.textContent = "No Saved TST";
+      badge.textContent = filterActive ? "Live Burners • No Snapshot" : "Live Burners • No Saved TST";
     }
   }
   if(banner){
@@ -8592,7 +8650,9 @@ function onTwinCuboidDateChanged(){
 }
 
 function clearTwinCuboidDateFilter(){
+  var shiftSel = document.getElementById("stack-cuboid-shift-select");
   var input = document.getElementById("stack-cuboid-date-input");
+  if(shiftSel) shiftSel.value = "All";
   if(input) input.value = "";
   requestTwinCuboidFilterApply(0, true);
 }
@@ -8973,27 +9033,27 @@ html, body, body *, body *::before, body *::after, svg text{
     gap:12px;
   }
   #tab-cuboidstack .cuboid-twin-control-panel{
-    padding:14px;
-    border-radius:18px;
+    padding:12px;
+    border-radius:16px;
   }
   #tab-cuboidstack .cuboid-twin-control-grid{
     grid-template-columns:1fr;
-    gap:14px;
+    gap:10px;
   }
   #tab-cuboidstack .cuboid-twin-control-field-shell{
-    min-height:60px;
-    padding-inline:15px;
-    border-radius:16px;
+    min-height:48px;
+    padding-inline:14px;
+    border-radius:14px;
   }
   #tab-cuboidstack .cuboid-twin-control-field-shell.is-select{
-    padding-right:44px;
+    padding-right:40px;
   }
   #tab-cuboidstack .cuboid-twin-control-field-shell.is-date{
-    padding-right:50px;
+    padding-right:42px;
   }
   #tab-cuboidstack .cuboid-twin-control-input{
-    min-height:58px;
-    font-size:20px;
+    min-height:46px;
+    font-size:15px;
   }
   #tab-cuboidstack .cuboid-twin-control-meta{
     width:100%;
@@ -18419,7 +18479,7 @@ html, body, body *, body *::before, body *::after, svg text{
         <div class="cuboid-twin-control-head">
           <div>
             <div class="cuboid-twin-control-title">Twin View Data Controls</div>
-            <div class="cuboid-twin-control-sub">Choose the saved TST data by shift and date while burner state, opening, and cleaning stay live.</div>
+            <div class="cuboid-twin-control-sub">Choose a shift/date for that saved burner and TST snapshot. Leave it on All Shifts with no date for live burners plus the latest saved TST.</div>
           </div>
         </div>
         <div class="cuboid-twin-control-grid">
@@ -18445,10 +18505,10 @@ html, body, body *, body *::before, body *::after, svg text{
             </div>
         </div>
         <div class="cuboid-twin-control-meta">
-          <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Latest Saved TST</div>
+          <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Live Burners + Latest TST</div>
           <div class="cuboid-twin-control-actions">
-            <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Saved TST</button>
-            <button type="button" class="cuboid-twin-control-btn is-secondary" onclick="requestTwinCuboidFilterApply(0, true)">Refresh Cuboids</button>
+            <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Live + Latest TST</button>
+            <button type="button" class="cuboid-twin-control-btn is-secondary" onclick="requestTwinCuboidFilterApply(0, true)">Refresh View</button>
           </div>
         </div>
       </div>
@@ -21149,6 +21209,7 @@ async function exportToExcel(options){
     for(var ph=1;ph<=15;ph++) tdHeaders.push(phRowLabels[rk]+" PH"+ph);
   });
   tdHeaders.push("Burner Snapshot JSON");
+  tdHeaders.push("Burner Opening Snapshot JSON");
   var tdRows = [tdHeaders];
   if(Array.isArray(tempDataEntries) && tempDataEntries.length){
     tempDataEntries.forEach(function(e){
@@ -21174,7 +21235,9 @@ async function exportToExcel(options){
         for(var ph=0;ph<15;ph++) row.push(vals[ph]!==undefined?vals[ph]:"");
       });
       var snapshot = getEntryBurnerSnapshot(e);
+      var openingSnapshot = getEntryBurnerOpeningSnapshot(e, snapshot || data);
       row.push(snapshot ? JSON.stringify(snapshot) : "");
+      row.push(openingSnapshot ? JSON.stringify(openingSnapshot) : "");
       tdRows.push(row);
     });
   }
@@ -21483,6 +21546,7 @@ function _doImport(file, onDone, silent){
             var idxNgFuelTemp = colIdx(["ng fuel temp","ng fuel temperature"], -1);
             var idxTag2411    = colIdx(["gja.2041tic2411","tag 2411","unknown"], -1);
             var idxSnapshot   = colIdx(["burner snapshot json","burner snapshot","snapshot"], -1);
+            var idxOpeningSnapshot = colIdx(["burner opening snapshot json","burner opening snapshot","opening snapshot json","opening snapshot"], -1);
             var phRowKeys2    = ["ab-bot","cd-bot","ab-top","cd-top"];
             var scalarIndexes = [
               idxHguLoad, idxAbCot, idxCdCot, idxFlue, idxExcessO2, idxPreMax, idxPreMin, idxMethane,
@@ -21534,6 +21598,18 @@ function _doImport(file, onDone, silent){
                 }
                 if(parsedSnap && typeof parsedSnap === "object"){
                   entry.burnerSnapshot = sanitizeBurnerSnapshotShape(parsedSnap);
+                }
+              }
+              if(idxOpeningSnapshot >= 0){
+                var rawOpeningSnap = row[idxOpeningSnapshot];
+                var parsedOpeningSnap = null;
+                if(rawOpeningSnap && typeof rawOpeningSnap === "string"){
+                  try{ parsedOpeningSnap = JSON.parse(rawOpeningSnap); }catch(e){}
+                }else if(rawOpeningSnap && typeof rawOpeningSnap === "object"){
+                  parsedOpeningSnap = rawOpeningSnap;
+                }
+                if(parsedOpeningSnap && typeof parsedOpeningSnap === "object"){
+                  entry.openingSnapshot = sanitizeBurnerOpeningShape(parsedOpeningSnap, entry.burnerSnapshot || data);
                 }
               }
               tempDataEntries.push(entry);
@@ -23107,11 +23183,21 @@ function cuboidBuildRenderSnapshot(){
   var entry = resolved.entry || null;
   var filterShift = resolved.selectedShift || "All";
   var filterDate = resolved.selectedDate || "";
+  var filterActive = !!resolved.filterActive;
   var entryShift = entry && (entry.selectedShift || entry.shift) ? (entry.selectedShift || entry.shift) : filterShift;
-  var fallbackEntryLabel = (filterDate || filterShift !== "All") ? "No Saved TST" : "Latest";
-  var hmData = cuboidBuildCurrentBurnerHmData();
+  var liveHmData = cuboidBuildCurrentBurnerHmData();
+  var savedHmData = entry ? getEntryBurnerSnapshot(entry) : null;
+  var useSavedBurnerData = !!(filterActive && entry && savedHmData);
+  var hmData = useSavedBurnerData ? cuboidLegendSanitizeHmData(savedHmData) : liveHmData;
+  var liveOpeningData = captureCurrentBurnerOpeningSnapshot(liveHmData);
+  var savedOpeningData = useSavedBurnerData ? getEntryBurnerOpeningSnapshot(entry, hmData) : null;
+  var openingData = useSavedBurnerData
+    ? (savedOpeningData || buildDefaultBurnerOpeningData(hmData))
+    : liveOpeningData;
+  var fallbackEntryLabel = filterActive ? "No Saved Snapshot" : "No Saved TST";
   return {
     hmData: hmData,
+    openingData: openingData,
     abBot: cuboidBuildPeepRow(entry, "ab-bot"),
     abTop: cuboidBuildPeepRow(entry, "ab-top"),
     cdBot: cuboidBuildPeepRow(entry, "cd-bot"),
@@ -23121,7 +23207,11 @@ function cuboidBuildRenderSnapshot(){
     entryShift: entryShift || "All",
     filterShift: filterShift,
     filterDate: filterDate,
-    entryFound: !!entry
+    filterActive: filterActive,
+    entryFound: !!entry,
+    burnerSource: useSavedBurnerData ? "saved" : "live",
+    openingSource: useSavedBurnerData ? (savedOpeningData ? "saved" : "derived") : "live",
+    cleaningSource: "live"
   };
 }
 
@@ -23303,12 +23393,18 @@ function cuboidBuildLivePayload(){
     entryShift:"All",
     filterShift:"All",
     filterDate:"",
-    entryFound:false
+    filterActive:false,
+    entryFound:false,
+    burnerSource:"live",
+    openingSource:"live",
+    cleaningSource:"live"
   };
 
   try{
     openingData = sanitizeBurnerOpeningShape(
-      (burnerOpeningData && typeof burnerOpeningData === "object") ? burnerOpeningData : null,
+      (snap && snap.openingData && typeof snap.openingData === "object")
+        ? snap.openingData
+        : ((burnerOpeningData && typeof burnerOpeningData === "object") ? burnerOpeningData : null),
       hmData
     );
   }catch(e){
@@ -23335,7 +23431,11 @@ function cuboidBuildLivePayload(){
     payload.entryShift = snap.entryShift || payload.entryShift;
     payload.filterShift = snap.filterShift || payload.filterShift;
     payload.filterDate = snap.filterDate || payload.filterDate;
+    payload.filterActive = !!snap.filterActive;
     payload.entryFound = !!snap.entryFound;
+    payload.burnerSource = snap.burnerSource || payload.burnerSource;
+    payload.openingSource = snap.openingSource || payload.openingSource;
+    payload.cleaningSource = snap.cleaningSource || payload.cleaningSource;
     return payload;
   }
   return payload;
@@ -28969,10 +29069,12 @@ async function saveTempData(){
   if(!dt){ alert("Please select a date and time."); return; }
   if(!shift){ alert("Please select a shift (Morning / Evening / Night)."); return; }
 
+  var burnerSnapshot = captureCurrentBurnerSnapshot();
   var entry = Object.assign({
     dt: dt,
     shift: shift,
-    burnerSnapshot: captureCurrentBurnerSnapshot(),
+    burnerSnapshot: burnerSnapshot,
+    openingSnapshot: captureCurrentBurnerOpeningSnapshot(burnerSnapshot),
     peepHoles: {}
   }, readTdProcessFieldInputs());
 
