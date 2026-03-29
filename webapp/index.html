@@ -2746,12 +2746,25 @@ body.light-theme .ab-chart-totals .ab-pill{
   background:var(--snap-bg,#1f2937);
   border:1px solid var(--snap-border,rgba(148,163,184,0.45));
   border-radius:8px;
-  min-height:38px;
+  min-height:46px;
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  padding:6px 0;
+  gap:4px;
+  padding:6px 4px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.all-ph-snapshot-state-code{
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+}
+.all-ph-snapshot-state-opening{
+  font-size:11px;
+  font-weight:800;
+  line-height:1;
+  opacity:0.96;
 }
 
 body.light-theme .snap-wall-btn{
@@ -7452,14 +7465,31 @@ function getEntryBurnerOpeningSnapshot(entry, stateSource){
 function ensureTempEntriesHaveSnapshots(){
   if(!Array.isArray(tempDataEntries) || !tempDataEntries.length) return false;
   var fallback = captureCurrentBurnerSnapshot();
-  if(!fallback || typeof fallback !== "object") return false;
+  var hasFallback = !!(fallback && typeof fallback === "object");
+  var fallbackOpening = hasFallback
+    ? captureCurrentBurnerOpeningSnapshot(fallback)
+    : null;
   var changed = false;
   for(var i=0; i<tempDataEntries.length; i++){
     var ent = tempDataEntries[i];
     if(!ent || typeof ent !== "object") continue;
-    if(getEntryBurnerSnapshot(ent)) continue;
-    ent.burnerSnapshot = sanitizeBurnerSnapshotShape(fallback);
-    changed = true;
+    var snap = getEntryBurnerSnapshot(ent);
+    var usedFallback = false;
+    if(!snap && hasFallback){
+      ent.burnerSnapshot = sanitizeBurnerSnapshotShape(fallback);
+      snap = ent.burnerSnapshot;
+      usedFallback = true;
+      changed = true;
+    }
+    if(snap && !getEntryBurnerOpeningSnapshot(ent, snap)){
+      ent.openingSnapshot = sanitizeBurnerOpeningShape(
+        usedFallback && fallbackOpening
+          ? fallbackOpening
+          : buildDefaultBurnerOpeningData(snap),
+        snap
+      );
+      changed = true;
+    }
   }
   if(changed){
     try{ localStorage.setItem("tempDataEntries", JSON.stringify(tempDataEntries)); }catch(e){}
@@ -17893,7 +17923,7 @@ html, body, body *, body *::before, body *::after, svg text{
     </div>
     <div class="burner-history-card" data-burner-history-root>
       <div class="burner-history-title">📜 Historical Burner Data</div>
-      <div class="burner-history-subtitle">Saved burner snapshots only. Filter by shift, date, and HGU load, then open any row to inspect the historical burner state.</div>
+      <div class="burner-history-subtitle">Saved burner snapshots only. Filter by shift, date, and HGU load, then open any row to inspect the historical burner state and opening percentage.</div>
       <div class="burner-history-toolbar">
         <div class="burner-history-filter-row">
           <div class="burner-history-shift-box">
@@ -20636,7 +20666,8 @@ function render(){
       th.setAttribute("data-col-head", String(idx-1));
     });
     tbl.appendChild(hr);
-    rows.forEach((row,ri)=>{
+    for(let ri = rows.length - 1; ri >= 0; ri--){
+      const row = Array.isArray(rows[ri]) ? rows[ri] : [];
       const tr=document.createElement("tr");
       tr.setAttribute("data-row-index", String(ri));
       tr.innerHTML=`<th>R${ri+1}</th>`;
@@ -20652,7 +20683,7 @@ function render(){
         tr.appendChild(td);
       });
       tbl.appendChild(tr);
-    });
+    }
     gridWrap.appendChild(tbl);
     const crosshair=document.createElement("div");
     crosshair.className="burner-grid-crosshair";
@@ -29794,12 +29825,13 @@ function buildEntryBurnerSnapshotHtml(entry){
   if(!snap){
     return '<div class="all-ph-empty all-ph-snapshot-empty">Burner snapshot not available for this old entry.</div>';
   }
+  var openingSnap = getEntryBurnerOpeningSnapshot(entry, snap) || sanitizeBurnerOpeningShape(buildDefaultBurnerOpeningData(snap), snap);
 
   var walls = ["A","B","C","D"];
   snapshotWallRenderCounter += 1;
   var groupId = "entry-snapshot-wall-group-" + snapshotWallRenderCounter;
   var html = '<div id="' + groupId + '" class="all-ph-snapshot-wrap">';
-  html += '<div class="all-ph-snapshot-title">Burner Table Snapshot (saved with this TST entry)</div>';
+  html += '<div class="all-ph-snapshot-title">Burner Table Snapshot (state + opening saved with this TST entry)</div>';
   html += '<div class="snap-wall-switch">';
   for(var bi=0; bi<walls.length; bi++){
     var bWall = walls[bi];
@@ -29811,6 +29843,7 @@ function buildEntryBurnerSnapshotHtml(entry){
   for(var wi=0; wi<walls.length; wi++){
     var wall = walls[wi];
     var rows = Array.isArray(snap[wall]) ? snap[wall] : [];
+    var openingRows = Array.isArray(openingSnap[wall]) ? openingSnap[wall] : [];
     var panelDisplay = wall === "A" ? "block" : "none";
 
     html += '<div data-snap-wall-panel data-wall="' + wall + '" class="all-ph-snapshot-panel" style="display:' + panelDisplay + ';">';
@@ -29822,13 +29855,18 @@ function buildEntryBurnerSnapshotHtml(entry){
       html += '<div class="all-ph-snapshot-burner-num">B' + b + '</div>';
     }
 
-    for(var r=0; r<6; r++){
+    for(var r=5; r>=0; r--){
       html += '<div class="all-ph-snapshot-row-label">R' + (r+1) + '</div>';
       var row = Array.isArray(rows[r]) ? rows[r] : [];
+      var openingRow = Array.isArray(openingRows[r]) ? openingRows[r] : [];
       for(var c=0; c<15; c++){
         var state = String(row[c] || "C").toUpperCase();
+        var opening = normalizeBurnerOpeningValue(openingRow[c], state);
         var v = burnerStateVisual(state);
-        html += '<div class="all-ph-snapshot-state" title="Wall ' + wall + ' R' + (r+1) + ' B' + (c+1) + ' = ' + state + '" style="--snap-text:' + v.text + ';--snap-bg:' + v.bg + ';--snap-border:' + v.border + ';">' + state + '</div>';
+        html += '<div class="all-ph-snapshot-state" title="Wall ' + wall + ' R' + (r+1) + ' B' + (c+1) + ' = ' + state + ' · ' + opening + '%" style="--snap-text:' + v.text + ';--snap-bg:' + v.bg + ';--snap-border:' + v.border + ';">'
+          + '<span class="all-ph-snapshot-state-code">' + state + '</span>'
+          + '<span class="all-ph-snapshot-state-opening">' + opening + '%</span>'
+          + '</div>';
       }
     }
     html += '</div></div></div>';
@@ -29854,7 +29892,7 @@ function renderAllPHData(){
     entries = [allEntries[allPhFocusedEntryIndex]];
     if(filterWrap) filterWrap.style.display = "none";
     if(titleEl) titleEl.textContent = "🔥 BURNER SNAPSHOT HISTORY";
-    if(subtitleEl) subtitleEl.textContent = "Selected burner snapshot captured with this saved entry.";
+    if(subtitleEl) subtitleEl.textContent = "Selected burner state and opening snapshot captured with this saved entry.";
   }else if(singleMode){
     entries = [allEntries[allPhFocusedEntryIndex]];
     if(filterWrap) filterWrap.style.display = "none";
