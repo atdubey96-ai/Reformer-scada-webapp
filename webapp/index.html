@@ -8510,7 +8510,7 @@ function normalizeTwinCuboidShift(raw){
 }
 
 function twinCuboidHasSpecificSelection(shift, date){
-  return normalizeTwinCuboidShift(shift || "All") !== "All" || !!String(date || "").trim();
+  return !!String(date || "").trim();
 }
 
 function getTwinCuboidSelectedShift(){
@@ -8566,8 +8566,9 @@ function cuboidGetSortedTempEntries(){
 function cuboidResolveConfiguredTempEntry(){
   var selectedShift = getTwinCuboidSelectedShift();
   var selectedDate = getTwinCuboidSelectedDate();
+  var filterActive = twinCuboidHasSpecificSelection(selectedShift, selectedDate);
   var list = cuboidGetSortedTempEntries();
-  if(selectedShift !== "All"){
+  if(filterActive && selectedShift !== "All"){
     list = list.filter(function(entry){
       return String((entry && entry.shift) || "") === selectedShift;
     });
@@ -8575,8 +8576,8 @@ function cuboidResolveConfiguredTempEntry(){
   return {
     selectedShift: selectedShift,
     selectedDate: selectedDate,
-    filterActive: twinCuboidHasSpecificSelection(selectedShift, selectedDate),
-    entry: resolveHeatMapEntryByDateValue(list, selectedDate || "latest"),
+    filterActive: filterActive,
+    entry: resolveHeatMapEntryByDateValue(list, filterActive ? selectedDate : "latest"),
     entries: list
   };
 }
@@ -8611,9 +8612,10 @@ function renderTwinCuboidFilterUi(snapshot){
     };
   }
 
-  var selectedShift = normalizeTwinCuboidShift(view.filterShift || "All");
-  var selectedDate = String(view.filterDate || "").trim();
-  var filterActive = !!view.filterActive;
+  var heldSelection = !!view.heldSelection;
+  var selectedShift = normalizeTwinCuboidShift((heldSelection ? view.heldShift : view.filterShift) || "All");
+  var selectedDate = String(heldSelection ? view.heldDate : view.filterDate || "").trim();
+  var filterActive = heldSelection ? !!selectedDate : !!view.filterActive;
   var entryFound = !!view.entryFound;
   var actualShift = normalizeTwinCuboidShift(view.entryShift || view.selectedShift || selectedShift);
   var entryStamp = (entryFound && view.entryDt && view.entryDt !== "No Saved TST" && view.entryDt !== "No Saved Snapshot")
@@ -8625,6 +8627,24 @@ function renderTwinCuboidFilterUi(snapshot){
   var shiftText = actualShift !== "All" ? actualShift : selectedShift;
   var shiftColor = shiftColors[shiftText] || shiftColors.All;
   var shiftIcon = shiftIcons[shiftText] || shiftIcons.All;
+
+  if(heldSelection){
+    var heldLabel = selectedShift === "All"
+      ? ("No snapshot for " + formatTwinCuboidEntryStamp(selectedDate))
+      : ("No " + selectedShift + " snapshot for " + formatTwinCuboidEntryStamp(selectedDate));
+    if(badge){
+      badge.classList.add("is-empty");
+      badge.innerHTML = '<span>' + heldLabel + '</span><span style="opacity:0.72;">•</span><span>Showing previous cuboid data</span>';
+    }
+    if(banner){
+      banner.classList.add("is-empty");
+      banner.style.display = "flex";
+      banner.innerHTML =
+        '<span style="font-size:14px;">⚠️</span>' +
+        '<span>' + heldLabel + '. Cuboids are still showing the previous valid data.</span>';
+    }
+    return;
+  }
 
   if(entryFound){
     var latestLabel = filterActive ? "Saved Burner + TST" : "Live Burners + Latest TST";
@@ -23122,6 +23142,7 @@ function cuboidReadLocalStorageString(key){
 }
 
 window._cuboidRenderSnapshot = null;
+window._cuboidLastStableSnapshot = null;
 var _cuboidRenderSnapshotDigest = "";
 var _cuboidLegendDigest = "";
 var _cuboidExtendedDigests = {
@@ -23283,14 +23304,49 @@ function cuboidBuildRenderSnapshot(){
   };
 }
 
+function cuboidBuildHeldSnapshot(baseSnapshot, requestedShift, requestedDate){
+  var base = (baseSnapshot && typeof baseSnapshot === "object") ? baseSnapshot : {};
+  var hmData = cuboidLegendSanitizeHmData(base.hmData || cuboidLegendDefaultHmData());
+  return {
+    hmData: hmData,
+    openingData: sanitizeBurnerOpeningShape(base.openingData || null, hmData),
+    abBot: Array.isArray(base.abBot) ? base.abBot.slice() : [],
+    abTop: Array.isArray(base.abTop) ? base.abTop.slice() : [],
+    cdBot: Array.isArray(base.cdBot) ? base.cdBot.slice() : [],
+    cdTop: Array.isArray(base.cdTop) ? base.cdTop.slice() : [],
+    entryDt: base.entryDt || "Latest",
+    selectedShift: base.selectedShift || "All",
+    entryShift: base.entryShift || base.selectedShift || "All",
+    filterShift: requestedShift || "All",
+    filterDate: String(requestedDate || "").trim(),
+    filterActive: !!String(requestedDate || "").trim(),
+    entryFound: !!base.entryFound,
+    burnerSource: base.burnerSource || "live",
+    openingSource: base.openingSource || "live",
+    cleaningSource: base.cleaningSource || "live",
+    heldSelection: true,
+    heldShift: requestedShift || "All",
+    heldDate: String(requestedDate || "").trim()
+  };
+}
+
 function refreshCuboidRenderSnapshot(force){
   var snapshot = cuboidBuildRenderSnapshot();
+  if(snapshot && snapshot.filterActive && !snapshot.entryFound){
+    var heldBase = window._cuboidRenderSnapshot || window._cuboidLastStableSnapshot || null;
+    if(heldBase){
+      snapshot = cuboidBuildHeldSnapshot(heldBase, snapshot.filterShift, snapshot.filterDate);
+    }
+  }
   var digest = hashStringFNV1a(cuboidSafeStringify(snapshot));
   if(!force && window._cuboidRenderSnapshot && digest === _cuboidRenderSnapshotDigest){
     if(typeof renderTwinCuboidFilterUi === "function") renderTwinCuboidFilterUi(window._cuboidRenderSnapshot);
     return window._cuboidRenderSnapshot;
   }
   window._cuboidRenderSnapshot = snapshot;
+  if(snapshot && !snapshot.heldSelection){
+    window._cuboidLastStableSnapshot = snapshot;
+  }
   _cuboidRenderSnapshotDigest = digest;
   if(typeof renderTwinCuboidFilterUi === "function") renderTwinCuboidFilterUi(snapshot);
   return snapshot;
