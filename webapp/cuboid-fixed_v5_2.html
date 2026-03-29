@@ -1016,7 +1016,46 @@ function makeFace34MetalTex(seed, rx, ry) {
   return t;
 }
 
-function makeFace12SilverTex(seed, rx, ry) {
+function paintWallFaceLetterCanvas(g, w, h, wallLetter) {
+  const letter = String(wallLetter || "").trim().toUpperCase();
+  if (!letter) return;
+
+  const fontSize = Math.round(Math.min(w, h) * 0.56);
+  const centerX = w * 0.50;
+  const centerY = h * 0.53;
+
+  g.save();
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.lineJoin = "round";
+  g.lineCap = "round";
+  g.font = "900 " + fontSize + "px 'Arial Black', 'Rajdhani', sans-serif";
+
+  g.shadowColor = "rgba(0,0,0,0.22)";
+  g.shadowBlur = fontSize * 0.07;
+  g.shadowOffsetY = fontSize * 0.022;
+  g.strokeStyle = "rgba(10,16,22,0.20)";
+  g.lineWidth = Math.max(12, Math.round(fontSize * 0.048));
+  g.strokeText(letter, centerX, centerY);
+
+  const fillGrad = g.createLinearGradient(0, h * 0.18, 0, h * 0.84);
+  fillGrad.addColorStop(0.00, "rgba(251,254,255,0.20)");
+  fillGrad.addColorStop(0.18, "rgba(232,241,248,0.16)");
+  fillGrad.addColorStop(0.54, "rgba(176,191,206,0.12)");
+  fillGrad.addColorStop(1.00, "rgba(110,126,144,0.09)");
+  g.fillStyle = fillGrad;
+  g.fillText(letter, centerX, centerY);
+
+  g.shadowBlur = 0;
+  g.shadowOffsetY = 0;
+  g.strokeStyle = "rgba(255,255,255,0.08)";
+  g.lineWidth = Math.max(4, Math.round(fontSize * 0.012));
+  g.strokeText(letter, centerX, centerY - (fontSize * 0.01));
+  g.restore();
+}
+
+function makeFace12SilverTex(seed, rx, ry, opts) {
+  const o = opts || {};
   const mc = makeFace34MetalCanvas(1024, 1024, { seedShift: seed });
   const g = mc.getContext("2d");
 
@@ -1042,6 +1081,8 @@ function makeFace12SilverTex(seed, rx, ry) {
   coolBloom.addColorStop(1.00, "rgba(255,255,255,0)");
   g.fillStyle = coolBloom;
   g.fillRect(0, 0, mc.width, mc.height);
+
+  paintWallFaceLetterCanvas(g, mc.width, mc.height, o.wallLetter);
 
   const t = new THREE.CanvasTexture(mc);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -3679,6 +3720,8 @@ capBot.position.y = -FH / 2;
 shellGroup.add(capBot);
 
 const faceFrontMaterial = face12SilverMaterial.clone();
+faceFrontMaterial.map = makeFace12SilverTex(1.1, 0.96, 0.92, { wallLetter: cuboidGetWallKeyForFace("face1") });
+faceFrontMaterial.needsUpdate = true;
 const faceFront = new THREE.Mesh(
   new THREE.PlaneGeometry(FW, FH),
   faceFrontMaterial
@@ -3687,6 +3730,8 @@ faceFront.position.z = FD / 2;
 shellGroup.add(faceFront);
 
 const faceBackMaterial = face12SilverMaterial.clone();
+faceBackMaterial.map = makeFace12SilverTex(5.7, 0.96, 0.92, { wallLetter: cuboidGetWallKeyForFace("face2") });
+faceBackMaterial.needsUpdate = true;
 const faceBack = new THREE.Mesh(
   new THREE.PlaneGeometry(FW, FH),
   faceBackMaterial
