@@ -18537,7 +18537,6 @@ html, body, body *, body *::before, body *::after, svg text{
         <div id="td-plant-excel-path-bar" class="td-plant-excel-path-bar hidden">
           <span class="td-plant-path-label">Excel File</span>
           <span id="td-plant-excel-path-display" class="td-plant-path-value"></span>
-          <button type="button" id="td-plant-change-path-btn" class="td-plant-path-clear">Browse Again</button>
         </div>
         <div class="td-toolbar-row td-plant-excel-controls">
           <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;">
@@ -18551,7 +18550,6 @@ html, body, body *, body *::before, body *::after, svg text{
           </div>
           <div class="td-plant-controls-right">
             <button type="button" id="td-plant-open-excel-btn" class="td-plant-action-btn td-plant-open-btn td-plant-btn-no-path" title="Browse and select the Excel workbook">Browse Excel</button>
-            <button type="button" id="td-plant-set-path-btn" class="td-plant-action-btn td-plant-settings-btn" title="Browse and replace the Excel workbook">⚙</button>
             <button type="button" id="td-plant-download-btn" class="td-plant-action-btn td-plant-download-btn" title="Download the dedicated Excel workbook">⬇ Download Excel</button>
             <button type="button" id="td-plant-refresh-btn" class="td-plant-action-btn td-plant-refresh-btn" title="Fetch the latest mapped plant tags into the TST cells">↻ Refresh Now</button>
           </div>
@@ -27440,8 +27438,6 @@ function bindTdPlantLiveInputs(){
   tdPlantControlsBound = true;
   var refreshSelect = getTdPlantRefreshSelect();
   var openBtn = document.getElementById("td-plant-open-excel-btn");
-  var setPathBtn = document.getElementById("td-plant-set-path-btn");
-  var changePathBtn = document.getElementById("td-plant-change-path-btn");
   var downloadBtn = document.getElementById("td-plant-download-btn");
   var refreshBtn = document.getElementById("td-plant-refresh-btn");
   var pathPicker = getTdPlantPathPicker();
@@ -27452,8 +27448,6 @@ function bindTdPlantLiveInputs(){
     });
   }
   if(openBtn) openBtn.addEventListener("click", handleTdPlantOpenExcel);
-  if(setPathBtn) setPathBtn.addEventListener("click", handleTdPlantOpenExcel);
-  if(changePathBtn) changePathBtn.addEventListener("click", handleTdPlantOpenExcel);
   if(downloadBtn) downloadBtn.addEventListener("click", downloadTdPlantExcelWorkbook);
   if(refreshBtn) refreshBtn.addEventListener("click", refreshTdPlantImportManual);
   if(pathPicker) pathPicker.addEventListener("change", handleTdPlantPathPickerChange);
