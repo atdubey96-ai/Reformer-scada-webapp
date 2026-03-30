@@ -1120,6 +1120,21 @@ body.light-theme .admin-pin-input{
   color:#0f172a;
 }
 body.light-theme .admin-pin-note{color:#52667d;}
+body[data-user-mode="operator"] [data-admin-only="true"]{
+  display:none !important;
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip{
+  grid-template-columns:minmax(280px,1fr) !important;
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip .td-plant-status-pill{
+  max-width:min(100%, 560px);
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-controls-right{
+  justify-content:flex-end;
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-controls-right .td-plant-action-btn:not([data-admin-only="true"]){
+  flex:0 0 auto;
+}
 @media (max-width: 900px){
   .admin-mode-badge{
     right:48px;
@@ -1131,6 +1146,9 @@ body.light-theme .admin-pin-note{color:#52667d;}
   .admin-pin-card{
     width:min(100%, 340px);
     padding:20px 18px 18px;
+  }
+  body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip{
+    grid-template-columns:1fr !important;
   }
 }
 .interface-mode-wrap{
@@ -9917,7 +9935,7 @@ html, body, body *, body *::before, body *::after, svg text{
 }
 </style>
 </head>
-<body>
+<body data-user-mode="operator">
 
 <!-- ====================================================
      LOGIN SCREEN — IOCL CORPORATE
@@ -10156,8 +10174,8 @@ html, body, body *, body *::before, body *::after, svg text{
           <span>🌙</span>
         </div>
         <button class="hd-btn hd-btn-secondary" id="notifyToggleBtn" onclick="toggleNotifications()" title="Enable browser notifications for saves and alarms">🔕 Notifications Off</button>
-        <button class="hd-btn hd-btn-secondary" id="notifyTestBtn" onclick="sendTestNotification()" title="Send a test notification">🧪 Test Alert</button>
-        <div style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:8px 10px;">
+        <button class="hd-btn hd-btn-secondary" id="notifyTestBtn" data-admin-only="true" onclick="sendTestNotification()" title="Send a test notification">🧪 Test Alert</button>
+        <div data-admin-only="true" style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:8px 10px;">
           <div style="font-size:11px;font-weight:700;color:#cbd5e1;letter-spacing:0.4px;">🚨 Alarm Sound</div>
           <select id="alarmToneSelect" onchange="setAlarmTonePreset(this.value)" style="width:100%;background:#0f2744;border:1px solid #334155;border-radius:6px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;padding:7px 8px;outline:none;cursor:pointer;">
             <option value="classic">1. Classic Chime</option>
@@ -10172,7 +10190,7 @@ html, body, body *, body *::before, body *::after, svg text{
             <option value="triple">10. Triple Pulse</option>
           </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:8px 10px;">
+        <div data-admin-only="true" style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:8px 10px;">
           <div style="font-size:11px;font-weight:700;color:#cbd5e1;letter-spacing:0.4px;">🔥 Heat Map Burner Icon</div>
           <div class="hm-icon-picker" id="hm-icon-picker">
             <button type="button" class="hm-icon-picker-btn" id="hm-icon-picker-btn" onclick="toggleHeatMapIconMenu(event)" aria-haspopup="true" aria-expanded="false">
@@ -10242,7 +10260,7 @@ html, body, body *, body *::before, body *::after, svg text{
       <div class="app-meta-item"><b>Last Sync:</b> <span id="lastSync">—</span></div>
     </div>
     <div class="app-meta-right" id="appMetaRight">
-      <div id="syncHealthChip" class="sync-health-chip sync-syncing" title="Syncing status">
+      <div id="syncHealthChip" class="sync-health-chip sync-syncing" data-admin-only="true" title="Syncing status">
         <span class="sync-health-dot"></span>
         <span id="syncHealthText" class="sync-health-text">Syncing · Checking server</span>
       </div>
@@ -18824,7 +18842,7 @@ html, body, body *, body *::before, body *::after, svg text{
           <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using GPT-4 Vision OCR">
             🧠 GPT-4 Vision
           </button>
-          <div class="td-fill-menu-wrap">
+          <div class="td-fill-menu-wrap" data-admin-only="true">
             <span style="font-size:10px;font-weight:800;color:#7ec8f0;letter-spacing:0.6px;text-transform:uppercase;">Ramp 930</span>
             <button type="button" id="td-fill-run-btn" class="td-fill-run-btn" onclick="runSelectedTstFillAction()" title="Fill all 60 TST cells with 930">📈 Ramp 930</button>
             <button type="button" id="td-voice-fill-btn" class="td-voice-icon-btn" onclick="toggleTstVoiceInput()" title="Voice Fill TST" aria-label="Voice Fill TST">🎙️</button>
@@ -18845,7 +18863,7 @@ html, body, body *, body *::before, body *::after, svg text{
           </button>
         </div>
       </div>
-      <div id="td-ocr-quota-hint" class="td-ocr-quota-hint" aria-live="polite">Shared OCR quota: Today 0/6 · Week 0/25 · Month 0/100.</div>
+      <div id="td-ocr-quota-hint" class="td-ocr-quota-hint" data-admin-only="true" aria-live="polite">Shared OCR quota: Today 0/6 · Week 0/25 · Month 0/100.</div>
 
       <div class="td-entry-layout">
       <!-- ── Section 1: General Temps ── -->
@@ -18862,12 +18880,12 @@ html, body, body *, body *::before, body *::after, svg text{
             <span id="td-plant-status-dot" style="width:10px;height:10px;border-radius:999px;background:#64748b;box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;flex:0 0 auto;"></span>
             <span id="td-plant-status-text" class="td-plant-status-text">Plant import idle</span>
           </div>
-          <div class="td-toolbar-pill"><span class="td-toolbar-label">Active Tags:</span><span id="td-plant-stat-tags" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill"><span class="td-toolbar-label">Mapped:</span><span id="td-plant-stat-mapped" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill"><span class="td-toolbar-label">PHD Time:</span><span id="td-plant-stat-sync" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill"><span class="td-toolbar-label">Last Fetch:</span><span id="td-plant-stat-fetch" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill"><span class="td-toolbar-label">Excel Last Push:</span><span id="td-plant-stat-push" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" class="td-plant-stat-value">30 sec</span></div>
+          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Active Tags:</span><span id="td-plant-stat-tags" class="td-plant-stat-value">—</span></div>
+          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Mapped:</span><span id="td-plant-stat-mapped" class="td-plant-stat-value">—</span></div>
+          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">PHD Time:</span><span id="td-plant-stat-sync" class="td-plant-stat-value">—</span></div>
+          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Last Fetch:</span><span id="td-plant-stat-fetch" class="td-plant-stat-value">—</span></div>
+          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Excel Last Push:</span><span id="td-plant-stat-push" class="td-plant-stat-value">—</span></div>
+          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" class="td-plant-stat-value">30 sec</span></div>
         </div>
         <div id="td-plant-excel-path-bar" class="td-plant-excel-path-bar hidden">
           <span class="td-plant-path-label">Excel File</span>
@@ -18885,8 +18903,8 @@ html, body, body *, body *::before, body *::after, svg text{
           </div>
           <div class="td-plant-controls-right">
             <button type="button" id="td-plant-open-excel-btn" class="td-plant-action-btn td-plant-open-btn" title="Open the dedicated Excel workbook with the local helper on this PC, or download it on any device">Update data</button>
-            <button type="button" id="td-plant-download-btn" class="td-plant-action-btn td-plant-download-btn" title="Download the dedicated Excel workbook">⬇ Download Excel</button>
-            <button type="button" id="td-plant-refresh-btn" class="td-plant-action-btn td-plant-refresh-btn" title="Fetch the latest mapped plant tags into the TST cells">↻ Refresh Now</button>
+            <button type="button" id="td-plant-download-btn" data-admin-only="true" class="td-plant-action-btn td-plant-download-btn" title="Download the dedicated Excel workbook">⬇ Download Excel</button>
+            <button type="button" id="td-plant-refresh-btn" data-admin-only="true" class="td-plant-action-btn td-plant-refresh-btn" title="Fetch the latest mapped plant tags into the TST cells">↻ Refresh Now</button>
           </div>
         </div>
         <div id="td-process-manual-grid" class="td-manual-grid">
