@@ -18524,6 +18524,7 @@ html, body, body *, body *::before, body *::after, svg text{
         <div id="td-plant-config-bar" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;">
           Live plant import is not configured. Set the plant data Supabase URL and key.
         </div>
+        <div id="td-plant-live-warning" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;"></div>
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
           <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;min-width:220px;">
             <span id="td-plant-status-dot" style="width:10px;height:10px;border-radius:999px;background:#64748b;box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;flex:0 0 auto;"></span>
@@ -18531,8 +18532,12 @@ html, body, body *, body *::before, body *::after, svg text{
           </div>
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Active Tags:</span><span id="td-plant-stat-tags" class="td-plant-stat-value">—</span></div>
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Mapped:</span><span id="td-plant-stat-mapped" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill"><span class="td-toolbar-label">Last Sync:</span><span id="td-plant-stat-sync" class="td-plant-stat-value">—</span></div>
+          <div class="td-toolbar-pill"><span class="td-toolbar-label">PHD Time:</span><span id="td-plant-stat-sync" class="td-plant-stat-value">—</span></div>
+          <div class="td-toolbar-pill"><span class="td-toolbar-label">Last Fetch:</span><span id="td-plant-stat-fetch" class="td-plant-stat-value">—</span></div>
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" class="td-plant-stat-value">30 sec</span></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+          <div class="td-toolbar-pill"><span class="td-toolbar-label">Excel Last Push:</span><span id="td-plant-stat-push" class="td-plant-stat-value">—</span></div>
         </div>
         <div id="td-plant-excel-path-bar" class="td-plant-excel-path-bar hidden">
           <span class="td-plant-path-label">Excel File</span>
@@ -26873,6 +26878,12 @@ var tdPlantDataRefreshTimer = null;
 var tdPlantFetchInFlight = null;
 var tdPlantLatestByTag = new Map();
 var tdPlantSnapshotRows = [];
+var tdPlantLastMappedCount = 0;
+var tdPlantLastFetchTime = null;
+var tdPlantLastExcelPush = null;
+var tdPlantLastPhdTime = null;
+var tdPlantLastErrorMessage = "";
+var tdPlantMetaTickTimer = null;
 var tdPlantControlsBound = false;
 var tdPlantExcelHandle = null;
 var tdPlantExcelTransientFile = null;
@@ -27199,8 +27210,8 @@ function updateTempSaveButtonLabel(){
 function setTempEditMode(idx){
   tdEditingIndex = (typeof idx === "number" && idx >= 0) ? idx : -1;
   updateTempSaveButtonLabel();
-  if(tdEditingIndex >= 0 && isTempDataTabActive()){
-    setTdPlantImportStatus("online", "Live sync paused during edit");
+  if(isTempDataTabActive()){
+    refreshTdPlantLiveHealthState();
   }
 }
 
@@ -27253,6 +27264,29 @@ function setTdPlantConfigBarVisible(show, text){
   if(text) bar.textContent = text;
 }
 
+function setTdPlantLiveWarning(level, text){
+  var bar = document.getElementById("td-plant-live-warning");
+  if(!bar) return;
+  if(!text){
+    bar.style.display = "none";
+    bar.textContent = "";
+    return;
+  }
+  var bg = "rgba(251,191,36,0.08)";
+  var border = "rgba(251,191,36,0.2)";
+  var color = "#fbbf24";
+  if(level === "error"){
+    bg = "rgba(248,113,113,0.08)";
+    border = "rgba(248,113,113,0.22)";
+    color = "#fca5a5";
+  }
+  bar.style.display = "block";
+  bar.style.background = bg;
+  bar.style.border = "1px solid " + border;
+  bar.style.color = color;
+  bar.textContent = text;
+}
+
 function setTdPlantImportStatus(state, text){
   var dot = document.getElementById("td-plant-status-dot");
   var label = document.getElementById("td-plant-status-text");
@@ -27265,6 +27299,9 @@ function setTdPlantImportStatus(state, text){
     }else if(state === "syncing"){
       color = "#fbbf24";
       glow = "0 0 14px rgba(251,191,36,0.35), 0 0 0 1px rgba(255,255,255,0.22) inset";
+    }else if(state === "stale"){
+      color = "#fbbf24";
+      glow = "0 0 14px rgba(251,191,36,0.38), 0 0 0 1px rgba(255,255,255,0.22) inset";
     }else if(state === "offline"){
       color = "#f87171";
       glow = "0 0 14px rgba(248,113,113,0.28), 0 0 0 1px rgba(255,255,255,0.16) inset";
@@ -27275,42 +27312,163 @@ function setTdPlantImportStatus(state, text){
   if(label) label.textContent = text || "";
 }
 
+function isTdPlantImportConfigured(){
+  return !!(TD_PLANT_DATA_SUPABASE_URL && TD_PLANT_DATA_SUPABASE_KEY
+    && TD_PLANT_DATA_SUPABASE_URL.indexOf("YOUR_PROJECT_ID") === -1
+    && TD_PLANT_DATA_SUPABASE_KEY.indexOf("YOUR_ANON") === -1);
+}
+
+function parseTdPlantDate(raw){
+  if(!raw) return null;
+  var dt = raw instanceof Date ? raw : new Date(raw);
+  return isFinite(dt.getTime()) ? dt : null;
+}
+
+function formatTdPlantTime(dt){
+  return dt ? dt.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"}) : "—";
+}
+
+function formatTdPlantDateTime(dt){
+  if(!dt) return "—";
+  return dt.toLocaleDateString([], {day:"2-digit", month:"short"}) + " " + formatTdPlantTime(dt);
+}
+
+function getTdPlantMinutesAgo(dt){
+  if(!dt) return null;
+  return Math.round((Date.now() - dt.getTime()) / 60000);
+}
+
+function getTdPlantAgoLabel(dt){
+  var mins = getTdPlantMinutesAgo(dt);
+  if(mins == null) return "";
+  if(mins < 1) return "just now";
+  if(mins === 1) return "1 min ago";
+  if(mins < 60) return mins + " min ago";
+  var hrs = Math.round(mins / 60);
+  if(hrs === 1) return "1 hr ago";
+  return hrs + " hr ago";
+}
+
+function formatTdPlantStatMoment(dt){
+  if(!dt) return "—";
+  var ago = getTdPlantAgoLabel(dt);
+  return ago ? (formatTdPlantTime(dt) + " (" + ago + ")") : formatTdPlantTime(dt);
+}
+
+function setTdPlantStatTone(el, tone){
+  if(!el) return;
+  el.style.color = "";
+  if(tone === "green") el.style.color = "#86efac";
+  if(tone === "amber") el.style.color = "#fbbf24";
+  if(tone === "red") el.style.color = "#fca5a5";
+}
+
+function deriveTdPlantTimeline(latestMap){
+  tdPlantLastPhdTime = null;
+  tdPlantLastExcelPush = null;
+  if(!latestMap || !latestMap.size) return;
+  latestMap.forEach(function(row){
+    var phdDt = parseTdPlantDate(row && row.synced_at);
+    var pushDt = parseTdPlantDate(row && (row.pushed_at || row.synced_at));
+    if(phdDt && (!tdPlantLastPhdTime || phdDt > tdPlantLastPhdTime)) tdPlantLastPhdTime = phdDt;
+    if(pushDt && (!tdPlantLastExcelPush || pushDt > tdPlantLastExcelPush)) tdPlantLastExcelPush = pushDt;
+  });
+}
+
 function updateTdPlantImportRateStat(){
   var stat = document.getElementById("td-plant-stat-rate");
   var select = getTdPlantRefreshSelect();
   if(!stat) return;
   if(!select) return;
   var sec = parseInt(select.value, 10);
-  stat.textContent = sec > 0 ? (sec + " sec") : "Off";
+  if(sec > 0){
+    stat.textContent = sec < 60 ? ("every " + sec + "s") : ("every " + Math.round(sec / 60) + "m");
+  }else{
+    stat.textContent = "Manual only";
+  }
 }
 
 function updateTdPlantImportStats(latestMap, mappedCount){
   var tagsEl = document.getElementById("td-plant-stat-tags");
   var mappedEl = document.getElementById("td-plant-stat-mapped");
   var syncEl = document.getElementById("td-plant-stat-sync");
+  var pushEl = document.getElementById("td-plant-stat-push");
+  var fetchEl = document.getElementById("td-plant-stat-fetch");
+  tdPlantLastMappedCount = typeof mappedCount === "number" ? mappedCount : tdPlantLastMappedCount;
+  deriveTdPlantTimeline(latestMap);
   if(tagsEl) tagsEl.textContent = latestMap && latestMap.size ? String(latestMap.size) : "0";
-  if(mappedEl) mappedEl.textContent = String(mappedCount || 0) + " / " + String(getTdPlantMappedBindings().length);
+  if(mappedEl) mappedEl.textContent = String(tdPlantLastMappedCount || 0) + " / " + String(getTdPlantMappedBindings().length);
   if(syncEl){
-    if(latestMap && latestMap.size){
-      var newest = null;
-      latestMap.forEach(function(row){
-        if(!row || !row.synced_at) return;
-        if(!newest || new Date(row.synced_at) > new Date(newest.synced_at)) newest = row;
-      });
-      syncEl.textContent = newest && newest.synced_at ? new Date(newest.synced_at).toLocaleTimeString() : "—";
-    }else{
-      syncEl.textContent = "—";
-    }
+    syncEl.textContent = formatTdPlantStatMoment(tdPlantLastPhdTime);
+    syncEl.title = tdPlantLastPhdTime ? ("Latest PHD sampled at " + formatTdPlantDateTime(tdPlantLastPhdTime)) : "";
+    setTdPlantStatTone(syncEl, tdPlantLastPhdTime ? "green" : "");
+  }
+  if(pushEl){
+    pushEl.textContent = formatTdPlantStatMoment(tdPlantLastExcelPush);
+    pushEl.title = tdPlantLastExcelPush ? ("Latest Excel push at " + formatTdPlantDateTime(tdPlantLastExcelPush)) : "";
+    var pushAge = getTdPlantMinutesAgo(tdPlantLastExcelPush);
+    setTdPlantStatTone(pushEl, pushAge == null ? "" : (pushAge > 20 ? "red" : pushAge > 10 ? "amber" : "green"));
+  }
+  if(fetchEl){
+    fetchEl.textContent = formatTdPlantStatMoment(tdPlantLastFetchTime);
+    fetchEl.title = tdPlantLastFetchTime ? ("Dashboard fetched at " + formatTdPlantDateTime(tdPlantLastFetchTime)) : "";
+    setTdPlantStatTone(fetchEl, tdPlantLastFetchTime ? "green" : "");
   }
   updateTdPlantImportRateStat();
 }
 
+function refreshTdPlantLiveHealthState(){
+  if(!isTdPlantImportConfigured()){
+    setTdPlantLiveWarning("", "");
+    setTdPlantImportStatus("offline", "Plant import not configured");
+    return;
+  }
+  if(tdPlantLastErrorMessage){
+    setTdPlantLiveWarning("error", tdPlantLastErrorMessage);
+    setTdPlantImportStatus("offline", "Connection error");
+    return;
+  }
+  if(!tdPlantLatestByTag || !tdPlantLatestByTag.size){
+    setTdPlantLiveWarning("warn", "No data received yet. Make sure Excel is open with macros enabled and auto-sync is running.");
+    setTdPlantImportStatus("offline", "No data — waiting for sync");
+    return;
+  }
+  var pushAge = getTdPlantMinutesAgo(tdPlantLastExcelPush);
+  if(pushAge != null && pushAge > 10){
+    setTdPlantLiveWarning("warn", "Excel has not pushed in over 10 minutes — data may be stale. Check that the Excel file is open with macros enabled.");
+    setTdPlantImportStatus("stale", "Stale — last push " + getTdPlantAgoLabel(tdPlantLastExcelPush));
+    return;
+  }
+  setTdPlantLiveWarning("", "");
+  if(tdEditingIndex >= 0){
+    setTdPlantImportStatus("online", "Live synced · process fields paused during edit");
+  }else{
+    setTdPlantImportStatus("online", "Live plant data imported to process fields");
+  }
+}
+
+function ensureTdPlantMetaTicker(){
+  if(tdPlantMetaTickTimer) return;
+  tdPlantMetaTickTimer = setInterval(function(){
+    if(!tdPlantControlsBound) return;
+    if(!tdPlantLastFetchTime && !tdPlantLastExcelPush && !tdPlantLastPhdTime) return;
+    updateTdPlantImportStats(tdPlantLatestByTag, tdPlantLastMappedCount);
+    refreshTdPlantLiveHealthState();
+  }, 30000);
+}
+
 function checkTdPlantImportConfig(){
-  var ok = !!(TD_PLANT_DATA_SUPABASE_URL && TD_PLANT_DATA_SUPABASE_KEY
-    && TD_PLANT_DATA_SUPABASE_URL.indexOf("YOUR_PROJECT_ID") === -1
-    && TD_PLANT_DATA_SUPABASE_KEY.indexOf("YOUR_ANON") === -1);
+  var ok = isTdPlantImportConfigured();
   setTdPlantConfigBarVisible(!ok, "Live plant import is not configured. Set the plant data Supabase URL and key.");
   if(!ok){
+    tdPlantLastErrorMessage = "";
+    tdPlantLatestByTag = new Map();
+    tdPlantSnapshotRows = [];
+    tdPlantLastMappedCount = 0;
+    tdPlantLastFetchTime = null;
+    tdPlantLastExcelPush = null;
+    tdPlantLastPhdTime = null;
+    setTdPlantLiveWarning("", "");
     setTdPlantImportStatus("offline", "Plant import not configured");
     updateTdPlantImportStats(new Map(), 0);
   }
@@ -27373,7 +27531,7 @@ async function fetchTdPlantImportRows(){
     return String(binding.plantTagId || "").trim();
   }).filter(Boolean);
   var url = TD_PLANT_DATA_SUPABASE_URL + "/rest/v1/plant_data"
-    + "?select=tag_id,label,value,unit,synced_at"
+    + "?select=tag_id,label,value,unit,synced_at,pushed_at"
     + (wantedTags.length ? ("&tag_id=in.(" + wantedTags.join(",") + ")") : "")
     + "&order=synced_at.desc"
     + "&limit=200";
@@ -27387,7 +27545,8 @@ async function fetchTdPlantImportRows(){
       "Cache-Control": "no-cache"
     }
   }, 9000);
-  if(!res || !res.ok) return null;
+  if(!res) throw new Error("No response from plant data service");
+  if(!res.ok) throw new Error("Plant data HTTP " + res.status);
   return await res.json();
 }
 
@@ -27403,7 +27562,8 @@ function applyTdPlantImportToInputs(latestMap){
       source_label: row.label || "",
       value: row.value,
       unit: row.unit || "",
-      synced_at: row.synced_at || ""
+      synced_at: row.synced_at || "",
+      pushed_at: row.pushed_at || row.synced_at || ""
     });
     if(tdEditingIndex >= 0) return;
     var input = getTdProcessFieldInput(binding);
@@ -27414,11 +27574,14 @@ function applyTdPlantImportToInputs(latestMap){
     input.value = nextValue;
     input.setAttribute("data-plant-tag-id", row.tag_id || binding.plantTagId);
     input.setAttribute("data-plant-synced-at", row.synced_at || "");
+    input.setAttribute("data-plant-pushed-at", row.pushed_at || row.synced_at || "");
     input.title = (row.label || binding.exportLabel || binding.key) + (row.unit ? (" [" + row.unit + "]") : "")
-      + (row.synced_at ? (" · " + new Date(row.synced_at).toLocaleString()) : "");
+      + (row.synced_at ? (" · PHD " + formatTdPlantDateTime(parseTdPlantDate(row.synced_at))) : "")
+      + ((row.pushed_at || row.synced_at) ? (" · Excel " + formatTdPlantDateTime(parseTdPlantDate(row.pushed_at || row.synced_at))) : "");
     if(prevValue !== nextValue) pulseTdPlantProcessField(input);
   });
   tdPlantSnapshotRows = mappedRows;
+  tdPlantLastMappedCount = mappedRows.length;
   return mappedRows.length;
 }
 
@@ -27430,18 +27593,17 @@ async function refreshTdPlantImportNow(force){
   tdPlantFetchInFlight = (async function(){
     try{
       var rows = await fetchTdPlantImportRows();
+      tdPlantLastErrorMessage = "";
+      tdPlantLastFetchTime = new Date();
       tdPlantLatestByTag = collectTdPlantLatestRows(rows);
       var mappedCount = applyTdPlantImportToInputs(tdPlantLatestByTag);
       updateTdPlantImportStats(tdPlantLatestByTag, mappedCount);
-      if(tdPlantLatestByTag.size){
-        setTdPlantImportStatus("online", tdEditingIndex >= 0 ? "Live synced · process fields paused during edit" : "Live plant data imported to process fields");
-      }else{
-        setTdPlantImportStatus("offline", "No plant data found");
-      }
+      refreshTdPlantLiveHealthState();
       return tdPlantLatestByTag;
     }catch(e){
       console.warn("TST plant import failed:", e);
-      setTdPlantImportStatus("offline", "Plant import error");
+      tdPlantLastErrorMessage = "Unable to reach live plant data right now. Check Supabase connectivity and try again.";
+      refreshTdPlantLiveHealthState();
       return null;
     }finally{
       tdPlantFetchInFlight = null;
@@ -27456,6 +27618,7 @@ function restoreTdPlantImportedValues(){
   if(tdPlantLatestByTag && tdPlantLatestByTag.size){
     var mappedCount = applyTdPlantImportToInputs(tdPlantLatestByTag);
     updateTdPlantImportStats(tdPlantLatestByTag, mappedCount);
+    refreshTdPlantLiveHealthState();
     return;
   }
   refreshTdPlantImportNow(true).catch(function(){});
@@ -27508,7 +27671,9 @@ function bindTdPlantLiveInputs(){
   restoreTdPlantExcelHandle().catch(function(err){
     console.warn("Could not restore Excel file handle:", err);
   });
+  ensureTdPlantMetaTicker();
   checkTdPlantImportConfig();
+  refreshTdPlantLiveHealthState();
 }
 
 function refreshTdPlantImportManual(){
