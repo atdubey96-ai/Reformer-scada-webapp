@@ -925,6 +925,214 @@ body.light-theme .interface-mode-note{color:#64748b;}
   box-sizing:border-box;
   justify-content:flex-start;
 }
+.admin-mode-badge{
+  position:absolute;
+  top:50%;
+  right:54px;
+  transform:translateY(-50%);
+  display:none;
+  align-items:center;
+  gap:7px;
+  min-height:30px;
+  padding:0 10px;
+  border-radius:999px;
+  border:1px solid rgba(52,211,153,0.38);
+  background:linear-gradient(135deg,rgba(6,78,59,0.96),rgba(15,118,110,0.94));
+  color:#ecfdf5;
+  font-family:'Rajdhani',sans-serif;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.7px;
+  text-transform:uppercase;
+  white-space:nowrap;
+  box-shadow:0 8px 18px rgba(0,0,0,0.28);
+  cursor:pointer;
+}
+.admin-mode-badge.active{display:inline-flex;}
+.admin-mode-badge::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#86efac;
+  box-shadow:0 0 0 4px rgba(134,239,172,0.14);
+}
+.admin-mode-menu-btn.admin-active{
+  border-color:rgba(52,211,153,0.42) !important;
+  background:linear-gradient(135deg,rgba(6,78,59,0.88),rgba(15,118,110,0.92)) !important;
+  color:#ecfdf5 !important;
+}
+.admin-pin-modal{
+  position:fixed;
+  inset:0;
+  z-index:100120;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(2,6,23,0.76);
+  backdrop-filter:blur(6px);
+}
+.admin-pin-modal.open{display:flex;}
+.admin-pin-card{
+  position:relative;
+  width:min(100%, 360px);
+  border-radius:18px;
+  padding:22px 22px 20px;
+  border:1px solid rgba(126,200,240,0.22);
+  background:linear-gradient(180deg,rgba(6,17,34,0.98) 0%, rgba(8,20,40,0.96) 100%);
+  box-shadow:0 22px 56px rgba(0,0,0,0.42);
+  color:#e2e8f0;
+  text-align:left;
+}
+.admin-pin-close{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:34px;
+  height:34px;
+  border:none;
+  border-radius:50%;
+  background:rgba(148,163,184,0.12);
+  color:#cbd5e1;
+  font-size:16px;
+  cursor:pointer;
+}
+.admin-pin-icon{
+  width:48px;
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  margin-bottom:14px;
+  background:linear-gradient(135deg,rgba(34,197,94,0.18),rgba(14,116,144,0.24));
+  font-size:24px;
+}
+.admin-pin-title{
+  font-size:24px;
+  font-weight:800;
+  line-height:1;
+  color:#f8fafc;
+  margin-bottom:8px;
+}
+.admin-pin-sub{
+  font-size:13px;
+  font-weight:600;
+  line-height:1.45;
+  color:#94a3b8;
+  margin-bottom:16px;
+}
+.admin-pin-label{
+  display:block;
+  margin-bottom:7px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:#7dd3fc;
+}
+.admin-pin-input{
+  width:100%;
+  box-sizing:border-box;
+  min-height:52px;
+  border-radius:14px;
+  border:1px solid rgba(71,85,105,0.82);
+  background:rgba(15,23,42,0.88);
+  color:#f8fafc;
+  font-family:'Rajdhani',sans-serif;
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:4px;
+  text-align:center;
+  padding:10px 14px;
+  outline:none;
+}
+.admin-pin-input:focus{
+  border-color:rgba(34,197,94,0.62);
+  box-shadow:0 0 0 3px rgba(34,197,94,0.16);
+}
+.admin-pin-error{
+  display:none;
+  min-height:18px;
+  margin-top:10px;
+  font-size:12px;
+  font-weight:700;
+  color:#fca5a5;
+}
+.admin-pin-note{
+  margin-top:12px;
+  font-size:11px;
+  font-weight:600;
+  line-height:1.45;
+  color:#8ea5c4;
+}
+.admin-pin-actions{
+  display:flex;
+  gap:10px;
+  margin-top:18px;
+}
+.admin-pin-btn{
+  flex:1 1 0;
+  min-height:42px;
+  border:none;
+  border-radius:12px;
+  font-family:'Rajdhani',sans-serif;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:0.35px;
+  cursor:pointer;
+}
+.admin-pin-btn-primary{
+  background:linear-gradient(135deg,#16a34a,#0f766e);
+  color:#f0fdf4;
+}
+.admin-pin-btn-secondary{
+  background:linear-gradient(135deg,#334155,#475569);
+  color:#e2e8f0;
+}
+body.light-theme .admin-mode-badge{
+  border-color:rgba(22,163,74,0.26);
+  background:linear-gradient(135deg,rgba(220,252,231,0.98),rgba(209,250,229,0.95));
+  color:#166534;
+  box-shadow:0 8px 20px rgba(15,23,42,0.12);
+}
+body.light-theme .admin-mode-badge::before{
+  background:#22c55e;
+  box-shadow:0 0 0 4px rgba(34,197,94,0.12);
+}
+body.light-theme .admin-pin-card{
+  border-color:rgba(59,130,246,0.12);
+  background:linear-gradient(180deg,rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.98) 100%);
+  color:#0f172a;
+  box-shadow:0 22px 50px rgba(15,23,42,0.16);
+}
+body.light-theme .admin-pin-close{
+  background:rgba(148,163,184,0.16);
+  color:#334155;
+}
+body.light-theme .admin-pin-title{color:#0f172a;}
+body.light-theme .admin-pin-sub{color:#475569;}
+body.light-theme .admin-pin-label{color:#0f766e;}
+body.light-theme .admin-pin-input{
+  background:rgba(255,255,255,0.96);
+  border-color:rgba(148,163,184,0.72);
+  color:#0f172a;
+}
+body.light-theme .admin-pin-note{color:#52667d;}
+@media (max-width: 900px){
+  .admin-mode-badge{
+    right:48px;
+    min-height:28px;
+    padding:0 8px;
+    font-size:10px;
+    letter-spacing:0.6px;
+  }
+  .admin-pin-card{
+    width:min(100%, 340px);
+    padding:20px 18px 18px;
+  }
+}
 .interface-mode-wrap{
   display:flex;
   flex-direction:column;
@@ -7231,6 +7439,15 @@ function clearLoginState(){
   try{ sessionStorage.removeItem("scadaEmpId"); }catch(e){}
 }
 
+async function sha256Hex(input){
+  var raw = String(input == null ? "" : input);
+  var bytes = new TextEncoder().encode(raw);
+  var digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest)).map(function(x){
+    return x.toString(16).padStart(2, "0");
+  }).join("");
+}
+
 function getPasswordCandidates(pw){
   var raw = String(pw || "");
   var list = [raw, raw.trim(), raw.toLowerCase(), raw.toUpperCase(), raw.trim().toLowerCase(), raw.trim().toUpperCase()];
@@ -9885,6 +10102,23 @@ html, body, body *, body *::before, body *::after, svg text{
   </div>
 </div>
 
+<div id="adminPinModal" class="admin-pin-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminPinTitle">
+  <div class="admin-pin-card">
+    <button class="admin-pin-close" type="button" onclick="hideAdminPinModal()" aria-label="Close admin PIN popup">&#10005;</button>
+    <div class="admin-pin-icon">🔒</div>
+    <div class="admin-pin-title" id="adminPinTitle">Admin Mode</div>
+    <div class="admin-pin-sub">Enter the 6-digit admin PIN to unlock admin tools for this session.</div>
+    <label class="admin-pin-label" for="adminPinInput">Admin PIN</label>
+    <input type="password" id="adminPinInput" class="admin-pin-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Enter 6-digit PIN" autocomplete="one-time-code" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)" onkeydown="handleAdminPinKeydown(event)">
+    <div id="adminPinError" class="admin-pin-error"></div>
+    <div class="admin-pin-note">Admin mode turns off automatically after 15 minutes of inactivity and resets on refresh or browser close.</div>
+    <div class="admin-pin-actions">
+      <button class="admin-pin-btn admin-pin-btn-primary" id="adminPinSubmitBtn" type="button" onclick="submitAdminPin()">Unlock Admin Mode</button>
+      <button class="admin-pin-btn admin-pin-btn-secondary" type="button" onclick="hideAdminPinModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- ====================================================
      MAIN APPLICATION
 ==================================================== -->
@@ -9904,10 +10138,12 @@ html, body, body *, body *::before, body *::after, svg text{
       <div class="app-system-sub">REFORMER WALL OPERATIONS &nbsp;·&nbsp; REAL-TIME ANALYTICS &nbsp;·&nbsp; AUTHORIZED PERSONNEL ONLY</div>
     </div>
     <div class="quick-menu-wrap app-banner-menu-wrap" id="quickMenuWrap">
+      <button class="admin-mode-badge" id="adminModeBadge" type="button" onclick="deactivateAdminMode(true, 'manual')" title="Admin mode active for this session. Tap to return to operator mode." aria-label="Admin mode active. Return to operator mode." aria-hidden="true">Admin Mode ON</button>
       <button class="app-banner-right app-banner-menu-btn" id="quickMenuBtn" type="button" onclick="toggleQuickMenu()" title="Quick menu" aria-label="Open quick menu" aria-haspopup="menu" aria-expanded="false">
       <img src="data:image/png;base64,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" alt="Gujarat Refinery Emblem" class="app-banner-logo">
       </button>
       <div class="quick-menu-panel" id="quickMenuPanel" aria-hidden="true">
+        <button class="hd-btn hd-btn-secondary admin-mode-menu-btn" id="adminModeToggleBtn" type="button" onclick="handleAdminModeQuickMenuAction()" title="Unlock admin mode for this session" aria-pressed="false">🔒 Admin Mode</button>
         <div id="syncDebugChip" class="sync-debug-chip sync-debug-info" title="Last sync endpoint status">
           <span id="syncDebugText" class="sync-debug-text">DBG SYNC -- · idle</span>
         </div>
@@ -19615,6 +19851,8 @@ var alarmLog = [];
    CONSTANTS
 ================================================== */
 const SCADA_PASSWORD = "d06b2c4efe3519e98c052cced2f117599b7771edea220f6b45a4d7b63c8b9ca8"; /* SHA-256 */
+const ADMIN_MODE_PIN_HASH = "dc19305e959e6753cbe6ff3e4156aac5fc5cd4e5393cadc06b7ff058ba324e4f";
+const ADMIN_MODE_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 const WALL_NAMES     = ["A","B","C","D"];
 const ROWS           = 6;
 const BURNERS        = 15;
@@ -19633,6 +19871,11 @@ const chartInstances = {};
 const hmChartInstances = {};
 const stackChartInstances = {};
 var burnerUiReady = false;
+var adminModeActive = false;
+var adminModeLastActivityAt = 0;
+var adminModeExpiryTimer = 0;
+var adminModeActivityListenersBound = false;
+var adminPinVerifyBusy = false;
 
 /* ==================================================
    LOGIN / LOGOUT
@@ -19647,6 +19890,8 @@ document.addEventListener("DOMContentLoaded",function(){
   updateAlarmToneUI();
   var m=document.getElementById("forgotModal");
   if(m) m.addEventListener("click",function(e){ if(e.target===this) hideForgotModal(); });
+  var adminModal = document.getElementById("adminPinModal");
+  if(adminModal) adminModal.addEventListener("click",function(e){ if(e.target===this) hideAdminPinModal(); });
 
   document.addEventListener("click", function(e){
     var wrap = document.getElementById("quickMenuWrap");
@@ -19654,9 +19899,13 @@ document.addEventListener("DOMContentLoaded",function(){
     if(!wrap.contains(e.target)) closeQuickMenu();
   });
   document.addEventListener("keydown", function(e){
-    if(e.key === "Escape") closeQuickMenu();
+    if(e.key === "Escape"){
+      hideAdminPinModal();
+      closeQuickMenu();
+    }
   });
   initHistoryScrollHandoff();
+  updateAdminModeUi();
   window.addEventListener("focus", function(){
     if(isUserLoggedIn()){
       subscribeCrossDeviceNotifications();
@@ -20026,6 +20275,239 @@ function startServerSaveWatcher(){
   serverSaveWatcherTimer = setInterval(tick, 10000);
 }
 
+function getAdminModeRemainingMs(){
+  if(!adminModeActive || !adminModeLastActivityAt) return 0;
+  return Math.max(0, ADMIN_MODE_IDLE_TIMEOUT_MS - (Date.now() - adminModeLastActivityAt));
+}
+
+function clearAdminModeExpiryTimer(){
+  if(adminModeExpiryTimer){
+    clearTimeout(adminModeExpiryTimer);
+    adminModeExpiryTimer = 0;
+  }
+}
+
+function updateAdminModeUi(){
+  var active = !!adminModeActive;
+  var badge = document.getElementById("adminModeBadge");
+  var toggleBtn = document.getElementById("adminModeToggleBtn");
+  var minsLeft = Math.max(1, Math.ceil(getAdminModeRemainingMs() / 60000));
+  var badgeTitle = active
+    ? ("Admin mode active for this session. Tap to return to operator mode. Timeout in about " + minsLeft + " min.")
+    : "";
+
+  if(document.body){
+    document.body.setAttribute("data-user-mode", active ? "admin" : "operator");
+  }
+  if(badge){
+    badge.classList.toggle("active", active);
+    badge.setAttribute("aria-hidden", active ? "false" : "true");
+    badge.title = badgeTitle;
+  }
+  if(toggleBtn){
+    toggleBtn.textContent = active ? "🔓 Exit Admin Mode" : "🔒 Admin Mode";
+    toggleBtn.classList.toggle("admin-active", active);
+    toggleBtn.setAttribute("aria-pressed", active ? "true" : "false");
+    toggleBtn.title = active ? "Return to operator mode now" : "Unlock admin mode for this session";
+  }
+}
+
+function scheduleAdminModeExpiryTimer(){
+  clearAdminModeExpiryTimer();
+  if(!adminModeActive) return;
+  var remaining = getAdminModeRemainingMs();
+  if(remaining <= 0){
+    deactivateAdminMode(true, "timeout");
+    return;
+  }
+  adminModeExpiryTimer = setTimeout(function(){
+    scheduleAdminModeExpiryTimer();
+  }, remaining + 120);
+  updateAdminModeUi();
+}
+
+function touchAdminModeActivity(){
+  if(!adminModeActive) return;
+  adminModeLastActivityAt = Date.now();
+  scheduleAdminModeExpiryTimer();
+}
+
+function bindAdminModeActivityListeners(){
+  if(adminModeActivityListenersBound) return;
+  var kick = function(){
+    touchAdminModeActivity();
+  };
+  ["pointerdown","mousedown","touchstart","keydown"].forEach(function(evtName){
+    document.addEventListener(evtName, kick, true);
+  });
+  window.addEventListener("focus", function(){
+    if(adminModeActive) scheduleAdminModeExpiryTimer();
+  });
+  document.addEventListener("visibilitychange", function(){
+    if(adminModeActive && document.visibilityState === "visible"){
+      scheduleAdminModeExpiryTimer();
+    }
+  });
+  window.addEventListener("pagehide", function(){
+    deactivateAdminMode(false, "pagehide");
+  });
+  adminModeActivityListenersBound = true;
+}
+
+function setAdminPinError(message){
+  var err = document.getElementById("adminPinError");
+  if(!err) return;
+  var msg = String(message || "").trim();
+  err.textContent = msg;
+  err.style.display = msg ? "block" : "none";
+}
+
+function showAdminPinModal(){
+  if(adminModeActive){
+    updateAdminModeUi();
+    return;
+  }
+  if(typeof isUserLoggedIn === "function" && !isUserLoggedIn()){
+    if(typeof showToast === "function") showToast("⚠ Please sign in first.");
+    return;
+  }
+  var modal = document.getElementById("adminPinModal");
+  var input = document.getElementById("adminPinInput");
+  var submitBtn = document.getElementById("adminPinSubmitBtn");
+  if(!modal) return;
+  setAdminPinError("");
+  adminPinVerifyBusy = false;
+  if(input) input.value = "";
+  if(submitBtn){
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Unlock Admin Mode";
+  }
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  setTimeout(function(){
+    if(input){
+      input.focus();
+      input.select();
+    }
+  }, 40);
+}
+
+function hideAdminPinModal(){
+  var modal = document.getElementById("adminPinModal");
+  var input = document.getElementById("adminPinInput");
+  var submitBtn = document.getElementById("adminPinSubmitBtn");
+  if(modal){
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+  }
+  if(input) input.value = "";
+  if(submitBtn){
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Unlock Admin Mode";
+  }
+  adminPinVerifyBusy = false;
+  setAdminPinError("");
+}
+
+function activateAdminMode(){
+  bindAdminModeActivityListeners();
+  adminModeActive = true;
+  adminModeLastActivityAt = Date.now();
+  closeQuickMenu();
+  updateAdminModeUi();
+  scheduleAdminModeExpiryTimer();
+  if(typeof showToast === "function"){
+    showToast("🔓 Admin mode enabled for this session");
+  }
+}
+
+function deactivateAdminMode(showNotice, reason){
+  var wasActive = !!adminModeActive;
+  adminModeActive = false;
+  adminModeLastActivityAt = 0;
+  clearAdminModeExpiryTimer();
+  hideAdminPinModal();
+  updateAdminModeUi();
+  if(wasActive && showNotice && typeof showToast === "function"){
+    if(String(reason || "").toLowerCase() === "timeout"){
+      showToast("🔒 Admin mode timed out. Returned to operator mode.");
+    }else{
+      showToast("🔒 Returned to operator mode.");
+    }
+  }
+}
+
+function handleAdminModeQuickMenuAction(){
+  if(adminModeActive){
+    deactivateAdminMode(true, "manual");
+    closeQuickMenu();
+    return;
+  }
+  closeQuickMenu();
+  showAdminPinModal();
+}
+
+function handleAdminPinKeydown(event){
+  var e = event || window.event;
+  if(!e) return true;
+  if(e.key === "Enter"){
+    if(e.preventDefault) e.preventDefault();
+    submitAdminPin();
+    return false;
+  }
+  if(e.key === "Escape"){
+    if(e.preventDefault) e.preventDefault();
+    hideAdminPinModal();
+    return false;
+  }
+  return true;
+}
+
+async function submitAdminPin(){
+  if(adminPinVerifyBusy) return;
+  var input = document.getElementById("adminPinInput");
+  var submitBtn = document.getElementById("adminPinSubmitBtn");
+  var pin = String(input && input.value || "").trim();
+  if(!/^\d{6}$/.test(pin)){
+    setAdminPinError("Enter the 6-digit admin PIN.");
+    if(input) input.focus();
+    return;
+  }
+
+  adminPinVerifyBusy = true;
+  setAdminPinError("");
+  if(submitBtn){
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Checking...";
+  }
+
+  try{
+    var pinHash = await sha256Hex(pin);
+    if(pinHash !== ADMIN_MODE_PIN_HASH){
+      setAdminPinError("Incorrect PIN. Admin mode not unlocked.");
+      if(input){
+        input.value = "";
+        input.focus();
+      }
+      return;
+    }
+    hideAdminPinModal();
+    activateAdminMode();
+  }catch(err){
+    setAdminPinError("PIN check failed. Please try again.");
+  }finally{
+    adminPinVerifyBusy = false;
+    if(submitBtn){
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Unlock Admin Mode";
+    }
+  }
+}
+
+window.isAdminModeActive = function(){
+  return !!adminModeActive;
+};
+
 function toggleQuickMenu(){
   var panel = document.getElementById("quickMenuPanel");
   var btn = document.getElementById("quickMenuBtn");
@@ -20101,6 +20583,7 @@ function closeQuickMenu(){
 }
 
 function logout(){
+  deactivateAdminMode(false, "logout");
   stopServerSaveWatcher();
   stopRealtimeNotifyEnsureLoop();
   cleanupRealtimeNotifyChannel();
