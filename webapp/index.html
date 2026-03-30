@@ -18838,7 +18838,7 @@ html, body, body *, body *::before, body *::after, svg text{
               class="td-toolbar-datetime">
           </div>
           <input type="file" id="td-ocr-operator-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstOperatorOcrSelect(event)">
-          <button type="button" id="td-ocr-operator-btn" data-operator-only="true" onclick="openTstOperatorOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload scanned TST file. Operator mode uses Claude first, then GPT-4 only if Claude fails.">
+          <button type="button" id="td-ocr-operator-btn" data-operator-only="true" onclick="openTstOperatorOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload scanned TST file. Operator mode processes automatically with protected OCR routing and emergency fallback when needed.">
             📄 Drop Scanned TST file
           </button>
           <input type="file" id="td-ocr-claude-file" data-admin-only="true" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstClaudeOcrSelect(event)">
@@ -28729,9 +28729,9 @@ function getPreferredTstOperatorOcrProvider(snapshot){
 function buildTstOperatorOcrButtonTitle(snapshot){
   var info = snapshot || getTstOperatorOcrUsageSnapshot();
   if(info.claudeUsed < TD_OPERATOR_CLAUDE_USAGE_LIMIT){
-    return "Upload scanned TST file. Operator mode uses Claude first (" + info.claudeUsed + "/" + info.claudeLimit + " used), then GPT-4 only if Claude fails.";
+    return "Upload scanned TST file. Operator mode processes automatically with protected OCR routing and emergency fallback when needed. Automatic route usage: " + info.claudeUsed + "/" + info.claudeLimit + ".";
   }
-  return "Upload scanned TST file. Claude operator usage is " + info.claudeUsed + "/" + info.claudeLimit + ", so operator mode now uses GPT-4 by default and Claude only as emergency fallback if GPT-4 fails.";
+  return "Upload scanned TST file. Operator mode processes automatically with protected OCR routing and emergency fallback when needed. Automatic route usage: " + info.claudeUsed + "/" + info.claudeLimit + ".";
 }
 
 function createEmptyTstClaudeGrid(){
@@ -29978,7 +29978,6 @@ async function runOperatorTstOcrWithProvider(providerKey, payload){
   var safeProvider = providerKey === "gpt4" ? "gpt4" : "claude";
   var reservation = reserveTstOperatorOcrProviderUsage(safeProvider);
   var providerLabel = getTstOperatorOcrProviderLabel(safeProvider);
-  var shortLabel = getTstOperatorOcrShortLabel(safeProvider);
   if(!reservation.ok){
     return { ok: false, providerKey: safeProvider, providerLabel: providerLabel, results: [], written: 0, error: reservation.reason };
   }
@@ -29993,9 +29992,9 @@ async function runOperatorTstOcrWithProvider(providerKey, payload){
     for(var i=0; i<pages.length; i++){
       var page = pages[i] || {};
       if(pages.length > 1){
-        setTstOperatorOcrBusyLabel("⏳ " + shortLabel + " page " + (i + 1) + "/" + pages.length + "...");
+        setTstOperatorOcrBusyLabel("⏳ Processing scanned TST page " + (i + 1) + "/" + pages.length + "...");
       }else{
-        setTstOperatorOcrBusyLabel("⏳ " + shortLabel + " processing...");
+        setTstOperatorOcrBusyLabel("⏳ Processing scanned TST...");
       }
       var result = safeProvider === "gpt4"
         ? await callGpt4VisionForTst(page.base64, page.mediaType || "image/jpeg")
@@ -30023,7 +30022,7 @@ async function runOperatorTstOcrWithProvider(providerKey, payload){
       providerLabel: providerLabel,
       results: results,
       written: 0,
-      error: getTstOcrFailureMessage(results, providerLabel + " could not detect usable TST values.")
+      error: getTstOcrFailureMessage(results, "OCR could not detect usable TST values.")
     };
   }
 
@@ -30058,24 +30057,24 @@ async function handleTstOperatorOcrSelect(event){
 
     var primaryResult = await runOperatorTstOcrWithProvider(primaryProvider, payload);
     if(primaryResult.ok){
-      setTstOperatorOcrBusyLabel("✅ " + primaryResult.providerLabel + " filled " + primaryResult.written + " cells");
-      showToast("✅ " + primaryResult.providerLabel + " filled " + primaryResult.written + " TST cells.");
+      setTstOperatorOcrBusyLabel("✅ Filled " + primaryResult.written + " TST cells");
+      showToast("✅ OCR filled " + primaryResult.written + " TST cells.");
       return;
     }
 
-    showToast("⚠ " + primaryResult.providerLabel + " failed. Trying " + getTstOperatorOcrProviderLabel(fallbackProvider) + ".");
+    showToast("⚠ Retrying scanned TST with backup OCR route...");
     var fallbackResult = await runOperatorTstOcrWithProvider(fallbackProvider, payload);
     if(fallbackResult.ok){
-      setTstOperatorOcrBusyLabel("✅ " + fallbackResult.providerLabel + " filled " + fallbackResult.written + " cells");
-      showToast("✅ " + fallbackResult.providerLabel + " filled " + fallbackResult.written + " TST cells after fallback.");
+      setTstOperatorOcrBusyLabel("✅ Filled " + fallbackResult.written + " TST cells");
+      showToast("✅ OCR filled " + fallbackResult.written + " TST cells.");
       return;
     }
 
     alert(
-      "Operator OCR failed.\n\n"
-      + primaryResult.providerLabel + ": " + primaryResult.error
+      "Scanned TST processing failed.\n\n"
+      + "First attempt: " + primaryResult.error
       + "\n\n"
-      + getTstOperatorOcrProviderLabel(fallbackProvider) + ": " + fallbackResult.error
+      + "Backup attempt: " + fallbackResult.error
     );
   }catch(err){
     alert("Could not process scanned TST file: " + (err && err.message ? err.message : err));
