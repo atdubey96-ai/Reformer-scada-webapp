@@ -18597,7 +18597,7 @@ html, body, body *, body *::before, body *::after, svg text{
             </select>
           </div>
           <div class="td-plant-controls-right">
-            <button type="button" id="td-plant-open-excel-btn" class="td-plant-action-btn td-plant-open-btn" title="Open the dedicated Excel workbook using the local helper">Update data</button>
+            <button type="button" id="td-plant-open-excel-btn" class="td-plant-action-btn td-plant-open-btn" title="Open the dedicated Excel workbook with the local helper on this PC, or download it on any device">Update data</button>
             <button type="button" id="td-plant-download-btn" class="td-plant-action-btn td-plant-download-btn" title="Download the dedicated Excel workbook">⬇ Download Excel</button>
             <button type="button" id="td-plant-refresh-btn" class="td-plant-action-btn td-plant-refresh-btn" title="Fetch the latest mapped plant tags into the TST cells">↻ Refresh Now</button>
           </div>
@@ -27066,7 +27066,7 @@ function updateTdPlantExcelUi(){
   if(btn){
     btn.textContent = "Update data";
     btn.classList.remove("td-plant-btn-no-path");
-    btn.title = "Open the dedicated Excel workbook using the local helper";
+    btn.title = "Open the dedicated Excel workbook with the local helper on this PC, or download it on any device";
   }
   if(bar) bar.classList.add("hidden");
   if(display){
@@ -27217,12 +27217,18 @@ function handleTdPlantOpenExcel(){
     return payload;
   }).catch(function(err){
     console.warn("Local Excel helper request failed:", err);
-    showToast("⚠ Start the local Excel helper on this PC, then try Update data again");
+    if(downloadTdPlantExcelWorkbook({
+      message: "🌐 Local helper is unavailable on this device. Downloading the Excel workbook instead.",
+      errorMessage: "⚠ Local helper is unavailable and the workbook could not be downloaded."
+    })){
+      return { ok: true, fallback: "downloaded-workbook" };
+    }
     throw err;
   });
 }
 
-function downloadTdPlantExcelWorkbook(){
+function downloadTdPlantExcelWorkbook(options){
+  var opts = options || {};
   try{
     var byteChars = atob(TD_PLANT_EXCEL_B64);
     var byteArr = new Uint8Array(byteChars.length);
@@ -27237,10 +27243,12 @@ function downloadTdPlantExcelWorkbook(){
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-    showToast("⬇ Excel workbook downloaded");
+    showToast(opts.message || "⬇ Excel workbook downloaded");
+    return true;
   }catch(e){
     console.warn("TST workbook download failed:", e);
-    showToast("⚠ Could not download Excel workbook");
+    showToast(opts.errorMessage || "⚠ Could not download Excel workbook");
+    return false;
   }
 }
 
