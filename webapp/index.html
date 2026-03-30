@@ -18525,7 +18525,7 @@ html, body, body *, body *::before, body *::after, svg text{
           Live plant import is not configured. Set the plant data Supabase URL and key.
         </div>
         <div id="td-plant-live-warning" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;"></div>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+        <div style="display:flex;flex-wrap:nowrap;gap:10px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
           <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;min-width:220px;">
             <span id="td-plant-status-dot" style="width:10px;height:10px;border-radius:999px;background:#64748b;box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;flex:0 0 auto;"></span>
             <span id="td-plant-status-text" class="td-plant-status-text">Plant import idle</span>
@@ -18534,10 +18534,8 @@ html, body, body *, body *::before, body *::after, svg text{
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Mapped:</span><span id="td-plant-stat-mapped" class="td-plant-stat-value">—</span></div>
           <div class="td-toolbar-pill"><span class="td-toolbar-label">PHD Time:</span><span id="td-plant-stat-sync" class="td-plant-stat-value">—</span></div>
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Last Fetch:</span><span id="td-plant-stat-fetch" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" class="td-plant-stat-value">30 sec</span></div>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
           <div class="td-toolbar-pill"><span class="td-toolbar-label">Excel Last Push:</span><span id="td-plant-stat-push" class="td-plant-stat-value">—</span></div>
+          <div class="td-toolbar-pill"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" class="td-plant-stat-value">30 sec</span></div>
         </div>
         <div id="td-plant-excel-path-bar" class="td-plant-excel-path-bar hidden">
           <span class="td-plant-path-label">Excel File</span>
