@@ -24,9 +24,10 @@ These launchers:
 
 - start the local site on `http://localhost:5500`
 - open the browser
+- start the local Excel helper on `http://127.0.0.1:8766`
 - open the workbook `webapp/Data_website2.xlsm`
 
-This is local-launch behavior, not browser-only behavior. A normal website cannot directly launch Excel by itself on page load across macOS and Windows.
+The `Update data` button inside the website uses that local helper. It will open Excel on another PC only if that other PC is also running the helper and has access to the workbook. A normal website cannot directly launch Excel by itself on page load across macOS and Windows.
 
 ## Main file
 

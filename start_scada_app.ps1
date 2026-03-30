@@ -8,7 +8,10 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $AppDir = Join-Path $ScriptDir "webapp"
 $ExcelFile = Join-Path $AppDir "Data_website2.xlsm"
 $LogFile = Join-Path $env:TEMP "scada-webapp.log"
+$HelperPort = 8766
+$HelperLogFile = Join-Path $env:TEMP "scada-excel-helper.log"
 $ServerProcess = $null
+$HelperProcess = $null
 
 function Test-PortListening {
   param([int]$LocalPort)
@@ -67,6 +70,18 @@ function Get-PythonLaunchSpec {
   return $null
 }
 
+function Get-NodeLaunchSpec {
+  $node = Get-Command node -ErrorAction SilentlyContinue
+  if ($node) {
+    return @{
+      FilePath = $node.Source
+      ArgumentList = @((Join-Path $ScriptDir "excel-launch-helper.js"))
+    }
+  }
+
+  return $null
+}
+
 if (-not (Test-Path -LiteralPath $AppDir)) {
   Write-Host "Web app folder not found: $AppDir"
   Read-Host "Press Enter to close"
@@ -74,6 +89,35 @@ if (-not (Test-Path -LiteralPath $AppDir)) {
 }
 
 try {
+  if (-not (Test-PortListening -LocalPort $HelperPort)) {
+    $nodeSpec = Get-NodeLaunchSpec
+    if ($nodeSpec) {
+      Write-Host "Starting Excel helper on http://127.0.0.1:$HelperPort ..."
+      $originalHelperPort = [System.Environment]::GetEnvironmentVariable("SCADA_HELPER_PORT", "Process")
+      $originalExcelPath = [System.Environment]::GetEnvironmentVariable("SCADA_EXCEL_FILE", "Process")
+      [System.Environment]::SetEnvironmentVariable("SCADA_HELPER_PORT", "$HelperPort", "Process")
+      [System.Environment]::SetEnvironmentVariable("SCADA_EXCEL_FILE", $ExcelFile, "Process")
+      try {
+        $HelperProcess = Start-Process -FilePath $nodeSpec.FilePath `
+          -ArgumentList $nodeSpec.ArgumentList `
+          -WorkingDirectory $ScriptDir `
+          -RedirectStandardOutput $HelperLogFile `
+          -RedirectStandardError $HelperLogFile `
+          -PassThru `
+          -WindowStyle Hidden
+      }
+      finally {
+        [System.Environment]::SetEnvironmentVariable("SCADA_HELPER_PORT", $originalHelperPort, "Process")
+        [System.Environment]::SetEnvironmentVariable("SCADA_EXCEL_FILE", $originalExcelPath, "Process")
+      }
+      Start-Sleep -Seconds 1
+    } else {
+      Write-Warning "Node.js was not found. Update data button will not open Excel until the helper is started on this PC."
+    }
+  } else {
+    Write-Host "Excel helper already running on port $HelperPort."
+  }
+
   if (Test-PortListening -LocalPort $Port) {
     Write-Host "Server already running on port $Port."
     Start-Process -FilePath "http://localhost:$Port" | Out-Null
@@ -102,6 +146,7 @@ try {
 
   Write-Host "Server PID: $($ServerProcess.Id)"
   Write-Host "Log file: $LogFile"
+  Write-Host "Excel helper log: $HelperLogFile"
   Write-Host "Excel file: $ExcelFile"
   Write-Host ""
   Read-Host "Press Enter to stop server and close"
@@ -109,5 +154,8 @@ try {
 finally {
   if ($ServerProcess -and -not $ServerProcess.HasExited) {
     Stop-Process -Id $ServerProcess.Id -Force -ErrorAction SilentlyContinue
+  }
+  if ($HelperProcess -and -not $HelperProcess.HasExited) {
+    Stop-Process -Id $HelperProcess.Id -Force -ErrorAction SilentlyContinue
   }
 }
