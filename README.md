@@ -15,6 +15,19 @@ Then open:
 
 `http://localhost:5500`
 
+## Auto-open the SCADA workbook
+
+- macOS: run [`start_scada_app.command`](/Users/ashutoshdubey/Documents/New%20project/start_scada_app.command)
+- Windows: run [`start_scada_app.cmd`](/Users/ashutoshdubey/Documents/New%20project/start_scada_app.cmd) or [`start_scada_app.ps1`](/Users/ashutoshdubey/Documents/New%20project/start_scada_app.ps1)
+
+These launchers:
+
+- start the local site on `http://localhost:5500`
+- open the browser
+- open the workbook `webapp/Data_website2.xlsm`
+
+This is local-launch behavior, not browser-only behavior. A normal website cannot directly launch Excel by itself on page load across macOS and Windows.
+
 ## Main file
 
 - `index.html` - your full SCADA dashboard webpage
