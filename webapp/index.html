@@ -5557,14 +5557,37 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   color:#f8fafc;
   font-weight:800;
 }
+#tab-tempdata .td-plant-status-strip{
+  display:grid;
+  grid-template-columns:
+    minmax(300px,1.8fr)
+    minmax(110px,0.72fr)
+    minmax(130px,0.84fr)
+    minmax(190px,1.18fr)
+    minmax(190px,1.18fr)
+    minmax(225px,1.34fr)
+    minmax(90px,0.62fr);
+  align-items:stretch;
+  gap:8px;
+  margin-bottom:12px;
+  min-width:0;
+  overflow:visible;
+}
 #tab-tempdata .td-plant-status-strip > *{
   flex:0 0 auto;
+  min-width:0;
 }
 #tab-tempdata .td-plant-status-strip .td-toolbar-pill{
   flex-wrap:nowrap;
+  width:100%;
+  min-width:0;
   white-space:nowrap;
   gap:7px;
   padding:4px 8px;
+  overflow:hidden;
+}
+#tab-tempdata .td-plant-status-strip .td-plant-status-pill{
+  justify-content:flex-start;
 }
 #tab-tempdata .td-plant-status-strip .td-toolbar-label{
   font-size:10px;
@@ -5576,6 +5599,8 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   font-size:11px;
   line-height:1.1;
   white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 #tab-tempdata .td-plant-settings-btn{
   padding:8px 11px;
@@ -18545,7 +18570,7 @@ html, body, body *, body *::before, body *::after, svg text{
           Live plant import is not configured. Set the plant data Supabase URL and key.
         </div>
         <div id="td-plant-live-warning" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;"></div>
-        <div class="td-plant-status-strip" style="display:flex;flex-wrap:nowrap;gap:10px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
+        <div class="td-plant-status-strip">
           <div class="td-toolbar-pill td-plant-status-pill" style="display:flex;align-items:center;gap:10px;min-width:220px;">
             <span id="td-plant-status-dot" style="width:10px;height:10px;border-radius:999px;background:#64748b;box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;flex:0 0 auto;"></span>
             <span id="td-plant-status-text" class="td-plant-status-text">Plant import idle</span>
