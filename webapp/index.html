@@ -1123,6 +1123,9 @@ body.light-theme .admin-pin-note{color:#52667d;}
 body[data-user-mode="operator"] [data-admin-only="true"]{
   display:none !important;
 }
+body[data-user-mode="admin"] [data-operator-only="true"]{
+  display:none !important;
+}
 body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip{
   grid-template-columns:minmax(280px,1fr) !important;
 }
@@ -18834,12 +18837,16 @@ html, body, body *, body *::before, body *::after, svg text{
             <input type="datetime-local" id="td-datetime"
               class="td-toolbar-datetime">
           </div>
-          <input type="file" id="td-ocr-claude-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstClaudeOcrSelect(event)">
-          <button type="button" id="td-ocr-claude-btn" onclick="openTstClaudeOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Vision OCR">
+          <input type="file" id="td-ocr-operator-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstOperatorOcrSelect(event)">
+          <button type="button" id="td-ocr-operator-btn" data-operator-only="true" onclick="openTstOperatorOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload scanned TST file. Operator mode uses Claude first, then GPT-4 only if Claude fails.">
+            📄 Drop Scanned TST file
+          </button>
+          <input type="file" id="td-ocr-claude-file" data-admin-only="true" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstClaudeOcrSelect(event)">
+          <button type="button" id="td-ocr-claude-btn" data-admin-only="true" onclick="openTstClaudeOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Vision OCR">
             🤖 Vision OCR
           </button>
-          <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
-          <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using GPT-4 Vision OCR">
+          <input type="file" id="td-ocr-pdf-file" data-admin-only="true" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
+          <button type="button" id="td-ocr-pdf-btn" data-admin-only="true" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using GPT-4 Vision OCR">
             🧠 GPT-4 Vision
           </button>
           <div class="td-fill-menu-wrap" data-admin-only="true">
@@ -28383,8 +28390,12 @@ var tdPdfPdfDoc = null;
 var tdPdfPageCanvases = {};
 var tdPdfSelectedPages = new Set();
 var tdPdfAllResults = [];
+var tdOperatorOcrBusy = false;
+var tdOperatorOcrBusyLabel = "";
 var TD_TST_OCR_QUOTA_STORAGE_KEY = "tstOcrQuotaUsageV1";
 var TD_TST_OCR_QUOTA_LIMITS = { day: 6, week: 25, month: 100 };
+var TD_OPERATOR_OCR_USAGE_STORAGE_KEY = "tstOperatorOcrUsageV1";
+var TD_OPERATOR_CLAUDE_USAGE_LIMIT = 200;
 
 function padTstOcrQuotaNum(n){
   var num = Math.max(0, parseInt(n, 10) || 0);
@@ -28605,12 +28616,130 @@ function reserveTstOcrQuotaSlot(sourceKey){
   };
 }
 
+function createEmptyTstOperatorOcrUsageStore(){
+  return { owners: {} };
+}
+
+function loadTstOperatorOcrUsageStore(){
+  var fallback = createEmptyTstOperatorOcrUsageStore();
+  try{
+    var raw = localStorage.getItem(TD_OPERATOR_OCR_USAGE_STORAGE_KEY);
+    if(!raw) return fallback;
+    var parsed = JSON.parse(raw);
+    if(!parsed || typeof parsed !== "object") return fallback;
+    var ownersIn = (parsed.owners && typeof parsed.owners === "object") ? parsed.owners : {};
+    var ownersOut = {};
+    Object.keys(ownersIn).forEach(function(ownerKey){
+      var entry = ownersIn[ownerKey] || {};
+      ownersOut[ownerKey] = {
+        claudeUsed: Math.max(0, parseInt(entry.claudeUsed, 10) || 0),
+        gptUsed: Math.max(0, parseInt(entry.gptUsed, 10) || 0),
+        lastProvider: typeof entry.lastProvider === "string" ? entry.lastProvider : "",
+        updatedAt: typeof entry.updatedAt === "string" ? entry.updatedAt : ""
+      };
+    });
+    return { owners: ownersOut };
+  }catch(e){
+    return fallback;
+  }
+}
+
+function saveTstOperatorOcrUsageStore(store){
+  try{
+    localStorage.setItem(TD_OPERATOR_OCR_USAGE_STORAGE_KEY, JSON.stringify(store || createEmptyTstOperatorOcrUsageStore()));
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function ensureTstOperatorOcrUsageOwner(store, ownerKey){
+  if(!store || typeof store !== "object") store = createEmptyTstOperatorOcrUsageStore();
+  if(!store.owners || typeof store.owners !== "object") store.owners = {};
+  if(!store.owners[ownerKey] || typeof store.owners[ownerKey] !== "object"){
+    store.owners[ownerKey] = { claudeUsed: 0, gptUsed: 0, lastProvider: "", updatedAt: "" };
+  }
+  var owner = store.owners[ownerKey];
+  owner.claudeUsed = Math.max(0, parseInt(owner.claudeUsed, 10) || 0);
+  owner.gptUsed = Math.max(0, parseInt(owner.gptUsed, 10) || 0);
+  owner.lastProvider = typeof owner.lastProvider === "string" ? owner.lastProvider : "";
+  owner.updatedAt = typeof owner.updatedAt === "string" ? owner.updatedAt : "";
+  return owner;
+}
+
+function getTstOperatorOcrUsageSnapshot(){
+  var store = loadTstOperatorOcrUsageStore();
+  var ownerKey = getTstOcrQuotaOwnerKey();
+  var owner = ensureTstOperatorOcrUsageOwner(store, ownerKey);
+  return {
+    ownerKey: ownerKey,
+    claudeUsed: owner.claudeUsed,
+    gptUsed: owner.gptUsed,
+    claudeLimit: TD_OPERATOR_CLAUDE_USAGE_LIMIT,
+    claudeRemaining: Math.max(0, TD_OPERATOR_CLAUDE_USAGE_LIMIT - owner.claudeUsed),
+    lastProvider: owner.lastProvider,
+    updatedAt: owner.updatedAt
+  };
+}
+
+function reserveTstOperatorOcrProviderUsage(providerKey){
+  var safeProvider = providerKey === "gpt4" ? "gpt4" : "claude";
+  var store = loadTstOperatorOcrUsageStore();
+  var ownerKey = getTstOcrQuotaOwnerKey();
+  var owner = ensureTstOperatorOcrUsageOwner(store, ownerKey);
+  if(safeProvider === "gpt4") owner.gptUsed += 1;
+  else owner.claudeUsed += 1;
+  owner.lastProvider = safeProvider;
+  owner.updatedAt = new Date().toISOString();
+
+  if(!saveTstOperatorOcrUsageStore(store)){
+    return {
+      ok: false,
+      reason: "Operator OCR usage could not be saved on this browser. Please try again."
+    };
+  }
+
+  return {
+    ok: true,
+    snapshot: {
+      ownerKey: ownerKey,
+      claudeUsed: owner.claudeUsed,
+      gptUsed: owner.gptUsed,
+      claudeLimit: TD_OPERATOR_CLAUDE_USAGE_LIMIT,
+      claudeRemaining: Math.max(0, TD_OPERATOR_CLAUDE_USAGE_LIMIT - owner.claudeUsed),
+      lastProvider: owner.lastProvider,
+      updatedAt: owner.updatedAt
+    }
+  };
+}
+
+function getTstOperatorOcrProviderLabel(providerKey){
+  return providerKey === "gpt4" ? "GPT-4 Vision OCR" : "Claude Vision OCR";
+}
+
+function getTstOperatorOcrShortLabel(providerKey){
+  return providerKey === "gpt4" ? "GPT-4 Vision" : "Claude Vision";
+}
+
+function getPreferredTstOperatorOcrProvider(snapshot){
+  var info = snapshot || getTstOperatorOcrUsageSnapshot();
+  return info.claudeUsed < TD_OPERATOR_CLAUDE_USAGE_LIMIT ? "claude" : "gpt4";
+}
+
+function buildTstOperatorOcrButtonTitle(snapshot){
+  var info = snapshot || getTstOperatorOcrUsageSnapshot();
+  if(info.claudeUsed < TD_OPERATOR_CLAUDE_USAGE_LIMIT){
+    return "Upload scanned TST file. Operator mode uses Claude first (" + info.claudeUsed + "/" + info.claudeLimit + " used), then GPT-4 only if Claude fails.";
+  }
+  return "Upload scanned TST file. Claude operator usage is " + info.claudeUsed + "/" + info.claudeLimit + ", so operator mode now uses GPT-4 by default and Claude only as emergency fallback if GPT-4 fails.";
+}
+
 function createEmptyTstClaudeGrid(){
   return Array.from({length:4}, function(){ return Array(TD_CLAUDE_OCR_PH_COUNT).fill(""); });
 }
 
 function isAnyTstOcrBusy(){
-  return !!(tdPdfOcrBusy || tdClaudeOcrBusy);
+  return !!(tdPdfOcrBusy || tdClaudeOcrBusy || tdOperatorOcrBusy);
 }
 
 function renderTstOcrButtonStates(){
@@ -28635,6 +28764,16 @@ function renderTstOcrButtonStates(){
     legacyBtn.style.cursor = anyBusy ? "not-allowed" : "pointer";
     legacyBtn.textContent = tdPdfOcrBusy ? "⏳ GPT-4 Vision running..." : "🧠 GPT-4 Vision";
     legacyBtn.title = quotaBlocked ? quotaMessage : "Upload PDF or photo and fill TST cells using GPT-4 Vision OCR";
+  }
+
+  var operatorBtn = document.getElementById("td-ocr-operator-btn");
+  if(operatorBtn){
+    var operatorSnapshot = getTstOperatorOcrUsageSnapshot();
+    operatorBtn.disabled = anyBusy;
+    operatorBtn.style.opacity = anyBusy ? "0.72" : "1";
+    operatorBtn.style.cursor = anyBusy ? "not-allowed" : "pointer";
+    operatorBtn.textContent = tdOperatorOcrBusy ? (tdOperatorOcrBusyLabel || "⏳ Processing scanned TST...") : "📄 Drop Scanned TST file";
+    operatorBtn.title = tdOperatorOcrBusy ? String(tdOperatorOcrBusyLabel || "Processing scanned TST file...") : buildTstOperatorOcrButtonTitle(operatorSnapshot);
   }
 }
 
@@ -28678,6 +28817,20 @@ function setTstPdfOcrBusy(busy){
   updateTstFillRunButtonState();
   setTstVoiceFillButtonState(tdVoiceFillListening);
   updateTstPdfExtractButtonState();
+}
+
+function setTstOperatorOcrBusy(busy, label){
+  tdOperatorOcrBusy = !!busy;
+  tdOperatorOcrBusyLabel = tdOperatorOcrBusy ? String(label || "⏳ Processing scanned TST...") : "";
+  renderTstOcrButtonStates();
+  updateTstFillRunButtonState();
+  setTstVoiceFillButtonState(tdVoiceFillListening);
+}
+
+function setTstOperatorOcrBusyLabel(label){
+  if(!tdOperatorOcrBusy) return;
+  tdOperatorOcrBusyLabel = String(label || "⏳ Processing scanned TST...");
+  renderTstOcrButtonStates();
 }
 
 function setTstVoiceFillStatus(msg, color){
@@ -29233,6 +29386,12 @@ function toggleTstVoiceInput(){
   else startTstVoiceInput();
 }
 
+function openTstOperatorOcrPicker(){
+  if(isAnyTstOcrBusy()) return;
+  var input = document.getElementById("td-ocr-operator-file");
+  if(input) input.click();
+}
+
 function openTstPdfOcrPicker(){
   if(isAnyTstOcrBusy()) return;
   if(getTstOcrQuotaExceededScope(getTstOcrQuotaSnapshot())){
@@ -29746,6 +29905,184 @@ function toBase64FromDataUrl(dataUrl){
   var idx = str.indexOf(",");
   if(idx < 0) return "";
   return str.slice(idx + 1).trim();
+}
+
+function getTstOcrFailureMessage(results, fallbackText){
+  var list = Array.isArray(results) ? results : [results];
+  for(var i=0; i<list.length; i++){
+    var item = list[i] || {};
+    if(item.error) return String(item.error);
+    if(item.raw) return String(item.raw);
+  }
+  return String(fallbackText || "No valid TST values detected.");
+}
+
+async function buildOperatorTstOcrPayload(file){
+  var fileKind = getTstOcrFileKind(file);
+  if(!fileKind){
+    throw new Error("Please upload a PDF or image file (JPG, PNG, WEBP, HEIC).");
+  }
+
+  var maxMb = Math.max(TD_CLAUDE_OCR_MAX_MB, TD_PDF_OCR_MAX_MB);
+  if((file.size || 0) > maxMb * 1024 * 1024){
+    throw new Error("File is too large. Please keep it under " + maxMb + " MB.");
+  }
+
+  if(fileKind === "image"){
+    setTstOperatorOcrBusyLabel("⏳ Preparing scanned image...");
+    var dataUrl = await readFileAsDataUrl(file);
+    return {
+      fileKind: "image",
+      name: file.name || "tst-image",
+      pages: [{
+        page: "Image",
+        base64: toBase64FromDataUrl(dataUrl) || "",
+        mediaType: file.type || "image/jpeg"
+      }]
+    };
+  }
+
+  var ready = await ensurePdfJsReady();
+  if(!ready) throw new Error("PDF reader is not available.");
+
+  setTstOperatorOcrBusyLabel("⏳ Opening scanned PDF...");
+  var buf = await file.arrayBuffer();
+  var pdfDoc = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  var totalPages = pdfDoc.numPages || 0;
+  if(totalPages < 1) throw new Error("PDF has no pages to scan.");
+
+  var pages = [];
+  for(var i=1; i<=totalPages; i++){
+    setTstOperatorOcrBusyLabel("⏳ Preparing PDF page " + i + "/" + totalPages + "...");
+    var page = await pdfDoc.getPage(i);
+    var viewportFull = page.getViewport({ scale: 2.5 });
+    var fullCanvas = document.createElement("canvas");
+    fullCanvas.width = Math.ceil(viewportFull.width);
+    fullCanvas.height = Math.ceil(viewportFull.height);
+    await page.render({ canvasContext: fullCanvas.getContext("2d"), viewport: viewportFull }).promise;
+    pages.push({
+      page: i,
+      base64: fullCanvas.toDataURL("image/jpeg", 0.92).split(",")[1],
+      mediaType: "image/jpeg"
+    });
+  }
+
+  return {
+    fileKind: "pdf",
+    name: file.name || "tst.pdf",
+    pages: pages
+  };
+}
+
+async function runOperatorTstOcrWithProvider(providerKey, payload){
+  var safeProvider = providerKey === "gpt4" ? "gpt4" : "claude";
+  var reservation = reserveTstOperatorOcrProviderUsage(safeProvider);
+  var providerLabel = getTstOperatorOcrProviderLabel(safeProvider);
+  var shortLabel = getTstOperatorOcrShortLabel(safeProvider);
+  if(!reservation.ok){
+    return { ok: false, providerKey: safeProvider, providerLabel: providerLabel, results: [], written: 0, error: reservation.reason };
+  }
+
+  var pages = Array.isArray(payload && payload.pages) ? payload.pages : [];
+  if(!pages.length){
+    return { ok: false, providerKey: safeProvider, providerLabel: providerLabel, results: [], written: 0, error: "No scan pages were prepared for OCR." };
+  }
+
+  var results = [];
+  try{
+    for(var i=0; i<pages.length; i++){
+      var page = pages[i] || {};
+      if(pages.length > 1){
+        setTstOperatorOcrBusyLabel("⏳ " + shortLabel + " page " + (i + 1) + "/" + pages.length + "...");
+      }else{
+        setTstOperatorOcrBusyLabel("⏳ " + shortLabel + " processing...");
+      }
+      var result = safeProvider === "gpt4"
+        ? await callGpt4VisionForTst(page.base64, page.mediaType || "image/jpeg")
+        : await callClaudeVisionForTst(page.base64, page.mediaType || "image/jpeg");
+      result.page = page.page;
+      results.push(result);
+    }
+  }catch(err){
+    return {
+      ok: false,
+      providerKey: safeProvider,
+      providerLabel: providerLabel,
+      results: results,
+      written: 0,
+      error: err && err.message ? err.message : String(err)
+    };
+  }
+
+  var values = extractTstValuesFromClaudeResults(results);
+  var written = fillTdPeepFieldsFromList(values, true);
+  if(written < 1){
+    return {
+      ok: false,
+      providerKey: safeProvider,
+      providerLabel: providerLabel,
+      results: results,
+      written: 0,
+      error: getTstOcrFailureMessage(results, providerLabel + " could not detect usable TST values.")
+    };
+  }
+
+  return {
+    ok: true,
+    providerKey: safeProvider,
+    providerLabel: providerLabel,
+    results: results,
+    written: written,
+    snapshot: reservation.snapshot
+  };
+}
+
+async function handleTstOperatorOcrSelect(event){
+  var fileInput = document.getElementById("td-ocr-operator-file");
+  var file = event && event.target && event.target.files ? event.target.files[0] : null;
+  if(!file || isAnyTstOcrBusy()){
+    if(fileInput) fileInput.value = "";
+    return;
+  }
+
+  try{
+    if(tdVoiceFillListening || tdVoiceFillKeepAlive){
+      try{ stopTstVoiceInput(); }catch(e){}
+    }
+
+    setTstOperatorOcrBusy(true, "⏳ Preparing scanned TST...");
+    var payload = await buildOperatorTstOcrPayload(file);
+    var usageSnapshot = getTstOperatorOcrUsageSnapshot();
+    var primaryProvider = getPreferredTstOperatorOcrProvider(usageSnapshot);
+    var fallbackProvider = primaryProvider === "claude" ? "gpt4" : "claude";
+
+    var primaryResult = await runOperatorTstOcrWithProvider(primaryProvider, payload);
+    if(primaryResult.ok){
+      setTstOperatorOcrBusyLabel("✅ " + primaryResult.providerLabel + " filled " + primaryResult.written + " cells");
+      showToast("✅ " + primaryResult.providerLabel + " filled " + primaryResult.written + " TST cells.");
+      return;
+    }
+
+    showToast("⚠ " + primaryResult.providerLabel + " failed. Trying " + getTstOperatorOcrProviderLabel(fallbackProvider) + ".");
+    var fallbackResult = await runOperatorTstOcrWithProvider(fallbackProvider, payload);
+    if(fallbackResult.ok){
+      setTstOperatorOcrBusyLabel("✅ " + fallbackResult.providerLabel + " filled " + fallbackResult.written + " cells");
+      showToast("✅ " + fallbackResult.providerLabel + " filled " + fallbackResult.written + " TST cells after fallback.");
+      return;
+    }
+
+    alert(
+      "Operator OCR failed.\n\n"
+      + primaryResult.providerLabel + ": " + primaryResult.error
+      + "\n\n"
+      + getTstOperatorOcrProviderLabel(fallbackProvider) + ": " + fallbackResult.error
+    );
+  }catch(err){
+    alert("Could not process scanned TST file: " + (err && err.message ? err.message : err));
+  }finally{
+    setTstOperatorOcrBusy(false);
+    if(fileInput) fileInput.value = "";
+  }
 }
 
 function setTstPdfModalStatus(msg, color){
@@ -30401,7 +30738,7 @@ function fillTdPeepFieldsFromList(values, onlyNonEmpty){
     renderTstOcrButtonStates();
     updateTstFillRunButtonState();
     window.addEventListener("storage", function(ev){
-      if(ev && ev.key === TD_TST_OCR_QUOTA_STORAGE_KEY){
+      if(ev && (ev.key === TD_TST_OCR_QUOTA_STORAGE_KEY || ev.key === TD_OPERATOR_OCR_USAGE_STORAGE_KEY)){
         renderTstOcrQuotaHint();
         renderTstOcrButtonStates();
         updateTstClaudeExtractButtonState();
@@ -32040,6 +32377,7 @@ body.light-theme .btab-alarm-count{
     font-size:13px !important;
     justify-content:center !important;
   }
+  #tab-tempdata #td-ocr-operator-btn,
   #tab-tempdata #td-ocr-claude-btn,
   #tab-tempdata #td-ocr-pdf-btn,
   #tab-tempdata .td-toolbar-btn-muted{
