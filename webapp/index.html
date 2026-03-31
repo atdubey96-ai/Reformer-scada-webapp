@@ -20155,7 +20155,7 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
             <span class="refdash-section-bar refdash-accent"></span>
             <div>
               <h3 class="refdash-section-title">Temperature Trends — Last 1 Hour</h3>
-              <p class="refdash-section-sub">5-minute buckets from Supabase history</p>
+              <p class="refdash-section-sub">2-minute buckets from Supabase history</p>
             </div>
           </div>
           <div class="refdash-chart-frame refdash-chart-frame-xl"><canvas id="refdash-chart-temp-trend"></canvas></div>
@@ -32573,7 +32573,7 @@ body.light-theme .btab-alarm-count{
   var REFORMER_DASH_HISTORY_TABLE = "plant_data_history";
   var REFORMER_DASH_REFRESH_MS = 60000;
   var REFORMER_DASH_HISTORY_WINDOW_MS = 1 * 60 * 60 * 1000;
-  var REFORMER_DASH_BUCKET_MS = 5 * 60 * 1000;
+  var REFORMER_DASH_BUCKET_MS = 2 * 60 * 1000;
   var REFORMER_DASH_NCV = {
     CH4: 8570,
     C2H6: 15370,
@@ -33330,7 +33330,7 @@ body.light-theme .btab-alarm-count{
       if(reformerDashState.historyMessage){
         message = reformerDashState.historyMessage;
       }else if(!reformerDashState.historyPoints.length){
-        message = "No history samples were found in the last 1 hour. Trend charts will fill as new 5-minute history rows arrive.";
+        message = "No history samples were found in the last 1 hour. Trend charts will fill as new 2-minute history rows arrive.";
       }
       status.style.display = message ? "block" : "none";
       status.textContent = message || "";
@@ -33655,7 +33655,7 @@ body.light-theme .btab-alarm-count{
         reformerDashState.lastFetchAt = new Date();
         reformerDashState.errorMessage = "";
 
-        if(forceHistory || !reformerDashState.historyLoaded || !reformerDashState.lastHistoryFetchAt || (Date.now() - reformerDashState.lastHistoryFetchAt.getTime()) >= (5 * 60 * 1000)){
+        if(forceHistory || !reformerDashState.historyLoaded || !reformerDashState.lastHistoryFetchAt || (Date.now() - reformerDashState.lastHistoryFetchAt.getTime()) >= (2 * 60 * 1000)){
           var historyResult = await fetchReformerHistoryRows();
           reformerDashState.historyRows = Array.isArray(historyResult.rows) ? historyResult.rows : [];
           reformerDashState.historyPoints = bucketHistoryRows(reformerDashState.historyRows);
@@ -33663,7 +33663,7 @@ body.light-theme .btab-alarm-count{
           reformerDashState.lastHistoryFetchAt = new Date();
           reformerDashState.historyMessage = historyResult.error || "";
           if(!reformerDashState.historyRows.length && !reformerDashState.historyMessage){
-            reformerDashState.historyMessage = "No history samples were found in the last 1 hour. Trend charts will fill as new 5-minute history rows arrive.";
+            reformerDashState.historyMessage = "No history samples were found in the last 1 hour. Trend charts will fill as new 2-minute history rows arrive.";
           }
         }
       }catch(err){
