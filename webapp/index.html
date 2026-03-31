@@ -1116,11 +1116,28 @@ body[data-user-mode="admin"] [data-operator-only="true"]{
   display:none !important;
 }
 body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip{
-  grid-template-columns:minmax(260px,380px) !important;
+  grid-template-columns:auto !important;
   justify-content:flex-start;
-  width:min(100%, 380px);
+  width:auto;
   margin-bottom:0;
-  flex:0 1 380px;
+  flex:0 0 auto;
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip .td-toolbar-pill:not(.td-plant-status-pill){
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  width:auto;
+  min-height:42px;
+  gap:8px;
+  padding:8px 12px;
+  flex-wrap:nowrap;
+  white-space:nowrap;
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip .td-toolbar-pill:not(.td-plant-status-pill) .td-toolbar-label,
+body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip .td-toolbar-pill:not(.td-plant-status-pill) .td-plant-stat-value{
+  width:auto;
+  white-space:nowrap;
+  overflow-wrap:normal;
 }
 body[data-user-mode="operator"] #tab-tempdata #td-plant-excel-path-bar{
   display:none !important;
