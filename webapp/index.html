@@ -19095,13 +19095,13 @@ html, body, body *, body *::before, body *::after, svg text{
           </div>
 
           <div class="td-field-group">
-            <label class="td-label">NG Fuel Temp <span class="td-unit">(°C)</span></label>
-            <input type="number" id="td-ng-fuel-temp" class="td-input" placeholder="Enter value" step="0.1">
+            <label class="td-label">Pre reformer Inlet <span class="td-unit">(°C)</span></label>
+            <input type="number" id="td-tag-2411" class="td-input" placeholder="Enter value" step="0.1">
           </div>
 
           <div class="td-field-group">
-            <label class="td-label">GJA.2041tic2411 <span class="td-unit">(Unassigned)</span></label>
-            <input type="number" id="td-tag-2411" class="td-input" placeholder="Enter value" step="0.1">
+            <label class="td-label">Pre-reformer Outlet <span class="td-unit">(°C)</span></label>
+            <input type="number" id="td-ng-fuel-temp" class="td-input" placeholder="Enter value" step="0.1">
           </div>
 
         </div>
@@ -27576,8 +27576,8 @@ var TD_PROCESS_FIELD_BINDINGS = [
   { key:"psa1TipP", inputId:"td-psa1-tip-p", exportLabel:"PSA-1 Off Gas Tip Pressure", importLabels:["psa-1 tip p","psa1 tip p","psa-1 off gas tip pressure"], plantTagId:"GJA.2041pi2501a.pv" },
   { key:"ngTipP", inputId:"td-ng-tip-p", exportLabel:"Natural Gas Tip Pressure", importLabels:["ng tip p","natural gas tip pressure"], plantTagId:"GJA.2041pi2504a.pv" },
   { key:"naphthaTipP", inputId:"td-naphtha-tip-p", exportLabel:"Naphtha Tip Pressure", importLabels:["naphtha tip p","naphtha tip pressure"], plantTagId:"GJA.2041pi2507a.pv" },
-  { key:"ngFuelTemp", inputId:"td-ng-fuel-temp", exportLabel:"NG Fuel Temp (degC)", importLabels:["ng fuel temp","ng fuel temperature"], plantTagId:"GJA.2041ti2412.pv" },
-  { key:"tag2411", inputId:"td-tag-2411", exportLabel:"GJA.2041tic2411 (Unassigned)", importLabels:["gja.2041tic2411","tag 2411","unknown"], plantTagId:"GJA.2041tic2411.pv" }
+  { key:"tag2411", inputId:"td-tag-2411", exportLabel:"Pre reformer Inlet (degC)", importLabels:["pre reformer inlet","pre-reformer inlet","gja.2041tic2411","tag 2411","unknown"], plantTagId:"GJA.2041tic2411.pv" },
+  { key:"ngFuelTemp", inputId:"td-ng-fuel-temp", exportLabel:"Pre-reformer Outlet (degC)", importLabels:["pre reformer outlet","pre-reformer outlet","ng fuel temp","ng fuel temperature"], plantTagId:"GJA.2041ti2412.pv" }
 ];
 var tdPlantDataRefreshTimer = null;
 var tdPlantFetchInFlight = null;
