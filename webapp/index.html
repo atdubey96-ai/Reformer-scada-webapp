@@ -4045,6 +4045,7 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 #btab-cleaning{ --tab-icon-accent:#78dfc8; --tab-icon-glow:rgba(120,223,200,0.24); }
 #btab-cuboid{ --tab-icon-accent:#9abfff; --tab-icon-glow:rgba(154,191,255,0.30); }
 #btab-cuboidstack{ --tab-icon-accent:#7ddcf7; --tab-icon-glow:rgba(125,220,247,0.28); }
+#btab-reformerdash{ --tab-icon-accent:#f59e0b; --tab-icon-glow:rgba(245,158,11,0.26); }
 #btab-tempdata{ --tab-icon-accent:#ff9772; --tab-icon-glow:rgba(255,151,114,0.24); }
 #btab-alarms{ --tab-icon-accent:#ff746b; --tab-icon-glow:rgba(255,116,107,0.28); }
 .btab-label{
@@ -5306,7 +5307,7 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
     bottom:max(2px, env(safe-area-inset-bottom, 0px));
   }
   .btab{
-    flex:1 1 20%;
+    flex:1 1 16.66%;
     min-width:0;
     min-height:54px;
     padding:5px 3px 6px;
@@ -5315,10 +5316,11 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
   }
   #btab-burner{order:1;}
   #btab-cleaning{order:2;}
-  #btab-cuboid{order:6;}
+  #btab-cuboid{order:7;}
   #btab-cuboidstack{order:3;}
-  #btab-tempdata{order:4;}
-  #btab-alarms{order:5;}
+  #btab-reformerdash{order:4;}
+  #btab-tempdata{order:5;}
+  #btab-alarms{order:6;}
   #btab-heatmap .btab-icon{
     width:40px;
     height:40px;
@@ -10031,6 +10033,205 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-tempdata .td-manual-grid{
     grid-template-columns:1fr 1fr !important;
   }
+}
+</style>
+<style id="reformer-dashboard-tab-20260331">
+#tab-reformerdash{
+  --refdash-surface:linear-gradient(180deg, rgba(15,23,42,0.9) 0%, rgba(7,14,26,0.94) 100%);
+  --refdash-panel:rgba(15,23,42,0.8);
+  --refdash-panel-strong:rgba(15,23,42,0.94);
+  --refdash-border:rgba(126,200,240,0.18);
+  --refdash-shadow:0 18px 42px rgba(2,6,23,0.28);
+  --refdash-text:#e8eef7;
+  --refdash-dim:#91a5bb;
+  --refdash-muted:#5f7289;
+  --refdash-accent:#7ec8f0;
+  --refdash-accent-2:#f59e0b;
+  --refdash-green:#22c55e;
+  --refdash-red:#fb7185;
+  --refdash-purple:#c084fc;
+  --refdash-blue:#60a5fa;
+  --refdash-cyan:#22d3ee;
+  padding:24px 20px 120px;
+  background:transparent;
+}
+body.light-theme #tab-reformerdash{
+  --refdash-surface:linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(239,245,251,0.98) 100%);
+  --refdash-panel:rgba(255,255,255,0.96);
+  --refdash-panel-strong:rgba(247,250,253,0.98);
+  --refdash-border:rgba(15,23,42,0.08);
+  --refdash-shadow:0 18px 42px rgba(15,23,42,0.08);
+  --refdash-text:#122033;
+  --refdash-dim:#5f7288;
+  --refdash-muted:#7a8da3;
+}
+#tab-reformerdash .refdash-shell{max-width:1560px;margin:0 auto;display:flex;flex-direction:column;gap:18px;}
+#tab-reformerdash .refdash-hero,
+#tab-reformerdash .refdash-sync-bar,
+#tab-reformerdash .refdash-panel,
+#tab-reformerdash .refdash-eff-hero,
+#tab-reformerdash .refdash-info-bar,
+#tab-reformerdash .refdash-subtabs{
+  border:1px solid var(--refdash-border);
+  box-shadow:var(--refdash-shadow);
+  backdrop-filter:blur(18px);
+}
+#tab-reformerdash .refdash-hero{
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
+  padding:24px 26px;
+  border-radius:22px;
+  background:var(--refdash-surface);
+}
+#tab-reformerdash .refdash-hero::before{
+  content:"";
+  position:absolute;
+  inset:auto -55px -75px auto;
+  width:220px;
+  height:220px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0) 72%);
+  pointer-events:none;
+}
+#tab-reformerdash .refdash-kicker{font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--refdash-accent);}
+#tab-reformerdash .refdash-title{margin:8px 0 10px;font-size:30px;line-height:1.05;color:var(--refdash-text);}
+#tab-reformerdash .refdash-copy{max-width:820px;font-size:13px;line-height:1.6;color:var(--refdash-dim);}
+#tab-reformerdash .refdash-hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:12px;min-width:220px;}
+#tab-reformerdash .refdash-live-strip{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,0.04);color:var(--refdash-dim);}
+#tab-reformerdash .refdash-live-dot{width:9px;height:9px;border-radius:999px;background:var(--refdash-green);box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset,0 0 12px rgba(34,197,94,0.45);animation:pulse 2s infinite;}
+#tab-reformerdash .refdash-live-dot.is-stale{background:var(--refdash-red);box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset,0 0 12px rgba(251,113,133,0.4);}
+#tab-reformerdash .refdash-refresh-btn{
+  border:none;
+  border-radius:12px;
+  padding:11px 16px;
+  background:linear-gradient(135deg, rgba(245,158,11,0.96), rgba(243,112,34,0.95));
+  color:#0f172a;
+  font-weight:800;
+  letter-spacing:0.4px;
+  cursor:pointer;
+  box-shadow:0 12px 26px rgba(245,158,11,0.22);
+}
+#tab-reformerdash .refdash-refresh-btn:disabled{opacity:0.7;cursor:progress;}
+#tab-reformerdash .refdash-sync-bar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 16px;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px;
+  border-radius:18px;
+  background:var(--refdash-panel);
+  color:var(--refdash-dim);
+  font-size:11px;
+}
+#tab-reformerdash .refdash-sync-bar strong{color:var(--refdash-text);}
+#tab-reformerdash .refdash-subtabs{
+  display:flex;
+  gap:10px;
+  padding:10px;
+  border-radius:18px;
+  background:var(--refdash-panel);
+  overflow-x:auto;
+}
+#tab-reformerdash .refdash-subtab{
+  border:none;
+  border-radius:12px;
+  padding:11px 16px;
+  background:rgba(255,255,255,0.04);
+  color:var(--refdash-dim);
+  font-weight:700;
+  letter-spacing:0.5px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+#tab-reformerdash .refdash-subtab.is-active{
+  background:linear-gradient(135deg, rgba(126,200,240,0.2), rgba(245,158,11,0.18));
+  color:var(--refdash-text);
+  box-shadow:inset 0 0 0 1px rgba(126,200,240,0.18);
+}
+#tab-reformerdash .refdash-pane{display:none;flex-direction:column;gap:18px;}
+#tab-reformerdash .refdash-pane.is-active{display:flex;}
+#tab-reformerdash .refdash-card-grid,
+#tab-reformerdash .refdash-grid{display:grid;gap:16px;}
+#tab-reformerdash .refdash-card-grid-6{grid-template-columns:repeat(6,minmax(0,1fr));}
+#tab-reformerdash .refdash-card-grid-4{grid-template-columns:repeat(4,minmax(0,1fr));}
+#tab-reformerdash .refdash-grid-3{grid-template-columns:2fr 1fr 1fr;}
+#tab-reformerdash .refdash-grid-2{grid-template-columns:1fr 1fr;}
+#tab-reformerdash .refdash-grid-31{grid-template-columns:3fr 1.15fr;}
+#tab-reformerdash .refdash-grid-3eq{grid-template-columns:repeat(3,minmax(0,1fr));}
+#tab-reformerdash .refdash-panel,
+#tab-reformerdash .refdash-eff-hero,
+#tab-reformerdash .refdash-info-bar{
+  padding:20px;
+  border-radius:20px;
+  background:var(--refdash-panel);
+}
+#tab-reformerdash .refdash-section-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;}
+#tab-reformerdash .refdash-section-bar{width:4px;height:26px;border-radius:999px;flex:0 0 auto;}
+#tab-reformerdash .refdash-accent{background:var(--refdash-accent);}
+#tab-reformerdash .refdash-accent-2{background:var(--refdash-accent-2);}
+#tab-reformerdash .refdash-green{background:var(--refdash-green);}
+#tab-reformerdash .refdash-blue{background:var(--refdash-blue);}
+#tab-reformerdash .refdash-purple{background:var(--refdash-purple);}
+#tab-reformerdash .refdash-cyan{background:var(--refdash-cyan);}
+#tab-reformerdash .refdash-section-title{font-size:18px;line-height:1.15;color:var(--refdash-text);}
+#tab-reformerdash .refdash-section-sub{margin-top:4px;font-size:12px;color:var(--refdash-dim);}
+#tab-reformerdash .refdash-chart-frame{position:relative;height:220px;}
+#tab-reformerdash .refdash-chart-frame-lg{height:260px;}
+#tab-reformerdash .refdash-chart-frame-xl{height:320px;}
+#tab-reformerdash .refdash-table-wrap{overflow:auto;}
+#tab-reformerdash .refdash-table{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:12px;}
+#tab-reformerdash .refdash-table th{padding:8px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-muted);}
+#tab-reformerdash .refdash-table td{padding:9px 12px;background:rgba(255,255,255,0.035);}
+#tab-reformerdash .refdash-gauge-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+#tab-reformerdash .refdash-legend-list{margin-top:12px;}
+#tab-reformerdash .refdash-mini-box{margin-top:20px;padding:14px;border-radius:14px;background:var(--refdash-panel-strong);border:1px solid rgba(126,200,240,0.12);}
+#tab-reformerdash .refdash-info-bar{font-size:12px;color:var(--refdash-dim);}
+#tab-reformerdash .refdash-eff-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;background:linear-gradient(135deg, rgba(15,23,42,0.88), rgba(34,197,94,0.08));}
+#tab-reformerdash .refdash-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+#tab-reformerdash .refdash-status-dot{display:inline-block;width:9px;height:9px;border-radius:999px;}
+#tab-reformerdash .refdash-status-normal{background:var(--refdash-green);box-shadow:0 0 10px rgba(34,197,94,0.4);}
+#tab-reformerdash .refdash-status-warning{background:var(--refdash-accent-2);box-shadow:0 0 10px rgba(245,158,11,0.35);}
+#tab-reformerdash .refdash-status-alarm{background:var(--refdash-red);box-shadow:0 0 10px rgba(251,113,133,0.36);}
+#tab-reformerdash .refdash-comp-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+#tab-reformerdash .refdash-comp-panel{padding:18px;border-radius:18px;background:var(--refdash-panel);border:1px solid var(--refdash-border);box-shadow:var(--refdash-shadow);}
+#tab-reformerdash .refdash-comp-input{
+  width:100%;
+  padding:7px 8px;
+  border-radius:10px;
+  border:1px solid rgba(126,200,240,0.12);
+  background:rgba(3,8,18,0.22);
+  color:var(--refdash-text);
+  outline:none;
+}
+body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,249,0.88);}
+@media (max-width:1200px){
+  #tab-reformerdash .refdash-card-grid-6{grid-template-columns:repeat(3,minmax(0,1fr));}
+  #tab-reformerdash .refdash-card-grid-4{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #tab-reformerdash .refdash-grid-3,
+  #tab-reformerdash .refdash-grid-31,
+  #tab-reformerdash .refdash-grid-3eq{grid-template-columns:1fr;}
+}
+@media (max-width:900px){
+  #tab-reformerdash{padding:18px 14px 122px;}
+  #tab-reformerdash .refdash-hero{padding:18px;flex-direction:column;align-items:stretch;}
+  #tab-reformerdash .refdash-title{font-size:24px;}
+  #tab-reformerdash .refdash-hero-side{align-items:stretch;min-width:0;}
+  #tab-reformerdash .refdash-card-grid-6,
+  #tab-reformerdash .refdash-card-grid-4,
+  #tab-reformerdash .refdash-grid-2,
+  #tab-reformerdash .refdash-grid-3eq{grid-template-columns:1fr;}
+  #tab-reformerdash .refdash-gauge-grid{grid-template-columns:1fr 1fr;}
+  #tab-reformerdash .refdash-chart-frame-xl{height:280px;}
+}
+@media (max-width:640px){
+  #tab-reformerdash .refdash-gauge-grid{grid-template-columns:1fr;}
+  #tab-reformerdash .refdash-section-title{font-size:16px;}
+  #tab-reformerdash .refdash-subtab{padding:10px 14px;font-size:12px;}
 }
 </style>
 </head>
@@ -19823,6 +20024,209 @@ html, body, body *, body *::before, body *::after, svg text{
     </div>
   </div>
 
+  <div id="tab-reformerdash" class="tab-panel">
+    <div class="refdash-shell">
+      <div class="refdash-hero">
+        <div class="refdash-hero-copy">
+          <div class="refdash-kicker">Reformer Monitoring</div>
+          <h2 class="refdash-title">Reformer Efficiency &amp; Heat Duty</h2>
+          <p class="refdash-copy">Live current-data, heat-duty breakdowns, estimated efficiency panels, composition tools, and historical trends from the plant-data Supabase feed already used in this website.</p>
+        </div>
+        <div class="refdash-hero-side">
+          <div class="refdash-live-strip">
+            <span id="refdash-live-dot" class="refdash-live-dot"></span>
+            <span id="refdash-live-label" class="refdash-mono">Connecting...</span>
+          </div>
+          <button type="button" class="refdash-refresh-btn" onclick="refreshReformerDashboard(true)">Refresh Data</button>
+        </div>
+      </div>
+
+      <div class="refdash-sync-bar refdash-mono">
+        <span>Last fetch: <strong id="refdash-last-fetch">—</strong></span>
+        <span>PHD Data: <strong id="refdash-phd-time">—</strong></span>
+        <span>Excel Push: <strong id="refdash-excel-push">—</strong></span>
+        <span>History rows: <strong id="refdash-history-count">—</strong></span>
+      </div>
+
+      <div class="refdash-subtabs" role="tablist" aria-label="Reformer dashboard views">
+        <button type="button" id="refdash-tabbtn-overview" class="refdash-subtab is-active" onclick="switchReformerDashTab('overview')">Overview</button>
+        <button type="button" id="refdash-tabbtn-heatduty" class="refdash-subtab" onclick="switchReformerDashTab('heatduty')">Heat Duty</button>
+        <button type="button" id="refdash-tabbtn-trends" class="refdash-subtab" onclick="switchReformerDashTab('trends')">Trends</button>
+        <button type="button" id="refdash-tabbtn-composition" class="refdash-subtab" onclick="switchReformerDashTab('composition')">Fuel Comp</button>
+      </div>
+
+      <div id="refdash-pane-overview" class="refdash-pane is-active">
+        <div id="refdash-kpi-overview" class="refdash-card-grid refdash-card-grid-6"></div>
+        <div class="refdash-grid refdash-grid-3">
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-accent"></span>
+              <div>
+                <h3 class="refdash-section-title">Temperature Profile</h3>
+                <p class="refdash-section-sub">Actual versus design reference</p>
+              </div>
+            </div>
+            <div class="refdash-chart-frame refdash-chart-frame-lg"><canvas id="refdash-chart-temp-profile"></canvas></div>
+          </section>
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-cyan"></span>
+              <div>
+                <h3 class="refdash-section-title">Fuel Mix</h3>
+                <p class="refdash-section-sub">Heat contribution by source</p>
+              </div>
+            </div>
+            <div class="refdash-chart-frame"><canvas id="refdash-chart-fuel-mix"></canvas></div>
+            <div id="refdash-fuel-mix-legend" class="refdash-legend-list"></div>
+          </section>
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-green"></span>
+              <div>
+                <h3 class="refdash-section-title">Key Indicators</h3>
+                <p class="refdash-section-sub">Real-time gauge snapshots</p>
+              </div>
+            </div>
+            <div id="refdash-gauges" class="refdash-gauge-grid"></div>
+          </section>
+        </div>
+
+        <div class="refdash-grid refdash-grid-31">
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-accent"></span>
+              <div>
+                <h3 class="refdash-section-title">Process Parameters</h3>
+                <p class="refdash-section-sub">Live values from the mapped plant-data feed</p>
+              </div>
+            </div>
+            <div class="refdash-table-wrap">
+              <table id="refdash-process-table" class="refdash-table refdash-mono"></table>
+            </div>
+          </section>
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-accent-2"></span>
+              <div>
+                <h3 class="refdash-section-title">Burner Tip Pressures</h3>
+                <p class="refdash-section-sub">Fuel delivery and pre-reformer view</p>
+              </div>
+            </div>
+            <div id="refdash-tip-pressures"></div>
+            <div id="refdash-prereformer-box" class="refdash-mini-box"></div>
+          </section>
+        </div>
+      </div>
+
+      <div id="refdash-pane-heatduty" class="refdash-pane">
+        <div id="refdash-kpi-heatduty" class="refdash-card-grid refdash-card-grid-4"></div>
+        <div class="refdash-grid refdash-grid-2">
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-cyan"></span>
+              <div>
+                <h3 class="refdash-section-title">Fuel-wise Heat Duty</h3>
+                <p class="refdash-section-sub">Individual fuel contribution</p>
+              </div>
+            </div>
+            <div class="refdash-table-wrap">
+              <table id="refdash-heat-duty-table" class="refdash-table refdash-mono"></table>
+            </div>
+          </section>
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-green"></span>
+              <div>
+                <h3 class="refdash-section-title">Heat Balance</h3>
+                <p class="refdash-section-sub">Distribution of heat input</p>
+              </div>
+            </div>
+            <div class="refdash-chart-frame"><canvas id="refdash-chart-heat-balance"></canvas></div>
+            <div id="refdash-heat-balance-legend"></div>
+          </section>
+        </div>
+        <section id="refdash-eff-hero" class="refdash-eff-hero"></section>
+      </div>
+
+      <div id="refdash-pane-trends" class="refdash-pane">
+        <div id="refdash-trend-status" class="refdash-info-bar refdash-mono" style="display:none;"></div>
+        <section class="refdash-panel">
+          <div class="refdash-section-head">
+            <span class="refdash-section-bar refdash-accent"></span>
+            <div>
+              <h3 class="refdash-section-title">Temperature Trends — Last 7 Days</h3>
+              <p class="refdash-section-sub">8-hour buckets from Supabase history</p>
+            </div>
+          </div>
+          <div class="refdash-chart-frame refdash-chart-frame-xl"><canvas id="refdash-chart-temp-trend"></canvas></div>
+        </section>
+
+        <div class="refdash-grid refdash-grid-2">
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-purple"></span>
+              <div>
+                <h3 class="refdash-section-title">Combustion Quality</h3>
+                <p class="refdash-section-sub">Methane slip and excess O2</p>
+              </div>
+            </div>
+            <div class="refdash-chart-frame refdash-chart-frame-lg"><canvas id="refdash-chart-combustion"></canvas></div>
+          </section>
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-blue"></span>
+              <div>
+                <h3 class="refdash-section-title">Flow Trends</h3>
+                <p class="refdash-section-sub">PSA off gas and naphtha fuel</p>
+              </div>
+            </div>
+            <div class="refdash-chart-frame refdash-chart-frame-lg"><canvas id="refdash-chart-flow-trend"></canvas></div>
+          </section>
+        </div>
+
+        <section class="refdash-panel">
+          <div class="refdash-section-head">
+            <span class="refdash-section-bar refdash-green"></span>
+            <div>
+              <h3 class="refdash-section-title">Reformer Efficiency Trend</h3>
+              <p class="refdash-section-sub">Estimated thermal efficiency from historical points</p>
+            </div>
+          </div>
+          <div class="refdash-chart-frame"><canvas id="refdash-chart-eff-trend"></canvas></div>
+        </section>
+      </div>
+
+      <div id="refdash-pane-composition" class="refdash-pane">
+        <div class="refdash-info-bar refdash-mono">Estimated heat-duty values recalculate instantly when you update the lab composition below.</div>
+        <div id="refdash-comp-panels" class="refdash-grid refdash-grid-3eq"></div>
+        <div class="refdash-grid refdash-grid-2">
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-accent"></span>
+              <div>
+                <h3 class="refdash-section-title">Net Calorific Values</h3>
+                <p class="refdash-section-sub">Calculated from the editable composition</p>
+              </div>
+            </div>
+            <div class="refdash-chart-frame"><canvas id="refdash-chart-ncv"></canvas></div>
+          </section>
+          <section class="refdash-panel">
+            <div class="refdash-section-head">
+              <span class="refdash-section-bar refdash-blue"></span>
+              <div>
+                <h3 class="refdash-section-title">Component NCV Reference</h3>
+                <p class="refdash-section-sub">Static reference values used by the model</p>
+              </div>
+            </div>
+            <div class="refdash-table-wrap">
+              <table id="refdash-ncv-ref-table" class="refdash-table refdash-mono"></table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /tab-panels -->
 
 <footer class="scada-app-footer" aria-label="Dashboard footer">
@@ -19831,11 +20235,12 @@ html, body, body *, body *::before, body *::after, svg text{
       <div class="scada-footer-brand">
         <div class="scada-footer-eyebrow">Industrial Monitoring Dashboard</div>
         <h2 class="scada-footer-title">Reformer SCADA</h2>
-        <p class="scada-footer-copy">Live monitoring for burner status, cleaning, cuboid analysis, TST data, alarms, and saved operational history in one shared dashboard.</p>
+        <p class="scada-footer-copy">Live monitoring for burner status, cleaning, cuboid analysis, reformer efficiency, heat duty, TST data, alarms, and saved operational history in one shared dashboard.</p>
         <div class="scada-footer-link-row" aria-label="Footer quick links">
           <a href="#tab-burner" class="scada-footer-link" onclick="switchTab('burner'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Burner</a>
           <a href="#tab-cleaning" class="scada-footer-link" onclick="switchTab('cleaning'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Cleaning</a>
           <a href="#tab-cuboidstack" class="scada-footer-link" onclick="switchTab('cuboidstack'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Dashboard</a>
+          <a href="#tab-reformerdash" class="scada-footer-link" onclick="switchTab('reformerdash'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Reformer</a>
           <a href="#tab-tempdata" class="scada-footer-link" onclick="switchTab('tempdata'); window.scrollTo({top:0, behavior:'smooth'}); return false;">TST Data</a>
           <a href="#tab-alarms" class="scada-footer-link" onclick="switchTab('alarms'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Alarms</a>
         </div>
@@ -19924,6 +20329,27 @@ html, body, body *, body *::before, body *::after, svg text{
     </span>
     <span class="btab-text">
       <span class="btab-label-top">Dashboard</span>
+      <span class="btab-label-sub"></span>
+    </span>
+  </button>
+  <button class="btab" id="btab-reformerdash" onclick="switchTab('reformerdash')">
+    <span class="btab-icon-wrap" aria-hidden="true">
+      <span class="btab-icon">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path class="tab-icon-stroke" d="M5.4 18.2h13.2"></path>
+          <path class="tab-icon-stroke" d="M7.3 16.5V9.9"></path>
+          <path class="tab-icon-stroke" d="M12 16.5V6.8"></path>
+          <path class="tab-icon-stroke" d="M16.7 16.5v-4.9"></path>
+          <path class="tab-icon-fill" d="M6.4 14.9h1.8v1.6H6.4z"></path>
+          <path class="tab-icon-fill" d="M11.1 11.8h1.8v4.7h-1.8z"></path>
+          <path class="tab-icon-fill" d="M15.8 13.3h1.8v3.2h-1.8z"></path>
+          <path class="tab-icon-stroke" d="M7.3 9.9 12 6.8l4.7 4.8"></path>
+          <circle class="tab-icon-solid" cx="12" cy="6.8" r=".95"></circle>
+        </svg>
+      </span>
+    </span>
+    <span class="btab-text">
+      <span class="btab-label-top">Reformer</span>
       <span class="btab-label-sub"></span>
     </span>
   </button>
@@ -25552,6 +25978,9 @@ function switchTab(tab){
   document.querySelectorAll('.btab').forEach(b => b.classList.remove('btab-active'));
   document.getElementById('tab-'+tab).classList.add('tab-active');
   document.getElementById('btab-'+tab).classList.add('btab-active');
+  if(tab === 'reformerdash' && typeof ensureReformerDashboardLoaded === 'function'){
+    setTimeout(function(){ ensureReformerDashboardLoaded(true); }, 20);
+  }
   setTabsRowHidden(false);
   syncHeatMapHeaderTools(tab);
   if(tab === 'alarms') refreshAlarmPanel();
@@ -32139,6 +32568,1172 @@ body.light-theme .btab-alarm-count{
   }
 }
 </style>
+<script id="reformer-dashboard-tab-script-20260331">
+(function(){
+  var REFORMER_DASH_HISTORY_TABLE = "plant_data_history";
+  var REFORMER_DASH_REFRESH_MS = 60000;
+  var REFORMER_DASH_HISTORY_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+  var REFORMER_DASH_BUCKET_MS = 8 * 60 * 60 * 1000;
+  var REFORMER_DASH_NCV = {
+    CH4: 8570,
+    C2H6: 15370,
+    C3H8: 22350,
+    H2: 2580,
+    CO: 3020,
+    CO2: 0,
+    N2: 0
+  };
+  var REFORMER_DASH_NAPHTHA_NCV = 10500;
+  var REFORMER_DASH_FIELD_ALIAS = {
+    hguLoad: "hguLoad",
+    abCot: "abCot",
+    cdCot: "cdCot",
+    flueGas: "flueGas",
+    excessO2: "excessO2",
+    methaneSlip: "methaneSlip",
+    psa1Og: "psa1Flow",
+    psa2Og: "psa2Flow",
+    naphthaFuel: "naphthaFuel",
+    psa1TipP: "psa1Tip",
+    ngTipP: "ngTip",
+    naphthaTipP: "napTip",
+    tag2411: "preInlet",
+    ngFuelTemp: "preOutlet"
+  };
+  var REFORMER_DASH_PROCESS_ROWS = [
+    { label:"HGU Load", key:"hguLoad", unit:"%", min:65, max:110 },
+    { label:"AB Side COT", key:"abCot", unit:"degC", min:800, max:860 },
+    { label:"CD Side COT", key:"cdCot", unit:"degC", min:800, max:860 },
+    { label:"Flue Gas Temp", key:"flueGas", unit:"degC", min:850, max:950 },
+    { label:"Excess O2", key:"excessO2", unit:"%Vol", min:2, max:7 },
+    { label:"Methane Slip", key:"methaneSlip", unit:"%Vol", min:1, max:5 },
+    { label:"PSA-1 Off Gas", key:"psa1Flow", unit:"Nm3/h", min:15000, max:35000 },
+    { label:"PSA-2 Off Gas", key:"psa2Flow", unit:"Nm3/h", min:0, max:35000 },
+    { label:"Naphtha Fuel", key:"naphthaFuel", unit:"kg/h", min:800, max:2000 },
+    { label:"Pre reformer Inlet", key:"preInlet", unit:"degC", min:420, max:470 },
+    { label:"Pre-reformer Outlet", key:"preOutlet", unit:"degC", min:470, max:520 },
+    { label:"Pre-ref Bed Max", key:"preBedMax", unit:"degC", min:480, max:540 },
+    { label:"Pre-ref Bed Min", key:"preBedMin", unit:"degC", min:470, max:510 }
+  ];
+
+  function makeDefaultComposition(){
+    return {
+      psa1: { CH4:18.5, C2H6:0.3, C3H8:0.1, H2:42.0, CO:12.5, CO2:25.6, N2:1.0 },
+      psa2: { CH4:20.0, C2H6:0.5, C3H8:0.2, H2:38.0, CO:14.0, CO2:26.3, N2:1.0 },
+      ng: { CH4:87.5, C2H6:6.2, C3H8:2.8, H2:0.0, CO:0.0, CO2:1.8, N2:1.7 }
+    };
+  }
+
+  function makeEmptyData(){
+    return {
+      hguLoad: null,
+      abCot: null,
+      cdCot: null,
+      flueGas: null,
+      excessO2: null,
+      preBedMax: null,
+      preBedMin: null,
+      methaneSlip: null,
+      psa1Flow: null,
+      psa2Flow: null,
+      naphthaFuel: null,
+      psa1Tip: null,
+      ngTip: null,
+      napTip: null,
+      preInlet: null,
+      preOutlet: null,
+      h2Production: null
+    };
+  }
+
+  var reformerDashState = window.__reformerDashState || (window.__reformerDashState = {
+    initialized: false,
+    resizeBound: false,
+    refreshTimer: 0,
+    fetchPromise: null,
+    activePane: "overview",
+    charts: {},
+    composition: makeDefaultComposition(),
+    data: makeEmptyData(),
+    rowMeta: {},
+    latestMap: new Map(),
+    historyRows: [],
+    historyPoints: [],
+    historyLoaded: false,
+    lastHistoryFetchAt: null,
+    historyMessage: "",
+    errorMessage: "",
+    mappedCount: 0,
+    lastFetchAt: null,
+    lastPhdAt: null,
+    lastPushAt: null
+  });
+
+  function getReformerDashEl(id){
+    return document.getElementById(id);
+  }
+
+  function isFiniteNumber(value){
+    return typeof value === "number" && isFinite(value);
+  }
+
+  function parseNumberOrNull(raw){
+    if(raw === null || raw === undefined) return null;
+    var token = String(raw).trim().replace(/,/g, "");
+    if(!token) return null;
+    var num = Number(token);
+    return isFinite(num) ? num : null;
+  }
+
+  function nz(value){
+    return isFiniteNumber(value) ? value : 0;
+  }
+
+  function clamp(value, min, max){
+    var num = isFiniteNumber(value) ? value : min;
+    if(num < min) return min;
+    if(num > max) return max;
+    return num;
+  }
+
+  function meanAvailable(list){
+    var vals = [];
+    (Array.isArray(list) ? list : []).forEach(function(item){
+      if(isFiniteNumber(item)) vals.push(item);
+    });
+    if(!vals.length) return null;
+    return vals.reduce(function(sum, item){ return sum + item; }, 0) / vals.length;
+  }
+
+  function formatValue(value, decimals, fallback){
+    if(!isFiniteNumber(value)) return fallback || "—";
+    var places = typeof decimals === "number" ? decimals : 2;
+    if(Math.abs(value - Math.round(value)) < 0.000001 && places > 0){
+      return String(Math.round(value));
+    }
+    return Number(value).toFixed(places);
+  }
+
+  function parseDashDate(raw){
+    if(typeof parseTdPlantDate === "function") return parseTdPlantDate(raw);
+    if(!raw) return null;
+    var dt = raw instanceof Date ? raw : new Date(raw);
+    return isFinite(dt.getTime()) ? dt : null;
+  }
+
+  function formatDashMoment(dt){
+    if(typeof formatTdPlantStatMoment === "function") return formatTdPlantStatMoment(dt);
+    if(!dt) return "—";
+    return dt.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+  }
+
+  function formatDashDateTime(dt){
+    if(typeof formatTdPlantDateTime === "function") return formatTdPlantDateTime(dt);
+    if(!dt) return "—";
+    return dt.toLocaleDateString([], {day:"2-digit", month:"short"}) + " " + dt.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+  }
+
+  function getDashAgoLabel(dt){
+    if(typeof getTdPlantAgoLabel === "function") return getTdPlantAgoLabel(dt);
+    if(!dt) return "";
+    var diff = Math.round((Date.now() - dt.getTime()) / 60000);
+    if(diff < 1) return "just now";
+    if(diff === 1) return "1 min ago";
+    if(diff < 60) return diff + " min ago";
+    var hours = Math.round(diff / 60);
+    return hours === 1 ? "1 hr ago" : (hours + " hr ago");
+  }
+
+  function getDashTheme(){
+    var root = getReformerDashEl("tab-reformerdash") || document.documentElement;
+    var styles = window.getComputedStyle(root);
+    return {
+      text: (styles.getPropertyValue("--refdash-text") || "").trim() || "#e8eef7",
+      dim: (styles.getPropertyValue("--refdash-dim") || "").trim() || "#91a5bb",
+      muted: (styles.getPropertyValue("--refdash-muted") || "").trim() || "#5f7289",
+      border: (styles.getPropertyValue("--refdash-border") || "").trim() || "rgba(126,200,240,0.18)",
+      accent: (styles.getPropertyValue("--refdash-accent") || "").trim() || "#7ec8f0",
+      accent2: (styles.getPropertyValue("--refdash-accent-2") || "").trim() || "#f59e0b",
+      green: (styles.getPropertyValue("--refdash-green") || "").trim() || "#22c55e",
+      red: (styles.getPropertyValue("--refdash-red") || "").trim() || "#fb7185",
+      purple: (styles.getPropertyValue("--refdash-purple") || "").trim() || "#c084fc",
+      blue: (styles.getPropertyValue("--refdash-blue") || "").trim() || "#60a5fa",
+      cyan: (styles.getPropertyValue("--refdash-cyan") || "").trim() || "#22d3ee",
+      panel: (styles.getPropertyValue("--refdash-panel-strong") || "").trim() || "rgba(15,23,42,0.94)"
+    };
+  }
+
+  function getBindingByKey(bindingKey){
+    if(!Array.isArray(TD_PROCESS_FIELD_BINDINGS)) return null;
+    for(var i = 0; i < TD_PROCESS_FIELD_BINDINGS.length; i++){
+      if(TD_PROCESS_FIELD_BINDINGS[i] && TD_PROCESS_FIELD_BINDINGS[i].key === bindingKey){
+        return TD_PROCESS_FIELD_BINDINGS[i];
+      }
+    }
+    return null;
+  }
+
+  function getStateKeyFromHistoryRow(row){
+    var tagId = String(row && row.tag_id || "").trim();
+    if(tagId){
+      for(var bindingKey in REFORMER_DASH_FIELD_ALIAS){
+        if(!Object.prototype.hasOwnProperty.call(REFORMER_DASH_FIELD_ALIAS, bindingKey)) continue;
+        var binding = getBindingByKey(bindingKey);
+        if(binding && binding.plantTagId === tagId) return REFORMER_DASH_FIELD_ALIAS[bindingKey];
+      }
+    }
+    var label = String(row && (row.label || row.name) || "").trim().toLowerCase();
+    if(!label) return "";
+    for(var key in REFORMER_DASH_FIELD_ALIAS){
+      if(!Object.prototype.hasOwnProperty.call(REFORMER_DASH_FIELD_ALIAS, key)) continue;
+      var rowBinding = getBindingByKey(key);
+      if(!rowBinding) continue;
+      var exportLabel = String(rowBinding.exportLabel || "").toLowerCase();
+      if(exportLabel && label.indexOf(exportLabel) >= 0) return REFORMER_DASH_FIELD_ALIAS[key];
+      var tokens = Array.isArray(rowBinding.importLabels) ? rowBinding.importLabels : [];
+      for(var t = 0; t < tokens.length; t++){
+        if(label.indexOf(String(tokens[t] || "").toLowerCase()) >= 0){
+          return REFORMER_DASH_FIELD_ALIAS[key];
+        }
+      }
+    }
+    return "";
+  }
+
+  function getLatestSavedEntry(){
+    if(Array.isArray(tempDataEntries) && tempDataEntries.length) return tempDataEntries[0] || null;
+    try{
+      var raw = localStorage.getItem("tempDataEntries");
+      var parsed = raw ? JSON.parse(raw) : [];
+      if(Array.isArray(parsed) && parsed.length) return parsed[0] || null;
+    }catch(ignoreStorageError){}
+    return null;
+  }
+
+  function readFallbackValue(entryKey, inputId){
+    var direct = parseNumberOrNull(getReformerDashEl(inputId) && getReformerDashEl(inputId).value);
+    if(isFiniteNumber(direct)) return direct;
+    var latestEntry = getLatestSavedEntry();
+    if(!latestEntry) return null;
+    return parseNumberOrNull(latestEntry[entryKey]);
+  }
+
+  function collectLatestRowsSafe(rows){
+    if(typeof collectTdPlantLatestRows === "function"){
+      return collectTdPlantLatestRows(rows);
+    }
+    var latest = new Map();
+    (Array.isArray(rows) ? rows : []).forEach(function(row){
+      if(!row) return;
+      var tagId = String(row.tag_id || "").trim();
+      if(tagId && !latest.has(tagId)) latest.set(tagId, row);
+    });
+    return latest;
+  }
+
+  function deriveDashTimeline(latestMap){
+    reformerDashState.lastPhdAt = null;
+    reformerDashState.lastPushAt = null;
+    if(!latestMap || !latestMap.forEach) return;
+    latestMap.forEach(function(row){
+      var phdAt = parseDashDate(row && row.synced_at);
+      var pushAt = parseDashDate(row && (row.pushed_at || row.synced_at));
+      if(phdAt && (!reformerDashState.lastPhdAt || phdAt > reformerDashState.lastPhdAt)) reformerDashState.lastPhdAt = phdAt;
+      if(pushAt && (!reformerDashState.lastPushAt || pushAt > reformerDashState.lastPushAt)) reformerDashState.lastPushAt = pushAt;
+    });
+  }
+
+  function mapCurrentRowsToState(rows){
+    var latestMap = collectLatestRowsSafe(rows);
+    var data = makeEmptyData();
+    var rowMeta = {};
+    for(var bindingKey in REFORMER_DASH_FIELD_ALIAS){
+      if(!Object.prototype.hasOwnProperty.call(REFORMER_DASH_FIELD_ALIAS, bindingKey)) continue;
+      var binding = getBindingByKey(bindingKey);
+      if(!binding || !binding.plantTagId) continue;
+      var row = latestMap.get(binding.plantTagId);
+      if(!row) continue;
+      var stateKey = REFORMER_DASH_FIELD_ALIAS[bindingKey];
+      data[stateKey] = parseNumberOrNull(row.value);
+      rowMeta[stateKey] = {
+        label: row.label || binding.exportLabel || stateKey,
+        unit: row.unit || "",
+        tagId: row.tag_id || binding.plantTagId,
+        syncedAt: row.synced_at || "",
+        pushedAt: row.pushed_at || row.synced_at || ""
+      };
+    }
+    data.preBedMax = readFallbackValue("preRefMax", "td-prereformer-max");
+    data.preBedMin = readFallbackValue("preRefMin", "td-prereformer-min");
+    data.h2Production = data.hguLoad;
+    reformerDashState.mappedCount = Object.keys(rowMeta).length;
+    deriveDashTimeline(latestMap);
+    return {
+      latestMap: latestMap,
+      data: data,
+      rowMeta: rowMeta
+    };
+  }
+
+  function buildPlantHeaders(){
+    return {
+      apikey: TD_PLANT_DATA_SUPABASE_KEY,
+      Authorization: "Bearer " + TD_PLANT_DATA_SUPABASE_KEY,
+      Accept: "application/json",
+      "Cache-Control": "no-cache"
+    };
+  }
+
+  async function fetchReformerCurrentRows(){
+    if(typeof fetchTdPlantImportRows === "function"){
+      return await fetchTdPlantImportRows();
+    }
+    if(!TD_PLANT_DATA_SUPABASE_URL || !TD_PLANT_DATA_SUPABASE_KEY || typeof fetch !== "function"){
+      throw new Error("Plant data service is not configured.");
+    }
+    var wantedTags = (typeof getTdPlantMappedBindings === "function" ? getTdPlantMappedBindings() : [])
+      .map(function(binding){ return String(binding && binding.plantTagId || "").trim(); })
+      .filter(Boolean);
+    var url = TD_PLANT_DATA_SUPABASE_URL + "/rest/v1/plant_data"
+      + "?select=tag_id,label,value,unit,synced_at,pushed_at"
+      + (wantedTags.length ? ("&tag_id=in.(" + wantedTags.join(",") + ")") : "")
+      + "&order=synced_at.desc"
+      + "&limit=200";
+    var res = typeof fetchWithTimeout === "function"
+      ? await fetchWithTimeout(url, { method:"GET", cache:"no-store", headers:buildPlantHeaders() }, 9000)
+      : await fetch(url, { method:"GET", cache:"no-store", headers:buildPlantHeaders() });
+    if(!res || !res.ok) throw new Error("Plant data HTTP " + (res ? res.status : "ERR"));
+    return await res.json();
+  }
+
+  async function fetchReformerHistoryRows(){
+    if(!TD_PLANT_DATA_SUPABASE_URL || !TD_PLANT_DATA_SUPABASE_KEY || typeof fetch !== "function"){
+      return { rows: [], error: "History service is not configured." };
+    }
+    var wantedTags = (typeof getTdPlantMappedBindings === "function" ? getTdPlantMappedBindings() : [])
+      .map(function(binding){ return String(binding && binding.plantTagId || "").trim(); })
+      .filter(Boolean);
+    var sinceIso = new Date(Date.now() - REFORMER_DASH_HISTORY_WINDOW_MS).toISOString();
+    var url = TD_PLANT_DATA_SUPABASE_URL + "/rest/v1/" + REFORMER_DASH_HISTORY_TABLE
+      + "?select=tag_id,label,value,recorded_at"
+      + "&recorded_at=gte." + encodeURIComponent(sinceIso)
+      + (wantedTags.length ? ("&tag_id=in.(" + wantedTags.join(",") + ")") : "")
+      + "&order=recorded_at.asc"
+      + "&limit=5000";
+    var res = typeof fetchWithTimeout === "function"
+      ? await fetchWithTimeout(url, { method:"GET", cache:"no-store", headers:buildPlantHeaders() }, 12000)
+      : await fetch(url, { method:"GET", cache:"no-store", headers:buildPlantHeaders() });
+    if(!res){
+      return { rows: [], error: "No response from history service." };
+    }
+    if(!res.ok){
+      if(res.status === 404){
+        return { rows: [], error: "History table not found in Supabase yet. Trends will appear after history logging is enabled." };
+      }
+      return { rows: [], error: "History data HTTP " + res.status };
+    }
+    return { rows: await res.json(), error: "" };
+  }
+
+  function bucketHistoryRows(rows){
+    var buckets = new Map();
+    (Array.isArray(rows) ? rows : []).forEach(function(row){
+      var stateKey = getStateKeyFromHistoryRow(row);
+      if(!stateKey) return;
+      var dt = parseDashDate(row.recorded_at || row.synced_at || row.created_at);
+      if(!dt) return;
+      var num = parseNumberOrNull(row.value);
+      if(!isFiniteNumber(num)) return;
+      var bucketKey = Math.floor(dt.getTime() / REFORMER_DASH_BUCKET_MS) * REFORMER_DASH_BUCKET_MS;
+      if(!buckets.has(bucketKey)){
+        buckets.set(bucketKey, { time: new Date(bucketKey), values: {} });
+      }
+      var bucket = buckets.get(bucketKey);
+      if(!bucket.values[stateKey]) bucket.values[stateKey] = [];
+      bucket.values[stateKey].push(num);
+    });
+    return Array.from(buckets.keys()).sort(function(a, b){ return a - b; }).map(function(key){
+      var bucket = buckets.get(key);
+      var point = { time: bucket.time, label: formatHistoryBucketLabel(bucket.time) };
+      for(var field in bucket.values){
+        if(!Object.prototype.hasOwnProperty.call(bucket.values, field)) continue;
+        var vals = bucket.values[field];
+        point[field] = vals.reduce(function(sum, item){ return sum + item; }, 0) / vals.length;
+      }
+      point.efficiency = calcReformerMetrics(point).efficiency;
+      return point;
+    });
+  }
+
+  function formatHistoryBucketLabel(dt){
+    if(!dt) return "";
+    return dt.toLocaleDateString([], { day:"2-digit", month:"short" }) + " " + dt.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+  }
+
+  function calcMixNCV(comp){
+    var total = 0;
+    for(var key in comp){
+      if(!Object.prototype.hasOwnProperty.call(comp, key)) continue;
+      total += (nz(comp[key]) / 100) * nz(REFORMER_DASH_NCV[key]);
+    }
+    return total;
+  }
+
+  function calcReformerMetrics(source){
+    var pv = source || reformerDashState.data || makeEmptyData();
+    var psa1NCV = calcMixNCV(reformerDashState.composition.psa1);
+    var psa2NCV = calcMixNCV(reformerDashState.composition.psa2);
+    var ngNCV = calcMixNCV(reformerDashState.composition.ng);
+    var totalOffGas = nz(pv.psa1Flow) + nz(pv.psa2Flow);
+    var ngFuelFlow = Math.max(0, 2400 - (totalOffGas * 0.018) - (nz(pv.naphthaFuel) * 0.12));
+    var psa1Heat = (nz(pv.psa1Flow) * psa1NCV) / 1000000;
+    var psa2Heat = (nz(pv.psa2Flow) * psa2NCV) / 1000000;
+    var napHeat = (nz(pv.naphthaFuel) * REFORMER_DASH_NAPHTHA_NCV) / 1000000;
+    var ngHeat = (ngFuelFlow * ngNCV) / 1000000;
+    var totalHeat = psa1Heat + psa2Heat + napHeat + ngHeat;
+    var avgCot = meanAvailable([pv.abCot, pv.cdCot]);
+    var cotImbalance = isFiniteNumber(pv.abCot) && isFiniteNumber(pv.cdCot) ? Math.abs(pv.abCot - pv.cdCot) : 0;
+    var preDeltaT = isFiniteNumber(pv.preInlet) && isFiniteNumber(pv.preOutlet) ? (pv.preOutlet - pv.preInlet) : 0;
+    var flueLossFactor = clamp(0.065 + Math.max(nz(pv.flueGas) - 860, 0) * 0.00012 + Math.max(nz(pv.excessO2) - 3.5, 0) * 0.009, 0.06, 0.19);
+    var slipLossFactor = clamp(nz(pv.methaneSlip) * 0.005, 0, 0.045);
+    var balanceLossFactor = clamp(0.02 + cotImbalance * 0.0008 + Math.max(Math.abs(preDeltaT - 20) - 6, 0) * 0.0007, 0.018, 0.07);
+    var totalLossFactor = clamp(flueLossFactor + slipLossFactor + balanceLossFactor, 0.09, 0.30);
+    var absorbed = totalHeat * (1 - totalLossFactor);
+    var flueLoss = totalHeat * flueLossFactor;
+    var otherLoss = Math.max(totalHeat - absorbed - flueLoss, 0);
+    return {
+      psa1NCV: psa1NCV,
+      psa2NCV: psa2NCV,
+      ngNCV: ngNCV,
+      ngFuelFlow: ngFuelFlow,
+      psa1Heat: psa1Heat,
+      psa2Heat: psa2Heat,
+      napHeat: napHeat,
+      ngHeat: ngHeat,
+      totalHeat: totalHeat,
+      absorbed: absorbed,
+      flueLoss: flueLoss,
+      otherLoss: otherLoss,
+      efficiency: totalHeat > 0 ? (absorbed / totalHeat) * 100 : 0,
+      avgCot: avgCot,
+      cotImbalance: cotImbalance,
+      preDeltaT: preDeltaT
+    };
+  }
+
+  function getStatusClass(value, min, max){
+    if(!isFiniteNumber(value)) return "";
+    if(value < min || value > max) return "alarm";
+    var band = Math.max((max - min) * 0.08, 0.5);
+    if(value <= (min + band) || value >= (max - band)) return "warning";
+    return "normal";
+  }
+
+  function getStatusDot(className){
+    if(!className) return '<span class="refdash-status-dot" style="background:rgba(148,163,184,0.45);box-shadow:none;"></span>';
+    return '<span class="refdash-status-dot refdash-status-' + className + '"></span>';
+  }
+
+  function kpiCardHtml(label, value, unit, color, opts){
+    var options = opts || {};
+    var status = options.status ? getStatusDot(options.status) : "";
+    var subtitle = options.subtitle ? ('<div style="margin-top:8px;font-size:11px;color:var(--refdash-muted)">' + options.subtitle + '</div>') : "";
+    var display = isFiniteNumber(value)
+      ? (formatValue(value, options.decimals == null ? 2 : options.decimals) + '<span style="font-size:13px;font-weight:500;color:var(--refdash-dim);margin-left:4px;">' + (unit || "") + '</span>')
+      : '<span style="font-size:22px;color:var(--refdash-muted)">—</span>';
+    return ''
+      + '<div class="refdash-panel" style="padding:16px 18px;border-top:3px solid ' + color + ';position:relative;overflow:hidden;">'
+      + '<div style="position:absolute;top:-14px;right:-14px;width:74px;height:74px;border-radius:999px;background:' + color + ';opacity:0.14;filter:blur(18px);"></div>'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;position:relative;">'
+      + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-dim);">' + label + '</div>'
+      + status
+      + '</div>'
+      + '<div class="refdash-mono" style="margin-top:10px;font-size:27px;font-weight:700;line-height:1.05;color:var(--refdash-text);position:relative;">' + display + '</div>'
+      + subtitle
+      + '</div>';
+  }
+
+  function gaugeHtml(value, max, label, unit, color, warn, alarm){
+    var percent = isFiniteNumber(value) && max > 0 ? clamp((value / max) * 100, 0, 100) : 0;
+    var tone = color;
+    if(isFiniteNumber(value)){
+      if(isFiniteNumber(alarm) && value >= alarm) tone = "var(--refdash-red)";
+      else if(isFiniteNumber(warn) && value >= warn) tone = "var(--refdash-accent-2)";
+    }else{
+      tone = "var(--refdash-muted)";
+    }
+    var valueLabel = isFiniteNumber(value) ? formatValue(value, 1) : "—";
+    return ''
+      + '<div style="padding:12px;border-radius:16px;background:var(--refdash-panel-strong);border:1px solid rgba(126,200,240,0.1);text-align:center;">'
+      + '<svg viewBox="0 0 120 65" width="112" height="62" aria-hidden="true">'
+      + '<path d="M 10 60 A 50 50 0 0 1 110 60" fill="none" stroke="rgba(148,163,184,0.18)" stroke-width="8" stroke-linecap="round"></path>'
+      + '<path d="M 10 60 A 50 50 0 0 1 110 60" fill="none" stroke="' + tone + '" stroke-width="8" stroke-linecap="round" stroke-dasharray="' + (percent * 1.57) + ' 157" style="filter:drop-shadow(0 0 6px ' + tone + ');transition:all 0.6s ease;"></path>'
+      + '</svg>'
+      + '<div class="refdash-mono" style="margin-top:-10px;font-size:18px;font-weight:700;color:' + tone + ';">' + valueLabel + '</div>'
+      + '<div style="margin-top:2px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-dim);">' + label + '</div>'
+      + '<div style="font-size:10px;color:var(--refdash-muted);">' + unit + '</div>'
+      + '</div>';
+  }
+
+  function setRefreshButtonState(loading){
+    var btn = document.querySelector("#tab-reformerdash .refdash-refresh-btn");
+    if(!btn) return;
+    btn.disabled = !!loading;
+    btn.textContent = loading ? "Refreshing..." : "Refresh Data";
+  }
+
+  function renderReformerStatus(){
+    var liveDot = getReformerDashEl("refdash-live-dot");
+    var liveLabel = getReformerDashEl("refdash-live-label");
+    var fetchEl = getReformerDashEl("refdash-last-fetch");
+    var phdEl = getReformerDashEl("refdash-phd-time");
+    var pushEl = getReformerDashEl("refdash-excel-push");
+    var historyEl = getReformerDashEl("refdash-history-count");
+    if(fetchEl) fetchEl.textContent = formatDashMoment(reformerDashState.lastFetchAt);
+    if(phdEl) phdEl.textContent = formatDashMoment(reformerDashState.lastPhdAt);
+    if(pushEl) pushEl.textContent = formatDashMoment(reformerDashState.lastPushAt);
+    if(historyEl) historyEl.textContent = String((reformerDashState.historyRows || []).length);
+    var stale = false;
+    if(reformerDashState.lastPushAt){
+      var minutes = Math.round((Date.now() - reformerDashState.lastPushAt.getTime()) / 60000);
+      stale = minutes > 10;
+    }
+    if(liveDot){
+      liveDot.classList.toggle("is-stale", !!(reformerDashState.errorMessage || stale));
+    }
+    if(liveLabel){
+      if(reformerDashState.errorMessage){
+        liveLabel.textContent = "Connection error";
+      }else if(!reformerDashState.latestMap || !reformerDashState.latestMap.size){
+        liveLabel.textContent = "Waiting for plant data";
+      }else if(stale){
+        liveLabel.textContent = "Stale · last push " + getDashAgoLabel(reformerDashState.lastPushAt);
+      }else{
+        liveLabel.textContent = "Live · " + reformerDashState.mappedCount + " mapped tags";
+      }
+    }
+    if(fetchEl && reformerDashState.lastFetchAt) fetchEl.title = "Dashboard fetched at " + formatDashDateTime(reformerDashState.lastFetchAt);
+    if(phdEl && reformerDashState.lastPhdAt) phdEl.title = "Latest PHD data at " + formatDashDateTime(reformerDashState.lastPhdAt);
+    if(pushEl && reformerDashState.lastPushAt) pushEl.title = "Latest Excel push at " + formatDashDateTime(reformerDashState.lastPushAt);
+  }
+
+  function renderOverviewPane(){
+    var metrics = calcReformerMetrics();
+    var avgCotStatus = getStatusClass(metrics.avgCot, 820, 850);
+    var effStatus = metrics.efficiency < 78 ? "alarm" : metrics.efficiency < 82 ? "warning" : "normal";
+    var o2Status = getStatusClass(reformerDashState.data.excessO2, 3, 5);
+    var slipStatus = getStatusClass(reformerDashState.data.methaneSlip, 0, 4);
+    var overviewRoot = getReformerDashEl("refdash-kpi-overview");
+    if(overviewRoot){
+      overviewRoot.innerHTML = [
+        kpiCardHtml("Estimated Efficiency", metrics.efficiency, "%", "var(--refdash-green)", { status: effStatus, subtitle: "Live fuel mix and heat-balance estimate", decimals: 2 }),
+        kpiCardHtml("Average COT", metrics.avgCot, "degC", "var(--refdash-accent-2)", { status: avgCotStatus, subtitle: "AB/CD delta " + formatValue(metrics.cotImbalance, 1) + " degC", decimals: 1 }),
+        kpiCardHtml("Excess O2", reformerDashState.data.excessO2, "%Vol", "var(--refdash-cyan)", { status: o2Status, subtitle: "Target band 3-5 %Vol", decimals: 2 }),
+        kpiCardHtml("Methane Slip", reformerDashState.data.methaneSlip, "%Vol", "var(--refdash-purple)", { status: slipStatus, subtitle: "Lower slip improves firing efficiency", decimals: 2 }),
+        kpiCardHtml("Total Heat Input", metrics.totalHeat, "Gcal/h", "var(--refdash-blue)", { subtitle: "Combined off gas, naphtha, and estimated NG", decimals: 3 }),
+        kpiCardHtml("HGU Load", reformerDashState.data.hguLoad, "%", "var(--refdash-accent)", { subtitle: "Current live process load", decimals: 2 })
+      ].join("");
+    }
+    var gauges = getReformerDashEl("refdash-gauges");
+    if(gauges){
+      gauges.innerHTML = [
+        gaugeHtml(metrics.efficiency, 100, "Efficiency", "%", "var(--refdash-green)", 82, 88),
+        gaugeHtml(reformerDashState.data.methaneSlip, 8, "CH4 Slip", "%Vol", "var(--refdash-purple)", 3.5, 5),
+        gaugeHtml(reformerDashState.data.excessO2, 10, "Excess O2", "%Vol", "var(--refdash-cyan)", 5, 7),
+        gaugeHtml(metrics.cotImbalance, 30, "COT Delta", "degC", "var(--refdash-accent-2)", 15, 25)
+      ].join("");
+    }
+
+    var processTable = getReformerDashEl("refdash-process-table");
+    if(processTable){
+      var html = '<thead><tr><th>Parameter</th><th style="text-align:right;">Value</th><th style="text-align:center;">Unit</th><th style="text-align:center;">Status</th><th style="text-align:right;">Min</th><th style="text-align:right;">Max</th></tr></thead><tbody>';
+      REFORMER_DASH_PROCESS_ROWS.forEach(function(item){
+        var val = reformerDashState.data[item.key];
+        var statusClass = getStatusClass(val, item.min, item.max);
+        html += ''
+          + '<tr>'
+          + '<td style="color:var(--refdash-text);">' + item.label + '</td>'
+          + '<td style="text-align:right;color:var(--refdash-text);font-weight:600;">' + (isFiniteNumber(val) ? formatValue(val, 2) : "—") + '</td>'
+          + '<td style="text-align:center;color:var(--refdash-dim);font-size:11px;">' + item.unit + '</td>'
+          + '<td style="text-align:center;">' + getStatusDot(statusClass) + '</td>'
+          + '<td style="text-align:right;color:var(--refdash-muted);font-size:11px;">' + item.min + '</td>'
+          + '<td style="text-align:right;color:var(--refdash-muted);font-size:11px;">' + item.max + '</td>'
+          + '</tr>';
+      });
+      html += '</tbody>';
+      processTable.innerHTML = html;
+    }
+
+    var tips = [
+      { label:"PSA-1 Off Gas", value: reformerDashState.data.psa1Tip, min:0.05, max:0.30, color:"var(--refdash-cyan)" },
+      { label:"Natural Gas", value: reformerDashState.data.ngTip, min:0.20, max:0.50, color:"var(--refdash-green)" },
+      { label:"Naphtha", value: reformerDashState.data.napTip, min:0.15, max:0.50, color:"var(--refdash-accent-2)" }
+    ];
+    var tipsRoot = getReformerDashEl("refdash-tip-pressures");
+    if(tipsRoot){
+      tipsRoot.innerHTML = tips.map(function(item){
+        var pct = isFiniteNumber(item.value) ? clamp(((item.value - item.min) / Math.max(item.max - item.min, 0.0001)) * 100, 0, 100) : 0;
+        return ''
+          + '<div style="margin-bottom:16px;">'
+          + '<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">'
+          + '<span style="font-size:11px;color:var(--refdash-dim);">' + item.label + '</span>'
+          + '<span class="refdash-mono" style="font-size:13px;font-weight:600;color:' + item.color + ';">' + (isFiniteNumber(item.value) ? (formatValue(item.value, 2) + ' kg/cm²') : '—') + '</span>'
+          + '</div>'
+          + '<div style="height:8px;border-radius:999px;background:rgba(148,163,184,0.14);overflow:hidden;">'
+          + '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,' + item.color + ',' + item.color + '88);border-radius:999px;box-shadow:0 0 10px ' + item.color + '55;"></div>'
+          + '</div>'
+          + '<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--refdash-muted);">'
+          + '<span>' + item.min + '</span>'
+          + '<span>' + item.max + '</span>'
+          + '</div>'
+          + '</div>';
+      }).join("");
+    }
+
+    var preRefBox = getReformerDashEl("refdash-prereformer-box");
+    if(preRefBox){
+      preRefBox.innerHTML = ''
+        + '<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-muted);margin-bottom:8px;">Pre-reformer</div>'
+        + '<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px;">'
+        + '<span style="font-size:11px;color:var(--refdash-dim);">Inlet → Outlet</span>'
+        + '<span class="refdash-mono" style="font-size:13px;font-weight:600;color:var(--refdash-accent-2);">'
+        + (isFiniteNumber(reformerDashState.data.preInlet) ? formatValue(reformerDashState.data.preInlet, 1) : "—")
+        + ' → '
+        + (isFiniteNumber(reformerDashState.data.preOutlet) ? formatValue(reformerDashState.data.preOutlet, 1) : "—")
+        + ' degC'
+        + '</span>'
+        + '</div>'
+        + '<div class="refdash-mono" style="font-size:12px;color:var(--refdash-green);font-weight:700;">'
+        + (isFiniteNumber(metrics.preDeltaT) ? ("Delta T = " + formatValue(metrics.preDeltaT, 1) + " degC") : "Delta T = —")
+        + '</div>'
+        + '<div style="margin-top:8px;font-size:10px;color:var(--refdash-muted);">Bed max/min follow the current TST data or latest saved TST fallback.</div>';
+    }
+
+    renderTempProfileChart();
+    renderFuelMixChart(metrics);
+  }
+
+  function renderHeatDutyPane(){
+    var metrics = calcReformerMetrics();
+    var heatRoot = getReformerDashEl("refdash-kpi-heatduty");
+    if(heatRoot){
+      heatRoot.innerHTML = [
+        kpiCardHtml("Total Heat Input", metrics.totalHeat, "Gcal/h", "var(--refdash-accent-2)", { decimals: 3 }),
+        kpiCardHtml("Heat Absorbed", metrics.absorbed, "Gcal/h", "var(--refdash-green)", { subtitle: formatValue(metrics.efficiency, 1) + "% of total input", decimals: 3 }),
+        kpiCardHtml("Flue Gas Loss", metrics.flueLoss, "Gcal/h", "var(--refdash-red)", { subtitle: "Driven by flue gas temp and excess O2", decimals: 3 }),
+        kpiCardHtml("Other Losses", metrics.otherLoss, "Gcal/h", "var(--refdash-purple)", { subtitle: "Slip and balance-related estimated losses", decimals: 3 })
+      ].join("");
+    }
+    var fuels = [
+      { name:"PSA-1 Off Gas", flow: reformerDashState.data.psa1Flow, flowUnit:"Nm3/h", ncv: metrics.psa1NCV, duty: metrics.psa1Heat, color:"var(--refdash-cyan)" },
+      { name:"PSA-2 Off Gas", flow: reformerDashState.data.psa2Flow, flowUnit:"Nm3/h", ncv: metrics.psa2NCV, duty: metrics.psa2Heat, color:"var(--refdash-purple)" },
+      { name:"Naphtha", flow: reformerDashState.data.naphthaFuel, flowUnit:"kg/h", ncv: REFORMER_DASH_NAPHTHA_NCV, duty: metrics.napHeat, color:"var(--refdash-accent-2)" },
+      { name:"Natural Gas (estimated)", flow: metrics.ngFuelFlow, flowUnit:"Nm3/h", ncv: metrics.ngNCV, duty: metrics.ngHeat, color:"var(--refdash-green)" }
+    ];
+    var table = getReformerDashEl("refdash-heat-duty-table");
+    if(table){
+      var html = '<thead><tr><th>Fuel</th><th style="text-align:right;">Flow</th><th style="text-align:right;">NCV</th><th style="text-align:right;">Heat Duty</th><th style="text-align:right;">Share</th></tr></thead><tbody>';
+      fuels.forEach(function(item){
+        var share = metrics.totalHeat > 0 ? (item.duty / metrics.totalHeat) * 100 : 0;
+        html += ''
+          + '<tr>'
+          + '<td style="color:var(--refdash-text);font-weight:600;">'
+          + '<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + item.color + ';margin-right:8px;vertical-align:middle;"></span>'
+          + item.name
+          + '</td>'
+          + '<td style="text-align:right;color:var(--refdash-text);">' + (isFiniteNumber(item.flow) ? formatValue(item.flow, 1) : "—") + ' <span style="font-size:10px;color:var(--refdash-muted);">' + item.flowUnit + '</span></td>'
+          + '<td style="text-align:right;color:var(--refdash-dim);">' + formatValue(item.ncv, 0) + '</td>'
+          + '<td style="text-align:right;color:var(--refdash-text);font-weight:600;">' + formatValue(item.duty, 3) + ' <span style="font-size:10px;color:var(--refdash-muted);">Gcal/h</span></td>'
+          + '<td style="text-align:right;color:' + item.color + ';font-weight:700;">' + formatValue(share, 1) + '%</td>'
+          + '</tr>';
+      });
+      html += '<tr>'
+        + '<td style="padding-top:12px;color:var(--refdash-accent-2);font-weight:700;">TOTAL</td>'
+        + '<td colspan="2"></td>'
+        + '<td style="padding-top:12px;text-align:right;color:var(--refdash-accent-2);font-weight:700;">' + formatValue(metrics.totalHeat, 3) + ' Gcal/h</td>'
+        + '<td style="padding-top:12px;text-align:right;color:var(--refdash-accent-2);font-weight:700;">100%</td>'
+        + '</tr></tbody>';
+      table.innerHTML = html;
+    }
+    var effHero = getReformerDashEl("refdash-eff-hero");
+    if(effHero){
+      effHero.innerHTML = ''
+        + '<div>'
+        + '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--refdash-dim);margin-bottom:6px;">Estimated Thermal Efficiency</div>'
+        + '<div class="refdash-mono" style="font-size:52px;font-weight:800;line-height:1;color:var(--refdash-green);">' + formatValue(metrics.efficiency, 2) + '<span style="font-size:28px;color:var(--refdash-dim);margin-left:6px;">%</span></div>'
+        + '<div style="margin-top:8px;font-size:12px;color:var(--refdash-dim);">Derived from live fuel contribution plus operating-condition loss factors. This is an estimate, not a direct lab-calculated efficiency.</div>'
+        + '</div>'
+        + '<div style="flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px;">'
+        + '<div style="padding:16px;border-radius:12px;background:var(--refdash-panel-strong);border:1px solid rgba(126,200,240,0.1);text-align:center;"><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-muted);margin-bottom:4px;">Fired Duty</div><div class="refdash-mono" style="font-size:21px;font-weight:700;color:var(--refdash-accent-2);">' + formatValue(metrics.totalHeat, 2) + '</div><div style="font-size:10px;color:var(--refdash-dim);">Gcal/h</div></div>'
+        + '<div style="padding:16px;border-radius:12px;background:var(--refdash-panel-strong);border:1px solid rgba(126,200,240,0.1);text-align:center;"><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-muted);margin-bottom:4px;">Absorbed</div><div class="refdash-mono" style="font-size:21px;font-weight:700;color:var(--refdash-green);">' + formatValue(metrics.absorbed, 2) + '</div><div style="font-size:10px;color:var(--refdash-dim);">Gcal/h</div></div>'
+        + '<div style="padding:16px;border-radius:12px;background:var(--refdash-panel-strong);border:1px solid rgba(126,200,240,0.1);text-align:center;"><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-muted);margin-bottom:4px;">Estimated Loss</div><div class="refdash-mono" style="font-size:21px;font-weight:700;color:var(--refdash-red);">' + formatValue(metrics.flueLoss + metrics.otherLoss, 2) + '</div><div style="font-size:10px;color:var(--refdash-dim);">Gcal/h</div></div>'
+        + '</div>';
+    }
+    renderHeatBalanceChart(metrics);
+  }
+
+  function renderCompositionPane(){
+    var groups = [
+      { key:"psa1", title:"PSA-1 Off Gas (%Vol)", color:"var(--refdash-cyan)" },
+      { key:"psa2", title:"PSA-2 Off Gas (%Vol)", color:"var(--refdash-purple)" },
+      { key:"ng", title:"Natural Gas (%Vol)", color:"var(--refdash-green)" }
+    ];
+    var panelRoot = getReformerDashEl("refdash-comp-panels");
+    if(panelRoot){
+      panelRoot.innerHTML = groups.map(function(group){
+        var mix = reformerDashState.composition[group.key];
+        var total = Object.keys(mix).reduce(function(sum, item){ return sum + nz(mix[item]); }, 0);
+        var inputs = Object.keys(mix).map(function(item){
+          return ''
+            + '<div>'
+            + '<div class="refdash-mono" style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-muted);margin-bottom:5px;">' + item + '</div>'
+            + '<input class="refdash-comp-input refdash-mono" type="number" step="0.1" value="' + formatValue(mix[item], 1, "0.0") + '" '
+            + 'onchange="updateReformerDashComposition(\'' + group.key + '\', \'' + item + '\', this.value)">'
+            + '</div>';
+        }).join("");
+        return ''
+          + '<div class="refdash-comp-panel" style="border-left:3px solid ' + group.color + ';">'
+          + '<div class="refdash-mono" style="font-size:13px;font-weight:700;letter-spacing:0.6px;color:' + group.color + ';margin-bottom:12px;">' + group.title + '</div>'
+          + '<div class="refdash-comp-grid">' + inputs + '</div>'
+          + '<div class="refdash-mono" style="margin-top:10px;font-size:11px;color:' + (Math.abs(total - 100) > 0.6 ? "var(--refdash-accent-2)" : "var(--refdash-muted)") + ';text-align:right;">Σ = ' + formatValue(total, 1) + '% | NCV = ' + formatValue(calcMixNCV(mix), 0) + ' kcal/Nm3</div>'
+          + '</div>';
+      }).join("");
+    }
+    var refTable = getReformerDashEl("refdash-ncv-ref-table");
+    if(refTable){
+      var html = '<thead><tr><th>Component</th><th style="text-align:right;">NCV (kcal/Nm3)</th><th style="text-align:right;">Formula</th></tr></thead><tbody>';
+      [
+        { name:"Methane", formula:"CH4", value:8570 },
+        { name:"Ethane", formula:"C2H6", value:15370 },
+        { name:"Propane", formula:"C3H8", value:22350 },
+        { name:"Hydrogen", formula:"H2", value:2580 },
+        { name:"Carbon Monoxide", formula:"CO", value:3020 },
+        { name:"Carbon Dioxide", formula:"CO2", value:0 },
+        { name:"Nitrogen", formula:"N2", value:0 }
+      ].forEach(function(item){
+        html += '<tr>'
+          + '<td style="color:var(--refdash-text);">' + item.name + '</td>'
+          + '<td style="text-align:right;color:' + (item.value > 0 ? "var(--refdash-accent-2)" : "var(--refdash-muted)") + ';font-weight:700;">' + item.value.toLocaleString() + '</td>'
+          + '<td style="text-align:right;color:var(--refdash-dim);">' + item.formula + '</td>'
+          + '</tr>';
+      });
+      html += '</tbody>';
+      refTable.innerHTML = html;
+    }
+    renderNcvChart();
+  }
+
+  function renderTrendsPane(){
+    var status = getReformerDashEl("refdash-trend-status");
+    if(status){
+      var message = "";
+      if(reformerDashState.historyMessage){
+        message = reformerDashState.historyMessage;
+      }else if(!reformerDashState.historyPoints.length){
+        message = "History table is currently empty. Trend charts will start filling after Excel pushes accumulate into plant_data_history.";
+      }
+      status.style.display = message ? "block" : "none";
+      status.textContent = message || "";
+    }
+    renderTrendCharts();
+  }
+
+  function destroyChart(key){
+    if(reformerDashState.charts[key]){
+      try{ reformerDashState.charts[key].destroy(); }catch(ignoreDestroyError){}
+      delete reformerDashState.charts[key];
+    }
+  }
+
+  function replaceChart(key, canvasId, config){
+    var canvas = getReformerDashEl(canvasId);
+    if(!canvas || !window.Chart) return;
+    destroyChart(key);
+    reformerDashState.charts[key] = new Chart(canvas, config);
+  }
+
+  function resizeCharts(){
+    for(var key in reformerDashState.charts){
+      if(!Object.prototype.hasOwnProperty.call(reformerDashState.charts, key)) continue;
+      try{ reformerDashState.charts[key].resize(); }catch(ignoreResizeError){}
+    }
+  }
+
+  function lineOptions(theme, extra){
+    var base = {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: "index" },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: theme.dim,
+            boxWidth: 12,
+            padding: 14,
+            font: { family:"ui-monospace,SFMono-Regular,Menlo,Consolas,monospace", size:10 }
+          }
+        },
+        tooltip: {
+          backgroundColor: theme.panel,
+          borderColor: theme.border,
+          borderWidth: 1,
+          cornerRadius: 10,
+          titleColor: theme.text,
+          bodyColor: theme.dim
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: theme.dim, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+          grid: { color: theme.border }
+        },
+        y: {
+          ticks: { color: theme.dim },
+          grid: { color: theme.border }
+        }
+      }
+    };
+    if(extra){
+      for(var key in extra){
+        if(Object.prototype.hasOwnProperty.call(extra, key)) base[key] = extra[key];
+      }
+    }
+    return base;
+  }
+
+  function renderTempProfileChart(){
+    var theme = getDashTheme();
+    var labels = ["Pre-Ref In", "Pre-Ref Out", "Bed Min", "Bed Max", "AB COT", "CD COT", "Avg COT", "Flue Gas"];
+    var metrics = calcReformerMetrics();
+    replaceChart("tempProfile", "refdash-chart-temp-profile", {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Actual",
+            data: [
+              reformerDashState.data.preInlet,
+              reformerDashState.data.preOutlet,
+              reformerDashState.data.preBedMin,
+              reformerDashState.data.preBedMax,
+              reformerDashState.data.abCot,
+              reformerDashState.data.cdCot,
+              metrics.avgCot,
+              reformerDashState.data.flueGas
+            ],
+            backgroundColor: theme.accent2,
+            borderRadius: 6,
+            barPercentage: 0.7
+          },
+          {
+            label: "Design Ref",
+            data: [450, 490, 495, 525, 845, 845, 845, 900],
+            backgroundColor: "rgba(148,163,184,0.24)",
+            borderRadius: 6,
+            barPercentage: 0.7
+          }
+        ]
+      },
+      options: lineOptions(theme, {
+        scales: {
+          x: { ticks:{ color:theme.dim }, grid:{ display:false } },
+          y: { ticks:{ color:theme.dim }, grid:{ color:theme.border }, min: 400, max: 950 }
+        }
+      })
+    });
+  }
+
+  function renderFuelMixChart(metrics){
+    var theme = getDashTheme();
+    var items = [
+      { name:"PSA-1 OG", value: metrics.psa1Heat, color: theme.cyan },
+      { name:"PSA-2 OG", value: metrics.psa2Heat, color: theme.purple },
+      { name:"Naphtha", value: metrics.napHeat, color: theme.accent2 },
+      { name:"NG", value: metrics.ngHeat, color: theme.green }
+    ].filter(function(item){ return item.value > 0; });
+    replaceChart("fuelMix", "refdash-chart-fuel-mix", {
+      type: "doughnut",
+      data: {
+        labels: items.map(function(item){ return item.name; }),
+        datasets: [{
+          data: items.map(function(item){ return item.value; }),
+          backgroundColor: items.map(function(item){ return item.color; }),
+          borderColor: theme.panel,
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "58%",
+        plugins: { legend: { display: false } }
+      }
+    });
+    var legend = getReformerDashEl("refdash-fuel-mix-legend");
+    if(legend){
+      legend.innerHTML = items.map(function(item){
+        var pct = metrics.totalHeat > 0 ? (item.value / metrics.totalHeat) * 100 : 0;
+        return ''
+          + '<div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;font-size:11px;">'
+          + '<span style="display:flex;align-items:center;gap:7px;color:var(--refdash-dim);"><span style="width:10px;height:10px;border-radius:2px;background:' + item.color + ';display:inline-block;"></span>' + item.name + '</span>'
+          + '<span class="refdash-mono" style="font-weight:700;color:var(--refdash-text);">' + formatValue(pct, 1) + '%</span>'
+          + '</div>';
+      }).join("");
+    }
+  }
+
+  function renderHeatBalanceChart(metrics){
+    var theme = getDashTheme();
+    var items = [
+      { name:"Heat Absorbed", value: metrics.absorbed, color: theme.green },
+      { name:"Flue Gas Loss", value: metrics.flueLoss, color: theme.red },
+      { name:"Other Losses", value: metrics.otherLoss, color: theme.accent2 }
+    ];
+    replaceChart("heatBalance", "refdash-chart-heat-balance", {
+      type: "doughnut",
+      data: {
+        labels: items.map(function(item){ return item.name; }),
+        datasets: [{
+          data: items.map(function(item){ return item.value; }),
+          backgroundColor: items.map(function(item){ return item.color; }),
+          borderColor: theme.panel,
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "58%",
+        plugins: { legend: { display: false } }
+      }
+    });
+    var legend = getReformerDashEl("refdash-heat-balance-legend");
+    if(legend){
+      legend.innerHTML = items.map(function(item){
+        var pct = metrics.totalHeat > 0 ? (item.value / metrics.totalHeat) * 100 : 0;
+        return ''
+          + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+          + '<span style="width:12px;height:12px;border-radius:3px;background:' + item.color + ';flex:0 0 auto;"></span>'
+          + '<div style="flex:1;">'
+          + '<div style="display:flex;justify-content:space-between;gap:8px;">'
+          + '<span style="font-size:12px;color:var(--refdash-text);">' + item.name + '</span>'
+          + '<span class="refdash-mono" style="font-size:12px;font-weight:700;color:' + item.color + ';">' + formatValue(item.value, 3) + ' Gcal/h</span>'
+          + '</div>'
+          + '<div style="height:4px;border-radius:999px;background:rgba(148,163,184,0.14);margin-top:5px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:' + item.color + ';border-radius:999px;"></div></div>'
+          + '</div>'
+          + '</div>';
+      }).join("");
+    }
+  }
+
+  function renderTrendCharts(){
+    var theme = getDashTheme();
+    var labels = reformerDashState.historyPoints.map(function(point){ return point.label; });
+    replaceChart("tempTrend", "refdash-chart-temp-trend", {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          { label:"AB COT", data: reformerDashState.historyPoints.map(function(point){ return point.abCot; }), borderColor: theme.accent2, backgroundColor: "rgba(245,158,11,0.08)", tension:0.3, borderWidth:2, spanGaps:true },
+          { label:"CD COT", data: reformerDashState.historyPoints.map(function(point){ return point.cdCot; }), borderColor: theme.cyan, backgroundColor: "rgba(34,211,238,0.08)", tension:0.3, borderWidth:2, spanGaps:true },
+          { label:"Flue Gas", data: reformerDashState.historyPoints.map(function(point){ return point.flueGas; }), borderColor: theme.red, backgroundColor: "rgba(251,113,133,0.08)", tension:0.3, borderWidth:2, spanGaps:true },
+          { label:"Pre-Ref In", data: reformerDashState.historyPoints.map(function(point){ return point.preInlet; }), borderColor: theme.green, borderDash:[5,5], tension:0.3, borderWidth:1.6, spanGaps:true },
+          { label:"Pre-Ref Out", data: reformerDashState.historyPoints.map(function(point){ return point.preOutlet; }), borderColor: theme.purple, borderDash:[5,5], tension:0.3, borderWidth:1.6, spanGaps:true }
+        ]
+      },
+      options: lineOptions(theme)
+    });
+
+    replaceChart("combustionTrend", "refdash-chart-combustion", {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          { label:"Methane Slip", data: reformerDashState.historyPoints.map(function(point){ return point.methaneSlip; }), borderColor: theme.purple, backgroundColor: "rgba(192,132,252,0.12)", fill:true, tension:0.3, borderWidth:2, spanGaps:true },
+          { label:"Excess O2", data: reformerDashState.historyPoints.map(function(point){ return point.excessO2; }), borderColor: theme.cyan, backgroundColor: "rgba(34,211,238,0.12)", fill:true, tension:0.3, borderWidth:2, spanGaps:true }
+        ]
+      },
+      options: lineOptions(theme)
+    });
+
+    replaceChart("flowTrend", "refdash-chart-flow-trend", {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          { label:"PSA-1 OG", data: reformerDashState.historyPoints.map(function(point){ return point.psa1Flow; }), borderColor: theme.cyan, borderWidth:2, tension:0.3, yAxisID:"y", spanGaps:true },
+          { label:"PSA-2 OG", data: reformerDashState.historyPoints.map(function(point){ return point.psa2Flow; }), borderColor: theme.purple, borderWidth:2, tension:0.3, yAxisID:"y", spanGaps:true },
+          { label:"Naphtha", data: reformerDashState.historyPoints.map(function(point){ return point.naphthaFuel; }), borderColor: theme.accent2, borderWidth:2, tension:0.3, yAxisID:"y1", spanGaps:true }
+        ]
+      },
+      options: lineOptions(theme, {
+        scales: {
+          x: { ticks:{ color:theme.dim, maxRotation:0, autoSkip:true, maxTicksLimit:8 }, grid:{ color:theme.border } },
+          y: { position:"left", ticks:{ color:theme.dim }, grid:{ color:theme.border }, title:{ display:true, text:"Nm3/h", color:theme.muted } },
+          y1: { position:"right", ticks:{ color:theme.dim }, grid:{ display:false }, title:{ display:true, text:"kg/h", color:theme.muted } }
+        }
+      })
+    });
+
+    replaceChart("effTrend", "refdash-chart-eff-trend", {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label:"Estimated Efficiency",
+          data: reformerDashState.historyPoints.map(function(point){ return point.efficiency; }),
+          borderColor: theme.green,
+          backgroundColor: "rgba(34,197,94,0.12)",
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2.4,
+          spanGaps: true
+        }]
+      },
+      options: lineOptions(theme, {
+        scales: {
+          x: { ticks:{ color:theme.dim, maxRotation:0, autoSkip:true, maxTicksLimit:8 }, grid:{ color:theme.border } },
+          y: { ticks:{ color:theme.dim }, grid:{ color:theme.border }, min: 72, max: 92 }
+        }
+      })
+    });
+  }
+
+  function renderNcvChart(){
+    var theme = getDashTheme();
+    replaceChart("ncv", "refdash-chart-ncv", {
+      type: "bar",
+      data: {
+        labels: ["PSA-1 OG", "PSA-2 OG", "Natural Gas", "Naphtha"],
+        datasets: [{
+          label: "NCV (kcal/Nm3)",
+          data: [
+            calcMixNCV(reformerDashState.composition.psa1),
+            calcMixNCV(reformerDashState.composition.psa2),
+            calcMixNCV(reformerDashState.composition.ng),
+            REFORMER_DASH_NAPHTHA_NCV
+          ],
+          backgroundColor: [theme.cyan, theme.purple, theme.green, theme.accent2],
+          borderRadius: 6,
+          barPercentage: 0.6
+        }]
+      },
+      options: lineOptions(theme, {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks:{ color:theme.dim }, grid:{ display:false } },
+          y: { ticks:{ color:theme.dim }, grid:{ color:theme.border } }
+        }
+      })
+    });
+  }
+
+  function renderReformerDashboardFromState(){
+    renderReformerStatus();
+    renderOverviewPane();
+    renderHeatDutyPane();
+    renderCompositionPane();
+    renderTrendsPane();
+    setTimeout(resizeCharts, 80);
+  }
+
+  async function refreshReformerDashboard(forceHistory){
+    if(reformerDashState.fetchPromise) return reformerDashState.fetchPromise;
+    reformerDashState.fetchPromise = (async function(){
+      setRefreshButtonState(true);
+      try{
+        if(typeof isTdPlantImportConfigured === "function" && !isTdPlantImportConfigured()){
+          throw new Error("Plant data Supabase is not configured.");
+        }
+        var rows = await fetchReformerCurrentRows();
+        var mapped = mapCurrentRowsToState(rows || []);
+        reformerDashState.latestMap = mapped.latestMap;
+        reformerDashState.data = mapped.data;
+        reformerDashState.rowMeta = mapped.rowMeta;
+        reformerDashState.lastFetchAt = new Date();
+        reformerDashState.errorMessage = "";
+
+        if(forceHistory || !reformerDashState.historyLoaded || !reformerDashState.lastHistoryFetchAt || (Date.now() - reformerDashState.lastHistoryFetchAt.getTime()) >= (5 * 60 * 1000)){
+          var historyResult = await fetchReformerHistoryRows();
+          reformerDashState.historyRows = Array.isArray(historyResult.rows) ? historyResult.rows : [];
+          reformerDashState.historyPoints = bucketHistoryRows(reformerDashState.historyRows);
+          reformerDashState.historyLoaded = true;
+          reformerDashState.lastHistoryFetchAt = new Date();
+          reformerDashState.historyMessage = historyResult.error || "";
+          if(!reformerDashState.historyRows.length && !reformerDashState.historyMessage){
+            reformerDashState.historyMessage = "History table is currently empty. Trend charts will start filling after Excel pushes accumulate into plant_data_history.";
+          }
+        }
+      }catch(err){
+        reformerDashState.errorMessage = err && err.message ? err.message : String(err || "Unknown error");
+        console.warn("Reformer dashboard refresh failed:", err);
+      }finally{
+        renderReformerDashboardFromState();
+        setRefreshButtonState(false);
+        reformerDashState.fetchPromise = null;
+      }
+      return reformerDashState.data;
+    })();
+    return reformerDashState.fetchPromise;
+  }
+
+  function switchReformerDashTab(tab){
+    var target = String(tab || "overview").toLowerCase();
+    if(["overview","heatduty","trends","composition"].indexOf(target) === -1) target = "overview";
+    reformerDashState.activePane = target;
+    ["overview","heatduty","trends","composition"].forEach(function(key){
+      var pane = getReformerDashEl("refdash-pane-" + key);
+      var btn = getReformerDashEl("refdash-tabbtn-" + key);
+      if(pane) pane.classList.toggle("is-active", key === target);
+      if(btn) btn.classList.toggle("is-active", key === target);
+    });
+    setTimeout(resizeCharts, 50);
+  }
+
+  function startReformerDashboardRefreshLoop(){
+    if(reformerDashState.refreshTimer) return;
+    reformerDashState.refreshTimer = setInterval(function(){
+      if(!getReformerDashEl("tab-reformerdash")) return;
+      if(!(getReformerDashEl("tab-reformerdash") || {}).classList.contains("tab-active")) return;
+      refreshReformerDashboard(false).catch(function(){});
+    }, REFORMER_DASH_REFRESH_MS);
+  }
+
+  function ensureReformerDashboardLoaded(forceRefresh){
+    if(!getReformerDashEl("tab-reformerdash")) return Promise.resolve(false);
+    if(!reformerDashState.initialized){
+      reformerDashState.initialized = true;
+      switchReformerDashTab(reformerDashState.activePane || "overview");
+      renderReformerDashboardFromState();
+      startReformerDashboardRefreshLoop();
+      if(!reformerDashState.resizeBound){
+        reformerDashState.resizeBound = true;
+        window.addEventListener("resize", function(){
+          setTimeout(resizeCharts, 60);
+        });
+      }
+    }
+    if(forceRefresh || !reformerDashState.lastFetchAt){
+      return refreshReformerDashboard(!reformerDashState.historyLoaded);
+    }
+    renderReformerDashboardFromState();
+    return Promise.resolve(true);
+  }
+
+  function updateReformerDashComposition(group, key, value){
+    if(!reformerDashState.composition[group] || !Object.prototype.hasOwnProperty.call(reformerDashState.composition[group], key)) return;
+    reformerDashState.composition[group][key] = nz(parseNumberOrNull(value));
+    renderReformerDashboardFromState();
+  }
+
+  window.switchReformerDashTab = switchReformerDashTab;
+  window.refreshReformerDashboard = refreshReformerDashboard;
+  window.ensureReformerDashboardLoaded = ensureReformerDashboardLoaded;
+  window.updateReformerDashComposition = updateReformerDashComposition;
+})();
+</script>
 <style id="mobile-app-refine-20260331">
 .mobile-shell-head{display:none;}
 .mobile-disclosure-toggle{display:none;}
@@ -32637,6 +34232,7 @@ body.light-theme .btab-alarm-count{
   ];
   var MOBILE_TAB_COPY = {
     cuboidstack:"Twin dashboard",
+    reformerdash:"Reformer efficiency",
     burner:"Burner operations",
     cleaning:"Cleaning log",
     tempdata:"TST and process data",
