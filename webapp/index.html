@@ -1122,13 +1122,27 @@ body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip{
   margin-bottom:0;
   flex:0 1 380px;
 }
+body[data-user-mode="operator"] #tab-tempdata #td-plant-excel-path-bar{
+  display:none !important;
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-heading-row{
+  flex-direction:row;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-heading-title{
+  flex:1 1 auto;
+  min-width:0;
+}
 body[data-user-mode="operator"] #tab-tempdata .td-plant-header-cluster{
   display:flex;
-  align-items:flex-end;
-  justify-content:flex-start;
+  align-items:flex-start;
+  justify-content:flex-end;
   gap:12px;
   flex-wrap:wrap;
-  margin-bottom:16px;
+  margin-bottom:0;
+  flex:0 0 auto;
 }
 body[data-user-mode="operator"] #tab-tempdata .td-plant-excel-controls{
   justify-content:flex-start;
@@ -1162,6 +1176,11 @@ body[data-user-mode="operator"] #tab-tempdata .td-plant-controls-right .td-plant
     grid-template-columns:1fr !important;
     width:100%;
     flex:1 1 100%;
+  }
+  body[data-user-mode="operator"] #tab-tempdata .td-plant-heading-row{
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
   }
   body[data-user-mode="operator"] #tab-tempdata .td-plant-header-cluster{
     gap:8px;
@@ -5802,6 +5821,23 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 }
 #tab-tempdata .td-plant-header-cluster{
   min-width:0;
+}
+#tab-tempdata .td-plant-heading-row{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  margin-bottom:16px;
+  min-width:0;
+}
+#tab-tempdata .td-plant-heading-title{
+  margin:0;
+  padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  font-size:12px;
+  font-weight:700;
+  color:#7ec8f0;
+  letter-spacing:1px;
+  text-transform:uppercase;
 }
 #tab-tempdata .td-plant-stat-value{
   color:#f8fafc;
@@ -18918,47 +18954,49 @@ html, body, body *, body *::before, body *::after, svg text{
       <div class="td-entry-layout">
       <!-- ── Section 1: General Temps ── -->
       <div class="td-entry-card">
-        <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);">
-          ⚙️ Process Temperatures
+        <div class="td-plant-heading-row">
+          <div class="td-plant-heading-title">
+            ⚙️ Process Temperatures
+          </div>
+          <div class="td-plant-header-cluster">
+          <div class="td-plant-status-strip">
+            <div class="td-toolbar-pill td-plant-status-pill" data-admin-only="true" style="display:flex;align-items:center;gap:10px;min-width:220px;">
+              <span id="td-plant-status-dot" style="width:10px;height:10px;border-radius:999px;background:#64748b;box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;flex:0 0 auto;"></span>
+              <span id="td-plant-status-text" class="td-plant-status-text">Plant import idle</span>
+            </div>
+            <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Active Tags:</span><span id="td-plant-stat-tags" class="td-plant-stat-value">—</span></div>
+            <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Mapped:</span><span id="td-plant-stat-mapped" class="td-plant-stat-value">—</span></div>
+            <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">PHD Time:</span><span id="td-plant-stat-sync" class="td-plant-stat-value">—</span></div>
+            <div class="td-toolbar-pill"><span class="td-toolbar-label">Last Fetch:</span><span id="td-plant-stat-fetch" class="td-plant-stat-value">—</span></div>
+            <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Excel Last Push:</span><span id="td-plant-stat-push" class="td-plant-stat-value">—</span></div>
+            <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" class="td-plant-stat-value">30 sec</span></div>
+          </div>
+          <div id="td-plant-excel-path-bar" class="td-plant-excel-path-bar hidden">
+            <span class="td-plant-path-label">Excel File</span>
+            <span id="td-plant-excel-path-display" class="td-plant-path-value"></span>
+          </div>
+          <div class="td-toolbar-row td-plant-excel-controls">
+            <div class="td-toolbar-pill" data-admin-only="true" style="display:flex;align-items:center;gap:10px;">
+              <span class="td-toolbar-label">Auto-refresh:</span>
+              <select id="td-plant-refresh-interval" class="td-toolbar-select">
+                <option value="10" style="background:#1e293b;color:#e2e8f0;">10 sec</option>
+                <option value="30" selected style="background:#1e293b;color:#e2e8f0;">30 sec</option>
+                <option value="60" style="background:#1e293b;color:#e2e8f0;">1 min</option>
+                <option value="0" style="background:#1e293b;color:#e2e8f0;">Off</option>
+              </select>
+            </div>
+            <div class="td-plant-controls-right">
+              <button type="button" id="td-plant-open-excel-btn" data-admin-only="true" class="td-plant-action-btn td-plant-open-btn" title="Open the dedicated Excel workbook with the local helper on this PC, or download it on any device">Update data</button>
+              <button type="button" id="td-plant-download-btn" data-admin-only="true" class="td-plant-action-btn td-plant-download-btn" title="Download the dedicated Excel workbook">⬇ Download Excel</button>
+              <button type="button" id="td-plant-refresh-btn" class="td-plant-action-btn td-plant-refresh-btn" title="Fetch the latest mapped plant tags into the TST cells">↻ Refresh Now</button>
+            </div>
+          </div>
+          </div>
         </div>
         <div id="td-plant-config-bar" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;">
           Live plant import is not configured. Set the plant data Supabase URL and key.
         </div>
         <div id="td-plant-live-warning" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;"></div>
-        <div class="td-plant-header-cluster">
-        <div class="td-plant-status-strip">
-          <div class="td-toolbar-pill td-plant-status-pill" data-admin-only="true" style="display:flex;align-items:center;gap:10px;min-width:220px;">
-            <span id="td-plant-status-dot" style="width:10px;height:10px;border-radius:999px;background:#64748b;box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;flex:0 0 auto;"></span>
-            <span id="td-plant-status-text" class="td-plant-status-text">Plant import idle</span>
-          </div>
-          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Active Tags:</span><span id="td-plant-stat-tags" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Mapped:</span><span id="td-plant-stat-mapped" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">PHD Time:</span><span id="td-plant-stat-sync" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill"><span class="td-toolbar-label">Last Fetch:</span><span id="td-plant-stat-fetch" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Excel Last Push:</span><span id="td-plant-stat-push" class="td-plant-stat-value">—</span></div>
-          <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" class="td-plant-stat-value">30 sec</span></div>
-        </div>
-        <div id="td-plant-excel-path-bar" class="td-plant-excel-path-bar hidden">
-          <span class="td-plant-path-label">Excel File</span>
-          <span id="td-plant-excel-path-display" class="td-plant-path-value"></span>
-        </div>
-        <div class="td-toolbar-row td-plant-excel-controls">
-          <div class="td-toolbar-pill" data-admin-only="true" style="display:flex;align-items:center;gap:10px;">
-            <span class="td-toolbar-label">Auto-refresh:</span>
-            <select id="td-plant-refresh-interval" class="td-toolbar-select">
-              <option value="10" style="background:#1e293b;color:#e2e8f0;">10 sec</option>
-              <option value="30" selected style="background:#1e293b;color:#e2e8f0;">30 sec</option>
-              <option value="60" style="background:#1e293b;color:#e2e8f0;">1 min</option>
-              <option value="0" style="background:#1e293b;color:#e2e8f0;">Off</option>
-            </select>
-          </div>
-          <div class="td-plant-controls-right">
-            <button type="button" id="td-plant-open-excel-btn" data-admin-only="true" class="td-plant-action-btn td-plant-open-btn" title="Open the dedicated Excel workbook with the local helper on this PC, or download it on any device">Update data</button>
-            <button type="button" id="td-plant-download-btn" data-admin-only="true" class="td-plant-action-btn td-plant-download-btn" title="Download the dedicated Excel workbook">⬇ Download Excel</button>
-            <button type="button" id="td-plant-refresh-btn" class="td-plant-action-btn td-plant-refresh-btn" title="Fetch the latest mapped plant tags into the TST cells">↻ Refresh Now</button>
-          </div>
-        </div>
-        </div>
         <div id="td-process-manual-grid" class="td-manual-grid">
 
           <!-- HGU Load -->
