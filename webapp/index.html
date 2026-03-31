@@ -1126,17 +1126,9 @@ body[data-user-mode="operator"] [data-admin-only="true"]{
 body[data-user-mode="admin"] [data-operator-only="true"]{
   display:none !important;
 }
-body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip{
-  grid-template-columns:minmax(280px,1fr) !important;
-}
-body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip .td-plant-status-pill{
-  max-width:min(100%, 560px);
-}
-body[data-user-mode="operator"] #tab-tempdata .td-plant-controls-right{
-  justify-content:flex-end;
-}
-body[data-user-mode="operator"] #tab-tempdata .td-plant-controls-right .td-plant-action-btn:not([data-admin-only="true"]){
-  flex:0 0 auto;
+body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip,
+body[data-user-mode="operator"] #tab-tempdata .td-plant-excel-controls{
+  display:none !important;
 }
 @media (max-width: 900px){
   .admin-mode-badge{
@@ -18882,7 +18874,7 @@ html, body, body *, body *::before, body *::after, svg text{
           Live plant import is not configured. Set the plant data Supabase URL and key.
         </div>
         <div id="td-plant-live-warning" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;"></div>
-        <div class="td-plant-status-strip">
+        <div class="td-plant-status-strip" data-admin-only="true">
           <div class="td-toolbar-pill td-plant-status-pill" style="display:flex;align-items:center;gap:10px;min-width:220px;">
             <span id="td-plant-status-dot" style="width:10px;height:10px;border-radius:999px;background:#64748b;box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;flex:0 0 auto;"></span>
             <span id="td-plant-status-text" class="td-plant-status-text">Plant import idle</span>
@@ -18898,7 +18890,7 @@ html, body, body *, body *::before, body *::after, svg text{
           <span class="td-plant-path-label">Excel File</span>
           <span id="td-plant-excel-path-display" class="td-plant-path-value"></span>
         </div>
-        <div class="td-toolbar-row td-plant-excel-controls">
+        <div class="td-toolbar-row td-plant-excel-controls" data-admin-only="true">
           <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:10px;">
             <span class="td-toolbar-label">Auto-refresh:</span>
             <select id="td-plant-refresh-interval" class="td-toolbar-select">
