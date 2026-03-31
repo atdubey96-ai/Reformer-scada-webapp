@@ -20655,7 +20655,14 @@ function isHeatMapTabEnabled(){
   return !!(panel && !panel.hasAttribute("hidden") && btn);
 }
 
+function isMobileLandingViewport(){
+  return typeof window !== "undefined"
+    && typeof window.matchMedia === "function"
+    && window.matchMedia("(max-width:900px)").matches;
+}
+
 function getDefaultLiveTab(){
+  if(isMobileLandingViewport()) return "burner";
   return isHeatMapTabEnabled() ? "heatmap" : "cuboidstack";
 }
 
@@ -24039,9 +24046,13 @@ function init(){
   setTimeout(function(){
     if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches();
     if(typeof isHeatMapTabEnabled === "function" && isHeatMapTabEnabled() && typeof requestHeatMapRender === "function") requestHeatMapRender(0);
-    if(typeof ensureCuboidViewerLoaded === "function") ensureCuboidViewerLoaded();
+    if(typeof ensureCuboidViewerLoaded === "function" && !isMobileLandingViewport()) ensureCuboidViewerLoaded();
   }, 0);
-  setTimeout(function(){ applyDesktopPrimaryInterfaceMode(true); }, 40);
+  if(isMobileLandingViewport()){
+    applyDesktopPrimaryInterfaceMode(true);
+  }else{
+    setTimeout(function(){ applyDesktopPrimaryInterfaceMode(true); }, 40);
+  }
 }
 
 /* auto-init for logged sessions is handled later, after sync stack initialization */
