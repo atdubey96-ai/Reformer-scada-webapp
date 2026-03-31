@@ -5799,29 +5799,49 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   min-width:0;
 }
 #tab-tempdata .td-plant-status-strip .td-toolbar-pill{
-  flex-wrap:nowrap;
+  flex-wrap:wrap;
   width:100%;
   min-width:0;
-  white-space:nowrap;
-  gap:7px;
-  padding:4px 8px;
-  overflow:hidden;
+  min-height:56px;
+  gap:4px 7px;
+  padding:8px 10px;
+  overflow:visible;
 }
 #tab-tempdata .td-plant-status-strip .td-plant-status-pill{
   justify-content:flex-start;
+  align-items:center;
+  flex-wrap:nowrap;
 }
 #tab-tempdata .td-plant-status-strip .td-toolbar-label{
-  font-size:10px;
+  font-size:9px;
   letter-spacing:0.55px;
-  white-space:nowrap;
+  line-height:1.05;
+  white-space:normal;
+}
+#tab-tempdata .td-plant-status-strip .td-toolbar-pill:not(.td-plant-status-pill){
+  display:grid;
+  grid-template-columns:1fr;
+  align-content:center;
+  justify-items:start;
+}
+#tab-tempdata .td-plant-status-strip .td-toolbar-pill:not(.td-plant-status-pill) .td-toolbar-label,
+#tab-tempdata .td-plant-status-strip .td-toolbar-pill:not(.td-plant-status-pill) .td-plant-stat-value{
+  width:100%;
+  overflow:visible;
+  text-overflow:clip;
+  white-space:normal;
+  overflow-wrap:anywhere;
 }
 #tab-tempdata .td-plant-status-strip .td-plant-status-text,
 #tab-tempdata .td-plant-status-strip .td-plant-stat-value{
-  font-size:11px;
-  line-height:1.1;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  font-size:12px;
+  line-height:1.2;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+#tab-tempdata .td-plant-status-strip .td-plant-status-text{
+  overflow-wrap:anywhere;
 }
 @media (max-width:1580px){
   #tab-tempdata .td-plant-status-strip{
@@ -5837,15 +5857,16 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   }
   #tab-tempdata .td-plant-status-strip .td-toolbar-pill{
     gap:6px;
-    padding:4px 7px;
+    min-height:54px;
+    padding:7px 9px;
   }
   #tab-tempdata .td-plant-status-strip .td-toolbar-label{
-    font-size:9px;
+    font-size:8.5px;
     letter-spacing:0.42px;
   }
   #tab-tempdata .td-plant-status-strip .td-plant-status-text,
   #tab-tempdata .td-plant-status-strip .td-plant-stat-value{
-    font-size:10px;
+    font-size:11px;
   }
 }
 @media (max-width:1420px){
@@ -5862,7 +5883,8 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   }
   #tab-tempdata .td-plant-status-strip .td-toolbar-pill{
     gap:5px;
-    padding:3px 6px;
+    min-height:52px;
+    padding:7px 8px;
     border-radius:10px;
   }
   #tab-tempdata .td-plant-status-strip .td-toolbar-label{
@@ -5871,7 +5893,7 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   }
   #tab-tempdata .td-plant-status-strip .td-plant-status-text,
   #tab-tempdata .td-plant-status-strip .td-plant-stat-value{
-    font-size:9px;
+    font-size:10px;
   }
 }
 #tab-tempdata .td-plant-settings-btn{
