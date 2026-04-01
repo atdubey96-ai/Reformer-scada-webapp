@@ -7,11 +7,38 @@ const { spawn } = require("child_process");
 
 const HOST = process.env.SCADA_HELPER_HOST || "127.0.0.1";
 const PORT = Number(process.env.SCADA_HELPER_PORT || "8766");
-const DEFAULT_WORKBOOK_PATH = path.join(__dirname, "webapp", "Data_website2.xlsm");
+const WEBAPP_DIR = path.join(__dirname, "webapp");
+const DEFAULT_WORKBOOK_PATH = path.join(WEBAPP_DIR, "Data_website2.xlsm");
 
 function getWorkbookPath() {
   const rawPath = process.env.SCADA_EXCEL_FILE || DEFAULT_WORKBOOK_PATH;
   return path.resolve(rawPath);
+}
+
+function parseJsonSafe(text) {
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch (_err) {
+    return {};
+  }
+}
+
+function resolveWorkbookPath(requestPayload) {
+  const fallbackPath = getWorkbookPath();
+  const requestedWorkbook = String(requestPayload && requestPayload.workbook || "").trim();
+  if (!requestedWorkbook) {
+    return fallbackPath;
+  }
+  const baseName = path.basename(requestedWorkbook);
+  if (!baseName || !/^[A-Za-z0-9._-]+$/.test(baseName)) {
+    throw new Error("Invalid workbook name requested.");
+  }
+  const candidatePath = path.join(WEBAPP_DIR, baseName);
+  if (!fs.existsSync(candidatePath)) {
+    throw new Error("Workbook not found: " + candidatePath);
+  }
+  return candidatePath;
 }
 
 function writeJson(res, statusCode, payload) {
@@ -91,12 +118,14 @@ function readRequestBody(req) {
 
 async function handleOpenExcel(req, res) {
   try {
-    await readRequestBody(req);
-    const workbookPath = getWorkbookPath();
+    const bodyText = await readRequestBody(req);
+    const payload = parseJsonSafe(bodyText);
+    const workbookPath = resolveWorkbookPath(payload);
     await openWorkbookFile(workbookPath);
     writeJson(res, 200, {
       ok: true,
       path: workbookPath,
+      requestedWorkbook: String(payload && payload.workbook || "").trim(),
       platform: process.platform
     });
   } catch (err) {
