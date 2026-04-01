@@ -19705,12 +19705,6 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
             <input type="number" id="td-excess-o2" class="td-input" placeholder="Enter value" step="0.01">
           </div>
 
-          <!-- Pre-reformer Bed Max -->
-          <div class="td-field-group">
-            <label class="td-label">Pre-reformer Bed Max <span class="td-unit">(°C)</span></label>
-            <input type="number" id="td-prereformer-max" class="td-input" placeholder="Enter value" step="0.1">
-          </div>
-
           <!-- Pre-reformer Bed Min -->
           <div class="td-field-group">
             <label class="td-label">Pre-reformer Bed Min <span class="td-unit">(°C)</span></label>
@@ -19807,7 +19801,6 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">CD COT (°C)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Flue Gas (°C)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">O₂ (%Vol)</th>
-                <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Pre-ref Max (°C)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Pre-ref Min (°C)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Methane Slip (%Vol)</th>
                 <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">AB Bot PH 1-15</th>
@@ -19818,7 +19811,7 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
               </tr>
             </thead>
             <tbody id="td-saved-tbody">
-              <tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>
+              <tr><td colspan="14" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>
             </tbody>
           </table>
         </div>
@@ -20263,7 +20256,6 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
                     <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">CD COT (°C)</th>
                     <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Flue Gas (°C)</th>
                     <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">O₂ (%Vol)</th>
-                    <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Pre-ref Max (°C)</th>
                     <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Pre-ref Min (°C)</th>
                     <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Methane Slip (%Vol)</th>
                     <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">AB Bot PH 1-15</th>
@@ -20274,7 +20266,7 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
                   </tr>
                 </thead>
                 <tbody id="stack-td-saved-tbody">
-                  <tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>
+                  <tr><td colspan="14" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -23197,7 +23189,6 @@ async function exportToExcel(options){
         "CD Side COT (°C)",
         "Flue Gas (°C)",
         "Excess O2 (%Vol)",
-        "Pre-ref Max (°C)",
         "Pre-ref Min (°C)",
         "Methane Slip (%Vol)"
       ];
@@ -23224,7 +23215,6 @@ async function exportToExcel(options){
           e.cdCot||"",
           e.flueGas||"",
           e.excessO2||"",
-          e.preRefMax||"",
           e.preRefMin||"",
           e.methaneSlip||""
         );
@@ -28577,13 +28567,14 @@ var tempDataEntries = [];
 var tdEditingIndex = -1;
 var TD_PLANT_DATA_SUPABASE_URL = "https://mozuuowwdfyqqvpiyetk.supabase.co";
 var TD_PLANT_DATA_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1venV1b3d3ZGZ5cXF2cGl5ZXRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTU3NjksImV4cCI6MjA5MDE5MTc2OX0.SqSAoPwxgPi6cVrYeIQC8xBebbVINZEaPw-odWdqUPo";
+var TD_HGU_LOAD_DIVISOR = 26636;
+var TD_HGU_LOAD_RAW_THRESHOLD = 500;
 var TD_PROCESS_FIELD_BINDINGS = [
   { key:"hguLoad", inputId:"td-hgu-load", exportLabel:"HGU Load (%)", importLabels:["hgu load"], plantTagId:"GJA.2041fic2405.pv" },
   { key:"abCot", inputId:"td-ab-cot", exportLabel:"AB Side COT (degC)", importLabels:["ab side cot","ab cot"], plantTagId:"GJA.2041ti2501.pv" },
   { key:"cdCot", inputId:"td-cd-cot", exportLabel:"CD Side COT (degC)", importLabels:["cd side cot","cd cot"], plantTagId:"GJA.2041ti2502.pv" },
   { key:"flueGas", inputId:"td-flue-gas", exportLabel:"Flue Gas (degC)", importLabels:["flue gas","flue gas temp","reformer flue gas"], plantTagId:"GJA.2041ti2408.pv" },
   { key:"excessO2", inputId:"td-excess-o2", exportLabel:"Excess O2 (%Vol)", importLabels:["excess o2","o2 excess","o2"], plantTagId:"GJA.2041ai2401.pv" },
-  { key:"preRefMax", inputId:"td-prereformer-max", exportLabel:"Pre-ref Max (degC)", importLabels:["pre-ref max","prereformer max"] },
   { key:"preRefMin", inputId:"td-prereformer-min", exportLabel:"Pre-ref Min (degC)", importLabels:["pre-ref min","prereformer min"] },
   { key:"methaneSlip", inputId:"td-methane-slip", exportLabel:"Methane Slip (%Vol)", importLabels:["methane slip","ch4 slip"], plantTagId:"GJA.2041ai2601.pv" },
   { key:"psa1Og", inputId:"td-psa1-og", exportLabel:"PSA-1 Off Gas", importLabels:["psa-1 og","psa1 og","psa-1 off gas"], plantTagId:"GJA.2041fic2904.pv" },
@@ -28953,11 +28944,64 @@ function isTempDataTabActive(){
   return !!(panel && panel.classList.contains("tab-active"));
 }
 
+function parseTdProcessNumericValue(raw){
+  if(raw === null || raw === undefined) return null;
+  var token = String(raw).trim().replace(/,/g, "");
+  if(!token) return null;
+  var num = Number(token);
+  return isFinite(num) ? num : null;
+}
+
+function formatTdProcessNumericValue(raw, decimals){
+  var num = parseTdProcessNumericValue(raw);
+  if(num === null) return raw == null ? "" : String(raw).trim();
+  var places = typeof decimals === "number" ? decimals : 2;
+  return num.toFixed(places)
+    .replace(/\.0+$/, "")
+    .replace(/(\.\d*?)0+$/, "$1");
+}
+
+function normalizeTdHguLoadPercent(raw){
+  var num = parseTdProcessNumericValue(raw);
+  if(num === null) return null;
+  if(Math.abs(num) > TD_HGU_LOAD_RAW_THRESHOLD && TD_HGU_LOAD_DIVISOR > 0){
+    num = (num / TD_HGU_LOAD_DIVISOR) * 100;
+  }
+  return num;
+}
+
+function formatTdProcessFieldValue(bindingOrKey, raw){
+  var key = typeof bindingOrKey === "string"
+    ? bindingOrKey
+    : (bindingOrKey && bindingOrKey.key ? bindingOrKey.key : "");
+  if(raw === null || raw === undefined) return "";
+  if(key === "hguLoad"){
+    var pct = normalizeTdHguLoadPercent(raw);
+    return pct === null ? String(raw).trim() : formatTdProcessNumericValue(pct, 2);
+  }
+  return String(raw).trim();
+}
+
+function getTempEntryFieldDisplayValue(entry, key){
+  if(!entry) return "—";
+  var formatted = formatTdProcessFieldValue(key, entry[key]);
+  return formatted || "—";
+}
+
+function getTempEntryFieldFilterValue(entry, key){
+  if(!entry) return NaN;
+  if(key === "hguLoad"){
+    var pct = normalizeTdHguLoadPercent(entry[key]);
+    return pct === null ? NaN : pct;
+  }
+  return parseSavedEntryFilterNumber(entry[key]);
+}
+
 function readTdProcessFieldInputs(){
   var values = {};
   TD_PROCESS_FIELD_BINDINGS.forEach(function(binding){
     var input = getTdProcessFieldInput(binding);
-    values[binding.key] = input ? input.value : "";
+    values[binding.key] = input ? formatTdProcessFieldValue(binding, input.value) : "";
   });
   return values;
 }
@@ -28965,7 +29009,7 @@ function readTdProcessFieldInputs(){
 function writeTdProcessFieldInputs(entry){
   TD_PROCESS_FIELD_BINDINGS.forEach(function(binding){
     var input = getTdProcessFieldInput(binding);
-    if(input) input.value = entry && entry[binding.key] != null ? entry[binding.key] : "";
+    if(input) input.value = entry && entry[binding.key] != null ? formatTdProcessFieldValue(binding, entry[binding.key]) : "";
   });
 }
 
@@ -29322,12 +29366,14 @@ function applyTdPlantImportToInputs(latestMap){
   getTdPlantMappedBindings().forEach(function(binding){
     var row = latestMap && latestMap.get ? latestMap.get(binding.plantTagId) : null;
     if(!row) return;
+    var normalizedValue = normalizeTdPlantNumericValue(row.value);
+    var displayValue = formatTdProcessFieldValue(binding, normalizedValue);
     mappedRows.push({
       key: binding.key,
       label: binding.exportLabel,
       tag_id: row.tag_id || binding.plantTagId,
       source_label: row.label || "",
-      value: row.value,
+      value: displayValue,
       unit: row.unit || "",
       synced_at: row.synced_at || "",
       pushed_at: row.pushed_at || row.synced_at || ""
@@ -29335,7 +29381,7 @@ function applyTdPlantImportToInputs(latestMap){
     if(tdEditingIndex >= 0) return;
     var input = getTdProcessFieldInput(binding);
     if(!input) return;
-    var nextValue = normalizeTdPlantNumericValue(row.value);
+    var nextValue = displayValue;
     if(nextValue === "") return;
     var prevValue = String(input.value || "");
     input.value = nextValue;
@@ -32073,7 +32119,6 @@ var SAVED_ENTRY_FILTER_FIELDS = [
   {key:"cdCot", label:"CD COT (°C)"},
   {key:"flueGas", label:"Flue Gas (°C)"},
   {key:"excessO2", label:"O2 (%Vol)"},
-  {key:"preRefMax", label:"Pre-ref Max (°C)"},
   {key:"preRefMin", label:"Pre-ref Min (°C)"},
   {key:"methaneSlip", label:"Methane Slip (%Vol)"}
 ];
@@ -32229,7 +32274,7 @@ function getFilteredTempDataEntries(){
     max = swap;
   }
   return rows.filter(function(row){
-    var value = parseSavedEntryFilterNumber(row && row.ent ? row.ent[state.field] : "");
+    var value = getTempEntryFieldFilterValue(row && row.ent, state.field);
     if(!isFinite(value)) return false;
     if(hasMin && value < min) return false;
     if(hasMax && value > max) return false;
@@ -32348,7 +32393,7 @@ function getBurnerHistoryFilteredEntries(){
   }
   if(hasMin || hasMax){
     rows = rows.filter(function(row){
-      var value = parseSavedEntryFilterNumber(row && row.ent ? row.ent.hguLoad : "");
+      var value = getTempEntryFieldFilterValue(row && row.ent, "hguLoad");
       if(!isFinite(value)) return false;
       if(hasMin && value < min) return false;
       if(hasMax && value > max) return false;
@@ -32416,7 +32461,7 @@ function renderBurnerHistoryTable(){
     rowsHtml += '<tr onclick="openBurnerHistorySnapshot(' + originalIndex + ')" title="Open burner snapshot history" style="cursor:pointer;">'
       + '<td>' + dtHtml + '</td>'
       + '<td style="text-align:center;"><span class="' + shiftChipClass + '">' + shiftLabel + '</span></td>'
-      + '<td style="text-align:center;">' + (ent.hguLoad || "—") + '</td>'
+      + '<td style="text-align:center;">' + getTempEntryFieldDisplayValue(ent, "hguLoad") + '</td>'
       + '</tr>';
   }
 
@@ -32429,11 +32474,11 @@ function renderTempDataTableInto(tbodyId, display, totalCount){
   var tbody = document.getElementById(tbodyId);
   if(!tbody) return;
   if(!totalCount){
-    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
     return;
   }
   if(!display.length){
-    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#94a3b8;padding:20px;">No entries match the selected shift/date/value filter.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:#94a3b8;padding:20px;">No entries match the selected shift/date/value filter.</td></tr>';
     return;
   }
   var rows = "";
@@ -32450,14 +32495,13 @@ function renderTempDataTableInto(tbodyId, display, totalCount){
     rows += '<tr onclick="openAllPHModal(' + originalIndex + ')" title="Open peep-hole details" style="border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
       + '<td style="text-align:left;">' + dtHtml + '</td>'
       + '<td style="text-align:center;"><span class="' + shiftChipClass + '">' + shiftLabel + '</span></td>'
-      + '<td style="text-align:center;">' + (ent.hguLoad||"—") + '</td>'
-      + '<td style="text-align:center;">' + (ent.abCot  || "—") + '</td>'
-      + '<td style="text-align:center;">' + (ent.cdCot  || "—") + '</td>'
-      + '<td style="text-align:center;">' + (ent.flueGas|| "—") + '</td>'
-      + '<td style="text-align:center;">' + (ent.excessO2||"—") + '</td>'
-      + '<td style="text-align:center;">' + (ent.preRefMax||"—") + '</td>'
-      + '<td style="text-align:center;">' + (ent.preRefMin||"—") + '</td>'
-      + '<td style="text-align:center;">' + (ent.methaneSlip||"—") + '</td>'
+      + '<td style="text-align:center;">' + getTempEntryFieldDisplayValue(ent, "hguLoad") + '</td>'
+      + '<td style="text-align:center;">' + getTempEntryFieldDisplayValue(ent, "abCot") + '</td>'
+      + '<td style="text-align:center;">' + getTempEntryFieldDisplayValue(ent, "cdCot") + '</td>'
+      + '<td style="text-align:center;">' + getTempEntryFieldDisplayValue(ent, "flueGas") + '</td>'
+      + '<td style="text-align:center;">' + getTempEntryFieldDisplayValue(ent, "excessO2") + '</td>'
+      + '<td style="text-align:center;">' + getTempEntryFieldDisplayValue(ent, "preRefMin") + '</td>'
+      + '<td style="text-align:center;">' + getTempEntryFieldDisplayValue(ent, "methaneSlip") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"ab-bot") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-bot") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"ab-top") + '</td>'
@@ -32470,7 +32514,7 @@ function renderTempDataTableInto(tbodyId, display, totalCount){
       + '</td>'
       + '</tr>';
   }
-  tbody.innerHTML = rows || '<tr><td colspan="15" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
+  tbody.innerHTML = rows || '<tr><td colspan="14" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
 }
 
 function renderTempDataTable(){
@@ -32635,7 +32679,8 @@ function renderAllPHData(){
     html += '<span class="all-ph-entry-dt">'+ent.dt+'</span>';
     html += '<span class="all-ph-entry-shift" style="--shift-color:'+sc+';">'+ent.shift+'</span>';
     if(snapshotOnlyMode){
-      if(ent.hguLoad) html += '<span class="all-ph-entry-meta">HGU Load: <b>'+ent.hguLoad+'%</b></span>';
+      var hguLoadLabel = formatTdProcessFieldValue("hguLoad", ent.hguLoad);
+      if(hguLoadLabel) html += '<span class="all-ph-entry-meta">HGU Load: <b>'+hguLoadLabel+'%</b></span>';
     }else{
       if(ent.abCot) html += '<span class="all-ph-entry-meta">AB COT: <b>'+ent.abCot+'°C</b></span>';
       if(ent.cdCot) html += '<span class="all-ph-entry-meta">CD COT: <b>'+ent.cdCot+'°C</b></span>';
@@ -33227,7 +33272,6 @@ body.light-theme .btab-alarm-count{
     { label:"Naphtha Fuel", key:"naphthaFuel", unit:"kg/h", min:800, max:2000 },
     { label:"Pre reformer Inlet", key:"preInlet", unit:"degC", min:420, max:470 },
     { label:"Pre-reformer Outlet", key:"preOutlet", unit:"degC", min:470, max:520 },
-    { label:"Pre-ref Bed Max", key:"preBedMax", unit:"degC", min:480, max:540 },
     { label:"Pre-ref Bed Min", key:"preBedMin", unit:"degC", min:470, max:510 }
   ];
 
@@ -33246,7 +33290,6 @@ body.light-theme .btab-alarm-count{
       cdCot: null,
       flueGas: null,
       excessO2: null,
-      preBedMax: null,
       preBedMin: null,
       methaneSlip: null,
       psa1Flow: null,
@@ -33426,11 +33469,16 @@ body.light-theme .btab-alarm-count{
   }
 
   function readFallbackValue(entryKey, inputId){
-    var direct = parseNumberOrNull(getReformerDashEl(inputId) && getReformerDashEl(inputId).value);
+    var directRaw = getReformerDashEl(inputId) && getReformerDashEl(inputId).value;
+    var direct = entryKey === "hguLoad"
+      ? normalizeTdHguLoadPercent(directRaw)
+      : parseNumberOrNull(directRaw);
     if(isFiniteNumber(direct)) return direct;
     var latestEntry = getLatestSavedEntry();
     if(!latestEntry) return null;
-    return parseNumberOrNull(latestEntry[entryKey]);
+    return entryKey === "hguLoad"
+      ? normalizeTdHguLoadPercent(latestEntry[entryKey])
+      : parseNumberOrNull(latestEntry[entryKey]);
   }
 
   function collectLatestRowsSafe(rows){
@@ -33469,7 +33517,9 @@ body.light-theme .btab-alarm-count{
       var row = latestMap.get(binding.plantTagId);
       if(!row) continue;
       var stateKey = REFORMER_DASH_FIELD_ALIAS[bindingKey];
-      data[stateKey] = parseNumberOrNull(row.value);
+      data[stateKey] = bindingKey === "hguLoad"
+        ? normalizeTdHguLoadPercent(row.value)
+        : parseNumberOrNull(row.value);
       rowMeta[stateKey] = {
         label: row.label || binding.exportLabel || stateKey,
         unit: row.unit || "",
@@ -33478,7 +33528,6 @@ body.light-theme .btab-alarm-count{
         pushedAt: row.pushed_at || row.synced_at || ""
       };
     }
-    data.preBedMax = readFallbackValue("preRefMax", "td-prereformer-max");
     data.preBedMin = readFallbackValue("preRefMin", "td-prereformer-min");
     data.h2Production = data.hguLoad;
     reformerDashState.mappedCount = Object.keys(rowMeta).length;
@@ -33821,7 +33870,7 @@ body.light-theme .btab-alarm-count{
         + '<div class="refdash-mono" style="font-size:12px;color:var(--refdash-green);font-weight:700;">'
         + (isFiniteNumber(metrics.preDeltaT) ? ("Delta T = " + formatValue(metrics.preDeltaT, 1) + " degC") : "Delta T = —")
         + '</div>'
-        + '<div style="margin-top:8px;font-size:10px;color:var(--refdash-muted);">Bed max/min follow the current TST data or latest saved TST fallback.</div>';
+        + '<div style="margin-top:8px;font-size:10px;color:var(--refdash-muted);">Bed min follows the current TST data or latest saved TST fallback.</div>';
     }
 
     renderTempProfileChart();
@@ -34019,7 +34068,7 @@ body.light-theme .btab-alarm-count{
 
   function renderTempProfileChart(){
     var theme = getDashTheme();
-    var labels = ["Pre-Ref In", "Pre-Ref Out", "Bed Min", "Bed Max", "AB COT", "CD COT", "Avg COT", "Flue Gas"];
+    var labels = ["Pre-Ref In", "Pre-Ref Out", "Bed Min", "AB COT", "CD COT", "Avg COT", "Flue Gas"];
     var metrics = calcReformerMetrics();
     replaceChart("tempProfile", "refdash-chart-temp-profile", {
       type: "bar",
@@ -34032,7 +34081,6 @@ body.light-theme .btab-alarm-count{
               reformerDashState.data.preInlet,
               reformerDashState.data.preOutlet,
               reformerDashState.data.preBedMin,
-              reformerDashState.data.preBedMax,
               reformerDashState.data.abCot,
               reformerDashState.data.cdCot,
               metrics.avgCot,
@@ -34044,7 +34092,7 @@ body.light-theme .btab-alarm-count{
           },
           {
             label: "Design Ref",
-            data: [450, 490, 495, 525, 845, 845, 845, 900],
+            data: [450, 490, 495, 845, 845, 845, 900],
             backgroundColor: "rgba(148,163,184,0.24)",
             borderRadius: 6,
             barPercentage: 0.7
