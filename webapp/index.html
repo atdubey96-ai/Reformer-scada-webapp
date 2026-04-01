@@ -19233,6 +19233,61 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
         </div>
       </div>
 
+      <div id="cleaning-history-panel" class="cleaning-history-panel">
+        <div class="cleaning-history-head">
+          <div>
+            <h3 class="cleaning-history-title">📜 Historical Burner Cleaning Data</h3>
+            <p class="cleaning-history-sub">Click any cleaning cell above to inspect every saved cleaning date for that burner in one place.</p>
+          </div>
+          <button type="button" class="hd-btn hd-btn-secondary" onclick="openSelectedBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;">✏️ Edit Selected Dates</button>
+        </div>
+
+        <div class="cleaning-history-chip-row">
+          <div class="cleaning-history-chip">
+            <span class="cleaning-history-chip-label">Selected Burner</span>
+            <span id="cleaning-history-selected" class="cleaning-history-chip-value">Wall A · Row 1 · Burner 1</span>
+          </div>
+          <div class="cleaning-history-chip">
+            <span class="cleaning-history-chip-label">Saved Dates</span>
+            <span id="cleaning-history-count" class="cleaning-history-chip-value">0 dates</span>
+          </div>
+          <div class="cleaning-history-chip">
+            <span class="cleaning-history-chip-label">Latest Cleaned</span>
+            <span id="cleaning-history-latest" class="cleaning-history-chip-value">No history yet</span>
+          </div>
+        </div>
+
+        <div class="cleaning-history-controls">
+          <div class="cleaning-history-select-wrap">
+            <label for="cleaning-history-date-select">Cleaning Dates Dropdown</label>
+            <select id="cleaning-history-date-select" class="cleaning-history-select" onchange="handleCleaningHistoryDateSelect(this.value)">
+              <option value="">No saved dates</option>
+            </select>
+          </div>
+          <div class="cleaning-history-chip" style="min-width:220px;">
+            <span class="cleaning-history-chip-label">Dropdown Selection</span>
+            <span id="cleaning-history-picked" class="cleaning-history-chip-value">No date selected</span>
+          </div>
+        </div>
+
+        <div class="cleaning-history-table-wrap">
+          <table class="cleaning-history-table">
+            <thead>
+              <tr>
+                <th style="width:88px;">#</th>
+                <th>Cleaning Date</th>
+                <th>Stored Value</th>
+              </tr>
+            </thead>
+            <tbody id="cleaning-history-tbody">
+              <tr>
+                <td colspan="3" class="cleaning-history-empty">Click a cleaning cell above to load its saved burner-cleaning dates.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- ══════════════════════════════════════════════════
            BURNER TIP DAMAGE & REPLACEMENT TABLE
       ══════════════════════════════════════════════════ -->
@@ -19318,61 +19373,6 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
               <div id="cdash-row-bars" class="cdash-bars"></div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div id="cleaning-history-panel" class="cleaning-history-panel">
-        <div class="cleaning-history-head">
-          <div>
-            <h3 class="cleaning-history-title">📜 Historical Burner Cleaning Data</h3>
-            <p class="cleaning-history-sub">Click any cleaning cell above to inspect every saved cleaning date for that burner in one place.</p>
-          </div>
-          <button type="button" class="hd-btn hd-btn-secondary" onclick="openSelectedBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;">✏️ Edit Selected Dates</button>
-        </div>
-
-        <div class="cleaning-history-chip-row">
-          <div class="cleaning-history-chip">
-            <span class="cleaning-history-chip-label">Selected Burner</span>
-            <span id="cleaning-history-selected" class="cleaning-history-chip-value">Wall A · Row 1 · Burner 1</span>
-          </div>
-          <div class="cleaning-history-chip">
-            <span class="cleaning-history-chip-label">Saved Dates</span>
-            <span id="cleaning-history-count" class="cleaning-history-chip-value">0 dates</span>
-          </div>
-          <div class="cleaning-history-chip">
-            <span class="cleaning-history-chip-label">Latest Cleaned</span>
-            <span id="cleaning-history-latest" class="cleaning-history-chip-value">No history yet</span>
-          </div>
-        </div>
-
-        <div class="cleaning-history-controls">
-          <div class="cleaning-history-select-wrap">
-            <label for="cleaning-history-date-select">Cleaning Dates Dropdown</label>
-            <select id="cleaning-history-date-select" class="cleaning-history-select" onchange="handleCleaningHistoryDateSelect(this.value)">
-              <option value="">No saved dates</option>
-            </select>
-          </div>
-          <div class="cleaning-history-chip" style="min-width:220px;">
-            <span class="cleaning-history-chip-label">Dropdown Selection</span>
-            <span id="cleaning-history-picked" class="cleaning-history-chip-value">No date selected</span>
-          </div>
-        </div>
-
-        <div class="cleaning-history-table-wrap">
-          <table class="cleaning-history-table">
-            <thead>
-              <tr>
-                <th style="width:88px;">#</th>
-                <th>Cleaning Date</th>
-                <th>Stored Value</th>
-              </tr>
-            </thead>
-            <tbody id="cleaning-history-tbody">
-              <tr>
-                <td colspan="3" class="cleaning-history-empty">Click a cleaning cell above to load its saved burner-cleaning dates.</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
