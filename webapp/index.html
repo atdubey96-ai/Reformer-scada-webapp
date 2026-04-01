@@ -18989,50 +18989,45 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
 
   <!-- TAB 2: Burner Cleaning Status -->
   <div id="tab-cleaning" class="tab-panel">
-    <!-- ══════════════════════════════════════════════════
-         BURNER TIP DAMAGE & REPLACEMENT TABLE
-    ══════════════════════════════════════════════════ -->
-    <div id="tip-damage-panel" style="margin:20px 20px 0;background:#0a1628;border:1px solid #1e3a5e;border-radius:12px;overflow:hidden;">
-
-      <!-- Header -->
-      <div style="background:linear-gradient(90deg,#0f2744,#1a3560);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #F37022;flex-wrap:wrap;gap:10px;">
-        <div>
-          <div style="font-size:15px;font-weight:700;color:#F37022;letter-spacing:1.5px;">🔧 Burner Tip — Damage &amp; Replacement Log</div>
-          <div style="font-size:11px;color:#7ec8f0;margin-top:3px;">Track tip damage status and replacement history for each burner</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;">
-          <span id="tipUnsavedBadge" style="display:none;font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);padding:4px 12px;border-radius:4px;">⚠ Unsaved Changes</span>
-          <button onclick="addTipRow()" style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.35);color:#4ade80;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;font-family:Rajdhani,sans-serif;cursor:pointer;letter-spacing:0.5px;">＋ Add Row</button>
-          <button class="scada-save-btn" onclick="saveTipData()">💾 SAVE TIP DATA</button>
-        </div>
-      </div>
-
-      <!-- Table -->
-      <div style="overflow-x:auto;padding:0 0 4px 0;">
-        <table id="tipDamageTable" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
-          <thead>
-            <tr style="background:rgba(255,255,255,0.06);">
-              <th style="padding:9px 12px;text-align:center;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">#</th>
-              <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Wall</th>
-              <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Row</th>
-              <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Burner No.</th>
-              <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Tip Damage Status</th>
-              <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Damage Date</th>
-              <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Replaced?</th>
-              <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Replacement Date</th>
-              <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Remarks</th>
-              <th style="padding:9px 12px;text-align:center;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Action</th>
-            </tr>
-          </thead>
-          <tbody id="tipDamageBody">
-            <!-- rows built by JS -->
-          </tbody>
-        </table>
-      </div>
-
-    </div><!-- /tip slab -->
-
     <div class="cleaning-section">
+      <div class="cleaning-main-outline" style="margin-top:0;">
+        <!-- Wall Selector Buttons -->
+        <div class="cw-selector" id="cleaningWallSelector">
+          <span class="cw-selector-label">Select Wall:</span>
+          <button class="cw-btn cw-btn-active" id="cw-btn-A" onclick="switchCleaningWall('A')">🔥 Wall A</button>
+          <button class="cw-btn" id="cw-btn-B" onclick="switchCleaningWall('B')">🔥 Wall B</button>
+          <button class="cw-btn" id="cw-btn-C" onclick="switchCleaningWall('C')">🔥 Wall C</button>
+          <button class="cw-btn" id="cw-btn-D" onclick="switchCleaningWall('D')">🔥 Wall D</button>
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+            <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
+              ⚠ Unsaved Changes — click <b>SAVE CLEANING DATA</b> to confirm
+            </span>
+            <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ HISTORICAL DATA</button>
+            <div style="position:relative;display:inline-block;" id="cleaningClearWrap" data-cleaning-clear-wrap="1">
+              <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 CLEAR DATA ▾</button>
+              <div id="cleaningClearMenu" style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.7);z-index:500;overflow:hidden;padding:6px 0;">
+                <div style="padding:8px 14px 6px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;border-bottom:1px solid #1e3a5e;margin-bottom:4px;">DELETE CLEANING DATA</div>
+                <button class="cl-menu-item" onclick="openClearByWall()">🧱 Clear by Wall</button>
+                <button class="cl-menu-item" onclick="openClearByRow()">📋 Clear by Row</button>
+                <button class="cl-menu-item" onclick="openClearByDateRange()">📅 Clear by Date Range</button>
+                <button class="cl-menu-item" onclick="openClearOlderThan()">🕐 Clear Older Than…</button>
+                <div style="height:1px;background:#1e3a5e;margin:4px 0;"></div>
+                <div style="padding:6px 14px 4px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;">CLEAR ALL</div>
+                <button class="cl-menu-item cl-menu-danger" onclick="openClearAllBurners()">⚠️ Clear All Burners…</button>
+              </div>
+            </div>
+            <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE CLEANING DATA</button>
+          </div>
+        </div>
+
+        <div id="cleaningTablesWrap" class="cleaning-walls-grid">
+          <!-- built by JS -->
+        </div>
+        <div class="cleaning-export-row" style="display:none;">
+          <span id="cleaningStatus" style="display:none;"></span>
+        </div>
+      </div>
+
       <h2 class="scada-panel-title">🧹 Burner Cleaning Log</h2>
       <div class="cleaning-subtitle">Select the date of last cleaning for each burner (6 Rows × 15 Burners) across all 4 walls. Data is saved automatically.</div>
 
@@ -19078,43 +19073,48 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
 
       <!-- High-frequency cleaning now uses the same bottom master alarm banner as burner imbalance -->
 
-      <div class="cleaning-main-outline">
-        <!-- Wall Selector Buttons -->
-        <div class="cw-selector" id="cleaningWallSelector">
-          <span class="cw-selector-label">Select Wall:</span>
-          <button class="cw-btn cw-btn-active" id="cw-btn-A" onclick="switchCleaningWall('A')">🔥 Wall A</button>
-          <button class="cw-btn" id="cw-btn-B" onclick="switchCleaningWall('B')">🔥 Wall B</button>
-          <button class="cw-btn" id="cw-btn-C" onclick="switchCleaningWall('C')">🔥 Wall C</button>
-          <button class="cw-btn" id="cw-btn-D" onclick="switchCleaningWall('D')">🔥 Wall D</button>
-          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-            <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
-              ⚠ Unsaved Changes — click <b>SAVE CLEANING DATA</b> to confirm
-            </span>
-            <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ HISTORICAL DATA</button>
-            <div style="position:relative;display:inline-block;" id="cleaningClearWrap" data-cleaning-clear-wrap="1">
-              <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 CLEAR DATA ▾</button>
-              <div id="cleaningClearMenu" style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.7);z-index:500;overflow:hidden;padding:6px 0;">
-                <div style="padding:8px 14px 6px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;border-bottom:1px solid #1e3a5e;margin-bottom:4px;">DELETE CLEANING DATA</div>
-                <button class="cl-menu-item" onclick="openClearByWall()">🧱 Clear by Wall</button>
-                <button class="cl-menu-item" onclick="openClearByRow()">📋 Clear by Row</button>
-                <button class="cl-menu-item" onclick="openClearByDateRange()">📅 Clear by Date Range</button>
-                <button class="cl-menu-item" onclick="openClearOlderThan()">🕐 Clear Older Than…</button>
-                <div style="height:1px;background:#1e3a5e;margin:4px 0;"></div>
-                <div style="padding:6px 14px 4px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;">CLEAR ALL</div>
-                <button class="cl-menu-item cl-menu-danger" onclick="openClearAllBurners()">⚠️ Clear All Burners…</button>
-              </div>
-            </div>
-            <button class="hd-btn hd-btn-primary scada-save-btn" onclick="exportToExcel()">💾 SAVE CLEANING DATA</button>
+      <!-- ══════════════════════════════════════════════════
+           BURNER TIP DAMAGE & REPLACEMENT TABLE
+      ══════════════════════════════════════════════════ -->
+      <div id="tip-damage-panel" style="margin-top:24px;background:#0a1628;border:1px solid #1e3a5e;border-radius:12px;overflow:hidden;">
+
+        <!-- Header -->
+        <div style="background:linear-gradient(90deg,#0f2744,#1a3560);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #F37022;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#F37022;letter-spacing:1.5px;">🔧 Burner Tip — Damage &amp; Replacement Log</div>
+            <div style="font-size:11px;color:#7ec8f0;margin-top:3px;">Track tip damage status and replacement history for each burner</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <span id="tipUnsavedBadge" style="display:none;font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);padding:4px 12px;border-radius:4px;">⚠ Unsaved Changes</span>
+            <button onclick="addTipRow()" style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.35);color:#4ade80;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;font-family:Rajdhani,sans-serif;cursor:pointer;letter-spacing:0.5px;">＋ Add Row</button>
+            <button class="scada-save-btn" onclick="saveTipData()">💾 SAVE TIP DATA</button>
           </div>
         </div>
 
-        <div id="cleaningTablesWrap" class="cleaning-walls-grid">
-          <!-- built by JS -->
+        <!-- Table -->
+        <div style="overflow-x:auto;padding:0 0 4px 0;">
+          <table id="tipDamageTable" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
+            <thead>
+              <tr style="background:rgba(255,255,255,0.06);">
+                <th style="padding:9px 12px;text-align:center;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">#</th>
+                <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Wall</th>
+                <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Row</th>
+                <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Burner No.</th>
+                <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Tip Damage Status</th>
+                <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Damage Date</th>
+                <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Replaced?</th>
+                <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Replacement Date</th>
+                <th style="padding:9px 12px;text-align:left;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Remarks</th>
+                <th style="padding:9px 12px;text-align:center;color:#7ec8f0;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #1e3a5e;white-space:nowrap;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="tipDamageBody">
+              <!-- rows built by JS -->
+            </tbody>
+          </table>
         </div>
-        <div class="cleaning-export-row" style="display:none;">
-          <span id="cleaningStatus" style="display:none;"></span>
-        </div>
-      </div>
+
+      </div><!-- /tip slab -->
     </div>
   </div>
 
