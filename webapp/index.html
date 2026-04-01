@@ -1813,15 +1813,15 @@ body:not(.heatmap-header-active) #hm-header-tools{
   background:rgba(0,0,0,0.18);
   border-radius:17px;
   border:1px solid rgba(255,255,255,0.22);
-  min-width:190px;
-  max-width:224px;
-  min-height:43px;
-  padding:6px 10px 5px;
+  min-width:224px;
+  max-width:312px;
+  min-height:50px;
+  padding:7px 12px 8px;
   display:inline-flex;
   flex-direction:column;
   align-items:flex-start;
   justify-content:center;
-  gap:2px;
+  gap:4px;
   text-align:left;
   box-shadow:
     0 8px 18px rgba(0,0,0,0.16),
@@ -1833,20 +1833,24 @@ body:not(.heatmap-header-active) #hm-header-tools{
 .alarm-chip-warning{background:linear-gradient(135deg,rgba(133,77,14,0.9),rgba(202,138,4,0.9));}
 .alarm-chip-freq{background:linear-gradient(135deg,rgba(30,64,175,0.9),rgba(37,99,235,0.9));}
 .alarm-chip-title{
-  font-size:10.5px;
+  font-size:11px;
   font-weight:800;
-  letter-spacing:0.38px;
+  letter-spacing:0.28px;
+  line-height:1.1;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
   width:100%;
 }
 .alarm-chip-desc{
-  font-size:9.5px;
+  font-size:10px;
   opacity:0.95;
-  white-space:nowrap;
+  line-height:1.18;
+  white-space:normal;
   overflow:hidden;
-  text-overflow:ellipsis;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
   width:100%;
 }
 .alarm-card-jump{
@@ -1880,9 +1884,9 @@ body:not(.heatmap-header-active) #hm-header-tools{
   }
   .alarm-sections{gap:6px;}
   .alarm-chip{
-    min-width:170px;
-    max-width:198px;
-    min-height:40px;
+    min-width:188px;
+    max-width:236px;
+    min-height:46px;
     border-radius:14px;
   }
   .alarm-banner button{
@@ -22391,6 +22395,52 @@ function getAlarmStableKey(a){
   return [a && a.type || "", a && a.wall || "", a && a.sev || "", a && a.desc || "", a && a.action || ""].join("|");
 }
 
+function normalizeAlarmChipText(text){
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
+function buildAlarmChipTitle(a){
+  var wall = a && a.wall ? String(a.wall).replace(/^Wall\s+/i, "Wall ") : "General";
+  if(a && a.type === "freq"){
+    var freqMatch = normalizeAlarmChipText(a.title).match(/^(Wall\s+[A-D]\s+R\d+\s+B\d+)/i);
+    return (freqMatch ? freqMatch[1] : wall) + " • Cleaning Frequency";
+  }
+  if(a && a.type === "imbalance"){
+    var sevTxt = String((a && a.sev) || "warning");
+    sevTxt = sevTxt.charAt(0).toUpperCase() + sevTxt.slice(1);
+    return wall + " • " + sevTxt + " Imbalance";
+  }
+  var title = normalizeAlarmChipText(a && a.title);
+  if(title){
+    return title.replace(/\s+—\s+/g, " • ").replace(/\s+Alarm$/i, "");
+  }
+  return wall + " • Alarm";
+}
+
+function buildAlarmChipSummary(a){
+  var desc = normalizeAlarmChipText(a && a.desc);
+  if(a && a.type === "freq"){
+    var freqMatch = desc.match(/has\s+(\d+)\s+cleaning entries in\s+([A-Za-z]{3}\s+\d{4})/i);
+    if(freqMatch){
+      return freqMatch[1] + " cleanings in " + freqMatch[2] + ". Tap for details.";
+    }
+    return "Repeated cleaning frequency detected. Tap for details.";
+  }
+  if(a && a.type === "imbalance"){
+    var imbalanceMatch = desc.match(/has a (minor|significant|severe) imbalance of (\d+) burner/i);
+    if(imbalanceMatch){
+      return imbalanceMatch[1].charAt(0).toUpperCase() + imbalanceMatch[1].slice(1) + " imbalance of " + imbalanceMatch[2] + " burners.";
+    }
+    return "Burner imbalance detected. Tap for details.";
+  }
+  if(desc){
+    var sentenceMatch = desc.match(/^.*?[.!?](?:\s|$)/);
+    var firstSentence = sentenceMatch ? sentenceMatch[0].trim() : desc;
+    return firstSentence.length > 72 ? (firstSentence.slice(0, 69).trimEnd() + "...") : firstSentence;
+  }
+  return "Tap for full alarm details";
+}
+
 function syncMasterAlarmBanner(){
   rebuildWallAlarms();
   rebuildFreqAlarms();
@@ -22404,16 +22454,19 @@ function syncMasterAlarmBanner(){
     activeAlarms.forEach(function(a){
       var sev = (a.type === "freq") ? "freq" : (a.sev || "warning");
       var icon = (a.type === "freq") ? "⚠" : ({critical:"🔴", major:"🟠", warning:"🟡", normal:"🟢"}[sev] || "🔵");
-      var wall = a.wall ? String(a.wall).replace(/^Wall\s+/i, "W") : "General";
-      var sevTxt = (a.type === "freq") ? "FREQ" : String(sev || "").toUpperCase();
-      var brief = String(a.desc || "").replace(/\s+/g, " ").trim();
-      if(brief.length > 28) brief = brief.slice(0, 28).trimEnd() + "...";
+      var titleText = buildAlarmChipTitle(a);
+      var summaryText = buildAlarmChipSummary(a);
       var chip = document.createElement("button");
       chip.className = "alarm-chip alarm-chip-" + sev;
       chip.type = "button";
-      chip.innerHTML =
-        "<span class='alarm-chip-title'>" + icon + " " + wall + " • " + sevTxt + "</span>" +
-        "<span class='alarm-chip-desc'>" + (brief || "Tap for full alarm details") + "</span>";
+      var titleEl = document.createElement("span");
+      titleEl.className = "alarm-chip-title";
+      titleEl.textContent = icon + " " + titleText;
+      var descEl = document.createElement("span");
+      descEl.className = "alarm-chip-desc";
+      descEl.textContent = summaryText;
+      chip.appendChild(titleEl);
+      chip.appendChild(descEl);
       var alarmKey = getAlarmStableKey(a);
       chip.dataset.alarmKey = alarmKey;
       chip.addEventListener("click", function(){
