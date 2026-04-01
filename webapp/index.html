@@ -3491,6 +3491,35 @@ body.light-theme .all-ph-snapshot-state{
   background:linear-gradient(155deg,rgba(10,16,26,0.88) 0%,rgba(8,14,22,0.8) 56%,rgba(7,12,19,0.9) 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 30px rgba(0,0,0,0.44);
 }
+.cleaning-log-canvas,
+.cleaning-history-panel{
+  position:relative;
+  margin-top:24px;
+  padding:16px 18px 18px;
+  border:1px solid rgba(92,122,156,0.46);
+  border-radius:16px;
+  background:linear-gradient(155deg,rgba(10,16,26,0.9) 0%,rgba(8,14,22,0.84) 56%,rgba(7,12,19,0.92) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 30px rgba(0,0,0,0.38);
+}
+.cleaning-log-canvas::before,
+.cleaning-history-panel::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0) 24%);
+}
+.cleaning-table td.ct-history-selected{
+  box-shadow:inset 0 0 0 2px rgba(243,112,34,0.82), 0 0 0 1px rgba(243,112,34,0.18);
+  background:linear-gradient(180deg,rgba(67,31,10,0.96) 0%,rgba(35,17,8,0.96) 100%);
+}
+.cleaning-table td.ct-history-selected .ct-date-label{
+  color:#fff3e8;
+}
+.cleaning-table td.ct-history-selected .ct-cal-icon{
+  opacity:0.55;
+}
 /* ── Cleaning Wall Selector Buttons ── */
 .cw-selector{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
 .cw-selector-label{font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;margin-right:6px;}
@@ -3514,6 +3543,19 @@ body.light-theme .cleaning-main-outline{
   border-color:rgba(148,163,184,0.44);
   background:linear-gradient(155deg,rgba(248,250,252,0.96) 0%,rgba(241,245,249,0.94) 56%,rgba(236,242,248,0.96) 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.92), 0 10px 24px rgba(15,23,42,0.14);
+}
+body.light-theme .cleaning-log-canvas,
+body.light-theme .cleaning-history-panel{
+  border-color:rgba(148,163,184,0.44);
+  background:linear-gradient(155deg,rgba(248,250,252,0.98) 0%,rgba(241,245,249,0.96) 56%,rgba(236,242,248,0.98) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.94), 0 10px 24px rgba(15,23,42,0.12);
+}
+body.light-theme .cleaning-table td.ct-history-selected{
+  background:linear-gradient(180deg,rgba(255,241,233,0.95) 0%,rgba(255,232,219,0.95) 100%);
+  box-shadow:inset 0 0 0 2px rgba(217,80,8,0.78), 0 0 0 1px rgba(217,80,8,0.14);
+}
+body.light-theme .cleaning-table td.ct-history-selected .ct-date-label{
+  color:#9a3412;
 }
 .cw-nudge{
   margin-left:auto;
@@ -3558,6 +3600,169 @@ body.light-theme .cw-nudge{
   background:rgba(243,112,34,0.08);
   border-left:4px solid #F37022;
   border-radius:0 4px 4px 0;
+}
+.cleaning-history-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.cleaning-history-title{
+  margin:0 0 4px;
+  color:#F37022;
+  font-size:16px;
+  font-weight:700;
+  letter-spacing:0.4px;
+}
+.cleaning-history-sub{
+  margin:0;
+  color:#94a3b8;
+  font-size:12px;
+  letter-spacing:0.24px;
+}
+.cleaning-history-chip-row{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:14px;
+}
+.cleaning-history-chip{
+  min-width:0;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(51,65,85,0.92);
+  background:rgba(15,31,56,0.72);
+}
+.cleaning-history-chip-label{
+  display:block;
+  margin-bottom:4px;
+  color:#7ec8f0;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.cleaning-history-chip-value{
+  display:block;
+  color:#e2e8f0;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.3;
+  word-break:break-word;
+}
+.cleaning-history-controls{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:end;
+  margin-bottom:14px;
+}
+.cleaning-history-select-wrap label{
+  display:block;
+  margin-bottom:6px;
+  color:#7ec8f0;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.cleaning-history-select{
+  width:100%;
+  background:#0f1f38;
+  border:1px solid #334155;
+  border-radius:8px;
+  color:#e2e8f0;
+  padding:10px 12px;
+  font-family:'Rajdhani',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  outline:none;
+}
+.cleaning-history-select:focus{
+  border-color:#F37022;
+  box-shadow:0 0 0 3px rgba(243,112,34,0.18);
+}
+.cleaning-history-table-wrap{
+  overflow:auto;
+  border:1px solid rgba(51,65,85,0.92);
+  border-radius:12px;
+  background:rgba(15,23,42,0.72);
+}
+.cleaning-history-table{
+  width:100%;
+  min-width:420px;
+  border-collapse:collapse;
+}
+.cleaning-history-table th,
+.cleaning-history-table td{
+  padding:10px 12px;
+  border-bottom:1px solid rgba(51,65,85,0.72);
+  text-align:left;
+  font-size:12px;
+}
+.cleaning-history-table th{
+  background:rgba(255,255,255,0.04);
+  color:#7ec8f0;
+  font-weight:700;
+  letter-spacing:0.6px;
+  text-transform:uppercase;
+}
+.cleaning-history-table td{
+  color:#e2e8f0;
+}
+.cleaning-history-table tbody tr:last-child td{
+  border-bottom:none;
+}
+.cleaning-history-table tbody tr:nth-child(odd){
+  background:rgba(255,255,255,0.02);
+}
+.cleaning-history-empty{
+  padding:18px 16px;
+  text-align:center;
+  color:#94a3b8;
+  font-size:12px;
+}
+body.light-theme .cleaning-history-title{
+  color:#d95008;
+}
+body.light-theme .cleaning-history-sub{
+  color:#64748b;
+}
+body.light-theme .cleaning-history-chip{
+  background:rgba(255,255,255,0.82);
+  border-color:rgba(184,205,232,0.86);
+}
+body.light-theme .cleaning-history-chip-value{
+  color:#172030;
+}
+body.light-theme .cleaning-history-select{
+  background:#ffffff;
+  border-color:#b8cde8;
+  color:#172030;
+}
+body.light-theme .cleaning-history-table-wrap{
+  background:rgba(255,255,255,0.84);
+  border-color:rgba(184,205,232,0.86);
+}
+body.light-theme .cleaning-history-table th{
+  background:rgba(226,234,246,0.85);
+  color:#2a4a6a;
+}
+body.light-theme .cleaning-history-table td{
+  color:#172030;
+}
+body.light-theme .cleaning-history-empty{
+  color:#64748b;
+}
+@media(max-width:900px){
+  .cleaning-history-chip-row{
+    grid-template-columns:1fr;
+  }
+  .cleaning-history-controls{
+    grid-template-columns:1fr;
+  }
 }
 
 .cleaning-clear-btn:hover{background:#334155;color:#e2e8f0;}
@@ -19071,7 +19276,7 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
 
       </div><!-- /tip slab -->
 
-      <div style="margin-top:24px;">
+      <div id="cleaning-log-summary-card" class="cleaning-log-canvas">
         <h2 class="scada-panel-title">🧹 Burner Cleaning Log</h2>
         <div class="cleaning-subtitle">Select the date of last cleaning for each burner (6 Rows × 15 Burners) across all 4 walls. Data is saved automatically.</div>
 
@@ -19113,6 +19318,61 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
               <div id="cdash-row-bars" class="cdash-bars"></div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div id="cleaning-history-panel" class="cleaning-history-panel">
+        <div class="cleaning-history-head">
+          <div>
+            <h3 class="cleaning-history-title">📜 Historical Burner Cleaning Data</h3>
+            <p class="cleaning-history-sub">Click any cleaning cell above to inspect every saved cleaning date for that burner in one place.</p>
+          </div>
+          <button type="button" class="hd-btn hd-btn-secondary" onclick="openSelectedBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;">✏️ Edit Selected Dates</button>
+        </div>
+
+        <div class="cleaning-history-chip-row">
+          <div class="cleaning-history-chip">
+            <span class="cleaning-history-chip-label">Selected Burner</span>
+            <span id="cleaning-history-selected" class="cleaning-history-chip-value">Wall A · Row 1 · Burner 1</span>
+          </div>
+          <div class="cleaning-history-chip">
+            <span class="cleaning-history-chip-label">Saved Dates</span>
+            <span id="cleaning-history-count" class="cleaning-history-chip-value">0 dates</span>
+          </div>
+          <div class="cleaning-history-chip">
+            <span class="cleaning-history-chip-label">Latest Cleaned</span>
+            <span id="cleaning-history-latest" class="cleaning-history-chip-value">No history yet</span>
+          </div>
+        </div>
+
+        <div class="cleaning-history-controls">
+          <div class="cleaning-history-select-wrap">
+            <label for="cleaning-history-date-select">Cleaning Dates Dropdown</label>
+            <select id="cleaning-history-date-select" class="cleaning-history-select" onchange="handleCleaningHistoryDateSelect(this.value)">
+              <option value="">No saved dates</option>
+            </select>
+          </div>
+          <div class="cleaning-history-chip" style="min-width:220px;">
+            <span class="cleaning-history-chip-label">Dropdown Selection</span>
+            <span id="cleaning-history-picked" class="cleaning-history-chip-value">No date selected</span>
+          </div>
+        </div>
+
+        <div class="cleaning-history-table-wrap">
+          <table class="cleaning-history-table">
+            <thead>
+              <tr>
+                <th style="width:88px;">#</th>
+                <th>Cleaning Date</th>
+                <th>Stored Value</th>
+              </tr>
+            </thead>
+            <tbody id="cleaning-history-tbody">
+              <tr>
+                <td colspan="3" class="cleaning-history-empty">Click a cleaning cell above to load its saved burner-cleaning dates.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -23492,9 +23752,12 @@ function populateBurnerSelectorOptions(wallSel, rowSel, burSel){
 }
 function setDefaultBurnerSelectorValues(wallSel, rowSel, burSel){
   if(!wallSel || !rowSel || !burSel) return;
-  wallSel.value = (typeof cleaningWallFilter !== "undefined" && cleaningWallFilter) ? cleaningWallFilter : "A";
-  rowSel.value = "1";
-  burSel.value = "1";
+  var sel = (typeof getCleaningHistorySelection === "function")
+    ? getCleaningHistorySelection()
+    : { wall: (typeof cleaningWallFilter !== "undefined" && cleaningWallFilter) ? cleaningWallFilter : "A", row: 1, burner: 1 };
+  wallSel.value = sel.wall;
+  rowSel.value = String(sel.row);
+  burSel.value = String(sel.burner);
 }
 function getBurnerSelection(wallId, rowId, burnerId){
   var wallEl = document.getElementById(wallId);
@@ -23510,6 +23773,95 @@ function getBurnerDatesForSelection(wall, key){
   var log = loadCleaningLog();
   if(log[wall] && log[wall][key]) dates.push(log[wall][key]);
   return Array.from(new Set(dates)).filter(Boolean).sort();
+}
+var cleaningHistorySelection = { wall:"A", row:1, burner:1, key:"R1B1" };
+
+function getCleaningHistorySelection(){
+  var sel = cleaningHistorySelection || {};
+  var wall = WALL_NAMES.indexOf(sel.wall) >= 0
+    ? sel.wall
+    : ((typeof cleaningWallFilter !== "undefined" && cleaningWallFilter) ? cleaningWallFilter : "A");
+  var row = parseInt(sel.row, 10);
+  var burner = parseInt(sel.burner, 10);
+  if(!row || row < 1 || row > ROWS) row = 1;
+  if(!burner || burner < 1 || burner > BURNERS) burner = 1;
+  return { wall: wall, row: row, burner: burner, key: "R" + row + "B" + burner };
+}
+function setCleaningHistorySelection(wall, row, burner){
+  cleaningHistorySelection = {
+    wall: wall,
+    row: row,
+    burner: burner,
+    key: "R" + row + "B" + burner
+  };
+  updateCleaningHistoryCellSelectionUI();
+  renderCleaningHistoryInspector();
+}
+function updateCleaningHistoryCellSelectionUI(){
+  var sel = getCleaningHistorySelection();
+  var cells = document.querySelectorAll('#tab-cleaning [data-cleaning-history-cell="1"]');
+  Array.prototype.forEach.call(cells, function(cell){
+    var match = cell.getAttribute("data-history-wall") === sel.wall
+      && parseInt(cell.getAttribute("data-history-row"), 10) === sel.row
+      && parseInt(cell.getAttribute("data-history-burner"), 10) === sel.burner;
+    cell.classList.toggle("ct-history-selected", !!match);
+  });
+}
+function handleCleaningHistoryDateSelect(value){
+  var picked = document.getElementById("cleaning-history-picked");
+  if(!picked) return;
+  picked.textContent = value ? formatYMDToDisplay(value) : "No date selected";
+}
+function renderCleaningHistoryInspector(){
+  var panel = document.getElementById("cleaning-history-panel");
+  if(!panel) return;
+
+  var sel = getCleaningHistorySelection();
+  var dates = getBurnerDatesForSelection(sel.wall, sel.key).slice().sort().reverse();
+
+  var selectedEl = document.getElementById("cleaning-history-selected");
+  if(selectedEl) selectedEl.textContent = "Wall " + sel.wall + " · Row " + sel.row + " · Burner " + sel.burner;
+
+  var countEl = document.getElementById("cleaning-history-count");
+  if(countEl) countEl.textContent = dates.length === 1 ? "1 date" : (dates.length + " dates");
+
+  var latestEl = document.getElementById("cleaning-history-latest");
+  if(latestEl) latestEl.textContent = dates.length ? formatYMDToDisplay(dates[0]) : "No history yet";
+
+  var select = document.getElementById("cleaning-history-date-select");
+  if(select){
+    if(dates.length){
+      select.innerHTML = dates.map(function(d, index){
+        var label = formatYMDToDisplay(d);
+        var suffix = index === 0 ? " (Latest)" : "";
+        return '<option value="' + d + '">' + label + suffix + '</option>';
+      }).join("");
+      select.disabled = false;
+      select.value = dates[0];
+    } else {
+      select.innerHTML = '<option value="">No saved dates</option>';
+      select.disabled = true;
+      select.value = "";
+    }
+    handleCleaningHistoryDateSelect(select.value);
+  }
+
+  var tbody = document.getElementById("cleaning-history-tbody");
+  if(!tbody) return;
+  if(!dates.length){
+    tbody.innerHTML = '<tr><td colspan="3" class="cleaning-history-empty">No cleaning history saved for this burner yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = dates.map(function(d, index){
+    return '<tr>'
+      + '<td>' + (index + 1) + '</td>'
+      + '<td><strong style="color:#fbbf24;">' + formatYMDToDisplay(d) + '</strong></td>'
+      + '<td>' + d + '</td>'
+      + '</tr>';
+  }).join("");
+}
+function openSelectedBurnerDateEditModal(){
+  openBurnerDateEditModal();
 }
 function openBurnerHistoryModal(){
   var modal = document.getElementById("burnerHistoryModal");
@@ -23618,6 +23970,7 @@ function saveBurnerEditedDates(){
 
   burnerDateEditState.dates = uniqueSorted.slice();
   renderBurnerDateEditorRows();
+  setCleaningHistorySelection(sel.wall, sel.row, sel.burner);
   buildCleaningTable();
 
   showToast("✅ Cleaning dates updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
@@ -23773,6 +24126,13 @@ var cleaningWallFilter = "A"; /* default wall for cleaning status */
 
 function switchCleaningWall(wall){
   cleaningWallFilter = wall;
+  var sel = getCleaningHistorySelection();
+  cleaningHistorySelection = {
+    wall: wall,
+    row: sel.row,
+    burner: sel.burner,
+    key: "R" + sel.row + "B" + sel.burner
+  };
   ["A","B","C","D"].forEach(function(w){
     ["cw-btn-","hm-cw-btn-"].forEach(function(prefix){
       var btn = document.getElementById(prefix + w);
@@ -23789,6 +24149,7 @@ function renderCleaningTableInto(wrapId, log){
 
   var monthStr = getActiveCleaningMonthValue();
   var wallsToShow = [cleaningWallFilter];
+  var selected = getCleaningHistorySelection();
 
   wallsToShow.forEach(function(w){
     const section = document.createElement("div");
@@ -23826,6 +24187,10 @@ function renderCleaningTableInto(wrapId, log){
         const td = document.createElement("td");
         const input = document.createElement("input");
         input.type = "date";
+        td.setAttribute("data-cleaning-history-cell", "1");
+        td.setAttribute("data-history-wall", w);
+        td.setAttribute("data-history-row", String(r));
+        td.setAttribute("data-history-burner", String(b));
 
         const savedVal = (log[w] && log[w][key]) ? log[w][key] : "";
         const pendingVal = cleaningPending[w] && Object.prototype.hasOwnProperty.call(cleaningPending[w], key)
@@ -23840,6 +24205,9 @@ function renderCleaningTableInto(wrapId, log){
 
         const histDates = getBurnerHistory(w, key);
         if(histDates.length) td.title = "History: " + histDates.join(", ");
+        if(selected.wall === w && selected.row === r && selected.burner === b){
+          td.classList.add("ct-history-selected");
+        }
 
         const cellWrap = document.createElement("div");
         cellWrap.className = "ct-cell";
@@ -23862,6 +24230,7 @@ function renderCleaningTableInto(wrapId, log){
 
         formatDateInput(input);
         td.addEventListener("click", function(ev){
+          setCleaningHistorySelection(w, r, b);
           if(ev && ev.target === input) return;
           try{
             input.focus({preventScroll:true});
@@ -23875,6 +24244,9 @@ function renderCleaningTableInto(wrapId, log){
             }
           }catch(e){}
           try{ input.click(); }catch(e){}
+        });
+        input.addEventListener("focus", function(){
+          setCleaningHistorySelection(w, r, b);
         });
 
         input.addEventListener("change", function(e){
@@ -23912,6 +24284,8 @@ function buildCleaningTable(){
   renderCleaningTableInto("cleaningTablesWrap", log);
   renderCleaningTableInto("hm-cleaningTablesWrap", log);
   updateCleaningStatus(log);
+  updateCleaningHistoryCellSelectionUI();
+  renderCleaningHistoryInspector();
   renderFreqAlarmPanel();
 }
 
