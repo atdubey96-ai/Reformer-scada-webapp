@@ -19182,7 +19182,117 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
       <div id="td-ocr-quota-hint" class="td-ocr-quota-hint" data-admin-only="true" aria-live="polite">Shared OCR quota: Today 0/6 · Week 0/25 · Month 0/100.</div>
 
       <div class="td-entry-layout">
-      <!-- ── Section 1: General Temps ── -->
+      <!-- ── Section 1: Peep Hole Temperatures ── -->
+      <div class="td-entry-card">
+        <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);">
+          👁️ Peep Hole Temperatures — Peep Hole No. 1 – 15
+        </div>
+
+        <div class="td-ph-grid-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;max-width:100%;">
+        <!-- Number header row -->
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;margin-bottom:6px;align-items:center;">
+          <div style="font-size:10px;color:#64748b;text-align:center;font-weight:700;letter-spacing:0.5px;">PH No.</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">1</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">2</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">3</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">4</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">5</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">6</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">7</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">8</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">9</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">10</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">11</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">12</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">13</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">14</div>
+          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">15</div>
+        </div>
+
+        <!-- AB Bottom -->
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;margin-bottom:8px;">
+          <div class="td-row-label" style="background:rgba(243,112,34,0.15);border-color:rgba(243,112,34,0.35);color:#F37022;">AB Bot.</div>
+          <input type="number" id="td-ph-ab-bot-1"  class="td-ph-input" placeholder="1"  step="2">
+          <input type="number" id="td-ph-ab-bot-2"  class="td-ph-input" placeholder="2"  step="2">
+          <input type="number" id="td-ph-ab-bot-3"  class="td-ph-input" placeholder="3"  step="2">
+          <input type="number" id="td-ph-ab-bot-4"  class="td-ph-input" placeholder="4"  step="2">
+          <input type="number" id="td-ph-ab-bot-5"  class="td-ph-input" placeholder="5"  step="2">
+          <input type="number" id="td-ph-ab-bot-6"  class="td-ph-input" placeholder="6"  step="2">
+          <input type="number" id="td-ph-ab-bot-7"  class="td-ph-input" placeholder="7"  step="2">
+          <input type="number" id="td-ph-ab-bot-8"  class="td-ph-input" placeholder="8"  step="2">
+          <input type="number" id="td-ph-ab-bot-9"  class="td-ph-input" placeholder="9"  step="2">
+          <input type="number" id="td-ph-ab-bot-10" class="td-ph-input" placeholder="10" step="2">
+          <input type="number" id="td-ph-ab-bot-11" class="td-ph-input" placeholder="11" step="2">
+          <input type="number" id="td-ph-ab-bot-12" class="td-ph-input" placeholder="12" step="2">
+          <input type="number" id="td-ph-ab-bot-13" class="td-ph-input" placeholder="13" step="2">
+          <input type="number" id="td-ph-ab-bot-14" class="td-ph-input" placeholder="14" step="2">
+          <input type="number" id="td-ph-ab-bot-15" class="td-ph-input" placeholder="15" step="2">
+        </div>
+
+        <!-- CD Bottom -->
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;margin-bottom:8px;">
+          <div class="td-row-label" style="background:rgba(96,200,255,0.1);border-color:rgba(96,200,255,0.3);color:#7ec8f0;">CD Bot.</div>
+          <input type="number" id="td-ph-cd-bot-1"  class="td-ph-input" placeholder="1"  step="2">
+          <input type="number" id="td-ph-cd-bot-2"  class="td-ph-input" placeholder="2"  step="2">
+          <input type="number" id="td-ph-cd-bot-3"  class="td-ph-input" placeholder="3"  step="2">
+          <input type="number" id="td-ph-cd-bot-4"  class="td-ph-input" placeholder="4"  step="2">
+          <input type="number" id="td-ph-cd-bot-5"  class="td-ph-input" placeholder="5"  step="2">
+          <input type="number" id="td-ph-cd-bot-6"  class="td-ph-input" placeholder="6"  step="2">
+          <input type="number" id="td-ph-cd-bot-7"  class="td-ph-input" placeholder="7"  step="2">
+          <input type="number" id="td-ph-cd-bot-8"  class="td-ph-input" placeholder="8"  step="2">
+          <input type="number" id="td-ph-cd-bot-9"  class="td-ph-input" placeholder="9"  step="2">
+          <input type="number" id="td-ph-cd-bot-10" class="td-ph-input" placeholder="10" step="2">
+          <input type="number" id="td-ph-cd-bot-11" class="td-ph-input" placeholder="11" step="2">
+          <input type="number" id="td-ph-cd-bot-12" class="td-ph-input" placeholder="12" step="2">
+          <input type="number" id="td-ph-cd-bot-13" class="td-ph-input" placeholder="13" step="2">
+          <input type="number" id="td-ph-cd-bot-14" class="td-ph-input" placeholder="14" step="2">
+          <input type="number" id="td-ph-cd-bot-15" class="td-ph-input" placeholder="15" step="2">
+        </div>
+
+        <!-- AB Top -->
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;margin-bottom:8px;">
+          <div class="td-row-label" style="background:rgba(243,112,34,0.15);border-color:rgba(243,112,34,0.35);color:#F37022;">AB Top</div>
+          <input type="number" id="td-ph-ab-top-1"  class="td-ph-input" placeholder="1"  step="2">
+          <input type="number" id="td-ph-ab-top-2"  class="td-ph-input" placeholder="2"  step="2">
+          <input type="number" id="td-ph-ab-top-3"  class="td-ph-input" placeholder="3"  step="2">
+          <input type="number" id="td-ph-ab-top-4"  class="td-ph-input" placeholder="4"  step="2">
+          <input type="number" id="td-ph-ab-top-5"  class="td-ph-input" placeholder="5"  step="2">
+          <input type="number" id="td-ph-ab-top-6"  class="td-ph-input" placeholder="6"  step="2">
+          <input type="number" id="td-ph-ab-top-7"  class="td-ph-input" placeholder="7"  step="2">
+          <input type="number" id="td-ph-ab-top-8"  class="td-ph-input" placeholder="8"  step="2">
+          <input type="number" id="td-ph-ab-top-9"  class="td-ph-input" placeholder="9"  step="2">
+          <input type="number" id="td-ph-ab-top-10" class="td-ph-input" placeholder="10" step="2">
+          <input type="number" id="td-ph-ab-top-11" class="td-ph-input" placeholder="11" step="2">
+          <input type="number" id="td-ph-ab-top-12" class="td-ph-input" placeholder="12" step="2">
+          <input type="number" id="td-ph-ab-top-13" class="td-ph-input" placeholder="13" step="2">
+          <input type="number" id="td-ph-ab-top-14" class="td-ph-input" placeholder="14" step="2">
+          <input type="number" id="td-ph-ab-top-15" class="td-ph-input" placeholder="15" step="2">
+        </div>
+
+        <!-- CD Top -->
+        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;">
+          <div class="td-row-label" style="background:rgba(96,200,255,0.1);border-color:rgba(96,200,255,0.3);color:#7ec8f0;">CD Top</div>
+          <input type="number" id="td-ph-cd-top-1"  class="td-ph-input" placeholder="1"  step="2">
+          <input type="number" id="td-ph-cd-top-2"  class="td-ph-input" placeholder="2"  step="2">
+          <input type="number" id="td-ph-cd-top-3"  class="td-ph-input" placeholder="3"  step="2">
+          <input type="number" id="td-ph-cd-top-4"  class="td-ph-input" placeholder="4"  step="2">
+          <input type="number" id="td-ph-cd-top-5"  class="td-ph-input" placeholder="5"  step="2">
+          <input type="number" id="td-ph-cd-top-6"  class="td-ph-input" placeholder="6"  step="2">
+          <input type="number" id="td-ph-cd-top-7"  class="td-ph-input" placeholder="7"  step="2">
+          <input type="number" id="td-ph-cd-top-8"  class="td-ph-input" placeholder="8"  step="2">
+          <input type="number" id="td-ph-cd-top-9"  class="td-ph-input" placeholder="9"  step="2">
+          <input type="number" id="td-ph-cd-top-10" class="td-ph-input" placeholder="10" step="2">
+          <input type="number" id="td-ph-cd-top-11" class="td-ph-input" placeholder="11" step="2">
+          <input type="number" id="td-ph-cd-top-12" class="td-ph-input" placeholder="12" step="2">
+          <input type="number" id="td-ph-cd-top-13" class="td-ph-input" placeholder="13" step="2">
+          <input type="number" id="td-ph-cd-top-14" class="td-ph-input" placeholder="14" step="2">
+          <input type="number" id="td-ph-cd-top-15" class="td-ph-input" placeholder="15" step="2">
+        </div>
+        </div>
+        <div id="td-ph-mobile-matrix" class="td-ph-mobile-matrix" aria-label="Peep hole temperatures mobile matrix"></div>
+      </div>
+
+      <!-- ── Section 2: General Temps ── -->
       <div class="td-entry-card">
         <div class="td-plant-heading-row">
           <div class="td-plant-heading-title">
@@ -19318,116 +19428,6 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
           </div>
 
         </div>
-      </div>
-
-      <!-- ── Section 2: Peep Hole Temperatures ── -->
-      <div class="td-entry-card">
-        <div style="font-size:12px;font-weight:700;color:#7ec8f0;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);">
-          👁️ Peep Hole Temperatures — Peep Hole No. 1 – 15
-        </div>
-
-        <div class="td-ph-grid-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;max-width:100%;">
-        <!-- Number header row -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;margin-bottom:6px;align-items:center;">
-          <div style="font-size:10px;color:#64748b;text-align:center;font-weight:700;letter-spacing:0.5px;">PH No.</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">1</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">2</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">3</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">4</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">5</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">6</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">7</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">8</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">9</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">10</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">11</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">12</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">13</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">14</div>
-          <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">15</div>
-        </div>
-
-        <!-- AB Bottom -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;margin-bottom:8px;">
-          <div class="td-row-label" style="background:rgba(243,112,34,0.15);border-color:rgba(243,112,34,0.35);color:#F37022;">AB Bot.</div>
-          <input type="number" id="td-ph-ab-bot-1"  class="td-ph-input" placeholder="1"  step="2">
-          <input type="number" id="td-ph-ab-bot-2"  class="td-ph-input" placeholder="2"  step="2">
-          <input type="number" id="td-ph-ab-bot-3"  class="td-ph-input" placeholder="3"  step="2">
-          <input type="number" id="td-ph-ab-bot-4"  class="td-ph-input" placeholder="4"  step="2">
-          <input type="number" id="td-ph-ab-bot-5"  class="td-ph-input" placeholder="5"  step="2">
-          <input type="number" id="td-ph-ab-bot-6"  class="td-ph-input" placeholder="6"  step="2">
-          <input type="number" id="td-ph-ab-bot-7"  class="td-ph-input" placeholder="7"  step="2">
-          <input type="number" id="td-ph-ab-bot-8"  class="td-ph-input" placeholder="8"  step="2">
-          <input type="number" id="td-ph-ab-bot-9"  class="td-ph-input" placeholder="9"  step="2">
-          <input type="number" id="td-ph-ab-bot-10" class="td-ph-input" placeholder="10" step="2">
-          <input type="number" id="td-ph-ab-bot-11" class="td-ph-input" placeholder="11" step="2">
-          <input type="number" id="td-ph-ab-bot-12" class="td-ph-input" placeholder="12" step="2">
-          <input type="number" id="td-ph-ab-bot-13" class="td-ph-input" placeholder="13" step="2">
-          <input type="number" id="td-ph-ab-bot-14" class="td-ph-input" placeholder="14" step="2">
-          <input type="number" id="td-ph-ab-bot-15" class="td-ph-input" placeholder="15" step="2">
-        </div>
-
-        <!-- CD Bottom -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;margin-bottom:8px;">
-          <div class="td-row-label" style="background:rgba(96,200,255,0.1);border-color:rgba(96,200,255,0.3);color:#7ec8f0;">CD Bot.</div>
-          <input type="number" id="td-ph-cd-bot-1"  class="td-ph-input" placeholder="1"  step="2">
-          <input type="number" id="td-ph-cd-bot-2"  class="td-ph-input" placeholder="2"  step="2">
-          <input type="number" id="td-ph-cd-bot-3"  class="td-ph-input" placeholder="3"  step="2">
-          <input type="number" id="td-ph-cd-bot-4"  class="td-ph-input" placeholder="4"  step="2">
-          <input type="number" id="td-ph-cd-bot-5"  class="td-ph-input" placeholder="5"  step="2">
-          <input type="number" id="td-ph-cd-bot-6"  class="td-ph-input" placeholder="6"  step="2">
-          <input type="number" id="td-ph-cd-bot-7"  class="td-ph-input" placeholder="7"  step="2">
-          <input type="number" id="td-ph-cd-bot-8"  class="td-ph-input" placeholder="8"  step="2">
-          <input type="number" id="td-ph-cd-bot-9"  class="td-ph-input" placeholder="9"  step="2">
-          <input type="number" id="td-ph-cd-bot-10" class="td-ph-input" placeholder="10" step="2">
-          <input type="number" id="td-ph-cd-bot-11" class="td-ph-input" placeholder="11" step="2">
-          <input type="number" id="td-ph-cd-bot-12" class="td-ph-input" placeholder="12" step="2">
-          <input type="number" id="td-ph-cd-bot-13" class="td-ph-input" placeholder="13" step="2">
-          <input type="number" id="td-ph-cd-bot-14" class="td-ph-input" placeholder="14" step="2">
-          <input type="number" id="td-ph-cd-bot-15" class="td-ph-input" placeholder="15" step="2">
-        </div>
-
-        <!-- AB Top -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;margin-bottom:8px;">
-          <div class="td-row-label" style="background:rgba(243,112,34,0.15);border-color:rgba(243,112,34,0.35);color:#F37022;">AB Top</div>
-          <input type="number" id="td-ph-ab-top-1"  class="td-ph-input" placeholder="1"  step="2">
-          <input type="number" id="td-ph-ab-top-2"  class="td-ph-input" placeholder="2"  step="2">
-          <input type="number" id="td-ph-ab-top-3"  class="td-ph-input" placeholder="3"  step="2">
-          <input type="number" id="td-ph-ab-top-4"  class="td-ph-input" placeholder="4"  step="2">
-          <input type="number" id="td-ph-ab-top-5"  class="td-ph-input" placeholder="5"  step="2">
-          <input type="number" id="td-ph-ab-top-6"  class="td-ph-input" placeholder="6"  step="2">
-          <input type="number" id="td-ph-ab-top-7"  class="td-ph-input" placeholder="7"  step="2">
-          <input type="number" id="td-ph-ab-top-8"  class="td-ph-input" placeholder="8"  step="2">
-          <input type="number" id="td-ph-ab-top-9"  class="td-ph-input" placeholder="9"  step="2">
-          <input type="number" id="td-ph-ab-top-10" class="td-ph-input" placeholder="10" step="2">
-          <input type="number" id="td-ph-ab-top-11" class="td-ph-input" placeholder="11" step="2">
-          <input type="number" id="td-ph-ab-top-12" class="td-ph-input" placeholder="12" step="2">
-          <input type="number" id="td-ph-ab-top-13" class="td-ph-input" placeholder="13" step="2">
-          <input type="number" id="td-ph-ab-top-14" class="td-ph-input" placeholder="14" step="2">
-          <input type="number" id="td-ph-ab-top-15" class="td-ph-input" placeholder="15" step="2">
-        </div>
-
-        <!-- CD Top -->
-        <div class="td-ph-grid-row" style="display:grid;grid-template-columns:80px repeat(15,56px);gap:6px;align-items:center;">
-          <div class="td-row-label" style="background:rgba(96,200,255,0.1);border-color:rgba(96,200,255,0.3);color:#7ec8f0;">CD Top</div>
-          <input type="number" id="td-ph-cd-top-1"  class="td-ph-input" placeholder="1"  step="2">
-          <input type="number" id="td-ph-cd-top-2"  class="td-ph-input" placeholder="2"  step="2">
-          <input type="number" id="td-ph-cd-top-3"  class="td-ph-input" placeholder="3"  step="2">
-          <input type="number" id="td-ph-cd-top-4"  class="td-ph-input" placeholder="4"  step="2">
-          <input type="number" id="td-ph-cd-top-5"  class="td-ph-input" placeholder="5"  step="2">
-          <input type="number" id="td-ph-cd-top-6"  class="td-ph-input" placeholder="6"  step="2">
-          <input type="number" id="td-ph-cd-top-7"  class="td-ph-input" placeholder="7"  step="2">
-          <input type="number" id="td-ph-cd-top-8"  class="td-ph-input" placeholder="8"  step="2">
-          <input type="number" id="td-ph-cd-top-9"  class="td-ph-input" placeholder="9"  step="2">
-          <input type="number" id="td-ph-cd-top-10" class="td-ph-input" placeholder="10" step="2">
-          <input type="number" id="td-ph-cd-top-11" class="td-ph-input" placeholder="11" step="2">
-          <input type="number" id="td-ph-cd-top-12" class="td-ph-input" placeholder="12" step="2">
-          <input type="number" id="td-ph-cd-top-13" class="td-ph-input" placeholder="13" step="2">
-          <input type="number" id="td-ph-cd-top-14" class="td-ph-input" placeholder="14" step="2">
-          <input type="number" id="td-ph-cd-top-15" class="td-ph-input" placeholder="15" step="2">
-        </div>
-        </div>
-        <div id="td-ph-mobile-matrix" class="td-ph-mobile-matrix" aria-label="Peep hole temperatures mobile matrix"></div>
       </div>
       </div>
 
