@@ -21181,6 +21181,9 @@ function updateAdminModeUi(){
     toggleBtn.setAttribute("aria-pressed", active ? "true" : "false");
     toggleBtn.title = active ? "Return to operator mode now" : "Unlock admin for this session";
   }
+  if(typeof notifyAllCuboidHostStates === "function"){
+    notifyAllCuboidHostStates();
+  }
 }
 
 function scheduleAdminModeExpiryTimer(){
@@ -25462,12 +25465,17 @@ function notifyCuboidHostState(frame){
   if(!frame || !frame.contentWindow || !cuboidIsFrameReady(frame)) return;
   var meta = cuboidGetFrameViewMeta(frame);
   var focusedFrame = cuboidGetFocusedFrame();
+  var userMode = "operator";
+  try{
+    userMode = (document.body && document.body.getAttribute("data-user-mode") === "admin") ? "admin" : "operator";
+  }catch(e){}
   try{
     frame.contentWindow.postMessage({
       type:"cuboid-host-state",
       active:isCuboidTabActive(),
       inView:!!meta.inView,
-      focused:focusedFrame ? focusedFrame === frame : !!meta.inView
+      focused:focusedFrame ? focusedFrame === frame : !!meta.inView,
+      userMode:userMode
     }, "*");
   }catch(e){}
 }

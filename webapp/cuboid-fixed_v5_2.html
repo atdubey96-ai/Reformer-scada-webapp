@@ -118,6 +118,9 @@ body{color:rgba(140,180,220,0.85);}
   align-items:center;
   flex:1 1 520px;
 }
+body.is-operator #ctrls{
+  display:none;
+}
 .face-current-pill{
   display:inline-flex;
   align-items:center;
@@ -259,6 +262,7 @@ const app = document.getElementById("app");
 const viewerTagTitle = document.getElementById("viewerTagTitle");
 const faceCurrent = document.getElementById("faceCurrent");
 const hint = document.getElementById("hint");
+const ctrls = document.getElementById("ctrls");
 const btnFront = document.getElementById("btnFront");
 const btnBack = document.getElementById("btnBack");
 const btnLeft = document.getElementById("btnLeft");
@@ -294,6 +298,7 @@ document.title = chamberZoneKey + " Reformer";
 let hostTabActive = true;
 let hostInView = true;
 let hostFocused = true;
+let hostUserMode = "operator";
 let lastRenderTs = 0;
 let forceNextRender = true;
 let viewMode = "shell";
@@ -302,6 +307,13 @@ let pushedCuboidLiveDigest = "";
 let pendingWallBurnerColorSync = false;
 let pendingWallCleaningSync = false;
 let pendingWallTstBarSync = false;
+
+function syncHostModeUi(){
+  const isOperator = hostUserMode !== "admin";
+  document.body.classList.toggle("is-operator", isOperator);
+  if(ctrls) ctrls.setAttribute("aria-hidden", isOperator ? "true" : "false");
+}
+syncHostModeUi();
 
 function cuboidGetParentApp(){
   try{
@@ -611,6 +623,8 @@ window.addEventListener("message", function(event){
     hostTabActive = !!data.active;
     hostInView = data.inView !== false;
     hostFocused = data.focused !== false;
+    hostUserMode = data.userMode === "admin" ? "admin" : "operator";
+    syncHostModeUi();
     markDirty();
     return;
   }
