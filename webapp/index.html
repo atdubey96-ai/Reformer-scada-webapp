@@ -1119,7 +1119,9 @@ body[data-user-mode="operator"] #syncDebugChip{
   display:none !important;
 }
 body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip{
-  grid-template-columns:auto !important;
+  display:flex !important;
+  align-items:stretch;
+  flex-wrap:wrap;
   justify-content:flex-start;
   width:auto;
   margin-bottom:0;
@@ -1134,6 +1136,19 @@ body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip .td-toolbar
   gap:8px;
   padding:8px 12px;
   flex-wrap:nowrap;
+  white-space:nowrap;
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-live-warning-pill{
+  display:none;
+  flex:0 1 auto;
+  max-width:min(100%, 360px);
+  min-width:0;
+}
+body[data-user-mode="operator"] #tab-tempdata .td-plant-live-warning-pill .td-plant-stat-value{
+  max-width:220px;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
   white-space:nowrap;
 }
 body[data-user-mode="operator"] #tab-tempdata .td-plant-status-strip .td-toolbar-pill:not(.td-plant-status-pill) .td-toolbar-label,
@@ -6196,6 +6211,10 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   white-space:normal;
   overflow:visible;
   text-overflow:clip;
+}
+#tab-tempdata .td-plant-live-warning-pill .td-toolbar-label,
+#tab-tempdata .td-plant-live-warning-pill .td-plant-stat-value{
+  color:inherit;
 }
 #tab-tempdata .td-plant-status-strip .td-plant-status-text{
   overflow-wrap:anywhere;
@@ -19617,6 +19636,10 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
             <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Mapped:</span><span id="td-plant-stat-mapped" class="td-plant-stat-value">—</span></div>
             <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">PHD Time:</span><span id="td-plant-stat-sync" class="td-plant-stat-value">—</span></div>
             <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Last Fetch:</span><span id="td-plant-stat-fetch" class="td-plant-stat-value">—</span></div>
+            <div id="td-plant-live-warning-inline" class="td-toolbar-pill td-plant-live-warning-pill" data-operator-only="true" style="display:none;">
+              <span class="td-toolbar-label">Excel Sync:</span>
+              <span id="td-plant-live-warning-inline-text" class="td-plant-stat-value">—</span>
+            </div>
             <div class="td-toolbar-pill"><span class="td-toolbar-label">Excel Last Push:</span><span id="td-plant-stat-push" class="td-plant-stat-value">—</span></div>
             <div class="td-toolbar-pill" data-admin-only="true"><span class="td-toolbar-label">Rate:</span><span id="td-plant-stat-rate" class="td-plant-stat-value">30 sec</span></div>
           </div>
@@ -19645,7 +19668,7 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
         <div id="td-plant-config-bar" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;">
           Live plant import is not configured. Set the plant data Supabase URL and key.
         </div>
-        <div id="td-plant-live-warning" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;"></div>
+        <div id="td-plant-live-warning" data-admin-only="true" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;"></div>
         <div id="td-process-manual-grid" class="td-manual-grid">
 
           <!-- HGU Load -->
@@ -28912,12 +28935,40 @@ function setTdPlantConfigBarVisible(show, text){
   if(text) bar.textContent = text;
 }
 
+function getTdPlantLiveWarningCompactText(level, text){
+  var message = String(text || "").trim();
+  var normalized = message.toLowerCase();
+  if(!message) return "";
+  if(normalized.indexOf("no data received yet") !== -1){
+    return "No Excel data yet";
+  }
+  if(normalized.indexOf("excel has not pushed in over 10 minutes") !== -1){
+    return "Stale > 10 min";
+  }
+  if(level === "error"){
+    if(normalized.indexOf("not configured") !== -1){
+      return "Config required";
+    }
+    return "Import issue";
+  }
+  return message.length > 38 ? (message.slice(0, 35) + "...") : message;
+}
+
 function setTdPlantLiveWarning(level, text){
   var bar = document.getElementById("td-plant-live-warning");
+  var inlineBar = document.getElementById("td-plant-live-warning-inline");
+  var inlineText = document.getElementById("td-plant-live-warning-inline-text");
   if(!bar) return;
   if(!text){
     bar.style.display = "none";
     bar.textContent = "";
+    if(inlineBar){
+      inlineBar.style.display = "none";
+      inlineBar.title = "";
+    }
+    if(inlineText){
+      inlineText.textContent = "";
+    }
     return;
   }
   var bg = "rgba(251,191,36,0.08)";
@@ -28933,6 +28984,16 @@ function setTdPlantLiveWarning(level, text){
   bar.style.border = "1px solid " + border;
   bar.style.color = color;
   bar.textContent = text;
+  if(inlineBar){
+    inlineBar.style.display = "inline-flex";
+    inlineBar.style.background = bg;
+    inlineBar.style.border = "1px solid " + border;
+    inlineBar.style.color = color;
+    inlineBar.title = text;
+  }
+  if(inlineText){
+    inlineText.textContent = getTdPlantLiveWarningCompactText(level, text);
+  }
 }
 
 function setTdPlantImportStatus(state, text){
