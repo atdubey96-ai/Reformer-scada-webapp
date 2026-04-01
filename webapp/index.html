@@ -23796,11 +23796,34 @@ function recordCleaningEvent(wall, key, date){
   saveCleaningHistory(hist);
 }
 
+/* Get all recorded dates for a burner across history, current log, and optional pending edits */
+function getBurnerDatesForSelection(wall, key, options){
+  var opts = options || {};
+  var dates = [];
+  var hist = loadCleaningHistory();
+  var log = loadCleaningLog();
+
+  if(hist[wall] && Array.isArray(hist[wall][key])){
+    dates = dates.concat(hist[wall][key]);
+  }
+  if(log[wall] && log[wall][key]){
+    dates.push(log[wall][key]);
+  }
+  if(opts.includePending){
+    var pendingVal = cleaningPending[wall] && cleaningPending[wall][key];
+    if(pendingVal) dates.push(pendingVal);
+  }
+
+  return Array.from(new Set(dates.map(function(d){
+    return normalizeImportedCleaningDate(d);
+  }).filter(Boolean))).sort();
+}
+
 /* Count cleanings in a given YYYY-MM month for a burner */
-function countCleaningsInMonth(wall, key, monthStr){
-  const hist = loadCleaningHistory();
-  if(!hist[wall] || !hist[wall][key] || !Array.isArray(hist[wall][key])) return 0;
-  return hist[wall][key].filter(d => d && d.slice(0,7) === monthStr).length;
+function countCleaningsInMonth(wall, key, monthStr, options){
+  return getBurnerDatesForSelection(wall, key, options).filter(function(d){
+    return d.slice(0,7) === monthStr;
+  }).length;
 }
 
 /* Get all history entries for a burner */
@@ -23843,12 +23866,6 @@ function getBurnerSelection(wallId, rowId, burnerId){
   var row = rowEl ? parseInt(rowEl.value, 10) : 1;
   var burner = burnerEl ? parseInt(burnerEl.value, 10) : 1;
   return { wall: wall, row: row, burner: burner, key: "R" + row + "B" + burner };
-}
-function getBurnerDatesForSelection(wall, key){
-  var dates = getBurnerHistory(wall, key).slice();
-  var log = loadCleaningLog();
-  if(log[wall] && log[wall][key]) dates.push(log[wall][key]);
-  return Array.from(new Set(dates)).filter(Boolean).sort();
 }
 var cleaningHistorySelection = { wall:"A", row:1, burner:1, key:"R1B1" };
 var cleaningHistoryInlineEdit = { date:"", value:"" };
@@ -24134,7 +24151,6 @@ function renderBurnerHistoryPreview(){
 
 /* Check if any burner has freq alarm this month */
 function getFreqAlarms(){
-  const hist     = loadCleaningHistory();
   const monthStr = getActiveCleaningMonthValue();
   const alarms   = [];
 
@@ -24142,18 +24158,7 @@ function getFreqAlarms(){
     for(let r=1; r<=ROWS; r++){
       for(let b=1; b<=BURNERS; b++){
         const key = "R"+r+"B"+b;
-
-        /* Committed history count */
-        let cnt = hist[w] && hist[w][key]
-          ? hist[w][key].filter(d => d.slice(0,7) === monthStr).length
-          : 0;
-
-        /* Add pending entry if it falls in same month and isn't already in history */
-        const pendingVal = cleaningPending[w] && cleaningPending[w][key];
-        if(pendingVal && pendingVal.slice(0,7) === monthStr){
-          const alreadyInHist = hist[w] && hist[w][key] && hist[w][key].includes(pendingVal);
-          if(!alreadyInHist) cnt++;
-        }
+        const cnt = countCleaningsInMonth(w, key, monthStr, { includePending:true });
 
         if(cnt > FREQ_ALARM_MAX){
           alarms.push({wall:w, row:r, burner:b, key, count:cnt, monthStr});
@@ -24327,7 +24332,7 @@ function renderCleaningTableInto(wrapId, log){
           : undefined;
         input.value = savedVal;
 
-        const histCnt = countCleaningsInMonth(w, key, monthStr);
+        const histCnt = countCleaningsInMonth(w, key, monthStr, { includePending:true });
         if(histCnt > FREQ_ALARM_MAX) td.classList.add("freq-alarm");
         if(savedVal) td.classList.add("date-filled");
         if(pendingVal !== undefined) td.classList.add("ct-pending");
