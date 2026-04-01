@@ -19681,6 +19681,12 @@ body.light-theme #tab-reformerdash .refdash-comp-input{background:rgba(241,245,2
             <input type="number" id="td-hgu-load" class="td-input" placeholder="Enter value" step="0.1">
           </div>
 
+          <!-- Feed Flow Mixing Point -->
+          <div class="td-field-group">
+            <label class="td-label">Feed Flow Mixing Point</label>
+            <input type="number" id="td-feed-flow-mixing-point" class="td-input" placeholder="Enter value" step="0.1">
+          </div>
+
           <!-- AB Side COT -->
           <div class="td-field-group">
             <label class="td-label">AB Side Reformer COT <span class="td-unit">(°C)</span></label>
@@ -23185,6 +23191,7 @@ async function exportToExcel(options){
       })
     : [
         "HGU Load (%)",
+        "Feed Flow Mixing Point",
         "AB Side COT (°C)",
         "CD Side COT (°C)",
         "Flue Gas (°C)",
@@ -23206,11 +23213,12 @@ async function exportToExcel(options){
       var row=[e.dt||"", e.shift||""];
       if(Array.isArray(TD_PROCESS_FIELD_BINDINGS) && TD_PROCESS_FIELD_BINDINGS.length){
         TD_PROCESS_FIELD_BINDINGS.forEach(function(binding){
-          row.push(e && e[binding.key] != null ? e[binding.key] : "");
+          row.push(formatTdProcessFieldValue(binding, getTdProcessEntryValue(e, binding.key)));
         });
       }else{
         row.push(
           e.hguLoad||"",
+          e.feedFlowMixingPoint||"",
           e.abCot||"",
           e.cdCot||"",
           e.flueGas||"",
@@ -23519,12 +23527,13 @@ function _doImport(file, onDone, silent){
             var idxDate       = colIdx(["date/time","date"], 0);
             var idxShift      = colIdx(["shift"], 1);
             var idxHguLoad    = colIdx(["hgu load"], -1);
-            var idxAbCot      = colIdx(["ab side cot","ab cot"], idxHguLoad>=0 ? 3 : 2);
-            var idxCdCot      = colIdx(["cd side cot","cd cot"], idxHguLoad>=0 ? 4 : 3);
-            var idxFlue       = colIdx(["flue gas"], idxHguLoad>=0 ? 5 : 4);
-            var idxExcessO2   = colIdx(["excess o2","o2 excess","o2"], idxHguLoad>=0 ? 6 : 5);
-            var idxPreMax     = colIdx(["pre-ref max","prereformer max"], idxHguLoad>=0 ? 7 : 6);
-            var idxPreMin     = colIdx(["pre-ref min","prereformer min"], idxHguLoad>=0 ? 8 : 7);
+            var idxFeedFlowMixingPoint = colIdx(["feed flow mixing point","feed flow","fic2405"], -1);
+            var idxAbCot      = colIdx(["ab side cot","ab cot"], idxHguLoad>=0 ? (idxFeedFlowMixingPoint>=0 ? 4 : 3) : 2);
+            var idxCdCot      = colIdx(["cd side cot","cd cot"], idxHguLoad>=0 ? (idxFeedFlowMixingPoint>=0 ? 5 : 4) : 3);
+            var idxFlue       = colIdx(["flue gas"], idxHguLoad>=0 ? (idxFeedFlowMixingPoint>=0 ? 6 : 5) : 4);
+            var idxExcessO2   = colIdx(["excess o2","o2 excess","o2"], idxHguLoad>=0 ? (idxFeedFlowMixingPoint>=0 ? 7 : 6) : 5);
+            var idxPreMax     = colIdx(["pre-ref max","prereformer max"], idxHguLoad>=0 ? (idxFeedFlowMixingPoint>=0 ? 8 : 7) : 6);
+            var idxPreMin     = colIdx(["pre-ref min","prereformer min"], idxHguLoad>=0 ? (idxFeedFlowMixingPoint>=0 ? 9 : 8) : 7);
             var idxMethane    = colIdx(["methane slip","ch4 slip"], -1);
             var idxPsa1Og     = colIdx(["psa-1 off gas","psa-1 og","psa1 og"], -1);
             var idxPsa2Og     = colIdx(["psa-2 off gas","psa-2 og","psa2 og"], -1);
@@ -23538,12 +23547,12 @@ function _doImport(file, onDone, silent){
             var idxOpeningSnapshot = colIdx(["burner opening snapshot json","burner opening snapshot","opening snapshot json","opening snapshot"], -1);
             var phRowKeys2    = ["ab-bot","cd-bot","ab-top","cd-top"];
             var scalarIndexes = [
-              idxHguLoad, idxAbCot, idxCdCot, idxFlue, idxExcessO2, idxPreMax, idxPreMin, idxMethane,
+              idxHguLoad, idxFeedFlowMixingPoint, idxAbCot, idxCdCot, idxFlue, idxExcessO2, idxPreMax, idxPreMin, idxMethane,
               idxPsa1Og, idxPsa2Og, idxNaphthaFuel, idxPsa1TipP, idxNgTipP, idxNaphthaTipP, idxNgFuelTemp, idxTag2411
             ].filter(function(idx){ return idx >= 0; });
             var colOffsetStart = scalarIndexes.length
               ? (Math.max.apply(null, scalarIndexes) + 1)
-              : (idxHguLoad>=0 ? 10 : 8);
+              : (idxHguLoad>=0 ? (idxFeedFlowMixingPoint>=0 ? 11 : 10) : 8);
 
             tempDataEntries = [];
             tdData.slice(1).forEach(function(row){
@@ -23552,11 +23561,11 @@ function _doImport(file, onDone, silent){
                 dt:         row[idxDate]||"",
                 shift:      row[idxShift]||"",
                 hguLoad:    idxHguLoad>=0 ? (row[idxHguLoad]||"") : "",
+                feedFlowMixingPoint: idxFeedFlowMixingPoint>=0 ? (row[idxFeedFlowMixingPoint]||"") : "",
                 abCot:      row[idxAbCot]||"",
                 cdCot:      row[idxCdCot]||"",
                 flueGas:    row[idxFlue]||"",
                 excessO2:   row[idxExcessO2]||"",
-                preRefMax:  row[idxPreMax]||"",
                 preRefMin:  row[idxPreMin]||"",
                 methaneSlip: idxMethane>=0 ? (row[idxMethane]||"") : "",
                 psa1Og:     idxPsa1Og>=0 ? (row[idxPsa1Og]||"") : "",
@@ -28571,6 +28580,7 @@ var TD_HGU_LOAD_DIVISOR = 26636;
 var TD_HGU_LOAD_RAW_THRESHOLD = 500;
 var TD_PROCESS_FIELD_BINDINGS = [
   { key:"hguLoad", inputId:"td-hgu-load", exportLabel:"HGU Load (%)", importLabels:["hgu load"], plantTagId:"GJA.2041fic2405.pv" },
+  { key:"feedFlowMixingPoint", inputId:"td-feed-flow-mixing-point", exportLabel:"Feed Flow Mixing Point", importLabels:["feed flow mixing point","feed flow","fic2405"] },
   { key:"abCot", inputId:"td-ab-cot", exportLabel:"AB Side COT (degC)", importLabels:["ab side cot","ab cot"], plantTagId:"GJA.2041ti2501.pv" },
   { key:"cdCot", inputId:"td-cd-cot", exportLabel:"CD Side COT (degC)", importLabels:["cd side cot","cd cot"], plantTagId:"GJA.2041ti2502.pv" },
   { key:"flueGas", inputId:"td-flue-gas", exportLabel:"Flue Gas (degC)", importLabels:["flue gas","flue gas temp","reformer flue gas"], plantTagId:"GJA.2041ti2408.pv" },
@@ -28979,22 +28989,38 @@ function formatTdProcessFieldValue(bindingOrKey, raw){
     var pct = normalizeTdHguLoadPercent(raw);
     return pct === null ? String(raw).trim() : formatTdProcessNumericValue(pct, 2);
   }
+  if(key === "feedFlowMixingPoint"){
+    return formatTdProcessNumericValue(raw, 2);
+  }
   return String(raw).trim();
+}
+
+function getTdProcessEntryValue(entry, key){
+  if(!entry) return "";
+  var direct = entry[key];
+  if(direct != null && String(direct).trim() !== "") return direct;
+  if(key === "feedFlowMixingPoint"){
+    var legacyRaw = parseTdProcessNumericValue(entry.hguLoad);
+    if(legacyRaw !== null && Math.abs(legacyRaw) > TD_HGU_LOAD_RAW_THRESHOLD){
+      return legacyRaw;
+    }
+  }
+  return "";
 }
 
 function getTempEntryFieldDisplayValue(entry, key){
   if(!entry) return "—";
-  var formatted = formatTdProcessFieldValue(key, entry[key]);
+  var formatted = formatTdProcessFieldValue(key, getTdProcessEntryValue(entry, key));
   return formatted || "—";
 }
 
 function getTempEntryFieldFilterValue(entry, key){
   if(!entry) return NaN;
   if(key === "hguLoad"){
-    var pct = normalizeTdHguLoadPercent(entry[key]);
+    var pct = normalizeTdHguLoadPercent(getTdProcessEntryValue(entry, key));
     return pct === null ? NaN : pct;
   }
-  return parseSavedEntryFilterNumber(entry[key]);
+  return parseSavedEntryFilterNumber(getTdProcessEntryValue(entry, key));
 }
 
 function readTdProcessFieldInputs(){
@@ -29009,7 +29035,7 @@ function readTdProcessFieldInputs(){
 function writeTdProcessFieldInputs(entry){
   TD_PROCESS_FIELD_BINDINGS.forEach(function(binding){
     var input = getTdProcessFieldInput(binding);
-    if(input) input.value = entry && entry[binding.key] != null ? formatTdProcessFieldValue(binding, entry[binding.key]) : "";
+    if(input) input.value = formatTdProcessFieldValue(binding, getTdProcessEntryValue(entry, binding.key));
   });
 }
 
@@ -29393,6 +29419,25 @@ function applyTdPlantImportToInputs(latestMap){
       + ((row.pushed_at || row.synced_at) ? (" · Excel " + formatTdPlantDateTime(parseTdPlantDate(row.pushed_at || row.synced_at))) : "");
     if(prevValue !== nextValue) pulseTdPlantProcessField(input);
   });
+  if(tdEditingIndex < 0){
+    var feedFlowBinding = getBindingByKey("feedFlowMixingPoint");
+    var hguBinding = getBindingByKey("hguLoad");
+    var feedFlowInput = getTdProcessFieldInput(feedFlowBinding);
+    var feedFlowRow = hguBinding && latestMap && latestMap.get ? latestMap.get(hguBinding.plantTagId) : null;
+    if(feedFlowInput && feedFlowRow){
+      var feedFlowValue = formatTdProcessFieldValue("feedFlowMixingPoint", normalizeTdPlantNumericValue(feedFlowRow.value));
+      var prevFeedFlowValue = String(feedFlowInput.value || "");
+      feedFlowInput.value = feedFlowValue;
+      feedFlowInput.setAttribute("data-plant-tag-id", feedFlowRow.tag_id || hguBinding.plantTagId);
+      feedFlowInput.setAttribute("data-plant-synced-at", feedFlowRow.synced_at || "");
+      feedFlowInput.setAttribute("data-plant-pushed-at", feedFlowRow.pushed_at || feedFlowRow.synced_at || "");
+      feedFlowInput.title = (feedFlowBinding && feedFlowBinding.exportLabel ? feedFlowBinding.exportLabel : "Feed Flow Mixing Point")
+        + (feedFlowRow.unit ? (" [" + feedFlowRow.unit + "]") : "")
+        + (feedFlowRow.synced_at ? (" · PHD " + formatTdPlantDateTime(parseTdPlantDate(feedFlowRow.synced_at))) : "")
+        + ((feedFlowRow.pushed_at || feedFlowRow.synced_at) ? (" · Excel " + formatTdPlantDateTime(parseTdPlantDate(feedFlowRow.pushed_at || feedFlowRow.synced_at))) : "");
+      if(prevFeedFlowValue !== feedFlowValue) pulseTdPlantProcessField(feedFlowInput);
+    }
+  }
   tdPlantSnapshotRows = mappedRows;
   tdPlantLastMappedCount = mappedRows.length;
   return mappedRows.length;
