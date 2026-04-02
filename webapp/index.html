@@ -9303,13 +9303,18 @@ function renderHeatMap(){
     /* Also fix the global and persist so other tabs work too */
     try{
       data = hmData;
-      saveData();
       burnerOpeningData = sanitizeBurnerOpeningShape(burnerOpeningData, data);
-      saveBurnerOpeningData();
+      reconcileBurnerStateOpeningStores(true);
+      hmData = sanitizeBurnerSnapshotShape(data);
     }catch(e){}
   } else {
     /* Sync to global for other features */
-    try{ data = hmData; }catch(e){}
+    try{
+      data = hmData;
+      burnerOpeningData = sanitizeBurnerOpeningShape(burnerOpeningData, data);
+      reconcileBurnerStateOpeningStores(true);
+      hmData = sanitizeBurnerSnapshotShape(data);
+    }catch(e){}
   }
 
   var shiftSel = document.getElementById("hm-shift-select");
@@ -22280,6 +22285,20 @@ function normalizeBurnerOpeningValue(raw, state){
   return n;
 }
 
+function normalizeBurnerStateOpeningPair(state, opening){
+  var nextState = normalizeBurnerStateSnapshotValue(state);
+  var nextOpening = normalizeBurnerOpeningValue(opening, nextState);
+  if(nextOpening <= 0){
+    nextState = "C";
+    nextOpening = 0;
+  }
+  if(nextState === "C") nextOpening = 0;
+  return {
+    state: nextState,
+    opening: nextOpening
+  };
+}
+
 function buildDefaultBurnerOpeningData(sourceData){
   var src = (sourceData && typeof sourceData === "object") ? sourceData : buildDefaultData();
   var out = {};
@@ -22347,6 +22366,32 @@ function getBurnerOpeningValue(wallName, ri, ci, state){
 function setBurnerOpeningValue(wallName, ri, ci, value, state){
   burnerOpeningData = sanitizeBurnerOpeningShape(burnerOpeningData, data);
   burnerOpeningData[wallName][ri][ci] = normalizeBurnerOpeningValue(value, state);
+}
+
+function reconcileBurnerStateOpeningStores(shouldPersist){
+  data = sanitizeBurnerSnapshotShape(data);
+  burnerOpeningData = sanitizeBurnerOpeningShape(burnerOpeningData, data);
+  var changed = false;
+  WALL_NAMES.forEach(function(wallName){
+    for(var ri=0; ri<ROWS; ri++){
+      for(var ci=0; ci<BURNERS; ci++){
+        var pair = normalizeBurnerStateOpeningPair(data[wallName][ri][ci], burnerOpeningData[wallName][ri][ci]);
+        if(data[wallName][ri][ci] !== pair.state){
+          data[wallName][ri][ci] = pair.state;
+          changed = true;
+        }
+        if(burnerOpeningData[wallName][ri][ci] !== pair.opening){
+          burnerOpeningData[wallName][ri][ci] = pair.opening;
+          changed = true;
+        }
+      }
+    }
+  });
+  if(changed && shouldPersist){
+    saveData();
+    saveBurnerOpeningData();
+  }
+  return changed;
 }
 
 function loadData(){
@@ -22530,7 +22575,9 @@ function stageBurnerCellChange(wallName, ri, ci, patch){
   if(currentState === "C" && nextState !== "C" && patch.opening == null && currentOpening === 0){
     nextOpening = 100;
   }
-  if(nextState === "C") nextOpening = 0;
+  var nextPair = normalizeBurnerStateOpeningPair(nextState, nextOpening);
+  nextState = nextPair.state;
+  nextOpening = nextPair.opening;
 
   data[wallName][ri][ci] = nextState;
   setBurnerOpeningValue(wallName, ri, ci, nextOpening, nextState);
@@ -24029,9 +24076,8 @@ function _doImport(file, onDone, silent){
 
       /* overwrite in-memory data and persist */
       data=nd;
-      saveData();
       burnerOpeningData = sanitizeBurnerOpeningShape(importedOpeningData, nd);
-      saveBurnerOpeningData();
+      reconcileBurnerStateOpeningStores(true);
 
       if(foundCleaningSheets || foundCleaningHistorySheet){
         saveCleaningLog(importedCleaningLog);
@@ -25582,6 +25628,7 @@ function acknowledgeAlarm(){
 function init(){
   loadData();
   loadBurnerOpeningData();
+  reconcileBurnerStateOpeningStores(true);
   burnerUiReady = true;
   if(isMobileLandingViewport()){
     if(Array.isArray(tempDataEntries) && tempDataEntries.length && typeof ensureTempEntriesHaveSnapshots === "function"){
