@@ -6,6 +6,7 @@
   var TAB_LABELS = {
     home: "Executive overview",
     walls: "Wall monitoring",
+    cleaning: "Cleaning status",
     trends: "Performance trends",
     logs: "Recent logs",
     alarms: "Alarm center"
@@ -49,7 +50,7 @@
     "cd-top": "CD Top"
   };
   var state = {
-    activeTab: readStored("active-tab", "home"),
+    activeTab: normalizeMobileTabKey(readStored("active-tab", "home")),
     wall: readStored("wall", "A"),
     trendMetric: readStored("trend-metric", "hguLoad"),
     alarmFilter: readStored("alarm-filter", "all"),
@@ -71,6 +72,11 @@
     }
   }
 
+  function normalizeMobileTabKey(value){
+    var key = String(value || "").toLowerCase();
+    return TAB_LABELS[key] ? key : "home";
+  }
+
   function writeStored(key, value){
     try{
       localStorage.setItem(STORAGE_PREFIX + key, String(value));
@@ -78,7 +84,7 @@
   }
 
   function persistState(){
-    writeStored("active-tab", state.activeTab);
+    writeStored("active-tab", normalizeMobileTabKey(state.activeTab));
     writeStored("wall", state.wall);
     writeStored("trend-metric", state.trendMetric);
     writeStored("alarm-filter", state.alarmFilter);
@@ -122,6 +128,16 @@
     return isMobileViewport() && isLoggedIn();
   }
 
+  function mapDesktopTabToMobileTab(tab){
+    var key = String(tab || "").toLowerCase();
+    if(key === "cleaning") return "cleaning";
+    if(key === "reformerdash") return "trends";
+    if(key === "tempdata") return "logs";
+    if(key === "alarms") return "alarms";
+    if(key === "home") return "home";
+    return "";
+  }
+
   function ensureRoot(){
     if(root && document.body && document.body.contains(root)) return root;
     root = document.getElementById("mobile-v2-root");
@@ -136,6 +152,16 @@
       }
     }
     return root;
+  }
+
+  function syncMobileBootVisibility(){
+    if(!document.body) return;
+    if(isMobileShellActive()){
+      document.body.setAttribute("data-mobile-v2-boot", "1");
+      ensureRoot();
+    }else{
+      document.body.removeAttribute("data-mobile-v2-boot");
+    }
   }
 
   function toNumber(value){
@@ -495,6 +521,168 @@
     };
   }
 
+  function getCleaningHistoryLog(){
+    try{
+      if(typeof window.loadCleaningHistory === "function"){
+        return window.loadCleaningHistory() || {};
+      }
+    }catch(e){}
+    return {};
+  }
+
+  function getCleaningMonthValue(){
+    if(typeof window.getActiveCleaningMonthValue === "function"){
+      try{ return window.getActiveCleaningMonthValue() || new Date().toISOString().slice(0, 7); }catch(e){}
+    }
+    return new Date().toISOString().slice(0, 7);
+  }
+
+  function formatShortDate(value){
+    var dt = parseDateSafe(value);
+    if(!dt) return "—";
+    return dt.toLocaleDateString([], {
+      day: "2-digit",
+      month: "short"
+    });
+  }
+
+  function formatMonthLabel(value){
+    var raw = String(value || "").trim();
+    var parts = raw.split("-");
+    if(parts.length !== 2) return raw || "current month";
+    var year = parseInt(parts[0], 10);
+    var monthIndex = parseInt(parts[1], 10) - 1;
+    if(!(year > 0) || !(monthIndex >= 0 && monthIndex < 12)) return raw;
+    return new Date(year, monthIndex, 1).toLocaleDateString([], {
+      month: "short",
+      year: "numeric"
+    });
+  }
+
+  function getCleaningMonthCount(wall, ri, ci){
+    var key = getCleaningKey(ri, ci);
+    if(typeof window.countCleaningsInMonth === "function"){
+      try{
+        return Number(window.countCleaningsInMonth(wall, key, getCleaningMonthValue(), { includePending: true }) || 0);
+      }catch(e){}
+    }
+    var dates = [];
+    if(typeof window.getBurnerDatesForSelection === "function"){
+      try{
+        dates = window.getBurnerDatesForSelection(wall, key, { includePending: true }) || [];
+      }catch(e){
+        dates = [];
+      }
+    }
+    return dates.filter(function(item){
+      return String(item || "").slice(0, 7) === getCleaningMonthValue();
+    }).length;
+  }
+
+  function getCleaningCellMeta(wall, ri, ci){
+    var cleanDate = getCleaningDateForCell(wall, ri, ci);
+    var parsed = parseDateSafe(cleanDate);
+    var monthCount = getCleaningMonthCount(wall, ri, ci);
+    var daysSince = parsed ? Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 86400000)) : null;
+    var tone = "recent";
+    if(monthCount > 3){
+      tone = "freq";
+    }else if(!cleanDate){
+      tone = "missing";
+    }else if(daysSince != null && daysSince > 14){
+      tone = "watch";
+    }
+    return {
+      wall: wall,
+      ri: ri,
+      ci: ci,
+      key: getCleaningKey(ri, ci),
+      cleanDate: cleanDate,
+      monthCount: monthCount,
+      daysSince: daysSince,
+      tone: tone,
+      label: monthCount > 3 ? "!" : (cleanDate ? String(cleanDate).slice(8, 10) : "—")
+    };
+  }
+
+  function summarizeCleaningWall(wall){
+    var counts = {
+      recent: 0,
+      watch: 0,
+      missing: 0,
+      freq: 0
+    };
+    for(var ri = 0; ri < 6; ri++){
+      for(var ci = 0; ci < 15; ci++){
+        var meta = getCleaningCellMeta(wall, ri, ci);
+        counts[meta.tone] += 1;
+      }
+    }
+    return counts;
+  }
+
+  function getRecentCleaningEvents(limit){
+    var seen = {};
+    var list = [];
+    var history = getCleaningHistoryLog();
+    var current = getCleaningLog();
+
+    function pushEvent(wall, key, dateValue){
+      var cleanDate = String(dateValue || "").trim();
+      if(!cleanDate) return;
+      var dedupeKey = wall + "|" + key + "|" + cleanDate;
+      if(seen[dedupeKey]) return;
+      seen[dedupeKey] = true;
+      var match = key.match(/^R(\d+)B(\d+)$/i);
+      if(!match) return;
+      var ri = Math.max(0, parseInt(match[1], 10) - 1);
+      var ci = Math.max(0, parseInt(match[2], 10) - 1);
+      list.push({
+        wall: wall,
+        ri: ri,
+        ci: ci,
+        key: key,
+        cleanDate: cleanDate,
+        monthCount: getCleaningMonthCount(wall, ri, ci),
+        tone: getCleaningCellMeta(wall, ri, ci).tone
+      });
+    }
+
+    Object.keys(history).forEach(function(wall){
+      var wallHist = history[wall] && typeof history[wall] === "object" ? history[wall] : {};
+      Object.keys(wallHist).forEach(function(key){
+        var dates = Array.isArray(wallHist[key]) ? wallHist[key] : [];
+        dates.forEach(function(dateValue){
+          pushEvent(wall, key, dateValue);
+        });
+      });
+    });
+
+    Object.keys(current).forEach(function(wall){
+      var wallLog = current[wall] && typeof current[wall] === "object" ? current[wall] : {};
+      Object.keys(wallLog).forEach(function(key){
+        pushEvent(wall, key, wallLog[key]);
+      });
+    });
+
+    list.sort(function(a, b){
+      var ta = parseDateSafe(a.cleanDate);
+      var tb = parseDateSafe(b.cleanDate);
+      return (tb ? tb.getTime() : 0) - (ta ? ta.getTime() : 0);
+    });
+    return typeof limit === "number" ? list.slice(0, limit) : list;
+  }
+
+  function getCleaningFrequencyAlerts(limit){
+    if(typeof window.getFreqAlarms !== "function") return [];
+    try{
+      var rows = window.getFreqAlarms() || [];
+      return typeof limit === "number" ? rows.slice(0, limit) : rows;
+    }catch(e){
+      return [];
+    }
+  }
+
   function getLastSyncCopy(){
     var lastSync = document.getElementById("lastSync");
     var syncHealth = document.getElementById("syncHealthText");
@@ -719,7 +907,7 @@
       items.push({
         tone: "good",
         title: "No immediate issues",
-        copy: "Mobile home is now focused on health status, top risks, and fast navigation."
+        copy: "All walls are stable and no active alarms are open."
       });
     }
     return items.slice(0, 3);
@@ -749,7 +937,7 @@
 
   function buildWallIssueBanner(summary){
     if(!summary || summary.severity === "normal"){
-      return buildBannerHtml("Stable wall view", "Single-wall 2D burner monitoring keeps the mobile scan fast and clear.");
+      return buildBannerHtml("Stable wall view", "No wall imbalance is active on the selected wall.");
     }
     return buildBannerHtml(
       "Wall " + summary.wall + " needs review",
@@ -780,8 +968,8 @@
 
     return ''
       + (alarms.length
-        ? buildBannerHtml(alarms.length + " issue" + (alarms.length > 1 ? "s" : "") + " need review", "Top risks are surfaced first for a boss-friendly mobile overview.", getAlarmTone(alarms[0]))
-        : buildBannerHtml("Plant status looks stable", "No active alarms at the moment. Mobile home stays focused on health, sync, and next actions.", "good"))
+        ? buildBannerHtml(alarms.length + " issue" + (alarms.length > 1 ? "s" : "") + " need review", "Highest severity alarm: " + getAlarmTitle(alarms[0]), getAlarmTone(alarms[0]))
+        : buildBannerHtml("Plant status looks stable", "No active alarms at the moment.", "good"))
       + '<section class="m2-hero">'
       +   '<div class="m2-eyebrow">Plant health</div>'
       +   '<div class="m2-hero-row">'
@@ -799,6 +987,15 @@
       +   buildChamberCardHtml(chamberAB)
       +   buildChamberCardHtml(chamberCD)
       + '</section>'
+      + '<section class="m2-card"><div class="m2-card-pad">'
+      +   '<div class="m2-card-title">Actions</div>'
+      +   buildActionRowHtml([
+            buildActionButtonHtml("Cleaning", { "data-nav-tab": "cleaning" }, "is-primary"),
+            buildActionButtonHtml("Logs", { "data-nav-tab": "logs" }),
+            buildActionButtonHtml("Alarms", { "data-nav-tab": "alarms" }),
+            buildActionButtonHtml("New TST", { "data-action": "open-tst-new" })
+          ])
+      + '</div></section>'
       + '<section class="m2-card"><div class="m2-card-pad">'
       +   '<div class="m2-card-title">Quick KPIs</div>'
       +   '<div class="m2-chip-row" style="margin-top:14px;">'
@@ -880,8 +1077,8 @@
       +   '</div>'
       + '</div></section>'
       + '<section class="m2-card"><div class="m2-card-pad">'
-      +   '<div class="m2-card-title">Why this view is faster</div>'
-      +   '<div class="m2-card-copy">You can scan one wall instantly, tap any burner for details, and skip heavy multi-surface loading on phone.</div>'
+      +   '<div class="m2-card-title">Status note</div>'
+      +   '<div class="m2-card-copy">' + escapeHtml(summary.actionCopy) + '</div>'
       + '</div></section>';
   }
 
@@ -937,13 +1134,134 @@
     return html;
   }
 
+  function buildCleaningMatrixHtml(wall){
+    var selected = state.selectedCellKey || "";
+    var html = ''
+      + '<div class="m2-matrix-shell m2-cleaning-shell"><div class="m2-matrix-scroll"><div class="m2-matrix m2-cleaning-matrix">'
+      +   '<div class="m2-matrix-top"><div class="m2-axis">R/B</div>';
+    for(var col = 1; col <= 15; col++){
+      html += '<div class="m2-axis">' + col + '</div>';
+    }
+    html += '</div>';
+    for(var ri = 5; ri >= 0; ri--){
+      html += '<div class="m2-matrix-row"><div class="m2-axis-row">R' + (ri + 1) + '</div>';
+      for(var ci = 0; ci < 15; ci++){
+        var meta = getCleaningCellMeta(wall, ri, ci);
+        var cellKey = wall + ":" + ri + ":" + ci;
+        var aria = "Wall " + wall + " row " + (ri + 1) + " burner " + (ci + 1)
+          + (meta.cleanDate ? (", last cleaned " + meta.cleanDate) : ", cleaning not logged");
+        html += '<button'
+          + ' type="button"'
+          + ' class="m2-cleaning-cell tone-' + meta.tone + (selected === cellKey ? ' is-selected' : '') + '"'
+          + ' data-cell-wall="' + escapeHtml(wall) + '"'
+          + ' data-cell-ri="' + ri + '"'
+          + ' data-cell-ci="' + ci + '"'
+          + ' aria-label="' + escapeHtml(aria) + '">'
+          + escapeHtml(meta.label)
+          + '</button>';
+      }
+      html += '</div>';
+    }
+    html += '</div></div></div>';
+    return html;
+  }
+
+  function buildCleaningEventItemHtml(item){
+    var title = "Wall " + item.wall + " · R" + (item.ri + 1) + " · B" + (item.ci + 1);
+    var copy = formatShortDate(item.cleanDate) + " · " + item.monthCount + " this month";
+    return ''
+      + '<div class="m2-list-item">'
+      +   '<div class="m2-list-title">' + escapeHtml(title) + '</div>'
+      +   '<div class="m2-list-meta">' + escapeHtml(copy) + '</div>'
+      +   buildActionRowHtml([
+            buildActionButtonHtml("Open", {
+              "data-cell-wall": item.wall,
+              "data-cell-ri": item.ri,
+              "data-cell-ci": item.ci
+            })
+          ])
+      + '</div>';
+  }
+
+  function buildCleaningPaneHtml(){
+    var cleaning = getCleaningStats();
+    var wallCounts = summarizeCleaningWall(state.wall);
+    var recent = getRecentCleaningEvents(6);
+    var freqAlerts = getCleaningFrequencyAlerts(5);
+    var bannerTone = wallCounts.freq ? "critical" : wallCounts.missing ? "major" : wallCounts.watch ? "warning" : "good";
+    var bannerCopy = wallCounts.freq
+      ? (wallCounts.freq + " burners on Wall " + state.wall + " crossed monthly cleaning frequency.")
+      : wallCounts.missing
+        ? (wallCounts.missing + " burners on Wall " + state.wall + " have no cleaning date logged.")
+        : ("Wall " + state.wall + " cleaning log is current.");
+
+    return ''
+      + buildBannerHtml("Cleaning overview", bannerCopy, bannerTone)
+      + '<section class="m2-card"><div class="m2-card-pad">'
+      +   '<div class="m2-card-title">Cleaning KPIs</div>'
+      +   '<div class="m2-chip-row" style="margin-top:14px;">'
+      +     buildChipHtml("Logged", cleaning.cleaned)
+      +     buildChipHtml("Pending", cleaning.pending)
+      +     buildChipHtml("Recent 7d", cleaning.recent7)
+      +     buildChipHtml("Freq alerts", freqAlerts.length)
+      +   '</div>'
+      + '</div></section>'
+      + '<section class="m2-card"><div class="m2-card-pad">'
+      +   '<div class="m2-card-title">Wall selector</div>'
+      +   '<div class="m2-seg" style="margin-top:14px;">'
+      +     getWallNames().map(function(wall){
+              return '<button class="m2-seg-btn' + (state.wall === wall ? ' is-active' : '') + '" type="button" data-wall="' + escapeHtml(wall) + '">' + escapeHtml(wall) + '</button>';
+            }).join("")
+      +   '</div>'
+      +   '<div class="m2-wall-kpis">'
+      +     buildMiniStatHtml("Recent", wallCounts.recent)
+      +     buildMiniStatHtml("Watch", wallCounts.watch)
+      +     buildMiniStatHtml("Missing", wallCounts.missing)
+      +     buildMiniStatHtml("Freq", wallCounts.freq)
+      +   '</div>'
+      + '</div></section>'
+      + '<section class="m2-card"><div class="m2-card-pad">'
+      +   '<div class="m2-card-title">Wall ' + escapeHtml(state.wall) + ' cleaning map</div>'
+      +   '<div class="m2-card-copy">Date = last logged day · Dash = missing · ! = monthly frequency alert</div>'
+      +   buildCleaningMatrixHtml(state.wall)
+      +   '<div class="m2-chip-row" style="margin-top:14px;">'
+      +     buildChipHtml("Recent", wallCounts.recent)
+      +     buildChipHtml("Watch", wallCounts.watch)
+      +     buildChipHtml("Missing", wallCounts.missing)
+      +     buildChipHtml("Freq", wallCounts.freq)
+      +   '</div>'
+      + '</div></section>'
+      + '<section class="m2-card"><div class="m2-card-pad">'
+      +   '<div class="m2-card-title">Recent cleaning activity</div>'
+      +   '<div class="m2-list" style="margin-top:14px;">'
+      +     (recent.length ? recent.map(buildCleaningEventItemHtml).join("") : '<div class="m2-empty">No cleaning history recorded yet.</div>')
+      +   '</div>'
+      + '</div></section>'
+      + '<section class="m2-card"><div class="m2-card-pad">'
+      +   '<div class="m2-card-title">Frequency watch</div>'
+      +   '<div class="m2-list" style="margin-top:14px;">'
+      +     (freqAlerts.length
+              ? freqAlerts.map(function(item){
+                  return buildListItemHtml(
+                    "Wall " + item.wall + " · R" + item.row + " · B" + item.burner,
+                    item.count + " cleanings in " + formatMonthLabel(item.monthStr)
+                  );
+                }).join("")
+              : '<div class="m2-empty">No monthly cleaning frequency alerts.</div>')
+      +   '</div>'
+      + '</div></section>';
+  }
+
   function buildTrendsPaneHtml(){
     var dashState = window.__reformerDashState || null;
     var current = dashState && dashState.data ? dashState.data : {};
     var historyPoints = dashState && Array.isArray(dashState.historyPoints) ? dashState.historyPoints.slice() : [];
     var currentMetric = TREND_METRICS[state.trendMetric] || TREND_METRICS.hguLoad;
+    var trendBannerCopy = historyPoints.length
+      ? (historyPoints.length + " samples loaded · " + (dashState && dashState.lastFetchAt ? formatTimeAgo(dashState.lastFetchAt) : "live"))
+      : "Trend history unavailable";
     return ''
-      + buildBannerHtml("Performance trends", historyPoints.length ? "Single-chart mobile trends with key live indicators." : "Load live history only when needed, instead of shipping a heavy analytics wall on phone.")
+      + buildBannerHtml("Performance trends", trendBannerCopy, historyPoints.length ? "good" : "warning")
       + '<section class="m2-grid-2">'
       +   buildMetricCardHtml("HGU Load", formatNumber(current.hguLoad, 1), "%")
       +   buildMetricCardHtml("Avg COT", formatAvgCot(current), "degC")
@@ -960,14 +1278,14 @@
       +   '</div>'
       +   (historyPoints.length
           ? buildTrendChartHtml(historyPoints, currentMetric)
-          : '<div class="m2-chart-card"><div class="m2-empty">No mobile trend history loaded yet. Tap refresh on this screen to pull the latest live history.</div></div>')
+          : '<div class="m2-chart-card"><div class="m2-empty">No trend history available.</div></div>')
       + '</div></section>'
       + '<section class="m2-card"><div class="m2-card-pad">'
-      +   '<div class="m2-card-title">What matters</div>'
+      +   '<div class="m2-card-title">Trend notes</div>'
       +   '<div class="m2-list" style="margin-top:14px;">'
       +     buildListItemHtml(currentMetric.label + " latest", getMetricLatestCopy(historyPoints, currentMetric))
       +     buildListItemHtml("History window", historyPoints.length ? (historyPoints.length + " recent samples from the plant feed") : "Waiting for live history")
-      +     buildListItemHtml("Mobile focus", "One live chart at a time keeps the phone view fast and readable.")
+      +     buildListItemHtml("Last refresh", dashState && dashState.lastFetchAt ? formatDateTime(dashState.lastFetchAt) : "Not loaded")
       +   '</div>'
       + '</div></section>';
   }
@@ -1141,7 +1459,7 @@
       +   '<div class="m2-hero-row" style="margin-top:8px;">'
       +     '<div>'
       +       '<div class="m2-chamber-status">' + escapeHtml(latestEntry ? (latestEntry.shift || "Latest") : "No TST") + '</div>'
-      +       '<div class="m2-card-copy">' + escapeHtml(latestEntry ? formatDateTime(latestEntry.dt) : "Create the first TST entry when needed.") + '</div>'
+      +       '<div class="m2-card-copy">' + escapeHtml(latestEntry ? formatDateTime(latestEntry.dt) : "No saved TST entry.") + '</div>'
       +     '</div>'
       +     '<div class="m2-live-stack">'
       +       '<div class="m2-live-pill">' + escapeHtml(latestEntry ? (countFilledPeepValues(latestEntry) + " points") : "Pending") + '</div>'
@@ -1169,7 +1487,7 @@
       +   '<div class="m2-list" style="margin-top:14px;">'
       +     (entries.length
               ? entries.map(buildTstRecordListItemHtml).join("")
-              : '<div class="m2-empty">No saved entries yet. Create the first mobile TST entry from this screen.</div>')
+              : '<div class="m2-empty">No saved TST entries yet.</div>')
       +   '</div>'
       + '</div></section>';
   }
@@ -1198,8 +1516,8 @@
 
     return ''
       + buildBannerHtml(
-          active.length ? "Priority-first alarm feed" : "No active alarms",
-          active.length ? "Critical and major alarms stay closest to the top, with one-tap acknowledgement." : "Resolved items stay available below for quick review.",
+          active.length ? "Alarm feed" : "No active alarms",
+          active.length ? (counts.critical + " critical · " + counts.major + " major · " + counts.warning + " warning") : "All alarms are cleared.",
           active.length ? getAlarmTone(active[0]) : "good"
         )
       + '<section class="m2-card"><div class="m2-card-pad">'
@@ -1282,7 +1600,7 @@
       +   '<div class="m2-sheet-panel">'
       +     '<div class="m2-sheet-handle"></div>'
       +     '<div class="m2-sheet-title">Wall ' + escapeHtml(wall) + ' · Row ' + (ri + 1) + ' · Burner ' + (ci + 1) + '</div>'
-      +     '<div class="m2-sheet-copy">Adjust state, opening, and cleaning directly from the mobile wall view.</div>'
+      +     '<div class="m2-sheet-copy">Current burner and cleaning status.</div>'
       +     '<div class="m2-inline-grid">'
       +       '<div class="m2-inline-block"><div class="m2-stat-label">Current state</div><div class="m2-mini-value">' + escapeHtml(getStateLabel(stateCode)) + '</div></div>'
       +       '<div class="m2-inline-block"><div class="m2-stat-label">Opening</div><div class="m2-mini-value" data-cell-opening-preview>' + escapeHtml(opening + "%") + '</div></div>'
@@ -1326,7 +1644,7 @@
       +   '<div class="m2-sheet-panel">'
       +     '<div class="m2-sheet-handle"></div>'
       +     '<div class="m2-sheet-title">' + escapeHtml(editIndex >= 0 ? "Edit TST entry" : "New TST entry") + '</div>'
-      +     '<div class="m2-sheet-copy">Fill process values and peep-hole readings directly in the mobile flow.</div>'
+      +     '<div class="m2-sheet-copy">Shift, process values, and peep-hole readings.</div>'
       +     '<div class="m2-form-grid">'
       +       '<label class="m2-field">'
       +         '<span class="m2-field-label">Date & time</span>'
@@ -1401,13 +1719,13 @@
     if(state.sheetKind === "tools"){
       var isLight = document.body && document.body.classList.contains("light-theme");
       var showInstallAction = !isStandaloneInstalled();
-      return ''
-        + '<div class="m2-sheet is-open">'
-        +   '<div class="m2-sheet-backdrop" data-action="sheet-close"></div>'
-        +   '<div class="m2-sheet-panel">'
-        +     '<div class="m2-sheet-handle"></div>'
-        +     '<div class="m2-sheet-title">Quick actions</div>'
-        +     '<div class="m2-sheet-copy">Lightweight mobile controls only, with no desktop fallback shortcuts.</div>'
+    return ''
+      + '<div class="m2-sheet is-open">'
+      +   '<div class="m2-sheet-backdrop" data-action="sheet-close"></div>'
+      +   '<div class="m2-sheet-panel">'
+      +     '<div class="m2-sheet-handle"></div>'
+      +     '<div class="m2-sheet-title">Quick actions</div>'
+      +     '<div class="m2-sheet-copy">Live mobile controls.</div>'
         +     '<div class="m2-tools-grid">'
         +       '<button class="m2-tool-btn" type="button" data-action="refresh-shell">Refresh live data</button>'
         +       (showInstallAction ? '<button class="m2-tool-btn" type="button" data-action="install-app">Install app</button>' : '')
@@ -1439,6 +1757,7 @@
   }
 
   function render(){
+    syncMobileBootVisibility();
     if(!ensureMountedState()) return;
     var shell = ensureRoot();
     shell.innerHTML = buildShellHtml();
@@ -1456,9 +1775,11 @@
     var mountedRoot = ensureRoot();
     if(!document.body) return false;
     if(active){
+      document.body.setAttribute("data-mobile-v2-boot", "1");
       document.body.setAttribute("data-mobile-v2", "1");
       document.body.removeAttribute("data-mobile-legacy");
     }else{
+      document.body.removeAttribute("data-mobile-v2-boot");
       document.body.removeAttribute("data-mobile-v2");
       document.body.removeAttribute("data-mobile-legacy");
       mountedRoot.innerHTML = "";
@@ -1485,12 +1806,14 @@
       +   '</header>'
       +   '<div class="m2-pane' + (state.activeTab === "home" ? ' is-active' : '') + '">' + (state.activeTab === "home" ? buildHomePaneHtml() : "") + '</div>'
       +   '<div class="m2-pane' + (state.activeTab === "walls" ? ' is-active' : '') + '">' + (state.activeTab === "walls" ? buildWallsPaneHtml() : "") + '</div>'
+      +   '<div class="m2-pane' + (state.activeTab === "cleaning" ? ' is-active' : '') + '">' + (state.activeTab === "cleaning" ? buildCleaningPaneHtml() : "") + '</div>'
       +   '<div class="m2-pane' + (state.activeTab === "trends" ? ' is-active' : '') + '">' + (state.activeTab === "trends" ? buildTrendsPaneHtml() : "") + '</div>'
       +   '<div class="m2-pane' + (state.activeTab === "logs" ? ' is-active' : '') + '">' + (state.activeTab === "logs" ? buildLogsPaneHtml() : "") + '</div>'
       +   '<div class="m2-pane' + (state.activeTab === "alarms" ? ' is-active' : '') + '">' + (state.activeTab === "alarms" ? buildAlarmsPaneHtml() : "") + '</div>'
       +   '<nav class="m2-nav" aria-label="Mobile app navigation">'
       +     buildNavButtonHtml("home", "HOME")
       +     buildNavButtonHtml("walls", "WALLS")
+      +     buildNavButtonHtml("cleaning", "CLEAN")
       +     buildNavButtonHtml("trends", "TRENDS")
       +     buildNavButtonHtml("logs", "LOGS")
       +     buildNavButtonHtml("alarms", "ALARMS")
@@ -1595,7 +1918,7 @@
       var target = event.target;
       var navBtn = target.closest("[data-nav-tab]");
       if(navBtn){
-        state.activeTab = String(navBtn.getAttribute("data-nav-tab") || "home");
+        state.activeTab = normalizeMobileTabKey(navBtn.getAttribute("data-nav-tab") || "home");
         state.sheetKind = "";
         state.sheetPayload = null;
         persistState();
@@ -1838,7 +2161,8 @@
 
   function scheduleRender(){
     clearTimeout(renderTimer);
-    renderTimer = window.setTimeout(render, 50);
+    syncMobileBootVisibility();
+    renderTimer = window.setTimeout(render, 16);
   }
 
   window.addEventListener("resize", function(){
@@ -1865,15 +2189,23 @@
     }
   });
 
-  window.scadaUpdateMobileShell = function(){
+  window.scadaUpdateMobileShell = function(sourceTab){
+    var mapped = mapDesktopTabToMobileTab(sourceTab);
+    if(mapped){
+      state.activeTab = normalizeMobileTabKey(mapped);
+      persistState();
+    }
+    syncMobileBootVisibility();
     scheduleRender();
   };
 
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", function(){
+      syncMobileBootVisibility();
       render();
     });
   }else{
+    syncMobileBootVisibility();
     render();
   }
 })();

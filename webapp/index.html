@@ -8055,6 +8055,20 @@ function clearLoginState(){
   try{ localStorage.removeItem("scadaEmpId"); }catch(e){}
   try{ sessionStorage.removeItem("scadaLoggedIn"); }catch(e){}
   try{ sessionStorage.removeItem("scadaEmpId"); }catch(e){}
+  try{
+    if(document.body) document.body.removeAttribute("data-mobile-v2-boot");
+  }catch(e){}
+}
+
+function primeMobileShellBootVisibility(){
+  try{
+    if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport() && document.body){
+      document.body.setAttribute("data-mobile-v2-boot", "1");
+      if(typeof window.scadaUpdateMobileShell === "function"){
+        window.scadaUpdateMobileShell("home");
+      }
+    }
+  }catch(e){}
 }
 
 async function sha256Hex(input){
@@ -8154,6 +8168,7 @@ async function login(){
     persistLogin(empId2);
     if(_matched && typeof saveLocalDevicePasswordHash === "function") saveLocalDevicePasswordHash(_matched);
 
+    primeMobileShellBootVisibility();
     document.getElementById("loginScreen").style.display="none";
     err.style.display="none";
     var opEl2 = document.getElementById("operatorDisplay");
@@ -8332,6 +8347,7 @@ async function loginWithBiometric(){
     if(_bufToB64url(assertion.rawId) !== rec.credId) throw new Error("Credential mismatch");
 
     persistLogin(rec.empId);
+    primeMobileShellBootVisibility();
     document.getElementById("loginScreen").style.display="none";
     if(err) err.style.display="none";
     var opEl = document.getElementById("operatorDisplay");
@@ -21849,6 +21865,7 @@ document.addEventListener("DOMContentLoaded",function(){
 });
 
 if(isUserLoggedIn()){
+  primeMobileShellBootVisibility();
   document.getElementById("loginScreen").style.display="none";
   /* Restore operator display from session */
   var _empRestore = getLoggedInEmpId();
