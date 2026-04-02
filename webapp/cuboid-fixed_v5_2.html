@@ -29,60 +29,14 @@ body{color:rgba(140,180,220,0.85);}
   width:min(97vw,1680px);
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:flex-end;
   gap:12px;
   flex-wrap:wrap;
-}
-#viewerTag{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:0;
-  min-height:38px;
-  width:auto;
-  min-width:0;
-  max-width:100%;
-  padding:8px 18px 9px 16px;
-  position:relative;
-  overflow:hidden;
-  border-radius:14px;
-  border:1px solid rgba(110,150,220,0.34);
-  background:
-    linear-gradient(135deg,rgba(20,31,54,0.97) 0%,rgba(25,20,38,0.95) 38%,rgba(9,24,38,0.96) 100%);
-  box-shadow:
-    0 12px 28px rgba(0,0,0,0.24),
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    inset 0 0 28px rgba(74,126,214,0.09);
-  text-align:left;
-  flex:0 1 auto;
-}
-#viewerTag::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    radial-gradient(circle at 16% 18%, rgba(102,180,255,0.16), transparent 42%),
-    radial-gradient(circle at 86% 78%, rgba(255,168,82,0.14), transparent 36%);
-  pointer-events:none;
-}
-.viewer-tag-title{
-  position:relative;
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:1.15px;
-  text-transform:uppercase;
-  white-space:nowrap;
-  color:#eaf2ff;
-  background:linear-gradient(90deg,#fff7d2 0%,#cfe5ff 42%,#8ef0d3 100%);
-  -webkit-background-clip:text;
-  background-clip:text;
-  -webkit-text-fill-color:transparent;
-  text-shadow:0 0 16px rgba(104,156,232,0.16);
 }
 #vp{
   position:relative;
   width:min(97vw,1680px);
-  height:min(calc(100vh - 110px),90vh);
+  height:min(calc(100vh - 78px),93vh);
   overflow:hidden;
   background:
     radial-gradient(circle at 50% 42%, rgba(58,78,104,0.52) 0%, rgba(26,33,45,0.88) 22%, rgba(10,13,19,0.97) 54%, #06070b 100%);
@@ -120,6 +74,15 @@ body{color:rgba(140,180,220,0.85);}
 }
 body.is-operator #ctrls{
   display:none;
+}
+body.is-operator #topbar{
+  display:none;
+}
+body.is-operator #app{
+  gap:0;
+}
+body.is-operator #vp{
+  height:min(calc(100vh - 20px),96vh);
 }
 .face-current-pill{
   display:inline-flex;
@@ -163,22 +126,11 @@ body.is-operator #ctrls{
   #topbar{
     width:100%;
     gap:8px;
-    justify-content:center;
-  }
-  #viewerTag{
-    width:100%;
-    min-height:38px;
-    padding:9px 12px 10px;
-    text-align:center;
-    align-items:center;
-  }
-  .viewer-tag-title{
-    font-size:11px;
-    line-height:1.15;
+    justify-content:flex-end;
   }
   #vp{
     width:100%;
-    height:min(calc(100vh - 138px),86vh);
+    height:min(calc(100vh - 112px),88vh);
   }
   #hint{
     font-size:7px;
@@ -206,15 +158,19 @@ body.is-operator #ctrls{
     font-size:9px;
     letter-spacing:1.2px;
   }
+  body.is-operator #app{
+    gap:0;
+    padding:8px;
+  }
+  body.is-operator #vp{
+    height:min(calc(100vh - 16px),96vh);
+  }
 }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="topbar">
-    <div id="viewerTag">
-      <span class="viewer-tag-title" id="viewerTagTitle">AB Reformer</span>
-    </div>
     <div id="ctrls">
       <div class="face-current-pill" id="faceCurrent">Face1 Front Outside</div>
       <button class="btn" id="btnFront">Front</button>
@@ -259,7 +215,6 @@ const chamberWalls = chamberParam === "cd" ? ["C", "D"] : ["A", "B"];
 const chamberZoneKey = chamberParam === "cd" ? "CD" : "AB";
 
 const app = document.getElementById("app");
-const viewerTagTitle = document.getElementById("viewerTagTitle");
 const faceCurrent = document.getElementById("faceCurrent");
 const hint = document.getElementById("hint");
 const ctrls = document.getElementById("ctrls");
@@ -292,7 +247,6 @@ const SHELL_FACE_KEYS = [
   { angle:Math.PI / 2, key:"face4" }
 ];
 
-if(viewerTagTitle) viewerTagTitle.textContent = chamberZoneKey + " Reformer";
 document.title = chamberZoneKey + " Reformer";
 
 let hostTabActive = true;
