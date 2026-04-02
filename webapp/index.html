@@ -11220,11 +11220,19 @@ body.light-theme #tab-jobsreformer{
   background:rgba(251,113,133,0.08);
   color:#ffd5dc;
 }
+#tab-jobsreformer .jobsdash-btn-muted{
+  border:1px solid rgba(148,163,184,0.18);
+  background:rgba(255,255,255,0.03);
+  color:var(--jobs-dim);
+}
 body.light-theme #tab-jobsreformer .jobsdash-btn-secondary{
   background:rgba(241,245,249,0.9);
 }
 body.light-theme #tab-jobsreformer .jobsdash-btn-danger{
   color:#b42335;
+}
+body.light-theme #tab-jobsreformer .jobsdash-btn-muted{
+  background:rgba(241,245,249,0.78);
 }
 #tab-jobsreformer .jobsdash-sync-bar{
   display:flex;
@@ -11356,6 +11364,31 @@ body.light-theme #tab-jobsreformer .jobsdash-btn-danger{
   display:flex;
   flex-direction:column;
   gap:14px;
+}
+#tab-jobsreformer .jobsdash-form-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+}
+#tab-jobsreformer .jobsdash-form-actions .jobsdash-btn-primary{
+  flex:1 1 180px;
+}
+#tab-jobsreformer .jobsdash-edit-chip{
+  display:none;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(126,200,240,0.18);
+  background:rgba(255,255,255,0.04);
+  color:var(--jobs-text);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.4px;
+}
+#tab-jobsreformer .jobsdash-edit-chip.is-active{
+  display:inline-flex;
 }
 #tab-jobsreformer .jobsdash-field label{
   display:block;
@@ -11554,6 +11587,7 @@ body.light-theme #tab-jobsreformer .jobsdash-textarea{
   gap:8px;
 }
 #tab-jobsreformer .jobsdash-status-btn,
+#tab-jobsreformer .jobsdash-edit-btn,
 #tab-jobsreformer .jobsdash-delete-btn{
   appearance:none;
   border-radius:999px;
@@ -11568,6 +11602,11 @@ body.light-theme #tab-jobsreformer .jobsdash-textarea{
   background:rgba(255,255,255,0.04);
   color:var(--jobs-text);
 }
+#tab-jobsreformer .jobsdash-edit-btn{
+  border:1px solid rgba(126,200,240,0.18);
+  background:rgba(126,200,240,0.08);
+  color:#d9f1ff;
+}
 #tab-jobsreformer .jobsdash-status-btn.is-pending{ color:#ffcf70; border-color:rgba(245,158,11,0.24); }
 #tab-jobsreformer .jobsdash-status-btn.is-progress{ color:#9bd7ff; border-color:rgba(96,165,250,0.24); }
 #tab-jobsreformer .jobsdash-status-btn.is-done{ color:#9df2b3; border-color:rgba(34,197,94,0.24); }
@@ -11575,6 +11614,9 @@ body.light-theme #tab-jobsreformer .jobsdash-textarea{
   border:1px solid rgba(251,113,133,0.16);
   background:rgba(251,113,133,0.07);
   color:#fecdd3;
+}
+body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
+  color:#1e4f74;
 }
 #tab-jobsreformer .jobsdash-empty{
   padding:68px 24px;
@@ -11656,8 +11698,14 @@ body.light-theme #tab-jobsreformer .jobsdash-textarea{
     align-items:stretch;
   }
   #tab-jobsreformer .jobsdash-status-btn,
+  #tab-jobsreformer .jobsdash-edit-btn,
   #tab-jobsreformer .jobsdash-delete-btn{
     width:100%;
+  }
+  #tab-jobsreformer .jobsdash-form-actions .jobsdash-btn-primary,
+  #tab-jobsreformer .jobsdash-form-actions .jobsdash-btn-muted{
+    width:100%;
+    flex:1 1 100%;
   }
 }
 </style>
@@ -21096,9 +21144,10 @@ body.light-theme #tab-jobsreformer .jobsdash-textarea{
         <section class="jobsdash-panel jobsdash-form-panel">
           <div class="jobsdash-panel-head">
             <div>
-              <div class="jobsdash-panel-title">Log New Job</div>
-              <div class="jobsdash-panel-sub">Create a new reformer activity or issue entry.</div>
+              <div id="jobsdash-form-title" class="jobsdash-panel-title">Log New Job</div>
+              <div id="jobsdash-form-sub" class="jobsdash-panel-sub">Create a new reformer activity or issue entry.</div>
             </div>
+            <div id="jobsdash-edit-chip" class="jobsdash-edit-chip">Editing selected job</div>
           </div>
 
           <div class="jobsdash-form">
@@ -21142,7 +21191,10 @@ body.light-theme #tab-jobsreformer .jobsdash-textarea{
               <input id="jobsdash-assigned" class="jobsdash-input" type="text" placeholder="e.g. Mechanical Team / Contractor">
             </div>
 
-            <button type="button" class="jobsdash-btn jobsdash-btn-primary" onclick="addJobsReformerJob()">Add Job</button>
+            <div class="jobsdash-form-actions">
+              <button id="jobsdash-submit-btn" type="button" class="jobsdash-btn jobsdash-btn-primary" onclick="addJobsReformerJob()">Add Job</button>
+              <button id="jobsdash-cancel-btn" type="button" class="jobsdash-btn jobsdash-btn-muted" onclick="cancelEditJobsReformer()" style="display:none;">Cancel Edit</button>
+            </div>
           </div>
         </section>
 
@@ -36276,6 +36328,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     eventsBound: false,
     onlineBound: false,
     jobs: [],
+    editingJobId: "",
     selectedType: "shutdown",
     selectedPri: "low",
     activeFilter: "all",
@@ -36639,6 +36692,34 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     });
   }
 
+  function getJobsReformerEditingJob(){
+    if(!jobsReformerState.editingJobId) return null;
+    return jobsReformerState.jobs.find(function(job){
+      return String(job.id) === String(jobsReformerState.editingJobId);
+    }) || null;
+  }
+
+  function renderJobsReformerFormState(){
+    var titleEl = getJobsReformerEl("jobsdash-form-title");
+    var subEl = getJobsReformerEl("jobsdash-form-sub");
+    var chipEl = getJobsReformerEl("jobsdash-edit-chip");
+    var submitEl = getJobsReformerEl("jobsdash-submit-btn");
+    var cancelEl = getJobsReformerEl("jobsdash-cancel-btn");
+    var editingJob = getJobsReformerEditingJob();
+    if(titleEl) titleEl.textContent = editingJob ? "Edit Job" : "Log New Job";
+    if(subEl){
+      subEl.textContent = editingJob
+        ? "Update the selected reformer job entry and save it back to the register."
+        : "Create a new reformer activity or issue entry.";
+    }
+    if(chipEl){
+      chipEl.classList.toggle("is-active", !!editingJob);
+      chipEl.textContent = editingJob ? ("Editing: " + String(editingJob.title || "Selected Job")) : "Editing selected job";
+    }
+    if(submitEl) submitEl.textContent = editingJob ? "Update Job" : "Add Job";
+    if(cancelEl) cancelEl.style.display = editingJob ? "inline-flex" : "none";
+  }
+
   function renderJobsReformerList(){
     var listEl = getJobsReformerEl("jobsdash-list");
     var searchEl = getJobsReformerEl("jobsdash-search");
@@ -36715,6 +36796,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
           '</div>',
           '<div class="jobsdash-card-actions">',
             '<button type="button" class="jobsdash-status-btn ' + (job.status === "in-progress" ? 'is-progress' : job.status === "done" ? 'is-done' : 'is-pending') + '" onclick="cycleJobsReformerStatus(' + JSON.stringify(String(job.id)) + ')">' + jobsReformerEscapeHtml(statusLabel) + '</button>',
+            '<button type="button" class="jobsdash-edit-btn" onclick="editJobsReformerJob(' + JSON.stringify(String(job.id)) + ')">Edit</button>',
             '<button type="button" class="jobsdash-delete-btn" onclick="deleteJobsReformerJob(' + JSON.stringify(String(job.id)) + ')">Delete</button>',
           '</div>',
         '</article>'
@@ -36724,6 +36806,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
 
   function renderJobsReformerFromState(){
     renderJobsReformerSelectors();
+    renderJobsReformerFormState();
     renderJobsReformerList();
     renderJobsReformerSyncMeta();
   }
@@ -36753,6 +36836,41 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     if(locationEl) locationEl.value = "";
     if(assignedEl) assignedEl.value = "";
     if(titleEl) titleEl.focus();
+  }
+
+  function cancelEditJobsReformer(){
+    jobsReformerState.editingJobId = "";
+    renderJobsReformerFormState();
+    jobsReformerResetForm();
+  }
+
+  function editJobsReformerJob(id){
+    var job = jobsReformerState.jobs.find(function(item){
+      return String(item.id) === String(id);
+    });
+    var titleEl = getJobsReformerEl("jobsdash-title");
+    var descEl = getJobsReformerEl("jobsdash-desc");
+    var locationEl = getJobsReformerEl("jobsdash-location");
+    var assignedEl = getJobsReformerEl("jobsdash-assigned");
+    if(!job) return;
+    jobsReformerState.editingJobId = String(job.id);
+    jobsReformerState.selectedType = jobsReformerNormalizeType(job.type);
+    jobsReformerState.selectedPri = jobsReformerNormalizePriority(job.priority);
+    if(titleEl) titleEl.value = String(job.title || "");
+    if(descEl) descEl.value = String(job.desc || "");
+    if(locationEl) locationEl.value = String(job.location || "");
+    if(assignedEl) assignedEl.value = String(job.assigned || "");
+    renderJobsReformerFromState();
+    if(titleEl){
+      titleEl.focus();
+      try{
+        titleEl.setSelectionRange(titleEl.value.length, titleEl.value.length);
+      }catch(e){}
+    }
+    var formPanel = document.querySelector("#tab-jobsreformer .jobsdash-form-panel");
+    if(formPanel && typeof formPanel.scrollIntoView === "function"){
+      formPanel.scrollIntoView({ block:"start", behavior:"smooth" });
+    }
   }
 
   function jobsReformerPersistLocal(queueExport){
@@ -36946,6 +37064,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
         return false;
       }
       jobsReformerState.jobs = parsed.jobs;
+      jobsReformerState.editingJobId = "";
       jobsReformerState.lastLocalSavedAt = parsed.saved_at || row.created_at || new Date().toISOString();
       jobsReformerState.lastServerSyncAt = row.created_at || new Date().toISOString();
       saveJobsReformerLocalState();
@@ -37007,25 +37126,40 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     var locationEl = getJobsReformerEl("jobsdash-location");
     var assignedEl = getJobsReformerEl("jobsdash-assigned");
     var title = titleEl ? String(titleEl.value || "").trim() : "";
+    var editingJob = getJobsReformerEditingJob();
     if(!title){
       if(titleEl) titleEl.focus();
       if(typeof showToast === "function") showToast("⚠ Enter a job title first.");
       return;
     }
-    jobsReformerState.jobs.unshift({
-      id: jobsReformerGenerateId(),
-      title: title,
-      desc: descEl ? String(descEl.value || "").trim() : "",
-      type: jobsReformerState.selectedType,
-      priority: jobsReformerState.selectedPri,
-      location: locationEl ? String(locationEl.value || "").trim() : "",
-      assigned: assignedEl ? String(assignedEl.value || "").trim() : "",
-      status: "pending",
-      created: new Date().toISOString(),
-      updated: new Date().toISOString()
-    });
+    if(editingJob){
+      editingJob.title = title;
+      editingJob.desc = descEl ? String(descEl.value || "").trim() : "";
+      editingJob.type = jobsReformerState.selectedType;
+      editingJob.priority = jobsReformerState.selectedPri;
+      editingJob.location = locationEl ? String(locationEl.value || "").trim() : "";
+      editingJob.assigned = assignedEl ? String(assignedEl.value || "").trim() : "";
+      editingJob.updated = new Date().toISOString();
+      jobsReformerState.editingJobId = "";
+    }else{
+      jobsReformerState.jobs.unshift({
+        id: jobsReformerGenerateId(),
+        title: title,
+        desc: descEl ? String(descEl.value || "").trim() : "",
+        type: jobsReformerState.selectedType,
+        priority: jobsReformerState.selectedPri,
+        location: locationEl ? String(locationEl.value || "").trim() : "",
+        assigned: assignedEl ? String(assignedEl.value || "").trim() : "",
+        status: "pending",
+        created: new Date().toISOString(),
+        updated: new Date().toISOString()
+      });
+    }
     jobsReformerPersistLocal(true);
     jobsReformerResetForm();
+    if(editingJob && typeof showToast === "function"){
+      showToast("✅ Jobs Reformer entry updated.");
+    }
   }
 
   function cycleJobsReformerStatus(id){
@@ -37039,6 +37173,10 @@ window.updateReformerDashComposition = updateReformerDashComposition;
 
   function deleteJobsReformerJob(id){
     var before = jobsReformerState.jobs.length;
+    if(String(jobsReformerState.editingJobId) === String(id)){
+      jobsReformerState.editingJobId = "";
+      jobsReformerResetForm();
+    }
     jobsReformerState.jobs = jobsReformerState.jobs.filter(function(job){
       return job.id !== id;
     });
@@ -37048,9 +37186,14 @@ window.updateReformerDashComposition = updateReformerDashComposition;
 
   function clearDoneJobsReformer(){
     var before = jobsReformerState.jobs.length;
+    var editingJob = getJobsReformerEditingJob();
     jobsReformerState.jobs = jobsReformerState.jobs.filter(function(job){
       return job.status !== "done";
     });
+    if(editingJob && editingJob.status === "done"){
+      jobsReformerState.editingJobId = "";
+      jobsReformerResetForm();
+    }
     if(jobsReformerState.jobs.length === before){
       if(typeof showToast === "function") showToast("ℹ No completed jobs to clear.");
       return;
@@ -37150,6 +37293,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     var stored = loadJobsReformerLocalState() || {};
     var snapshot = loadJobsReformerSnapshot();
     jobsReformerState.jobs = jobsReformerNormalizeJobs(stored.jobs);
+    jobsReformerState.editingJobId = "";
     jobsReformerState.selectedType = jobsReformerNormalizeType(stored.selectedType || "shutdown");
     jobsReformerState.selectedPri = jobsReformerNormalizePriority(stored.selectedPri || "low");
     jobsReformerState.activeFilter = String(stored.activeFilter || "all").toLowerCase();
@@ -37204,6 +37348,8 @@ window.updateReformerDashComposition = updateReformerDashComposition;
   window.importJobsReformerFromServer = importJobsReformerFromServer;
   window.exportJobsReformerToServer = exportJobsReformerToServer;
   window.addJobsReformerJob = addJobsReformerJob;
+  window.editJobsReformerJob = editJobsReformerJob;
+  window.cancelEditJobsReformer = cancelEditJobsReformer;
   window.cycleJobsReformerStatus = cycleJobsReformerStatus;
   window.deleteJobsReformerJob = deleteJobsReformerJob;
   window.clearDoneJobsReformer = clearDoneJobsReformer;
