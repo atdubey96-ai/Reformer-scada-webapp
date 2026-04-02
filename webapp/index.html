@@ -32,6 +32,32 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="./icon-192.svg">
+<link rel="stylesheet" href="./mobile-v2.css">
+<style id="mobile-v2-boot-style">
+@media (max-width:900px){
+  body[data-mobile-v2-boot="1"] .app-topbar,
+  body[data-mobile-v2-boot="1"] .app-header,
+  body[data-mobile-v2-boot="1"] .tab-panels,
+  body[data-mobile-v2-boot="1"] .bottom-tab-bar,
+  body[data-mobile-v2-boot="1"] .scada-app-footer,
+  body[data-mobile-v2-boot="1"] #masterAlarm,
+  body[data-mobile-v2="1"]:not([data-mobile-legacy="1"]) .app-topbar,
+  body[data-mobile-v2="1"]:not([data-mobile-legacy="1"]) .app-header,
+  body[data-mobile-v2="1"]:not([data-mobile-legacy="1"]) .tab-panels,
+  body[data-mobile-v2="1"]:not([data-mobile-legacy="1"]) .bottom-tab-bar,
+  body[data-mobile-v2="1"]:not([data-mobile-legacy="1"]) .scada-app-footer,
+  body[data-mobile-v2="1"]:not([data-mobile-legacy="1"]) #masterAlarm{
+    display:none !important;
+  }
+
+  body[data-mobile-v2-boot="1"] #mobile-v2-root,
+  body[data-mobile-v2="1"]:not([data-mobile-legacy="1"]) #mobile-v2-root{
+    display:block;
+    position:relative;
+    z-index:30;
+  }
+}
+</style>
 
 <!-- AUTO-PURGE: Nuke stale all-capped burner data from localStorage BEFORE anything loads -->
 <script>
@@ -35135,7 +35161,6 @@ body.light-theme .btab-alarm-count{
   window.updateReformerDashComposition = updateReformerDashComposition;
 })();
 </script>
-<link rel="stylesheet" href="./mobile-v2.css">
 <script src="./mobile-v2.js"></script>
 </body>
 </html>

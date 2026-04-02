@@ -1124,6 +1124,10 @@
     background:linear-gradient(180deg,rgba(17,26,40,0.98) 0%,rgba(10,16,27,1) 100%);
     box-shadow:0 -20px 40px rgba(0,0,0,0.28);
     padding:14px 16px calc(24px + env(safe-area-inset-bottom));
+    max-height:calc(100svh - 10px);
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
   }
 
   body.light-theme #mobile-v2-root .m2-sheet-panel{
@@ -1195,8 +1199,8 @@
   }
 
   #mobile-v2-root .m2-list-actions{
-    display:flex;
-    flex-wrap:wrap;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
     gap:8px;
     margin-top:12px;
   }
@@ -1212,6 +1216,11 @@
     font-family:"Rajdhani",sans-serif;
     font-size:12px;
     font-weight:800;
+    line-height:1.1;
+    text-align:center;
+    white-space:normal;
+    min-width:0;
+    width:100%;
   }
 
   #mobile-v2-root .m2-inline-btn.is-primary{
@@ -1437,9 +1446,33 @@
       grid-template-columns:minmax(0,1fr);
     }
 
+    #mobile-v2-root .m2-sheet-actions,
+    #mobile-v2-root .m2-list-actions{
+      grid-template-columns:minmax(0,1fr);
+    }
+
+    #mobile-v2-root .m2-sheet-panel{
+      padding-left:14px;
+      padding-right:14px;
+    }
+
+    #mobile-v2-root .m2-peep-row,
+    #mobile-v2-root .m2-peep-readonly{
+      padding:10px;
+      border-radius:18px;
+    }
+
     #mobile-v2-root .m2-peep-values,
     #mobile-v2-root .m2-row-values{
       grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:6px;
+    }
+
+    #mobile-v2-root .m2-peep-input,
+    #mobile-v2-root .m2-row-value{
+      min-height:38px;
+      padding:0 6px;
+      font-size:12px;
     }
   }
 }
