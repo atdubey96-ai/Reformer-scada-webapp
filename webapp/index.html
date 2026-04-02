@@ -5409,35 +5409,6 @@ body.light-theme #tab-cuboidstack .cuboid-twin-control-banner.is-empty{
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-openings{
   max-width:none;
 }
-#tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-band{
-  display:grid;
-  grid-template-columns:minmax(158px,0.72fr) minmax(0,1fr);
-  gap:8px;
-  align-items:stretch;
-  min-width:0;
-}
-#tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-reformer{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-width:0;
-  min-height:44px;
-  padding:0 16px;
-  border-radius:18px;
-  border:1px solid rgba(78,124,223,0.48);
-  background:linear-gradient(135deg,rgba(43,58,108,0.94),rgba(21,28,45,0.98));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.16);
-  color:#edf4ff;
-  font-size:10px;
-  font-weight:800;
-  letter-spacing:0.14em;
-  line-height:1;
-  text-transform:uppercase;
-  text-align:center;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-title{
   margin-bottom:5px;
   font-size:7px;
@@ -20226,37 +20197,34 @@ body.light-theme .scada-source-btn.is-active{
           <div class="cuboid-legend-scroll">
             <section class="cuboid-legend-block cuboid-legend-states">
               <div class="cuboid-legend-title">Burner State Legend</div>
-              <div class="cuboid-legend-state-band">
-                <div class="cuboid-legend-state-reformer">AB Reformer</div>
-                <div class="cuboid-legend-state-row">
-                  <div class="cuboid-legend-state-card" data-state="B">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Both</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
+              <div class="cuboid-legend-state-row">
+                <div class="cuboid-legend-state-card" data-state="B">
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Both</div>
                   </div>
-                  <div class="cuboid-legend-state-card" data-state="C">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Cold</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="C">
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Cold</div>
                   </div>
-                  <div class="cuboid-legend-state-card" data-state="O">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Off Gas</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="O">
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Off Gas</div>
                   </div>
-                  <div class="cuboid-legend-state-card" data-state="N">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">NG Only</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-n">0</div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="N">
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">NG Only</div>
                   </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-n">0</div>
                 </div>
               </div>
             </section>
@@ -20342,37 +20310,34 @@ body.light-theme .scada-source-btn.is-active{
           <div class="cuboid-legend-scroll">
             <section class="cuboid-legend-block cuboid-legend-states">
               <div class="cuboid-legend-title">Burner State Legend</div>
-              <div class="cuboid-legend-state-band">
-                <div class="cuboid-legend-state-reformer">CD Reformer</div>
-                <div class="cuboid-legend-state-row">
-                  <div class="cuboid-legend-state-card" data-state="B">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Both</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
+              <div class="cuboid-legend-state-row">
+                <div class="cuboid-legend-state-card" data-state="B">
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Both</div>
                   </div>
-                  <div class="cuboid-legend-state-card" data-state="C">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Cold</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="C">
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Cold</div>
                   </div>
-                  <div class="cuboid-legend-state-card" data-state="O">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Off Gas</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="O">
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">Off Gas</div>
                   </div>
-                  <div class="cuboid-legend-state-card" data-state="N">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">NG Only</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-n">0</div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
+                </div>
+                <div class="cuboid-legend-state-card" data-state="N">
+                  <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
+                  <div class="cuboid-legend-state-copy">
+                    <div class="cuboid-legend-state-name">NG Only</div>
                   </div>
+                  <div class="cuboid-legend-state-count" data-legend-value="count-n">0</div>
                 </div>
               </div>
             </section>
@@ -35497,14 +35462,6 @@ body.light-theme .btab-alarm-count{
   #tab-cuboidstack .cuboid-legend-scroll{
     grid-template-columns:1fr !important;
     gap:10px !important;
-  }
-  #tab-cuboidstack .cuboid-legend-state-band{
-    grid-template-columns:1fr !important;
-    gap:8px !important;
-  }
-  #tab-cuboidstack .cuboid-legend-state-reformer{
-    min-height:44px !important;
-    width:100% !important;
   }
   #tab-cuboidstack .cuboid-legend-state-row,
   #tab-cuboidstack .cuboid-legend-opening-row{
