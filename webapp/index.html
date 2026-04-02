@@ -19334,10 +19334,10 @@ body.light-theme .scada-source-btn.is-active{
             <span id="cleaningUnsavedBadge" class="cl-unsaved-badge" style="display:none;">
               ⚠ Unsaved Changes — click <b>SAVE CLEANING DATA</b> to confirm
             </span>
-            <button class="hd-btn hd-btn-secondary" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ HISTORICAL DATA</button>
+            <button class="hd-btn hd-btn-secondary" data-admin-only="true" onclick="openBurnerDateEditModal()" style="padding:8px 14px;font-size:13px;border-radius:6px;" title="Select a burner and edit all cleaning dates">✏️ HISTORICAL DATA</button>
             <div style="position:relative;display:inline-block;" id="cleaningClearWrap" data-cleaning-clear-wrap="1">
               <button class="cleaning-clear-btn" onclick="toggleCleaningClearMenu(event)" id="cleaningClearMenuBtn" title="Delete burner cleaning data">🗑 CLEAR DATA ▾</button>
-              <div id="cleaningClearMenu" style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.7);z-index:500;overflow:hidden;padding:6px 0;">
+              <div id="cleaningClearMenu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);bottom:auto;background:#0f1f38;border:1px solid #1e3a5e;border-radius:10px;min-width:230px;max-height:min(70vh,420px);box-shadow:0 8px 32px rgba(0,0,0,0.7);z-index:500;overflow:auto;padding:6px 0;">
                 <div style="padding:8px 14px 6px;font-size:10px;font-weight:700;color:#7ec8f0;letter-spacing:1px;border-bottom:1px solid #1e3a5e;margin-bottom:4px;">DELETE CLEANING DATA</div>
                 <button class="cl-menu-item" onclick="openClearByWall()">🧱 Clear by Wall</button>
                 <button class="cl-menu-item" onclick="openClearByRow()">📋 Clear by Row</button>
@@ -24739,8 +24739,29 @@ function toggleCleaningClearMenuById(e, menuId){
   ["cleaningClearMenu","hm-cleaningClearMenu"].forEach(function(id){
     var menu = document.getElementById(id);
     if(!menu) return;
-    menu.style.display = (id === targetId && menu.style.display !== "block") ? "block" : "none";
+    var shouldOpen = (id === targetId && menu.style.display !== "block");
+    menu.style.display = shouldOpen ? "block" : "none";
+    if(shouldOpen) positionCleaningClearMenu(menu);
   });
+}
+function positionCleaningClearMenu(menu){
+  if(!menu) return;
+  menu.style.top = "calc(100% + 6px)";
+  menu.style.bottom = "auto";
+
+  var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  var wrap = menu.parentElement;
+  var anchorRect = wrap ? wrap.getBoundingClientRect() : menu.getBoundingClientRect();
+  var menuRect = menu.getBoundingClientRect();
+  var gap = 12;
+  var menuHeight = menuRect.height || menu.offsetHeight || 0;
+  var spaceBelow = viewportHeight - anchorRect.bottom - gap;
+  var spaceAbove = anchorRect.top - gap;
+
+  if(menuHeight > spaceBelow && spaceAbove > spaceBelow){
+    menu.style.top = "auto";
+    menu.style.bottom = "calc(100% + 6px)";
+  }
 }
 function closeCleaningClearMenu(){
   ["cleaningClearMenu","hm-cleaningClearMenu"].forEach(function(id){
