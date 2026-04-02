@@ -1897,9 +1897,10 @@ function makeNozzleFireIconTex(width, height, paletteInput, openingValue) {
   const innerAlpha = [0.00, 0.00, 0.12, 0.58, 0.96][tier];
   const emberAlpha = [0.00, 0.06, 0.18, 0.52, 0.92][tier];
   const hotSpotAlpha = [0.00, 0.04, 0.12, 0.26, 0.56][tier];
+  const verticalBias = [0.00, 0.00, 0.00, 0.00, 0.03][tier];
 
   if(outerScale > 0){
-    const outerBy = h * (0.80 + ((1 - outerScale) * 0.14));
+    const outerBy = h * ((0.80 + ((1 - outerScale) * 0.14)) + verticalBias);
     const outerGrad = g.createLinearGradient(0, outerBy - h * (0.72 * outerScale), 0, outerBy + h * (0.10 * outerScale));
     outerGrad.addColorStop(0.00, outerHot);
     outerGrad.addColorStop(0.24, outerMid);
@@ -1919,7 +1920,7 @@ function makeNozzleFireIconTex(width, height, paletteInput, openingValue) {
   }
 
   if(midScale > 0){
-    const midBy = h * (0.83 + ((1 - midScale) * 0.08));
+    const midBy = h * ((0.83 + ((1 - midScale) * 0.08)) + verticalBias);
     const midGrad = g.createLinearGradient(0, midBy - h * (0.60 * midScale), 0, midBy + h * (0.10 * midScale));
     midGrad.addColorStop(0.00, midHot);
     midGrad.addColorStop(0.32, palette.core);
@@ -1936,7 +1937,7 @@ function makeNozzleFireIconTex(width, height, paletteInput, openingValue) {
   }
 
   if(innerScale > 0){
-    const innerBy = h * (0.86 + ((1 - innerScale) * 0.05));
+    const innerBy = h * ((0.86 + ((1 - innerScale) * 0.05)) + verticalBias);
     const coreGrad = g.createLinearGradient(0, innerBy - h * (0.52 * innerScale), 0, innerBy + h * (0.08 * innerScale));
     coreGrad.addColorStop(0.00, "#fffef8");
     coreGrad.addColorStop(0.38, palette.inner);
@@ -1956,7 +1957,7 @@ function makeNozzleFireIconTex(width, height, paletteInput, openingValue) {
     g.globalAlpha = hotSpotAlpha;
     g.fillStyle = cuboidColorToRgba(palette.inner, 0.95);
     g.beginPath();
-    g.ellipse(w * 0.50, h * 0.67, w * 0.028, h * 0.050, 0, 0, Math.PI * 2);
+    g.ellipse(w * 0.50, h * (0.67 + verticalBias), w * 0.028, h * 0.050, 0, 0, Math.PI * 2);
     g.fill();
     g.restore();
   }
@@ -1990,7 +1991,8 @@ function makeNozzleFireGlowTex(size, paletteInput, openingValue) {
   const midAlpha = [0.00, 0.18, 0.34, 0.56, 0.76][tier];
   const outerAlpha = [0.00, 0.10, 0.16, 0.24, 0.32][tier];
   const outerRadius = size * ([0.16, 0.26, 0.34, 0.42, 0.48][tier]);
-  const grad = g.createRadialGradient(size * 0.5, size * 0.68, size * 0.04, size * 0.5, size * 0.68, outerRadius);
+  const verticalBias = size * ([0.00, 0.00, 0.00, 0.00, 0.03][tier]);
+  const grad = g.createRadialGradient(size * 0.5, size * 0.68 + verticalBias, size * 0.04, size * 0.5, size * 0.68 + verticalBias, outerRadius);
   grad.addColorStop(0.00, cuboidColorToRgba(palette.inner, innerAlpha));
   grad.addColorStop(0.28, cuboidColorToRgba(palette.core, midAlpha));
   grad.addColorStop(0.62, cuboidColorToRgba(palette.flame, outerAlpha));
