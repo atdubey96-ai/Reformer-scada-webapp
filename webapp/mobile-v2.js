@@ -128,6 +128,42 @@
     return isMobileViewport() && isLoggedIn();
   }
 
+  function getNotificationToolState(){
+    var supported = typeof window !== "undefined" && "Notification" in window;
+    var permission = supported && window.Notification ? String(window.Notification.permission || "default") : "unsupported";
+    var enabled = supported && !!window.notificationsEnabled;
+    if(!supported){
+      return {
+        enabled: false,
+        disabled: true,
+        icon: "&#128277;",
+        label: "Notifications unavailable"
+      };
+    }
+    if(permission === "denied"){
+      return {
+        enabled: false,
+        disabled: false,
+        icon: "&#128277;",
+        label: "Notifications blocked"
+      };
+    }
+    if(enabled){
+      return {
+        enabled: true,
+        disabled: false,
+        icon: "&#128276;",
+        label: "Notifications on"
+      };
+    }
+    return {
+      enabled: false,
+      disabled: false,
+      icon: "&#128277;",
+      label: "Notifications off"
+    };
+  }
+
   function mapDesktopTabToMobileTab(tab){
     var key = String(tab || "").toLowerCase();
     if(key === "cleaning") return "cleaning";
@@ -1710,6 +1746,7 @@
     if(state.sheetKind === "tools"){
       var isLight = document.body && document.body.classList.contains("light-theme");
       var showInstallAction = !isStandaloneInstalled();
+      var notificationState = getNotificationToolState();
     return ''
       + '<div class="m2-sheet is-open">'
       +   '<div class="m2-sheet-backdrop" data-action="sheet-close"></div>'
@@ -1719,6 +1756,7 @@
       +     '<div class="m2-sheet-copy">Live mobile controls.</div>'
         +     '<div class="m2-tools-grid">'
         +       '<button class="m2-tool-btn" type="button" data-action="refresh-shell">Refresh live data</button>'
+        +       '<button class="m2-tool-btn' + (notificationState.enabled ? ' is-active' : '') + '" type="button" data-action="toggle-notifications"' + (notificationState.disabled ? ' disabled' : '') + '>' + notificationState.icon + ' ' + escapeHtml(notificationState.label) + '</button>'
         +       (showInstallAction ? '<button class="m2-tool-btn" type="button" data-action="install-app">Install app</button>' : '')
         +       '<button class="m2-tool-btn" type="button" data-action="toggle-theme">' + (isLight ? "Switch to dark mode" : "Switch to light mode") + '</button>'
         +       '<button class="m2-tool-btn" type="button" data-action="open-tst-new">New TST entry</button>'
@@ -2038,6 +2076,14 @@
           ? window.scadaGetInstallFallbackMessage(getInstallPlatform())
           : "Install prompt not available yet. Open the browser menu and choose Install app or Add to Home screen.";
         if(typeof window.alert === "function") window.alert(fallback);
+        scheduleRender();
+      }
+      return;
+    }
+    if(action === "toggle-notifications"){
+      if(typeof window.toggleNotifications === "function"){
+        Promise.resolve(window.toggleNotifications()).finally(scheduleRender);
+      }else{
         scheduleRender();
       }
       return;
