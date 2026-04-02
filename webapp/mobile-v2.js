@@ -956,7 +956,6 @@
   }
 
   function buildHomePaneHtml(){
-    var health = computeHealthScore();
     var sync = getLastSyncCopy();
     var alarms = getActiveAlarms();
     var chamberAB = buildChamberSummary("AB Chamber", ["A", "B"]);
@@ -970,19 +969,16 @@
       + (alarms.length
         ? buildBannerHtml(alarms.length + " issue" + (alarms.length > 1 ? "s" : "") + " need review", "Highest severity alarm: " + getAlarmTitle(alarms[0]), getAlarmTone(alarms[0]))
         : buildBannerHtml("Plant status looks stable", "No active alarms at the moment.", "good"))
-      + '<section class="m2-hero">'
-      +   '<div class="m2-eyebrow">Plant health</div>'
-      +   '<div class="m2-hero-row">'
-      +     '<div>'
-      +       '<div class="m2-hero-score">' + health + '%</div>'
-      +       '<div class="m2-hero-copy">' + escapeHtml(health >= 85 ? "Stable operating picture" : health >= 70 ? "Stable with focused attention" : "Needs leadership review") + '</div>'
-      +     '</div>'
-      +     '<div class="m2-live-stack">'
-      +       '<div class="m2-live-pill">' + escapeHtml(sync.syncStatus || "Live") + '</div>'
-      +       '<div class="m2-live-meta">Last sync<div class="m2-live-time">' + escapeHtml(sync.lastSync || "—") + '</div></div>'
-      +     '</div>'
+      + '<section class="m2-card"><div class="m2-card-pad">'
+      +   '<div class="m2-card-title">Live summary</div>'
+      +   '<div class="m2-card-copy">' + escapeHtml((sync.syncStatus || "Live") + " feed · Last sync " + (sync.lastSync || "—")) + '</div>'
+      +   '<div class="m2-chip-row" style="margin-top:14px;">'
+      +     buildChipHtml("Active alarms", alarms.length)
+      +     buildChipHtml("Sync", sync.syncStatus || "Live")
+      +     buildChipHtml("TST points", filledPoints || "—")
+      +     buildChipHtml("Cleaned", getCleaningStats().cleaned)
       +   '</div>'
-      + '</section>'
+      + '</div></section>'
       + '<section class="m2-grid-2">'
       +   buildChamberCardHtml(chamberAB)
       +   buildChamberCardHtml(chamberCD)
@@ -997,13 +993,8 @@
           ])
       + '</div></section>'
       + '<section class="m2-card"><div class="m2-card-pad">'
-      +   '<div class="m2-card-title">Quick KPIs</div>'
-      +   '<div class="m2-chip-row" style="margin-top:14px;">'
-      +     buildChipHtml("Active alarms", alarms.length)
-      +     buildChipHtml("TST points", filledPoints || "—")
-      +     buildChipHtml("Cleaned", getCleaningStats().cleaned)
-      +     buildChipHtml("Wall focus", state.wall)
-      +   '</div>'
+      +   '<div class="m2-card-title">Focus wall</div>'
+      +   '<div class="m2-card-copy">Selected wall for quick actions and drilldown: ' + escapeHtml(state.wall) + '</div>'
       + '</div></section>'
       + '<section class="m2-card"><div class="m2-card-pad">'
       +   '<div class="m2-card-title">Focus Now</div>'
