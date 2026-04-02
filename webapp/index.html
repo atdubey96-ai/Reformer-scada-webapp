@@ -34,6 +34,12 @@
 <link rel="icon" type="image/svg+xml" href="./icon-192.svg">
 <link rel="stylesheet" href="./mobile-v2.css">
 <style id="mobile-v2-boot-style">
+html[data-scada-auth-boot="1"] #loginScreen{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
 @media (max-width:900px){
   body[data-mobile-v2-boot="1"] .app-topbar,
   body[data-mobile-v2-boot="1"] .app-header,
@@ -58,6 +64,18 @@
   }
 }
 </style>
+<script>
+(function(){
+  try{
+    var logged = false;
+    try{
+      logged = localStorage.getItem("scadaLoggedIn") === "true" || sessionStorage.getItem("scadaLoggedIn") === "true";
+    }catch(e){}
+    if(!logged) return;
+    document.documentElement.setAttribute("data-scada-auth-boot", "1");
+  }catch(e){}
+})();
+</script>
 
 <!-- AUTO-PURGE: Nuke stale all-capped burner data from localStorage BEFORE anything loads -->
 <script>
@@ -8281,12 +8299,16 @@ function clearLoginState(){
   try{ localStorage.removeItem("scadaEmpId"); }catch(e){}
   try{ sessionStorage.removeItem("scadaLoggedIn"); }catch(e){}
   try{ sessionStorage.removeItem("scadaEmpId"); }catch(e){}
+  try{ sessionStorage.removeItem("scadaSwControllerReloaded"); }catch(e){}
   try{
     if(document.body){
       document.body.removeAttribute("data-mobile-v2-boot");
       document.body.removeAttribute("data-mobile-v2");
       document.body.removeAttribute("data-mobile-legacy");
     }
+  }catch(e){}
+  try{
+    document.documentElement.removeAttribute("data-scada-auth-boot");
   }catch(e){}
 }
 
@@ -29132,13 +29154,13 @@ function bootLoggedSessionAfterRefresh(){
   });
 }
 if(isUserLoggedIn()){
-  setTimeout(bootLoggedSessionAfterRefresh, 0);
+  bootLoggedSessionAfterRefresh();
 }
 window.addEventListener("load", function(){
   setTimeout(ensureStartupServerSyncRecovery, 1500);
 });
 window.addEventListener("pageshow", function(){
-  setTimeout(bootLoggedSessionAfterRefresh, 120);
+  setTimeout(bootLoggedSessionAfterRefresh, 0);
   setTimeout(ensureStartupServerSyncRecovery, 600);
 });
 
@@ -33877,8 +33899,17 @@ function tempToColorInline(val, minT, maxT){
       }).catch(function(){});
     });
     navigator.serviceWorker.addEventListener("controllerchange", function(){
-      if(window.__scadaSwReloaded) return;
-      window.__scadaSwReloaded = true;
+      if(window.__scadaSwControllerHandled) return;
+      window.__scadaSwControllerHandled = true;
+      try{
+        if(localStorage.getItem("scadaLoggedIn") === "true" || sessionStorage.getItem("scadaLoggedIn") === "true"){
+          return;
+        }
+      }catch(e){}
+      try{
+        if(sessionStorage.getItem("scadaSwControllerReloaded") === "1") return;
+        sessionStorage.setItem("scadaSwControllerReloaded", "1");
+      }catch(e){}
       window.location.reload();
     });
   }
