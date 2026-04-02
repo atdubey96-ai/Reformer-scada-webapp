@@ -41,6 +41,13 @@
       accessor: function(point){ return point ? point.methaneSlip : null; }
     }
   };
+  var TST_ROW_KEYS = ["ab-bot", "cd-bot", "ab-top", "cd-top"];
+  var TST_ROW_LABELS = {
+    "ab-bot": "AB Bot",
+    "cd-bot": "CD Bot",
+    "ab-top": "AB Top",
+    "cd-top": "CD Top"
+  };
   var state = {
     activeTab: readStored("active-tab", "home"),
     wall: readStored("wall", "A"),
@@ -48,15 +55,12 @@
     alarmFilter: readStored("alarm-filter", "all"),
     sheetKind: "",
     sheetPayload: null,
-    legacyMode: false,
     selectedCellKey: ""
   };
   var root = null;
   var renderTimer = 0;
-  var refreshInterval = 0;
-  var hooksInstalled = false;
-  var primedAnalysis = false;
   var lastTrendRequestAt = 0;
+  var lastAlarmRefreshAt = 0;
 
   function readStored(key, fallback){
     try{
@@ -252,6 +256,208 @@
     return getTempEntries()[0] || null;
   }
 
+  function getTempEntryRecords(){
+    var list = [];
+    if(Array.isArray(window.tempDataEntries) && window.tempDataEntries.length){
+      list = window.tempDataEntries.map(function(entry, index){
+        return { entry: entry, originalIndex: index };
+      });
+    }else if(typeof window.getAllTempEntries === "function"){
+      try{
+        list = window.getAllTempEntries().map(function(entry, index){
+          return { entry: entry, originalIndex: index };
+        });
+      }catch(e){
+        list = [];
+      }
+    }
+    list.sort(function(a, b){
+      var ta = parseDateSafe(a && a.entry && (a.entry.dt || a.entry.date || a.entry.createdAt || a.entry.created_at));
+      var tb = parseDateSafe(b && b.entry && (b.entry.dt || b.entry.date || b.entry.createdAt || b.entry.created_at));
+      return (tb ? tb.getTime() : 0) - (ta ? ta.getTime() : 0);
+    });
+    return list;
+  }
+
+  function getProcessBindings(){
+    return Array.isArray(window.TD_PROCESS_FIELD_BINDINGS) ? window.TD_PROCESS_FIELD_BINDINGS.slice() : [];
+  }
+
+  function getCurrentDateTimeLocalValue(){
+    var now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  }
+
+  function toDateTimeLocalValue(value){
+    var dt = parseDateSafe(value);
+    if(!dt) return getCurrentDateTimeLocalValue();
+    var local = new Date(dt.getTime() - (dt.getTimezoneOffset() * 60000));
+    return local.toISOString().slice(0, 16);
+  }
+
+  function createEmptyPeepHoles(){
+    var peepHoles = {};
+    TST_ROW_KEYS.forEach(function(key){
+      peepHoles[key] = Array(15).fill("");
+    });
+    return peepHoles;
+  }
+
+  function buildTstDraft(entry){
+    var draft = {
+      dt: toDateTimeLocalValue(entry && entry.dt),
+      shift: entry && entry.shift ? String(entry.shift) : "",
+      peepHoles: createEmptyPeepHoles(),
+      processValues: {}
+    };
+    getProcessBindings().forEach(function(binding){
+      var raw = entry && typeof window.getTdProcessEntryValue === "function"
+        ? window.getTdProcessEntryValue(entry, binding.key)
+        : (entry ? entry[binding.key] : "");
+      draft.processValues[binding.key] = typeof window.formatTdProcessFieldValue === "function"
+        ? window.formatTdProcessFieldValue(binding, raw)
+        : String(raw == null ? "" : raw);
+    });
+    TST_ROW_KEYS.forEach(function(rowKey){
+      var values = entry && entry.peepHoles && Array.isArray(entry.peepHoles[rowKey]) ? entry.peepHoles[rowKey] : [];
+      for(var i = 0; i < 15; i++){
+        draft.peepHoles[rowKey][i] = values[i] == null ? "" : String(values[i]);
+      }
+    });
+    return draft;
+  }
+
+  function getCleaningKey(ri, ci){
+    return "R" + (ri + 1) + "B" + (ci + 1);
+  }
+
+  function getCleaningDateForCell(wall, ri, ci){
+    var log = getCleaningLog();
+    var key = getCleaningKey(ri, ci);
+    return log[wall] && log[wall][key] ? String(log[wall][key]) : "";
+  }
+
+  function ensureAlarmDataFresh(force){
+    var now = Date.now();
+    if(!force && (now - lastAlarmRefreshAt) < 5000) return;
+    lastAlarmRefreshAt = now;
+    try{
+      if(typeof window.rebuildWallAlarms === "function") window.rebuildWallAlarms();
+      if(typeof window.rebuildFreqAlarms === "function") window.rebuildFreqAlarms();
+      if(typeof window.updateAlarmTabBadge === "function") window.updateAlarmTabBadge();
+    }catch(e){}
+  }
+
+  function saveBurnerCellNative(wall, ri, ci, nextState, nextOpening){
+    if(typeof window.stageBurnerCellChange === "function"){
+      window.stageBurnerCellChange(wall, ri, ci, {
+        state: nextState,
+        opening: nextOpening
+      });
+      if(typeof window.commitBurnerPending === "function"){
+        window.commitBurnerPending();
+      }
+    }else{
+      if(window.data && window.data[wall] && window.data[wall][ri]){
+        window.data[wall][ri][ci] = nextState;
+      }
+      if(typeof window.setBurnerOpeningValue === "function"){
+        window.setBurnerOpeningValue(wall, ri, ci, nextOpening, nextState);
+      }
+      if(typeof window.saveData === "function") window.saveData();
+      if(typeof window.saveBurnerOpeningData === "function") window.saveBurnerOpeningData();
+    }
+    if(typeof window.markCurrentAutoSyncDigest === "function"){
+      try{ window.markCurrentAutoSyncDigest(); }catch(e){}
+    }
+    ensureAlarmDataFresh(true);
+  }
+
+  function addCleaningEventNative(wall, ri, ci, dateValue){
+    var cleanDate = String(dateValue || "").trim();
+    if(!cleanDate) return false;
+    var key = getCleaningKey(ri, ci);
+    if(typeof window.getBurnerDatesForSelection === "function" && typeof window.persistCleaningDatesForBurner === "function"){
+      var dates = window.getBurnerDatesForSelection(wall, key).slice();
+      dates.push(cleanDate);
+      window.persistCleaningDatesForBurner(wall, key, dates);
+    }else{
+      var log = typeof window.loadCleaningLog === "function" ? (window.loadCleaningLog() || {}) : {};
+      if(!log[wall]) log[wall] = {};
+      log[wall][key] = cleanDate;
+      if(typeof window.saveCleaningLog === "function") window.saveCleaningLog(log);
+    }
+    if(typeof window.markCurrentAutoSyncDigest === "function"){
+      try{ window.markCurrentAutoSyncDigest(); }catch(e){}
+    }
+    ensureAlarmDataFresh(true);
+    return true;
+  }
+
+  function saveTempEntryNative(entryDraft, editIndex){
+    var rows = Array.isArray(window.tempDataEntries)
+      ? window.tempDataEntries
+      : (typeof window.getAllTempEntries === "function" ? window.getAllTempEntries().slice() : []);
+    window.tempDataEntries = rows;
+
+    var entry = {
+      dt: String(entryDraft.dt || ""),
+      shift: String(entryDraft.shift || ""),
+      burnerSnapshot: typeof window.captureCurrentBurnerSnapshot === "function"
+        ? window.captureCurrentBurnerSnapshot()
+        : null,
+      peepHoles: createEmptyPeepHoles()
+    };
+
+    if(typeof window.captureCurrentBurnerOpeningSnapshot === "function"){
+      entry.openingSnapshot = window.captureCurrentBurnerOpeningSnapshot(entry.burnerSnapshot);
+    }
+
+    getProcessBindings().forEach(function(binding){
+      entry[binding.key] = String(entryDraft.processValues[binding.key] || "").trim();
+    });
+
+    TST_ROW_KEYS.forEach(function(rowKey){
+      for(var i = 0; i < 15; i++){
+        entry.peepHoles[rowKey][i] = String(entryDraft.peepHoles[rowKey][i] || "").trim();
+      }
+    });
+
+    if(editIndex >= 0 && editIndex < rows.length){
+      rows[editIndex] = entry;
+    }else{
+      rows.unshift(entry);
+    }
+
+    try{
+      localStorage.setItem("tempDataEntries", JSON.stringify(rows));
+    }catch(e){}
+    if(typeof window.ensureTempEntriesHaveSnapshots === "function"){
+      try{ window.ensureTempEntriesHaveSnapshots(); }catch(e){}
+    }
+    if(typeof window.markCurrentAutoSyncDigest === "function"){
+      try{ window.markCurrentAutoSyncDigest(); }catch(e){}
+    }
+    return entry;
+  }
+
+  function deleteTempEntryNative(index){
+    var rows = Array.isArray(window.tempDataEntries)
+      ? window.tempDataEntries
+      : (typeof window.getAllTempEntries === "function" ? window.getAllTempEntries().slice() : []);
+    if(!(index >= 0 && index < rows.length)) return false;
+    rows.splice(index, 1);
+    window.tempDataEntries = rows;
+    try{
+      localStorage.setItem("tempDataEntries", JSON.stringify(rows));
+    }catch(e){}
+    if(typeof window.markCurrentAutoSyncDigest === "function"){
+      try{ window.markCurrentAutoSyncDigest(); }catch(e){}
+    }
+    return true;
+  }
+
   function getCleaningLog(){
     try{
       if(typeof window.getMergedCleaningLog === "function"){
@@ -298,21 +504,38 @@
     };
   }
 
-  function ensureAnalysisPayload(){
-    if(primedAnalysis) return;
-    primedAnalysis = true;
-    try{
-      if(typeof window.generateAnalysis === "function"){
-        window.generateAnalysis({ skipRender: true });
-      }
-    }catch(e){}
+  function getTempEntryByIndex(index){
+    if(!Array.isArray(window.tempDataEntries)) return null;
+    return (index >= 0 && index < window.tempDataEntries.length) ? window.tempDataEntries[index] : null;
   }
 
-  function getLatestBurnerAnalysisPayload(){
-    ensureAnalysisPayload();
-    return window._latestBurnerAnalysisPayload && typeof window._latestBurnerAnalysisPayload === "object"
-      ? window._latestBurnerAnalysisPayload
-      : null;
+  function showMobileToast(message){
+    if(!message) return;
+    if(typeof window.showToast === "function"){
+      window.showToast(message);
+    }
+  }
+
+  function syncMobileChanges(successMessage){
+    if(typeof window.exportToExcel !== "function"){
+      if(successMessage) showMobileToast(successMessage);
+      return Promise.resolve(true);
+    }
+    return Promise.resolve(window.exportToExcel({ silent: true })).then(function(result){
+      if(!successMessage) return result;
+      if(result === "queued"){
+        showMobileToast(successMessage + " Sync queued.");
+      }else if(result === true){
+        showMobileToast(successMessage);
+      }else{
+        showMobileToast(successMessage + " Saved locally.");
+      }
+      return result;
+    }).catch(function(err){
+      console.warn("Mobile sync failed:", err);
+      showMobileToast("Saved locally. Central sync will retry.");
+      return false;
+    });
   }
 
   function getWallSeverity(wall){
@@ -336,14 +559,47 @@
     return "Healthy";
   }
 
-  function buildWallSummary(wall){
-    var payload = getLatestBurnerAnalysisPayload();
-    var payloadEntry = null;
-    if(payload && Array.isArray(payload.wallEntries)){
-      payloadEntry = payload.wallEntries.find(function(item){
-        return String(item && (item.wallName || item.displayName) || "").replace(/^Wall\s+/i, "").toUpperCase() === String(wall).toUpperCase();
-      }) || null;
+  function maxSeverity(a, b){
+    return severityRank(a) >= severityRank(b) ? String(a || "normal").toLowerCase() : String(b || "normal").toLowerCase();
+  }
+
+  function deriveWallSeverity(counts){
+    var total = (counts.B || 0) + (counts.N || 0) + (counts.O || 0) + (counts.C || 0);
+    if(!total) return "normal";
+    var coldRatio = (counts.C || 0) / total;
+    var activeStates = [counts.B || 0, counts.N || 0, counts.O || 0];
+    var maxActive = Math.max.apply(null, activeStates);
+    var minActive = Math.min.apply(null, activeStates);
+    var gap = maxActive - minActive;
+    if(coldRatio >= 0.5 || gap >= 24) return "critical";
+    if(coldRatio >= 0.35 || gap >= 16) return "major";
+    if(coldRatio >= 0.18 || gap >= 9) return "warning";
+    return "normal";
+  }
+
+  function buildWallIssueCopy(wall, counts, severity){
+    var active = (counts.B || 0) + (counts.N || 0) + (counts.O || 0);
+    var cold = counts.C || 0;
+    if(severity === "normal"){
+      return active + " burners active and " + cold + " cold on Wall " + wall + ".";
     }
+    if(cold >= 18){
+      return cold + " burners are cold on Wall " + wall + ".";
+    }
+    return "Wall " + wall + " is showing " + getDominantStateLabel(counts).toLowerCase() + " dominance with " + cold + " cold burners.";
+  }
+
+  function buildWallActionCopy(wall, counts, severity){
+    if(severity === "normal"){
+      return "No immediate action required.";
+    }
+    if((counts.C || 0) >= 18){
+      return "Review cold burners on Wall " + wall + " first.";
+    }
+    return "Open Wall " + wall + " and review burner states and openings.";
+  }
+
+  function buildWallSummary(wall){
     var grid = getBurnerGrid();
     var rows = Array.isArray(grid[wall]) ? grid[wall] : [];
     var counts = { B:0, N:0, O:0, C:0 };
@@ -352,13 +608,9 @@
         counts[normalizeBurnerState(cell)] += 1;
       });
     });
-    var severity = payloadEntry && payloadEntry.sev ? String(payloadEntry.sev).toLowerCase() : getWallSeverity(wall);
-    var issueCopy = payloadEntry && payloadEntry.desc
-      ? payloadEntry.desc
-      : (severity === "normal" ? "Balanced burner mix" : ("Wall " + wall + " needs review"));
-    var actionCopy = payloadEntry && payloadEntry.action
-      ? payloadEntry.action
-      : (severity === "normal" ? "No immediate action required." : "Open wall view for burner-level monitoring.");
+    var severity = maxSeverity(getWallSeverity(wall), deriveWallSeverity(counts));
+    var issueCopy = buildWallIssueCopy(wall, counts, severity);
+    var actionCopy = buildWallActionCopy(wall, counts, severity);
     return {
       wall: wall,
       counts: counts,
@@ -390,10 +642,12 @@
   }
 
   function getActiveAlarms(){
+    ensureAlarmDataFresh(false);
     return Array.isArray(window.alarmLog) ? window.alarmLog.filter(function(item){ return !item.acked; }) : [];
   }
 
   function getResolvedAlarms(){
+    ensureAlarmDataFresh(false);
     return Array.isArray(window.alarmLog) ? window.alarmLog.filter(function(item){ return !!item.acked; }) : [];
   }
 
@@ -495,7 +749,7 @@
 
   function buildWallIssueBanner(summary){
     if(!summary || summary.severity === "normal"){
-      return buildBannerHtml("Stable wall view", "2D burner monitoring is now the primary phone surface. 3D stays optional.");
+      return buildBannerHtml("Stable wall view", "Single-wall 2D burner monitoring keeps the mobile scan fast and clear.");
     }
     return buildBannerHtml(
       "Wall " + summary.wall + " needs review",
@@ -616,7 +870,7 @@
       + '</div></section>'
       + '<section class="m2-card"><div class="m2-card-pad">'
       +   '<div class="m2-card-title">Wall ' + escapeHtml(state.wall) + ' burner view</div>'
-      +   '<div class="m2-card-copy">Single-wall 2D monitoring replaces the twin-cuboid landing surface on mobile.</div>'
+      +   '<div class="m2-card-copy">Single-wall 2D monitoring is the core mobile surface for fast review.</div>'
       +   buildWallMatrixHtml(state.wall)
       +   '<div class="m2-chip-row" style="margin-top:14px;">'
       +     buildChipHtml("Both", counts.B)
@@ -627,7 +881,7 @@
       + '</div></section>'
       + '<section class="m2-card"><div class="m2-card-pad">'
       +   '<div class="m2-card-title">Why this view is faster</div>'
-      +   '<div class="m2-card-copy">You can scan one wall instantly, tap any burner for details, and only open 3D when you actually need it.</div>'
+      +   '<div class="m2-card-copy">You can scan one wall instantly, tap any burner for details, and skip heavy multi-surface loading on phone.</div>'
       + '</div></section>';
   }
 
@@ -689,7 +943,7 @@
     var historyPoints = dashState && Array.isArray(dashState.historyPoints) ? dashState.historyPoints.slice() : [];
     var currentMetric = TREND_METRICS[state.trendMetric] || TREND_METRICS.hguLoad;
     return ''
-      + buildBannerHtml("Performance trends", historyPoints.length ? "Single-chart mobile trends with key live indicators." : "Load live history only when needed, instead of shipping a full desktop analytics wall.")
+      + buildBannerHtml("Performance trends", historyPoints.length ? "Single-chart mobile trends with key live indicators." : "Load live history only when needed, instead of shipping a heavy analytics wall on phone.")
       + '<section class="m2-grid-2">'
       +   buildMetricCardHtml("HGU Load", formatNumber(current.hguLoad, 1), "%")
       +   buildMetricCardHtml("Avg COT", formatAvgCot(current), "degC")
@@ -713,7 +967,7 @@
       +   '<div class="m2-list" style="margin-top:14px;">'
       +     buildListItemHtml(currentMetric.label + " latest", getMetricLatestCopy(historyPoints, currentMetric))
       +     buildListItemHtml("History window", historyPoints.length ? (historyPoints.length + " recent samples from the plant feed") : "Waiting for live history")
-      +     buildListItemHtml("Classic analytics", "Open the classic dashboard only when you need the full multi-chart desktop stack.")
+      +     buildListItemHtml("Mobile focus", "One live chart at a time keeps the phone view fast and readable.")
       +   '</div>'
       + '</div></section>';
   }
@@ -725,6 +979,95 @@
       +   '<div class="m2-stat-value">' + escapeHtml(value) + '</div>'
       +   '<div class="m2-card-copy">' + escapeHtml(unit) + '</div>'
       + '</div></section>';
+  }
+
+  function buildActionButtonHtml(label, attrs, tone){
+    var attrText = "";
+    Object.keys(attrs || {}).forEach(function(key){
+      attrText += " " + key + '="' + escapeHtml(attrs[key]) + '"';
+    });
+    return '<button class="m2-inline-btn' + (tone ? (' ' + tone) : '') + '" type="button"' + attrText + '>' + escapeHtml(label) + '</button>';
+  }
+
+  function buildActionRowHtml(buttons){
+    return buttons && buttons.length ? ('<div class="m2-list-actions">' + buttons.join("") + '</div>') : "";
+  }
+
+  function buildShiftOptionsHtml(selected){
+    var options = ["Morning", "Evening", "Night"];
+    return options.map(function(label){
+      return '<option value="' + escapeHtml(label) + '"' + (selected === label ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+    }).join("");
+  }
+
+  function buildBurnerStateOptionsHtml(selected){
+    var options = [
+      { value: "B", label: "Both" },
+      { value: "N", label: "NG only" },
+      { value: "O", label: "Off gas" },
+      { value: "C", label: "Cold" }
+    ];
+    return options.map(function(item){
+      return '<option value="' + item.value + '"' + (selected === item.value ? ' selected' : '') + '>' + escapeHtml(item.label) + '</option>';
+    }).join("");
+  }
+
+  function buildTstRecordListItemHtml(record){
+    var entry = record && record.entry ? record.entry : null;
+    var index = record ? record.originalIndex : -1;
+    if(!entry) return "";
+    return ''
+      + '<div class="m2-list-item">'
+      +   '<div class="m2-list-title">' + escapeHtml((entry.shift || "Saved entry") + " · " + formatDateTime(entry.dt)) + '</div>'
+      +   '<div class="m2-list-meta">Filled peep values: ' + escapeHtml(countFilledPeepValues(entry)) + '</div>'
+      +   buildActionRowHtml([
+            buildActionButtonHtml("View", { "data-entry-view": index }),
+            buildActionButtonHtml("Edit", { "data-entry-edit": index })
+          ])
+      + '</div>';
+  }
+
+  function buildTstProcessFieldsHtml(draft){
+    return getProcessBindings().map(function(binding){
+      var value = draft.processValues[binding.key] || "";
+      var label = binding.exportLabel || binding.label || binding.key;
+      return ''
+        + '<label class="m2-field">'
+        +   '<span class="m2-field-label">' + escapeHtml(label) + '</span>'
+        +   '<input class="m2-input" type="text" inputmode="decimal" data-tst-field-key="' + escapeHtml(binding.key) + '" value="' + escapeHtml(value) + '">'
+        + '</label>';
+    }).join("");
+  }
+
+  function buildTstPeepRowsHtml(draft){
+    return TST_ROW_KEYS.map(function(rowKey){
+      var values = draft.peepHoles[rowKey] || [];
+      return ''
+        + '<div class="m2-peep-row">'
+        +   '<div class="m2-peep-label">' + escapeHtml(TST_ROW_LABELS[rowKey] || rowKey) + '</div>'
+        +   '<div class="m2-peep-values">'
+        +     Array.from({ length: 15 }, function(_, index){
+              return '<input class="m2-peep-input" type="text" inputmode="decimal" data-tst-peep-row="' + escapeHtml(rowKey) + '" data-tst-peep-index="' + index + '" value="' + escapeHtml(values[index] || "") + '" placeholder="' + (index + 1) + '">';
+            }).join("")
+        +   '</div>'
+        + '</div>';
+    }).join("");
+  }
+
+  function buildTstReadonlyRowsHtml(entry){
+    return TST_ROW_KEYS.map(function(rowKey){
+      var values = entry && entry.peepHoles && Array.isArray(entry.peepHoles[rowKey]) ? entry.peepHoles[rowKey] : [];
+      return ''
+        + '<div class="m2-peep-readonly">'
+        +   '<div class="m2-peep-label">' + escapeHtml(TST_ROW_LABELS[rowKey] || rowKey) + '</div>'
+        +   '<div class="m2-row-values">'
+        +     Array.from({ length: 15 }, function(_, index){
+              var raw = values[index];
+              return '<span class="m2-row-value">' + escapeHtml(raw == null || raw === "" ? "—" : raw) + '</span>';
+            }).join("")
+        +   '</div>'
+        + '</div>';
+    }).join("");
   }
 
   function formatAvgCot(current){
@@ -786,9 +1129,11 @@
   }
 
   function buildLogsPaneHtml(){
-    var latestEntry = getLatestTempEntry();
+    var records = getTempEntryRecords();
+    var latestRecord = records[0] || null;
+    var latestEntry = latestRecord ? latestRecord.entry : null;
     var cleaning = getCleaningStats();
-    var entries = getTempEntries().slice(0, 4);
+    var entries = records.slice(0, 4);
     return ''
       + buildBannerHtml("Latest process snapshot", latestEntry ? ((latestEntry.shift || "Saved entry") + " · " + formatDateTime(latestEntry.dt)) : "No saved TST entries yet.", latestEntry ? "good" : "warning")
       + '<section class="m2-card"><div class="m2-card-pad">'
@@ -796,40 +1141,35 @@
       +   '<div class="m2-hero-row" style="margin-top:8px;">'
       +     '<div>'
       +       '<div class="m2-chamber-status">' + escapeHtml(latestEntry ? (latestEntry.shift || "Latest") : "No TST") + '</div>'
-      +       '<div class="m2-card-copy">' + escapeHtml(latestEntry ? formatDateTime(latestEntry.dt) : "Start with classic TST entry when needed.") + '</div>'
+      +       '<div class="m2-card-copy">' + escapeHtml(latestEntry ? formatDateTime(latestEntry.dt) : "Create the first TST entry when needed.") + '</div>'
       +     '</div>'
       +     '<div class="m2-live-stack">'
       +       '<div class="m2-live-pill">' + escapeHtml(latestEntry ? (countFilledPeepValues(latestEntry) + " points") : "Pending") + '</div>'
       +     '</div>'
       +   '</div>'
+      +   buildActionRowHtml(latestRecord
+            ? [
+                buildActionButtonHtml("View latest", { "data-entry-view": latestRecord.originalIndex }),
+                buildActionButtonHtml("Edit latest", { "data-entry-edit": latestRecord.originalIndex }),
+                buildActionButtonHtml("New TST", { "data-action": "open-tst-new" }, "is-primary")
+              ]
+            : [
+                buildActionButtonHtml("New TST", { "data-action": "open-tst-new" }, "is-primary"),
+                buildActionButtonHtml("Download format", { "data-action": "download-tst-format" })
+              ])
       + '</div></section>'
       + '<section class="m2-grid-2">'
       +   buildMetricCardHtml("Cleaned", String(cleaning.cleaned), "logged burners")
       +   buildMetricCardHtml("Pending", String(cleaning.pending), "not logged")
       +   buildMetricCardHtml("Recent 7d", String(cleaning.recent7), "cleaning updates")
-      +   buildMetricCardHtml("History", String(entries.length), "saved snapshots")
+      +   buildMetricCardHtml("History", String(records.length), "saved snapshots")
       + '</section>'
       + '<section class="m2-card"><div class="m2-card-pad">'
       +   '<div class="m2-card-title">Recent records</div>'
       +   '<div class="m2-list" style="margin-top:14px;">'
       +     (entries.length
-              ? entries.map(function(entry){
-                  return buildListItemHtml(
-                    (entry.shift || "Saved entry") + " · " + formatDateTime(entry.dt),
-                    "Filled peep values: " + countFilledPeepValues(entry)
-                  );
-                }).join("")
-              : '<div class="m2-empty">No saved entries yet. Classic operator tools remain available from this screen.</div>')
-      +   '</div>'
-      + '</div></section>'
-      + '<section class="m2-card"><div class="m2-card-pad">'
-      +   '<div class="m2-card-title">Classic operator tools</div>'
-      +   '<div class="m2-card-copy">Desktop-style editing remains available behind these secondary actions so the main mobile flow stays clean.</div>'
-      +   '<div class="m2-tools-grid">'
-      +     buildToolButtonHtml("Open TST entry", "tempdata")
-      +     buildToolButtonHtml("Open burner editor", "burner")
-      +     buildToolButtonHtml("Open cleaning log", "cleaning")
-      +     buildToolButtonHtml("Open 3D dashboard", "cuboidstack")
+              ? entries.map(buildTstRecordListItemHtml).join("")
+              : '<div class="m2-empty">No saved entries yet. Create the first mobile TST entry from this screen.</div>')
       +   '</div>'
       + '</div></section>';
   }
@@ -840,10 +1180,6 @@
       +   '<div class="m2-list-title">' + escapeHtml(title) + '</div>'
       +   '<div class="m2-list-meta">' + escapeHtml(copy) + '</div>'
       + '</div>';
-  }
-
-  function buildToolButtonHtml(label, tab){
-    return '<button class="m2-tool-btn" type="button" data-legacy-tab="' + escapeHtml(tab) + '">' + escapeHtml(label) + '</button>';
   }
 
   function buildAlarmsPaneHtml(){
@@ -911,6 +1247,155 @@
       + '</div>';
   }
 
+  function buildTstReadonlyFieldsHtml(entry){
+    return getProcessBindings().map(function(binding){
+      var raw = typeof window.getTdProcessEntryValue === "function"
+        ? window.getTdProcessEntryValue(entry, binding.key)
+        : (entry ? entry[binding.key] : "");
+      var formatted = typeof window.formatTdProcessFieldValue === "function"
+        ? window.formatTdProcessFieldValue(binding, raw)
+        : String(raw == null ? "" : raw);
+      return ''
+        + '<div class="m2-field is-static">'
+        +   '<span class="m2-field-label">' + escapeHtml(binding.exportLabel || binding.label || binding.key) + '</span>'
+        +   '<div class="m2-field-static-value">' + escapeHtml(formatted || "—") + '</div>'
+        + '</div>';
+    }).join("");
+  }
+
+  function buildCellEditorSheetHtml(payload){
+    if(!payload) return "";
+    var wall = payload.wall;
+    var ri = payload.ri;
+    var ci = payload.ci;
+    var grid = getBurnerGrid();
+    var rows = Array.isArray(grid[wall]) ? grid[wall] : [];
+    var stateCode = normalizeBurnerState(rows[ri] && rows[ri][ci]);
+    var opening = getOpeningValue(wall, ri, ci, stateCode);
+    var cleanDate = getCleaningDateForCell(wall, ri, ci);
+    var latestEntry = getLatestTempEntry();
+    var displayCleanDate = cleanDate || "Not logged";
+    var openingDisabled = stateCode === "C" ? ' disabled' : "";
+    return ''
+      + '<div class="m2-sheet is-open">'
+      +   '<div class="m2-sheet-backdrop" data-action="sheet-close"></div>'
+      +   '<div class="m2-sheet-panel">'
+      +     '<div class="m2-sheet-handle"></div>'
+      +     '<div class="m2-sheet-title">Wall ' + escapeHtml(wall) + ' · Row ' + (ri + 1) + ' · Burner ' + (ci + 1) + '</div>'
+      +     '<div class="m2-sheet-copy">Adjust state, opening, and cleaning directly from the mobile wall view.</div>'
+      +     '<div class="m2-inline-grid">'
+      +       '<div class="m2-inline-block"><div class="m2-stat-label">Current state</div><div class="m2-mini-value">' + escapeHtml(getStateLabel(stateCode)) + '</div></div>'
+      +       '<div class="m2-inline-block"><div class="m2-stat-label">Opening</div><div class="m2-mini-value" data-cell-opening-preview>' + escapeHtml(opening + "%") + '</div></div>'
+      +       '<div class="m2-inline-block"><div class="m2-stat-label">Last cleaned</div><div class="m2-mini-value">' + escapeHtml(displayCleanDate) + '</div></div>'
+      +       '<div class="m2-inline-block"><div class="m2-stat-label">Latest TST</div><div class="m2-mini-value">' + escapeHtml(latestEntry ? formatTimeAgo(latestEntry.dt) : "No TST") + '</div></div>'
+      +     '</div>'
+      +     '<div class="m2-form-grid m2-form-grid-tight">'
+      +       '<label class="m2-field">'
+      +         '<span class="m2-field-label">Burner state</span>'
+      +         '<select class="m2-select" data-cell-state>'
+      +           buildBurnerStateOptionsHtml(stateCode)
+      +         '</select>'
+      +       '</label>'
+      +       '<label class="m2-field">'
+      +         '<span class="m2-field-label">Opening</span>'
+      +         '<div class="m2-range-row">'
+      +           '<input class="m2-range" type="range" min="0" max="100" step="5" data-cell-opening value="' + escapeHtml(opening) + '"' + openingDisabled + '>'
+      +           '<strong class="m2-range-value" data-cell-opening-label>' + escapeHtml(opening + "%") + '</strong>'
+      +         '</div>'
+      +       '</label>'
+      +       '<label class="m2-field m2-field-wide">'
+      +         '<span class="m2-field-label">Log cleaning date</span>'
+      +         '<input class="m2-input" type="date" data-cell-cleaning-date value="' + escapeHtml(cleanDate || "") + '">'
+      +       '</label>'
+      +     '</div>'
+      +     '<div class="m2-sheet-actions">'
+      +       '<button class="m2-tool-btn" type="button" data-action="save-cell">Save burner update</button>'
+      +       '<button class="m2-tool-btn" type="button" data-action="log-cleaning">Add cleaning log</button>'
+      +     '</div>'
+      +   '</div>'
+      + '</div>';
+  }
+
+  function buildTstFormSheetHtml(payload){
+    var editIndex = payload && typeof payload.editIndex === "number" ? payload.editIndex : -1;
+    var entry = editIndex >= 0 ? getTempEntryByIndex(editIndex) : null;
+    var draft = buildTstDraft(entry);
+    return ''
+      + '<div class="m2-sheet is-open">'
+      +   '<div class="m2-sheet-backdrop" data-action="sheet-close"></div>'
+      +   '<div class="m2-sheet-panel">'
+      +     '<div class="m2-sheet-handle"></div>'
+      +     '<div class="m2-sheet-title">' + escapeHtml(editIndex >= 0 ? "Edit TST entry" : "New TST entry") + '</div>'
+      +     '<div class="m2-sheet-copy">Fill process values and peep-hole readings directly in the mobile flow.</div>'
+      +     '<div class="m2-form-grid">'
+      +       '<label class="m2-field">'
+      +         '<span class="m2-field-label">Date & time</span>'
+      +         '<input class="m2-input" type="datetime-local" data-tst-dt value="' + escapeHtml(draft.dt) + '">'
+      +       '</label>'
+      +       '<label class="m2-field">'
+      +         '<span class="m2-field-label">Shift</span>'
+      +         '<select class="m2-select" data-tst-shift>'
+      +           '<option value="">Select shift</option>'
+      +           buildShiftOptionsHtml(draft.shift)
+      +         '</select>'
+      +       '</label>'
+      +       buildTstProcessFieldsHtml(draft)
+      +     '</div>'
+      +     '<div class="m2-sheet-section">Peep-hole readings</div>'
+      +     '<div class="m2-peep-shell">'
+      +       buildTstPeepRowsHtml(draft)
+      +     '</div>'
+      +     '<div class="m2-sheet-actions">'
+      +       '<button class="m2-tool-btn" type="button" data-action="save-tst">' + escapeHtml(editIndex >= 0 ? "Update TST" : "Save TST") + '</button>'
+      +       '<button class="m2-tool-btn" type="button" data-action="sheet-close">Cancel</button>'
+      +     '</div>'
+      +   '</div>'
+      + '</div>';
+  }
+
+  function buildTstViewSheetHtml(payload){
+    var index = payload && typeof payload.index === "number" ? payload.index : -1;
+    var entry = getTempEntryByIndex(index);
+    if(!entry){
+      return ''
+        + '<div class="m2-sheet is-open">'
+        +   '<div class="m2-sheet-backdrop" data-action="sheet-close"></div>'
+        +   '<div class="m2-sheet-panel">'
+        +     '<div class="m2-sheet-handle"></div>'
+        +     '<div class="m2-sheet-title">Record unavailable</div>'
+        +     '<div class="m2-sheet-copy">This TST record is no longer available.</div>'
+        +   '</div>'
+        + '</div>';
+    }
+    return ''
+      + '<div class="m2-sheet is-open">'
+      +   '<div class="m2-sheet-backdrop" data-action="sheet-close"></div>'
+      +   '<div class="m2-sheet-panel">'
+      +     '<div class="m2-sheet-handle"></div>'
+      +     '<div class="m2-sheet-title">' + escapeHtml((entry.shift || "Saved entry") + " · " + formatDateTime(entry.dt)) + '</div>'
+      +     '<div class="m2-sheet-copy">' + escapeHtml(countFilledPeepValues(entry) + " peep-hole values captured in this snapshot.") + '</div>'
+      +     '<div class="m2-inline-grid">'
+      +       '<div class="m2-inline-block"><div class="m2-stat-label">Shift</div><div class="m2-mini-value">' + escapeHtml(entry.shift || "—") + '</div></div>'
+      +       '<div class="m2-inline-block"><div class="m2-stat-label">Saved</div><div class="m2-mini-value">' + escapeHtml(formatTimeAgo(entry.dt)) + '</div></div>'
+      +       '<div class="m2-inline-block"><div class="m2-stat-label">Filled points</div><div class="m2-mini-value">' + escapeHtml(countFilledPeepValues(entry)) + '</div></div>'
+      +       '<div class="m2-inline-block"><div class="m2-stat-label">Burner snapshot</div><div class="m2-mini-value">' + escapeHtml(entry.burnerSnapshot ? "Attached" : "Not saved") + '</div></div>'
+      +     '</div>'
+      +     '<div class="m2-sheet-section">Process values</div>'
+      +     '<div class="m2-form-grid">'
+      +       buildTstReadonlyFieldsHtml(entry)
+      +     '</div>'
+      +     '<div class="m2-sheet-section">Peep-hole readings</div>'
+      +     '<div class="m2-peep-shell is-readonly">'
+      +       buildTstReadonlyRowsHtml(entry)
+      +     '</div>'
+      +     '<div class="m2-sheet-actions">'
+      +       '<button class="m2-tool-btn" type="button" data-entry-edit="' + escapeHtml(index) + '">Edit entry</button>'
+      +       '<button class="m2-tool-btn" type="button" data-entry-delete="' + escapeHtml(index) + '">Delete entry</button>'
+      +     '</div>'
+      +   '</div>'
+      + '</div>';
+  }
+
   function buildSheetHtml(){
     if(!state.sheetKind) return "";
     if(state.sheetKind === "tools"){
@@ -922,52 +1407,26 @@
         +   '<div class="m2-sheet-panel">'
         +     '<div class="m2-sheet-handle"></div>'
         +     '<div class="m2-sheet-title">Quick actions</div>'
-        +     '<div class="m2-sheet-copy">Mobile-first monitoring stays in front. Classic tools stay one tap away.</div>'
+        +     '<div class="m2-sheet-copy">Lightweight mobile controls only, with no desktop fallback shortcuts.</div>'
         +     '<div class="m2-tools-grid">'
         +       '<button class="m2-tool-btn" type="button" data-action="refresh-shell">Refresh live data</button>'
         +       (showInstallAction ? '<button class="m2-tool-btn" type="button" data-action="install-app">Install app</button>' : '')
         +       '<button class="m2-tool-btn" type="button" data-action="toggle-theme">' + (isLight ? "Switch to dark mode" : "Switch to light mode") + '</button>'
-        +       buildToolButtonHtml("Classic burner tools", "burner")
-        +       buildToolButtonHtml("Classic cleaning tools", "cleaning")
-        +       buildToolButtonHtml("Classic TST tools", "tempdata")
-        +       buildToolButtonHtml("Classic 3D dashboard", "cuboidstack")
+        +       '<button class="m2-tool-btn" type="button" data-action="open-tst-new">New TST entry</button>'
+        +       '<button class="m2-tool-btn" type="button" data-action="download-tst-format">Download TST format</button>'
         +       '<button class="m2-tool-btn wide" type="button" data-action="logout-shell">Logout</button>'
         +     '</div>'
         +   '</div>'
         + '</div>';
     }
     if(state.sheetKind === "cell" && state.sheetPayload){
-      var payload = state.sheetPayload;
-      var wall = payload.wall;
-      var ri = payload.ri;
-      var ci = payload.ci;
-      var grid = getBurnerGrid();
-      var rows = Array.isArray(grid[wall]) ? grid[wall] : [];
-      var stateCode = normalizeBurnerState(rows[ri] && rows[ri][ci]);
-      var opening = getOpeningValue(wall, ri, ci, stateCode);
-      var cleaningLog = getCleaningLog();
-      var cleanKey = "R" + (ri + 1) + "B" + (ci + 1);
-      var cleanDate = cleaningLog[wall] && cleaningLog[wall][cleanKey] ? cleaningLog[wall][cleanKey] : "Not logged";
-      var latestEntry = getLatestTempEntry();
-      return ''
-        + '<div class="m2-sheet is-open">'
-        +   '<div class="m2-sheet-backdrop" data-action="sheet-close"></div>'
-        +   '<div class="m2-sheet-panel">'
-        +     '<div class="m2-sheet-handle"></div>'
-        +     '<div class="m2-sheet-title">Wall ' + escapeHtml(wall) + ' · Row ' + (ri + 1) + ' · Burner ' + (ci + 1) + '</div>'
-        +     '<div class="m2-sheet-copy">Quick burner detail stays compact and readable for mobile review.</div>'
-        +     '<div class="m2-inline-grid">'
-        +       '<div class="m2-inline-block"><div class="m2-stat-label">State</div><div class="m2-mini-value">' + escapeHtml(getStateLabel(stateCode)) + '</div></div>'
-        +       '<div class="m2-inline-block"><div class="m2-stat-label">Opening</div><div class="m2-mini-value">' + escapeHtml(opening + "%") + '</div></div>'
-        +       '<div class="m2-inline-block"><div class="m2-stat-label">Last cleaned</div><div class="m2-mini-value">' + escapeHtml(cleanDate) + '</div></div>'
-        +       '<div class="m2-inline-block"><div class="m2-stat-label">Latest snapshot</div><div class="m2-mini-value">' + escapeHtml(latestEntry ? formatTimeAgo(latestEntry.dt) : "No TST") + '</div></div>'
-        +     '</div>'
-        +     '<div class="m2-sheet-actions">'
-        +       '<button class="m2-tool-btn" type="button" data-legacy-tab="cuboidstack">Open 3D viewer</button>'
-        +       '<button class="m2-tool-btn" type="button" data-legacy-tab="burner">Open classic burner tools</button>'
-        +     '</div>'
-        +   '</div>'
-        + '</div>';
+      return buildCellEditorSheetHtml(state.sheetPayload);
+    }
+    if(state.sheetKind === "tst-form"){
+      return buildTstFormSheetHtml(state.sheetPayload);
+    }
+    if(state.sheetKind === "tst-view"){
+      return buildTstViewSheetHtml(state.sheetPayload);
     }
     return "";
   }
@@ -998,16 +1457,11 @@
     if(!document.body) return false;
     if(active){
       document.body.setAttribute("data-mobile-v2", "1");
-      if(state.legacyMode){
-        document.body.setAttribute("data-mobile-legacy", "1");
-      }else{
-        document.body.removeAttribute("data-mobile-legacy");
-      }
+      document.body.removeAttribute("data-mobile-legacy");
     }else{
       document.body.removeAttribute("data-mobile-v2");
       document.body.removeAttribute("data-mobile-legacy");
       mountedRoot.innerHTML = "";
-      state.legacyMode = false;
       state.sheetKind = "";
       state.sheetPayload = null;
       return false;
@@ -1017,10 +1471,6 @@
 
   function buildShellHtml(){
     return ''
-      + '<div class="m2-legacy-bar">'
-      +   '<button class="m2-legacy-btn" type="button" data-action="exit-legacy">Back to redesigned mobile</button>'
-      +   '<button class="m2-legacy-btn" type="button" data-action="refresh-shell">Refresh</button>'
-      + '</div>'
       + '<div class="m2-shell">'
       +   '<header class="m2-head">'
       +     '<div class="m2-brand">'
@@ -1055,6 +1505,88 @@
       +   '<span class="m2-nav-icon"></span>'
       +   '<span>' + escapeHtml(label) + '</span>'
       + '</button>';
+  }
+
+  function openSheet(kind, payload){
+    state.sheetKind = kind || "";
+    state.sheetPayload = payload || null;
+    scheduleRender();
+  }
+
+  function closeSheet(){
+    state.sheetKind = "";
+    state.sheetPayload = null;
+    scheduleRender();
+  }
+
+  function syncCellSheetControls(source){
+    var panel = source && typeof source.closest === "function"
+      ? source.closest(".m2-sheet-panel")
+      : ensureRoot().querySelector(".m2-sheet-panel");
+    if(!panel) return;
+    var stateSelect = panel.querySelector("[data-cell-state]");
+    var openingInput = panel.querySelector("[data-cell-opening]");
+    var openingLabel = panel.querySelector("[data-cell-opening-label]");
+    var openingPreview = panel.querySelector("[data-cell-opening-preview]");
+    if(stateSelect && openingInput){
+      if(String(stateSelect.value || "C") === "C"){
+        openingInput.value = "0";
+        openingInput.disabled = true;
+      }else{
+        if(openingInput.disabled && Number(openingInput.value || 0) <= 0){
+          openingInput.value = "100";
+        }
+        openingInput.disabled = false;
+      }
+    }
+    if(openingInput && openingLabel){
+      openingLabel.textContent = String(openingInput.value || 0) + "%";
+    }
+    if(openingInput && openingPreview){
+      openingPreview.textContent = String(openingInput.value || 0) + "%";
+    }
+  }
+
+  function readCellSheetDraft(){
+    if(!state.sheetPayload) return null;
+    var panel = ensureRoot().querySelector(".m2-sheet-panel");
+    if(!panel) return null;
+    var stateSelect = panel.querySelector("[data-cell-state]");
+    var openingInput = panel.querySelector("[data-cell-opening]");
+    var cleanInput = panel.querySelector("[data-cell-cleaning-date]");
+    var nextState = normalizeBurnerState(stateSelect ? stateSelect.value : "C");
+    var nextOpening = nextState === "C" ? 0 : clamp(Number(openingInput && openingInput.value), 0, 100);
+    if(!isFiniteNumber(nextOpening)) nextOpening = nextState === "C" ? 0 : 100;
+    return {
+      wall: state.sheetPayload.wall,
+      ri: state.sheetPayload.ri,
+      ci: state.sheetPayload.ci,
+      stateCode: nextState,
+      opening: nextOpening,
+      cleanDate: String(cleanInput && cleanInput.value || "").trim()
+    };
+  }
+
+  function readTstSheetDraft(){
+    var panel = ensureRoot().querySelector(".m2-sheet-panel");
+    if(!panel) return null;
+    var draft = {
+      dt: String(panel.querySelector("[data-tst-dt]") && panel.querySelector("[data-tst-dt]").value || "").trim(),
+      shift: String(panel.querySelector("[data-tst-shift]") && panel.querySelector("[data-tst-shift]").value || "").trim(),
+      processValues: {},
+      peepHoles: createEmptyPeepHoles()
+    };
+    getProcessBindings().forEach(function(binding){
+      var input = panel.querySelector('[data-tst-field-key="' + binding.key + '"]');
+      draft.processValues[binding.key] = String(input && input.value || "").trim();
+    });
+    TST_ROW_KEYS.forEach(function(rowKey){
+      for(var i = 0; i < 15; i++){
+        var peep = panel.querySelector('[data-tst-peep-row="' + rowKey + '"][data-tst-peep-index="' + i + '"]');
+        draft.peepHoles[rowKey][i] = String(peep && peep.value || "").trim();
+      }
+    });
+    return draft;
   }
 
   function bindRootEvents(){
@@ -1098,13 +1630,11 @@
       var cellBtn = target.closest("[data-cell-wall]");
       if(cellBtn){
         state.selectedCellKey = String(cellBtn.getAttribute("data-cell-wall")) + ":" + cellBtn.getAttribute("data-cell-ri") + ":" + cellBtn.getAttribute("data-cell-ci");
-        state.sheetKind = "cell";
-        state.sheetPayload = {
+        openSheet("cell", {
           wall: String(cellBtn.getAttribute("data-cell-wall")),
           ri: parseInt(cellBtn.getAttribute("data-cell-ri"), 10),
           ci: parseInt(cellBtn.getAttribute("data-cell-ci"), 10)
-        };
-        scheduleRender();
+        });
         return;
       }
 
@@ -1113,13 +1643,37 @@
         if(typeof window.acknowledgeAlarmById === "function"){
           window.acknowledgeAlarmById(Number(ackBtn.getAttribute("data-ack-id")));
         }
+        ensureAlarmDataFresh(true);
         scheduleRender();
         return;
       }
 
-      var legacyBtn = target.closest("[data-legacy-tab]");
-      if(legacyBtn){
-        enterLegacyMode(String(legacyBtn.getAttribute("data-legacy-tab") || ""));
+      var entryViewBtn = target.closest("[data-entry-view]");
+      if(entryViewBtn){
+        openSheet("tst-view", {
+          index: parseInt(entryViewBtn.getAttribute("data-entry-view"), 10)
+        });
+        return;
+      }
+
+      var entryEditBtn = target.closest("[data-entry-edit]");
+      if(entryEditBtn){
+        openSheet("tst-form", {
+          editIndex: parseInt(entryEditBtn.getAttribute("data-entry-edit"), 10)
+        });
+        return;
+      }
+
+      var entryDeleteBtn = target.closest("[data-entry-delete]");
+      if(entryDeleteBtn){
+        var deleteIndex = parseInt(entryDeleteBtn.getAttribute("data-entry-delete"), 10);
+        if(deleteIndex >= 0 && typeof window.confirm === "function" && !window.confirm("Delete this TST entry?")){
+          return;
+        }
+        if(deleteTempEntryNative(deleteIndex)){
+          closeSheet();
+          syncMobileChanges("TST entry deleted.");
+        }
         return;
       }
 
@@ -1128,24 +1682,35 @@
         handleAction(String(actionBtn.getAttribute("data-action") || ""));
       }
     };
+
+    shell.oninput = function(event){
+      var target = event.target;
+      if(target && (target.matches("[data-cell-opening]") || target.matches("[data-cell-state]"))){
+        syncCellSheetControls(target);
+      }
+    };
+
+    shell.onchange = function(event){
+      var target = event.target;
+      if(target && (target.matches("[data-cell-opening]") || target.matches("[data-cell-state]"))){
+        syncCellSheetControls(target);
+      }
+    };
   }
 
   function handleAction(action){
     if(action === "open-tools"){
-      state.sheetKind = "tools";
-      state.sheetPayload = null;
-      scheduleRender();
+      openSheet("tools");
       return;
     }
     if(action === "sheet-close"){
-      state.sheetKind = "";
-      state.sheetPayload = null;
-      scheduleRender();
+      closeSheet();
       return;
     }
     if(action === "refresh-shell"){
       state.sheetKind = "";
       state.sheetPayload = null;
+      scheduleRender();
       refreshCurrentMobileView();
       return;
     }
@@ -1172,6 +1737,19 @@
       scheduleRender();
       return;
     }
+    if(action === "open-tst-new"){
+      openSheet("tst-form", { editIndex: -1 });
+      return;
+    }
+    if(action === "download-tst-format"){
+      state.sheetKind = "";
+      state.sheetPayload = null;
+      if(typeof window.downloadTstTemplate === "function"){
+        window.downloadTstTemplate();
+      }
+      scheduleRender();
+      return;
+    }
     if(action === "logout-shell"){
       if(typeof window.logout === "function") window.logout();
       return;
@@ -1180,37 +1758,74 @@
       if(typeof window.acknowledgeAllAlarms === "function"){
         window.acknowledgeAllAlarms();
       }
+      ensureAlarmDataFresh(true);
       scheduleRender();
       return;
     }
-    if(action === "exit-legacy"){
-      exitLegacyMode();
+    if(action === "save-cell"){
+      var cellDraft = readCellSheetDraft();
+      if(!cellDraft) return;
+      saveBurnerCellNative(cellDraft.wall, cellDraft.ri, cellDraft.ci, cellDraft.stateCode, cellDraft.opening);
+      closeSheet();
+      syncMobileChanges("Burner update saved.");
+      return;
+    }
+    if(action === "log-cleaning"){
+      var cleaningDraft = readCellSheetDraft();
+      if(!cleaningDraft || !cleaningDraft.cleanDate){
+        showMobileToast("Select a cleaning date first.");
+        return;
+      }
+      if(addCleaningEventNative(cleaningDraft.wall, cleaningDraft.ri, cleaningDraft.ci, cleaningDraft.cleanDate)){
+        closeSheet();
+        syncMobileChanges("Cleaning log saved.");
+      }
+      return;
+    }
+    if(action === "save-tst"){
+      var tstDraft = readTstSheetDraft();
+      var editIndex = state.sheetPayload && typeof state.sheetPayload.editIndex === "number" ? state.sheetPayload.editIndex : -1;
+      if(!tstDraft || !tstDraft.dt){
+        showMobileToast("Select a date and time first.");
+        return;
+      }
+      if(!tstDraft.shift){
+        showMobileToast("Select a shift first.");
+        return;
+      }
+      saveTempEntryNative(tstDraft, editIndex);
+      state.activeTab = "logs";
+      persistState();
+      closeSheet();
+      syncMobileChanges(editIndex >= 0 ? "TST entry updated." : "TST entry saved.");
       return;
     }
   }
 
   function refreshCurrentMobileView(){
-    if(state.activeTab === "alarms"){
-      if(typeof window.refreshAlarmPanel === "function") window.refreshAlarmPanel();
-      scheduleRender();
-      return;
+    var refreshPromise;
+    if(typeof window.autoImportFromServer === "function"){
+      refreshPromise = Promise.resolve(window.autoImportFromServer(true));
+    }else if(typeof window.smartRefresh === "function"){
+      refreshPromise = Promise.resolve(window.smartRefresh());
+    }else{
+      refreshPromise = Promise.resolve(typeof window.handleGlobalRefreshClick === "function" ? window.handleGlobalRefreshClick() : true);
     }
-    if(state.activeTab === "trends"){
-      requestTrendData(true);
-      return;
-    }
-    if(typeof window.smartRefresh === "function"){
-      Promise.resolve(window.smartRefresh()).finally(scheduleRender);
-      return;
-    }
-    if(typeof window.handleGlobalRefreshClick === "function"){
-      window.handleGlobalRefreshClick();
-    }
-    scheduleRender();
+    refreshPromise.finally(function(){
+      ensureAlarmDataFresh(true);
+      if(state.activeTab === "trends"){
+        requestTrendData(true);
+      }else{
+        scheduleRender();
+      }
+    });
   }
 
   function requestTrendData(force){
-    if(typeof window.refreshReformerDashboard !== "function"){
+    var refreshFn = typeof window.refreshReformerDashboardLite === "function"
+      ? window.refreshReformerDashboardLite
+      : window.refreshReformerDashboard;
+    if(typeof refreshFn !== "function"){
       scheduleRender();
       return;
     }
@@ -1218,29 +1833,7 @@
       return;
     }
     lastTrendRequestAt = Date.now();
-    Promise.resolve(window.refreshReformerDashboard(!!force)).finally(scheduleRender);
-  }
-
-  function enterLegacyMode(tab){
-    state.legacyMode = true;
-    state.sheetKind = "";
-    state.sheetPayload = null;
-    ensureMountedState();
-    if(tab && typeof window.switchTab === "function"){
-      window.switchTab(tab);
-    }
-    setTimeout(function(){
-      try{ window.scrollTo({ top: 0, behavior: "smooth" }); }catch(e){ window.scrollTo(0, 0); }
-      scheduleRender();
-    }, 20);
-  }
-
-  function exitLegacyMode(){
-    state.legacyMode = false;
-    state.sheetKind = "";
-    state.sheetPayload = null;
-    ensureMountedState();
-    scheduleRender();
+    Promise.resolve(refreshFn(!!force)).finally(scheduleRender);
   }
 
   function scheduleRender(){
@@ -1248,46 +1841,7 @@
     renderTimer = window.setTimeout(render, 50);
   }
 
-  function installHooks(){
-    if(hooksInstalled) return;
-    hooksInstalled = true;
-    [
-      "generateAnalysis",
-      "refreshAlarmPanel",
-      "render",
-      "buildCleaningTable",
-      "saveTempData",
-      "smartRefresh",
-      "acknowledgeAlarmById",
-      "acknowledgeAllAlarms",
-      "refreshReformerDashboard"
-    ].forEach(wrapFunction);
-  }
-
-  function wrapFunction(name){
-    var original = window[name];
-    if(typeof original !== "function" || original.__mobileV2Wrapped) return;
-    var wrapped = function(){
-      var result = original.apply(this, arguments);
-      scheduleRender();
-      return result;
-    };
-    wrapped.__mobileV2Wrapped = true;
-    wrapped.__mobileV2Original = original;
-    window[name] = wrapped;
-  }
-
-  function startFallbackRefreshLoop(){
-    clearInterval(refreshInterval);
-    refreshInterval = window.setInterval(function(){
-      if(isMobileShellActive() && !state.legacyMode){
-        scheduleRender();
-      }
-    }, 12000);
-  }
-
   window.addEventListener("resize", function(){
-    if(!isMobileViewport()) exitLegacyMode();
     scheduleRender();
   }, { passive: true });
 
@@ -1309,9 +1863,6 @@
       scheduleRender();
       return;
     }
-    if(state.legacyMode){
-      exitLegacyMode();
-    }
   });
 
   window.scadaUpdateMobileShell = function(){
@@ -1320,13 +1871,9 @@
 
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", function(){
-      installHooks();
-      startFallbackRefreshLoop();
       render();
     });
   }else{
-    installHooks();
-    startFallbackRefreshLoop();
     render();
   }
 })();

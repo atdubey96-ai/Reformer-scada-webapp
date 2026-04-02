@@ -21078,13 +21078,13 @@ document.addEventListener("DOMContentLoaded",function(){
   initHistoryScrollHandoff();
   updateAdminModeUi();
   window.addEventListener("focus", function(){
-    if(isUserLoggedIn()){
+    if(isUserLoggedIn() && !isMobileLandingViewport()){
       subscribeCrossDeviceNotifications();
       startRealtimeNotifyEnsureLoop();
     }
   });
   document.addEventListener("visibilitychange", function(){
-    if(document.visibilityState === "visible" && isUserLoggedIn()){
+    if(document.visibilityState === "visible" && isUserLoggedIn() && !isMobileLandingViewport()){
       subscribeCrossDeviceNotifications();
       startRealtimeNotifyEnsureLoop();
     }
@@ -21700,6 +21700,7 @@ function isDesktopPrimaryInterfaceViewport(){
 }
 
 function isHeatMapTabEnabled(){
+  if(isMobileLandingViewport()) return false;
   var panel = document.getElementById("tab-heatmap");
   var btn = document.getElementById("btab-heatmap");
   return !!(panel && !panel.hasAttribute("hidden") && btn);
@@ -25323,6 +25324,15 @@ function init(){
   loadData();
   loadBurnerOpeningData();
   burnerUiReady = true;
+  if(isMobileLandingViewport()){
+    if(Array.isArray(tempDataEntries) && tempDataEntries.length && typeof ensureTempEntriesHaveSnapshots === "function"){
+      ensureTempEntriesHaveSnapshots();
+    }
+    if(typeof rebuildWallAlarms === "function") rebuildWallAlarms();
+    if(typeof rebuildFreqAlarms === "function") rebuildFreqAlarms();
+    if(typeof updateAlarmTabBadge === "function") updateAlarmTabBadge();
+    return;
+  }
   applyMobileHorizontalScrollFixes();
   updateNotificationToggleUI();
   subscribeCrossDeviceNotifications();
@@ -25504,6 +25514,7 @@ function getCuboidFollowupStack(){
 }
 
 function isCuboidTabActive(){
+  if(isMobileLandingViewport()) return false;
   return !!getActiveCuboidDashboardPanel();
 }
 
@@ -28637,6 +28648,7 @@ function hasPendingLocalEdits(){
   return burner || cleaning;
 }
 async function autoSaveToServerIfNeeded(reason, forceSave){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return false;
   if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return false;
   if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight) return false;
 
@@ -28666,6 +28678,7 @@ async function autoSaveToServerIfNeeded(reason, forceSave){
   return res;
 }
 async function autoRefreshFromServer(reason){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return false;
   if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return false;
   if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight || smartRefreshInFlight) return false;
   if(typeof navigator !== "undefined" && navigator.onLine === false){
@@ -28684,6 +28697,7 @@ async function autoRefreshFromServer(reason){
 }
 async function runAutoSyncCycle(reason, opts){
   opts = opts || {};
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return false;
   if(autoSyncCycleInFlight) return false;
   if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return false;
   autoSyncCycleInFlight = true;
@@ -28700,6 +28714,7 @@ async function runAutoSyncCycle(reason, opts){
   }
 }
 function scheduleAutoRefreshOnOpen(){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(autoRefreshOnOpenDone) return;
   autoRefreshOnOpenDone = true;
   setTimeout(function(){
@@ -28726,6 +28741,7 @@ function isSyncBootstrapLikelyStuck(){
 }
 
 function ensureStartupServerSyncRecovery(){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return;
   if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight || smartRefreshInFlight) return;
   if(!isSyncBootstrapLikelyStuck()) return;
@@ -28747,6 +28763,7 @@ function ensureStartupServerSyncRecovery(){
 }
 
 function triggerServerAutoImport(reason){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(!SERVER_SYNC_ENABLED) return;
   if(!isUserLoggedIn()) return;
   if(typeof navigator !== "undefined" && navigator.onLine === false) return;
@@ -28760,25 +28777,30 @@ function triggerServerAutoImport(reason){
 }
 
 window.addEventListener("online", function(){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   syncHealthMarkSyncing("Network restored");
   flushQueuedServerExport(true).catch(function(){});
   triggerServerAutoImport("online");
 });
 window.addEventListener("focus", function(){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   flushQueuedServerExport(false).catch(function(){});
   triggerServerAutoImport("focus");
 });
 window.addEventListener("pageshow", function(){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   flushQueuedServerExport(false).catch(function(){});
   triggerServerAutoImport("pageshow");
 });
 document.addEventListener("visibilitychange", function(){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(document.visibilityState === "visible"){
     flushQueuedServerExport(false).catch(function(){});
     triggerServerAutoImport("visible");
   }
 });
 setInterval(function(){
+  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(!SERVER_SYNC_ENABLED) return;
   if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight) return;
   if(typeof navigator !== "undefined" && navigator.onLine === false) return;
@@ -32472,8 +32494,11 @@ function fillTdPeepFieldsFromList(values, onlyNonEmpty){
       var saved = localStorage.getItem("tempDataEntries");
       if(saved) tempDataEntries = JSON.parse(saved);
       ensureTempEntriesHaveSnapshots();
-      renderTempDataTable();
+      if(!isMobileLandingViewport()) renderTempDataTable();
     } catch(e){}
+    if(isMobileLandingViewport()){
+      return;
+    }
     buildTdMobileMatrixIfNeeded();
     syncTdMobileMatrixFromBase();
     applyMobileHorizontalScrollFixes();
@@ -34977,7 +35002,8 @@ body.light-theme .btab-alarm-count{
     setTimeout(resizeCharts, 80);
   }
 
-  async function refreshReformerDashboard(forceHistory){
+  async function refreshReformerDashboardCore(forceHistory, options){
+    var opts = options || {};
     if(reformerDashState.fetchPromise) return reformerDashState.fetchPromise;
     reformerDashState.fetchPromise = (async function(){
       setRefreshButtonState(true);
@@ -35015,13 +35041,23 @@ body.light-theme .btab-alarm-count{
         reformerDashState.errorMessage = err && err.message ? err.message : String(err || "Unknown error");
         console.warn("Reformer dashboard refresh failed:", err);
       }finally{
-        renderReformerDashboardFromState();
+        if(opts.render !== false){
+          renderReformerDashboardFromState();
+        }
         setRefreshButtonState(false);
         reformerDashState.fetchPromise = null;
       }
       return reformerDashState.data;
     })();
     return reformerDashState.fetchPromise;
+  }
+
+  async function refreshReformerDashboard(forceHistory){
+    return refreshReformerDashboardCore(forceHistory, { render:true });
+  }
+
+  async function refreshReformerDashboardLite(forceHistory){
+    return refreshReformerDashboardCore(forceHistory, { render:false });
   }
 
   function switchReformerDashTab(tab){
@@ -35038,8 +35074,10 @@ body.light-theme .btab-alarm-count{
   }
 
   function startReformerDashboardRefreshLoop(){
+    if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
     if(reformerDashState.refreshTimer) return;
     reformerDashState.refreshTimer = setInterval(function(){
+      if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
       if(!getReformerDashEl("tab-reformerdash")) return;
       if(!(getReformerDashEl("tab-reformerdash") || {}).classList.contains("tab-active")) return;
       refreshReformerDashboard(false).catch(function(){});
@@ -35075,6 +35113,7 @@ body.light-theme .btab-alarm-count{
 
   window.switchReformerDashTab = switchReformerDashTab;
   window.refreshReformerDashboard = refreshReformerDashboard;
+  window.refreshReformerDashboardLite = refreshReformerDashboardLite;
   window.ensureReformerDashboardLoaded = ensureReformerDashboardLoaded;
   window.updateReformerDashComposition = updateReformerDashComposition;
 })();
