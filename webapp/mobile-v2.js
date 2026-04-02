@@ -11,6 +11,14 @@
     logs: "Recent logs",
     alarms: "Alarm center"
   };
+  var NAV_ICONS = {
+    home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5"></path><path d="M6.5 9.5V20h11V9.5"></path><path d="M10 20v-5h4v5"></path></svg>',
+    walls: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path><path d="M8 4v16"></path><path d="M16 4v16"></path></svg>',
+    cleaning: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h9"></path><path d="M12.5 7l5.5 10"></path><path d="M9 11l-2 7"></path><path d="M15.5 14.5l3-1.5"></path><path d="M6.5 18.5h10.5"></path></svg>',
+    trends: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18V6"></path><path d="M5 18h14"></path><path d="M8 15l3-4 3 2 4-5"></path><path d="M18 8v2.5H15.5"></path></svg>',
+    logs: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h8l3 3V19.5H7z"></path><path d="M15 4.5v3h3"></path><path d="M9.5 11h6"></path><path d="M9.5 14h6"></path><path d="M9.5 17h4"></path></svg>',
+    alarms: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"></path><path d="M10 20h4"></path><path d="M6.5 18V11a5.5 5.5 0 0 1 11 0v7"></path><path d="M5 18h14"></path></svg>'
+  };
   var TREND_METRICS = {
     hguLoad: {
       label: "HGU Load",
@@ -1863,7 +1871,7 @@
   function buildNavButtonHtml(key, label){
     return ''
       + '<button class="m2-nav-btn' + (state.activeTab === key ? ' is-active' : '') + '" type="button" data-nav-tab="' + escapeHtml(key) + '">'
-      +   '<span class="m2-nav-icon"></span>'
+      +   '<span class="m2-nav-icon">' + (NAV_ICONS[key] || NAV_ICONS.home) + '</span>'
       +   '<span>' + escapeHtml(label) + '</span>'
       + '</button>';
   }
@@ -1901,7 +1909,7 @@
     if(!target || !touch || !panel || !state.sheetKind) return false;
     if(typeof panel.contains === "function" && !panel.contains(target)) return false;
     var rect = panel.getBoundingClientRect();
-    var startedInHeader = touch.clientY <= (rect.top + 108)
+    var startedInHeader = touch.clientY <= (rect.top + 132)
       || !!(typeof target.closest === "function" && target.closest(".m2-sheet-handle, .m2-sheet-title, .m2-sheet-copy"));
     var interactive = !!(typeof target.closest === "function" && target.closest("input, select, textarea, button, label, a"));
     if(interactive && !startedInHeader) return false;
@@ -1953,7 +1961,7 @@
       clearSheetDragState();
       return;
     }
-    var shouldClose = !!forceClose || (sheetDrag.dragging && sheetDrag.deltaY > 96);
+    var shouldClose = !!forceClose || (sheetDrag.dragging && sheetDrag.deltaY > 72);
     if(shouldClose){
       panel.style.transition = "transform 180ms ease";
       panel.style.transform = "translateY(calc(100% + 24px))";
