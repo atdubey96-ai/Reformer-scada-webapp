@@ -90,6 +90,30 @@
     return typeof window.isUserLoggedIn === "function" ? !!window.isUserLoggedIn() : true;
   }
 
+  function isStandaloneInstalled(){
+    try{
+      if(typeof window.scadaGetInstallState === "function"){
+        var state = window.scadaGetInstallState();
+        if(state && state.installed) return true;
+      }
+    }catch(e){}
+    try{
+      if(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+    }catch(e){}
+    try{
+      if(window.navigator && window.navigator.standalone) return true;
+    }catch(e){}
+    return false;
+  }
+
+  function getInstallPlatform(){
+    var ua = String((window.navigator && window.navigator.userAgent) || "").toLowerCase();
+    if(/iphone|ipad|ipod/.test(ua)) return "ios";
+    if(/android/.test(ua)) return "android";
+    if(/windows/.test(ua)) return "windows";
+    return "mobile";
+  }
+
   function isMobileShellActive(){
     return isMobileViewport() && isLoggedIn();
   }
@@ -891,6 +915,7 @@
     if(!state.sheetKind) return "";
     if(state.sheetKind === "tools"){
       var isLight = document.body && document.body.classList.contains("light-theme");
+      var showInstallAction = !isStandaloneInstalled();
       return ''
         + '<div class="m2-sheet is-open">'
         +   '<div class="m2-sheet-backdrop" data-action="sheet-close"></div>'
@@ -900,6 +925,7 @@
         +     '<div class="m2-sheet-copy">Mobile-first monitoring stays in front. Classic tools stay one tap away.</div>'
         +     '<div class="m2-tools-grid">'
         +       '<button class="m2-tool-btn" type="button" data-action="refresh-shell">Refresh live data</button>'
+        +       (showInstallAction ? '<button class="m2-tool-btn" type="button" data-action="install-app">Install app</button>' : '')
         +       '<button class="m2-tool-btn" type="button" data-action="toggle-theme">' + (isLight ? "Switch to dark mode" : "Switch to light mode") + '</button>'
         +       buildToolButtonHtml("Classic burner tools", "burner")
         +       buildToolButtonHtml("Classic cleaning tools", "cleaning")
@@ -1123,6 +1149,20 @@
       refreshCurrentMobileView();
       return;
     }
+    if(action === "install-app"){
+      state.sheetKind = "";
+      state.sheetPayload = null;
+      if(typeof window.scadaOpenInstallPrompt === "function"){
+        Promise.resolve(window.scadaOpenInstallPrompt(getInstallPlatform())).finally(scheduleRender);
+      }else{
+        var fallback = typeof window.scadaGetInstallFallbackMessage === "function"
+          ? window.scadaGetInstallFallbackMessage(getInstallPlatform())
+          : "Install prompt not available yet. Open the browser menu and choose Install app or Add to Home screen.";
+        if(typeof window.alert === "function") window.alert(fallback);
+        scheduleRender();
+      }
+      return;
+    }
     if(action === "toggle-theme"){
       state.sheetKind = "";
       state.sheetPayload = null;
@@ -1255,6 +1295,7 @@
     setTimeout(scheduleRender, 120);
   });
 
+  window.addEventListener("appinstalled", scheduleRender);
   window.addEventListener("pageshow", scheduleRender);
   window.addEventListener("storage", scheduleRender);
   document.addEventListener("visibilitychange", function(){

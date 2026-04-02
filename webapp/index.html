@@ -33458,13 +33458,26 @@ function tempToColorInline(val, minT, maxT){
 
   function getInstallFallbackMessage(platform){
     var key = String(platform || "").toLowerCase().trim();
+    if(key === "ios" || key === "iphone" || key === "ipad"){
+      return "Install prompt not available here. On iPhone or iPad, tap Share and choose Add to Home Screen.";
+    }
     if(key === "android"){
       return "Install prompt not available yet. On Android, open the browser menu and choose Install app or Add to Home screen.";
     }
     if(key === "windows"){
       return "Install prompt not available yet. On Windows, open the browser menu and choose Install app for this site.";
     }
+    if(key === "mobile"){
+      return "Install prompt not available yet. Open the browser menu and choose Install app or Add to Home screen.";
+    }
     return "Install prompt not available yet. Use the browser menu and choose Install app.";
+  }
+
+  function getInstallState(){
+    return {
+      installed: isStandaloneInstalled(),
+      canInstall: !!deferredInstallPrompt
+    };
   }
 
   function showInstallButtons(show){
@@ -33472,6 +33485,25 @@ function tempToColorInline(val, minT, maxT){
       btn.style.display = show ? "inline-flex" : "none";
     });
   }
+
+  window.scadaGetInstallState = function(){
+    return getInstallState();
+  };
+
+  window.scadaGetInstallFallbackMessage = getInstallFallbackMessage;
+
+  window.scadaOpenInstallPrompt = async function(platform){
+    if (!deferredInstallPrompt) {
+      alert(getInstallFallbackMessage(platform));
+      return false;
+    }
+    deferredInstallPrompt.prompt();
+    try {
+      await deferredInstallPrompt.userChoice;
+    } catch (err) {}
+    deferredInstallPrompt = null;
+    return true;
+  };
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function(){
@@ -33519,8 +33551,6 @@ function tempToColorInline(val, minT, maxT){
     });
   }
 
-  if (!installButtons.length) return;
-
   showInstallButtons(!isStandaloneInstalled());
 
   window.addEventListener("beforeinstallprompt", function(e){
@@ -33532,15 +33562,7 @@ function tempToColorInline(val, minT, maxT){
   installButtons.forEach(function(btn){
     btn.addEventListener("click", async function(){
       var platform = btn.getAttribute("data-install-platform") || "";
-      if (!deferredInstallPrompt) {
-        alert(getInstallFallbackMessage(platform));
-        return;
-      }
-      deferredInstallPrompt.prompt();
-      try {
-        await deferredInstallPrompt.userChoice;
-      } catch (err) {}
-      deferredInstallPrompt = null;
+      await window.scadaOpenInstallPrompt(platform);
     });
   });
 
