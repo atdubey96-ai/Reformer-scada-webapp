@@ -3423,6 +3423,14 @@ body.light-theme .all-ph-snapshot-state{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:0;padding:4px 3px;min-height:24px;
   position:relative;
+  width:100%;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.cleaning-table .ct-cell:focus-visible{
+  outline:2px solid rgba(243,112,34,0.72);
+  outline-offset:-2px;
+  border-radius:8px;
 }
 /* Show formatted date text in-cell */
 .cleaning-table .ct-date-label{
@@ -3495,6 +3503,7 @@ body.light-theme .all-ph-snapshot-state{
   color:transparent;font-size:11px;
   font-family:'Rajdhani',sans-serif;padding:0;outline:none;
   cursor:pointer;
+  pointer-events:none;
   transition:none;
 }
 .cleaning-table input[type="date"]:hover{
@@ -24847,6 +24856,28 @@ function formatDateInput(input){
   }
 }
 
+function openCleaningDatePicker(input, event){
+  if(!input) return false;
+  if(event && typeof event.preventDefault === "function") event.preventDefault();
+  if(event && typeof event.stopPropagation === "function") event.stopPropagation();
+  try{
+    input.focus({preventScroll:true});
+  }catch(e){
+    try{ input.focus(); }catch(_){}
+  }
+  try{
+    if(typeof input.showPicker === "function"){
+      input.showPicker();
+      return true;
+    }
+  }catch(e){}
+  try{
+    input.click();
+    return true;
+  }catch(e){}
+  return false;
+}
+
 /* ==================================================
    PENDING CLEANING CHANGES
 ================================================== */
@@ -25000,6 +25031,10 @@ function renderCleaningTableInto(wrapId, log){
 
         const cellWrap = document.createElement("div");
         cellWrap.className = "ct-cell";
+        cellWrap.tabIndex = 0;
+        cellWrap.setAttribute("role", "button");
+        cellWrap.setAttribute("aria-haspopup", "dialog");
+        cellWrap.setAttribute("aria-label", "Select cleaning date for Wall " + w + " Row " + r + " Burner " + b);
 
         const dateLabel = document.createElement("span");
         dateLabel.className = "ct-date-label";
@@ -25018,21 +25053,16 @@ function renderCleaningTableInto(wrapId, log){
         td.appendChild(cellWrap);
 
         formatDateInput(input);
-        td.addEventListener("click", function(ev){
+        function handleDatePickerOpen(ev){
           setCleaningHistorySelection(w, r, b);
-          if(ev && ev.target === input) return;
-          try{
-            input.focus({preventScroll:true});
-          }catch(e){
-            try{ input.focus(); }catch(_){}
+          openCleaningDatePicker(input, ev);
+        }
+        td.addEventListener("click", handleDatePickerOpen);
+        cellWrap.addEventListener("keydown", function(ev){
+          var key = String(ev && ev.key || "");
+          if(key === "Enter" || key === " " || key === "Spacebar"){
+            handleDatePickerOpen(ev);
           }
-          try{
-            if(typeof input.showPicker === "function"){
-              input.showPicker();
-              return;
-            }
-          }catch(e){}
-          try{ input.click(); }catch(e){}
         });
         input.addEventListener("focus", function(){
           setCleaningHistorySelection(w, r, b);
