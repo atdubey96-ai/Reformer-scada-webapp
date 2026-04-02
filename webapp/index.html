@@ -5402,6 +5402,17 @@ body.light-theme #tab-cuboidstack .cuboid-twin-control-banner.is-empty{
   padding:5px 10px 6px;
   border-radius:11px;
 }
+#tab-cuboidstack .cuboid-tab-shell .cuboid-tab-legend-row{
+  grid-area:legend;
+  display:grid;
+  grid-template-columns:minmax(154px,0.7fr) minmax(0,1fr);
+  gap:8px;
+  align-items:stretch;
+  min-width:0;
+}
+#tab-cuboidstack .cuboid-tab-shell .cuboid-tab-legend-row .cuboid-legend-panel{
+  grid-area:auto;
+}
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-scroll{
   grid-template-columns:minmax(0,1.88fr) minmax(336px,1.24fr) minmax(178px,0.54fr) minmax(238px,0.76fr);
   gap:8px;
@@ -5413,10 +5424,7 @@ body.light-theme #tab-cuboidstack .cuboid-twin-control-banner.is-empty{
   max-width:none;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-band{
-  display:grid;
-  grid-template-columns:minmax(154px,0.7fr) minmax(0,1fr);
-  gap:8px;
-  align-items:stretch;
+  display:block;
   min-width:0;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-reformer{
@@ -5457,7 +5465,7 @@ body.light-theme #tab-cuboidstack .cuboid-twin-control-banner.is-empty{
   gap:4px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-card{
-  grid-template-columns:34px minmax(0,1fr) minmax(22px,auto);
+  grid-template-columns:34px minmax(0,1fr);
   column-gap:4px;
   min-height:44px;
   padding:4px 5px 4px 4px;
@@ -5468,17 +5476,19 @@ body.light-theme #tab-cuboidstack .cuboid-twin-control-banner.is-empty{
   height:36px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-copy{
-  gap:1px;
-  min-height:0;
+  display:none;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-name{
   font-size:12px;
   line-height:0.96;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-count{
-  min-width:22px;
-  font-size:16px;
-  line-height:0.96;
+  min-width:0;
+  font-size:19px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  line-height:0.94;
+  text-shadow:0 0 14px rgba(255,255,255,0.08);
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-opening-row{
   gap:6px;
@@ -20237,40 +20247,41 @@ body.light-theme .scada-source-btn.is-active{
             allowfullscreen
           ></iframe>
         </div>
-        <div class="cuboid-legend-panel" id="stack-legend-panel-ab" data-cuboid-legend="ab">
-          <div class="cuboid-legend-scroll">
+        <div class="cuboid-tab-legend-row">
+          <div class="cuboid-legend-state-reformer">AB Chamber</div>
+          <div class="cuboid-legend-panel" id="stack-legend-panel-ab" data-cuboid-legend="ab">
+            <div class="cuboid-legend-scroll">
             <section class="cuboid-legend-block cuboid-legend-states">
               <div class="cuboid-legend-title">Burner State Legend</div>
               <div class="cuboid-legend-state-band">
-                <div class="cuboid-legend-state-reformer">AB Chamber</div>
                 <div class="cuboid-legend-state-row">
                   <div class="cuboid-legend-state-card" data-state="B">
                     <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
                     <div class="cuboid-legend-state-copy">
                       <div class="cuboid-legend-state-name">B</div>
                     </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
+                    <div class="cuboid-legend-state-count" aria-label="Both burner symbol">B</div>
                   </div>
                   <div class="cuboid-legend-state-card" data-state="C">
                     <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
                     <div class="cuboid-legend-state-copy">
                       <div class="cuboid-legend-state-name">C</div>
                     </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
+                    <div class="cuboid-legend-state-count" aria-label="Cold burner symbol">C</div>
                   </div>
                   <div class="cuboid-legend-state-card" data-state="O">
                     <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
                     <div class="cuboid-legend-state-copy">
                       <div class="cuboid-legend-state-name">O</div>
                     </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
+                    <div class="cuboid-legend-state-count" aria-label="Off gas burner symbol">O</div>
                   </div>
                   <div class="cuboid-legend-state-card" data-state="N">
                     <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
                     <div class="cuboid-legend-state-copy">
                       <div class="cuboid-legend-state-name">N</div>
                     </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-n">0</div>
+                    <div class="cuboid-legend-state-count" aria-label="NG only burner symbol">N</div>
                   </div>
                 </div>
               </div>
@@ -20331,6 +20342,7 @@ body.light-theme .scada-source-btn.is-active{
                 <span class="cuboid-legend-tst-max" data-legend-value="tst-max">--</span>
               </div>
             </section>
+            </div>
           </div>
         </div>
       </div>
@@ -20353,40 +20365,41 @@ body.light-theme .scada-source-btn.is-active{
             allowfullscreen
           ></iframe>
         </div>
-        <div class="cuboid-legend-panel" id="stack-legend-panel-cd" data-cuboid-legend="cd">
-          <div class="cuboid-legend-scroll">
+        <div class="cuboid-tab-legend-row">
+          <div class="cuboid-legend-state-reformer">CD Chamber</div>
+          <div class="cuboid-legend-panel" id="stack-legend-panel-cd" data-cuboid-legend="cd">
+            <div class="cuboid-legend-scroll">
             <section class="cuboid-legend-block cuboid-legend-states">
               <div class="cuboid-legend-title">Burner State Legend</div>
               <div class="cuboid-legend-state-band">
-                <div class="cuboid-legend-state-reformer">CD Chamber</div>
                 <div class="cuboid-legend-state-row">
                   <div class="cuboid-legend-state-card" data-state="B">
                     <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
                     <div class="cuboid-legend-state-copy">
                       <div class="cuboid-legend-state-name">B</div>
                     </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-b">0</div>
+                    <div class="cuboid-legend-state-count" aria-label="Both burner symbol">B</div>
                   </div>
                   <div class="cuboid-legend-state-card" data-state="C">
                     <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
                     <div class="cuboid-legend-state-copy">
                       <div class="cuboid-legend-state-name">C</div>
                     </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-c">0</div>
+                    <div class="cuboid-legend-state-count" aria-label="Cold burner symbol">C</div>
                   </div>
                   <div class="cuboid-legend-state-card" data-state="O">
                     <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
                     <div class="cuboid-legend-state-copy">
                       <div class="cuboid-legend-state-name">O</div>
                     </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-o">0</div>
+                    <div class="cuboid-legend-state-count" aria-label="Off gas burner symbol">O</div>
                   </div>
                   <div class="cuboid-legend-state-card" data-state="N">
                     <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
                     <div class="cuboid-legend-state-copy">
                       <div class="cuboid-legend-state-name">N</div>
                     </div>
-                    <div class="cuboid-legend-state-count" data-legend-value="count-n">0</div>
+                    <div class="cuboid-legend-state-count" aria-label="NG only burner symbol">N</div>
                   </div>
                 </div>
               </div>
@@ -20447,6 +20460,7 @@ body.light-theme .scada-source-btn.is-active{
                 <span class="cuboid-legend-tst-max" data-legend-value="tst-max">--</span>
               </div>
             </section>
+            </div>
           </div>
         </div>
       </div>
@@ -35513,7 +35527,7 @@ body.light-theme .btab-alarm-count{
     grid-template-columns:1fr !important;
     gap:10px !important;
   }
-  #tab-cuboidstack .cuboid-legend-state-band{
+  #tab-cuboidstack .cuboid-tab-legend-row{
     grid-template-columns:1fr !important;
     gap:8px !important;
   }
