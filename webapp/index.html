@@ -1578,408 +1578,6 @@ body:not(.heatmap-header-active) #hm-header-tools{
   transform:translateY(-1px);
 }
 
-/* Login Refresh 2026 */
-#loginScreen{
-  background:
-    radial-gradient(1200px 520px at 10% 8%,rgba(30,64,175,0.22) 0%,rgba(30,64,175,0) 58%),
-    radial-gradient(860px 420px at 88% 14%,rgba(243,112,34,0.14) 0%,rgba(243,112,34,0) 64%),
-    linear-gradient(135deg,#020817 0%,#071632 38%,#081c45 70%,#041126 100%);
-  isolation:isolate;
-}
-#loginScreen::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background:
-    linear-gradient(rgba(255,255,255,0.035) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);
-  background-size:42px 42px;
-  opacity:0.38;
-  mix-blend-mode:screen;
-}
-#loginScreen::after{
-  content:"";
-  position:absolute;
-  inset:auto -12% -28% auto;
-  width:48vw;
-  min-width:340px;
-  aspect-ratio:1 / 1;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(243,112,34,0.22) 0%,rgba(243,112,34,0) 68%);
-  filter:blur(28px);
-  pointer-events:none;
-}
-#loginScreen .ls-header{
-  position:relative;
-  z-index:2;
-  padding:20px 34px 16px;
-  background:linear-gradient(180deg,rgba(4,13,31,0.84) 0%,rgba(4,13,31,0.58) 100%);
-  backdrop-filter:blur(14px);
-  border-bottom:1px solid rgba(148,163,184,0.12);
-  box-shadow:none;
-}
-#loginScreen .ls-logo-group{
-  gap:14px;
-}
-#loginScreen .ls-iocl-svg{
-  width:68px;
-  height:68px;
-  filter:drop-shadow(0 10px 28px rgba(243,112,34,0.2));
-}
-#loginScreen .ls-brand-name{
-  font-size:32px;
-  letter-spacing:1.2px;
-  color:#f68b49;
-}
-#loginScreen .ls-brand-full{
-  margin-top:4px;
-  color:#dde9fb;
-  font-size:12px;
-  letter-spacing:0.5px;
-}
-#loginScreen .ls-brand-govt{
-  margin-top:3px;
-  color:#90a8c7;
-  font-size:10.5px;
-  letter-spacing:0.3px;
-}
-#loginScreen .ls-portal-right{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:8px;
-}
-#loginScreen .ls-portal-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  min-height:32px;
-  padding:0 14px;
-  border-radius:999px;
-  border:1px solid rgba(125,211,252,0.22);
-  background:rgba(10,23,45,0.62);
-  color:#d8e8fa;
-  font-family:'Rajdhani',sans-serif;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:1px;
-  text-transform:uppercase;
-}
-#loginScreen .ls-portal-title{
-  font-size:22px;
-  letter-spacing:0.3px;
-  color:#f8fbff;
-  text-shadow:none;
-}
-#loginScreen .ls-portal-sub{
-  margin-top:0;
-  color:#95adca;
-  font-size:12px;
-}
-#loginScreen .ls-body{
-  position:relative;
-  z-index:1;
-  display:grid;
-  grid-template-columns:minmax(0,1.2fr) minmax(420px,460px);
-  align-items:stretch;
-  gap:0;
-  overflow:hidden;
-}
-#loginScreen .ls-hero{
-  padding:58px 58px 54px;
-  display:flex;
-  align-items:center;
-  background:transparent;
-  border-right:1px solid rgba(148,163,184,0.08);
-}
-#loginScreen .ls-hero::before{
-  top:-40px;
-  right:120px;
-  width:280px;
-  height:720px;
-  background:linear-gradient(180deg,rgba(243,112,34,0.2) 0%,rgba(243,112,34,0) 72%);
-  opacity:0.48;
-  filter:blur(4px);
-}
-#loginScreen .ls-hero::after{
-  bottom:34px;
-  left:58px;
-  width:320px;
-  height:320px;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(59,130,246,0.16) 0%,rgba(59,130,246,0) 72%);
-}
-#loginScreen .ls-hero-grid{
-  opacity:0.46;
-}
-#loginScreen .ls-reformer-img-wrap{
-  right:14px;
-  top:6%;
-  width:60%;
-  max-width:500px;
-  bottom:24px;
-}
-#loginScreen .ls-reformer-img-wrap::before{
-  background:radial-gradient(ellipse at 50% 55%,rgba(243,112,34,0.18) 0%,transparent 68%);
-}
-#loginScreen .ls-reformer-img{
-  width:88%;
-  opacity:0.98;
-  filter:
-    brightness(0.96)
-    contrast(1.1)
-    saturate(1.06)
-    drop-shadow(0 0 26px rgba(243,112,34,0.22))
-    drop-shadow(0 20px 42px rgba(2,6,23,0.95));
-}
-#loginScreen .ls-hero-content{
-  max-width:560px;
-}
-#loginScreen .ls-tagline{
-  margin-bottom:16px;
-  color:#f8b27d;
-  font-size:12px;
-  letter-spacing:4px;
-}
-#loginScreen .ls-tagline::before{
-  width:38px;
-  background:#f68b49;
-}
-#loginScreen .ls-system-title{
-  margin-bottom:14px;
-  font-size:48px;
-  line-height:1.04;
-  letter-spacing:-0.02em;
-}
-#loginScreen .ls-system-title span{
-  display:block;
-  margin-top:8px;
-  color:#8ec5ff;
-}
-#loginScreen .ls-desc{
-  max-width:470px;
-  margin-bottom:22px;
-  color:#d8e4f5;
-  font-size:15px;
-  line-height:1.7;
-}
-#loginScreen .ls-badges{
-  gap:10px;
-}
-#loginScreen .ls-badge{
-  padding:7px 14px;
-  border-radius:999px;
-  background:rgba(7,18,39,0.68);
-  border:1px solid rgba(148,163,184,0.2);
-  color:#edf5ff;
-  font-size:11px;
-  letter-spacing:0.8px;
-  text-transform:uppercase;
-}
-#loginScreen .ls-hero-metrics{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:12px;
-  margin-top:22px;
-  max-width:510px;
-}
-#loginScreen .ls-hero-metric{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  padding:14px 16px;
-  border-radius:20px;
-  border:1px solid rgba(148,163,184,0.16);
-  background:linear-gradient(180deg,rgba(9,20,41,0.78) 0%,rgba(5,14,31,0.68) 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
-}
-#loginScreen .ls-hero-metric-label{
-  color:#7fa3cb;
-  font-family:'Rajdhani',sans-serif;
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:1.2px;
-  text-transform:uppercase;
-}
-#loginScreen .ls-hero-metric-value{
-  color:#f7fbff;
-  font-family:'EB Garamond',Georgia,serif;
-  font-size:21px;
-  font-weight:600;
-  line-height:1.08;
-}
-#loginScreen .ls-card-wrap{
-  position:relative;
-  width:100%;
-  min-width:420px;
-  padding:42px 36px 34px;
-  background:linear-gradient(180deg,rgba(8,19,38,0.96) 0%,rgba(6,14,29,0.98) 100%);
-  border-left:1px solid rgba(148,163,184,0.12);
-  box-shadow:-28px 0 72px rgba(2,6,23,0.42);
-}
-#loginScreen .ls-card-wrap::before{
-  content:"";
-  position:absolute;
-  inset:0 0 auto 0;
-  height:160px;
-  background:linear-gradient(180deg,rgba(59,130,246,0.12) 0%,rgba(59,130,246,0) 100%);
-  pointer-events:none;
-}
-#loginScreen .ls-card-kicker{
-  position:relative;
-  z-index:1;
-  display:inline-flex;
-  align-items:center;
-  min-height:30px;
-  padding:0 12px;
-  border-radius:999px;
-  border:1px solid rgba(96,165,250,0.22);
-  background:rgba(11,25,49,0.7);
-  color:#d5e7fb;
-  font-family:'Rajdhani',sans-serif;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:1.1px;
-  text-transform:uppercase;
-}
-#loginScreen .ls-card-title{
-  position:relative;
-  z-index:1;
-  margin-top:18px;
-  margin-bottom:8px;
-  font-size:34px;
-  line-height:1.02;
-  color:#f8fbff;
-}
-#loginScreen .ls-card-sub{
-  position:relative;
-  z-index:1;
-  margin-bottom:18px;
-  color:#9cb3d0;
-  font-size:14px;
-  line-height:1.6;
-}
-#loginScreen .ls-card-status{
-  position:relative;
-  z-index:1;
-  margin-bottom:20px;
-  padding:14px 16px;
-  border-radius:18px;
-  border:1px solid rgba(148,163,184,0.12);
-  background:rgba(10,20,39,0.66);
-}
-#loginScreen .ls-card-status-label{
-  color:#7fa3cb;
-  font-family:'Rajdhani',sans-serif;
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:1.15px;
-  text-transform:uppercase;
-}
-#loginScreen .ls-card-status-value{
-  margin-top:6px;
-  color:#f6fbff;
-  font-size:14px;
-  font-weight:600;
-  line-height:1.45;
-}
-#loginScreen .ls-accent-bar{
-  display:none;
-}
-#loginScreen .ls-field{
-  margin-bottom:16px;
-}
-#loginScreen .ls-label{
-  margin-bottom:7px;
-  color:#8eb7e0;
-  font-size:10.5px;
-}
-#loginScreen .ls-input-box{
-  min-height:58px;
-  border-radius:18px;
-  border:1px solid rgba(148,163,184,0.18);
-  background:rgba(15,28,52,0.72);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
-}
-#loginScreen .ls-input-box:focus-within{
-  border-color:rgba(96,165,250,0.64);
-  box-shadow:0 0 0 4px rgba(59,130,246,0.12);
-  background:rgba(17,33,59,0.88);
-}
-#loginScreen .ls-input-icon{
-  padding:0 15px;
-  font-size:16px;
-}
-#loginScreen .ls-input{
-  padding:14px 12px 14px 0;
-  color:#f8fbff;
-  font-size:15px;
-}
-#loginScreen .ls-input::placeholder{
-  color:#6482a8;
-}
-#loginScreen .ls-error{
-  border-radius:14px;
-  padding:10px 12px;
-}
-#loginScreen .ls-btn{
-  min-height:54px;
-  border-radius:18px;
-  padding:14px 18px;
-  font-size:15px;
-}
-#loginScreen .ls-btn-bio{
-  margin-top:12px;
-  background:linear-gradient(90deg,#0f2744,#1c3f78,#2563eb);
-}
-#loginScreen .ls-helper{
-  margin-top:14px;
-  text-align:left;
-}
-#loginScreen .ls-forgot-link{
-  display:inline-flex;
-  width:100%;
-  align-items:center;
-  justify-content:center;
-  min-height:44px;
-  border-radius:14px;
-  font-size:12px;
-}
-#loginScreen .ls-helpdesk{
-  margin-top:18px;
-  padding:14px 16px;
-  border-radius:18px;
-  border-color:rgba(96,165,250,0.18);
-  background:linear-gradient(180deg,rgba(9,21,43,0.72) 0%,rgba(7,16,33,0.72) 100%);
-  color:#d4e5f9;
-}
-#loginScreen .ls-helpdesk a{
-  color:#f6fbff;
-}
-#loginScreen .ls-credit-row{
-  position:relative;
-  z-index:2;
-  padding:14px 34px 20px;
-  background:linear-gradient(180deg,rgba(4,10,24,0) 0%,rgba(4,10,24,0.56) 100%);
-  border-top:1px solid rgba(148,163,184,0.08);
-}
-#loginScreen .ls-credit-text{
-  color:#7d95b1;
-}
-#loginScreen .install-fab{
-  min-height:42px;
-  padding:0 16px;
-  border-radius:999px;
-  border-color:rgba(96,165,250,0.22);
-  background:linear-gradient(135deg,rgba(243,112,34,0.26) 0%,rgba(59,130,246,0.2) 100%);
-  color:#f8fbff;
-}
-#loginScreen .install-fab:hover{
-  border-color:rgba(243,112,34,0.56);
-  background:linear-gradient(135deg,rgba(243,112,34,0.36) 0%,rgba(59,130,246,0.28) 100%);
-}
-
 .app-header-meta{
   order:1;
   background:rgba(0,0,0,0.3);
@@ -8409,200 +8007,165 @@ body.light-theme .hm-adjust-empty{
     height:100dvh !important;
     overflow-y:auto !important;
     overflow-x:hidden !important;
-    padding-bottom:max(10px, env(safe-area-inset-bottom,0px)) !important;
+    padding-bottom:max(12px, env(safe-area-inset-bottom,0px)) !important;
+    background:
+      radial-gradient(118% 84% at 0% 0%,rgba(243,112,34,0.18) 0%,rgba(243,112,34,0) 42%),
+      radial-gradient(88% 78% at 100% 12%,rgba(96,176,240,0.18) 0%,rgba(96,176,240,0) 40%),
+      linear-gradient(180deg,#031445 0%,#021131 100%) !important;
   }
-  #loginScreen::before{
-    opacity:0.28 !important;
-    background-size:30px 30px !important;
+  #loginScreen .ls-topbar{
+    padding:6px 12px !important;
+    gap:8px !important;
+    justify-content:space-between !important;
+    font-size:10px !important;
   }
-  #loginScreen::after{
-    width:92vw !important;
-    min-width:0 !important;
-    right:-28vw !important;
-    bottom:-34vw !important;
+  #loginScreen .ls-topbar span:first-child{
+    display:none !important;
+  }
+  #loginScreen #ls-clock{
+    padding:2px 8px !important;
+    font-size:10px !important;
   }
   #loginScreen .ls-header{
-    padding:14px 14px 10px !important;
-    justify-content:flex-start !important;
-    align-items:flex-start !important;
-    text-align:left !important;
-    gap:12px !important;
+    padding:12px 14px 10px !important;
+    justify-content:center !important;
+    text-align:center !important;
+    gap:10px !important;
+    background:transparent !important;
+    border-bottom:0 !important;
+    box-shadow:none !important;
   }
   #loginScreen .ls-logo-group{
-    width:auto !important;
-    justify-content:flex-start !important;
+    width:100% !important;
+    justify-content:center !important;
     gap:10px !important;
-    align-items:flex-start !important;
   }
   #loginScreen .ls-iocl-svg{
-    width:44px !important;
-    height:44px !important;
+    width:48px !important;
+    height:48px !important;
   }
   #loginScreen .ls-brand-name{
     font-size:22px !important;
   }
   #loginScreen .ls-brand-full,
-  #loginScreen .ls-brand-govt{
-    display:none !important;
-  }
+  #loginScreen .ls-brand-govt,
   #loginScreen .ls-portal-right{
-    display:flex !important;
-    flex:1 1 auto !important;
-    align-items:flex-start !important;
-    text-align:left !important;
-    gap:6px !important;
-  }
-  #loginScreen .ls-portal-chip{
-    min-height:28px !important;
-    padding:0 10px !important;
-    font-size:10px !important;
-    letter-spacing:0.9px !important;
-  }
-  #loginScreen .ls-portal-title{
-    font-size:14px !important;
-  }
-  #loginScreen .ls-portal-sub{
-    display:block !important;
-    font-size:10.5px !important;
-    line-height:1.45 !important;
-  }
-  #loginScreen .ls-topbar,
-  #loginScreen .ls-info-strip,
-  #loginScreen .ls-footer,
-  #loginScreen .ls-security{
     display:none !important;
   }
   #loginScreen .ls-body{
     display:flex !important;
     flex-direction:column !important;
-    min-height:0 !important;
     overflow:visible !important;
     padding:0 12px 16px !important;
-    gap:12px !important;
   }
   #loginScreen .ls-hero{
     display:flex !important;
+    min-height:250px !important;
+    padding:18px 16px 118px !important;
     align-items:flex-start !important;
-    min-height:0 !important;
-    padding:16px 14px 126px !important;
-    border:1px solid rgba(148,163,184,0.14) !important;
-    border-right:1px solid rgba(148,163,184,0.14) !important;
+    border:1px solid rgba(255,255,255,0.08) !important;
     border-radius:24px !important;
+    background:linear-gradient(160deg,rgba(2,16,58,0.96),rgba(5,28,82,0.88)) !important;
+    box-shadow:0 22px 44px rgba(0,0,0,0.34) !important;
     overflow:hidden !important;
   }
   #loginScreen .ls-hero::before{
-    right:12px !important;
-    top:-96px !important;
-    width:200px !important;
+    top:-72px !important;
+    right:18px !important;
+    width:180px !important;
     height:420px !important;
-    opacity:0.42 !important;
+    opacity:0.24 !important;
   }
   #loginScreen .ls-hero::after{
-    left:-22px !important;
-    bottom:-28px !important;
-    width:220px !important;
-    height:220px !important;
+    bottom:26px !important;
+    left:16px !important;
+    width:52% !important;
+    height:1px !important;
+  }
+  #loginScreen .ls-hero-grid{
+    opacity:0.48 !important;
+  }
+  #loginScreen .ls-reformer-img-wrap{
+    position:absolute !important;
+    right:-18px !important;
+    top:14px !important;
+    width:50% !important;
+    max-width:218px !important;
+    bottom:auto !important;
+    opacity:0.92 !important;
+  }
+  #loginScreen .ls-reformer-img{
+    width:88% !important;
   }
   #loginScreen .ls-hero-content{
     max-width:none !important;
-    padding-right:35% !important;
+    padding-right:34% !important;
   }
   #loginScreen .ls-tagline{
     display:flex !important;
-    margin-bottom:10px !important;
     font-size:10px !important;
-    letter-spacing:2.8px !important;
+    letter-spacing:2.4px !important;
+    margin-bottom:10px !important;
   }
   #loginScreen .ls-system-title{
-    font-size:30px !important;
-    line-height:1.02 !important;
+    font-size:28px !important;
+    line-height:1.04 !important;
     margin-bottom:10px !important;
-  }
-  #loginScreen .ls-system-title span{
-    margin-top:6px !important;
   }
   #loginScreen .ls-desc{
     display:block !important;
-    max-width:64% !important;
+    max-width:66% !important;
     margin-bottom:14px !important;
     font-size:12px !important;
     line-height:1.55 !important;
   }
   #loginScreen .ls-badges{
     display:flex !important;
-    gap:8px !important;
+    flex-wrap:wrap !important;
+    gap:7px !important;
   }
   #loginScreen .ls-badge{
     font-size:9.5px !important;
     padding:5px 10px !important;
+    background:rgba(3,12,34,0.58) !important;
   }
-  #loginScreen .ls-hero-metrics{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    gap:8px !important;
-    margin-top:16px !important;
-    max-width:none !important;
-  }
-  #loginScreen .ls-hero-metric:last-child{
-    grid-column:1 / -1 !important;
-  }
-  #loginScreen .ls-hero-metric{
-    padding:11px 12px !important;
-    border-radius:16px !important;
-  }
-  #loginScreen .ls-hero-metric-label{
-    font-size:9px !important;
-  }
-  #loginScreen .ls-hero-metric-value{
-    font-size:17px !important;
-  }
-  #loginScreen .ls-reformer-img-wrap{
-    position:absolute !important;
-    right:-14px !important;
-    top:16px !important;
-    width:50% !important;
-    max-width:220px !important;
-    bottom:auto !important;
-    opacity:0.88 !important;
+  #loginScreen .ls-info-strip,
+  #loginScreen .ls-security,
+  #loginScreen .ls-footer{
+    display:none !important;
   }
   #loginScreen .ls-card-wrap{
     width:100% !important;
     min-width:0 !important;
     max-width:none !important;
-    margin:-102px 0 0 !important;
+    margin:-94px 0 0 !important;
     position:relative !important;
-    z-index:5 !important;
+    z-index:4 !important;
     padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px)) !important;
-    border:1px solid rgba(148,163,184,0.14) !important;
-    border-left:1px solid rgba(148,163,184,0.14) !important;
-    border-top:1px solid rgba(148,163,184,0.14) !important;
+    border:1px solid rgba(255,255,255,0.1) !important;
+    border-top:1px solid rgba(243,112,34,0.34) !important;
+    border-left:1px solid rgba(255,255,255,0.1) !important;
     border-radius:24px !important;
-    box-shadow:0 24px 48px rgba(2,6,23,0.46) !important;
+    background:linear-gradient(180deg,rgba(4,16,44,0.96) 0%,rgba(4,12,31,0.98) 100%) !important;
+    box-shadow:0 24px 48px rgba(0,0,0,0.42) !important;
     justify-content:flex-start !important;
   }
-  #loginScreen .ls-card-kicker{
-    min-height:28px !important;
-    padding:0 10px !important;
-    font-size:10px !important;
-  }
   #loginScreen .ls-card-title{
-    font-size:27px !important;
+    font-size:24px !important;
     text-align:left !important;
-    margin-top:14px !important;
     margin-bottom:6px !important;
   }
   #loginScreen .ls-card-sub{
     font-size:13px !important;
     text-align:left !important;
-    margin-bottom:14px !important;
-  }
-  #loginScreen .ls-card-status{
-    display:block !important;
-    margin-bottom:16px !important;
-    padding:12px 14px !important;
-    border-radius:16px !important;
+    margin-bottom:12px !important;
+    color:#c7daf1 !important;
   }
   #loginScreen .ls-accent-bar{
-    display:none !important;
+    width:84px !important;
+    margin:0 0 14px !important;
+    height:4px !important;
+    border-radius:999px !important;
   }
   #loginScreen .ls-field{
     margin-bottom:12px !important;
@@ -8614,6 +8177,8 @@ body.light-theme .hm-adjust-empty{
   #loginScreen .ls-input-box{
     min-height:54px !important;
     border-radius:16px !important;
+    background:rgba(255,255,255,0.06) !important;
+    border-color:rgba(140,180,255,0.18) !important;
   }
   #loginScreen .ls-input{
     font-size:16px !important;
@@ -8625,10 +8190,9 @@ body.light-theme .hm-adjust-empty{
     padding:8px 10px !important;
   }
   #loginScreen .ls-btn{
-    min-height:52px !important;
+    min-height:50px !important;
     font-size:15px !important;
     padding:12px 14px !important;
-    margin-top:10px !important;
     border-radius:16px !important;
   }
   #loginScreen .ls-btn-bio{
@@ -8636,32 +8200,43 @@ body.light-theme .hm-adjust-empty{
   }
   #loginScreen .ls-helper{
     margin-top:10px !important;
-    text-align:left !important;
   }
   #loginScreen .ls-forgot-link{
     width:100% !important;
     justify-content:center !important;
+    min-height:44px !important;
+    border-radius:14px !important;
+    background:rgba(255,255,255,0.05) !important;
   }
   #loginScreen .ls-helpdesk{
     display:flex !important;
     margin-top:14px !important;
-    padding:12px 14px !important;
+    padding:11px 12px !important;
+    border-radius:16px !important;
+    background:rgba(96,176,240,0.08) !important;
     font-size:11px !important;
     gap:8px !important;
+    flex-wrap:wrap !important;
   }
   #loginScreen .ls-credit-row{
     display:flex !important;
-    padding:10px 12px 18px !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:10px !important;
+    padding:12px 12px 18px !important;
     background:transparent !important;
     border-top:0 !important;
   }
   #loginScreen .ls-credit-text{
-    flex:1 1 100% !important;
     font-size:10px !important;
+    text-align:center !important;
+    color:#7fa3cb !important;
   }
   #loginScreen .install-fab{
     width:100% !important;
+    min-height:44px !important;
     justify-content:center !important;
+    font-size:13px !important;
   }
 }
 </style>
@@ -11501,9 +11076,8 @@ body.light-theme .scada-source-btn.is-active{
     </div>
 
     <div class="ls-portal-right">
-      <div class="ls-portal-chip">Protected refinery access</div>
-      <div class="ls-portal-title">Operations Sign In</div>
-      <div class="ls-portal-sub">HGU-3 reformer monitoring workspace for burners, cleaning, alarms, and TST logs.</div>
+      <div class="ls-portal-title">Employee Enterprise Portal</div>
+      <div class="ls-portal-sub">Integrated SCADA &amp; Operations Management System &nbsp;|&nbsp; Refinery Division</div>
     </div>
   </div>
 
@@ -11521,31 +11095,21 @@ body.light-theme .scada-source-btn.is-active{
       </div>
 
       <div class="ls-hero-content">
-        <div class="ls-tagline">Refinery Operations Access</div>
+        <div class="ls-tagline">The Energy of India</div>
         <div class="ls-system-title">
-          SCADA HGU-3 Reformer<br><span>Monitoring Console</span>
+          🔥 SCADA HGU-3 Reformer<br><span>Burner Control System</span>
         </div>
         <div class="ls-desc">
-          Live burner monitoring, cleaning visibility, alarms, and TST history in one secure operations workspace for refinery teams.
+          Real-time monitoring and management of reformer<br>
+          burner operations across refinery walls.<br>
+          <strong style="color:#F37022;font-weight:700;">Authorized Personnel Only.</strong>
+          Unauthorized access is<br>prohibited and subject to disciplinary action.
         </div>
         <div class="ls-badges">
-          <span class="ls-badge">Walls A-D live</span>
-          <span class="ls-badge">Secure employee access</span>
-          <span class="ls-badge">Mobile and desktop ready</span>
-        </div>
-        <div class="ls-hero-metrics">
-          <div class="ls-hero-metric">
-            <span class="ls-hero-metric-label">Coverage</span>
-            <strong class="ls-hero-metric-value">Burners</strong>
-          </div>
-          <div class="ls-hero-metric">
-            <span class="ls-hero-metric-label">Tracking</span>
-            <strong class="ls-hero-metric-value">TST + Alarms</strong>
-          </div>
-          <div class="ls-hero-metric">
-            <span class="ls-hero-metric-label">Access</span>
-            <strong class="ls-hero-metric-value">Secure login</strong>
-          </div>
+          <span class="ls-badge">🏭 Refinery Operations</span>
+          <span class="ls-badge">🔒 Secure Access</span>
+          <span class="ls-badge">📊 Live Analytics</span>
+          <span class="ls-badge">⚙️ IOCL IT Division</span>
         </div>
       </div>
 
@@ -11553,13 +11117,8 @@ body.light-theme .scada-source-btn.is-active{
 
     <!-- Right: Login Card -->
     <div class="ls-card-wrap">
-      <div class="ls-card-kicker">Authorized Access</div>
-      <div class="ls-card-title">Welcome back</div>
-      <div class="ls-card-sub">Sign in with your employee ID to open the live reformer monitoring workspace.</div>
-      <div class="ls-card-status">
-        <div class="ls-card-status-label">Workspace</div>
-        <div class="ls-card-status-value">Burners, cleaning, chamber status, alarms, and TST logs in one view.</div>
-      </div>
+      <div class="ls-card-title">Secure Sign In</div>
+      <div class="ls-card-sub">Enter your IOCL credentials to access the portal</div>
       <div class="ls-accent-bar"></div>
 
       <div class="ls-field">
@@ -11587,19 +11146,19 @@ body.light-theme .scada-source-btn.is-active{
       </div>
 
       <button class="ls-btn ls-btn-login" onclick="login()">
-        <span>Open monitoring workspace</span>
+        <span>Sign In to Portal</span>
         <span class="ls-btn-arrow">&#8594;</span>
       </button>
       <button class="ls-btn ls-btn-bio" id="ls-biometric-btn" style="display:none;" onclick="loginWithBiometric()">
-        <span>Use fingerprint login</span>
+        <span>👆 Use Fingerprint Login</span>
       </button>
 
       <div class="ls-helper">
-        <button class="ls-forgot-link" onclick="showForgotModal()">Forgot password? Contact IT Helpdesk</button>
+        <button class="ls-forgot-link" onclick="showForgotModal()">🔑 Forgot Password? Contact IT Helpdesk</button>
       </div>
 
       <div class="ls-helpdesk">
-        <span>IT Helpdesk</span>
+        <span>🛟 IT Helpdesk</span>
         <span><b>8476056756</b>&nbsp;|&nbsp;<b><a href="mailto:dubeya1@indianoil.in" style="color:#fff;font-weight:700;text-decoration:none;">dubeya1@indianoil.in</a></b></span>
       </div>
     </div>
@@ -11607,7 +11166,7 @@ body.light-theme .scada-source-btn.is-active{
 
   <div class="ls-credit-row">
     <div class="ls-credit-text">Dashboard designed &amp; developed by <b style="color:#F37022;">Ashutosh Dubey</b></div>
-    <button class="install-fab" id="installAppFab" data-install-app data-install-autohide title="Install this dashboard app">Install App</button>
+    <button class="install-fab" id="installAppFab" data-install-app data-install-autohide title="Install this dashboard app">⬇️ Install App</button>
   </div>
 
 
