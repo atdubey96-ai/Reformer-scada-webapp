@@ -8082,7 +8082,11 @@ function clearLoginState(){
   try{ sessionStorage.removeItem("scadaLoggedIn"); }catch(e){}
   try{ sessionStorage.removeItem("scadaEmpId"); }catch(e){}
   try{
-    if(document.body) document.body.removeAttribute("data-mobile-v2-boot");
+    if(document.body){
+      document.body.removeAttribute("data-mobile-v2-boot");
+      document.body.removeAttribute("data-mobile-v2");
+      document.body.removeAttribute("data-mobile-legacy");
+    }
   }catch(e){}
 }
 
@@ -8090,6 +8094,18 @@ function primeMobileShellBootVisibility(){
   try{
     if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport() && document.body){
       document.body.setAttribute("data-mobile-v2-boot", "1");
+      document.body.setAttribute("data-mobile-v2", "1");
+      var mobileRoot = document.getElementById("mobile-v2-root");
+      if(!mobileRoot){
+        mobileRoot = document.createElement("div");
+        mobileRoot.id = "mobile-v2-root";
+        var anchor = document.querySelector(".tab-panels");
+        if(anchor && anchor.parentNode){
+          anchor.parentNode.insertBefore(mobileRoot, anchor);
+        }else{
+          document.body.appendChild(mobileRoot);
+        }
+      }
       if(typeof window.scadaUpdateMobileShell === "function"){
         window.scadaUpdateMobileShell("home");
       }
@@ -28903,6 +28919,7 @@ async function loginWithFolderSupport(){
     persistLogin(empId);
     if(_matched2 && typeof saveLocalDevicePasswordHash === "function") saveLocalDevicePasswordHash(_matched2);
 
+    primeMobileShellBootVisibility();
     document.getElementById("loginScreen").style.display="none";
     err.style.display="none";
     /* Update operator display */
