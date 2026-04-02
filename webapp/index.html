@@ -9804,6 +9804,9 @@ function updateHeatMapAdjustmentLogic(snapshot){
       }
       var isScrollableList = row.suggestions.length > 6;
       listHtml = '<div class="hm-adjust-suggest-list' + (isScrollableList ? ' is-scrollable' : '') + '">' + listHtml + '</div>';
+      if(isScrollableList){
+        listHtml += '<div class="hm-adjust-scroll-cue" aria-hidden="true"><span class="hm-adjust-scroll-cue-arrows"></span></div>';
+      }
     }else{
       listHtml = '<div class="hm-adjust-empty">All peep holes are currently inside the preferred TST band.</div>';
     }
@@ -16975,6 +16978,50 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           border-radius:999px;
           background:rgba(148,163,184,0.72);
         }
+        #tab-cuboid #stack-adjust-card .hm-adjust-scroll-cue,
+        #tab-cuboidstack #stack-adjust-card .hm-adjust-scroll-cue{
+          margin-top:8px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          min-height:18px;
+        }
+        #tab-cuboid #stack-adjust-card .hm-adjust-scroll-cue-arrows,
+        #tab-cuboidstack #stack-adjust-card .hm-adjust-scroll-cue-arrows{
+          position:relative;
+          display:block;
+          width:20px;
+          height:14px;
+          animation:hm-adjust-scroll-cue-bob 1.5s ease-in-out infinite;
+          opacity:0.9;
+        }
+        #tab-cuboid #stack-adjust-card .hm-adjust-scroll-cue-arrows::before,
+        #tab-cuboid #stack-adjust-card .hm-adjust-scroll-cue-arrows::after,
+        #tab-cuboidstack #stack-adjust-card .hm-adjust-scroll-cue-arrows::before,
+        #tab-cuboidstack #stack-adjust-card .hm-adjust-scroll-cue-arrows::after{
+          content:"";
+          position:absolute;
+          left:50%;
+          width:8px;
+          height:8px;
+          margin-left:-5px;
+          border-right:2px solid rgba(148,163,184,0.9);
+          border-bottom:2px solid rgba(148,163,184,0.9);
+          transform:rotate(45deg);
+        }
+        #tab-cuboid #stack-adjust-card .hm-adjust-scroll-cue-arrows::before,
+        #tab-cuboidstack #stack-adjust-card .hm-adjust-scroll-cue-arrows::before{
+          top:0;
+        }
+        #tab-cuboid #stack-adjust-card .hm-adjust-scroll-cue-arrows::after,
+        #tab-cuboidstack #stack-adjust-card .hm-adjust-scroll-cue-arrows::after{
+          top:5px;
+          opacity:0.72;
+        }
+        @keyframes hm-adjust-scroll-cue-bob{
+          0%,100%{ transform:translateY(0); opacity:0.7; }
+          50%{ transform:translateY(3px); opacity:1; }
+        }
         #tab-cuboid #stack-adjust-card .hm-adjust-suggest-row,
         #tab-cuboidstack #stack-adjust-card .hm-adjust-suggest-row{
           display:flex;
@@ -17081,6 +17128,13 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         body.light-theme #tab-cuboid #stack-adjust-card .hm-adjust-suggest-list::-webkit-scrollbar-thumb,
         body.light-theme #tab-cuboidstack #stack-adjust-card .hm-adjust-suggest-list::-webkit-scrollbar-thumb{
           background:rgba(148,163,184,0.9);
+        }
+        body.light-theme #tab-cuboid #stack-adjust-card .hm-adjust-scroll-cue-arrows::before,
+        body.light-theme #tab-cuboid #stack-adjust-card .hm-adjust-scroll-cue-arrows::after,
+        body.light-theme #tab-cuboidstack #stack-adjust-card .hm-adjust-scroll-cue-arrows::before,
+        body.light-theme #tab-cuboidstack #stack-adjust-card .hm-adjust-scroll-cue-arrows::after{
+          border-right-color:rgba(100,116,139,0.92);
+          border-bottom-color:rgba(100,116,139,0.92);
         }
         body.light-theme #tab-cuboid #stack-adjust-card .hm-adjust-item-high .hm-adjust-suggest,
         body.light-theme #tab-cuboidstack #stack-adjust-card .hm-adjust-item-high .hm-adjust-suggest{
