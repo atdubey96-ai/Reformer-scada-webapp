@@ -36794,9 +36794,9 @@ window.updateReformerDashComposition = updateReformerDashComposition;
             '<div class="jobsdash-card-date">Logged: ' + jobsReformerEscapeHtml(jobsReformerFormatCardTime(job.created)) + '</div>',
           '</div>',
           '<div class="jobsdash-card-actions">',
-            '<button type="button" class="jobsdash-status-btn ' + (job.status === "in-progress" ? 'is-progress' : job.status === "done" ? 'is-done' : 'is-pending') + '" onclick="cycleJobsReformerStatus(' + JSON.stringify(String(job.id)) + ')">' + jobsReformerEscapeHtml(statusLabel) + '</button>',
-            '<button type="button" class="jobsdash-edit-btn" onclick="editJobsReformerJob(' + JSON.stringify(String(job.id)) + ')">Edit</button>',
-            '<button type="button" class="jobsdash-delete-btn" onclick="deleteJobsReformerJob(' + JSON.stringify(String(job.id)) + ')">Delete</button>',
+            '<button type="button" class="jobsdash-status-btn ' + (job.status === "in-progress" ? 'is-progress' : job.status === "done" ? 'is-done' : 'is-pending') + '" data-job-id="' + jobsReformerEscapeHtml(String(job.id)) + '" onclick="cycleJobsReformerStatus(this.dataset.jobId)">' + jobsReformerEscapeHtml(statusLabel) + '</button>',
+            '<button type="button" class="jobsdash-edit-btn" data-job-id="' + jobsReformerEscapeHtml(String(job.id)) + '" onclick="editJobsReformerJob(this.dataset.jobId)">Edit</button>',
+            '<button type="button" class="jobsdash-delete-btn" data-job-id="' + jobsReformerEscapeHtml(String(job.id)) + '" onclick="deleteJobsReformerJob(this.dataset.jobId)">Delete</button>',
           '</div>',
         '</article>'
       ].join("");
