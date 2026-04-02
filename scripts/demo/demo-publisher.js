@@ -336,13 +336,34 @@ function appleScriptString(value) {
   return String(value || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-function openWorkbookInExcel() {
-  const result = spawnSync("open", ["-a", "Microsoft Excel", DEMO_WORKBOOK_PATH], {
+function runAppleScript(script) {
+  return spawnSync("osascript", ["-"], {
+    cwd: ROOT_DIR,
+    input: script,
+    encoding: "utf8"
+  });
+}
+
+function isDemoWorkbookOpen() {
+  const workbookName = path.basename(DEMO_WORKBOOK_PATH);
+  const script = [
+    'tell application "Microsoft Excel"',
+    "if not running then return false",
+    'return (exists workbook "' + appleScriptString(workbookName) + '")',
+    "end tell"
+  ].join("\n");
+  const result = runAppleScript(script);
+  if (result.status !== 0) return false;
+  return String(result.stdout || "").trim().toLowerCase() === "true";
+}
+
+function openWorkbookInBackground() {
+  const result = spawnSync("open", ["-g", "-a", "Microsoft Excel", DEMO_WORKBOOK_PATH], {
     cwd: ROOT_DIR,
     stdio: "ignore"
   });
   if (result.status === 0) return;
-  spawnSync("open", [DEMO_WORKBOOK_PATH], {
+  spawnSync("open", ["-g", DEMO_WORKBOOK_PATH], {
     cwd: ROOT_DIR,
     stdio: "ignore"
   });
@@ -352,14 +373,15 @@ function updateWorkbook(snapshot) {
   if (SKIP_WORKBOOK) return;
   if (process.platform !== "darwin") return;
   ensureDemoWorkbook();
-  openWorkbookInExcel();
+  if (!isDemoWorkbookOpen()) {
+    openWorkbookInBackground();
+  }
   const workbookName = path.basename(DEMO_WORKBOOK_PATH);
   const assignments = TAGS.map((tag) => {
     return 'set value of range "' + tag.sheetCell + '" of targetSheet to ' + Number(snapshot[tag.tagId] || 0).toFixed(2);
   }).join("\n");
   const script = [
     'tell application "Microsoft Excel"',
-    "activate",
     "repeat 10 times",
     'if (exists workbook "' + appleScriptString(workbookName) + '") then exit repeat',
     "delay 0.5",
@@ -375,11 +397,7 @@ function updateWorkbook(snapshot) {
     "save workbook targetBook",
     "end tell"
   ].join("\n");
-  const result = spawnSync("osascript", ["-"], {
-    cwd: ROOT_DIR,
-    input: script,
-    encoding: "utf8"
-  });
+  const result = runAppleScript(script);
   if (result.status !== 0) {
     log("Workbook update warning: " + (result.stderr || result.stdout || "AppleScript failed").trim());
   }

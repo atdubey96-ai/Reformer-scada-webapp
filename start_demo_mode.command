@@ -31,7 +31,7 @@ else
 fi
 
 if [ -f "$SCRIPT_DIR/webapp/Data_website_demo.xlsx" ]; then
-  open -a "Microsoft Excel" "$SCRIPT_DIR/webapp/Data_website_demo.xlsx" >/dev/null 2>&1 || open "$SCRIPT_DIR/webapp/Data_website_demo.xlsx" >/dev/null 2>&1 || true
+  open -g -a "Microsoft Excel" "$SCRIPT_DIR/webapp/Data_website_demo.xlsx" >/dev/null 2>&1 || open -g "$SCRIPT_DIR/webapp/Data_website_demo.xlsx" >/dev/null 2>&1 || true
 fi
 
 echo ""
