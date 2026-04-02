@@ -4362,6 +4362,13 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   flex-direction:column;
   gap:18px;
 }
+#tab-cuboidstack .cuboid-tab-stack{
+  width:min(100%,1680px);
+  margin:0 auto;
+  padding:12px;
+  border:1px solid rgba(88,118,160,0.42);
+  border-radius:18px;
+}
 #tab-cuboidstack .cuboid-twin-control-panel{
   display:flex;
   align-items:center;
@@ -5443,6 +5450,9 @@ body.cuboid-overlay-lock #masterAlarm{
 body.light-theme #tab-cuboid,
 body.light-theme #tab-cuboidstack{
   background:#07090d;
+}
+body.light-theme #tab-cuboidstack .cuboid-tab-stack{
+  border-color:rgba(148,163,184,0.44);
 }
 
 /* Add bottom padding to body so content isn't hidden under tab bar */
@@ -9934,6 +9944,10 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cuboid .cuboid-tab-stack,
   #tab-cuboidstack .cuboid-tab-stack{
     gap:12px;
+  }
+  #tab-cuboidstack .cuboid-tab-stack{
+    padding:10px;
+    border-radius:16px;
   }
   #tab-cuboidstack .cuboid-twin-control-panel{
     flex-wrap:wrap;
@@ -35290,6 +35304,7 @@ body.light-theme .btab-alarm-count{
   #tab-cuboidstack .cuboid-twin-control-sub{display:none !important;}
   #tab-cuboidstack .cuboid-twin-control-badge{width:100% !important;}
   #tab-cuboidstack .cuboid-tab-stack{
+    padding:10px !important;
     gap:12px !important;
   }
   #tab-cuboidstack .cuboid-tab-shell{
