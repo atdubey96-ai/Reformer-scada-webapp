@@ -4392,6 +4392,7 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
 #btab-cuboidstack{ --tab-icon-accent:#7ddcf7; --tab-icon-glow:rgba(125,220,247,0.28); }
 #btab-reformerdash{ --tab-icon-accent:#f59e0b; --tab-icon-glow:rgba(245,158,11,0.26); }
 #btab-tempdata{ --tab-icon-accent:#ff9772; --tab-icon-glow:rgba(255,151,114,0.24); }
+#btab-jobsreformer{ --tab-icon-accent:#7ec8f0; --tab-icon-glow:rgba(126,200,240,0.28); }
 #btab-alarms{ --tab-icon-accent:#ff746b; --tab-icon-glow:rgba(255,116,107,0.28); }
 .btab-label{
   font-size:13px;
@@ -5868,7 +5869,8 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
   #btab-cuboidstack{order:3;}
   #btab-reformerdash{order:4;}
   #btab-tempdata{order:5;}
-  #btab-alarms{order:6;}
+  #btab-jobsreformer{order:6;}
+  #btab-alarms{order:7;}
   #btab-heatmap .btab-icon{
     width:40px;
     height:40px;
@@ -11072,6 +11074,591 @@ body.light-theme .scada-source-btn.is-active{
   #tab-reformerdash .refdash-gauge-grid{grid-template-columns:1fr;}
   #tab-reformerdash .refdash-section-title{font-size:16px;}
   #tab-reformerdash .refdash-subtab{padding:10px 14px;font-size:12px;}
+}
+</style>
+<style id="jobs-reformer-tab-20260402">
+#tab-jobsreformer{
+  --jobs-surface:linear-gradient(180deg, rgba(15,23,42,0.92) 0%, rgba(7,14,26,0.96) 100%);
+  --jobs-panel:rgba(15,23,42,0.82);
+  --jobs-panel-strong:rgba(10,18,32,0.92);
+  --jobs-border:rgba(126,200,240,0.18);
+  --jobs-shadow:0 18px 42px rgba(2,6,23,0.28);
+  --jobs-text:#e8eef7;
+  --jobs-dim:#8ea2b8;
+  --jobs-muted:#60748b;
+  --jobs-accent:#7ec8f0;
+  --jobs-amber:#f59e0b;
+  --jobs-green:#22c55e;
+  --jobs-red:#fb7185;
+  --jobs-blue:#60a5fa;
+  --jobs-cyan:#22d3ee;
+  padding:24px 20px 120px;
+  background:transparent;
+}
+body.light-theme #tab-jobsreformer{
+  --jobs-surface:linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(240,245,251,0.98) 100%);
+  --jobs-panel:rgba(255,255,255,0.96);
+  --jobs-panel-strong:rgba(246,249,253,0.98);
+  --jobs-border:rgba(15,23,42,0.08);
+  --jobs-shadow:0 18px 42px rgba(15,23,42,0.08);
+  --jobs-text:#122033;
+  --jobs-dim:#5f7288;
+  --jobs-muted:#7b8ca1;
+}
+#tab-jobsreformer .jobsdash-shell{
+  max-width:1560px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+#tab-jobsreformer .jobsdash-hero,
+#tab-jobsreformer .jobsdash-sync-bar,
+#tab-jobsreformer .jobsdash-stat,
+#tab-jobsreformer .jobsdash-panel{
+  border:1px solid var(--jobs-border);
+  box-shadow:var(--jobs-shadow);
+  backdrop-filter:blur(18px);
+}
+#tab-jobsreformer .jobsdash-hero{
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
+  padding:24px 26px;
+  border-radius:22px;
+  background:var(--jobs-surface);
+}
+#tab-jobsreformer .jobsdash-hero::before{
+  content:"";
+  position:absolute;
+  inset:auto -64px -88px auto;
+  width:260px;
+  height:260px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(245,158,11,0.16) 0%, rgba(245,158,11,0) 74%);
+  pointer-events:none;
+}
+#tab-jobsreformer .jobsdash-kicker{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1.8px;
+  text-transform:uppercase;
+  color:var(--jobs-accent);
+}
+#tab-jobsreformer .jobsdash-title{
+  margin:8px 0 10px;
+  font-size:30px;
+  line-height:1.05;
+  color:var(--jobs-text);
+}
+#tab-jobsreformer .jobsdash-copy{
+  max-width:860px;
+  font-size:13px;
+  line-height:1.65;
+  color:var(--jobs-dim);
+}
+#tab-jobsreformer .jobsdash-hero-side{
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:12px;
+  min-width:260px;
+}
+#tab-jobsreformer .jobsdash-clock-strip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.04);
+  color:var(--jobs-dim);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11px;
+}
+#tab-jobsreformer .jobsdash-live-dot{
+  width:9px;
+  height:9px;
+  border-radius:999px;
+  background:var(--jobs-green);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset,0 0 12px rgba(34,197,94,0.45);
+  animation:pulse 2s infinite;
+}
+#tab-jobsreformer .jobsdash-action-row{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:10px;
+}
+#tab-jobsreformer .jobsdash-btn{
+  appearance:none;
+  border:none;
+  border-radius:12px;
+  padding:11px 16px;
+  cursor:pointer;
+  font-weight:800;
+  letter-spacing:0.3px;
+  transition:transform 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+#tab-jobsreformer .jobsdash-btn:hover{ transform:translateY(-1px); }
+#tab-jobsreformer .jobsdash-btn-primary{
+  background:linear-gradient(135deg, rgba(245,158,11,0.96), rgba(243,112,34,0.95));
+  color:#0f172a;
+  box-shadow:0 12px 26px rgba(245,158,11,0.22);
+}
+#tab-jobsreformer .jobsdash-btn-secondary{
+  border:1px solid rgba(126,200,240,0.18);
+  background:rgba(255,255,255,0.04);
+  color:var(--jobs-text);
+}
+#tab-jobsreformer .jobsdash-btn-danger{
+  border:1px solid rgba(251,113,133,0.22);
+  background:rgba(251,113,133,0.08);
+  color:#ffd5dc;
+}
+body.light-theme #tab-jobsreformer .jobsdash-btn-secondary{
+  background:rgba(241,245,249,0.9);
+}
+body.light-theme #tab-jobsreformer .jobsdash-btn-danger{
+  color:#b42335;
+}
+#tab-jobsreformer .jobsdash-sync-bar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px 18px;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px;
+  border-radius:18px;
+  background:var(--jobs-panel);
+  color:var(--jobs-dim);
+  font-size:11px;
+}
+#tab-jobsreformer .jobsdash-sync-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 16px;
+  align-items:center;
+}
+#tab-jobsreformer .jobsdash-mono{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+#tab-jobsreformer .jobsdash-sync-meta strong{
+  color:var(--jobs-text);
+}
+#tab-jobsreformer .jobsdash-sync-state{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 12px;
+  border-radius:999px;
+  border:1px solid rgba(126,200,240,0.18);
+  background:rgba(255,255,255,0.04);
+  color:var(--jobs-text);
+}
+#tab-jobsreformer .jobsdash-sync-state::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:var(--jobs-blue);
+  box-shadow:0 0 12px rgba(96,165,250,0.45);
+}
+#tab-jobsreformer .jobsdash-sync-state.is-ok::before{
+  background:var(--jobs-green);
+  box-shadow:0 0 12px rgba(34,197,94,0.42);
+}
+#tab-jobsreformer .jobsdash-sync-state.is-warn::before{
+  background:var(--jobs-amber);
+  box-shadow:0 0 12px rgba(245,158,11,0.42);
+}
+#tab-jobsreformer .jobsdash-sync-state.is-bad::before{
+  background:var(--jobs-red);
+  box-shadow:0 0 12px rgba(251,113,133,0.42);
+}
+#tab-jobsreformer .jobsdash-stats{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:16px;
+}
+#tab-jobsreformer .jobsdash-stat{
+  position:relative;
+  overflow:hidden;
+  padding:18px 20px;
+  border-radius:20px;
+  background:var(--jobs-panel);
+}
+#tab-jobsreformer .jobsdash-stat::before{
+  content:"";
+  position:absolute;
+  inset:0 auto auto 0;
+  width:84px;
+  height:84px;
+  background:radial-gradient(circle, rgba(255,255,255,0.12), transparent 72%);
+  pointer-events:none;
+}
+#tab-jobsreformer .jobsdash-stat-label{
+  position:relative;
+  font-size:10px;
+  letter-spacing:1.8px;
+  text-transform:uppercase;
+  color:var(--jobs-dim);
+}
+#tab-jobsreformer .jobsdash-stat-value{
+  position:relative;
+  margin-top:10px;
+  font-size:32px;
+  line-height:1;
+  font-weight:800;
+  color:var(--jobs-text);
+}
+#tab-jobsreformer .jobsdash-stat-value.is-pending{ color:#ffb648; }
+#tab-jobsreformer .jobsdash-stat-value.is-progress{ color:var(--jobs-blue); }
+#tab-jobsreformer .jobsdash-stat-value.is-done{ color:var(--jobs-green); }
+#tab-jobsreformer .jobsdash-main{
+  display:grid;
+  grid-template-columns:minmax(340px,0.96fr) minmax(0,1.64fr);
+  gap:18px;
+  align-items:start;
+}
+#tab-jobsreformer .jobsdash-panel{
+  padding:20px;
+  border-radius:20px;
+  background:var(--jobs-panel);
+}
+#tab-jobsreformer .jobsdash-form-panel{
+  position:sticky;
+  top:14px;
+}
+#tab-jobsreformer .jobsdash-panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:16px;
+}
+#tab-jobsreformer .jobsdash-panel-title{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:2.4px;
+  text-transform:uppercase;
+  color:var(--jobs-accent);
+}
+#tab-jobsreformer .jobsdash-panel-sub{
+  font-size:11px;
+  color:var(--jobs-dim);
+}
+#tab-jobsreformer .jobsdash-form{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+#tab-jobsreformer .jobsdash-field label{
+  display:block;
+  margin-bottom:7px;
+  font-size:10px;
+  letter-spacing:1.8px;
+  text-transform:uppercase;
+  color:var(--jobs-muted);
+}
+#tab-jobsreformer .jobsdash-input,
+#tab-jobsreformer .jobsdash-textarea{
+  width:100%;
+  border:1px solid rgba(126,200,240,0.14);
+  border-radius:14px;
+  background:rgba(3,8,18,0.26);
+  color:var(--jobs-text);
+  padding:12px 14px;
+  outline:none;
+  transition:border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+#tab-jobsreformer .jobsdash-input:focus,
+#tab-jobsreformer .jobsdash-textarea:focus{
+  border-color:rgba(245,158,11,0.55);
+  box-shadow:0 0 0 1px rgba(245,158,11,0.24);
+}
+body.light-theme #tab-jobsreformer .jobsdash-input,
+body.light-theme #tab-jobsreformer .jobsdash-textarea{
+  background:rgba(241,245,249,0.86);
+}
+#tab-jobsreformer .jobsdash-textarea{
+  min-height:110px;
+  resize:vertical;
+}
+#tab-jobsreformer .jobsdash-type-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:8px;
+}
+#tab-jobsreformer .jobsdash-priority-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  gap:8px;
+}
+#tab-jobsreformer .jobsdash-toggle{
+  border:1px solid rgba(126,200,240,0.14);
+  border-radius:14px;
+  background:rgba(255,255,255,0.03);
+  color:var(--jobs-dim);
+  padding:11px 12px;
+  text-align:left;
+  cursor:pointer;
+  font-weight:700;
+  font-size:12px;
+  transition:border-color 140ms ease, background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+#tab-jobsreformer .jobsdash-toggle:hover{
+  transform:translateY(-1px);
+  border-color:rgba(126,200,240,0.24);
+}
+#tab-jobsreformer .jobsdash-toggle.is-active{
+  color:var(--jobs-text);
+  border-color:rgba(245,158,11,0.32);
+  background:linear-gradient(135deg, rgba(126,200,240,0.14), rgba(245,158,11,0.16));
+}
+#tab-jobsreformer .jobsdash-toggle[data-pri="high"].is-active{
+  border-color:rgba(251,113,133,0.34);
+  background:linear-gradient(135deg, rgba(251,113,133,0.14), rgba(245,158,11,0.12));
+}
+#tab-jobsreformer .jobsdash-toggle[data-pri="medium"].is-active{
+  border-color:rgba(245,158,11,0.34);
+}
+#tab-jobsreformer .jobsdash-toggle[data-pri="low"].is-active{
+  border-color:rgba(96,165,250,0.32);
+  background:linear-gradient(135deg, rgba(96,165,250,0.16), rgba(126,200,240,0.12));
+}
+#tab-jobsreformer .jobsdash-panel-topline{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+#tab-jobsreformer .jobsdash-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:14px;
+}
+#tab-jobsreformer .jobsdash-filter{
+  border:1px solid rgba(126,200,240,0.14);
+  border-radius:999px;
+  background:rgba(255,255,255,0.03);
+  color:var(--jobs-dim);
+  padding:8px 13px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.6px;
+  cursor:pointer;
+}
+#tab-jobsreformer .jobsdash-filter.is-active{
+  color:var(--jobs-text);
+  border-color:rgba(245,158,11,0.32);
+  background:linear-gradient(135deg, rgba(126,200,240,0.14), rgba(245,158,11,0.16));
+}
+#tab-jobsreformer .jobsdash-search{
+  flex:1 1 220px;
+}
+#tab-jobsreformer .jobsdash-search .jobsdash-input{
+  height:100%;
+  min-height:42px;
+}
+#tab-jobsreformer .jobsdash-list-count{
+  font-size:11px;
+  color:var(--jobs-dim);
+}
+#tab-jobsreformer .jobsdash-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+#tab-jobsreformer .jobsdash-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:start;
+  padding:16px 18px;
+  border-radius:18px;
+  border:1px solid rgba(126,200,240,0.14);
+  background:var(--jobs-panel-strong);
+  border-left:4px solid rgba(126,200,240,0.18);
+}
+#tab-jobsreformer .jobsdash-card.is-done{
+  opacity:0.58;
+}
+#tab-jobsreformer .jobsdash-card[data-type="shutdown"]{ border-left-color:#fb7185; }
+#tab-jobsreformer .jobsdash-card[data-type="routine"]{ border-left-color:#60a5fa; }
+#tab-jobsreformer .jobsdash-card[data-type="emergency"]{ border-left-color:#f59e0b; }
+#tab-jobsreformer .jobsdash-card[data-type="inspection"]{ border-left-color:#22d3ee; }
+#tab-jobsreformer .jobsdash-card[data-type="modification"]{ border-left-color:#7ec8f0; }
+#tab-jobsreformer .jobsdash-card-title{
+  font-size:18px;
+  line-height:1.2;
+  font-weight:800;
+  color:var(--jobs-text);
+}
+#tab-jobsreformer .jobsdash-card.is-done .jobsdash-card-title{
+  text-decoration:line-through;
+  text-decoration-color:rgba(148,163,184,0.66);
+}
+#tab-jobsreformer .jobsdash-card-desc{
+  margin-top:6px;
+  font-size:12px;
+  line-height:1.65;
+  color:var(--jobs-dim);
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+#tab-jobsreformer .jobsdash-card-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+}
+#tab-jobsreformer .jobsdash-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 9px;
+  border-radius:999px;
+  border:1px solid rgba(126,200,240,0.14);
+  background:rgba(255,255,255,0.04);
+  color:var(--jobs-dim);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+#tab-jobsreformer .jobsdash-tag.is-shutdown{ color:#fecaca; border-color:rgba(251,113,133,0.24); }
+#tab-jobsreformer .jobsdash-tag.is-routine{ color:#bfdbfe; border-color:rgba(96,165,250,0.22); }
+#tab-jobsreformer .jobsdash-tag.is-emergency{ color:#fed7aa; border-color:rgba(245,158,11,0.26); }
+#tab-jobsreformer .jobsdash-tag.is-inspection{ color:#a5f3fc; border-color:rgba(34,211,238,0.24); }
+#tab-jobsreformer .jobsdash-tag.is-modification{ color:#dbeafe; border-color:rgba(126,200,240,0.24); }
+#tab-jobsreformer .jobsdash-tag.is-pri-high{ color:#fecaca; border-color:rgba(251,113,133,0.24); }
+#tab-jobsreformer .jobsdash-tag.is-pri-medium{ color:#fed7aa; border-color:rgba(245,158,11,0.24); }
+#tab-jobsreformer .jobsdash-tag.is-pri-low{ color:#bfdbfe; border-color:rgba(96,165,250,0.24); }
+#tab-jobsreformer .jobsdash-card-date{
+  margin-top:12px;
+  font-size:11px;
+  color:var(--jobs-muted);
+}
+#tab-jobsreformer .jobsdash-card-actions{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:8px;
+}
+#tab-jobsreformer .jobsdash-status-btn,
+#tab-jobsreformer .jobsdash-delete-btn{
+  appearance:none;
+  border-radius:999px;
+  padding:9px 13px;
+  cursor:pointer;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.8px;
+}
+#tab-jobsreformer .jobsdash-status-btn{
+  border:1px solid rgba(126,200,240,0.16);
+  background:rgba(255,255,255,0.04);
+  color:var(--jobs-text);
+}
+#tab-jobsreformer .jobsdash-status-btn.is-pending{ color:#ffcf70; border-color:rgba(245,158,11,0.24); }
+#tab-jobsreformer .jobsdash-status-btn.is-progress{ color:#9bd7ff; border-color:rgba(96,165,250,0.24); }
+#tab-jobsreformer .jobsdash-status-btn.is-done{ color:#9df2b3; border-color:rgba(34,197,94,0.24); }
+#tab-jobsreformer .jobsdash-delete-btn{
+  border:1px solid rgba(251,113,133,0.16);
+  background:rgba(251,113,133,0.07);
+  color:#fecdd3;
+}
+#tab-jobsreformer .jobsdash-empty{
+  padding:68px 24px;
+  border-radius:18px;
+  border:1px dashed rgba(126,200,240,0.18);
+  background:rgba(255,255,255,0.03);
+  text-align:center;
+  color:var(--jobs-muted);
+}
+#tab-jobsreformer .jobsdash-empty-icon{
+  font-size:34px;
+  margin-bottom:10px;
+  opacity:0.54;
+}
+#tab-jobsreformer .jobsdash-empty-title{
+  font-size:15px;
+  font-weight:800;
+  color:var(--jobs-text);
+}
+#tab-jobsreformer .jobsdash-empty-copy{
+  margin-top:6px;
+  font-size:12px;
+  line-height:1.6;
+}
+@media (max-width:1200px){
+  #tab-jobsreformer .jobsdash-stats{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+  #tab-jobsreformer .jobsdash-main{
+    grid-template-columns:1fr;
+  }
+  #tab-jobsreformer .jobsdash-form-panel{
+    position:relative;
+    top:auto;
+  }
+}
+@media (max-width:900px){
+  #tab-jobsreformer{
+    padding:18px 14px 122px;
+  }
+  #tab-jobsreformer .jobsdash-hero{
+    padding:18px;
+    flex-direction:column;
+    align-items:stretch;
+  }
+  #tab-jobsreformer .jobsdash-title{
+    font-size:24px;
+  }
+  #tab-jobsreformer .jobsdash-hero-side{
+    min-width:0;
+    align-items:stretch;
+  }
+  #tab-jobsreformer .jobsdash-action-row{
+    justify-content:stretch;
+  }
+  #tab-jobsreformer .jobsdash-action-row .jobsdash-btn{
+    flex:1 1 180px;
+  }
+}
+@media (max-width:640px){
+  #tab-jobsreformer .jobsdash-stats{
+    grid-template-columns:1fr;
+  }
+  #tab-jobsreformer .jobsdash-sync-bar{
+    align-items:flex-start;
+  }
+  #tab-jobsreformer .jobsdash-sync-meta{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  #tab-jobsreformer .jobsdash-type-grid,
+  #tab-jobsreformer .jobsdash-priority-grid{
+    grid-template-columns:1fr;
+  }
+  #tab-jobsreformer .jobsdash-card{
+    grid-template-columns:1fr;
+  }
+  #tab-jobsreformer .jobsdash-card-actions{
+    align-items:stretch;
+  }
+  #tab-jobsreformer .jobsdash-status-btn,
+  #tab-jobsreformer .jobsdash-delete-btn{
+    width:100%;
+  }
 }
 </style>
 </head>
@@ -20459,6 +21046,138 @@ body.light-theme .scada-source-btn.is-active{
   </div>
 
 
+  <div id="tab-jobsreformer" class="tab-panel">
+    <div class="jobsdash-shell">
+      <div class="jobsdash-hero">
+        <div class="jobsdash-hero-copy">
+          <div class="jobsdash-kicker">Maintenance Register</div>
+          <h2 class="jobsdash-title">Jobs Reformer</h2>
+          <p class="jobsdash-copy">Track shutdown, routine, emergency, inspection, and modification jobs in one shared reformer register, then sync that register through the same central Supabase-backed workflow used by this SCADA website.</p>
+        </div>
+        <div class="jobsdash-hero-side">
+          <div class="jobsdash-clock-strip"><span class="jobsdash-live-dot" aria-hidden="true"></span><span id="jobsdash-clock">--:--:-- IST</span></div>
+          <div class="jobsdash-action-row">
+            <button type="button" class="jobsdash-btn jobsdash-btn-secondary" onclick="importJobsReformerFromServer(true)">Import Latest</button>
+            <button type="button" class="jobsdash-btn jobsdash-btn-primary" onclick="exportJobsReformerToServer(true)">Sync Now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="jobsdash-sync-bar jobsdash-mono">
+        <div class="jobsdash-sync-meta">
+          <span>Local Save: <strong id="jobsdash-local-save">—</strong></span>
+          <span>Server Sync: <strong id="jobsdash-server-sync">—</strong></span>
+          <span>Pending Upload: <strong id="jobsdash-pending-upload">No</strong></span>
+          <span>Register Count: <strong id="jobsdash-register-count">0</strong></span>
+        </div>
+        <div id="jobsdash-sync-state" class="jobsdash-sync-state is-warn">Waiting for first sync</div>
+      </div>
+
+      <div class="jobsdash-stats">
+        <div class="jobsdash-stat">
+          <div class="jobsdash-stat-label">Total Jobs</div>
+          <div id="jobsdash-total-count" class="jobsdash-stat-value">0</div>
+        </div>
+        <div class="jobsdash-stat">
+          <div class="jobsdash-stat-label">Pending</div>
+          <div id="jobsdash-pending-count" class="jobsdash-stat-value is-pending">0</div>
+        </div>
+        <div class="jobsdash-stat">
+          <div class="jobsdash-stat-label">In Progress</div>
+          <div id="jobsdash-progress-count" class="jobsdash-stat-value is-progress">0</div>
+        </div>
+        <div class="jobsdash-stat">
+          <div class="jobsdash-stat-label">Completed</div>
+          <div id="jobsdash-done-count" class="jobsdash-stat-value is-done">0</div>
+        </div>
+      </div>
+
+      <div class="jobsdash-main">
+        <section class="jobsdash-panel jobsdash-form-panel">
+          <div class="jobsdash-panel-head">
+            <div>
+              <div class="jobsdash-panel-title">Log New Job</div>
+              <div class="jobsdash-panel-sub">Create a new reformer activity or issue entry.</div>
+            </div>
+          </div>
+
+          <div class="jobsdash-form">
+            <div class="jobsdash-field">
+              <label for="jobsdash-title">Job Title / Issue</label>
+              <input id="jobsdash-title" class="jobsdash-input" type="text" placeholder="e.g. Tube leak in radiant section">
+            </div>
+
+            <div class="jobsdash-field">
+              <label for="jobsdash-desc">Description / Remarks</label>
+              <textarea id="jobsdash-desc" class="jobsdash-textarea" placeholder="Describe the problem, observations, scope of work, or shutdown remarks..."></textarea>
+            </div>
+
+            <div class="jobsdash-field">
+              <label>Job Type</label>
+              <div id="jobsdash-type-grid" class="jobsdash-type-grid">
+                <button type="button" class="jobsdash-toggle is-active" data-type="shutdown">Shutdown</button>
+                <button type="button" class="jobsdash-toggle" data-type="routine">Routine</button>
+                <button type="button" class="jobsdash-toggle" data-type="emergency">Emergency</button>
+                <button type="button" class="jobsdash-toggle" data-type="inspection">Inspection</button>
+                <button type="button" class="jobsdash-toggle" data-type="modification">Modification</button>
+              </div>
+            </div>
+
+            <div class="jobsdash-field">
+              <label>Priority</label>
+              <div id="jobsdash-priority-grid" class="jobsdash-priority-grid">
+                <button type="button" class="jobsdash-toggle is-active" data-pri="low">Low</button>
+                <button type="button" class="jobsdash-toggle" data-pri="medium">Medium</button>
+                <button type="button" class="jobsdash-toggle" data-pri="high">High</button>
+              </div>
+            </div>
+
+            <div class="jobsdash-field">
+              <label for="jobsdash-location">Location / Equipment Tag</label>
+              <input id="jobsdash-location" class="jobsdash-input" type="text" placeholder="e.g. R-101 / Convection Zone">
+            </div>
+
+            <div class="jobsdash-field">
+              <label for="jobsdash-assigned">Assigned To</label>
+              <input id="jobsdash-assigned" class="jobsdash-input" type="text" placeholder="e.g. Mechanical Team / Contractor">
+            </div>
+
+            <button type="button" class="jobsdash-btn jobsdash-btn-primary" onclick="addJobsReformerJob()">Add Job</button>
+          </div>
+        </section>
+
+        <section class="jobsdash-panel">
+          <div class="jobsdash-panel-topline">
+            <div>
+              <div class="jobsdash-panel-title">Active Register</div>
+              <div class="jobsdash-panel-sub">Search, filter, update status, or clear finished items.</div>
+            </div>
+            <div id="jobsdash-list-count" class="jobsdash-list-count">Showing 0 of 0 jobs</div>
+          </div>
+
+          <div class="jobsdash-toolbar">
+            <button type="button" class="jobsdash-filter is-active" data-filter="all">All</button>
+            <button type="button" class="jobsdash-filter" data-filter="pending">Pending</button>
+            <button type="button" class="jobsdash-filter" data-filter="in-progress">In Progress</button>
+            <button type="button" class="jobsdash-filter" data-filter="done">Done</button>
+            <div class="jobsdash-search">
+              <input id="jobsdash-search" class="jobsdash-input" type="text" placeholder="Search jobs, location, assigned team...">
+            </div>
+            <button type="button" class="jobsdash-btn jobsdash-btn-danger" onclick="clearDoneJobsReformer()">Clear Done</button>
+          </div>
+
+          <div id="jobsdash-list" class="jobsdash-list">
+            <div class="jobsdash-empty">
+              <div class="jobsdash-empty-icon">⚙</div>
+              <div class="jobsdash-empty-title">No jobs logged yet</div>
+              <div class="jobsdash-empty-copy">The reformer jobs register is ready. Add the first shutdown, inspection, routine, emergency, or modification job from the left panel.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB 4: Alarms -->
   <div id="tab-alarms" class="tab-panel">
     <div class="alarms-section">
@@ -21150,13 +21869,14 @@ body.light-theme .scada-source-btn.is-active{
       <div class="scada-footer-brand">
         <div class="scada-footer-eyebrow">Industrial Monitoring Dashboard</div>
         <h2 class="scada-footer-title">Reformer SCADA</h2>
-        <p class="scada-footer-copy">Live monitoring for burner status, cleaning, cuboid analysis, reformer efficiency, heat duty, TST data, alarms, and saved operational history in one shared dashboard.</p>
+        <p class="scada-footer-copy">Live monitoring for burner status, cleaning, cuboid analysis, reformer efficiency, heat duty, jobs tracking, TST data, alarms, and saved operational history in one shared dashboard.</p>
         <div class="scada-footer-link-row" aria-label="Footer quick links">
           <a href="#tab-burner" class="scada-footer-link" onclick="switchTab('burner'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Burner</a>
           <a href="#tab-cleaning" class="scada-footer-link" onclick="switchTab('cleaning'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Cleaning</a>
           <a href="#tab-cuboidstack" class="scada-footer-link" onclick="switchTab('cuboidstack'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Dashboard</a>
           <a href="#tab-reformerdash" class="scada-footer-link" onclick="switchTab('reformerdash'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Reformer</a>
           <a href="#tab-tempdata" class="scada-footer-link" onclick="switchTab('tempdata'); window.scrollTo({top:0, behavior:'smooth'}); return false;">TST Data</a>
+          <a href="#tab-jobsreformer" class="scada-footer-link" onclick="switchTab('jobsreformer'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Jobs Reformer</a>
           <a href="#tab-alarms" class="scada-footer-link" onclick="switchTab('alarms'); window.scrollTo({top:0, behavior:'smooth'}); return false;">Alarms</a>
         </div>
       </div>
@@ -21283,6 +22003,25 @@ body.light-theme .scada-source-btn.is-active{
     <span class="btab-text">
       <span class="btab-label-top">Temp Data</span>
       <span class="btab-label-sub"></span>
+    </span>
+  </button>
+  <button class="btab" id="btab-jobsreformer" onclick="switchTab('jobsreformer')">
+    <span class="btab-icon-wrap" aria-hidden="true">
+      <span class="btab-icon">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <rect class="tab-icon-stroke" x="5.1" y="5.2" width="13.8" height="14.3" rx="2.2"></rect>
+          <path class="tab-icon-stroke" d="M9.2 5.3h5.6"></path>
+          <path class="tab-icon-fill" d="M9 4.2h6a1.1 1.1 0 0 1 1.1 1.1v1.1H7.9V5.3A1.1 1.1 0 0 1 9 4.2Z"></path>
+          <path class="tab-icon-stroke" d="M8.3 10h7.4"></path>
+          <path class="tab-icon-stroke" d="M8.3 13h7.4"></path>
+          <path class="tab-icon-stroke" d="M8.3 16h4.4"></path>
+          <circle class="tab-icon-solid" cx="15.8" cy="16" r="1"></circle>
+        </svg>
+      </span>
+    </span>
+    <span class="btab-text">
+      <span class="btab-label-top">Jobs</span>
+      <span class="btab-label-sub">Reformer</span>
     </span>
   </button>
   <button class="btab btab-alarm" id="btab-alarms" onclick="switchTab('alarms')">
@@ -25821,6 +26560,7 @@ function updateGlobalRefreshButtonLabel(tab){
   var key = String(tab || "").toLowerCase();
   btn.textContent =
     key === "alarms" ? "↻ Refresh Alarms" :
+    key === "jobsreformer" ? "↻ Refresh Jobs" :
     key === "cuboidstack" ? "↻ Refresh Data" :
     "🔄 Refresh Data";
 }
@@ -27169,6 +27909,10 @@ function handleGlobalRefreshClick(){
     showToast("↻ Alarm panel refreshed");
     return;
   }
+  if(tab === 'jobsreformer' && typeof refreshJobsReformerTab === 'function'){
+    refreshJobsReformerTab(true);
+    return;
+  }
   if(isCuboidDashboardTabName(tab)){
     ensureCuboidViewerLoaded(true);
     scheduleCuboidFrameDataPush(20, true);
@@ -27221,6 +27965,9 @@ function switchTab(tab){
   document.getElementById('btab-'+tab).classList.add('btab-active');
   if(tab === 'reformerdash' && typeof ensureReformerDashboardLoaded === 'function'){
     setTimeout(function(){ ensureReformerDashboardLoaded(true); }, 20);
+  }
+  if(tab === 'jobsreformer' && typeof ensureJobsReformerLoaded === 'function'){
+    setTimeout(function(){ ensureJobsReformerLoaded(true); }, 20);
   }
   setTabsRowHidden(false);
   syncHeatMapHeaderTools(tab);
@@ -34125,6 +34872,31 @@ body.light-theme .btab-active .btab-icon{
 .btab-label-sub{
   display:none !important;
 }
+#btab-jobsreformer .btab-text{
+  gap:1px;
+}
+#btab-jobsreformer .btab-label-sub{
+  display:block !important;
+  font-size:9px;
+  line-height:1;
+  font-weight:600;
+  color:rgba(255,255,255,0.52);
+}
+body.light-theme #btab-jobsreformer .btab-label-sub{
+  color:rgba(0,0,0,0.5);
+}
+#btab-jobsreformer:hover .btab-label-sub{
+  color:rgba(255,255,255,0.72);
+}
+body.light-theme #btab-jobsreformer:hover .btab-label-sub{
+  color:rgba(0,0,0,0.68);
+}
+#btab-jobsreformer.btab-active .btab-label-sub{
+  color:rgba(255,255,255,0.82);
+}
+body.light-theme #btab-jobsreformer.btab-active .btab-label-sub{
+  color:rgba(0,0,0,0.74);
+}
 body.light-theme .btab-label-top{
   color:rgba(0,0,0,0.72);
   text-shadow:none;
@@ -35479,11 +36251,962 @@ body.light-theme .btab-alarm-count{
     renderReformerDashboardFromState();
   }
 
-  window.switchReformerDashTab = switchReformerDashTab;
-  window.refreshReformerDashboard = refreshReformerDashboard;
-  window.refreshReformerDashboardLite = refreshReformerDashboardLite;
-  window.ensureReformerDashboardLoaded = ensureReformerDashboardLoaded;
-  window.updateReformerDashComposition = updateReformerDashComposition;
+window.switchReformerDashTab = switchReformerDashTab;
+window.refreshReformerDashboard = refreshReformerDashboard;
+window.refreshReformerDashboardLite = refreshReformerDashboardLite;
+window.ensureReformerDashboardLoaded = ensureReformerDashboardLoaded;
+window.updateReformerDashComposition = updateReformerDashComposition;
+})();
+</script>
+<script>
+(function(){
+  var JOBS_REFORMER_STORAGE_KEY = "scadaJobsReformerStateV1";
+  var JOBS_REFORMER_QUEUE_KEY = "scadaJobsReformerQueuedExportV1";
+  var JOBS_REFORMER_LAST_SNAPSHOT_KEY = "scadaJobsReformerLastSnapshotV1";
+  var JOBS_REFORMER_LAST_IMPORTED_DIGEST_KEY = "scadaJobsReformerLastImportedDigestV1";
+  var JOBS_REFORMER_PENDING_DIGEST_KEY = "scadaJobsReformerPendingDigestV1";
+  var JOBS_REFORMER_FILE_NAME = "Jobs_Reformer_Register.json";
+  var JOBS_REFORMER_EXPORT_DEBOUNCE_MS = 1200;
+  var JOBS_REFORMER_AUTO_SYNC_MS = 70000;
+  var JOBS_REFORMER_STATUS_CYCLE = ["pending", "in-progress", "done"];
+  var JOBS_REFORMER_TYPES = ["shutdown", "routine", "emergency", "inspection", "modification"];
+  var JOBS_REFORMER_PRIORITIES = ["low", "medium", "high"];
+  var jobsReformerState = {
+    initialized: false,
+    eventsBound: false,
+    onlineBound: false,
+    jobs: [],
+    selectedType: "shutdown",
+    selectedPri: "low",
+    activeFilter: "all",
+    lastLocalSavedAt: "",
+    lastServerSyncAt: "",
+    lastAutoImportMs: 0,
+    syncMessage: "Waiting for first sync",
+    syncTone: "warn",
+    exportTimer: 0,
+    syncTimer: 0,
+    clockTimer: 0,
+    exportPromise: null,
+    importPromise: null
+  };
+
+  function getJobsReformerEl(id){
+    return document.getElementById(id);
+  }
+
+  function jobsReformerIsActive(){
+    var panel = getJobsReformerEl("tab-jobsreformer");
+    return !!(panel && panel.classList.contains("tab-active"));
+  }
+
+  function jobsReformerIsSyncEnabled(){
+    return !!(typeof SERVER_SYNC_ENABLED === "undefined" || SERVER_SYNC_ENABLED);
+  }
+
+  function jobsReformerHasSupabaseConfig(){
+    var key = "";
+    try{
+      key = typeof getSupabaseAnonKey === "function"
+        ? String(getSupabaseAnonKey() || "")
+        : String(typeof SUPABASE_ANON_KEY === "string" ? SUPABASE_ANON_KEY : "");
+    }catch(e){
+      key = "";
+    }
+    return jobsReformerIsSyncEnabled()
+      && typeof SUPABASE_URL === "string" && !!SUPABASE_URL
+      && !!key;
+  }
+
+  function jobsReformerEncodeText(text){
+    var raw = String(text == null ? "" : text);
+    try{
+      if(typeof TextEncoder === "function"){
+        var bytes = new TextEncoder().encode(raw);
+        var chunkSize = 32768;
+        var binary = "";
+        for(var i = 0; i < bytes.length; i += chunkSize){
+          var chunk = bytes.subarray(i, i + chunkSize);
+          binary += String.fromCharCode.apply(null, chunk);
+        }
+        return btoa(binary);
+      }
+      return btoa(unescape(encodeURIComponent(raw)));
+    }catch(e){
+      return "";
+    }
+  }
+
+  function jobsReformerDecodeText(base64){
+    try{
+      var binary = atob(String(base64 || ""));
+      if(typeof TextDecoder === "function"){
+        var bytes = new Uint8Array(binary.length);
+        for(var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return new TextDecoder().decode(bytes);
+      }
+      return decodeURIComponent(escape(binary));
+    }catch(e){
+      return "";
+    }
+  }
+
+  function jobsReformerEscapeHtml(value){
+    var div = document.createElement("div");
+    div.textContent = String(value == null ? "" : value);
+    return div.innerHTML;
+  }
+
+  function jobsReformerGenerateId(){
+    return "job_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function jobsReformerNormalizeType(type){
+    var value = String(type || "shutdown").toLowerCase();
+    return JOBS_REFORMER_TYPES.indexOf(value) >= 0 ? value : "shutdown";
+  }
+
+  function jobsReformerNormalizePriority(priority){
+    var value = String(priority || "low").toLowerCase();
+    return JOBS_REFORMER_PRIORITIES.indexOf(value) >= 0 ? value : "low";
+  }
+
+  function jobsReformerNormalizeStatus(status){
+    var value = String(status || "pending").toLowerCase();
+    return JOBS_REFORMER_STATUS_CYCLE.indexOf(value) >= 0 ? value : "pending";
+  }
+
+  function jobsReformerNormalizeJob(job, index){
+    job = job && typeof job === "object" ? job : {};
+    var created = String(job.created || job.created_at || new Date(Date.now() - (index || 0) * 1000).toISOString());
+    var updated = String(job.updated || job.updated_at || created);
+    return {
+      id: job.id ? String(job.id) : jobsReformerGenerateId(),
+      title: String(job.title || job.name || "Untitled job"),
+      desc: String(job.desc || job.description || ""),
+      type: jobsReformerNormalizeType(job.type),
+      priority: jobsReformerNormalizePriority(job.priority || job.pri),
+      location: String(job.location || ""),
+      assigned: String(job.assigned || ""),
+      status: jobsReformerNormalizeStatus(job.status),
+      created: created,
+      updated: updated
+    };
+  }
+
+  function jobsReformerNormalizeJobs(list){
+    if(!Array.isArray(list)) return [];
+    return list.map(function(job, index){
+      return jobsReformerNormalizeJob(job, index);
+    });
+  }
+
+  function jobsReformerFormatTime(value){
+    if(!value) return "—";
+    try{
+      var d = value instanceof Date ? value : new Date(value);
+      if(!isFinite(d.getTime())) return "—";
+      return d.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata"
+      }) + " · " + d.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Kolkata"
+      }) + " IST";
+    }catch(e){
+      return "—";
+    }
+  }
+
+  function jobsReformerFormatCardTime(value){
+    if(!value) return "—";
+    try{
+      var d = value instanceof Date ? value : new Date(value);
+      if(!isFinite(d.getTime())) return "—";
+      return d.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata"
+      }) + "  " + d.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Kolkata"
+      });
+    }catch(e){
+      return "—";
+    }
+  }
+
+  function jobsReformerTitleCase(value){
+    return String(value || "").replace(/-/g, " ").replace(/\b[a-z]/g, function(ch){
+      return ch.toUpperCase();
+    });
+  }
+
+  function loadJobsReformerLocalState(){
+    try{
+      var raw = localStorage.getItem(JOBS_REFORMER_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function saveJobsReformerLocalState(){
+    try{
+      localStorage.setItem(JOBS_REFORMER_STORAGE_KEY, JSON.stringify({
+        version: 1,
+        jobs: jobsReformerState.jobs,
+        selectedType: jobsReformerState.selectedType,
+        selectedPri: jobsReformerState.selectedPri,
+        activeFilter: jobsReformerState.activeFilter,
+        lastLocalSavedAt: jobsReformerState.lastLocalSavedAt || ""
+      }));
+    }catch(e){}
+  }
+
+  function loadJobsReformerQueuedExport(){
+    try{
+      var raw = localStorage.getItem(JOBS_REFORMER_QUEUE_KEY);
+      if(!raw) return null;
+      var obj = JSON.parse(raw);
+      if(!obj || typeof obj !== "object" || !obj.data_base64) return null;
+      if(!getJobsReformerPendingDigest()){
+        var digest = makeServerPayloadDigest(obj);
+        if(digest) setJobsReformerPendingDigest(digest);
+      }
+      return obj;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function saveJobsReformerQueuedExport(payload){
+    try{
+      localStorage.setItem(JOBS_REFORMER_QUEUE_KEY, JSON.stringify(payload));
+    }catch(e){}
+    var digest = makeServerPayloadDigest(payload);
+    if(digest) setJobsReformerPendingDigest(digest);
+  }
+
+  function clearJobsReformerQueuedExport(){
+    try{
+      localStorage.removeItem(JOBS_REFORMER_QUEUE_KEY);
+    }catch(e){}
+    clearJobsReformerPendingDigest();
+  }
+
+  function loadJobsReformerSnapshot(){
+    try{
+      var raw = localStorage.getItem(JOBS_REFORMER_LAST_SNAPSHOT_KEY);
+      if(!raw) return null;
+      var obj = JSON.parse(raw);
+      if(!obj || typeof obj !== "object" || !obj.data_base64) return null;
+      return obj;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function saveJobsReformerSnapshot(payload){
+    try{
+      if(!payload || !payload.data_base64) return;
+      localStorage.setItem(JOBS_REFORMER_LAST_SNAPSHOT_KEY, JSON.stringify({
+        file_name: payload.file_name || JOBS_REFORMER_FILE_NAME,
+        data_base64: payload.data_base64,
+        uploaded_by: payload.uploaded_by || null,
+        created_at: payload.created_at || payload.saved_at || new Date().toISOString(),
+        saved_at: payload.saved_at || new Date().toISOString()
+      }));
+    }catch(e){}
+  }
+
+  function getJobsReformerLastImportedDigest(){
+    try{
+      return String(localStorage.getItem(JOBS_REFORMER_LAST_IMPORTED_DIGEST_KEY) || "");
+    }catch(e){
+      return "";
+    }
+  }
+
+  function setJobsReformerLastImportedDigest(digest){
+    try{
+      localStorage.setItem(JOBS_REFORMER_LAST_IMPORTED_DIGEST_KEY, String(digest || ""));
+    }catch(e){}
+  }
+
+  function getJobsReformerPendingDigest(){
+    try{
+      return String(localStorage.getItem(JOBS_REFORMER_PENDING_DIGEST_KEY) || "");
+    }catch(e){
+      return "";
+    }
+  }
+
+  function setJobsReformerPendingDigest(digest){
+    try{
+      localStorage.setItem(JOBS_REFORMER_PENDING_DIGEST_KEY, String(digest || ""));
+    }catch(e){}
+  }
+
+  function clearJobsReformerPendingDigest(){
+    try{
+      localStorage.removeItem(JOBS_REFORMER_PENDING_DIGEST_KEY);
+    }catch(e){}
+  }
+
+  function jobsReformerGetUploadedBy(){
+    var emp = getJobsReformerEl("operatorEmpId");
+    var text = emp ? String(emp.textContent || "").trim() : "";
+    return text && text !== "—" ? text : "Jobs Reformer";
+  }
+
+  function jobsReformerBuildDataset(){
+    return {
+      version: 1,
+      saved_at: jobsReformerState.lastLocalSavedAt || new Date().toISOString(),
+      jobs: jobsReformerState.jobs
+    };
+  }
+
+  function jobsReformerBuildServerPayload(){
+    return {
+      file_name: JOBS_REFORMER_FILE_NAME,
+      data_base64: jobsReformerEncodeText(JSON.stringify(jobsReformerBuildDataset())),
+      uploaded_by: jobsReformerGetUploadedBy()
+    };
+  }
+
+  function jobsReformerParseDataset(payload){
+    try{
+      var text = jobsReformerDecodeText(payload && payload.data_base64);
+      if(!text) return null;
+      var parsed = JSON.parse(text);
+      if(Array.isArray(parsed)){
+        return { jobs: jobsReformerNormalizeJobs(parsed), saved_at: "" };
+      }
+      return {
+        jobs: jobsReformerNormalizeJobs(parsed && parsed.jobs),
+        saved_at: parsed && parsed.saved_at ? String(parsed.saved_at) : ""
+      };
+    }catch(e){
+      return null;
+    }
+  }
+
+  function jobsReformerSetSyncState(message, tone){
+    jobsReformerState.syncMessage = String(message || "");
+    jobsReformerState.syncTone = tone || "warn";
+    renderJobsReformerSyncMeta();
+  }
+
+  function renderJobsReformerSyncMeta(){
+    var stateEl = getJobsReformerEl("jobsdash-sync-state");
+    var localEl = getJobsReformerEl("jobsdash-local-save");
+    var serverEl = getJobsReformerEl("jobsdash-server-sync");
+    var pendingEl = getJobsReformerEl("jobsdash-pending-upload");
+    var countEl = getJobsReformerEl("jobsdash-register-count");
+    if(localEl) localEl.textContent = jobsReformerFormatTime(jobsReformerState.lastLocalSavedAt);
+    if(serverEl) serverEl.textContent = jobsReformerFormatTime(jobsReformerState.lastServerSyncAt);
+    if(pendingEl) pendingEl.textContent = loadJobsReformerQueuedExport() ? "Yes" : "No";
+    if(countEl) countEl.textContent = String(jobsReformerState.jobs.length);
+    if(stateEl){
+      stateEl.textContent = jobsReformerState.syncMessage || "Ready";
+      stateEl.classList.remove("is-ok", "is-warn", "is-bad");
+      stateEl.classList.add(
+        jobsReformerState.syncTone === "ok" ? "is-ok" :
+        jobsReformerState.syncTone === "bad" ? "is-bad" :
+        "is-warn"
+      );
+    }
+  }
+
+  function renderJobsReformerSelectors(){
+    Array.prototype.forEach.call(document.querySelectorAll("#jobsdash-type-grid .jobsdash-toggle"), function(btn){
+      btn.classList.toggle("is-active", btn.getAttribute("data-type") === jobsReformerState.selectedType);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#jobsdash-priority-grid .jobsdash-toggle"), function(btn){
+      btn.classList.toggle("is-active", btn.getAttribute("data-pri") === jobsReformerState.selectedPri);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#tab-jobsreformer .jobsdash-filter"), function(btn){
+      btn.classList.toggle("is-active", btn.getAttribute("data-filter") === jobsReformerState.activeFilter);
+    });
+  }
+
+  function renderJobsReformerList(){
+    var listEl = getJobsReformerEl("jobsdash-list");
+    var searchEl = getJobsReformerEl("jobsdash-search");
+    var countEl = getJobsReformerEl("jobsdash-list-count");
+    var totalEl = getJobsReformerEl("jobsdash-total-count");
+    var pendingEl = getJobsReformerEl("jobsdash-pending-count");
+    var progressEl = getJobsReformerEl("jobsdash-progress-count");
+    var doneEl = getJobsReformerEl("jobsdash-done-count");
+    var jobs = jobsReformerState.jobs.slice();
+    var query = String(searchEl && searchEl.value ? searchEl.value : "").trim().toLowerCase();
+
+    if(totalEl) totalEl.textContent = String(jobs.length);
+    if(pendingEl) pendingEl.textContent = String(jobs.filter(function(job){ return job.status === "pending"; }).length);
+    if(progressEl) progressEl.textContent = String(jobs.filter(function(job){ return job.status === "in-progress"; }).length);
+    if(doneEl) doneEl.textContent = String(jobs.filter(function(job){ return job.status === "done"; }).length);
+
+    if(jobsReformerState.activeFilter !== "all"){
+      jobs = jobs.filter(function(job){
+        return job.status === jobsReformerState.activeFilter;
+      });
+    }
+    if(query){
+      jobs = jobs.filter(function(job){
+        return [
+          job.title,
+          job.desc,
+          job.location,
+          job.assigned,
+          job.type,
+          job.priority
+        ].join(" ").toLowerCase().indexOf(query) >= 0;
+      });
+    }
+
+    if(countEl){
+      countEl.textContent = "Showing " + jobs.length + " of " + jobsReformerState.jobs.length + " jobs";
+    }
+    if(!listEl) return;
+
+    if(!jobs.length){
+      listEl.innerHTML = [
+        '<div class="jobsdash-empty">',
+          '<div class="jobsdash-empty-icon">⚙</div>',
+          '<div class="jobsdash-empty-title">' + jobsReformerEscapeHtml(jobsReformerState.jobs.length ? "No matching jobs" : "No jobs logged yet") + '</div>',
+          '<div class="jobsdash-empty-copy">' + jobsReformerEscapeHtml(jobsReformerState.jobs.length ? "Change the filter or search text to see matching register entries." : "The reformer jobs register is ready. Add the first shutdown, inspection, routine, emergency, or modification job from the left panel.") + '</div>',
+        '</div>'
+      ].join("");
+      return;
+    }
+
+    listEl.innerHTML = jobs.map(function(job){
+      var statusLabel = job.status === "in-progress"
+        ? "In Progress"
+        : job.status === "done"
+          ? "Done"
+          : "Pending";
+      var tags = [
+        '<span class="jobsdash-tag is-' + jobsReformerEscapeHtml(job.type) + '">' + jobsReformerEscapeHtml(jobsReformerTitleCase(job.type)) + '</span>',
+        '<span class="jobsdash-tag is-pri-' + jobsReformerEscapeHtml(job.priority) + '">' + jobsReformerEscapeHtml(jobsReformerTitleCase(job.priority)) + '</span>'
+      ];
+      if(job.location){
+        tags.push('<span class="jobsdash-tag">' + jobsReformerEscapeHtml(job.location) + '</span>');
+      }
+      if(job.assigned){
+        tags.push('<span class="jobsdash-tag">Assigned: ' + jobsReformerEscapeHtml(job.assigned) + '</span>');
+      }
+      return [
+        '<article class="jobsdash-card' + (job.status === "done" ? ' is-done' : '') + '" data-type="' + jobsReformerEscapeHtml(job.type) + '">',
+          '<div>',
+            '<div class="jobsdash-card-title">' + jobsReformerEscapeHtml(job.title) + '</div>',
+            (job.desc ? '<div class="jobsdash-card-desc">' + jobsReformerEscapeHtml(job.desc) + '</div>' : ''),
+            '<div class="jobsdash-card-tags">' + tags.join("") + '</div>',
+            '<div class="jobsdash-card-date">Logged: ' + jobsReformerEscapeHtml(jobsReformerFormatCardTime(job.created)) + '</div>',
+          '</div>',
+          '<div class="jobsdash-card-actions">',
+            '<button type="button" class="jobsdash-status-btn ' + (job.status === "in-progress" ? 'is-progress' : job.status === "done" ? 'is-done' : 'is-pending') + '" onclick="cycleJobsReformerStatus(' + JSON.stringify(String(job.id)) + ')">' + jobsReformerEscapeHtml(statusLabel) + '</button>',
+            '<button type="button" class="jobsdash-delete-btn" onclick="deleteJobsReformerJob(' + JSON.stringify(String(job.id)) + ')">Delete</button>',
+          '</div>',
+        '</article>'
+      ].join("");
+    }).join("");
+  }
+
+  function renderJobsReformerFromState(){
+    renderJobsReformerSelectors();
+    renderJobsReformerList();
+    renderJobsReformerSyncMeta();
+  }
+
+  function jobsReformerTickClock(){
+    var clockEl = getJobsReformerEl("jobsdash-clock");
+    if(!clockEl) return;
+    var now = new Date();
+    clockEl.textContent = now.toLocaleTimeString("en-IN", {
+      hour12: false,
+      timeZone: "Asia/Kolkata"
+    }) + " IST · " + now.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "Asia/Kolkata"
+    });
+  }
+
+  function jobsReformerResetForm(){
+    var titleEl = getJobsReformerEl("jobsdash-title");
+    var descEl = getJobsReformerEl("jobsdash-desc");
+    var locationEl = getJobsReformerEl("jobsdash-location");
+    var assignedEl = getJobsReformerEl("jobsdash-assigned");
+    if(titleEl) titleEl.value = "";
+    if(descEl) descEl.value = "";
+    if(locationEl) locationEl.value = "";
+    if(assignedEl) assignedEl.value = "";
+    if(titleEl) titleEl.focus();
+  }
+
+  function jobsReformerPersistLocal(queueExport){
+    jobsReformerState.lastLocalSavedAt = new Date().toISOString();
+    saveJobsReformerLocalState();
+    renderJobsReformerFromState();
+    if(queueExport !== false){
+      scheduleJobsReformerExport();
+    }
+  }
+
+  function scheduleJobsReformerExport(){
+    var payload = jobsReformerBuildServerPayload();
+    if(!payload.data_base64){
+      jobsReformerSetSyncState("Could not encode jobs register", "bad");
+      return;
+    }
+    saveJobsReformerQueuedExport(payload);
+    jobsReformerSetSyncState("Pending upload to central server", "warn");
+    if(jobsReformerState.exportTimer){
+      clearTimeout(jobsReformerState.exportTimer);
+    }
+    jobsReformerState.exportTimer = setTimeout(function(){
+      jobsReformerState.exportTimer = 0;
+      flushJobsReformerQueuedExport(false).catch(function(){});
+    }, JOBS_REFORMER_EXPORT_DEBOUNCE_MS);
+  }
+
+  async function jobsReformerFetchLatestRow(){
+    if(!jobsReformerHasSupabaseConfig()) return null;
+    var row = null;
+    if(typeof ensureSupaClient === "function" && ensureSupaClient()){
+      try{
+        var q = await withTimeout(
+          supaClient
+            .from(SUPABASE_TABLE)
+            .select("file_name,data_base64,created_at,uploaded_by")
+            .eq("file_name", JOBS_REFORMER_FILE_NAME)
+            .order("created_at", { ascending: false })
+            .limit(1),
+          SERVER_SYNC_TIMEOUT_MS
+        );
+        if(q && !q.error && q.data && q.data.length){
+          row = q.data[0];
+        }
+      }catch(e){}
+    }
+    if(row) return row;
+    try{
+      var path = "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE)
+        + "?select=file_name,data_base64,created_at,uploaded_by"
+        + "&file_name=eq." + encodeURIComponent(JOBS_REFORMER_FILE_NAME)
+        + "&order=created_at.desc&limit=1";
+      var res = await supabaseRestRequest(path, "GET", null, null);
+      if(res && res.ok){
+        var rows = await res.json();
+        if(Array.isArray(rows) && rows.length) row = rows[0];
+      }
+    }catch(e){}
+    return row;
+  }
+
+  async function jobsReformerInsertRow(payload){
+    if(!jobsReformerHasSupabaseConfig()) return false;
+    if(typeof ensureSupaClient === "function" && ensureSupaClient()){
+      try{
+        var ins = await withTimeout(
+          supaClient.from(SUPABASE_TABLE).insert(payload),
+          SERVER_SYNC_TIMEOUT_MS
+        );
+        if(ins && !ins.error) return true;
+      }catch(e){}
+    }
+    try{
+      var res = await supabaseRestRequest(
+        "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE),
+        "POST",
+        payload,
+        "return=minimal"
+      );
+      return !!(res && (res.ok || res.status === 201 || res.status === 204));
+    }catch(e){
+      return false;
+    }
+  }
+
+  async function flushJobsReformerQueuedExport(showMsg){
+    if(jobsReformerState.exportPromise) return jobsReformerState.exportPromise;
+    jobsReformerState.exportPromise = (async function(){
+      var pending = loadJobsReformerQueuedExport();
+      if(!pending || !pending.data_base64){
+        renderJobsReformerSyncMeta();
+        return true;
+      }
+      if(typeof isUserLoggedIn === "function" && !isUserLoggedIn()){
+        jobsReformerSetSyncState("Sign in required before sync", "bad");
+        return false;
+      }
+      if(typeof navigator !== "undefined" && navigator.onLine === false){
+        jobsReformerSetSyncState("Offline. Upload kept queued.", "warn");
+        return false;
+      }
+      if(!jobsReformerHasSupabaseConfig()){
+        jobsReformerSetSyncState("Supabase sync unavailable. Kept locally.", "bad");
+        return false;
+      }
+      jobsReformerSetSyncState("Syncing register to central server...", "warn");
+      var ok = await jobsReformerInsertRow(pending);
+      if(ok){
+        clearJobsReformerQueuedExport();
+        saveJobsReformerSnapshot({
+          file_name: pending.file_name,
+          data_base64: pending.data_base64,
+          uploaded_by: pending.uploaded_by,
+          created_at: new Date().toISOString(),
+          saved_at: new Date().toISOString()
+        });
+        setJobsReformerLastImportedDigest(makeServerPayloadDigest(pending));
+        jobsReformerState.lastServerSyncAt = new Date().toISOString();
+        jobsReformerSetSyncState("Synced to central server", "ok");
+        if(showMsg && typeof showToast === "function"){
+          showToast("✅ Jobs Reformer synced to central server");
+        }
+        return true;
+      }
+      jobsReformerSetSyncState("Sync failed. Upload kept queued.", "bad");
+      if(showMsg && typeof showToast === "function"){
+        showToast("📶 Jobs Reformer sync failed. Upload kept queued.");
+      }
+      return false;
+    })();
+    try{
+      return await jobsReformerState.exportPromise;
+    }finally{
+      jobsReformerState.exportPromise = null;
+      renderJobsReformerSyncMeta();
+    }
+  }
+
+  async function importJobsReformerFromServer(showMsg){
+    if(jobsReformerState.importPromise) return jobsReformerState.importPromise;
+    jobsReformerState.importPromise = (async function(){
+      if(loadJobsReformerQueuedExport()){
+        jobsReformerSetSyncState("Pending local upload blocks import", "warn");
+        if(showMsg && typeof showToast === "function"){
+          showToast("⚠ Jobs Reformer has pending local changes. Sync Now before importing.");
+        }
+        return false;
+      }
+      if(typeof isUserLoggedIn === "function" && !isUserLoggedIn()){
+        jobsReformerSetSyncState("Sign in required before import", "bad");
+        return false;
+      }
+      if(typeof navigator !== "undefined" && navigator.onLine === false){
+        jobsReformerSetSyncState("Offline. Using local jobs register.", "warn");
+        if(showMsg && typeof showToast === "function"){
+          showToast("📴 Jobs Reformer is offline. Using local register.");
+        }
+        return false;
+      }
+      if(!jobsReformerHasSupabaseConfig()){
+        jobsReformerSetSyncState("Supabase sync unavailable", "bad");
+        if(showMsg && typeof showToast === "function"){
+          showToast("⚠ Supabase sync is unavailable for Jobs Reformer.");
+        }
+        return false;
+      }
+      jobsReformerSetSyncState("Checking central jobs register...", "warn");
+      var row = await jobsReformerFetchLatestRow();
+      if(!row || !row.data_base64){
+        jobsReformerSetSyncState("No central jobs register found yet", "warn");
+        if(showMsg && typeof showToast === "function"){
+          showToast("ℹ No central Jobs Reformer register found yet.");
+        }
+        return false;
+      }
+      var rowDigest = makeServerPayloadDigest(row);
+      if(rowDigest && rowDigest === getJobsReformerLastImportedDigest()){
+        jobsReformerState.lastServerSyncAt = row.created_at || jobsReformerState.lastServerSyncAt;
+        jobsReformerState.lastAutoImportMs = Date.now();
+        jobsReformerSetSyncState("Central register already current", "ok");
+        renderJobsReformerSyncMeta();
+        return true;
+      }
+      var parsed = jobsReformerParseDataset(row);
+      if(!parsed){
+        jobsReformerSetSyncState("Central jobs data could not be read", "bad");
+        if(showMsg && typeof showToast === "function"){
+          showToast("⚠ Central Jobs Reformer data could not be read.");
+        }
+        return false;
+      }
+      jobsReformerState.jobs = parsed.jobs;
+      jobsReformerState.lastLocalSavedAt = parsed.saved_at || row.created_at || new Date().toISOString();
+      jobsReformerState.lastServerSyncAt = row.created_at || new Date().toISOString();
+      saveJobsReformerLocalState();
+      saveJobsReformerSnapshot({
+        file_name: row.file_name || JOBS_REFORMER_FILE_NAME,
+        data_base64: row.data_base64,
+        uploaded_by: row.uploaded_by || null,
+        created_at: row.created_at || new Date().toISOString(),
+        saved_at: parsed.saved_at || row.created_at || new Date().toISOString()
+      });
+      if(rowDigest) setJobsReformerLastImportedDigest(rowDigest);
+      jobsReformerState.lastAutoImportMs = Date.now();
+      jobsReformerSetSyncState("Imported latest central register", "ok");
+      renderJobsReformerFromState();
+      if(showMsg && typeof showToast === "function"){
+        showToast("✅ Jobs Reformer imported from central server");
+      }
+      return true;
+    })();
+    try{
+      return await jobsReformerState.importPromise;
+    }finally{
+      jobsReformerState.importPromise = null;
+      renderJobsReformerSyncMeta();
+    }
+  }
+
+  async function exportJobsReformerToServer(showMsg){
+    jobsReformerState.lastLocalSavedAt = new Date().toISOString();
+    saveJobsReformerLocalState();
+    var payload = jobsReformerBuildServerPayload();
+    if(!payload.data_base64){
+      jobsReformerSetSyncState("Could not encode jobs register", "bad");
+      if(showMsg && typeof showToast === "function"){
+        showToast("⚠ Jobs Reformer could not be prepared for sync.");
+      }
+      return false;
+    }
+    saveJobsReformerQueuedExport(payload);
+    renderJobsReformerSyncMeta();
+    return flushJobsReformerQueuedExport(showMsg);
+  }
+
+  async function refreshJobsReformerTab(showMsg){
+    await ensureJobsReformerLoaded(false);
+    var flushed = await flushJobsReformerQueuedExport(false);
+    if(loadJobsReformerQueuedExport() && !flushed){
+      if(showMsg && typeof showToast === "function"){
+        showToast("📶 Pending Jobs Reformer upload is still queued.");
+      }
+      return false;
+    }
+    return importJobsReformerFromServer(!!showMsg);
+  }
+
+  function addJobsReformerJob(){
+    var titleEl = getJobsReformerEl("jobsdash-title");
+    var descEl = getJobsReformerEl("jobsdash-desc");
+    var locationEl = getJobsReformerEl("jobsdash-location");
+    var assignedEl = getJobsReformerEl("jobsdash-assigned");
+    var title = titleEl ? String(titleEl.value || "").trim() : "";
+    if(!title){
+      if(titleEl) titleEl.focus();
+      if(typeof showToast === "function") showToast("⚠ Enter a job title first.");
+      return;
+    }
+    jobsReformerState.jobs.unshift({
+      id: jobsReformerGenerateId(),
+      title: title,
+      desc: descEl ? String(descEl.value || "").trim() : "",
+      type: jobsReformerState.selectedType,
+      priority: jobsReformerState.selectedPri,
+      location: locationEl ? String(locationEl.value || "").trim() : "",
+      assigned: assignedEl ? String(assignedEl.value || "").trim() : "",
+      status: "pending",
+      created: new Date().toISOString(),
+      updated: new Date().toISOString()
+    });
+    jobsReformerPersistLocal(true);
+    jobsReformerResetForm();
+  }
+
+  function cycleJobsReformerStatus(id){
+    var job = jobsReformerState.jobs.find(function(item){ return item.id === id; });
+    if(!job) return;
+    var index = JOBS_REFORMER_STATUS_CYCLE.indexOf(job.status);
+    job.status = JOBS_REFORMER_STATUS_CYCLE[(index + 1) % JOBS_REFORMER_STATUS_CYCLE.length];
+    job.updated = new Date().toISOString();
+    jobsReformerPersistLocal(true);
+  }
+
+  function deleteJobsReformerJob(id){
+    var before = jobsReformerState.jobs.length;
+    jobsReformerState.jobs = jobsReformerState.jobs.filter(function(job){
+      return job.id !== id;
+    });
+    if(jobsReformerState.jobs.length === before) return;
+    jobsReformerPersistLocal(true);
+  }
+
+  function clearDoneJobsReformer(){
+    var before = jobsReformerState.jobs.length;
+    jobsReformerState.jobs = jobsReformerState.jobs.filter(function(job){
+      return job.status !== "done";
+    });
+    if(jobsReformerState.jobs.length === before){
+      if(typeof showToast === "function") showToast("ℹ No completed jobs to clear.");
+      return;
+    }
+    jobsReformerPersistLocal(true);
+    if(typeof showToast === "function") showToast("🗑 Cleared completed Jobs Reformer entries.");
+  }
+
+  function bindJobsReformerEvents(){
+    if(jobsReformerState.eventsBound) return;
+    jobsReformerState.eventsBound = true;
+
+    var typeGrid = getJobsReformerEl("jobsdash-type-grid");
+    if(typeGrid){
+      typeGrid.addEventListener("click", function(event){
+        var btn = event.target && event.target.closest ? event.target.closest("[data-type]") : null;
+        if(!btn) return;
+        jobsReformerState.selectedType = jobsReformerNormalizeType(btn.getAttribute("data-type"));
+        saveJobsReformerLocalState();
+        renderJobsReformerSelectors();
+      });
+    }
+
+    var priGrid = getJobsReformerEl("jobsdash-priority-grid");
+    if(priGrid){
+      priGrid.addEventListener("click", function(event){
+        var btn = event.target && event.target.closest ? event.target.closest("[data-pri]") : null;
+        if(!btn) return;
+        jobsReformerState.selectedPri = jobsReformerNormalizePriority(btn.getAttribute("data-pri"));
+        saveJobsReformerLocalState();
+        renderJobsReformerSelectors();
+      });
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll("#tab-jobsreformer .jobsdash-filter"), function(btn){
+      btn.addEventListener("click", function(){
+        jobsReformerState.activeFilter = String(btn.getAttribute("data-filter") || "all");
+        saveJobsReformerLocalState();
+        renderJobsReformerFromState();
+      });
+    });
+
+    var searchEl = getJobsReformerEl("jobsdash-search");
+    if(searchEl){
+      searchEl.addEventListener("input", renderJobsReformerList);
+    }
+
+    var titleEl = getJobsReformerEl("jobsdash-title");
+    if(titleEl){
+      titleEl.addEventListener("keydown", function(event){
+        if(event.key === "Enter"){
+          event.preventDefault();
+          addJobsReformerJob();
+        }
+      });
+    }
+
+    var descEl = getJobsReformerEl("jobsdash-desc");
+    if(descEl){
+      descEl.addEventListener("keydown", function(event){
+        if((event.metaKey || event.ctrlKey) && event.key === "Enter"){
+          event.preventDefault();
+          addJobsReformerJob();
+        }
+      });
+    }
+  }
+
+  function startJobsReformerClock(){
+    if(jobsReformerState.clockTimer) return;
+    jobsReformerTickClock();
+    jobsReformerState.clockTimer = setInterval(jobsReformerTickClock, 1000);
+  }
+
+  function startJobsReformerSyncLoop(){
+    if(jobsReformerState.syncTimer) return;
+    jobsReformerState.syncTimer = setInterval(function(){
+      if(!jobsReformerIsActive()) return;
+      if(loadJobsReformerQueuedExport()){
+        flushJobsReformerQueuedExport(false).catch(function(){});
+        return;
+      }
+      importJobsReformerFromServer(false).catch(function(){});
+    }, JOBS_REFORMER_AUTO_SYNC_MS);
+    if(!jobsReformerState.onlineBound){
+      jobsReformerState.onlineBound = true;
+      window.addEventListener("online", function(){
+        flushJobsReformerQueuedExport(false).catch(function(){});
+        if(jobsReformerIsActive()){
+          importJobsReformerFromServer(false).catch(function(){});
+        }
+      });
+    }
+  }
+
+  function hydrateJobsReformerState(){
+    var stored = loadJobsReformerLocalState() || {};
+    var snapshot = loadJobsReformerSnapshot();
+    jobsReformerState.jobs = jobsReformerNormalizeJobs(stored.jobs);
+    jobsReformerState.selectedType = jobsReformerNormalizeType(stored.selectedType || "shutdown");
+    jobsReformerState.selectedPri = jobsReformerNormalizePriority(stored.selectedPri || "low");
+    jobsReformerState.activeFilter = String(stored.activeFilter || "all").toLowerCase();
+    if(["all", "pending", "in-progress", "done"].indexOf(jobsReformerState.activeFilter) === -1){
+      jobsReformerState.activeFilter = "all";
+    }
+    jobsReformerState.lastLocalSavedAt = stored.lastLocalSavedAt || (snapshot && (snapshot.saved_at || snapshot.created_at)) || "";
+    jobsReformerState.lastServerSyncAt = snapshot && (snapshot.created_at || snapshot.saved_at) ? (snapshot.created_at || snapshot.saved_at) : "";
+    if(loadJobsReformerQueuedExport()){
+      jobsReformerState.syncMessage = "Pending upload to central server";
+      jobsReformerState.syncTone = "warn";
+    }else if(jobsReformerState.lastServerSyncAt){
+      jobsReformerState.syncMessage = "Local cache ready";
+      jobsReformerState.syncTone = "ok";
+    }else{
+      jobsReformerState.syncMessage = jobsReformerState.jobs.length ? "Local register ready" : "Waiting for first entry";
+      jobsReformerState.syncTone = jobsReformerState.jobs.length ? "ok" : "warn";
+    }
+  }
+
+  function ensureJobsReformerLoaded(forceRefresh){
+    if(!getJobsReformerEl("tab-jobsreformer")) return Promise.resolve(false);
+    if(!jobsReformerState.initialized){
+      jobsReformerState.initialized = true;
+      hydrateJobsReformerState();
+      bindJobsReformerEvents();
+      startJobsReformerClock();
+      startJobsReformerSyncLoop();
+      renderJobsReformerFromState();
+    }else{
+      renderJobsReformerFromState();
+    }
+    var queued = loadJobsReformerQueuedExport();
+    if(queued){
+      return flushJobsReformerQueuedExport(false).then(function(){
+        if(forceRefresh || !jobsReformerState.jobs.length){
+          return importJobsReformerFromServer(false);
+        }
+        return true;
+      }).catch(function(){
+        return false;
+      });
+    }
+    if(forceRefresh || !jobsReformerState.jobs.length){
+      return importJobsReformerFromServer(false);
+    }
+    return Promise.resolve(true);
+  }
+
+  window.ensureJobsReformerLoaded = ensureJobsReformerLoaded;
+  window.refreshJobsReformerTab = refreshJobsReformerTab;
+  window.importJobsReformerFromServer = importJobsReformerFromServer;
+  window.exportJobsReformerToServer = exportJobsReformerToServer;
+  window.addJobsReformerJob = addJobsReformerJob;
+  window.cycleJobsReformerStatus = cycleJobsReformerStatus;
+  window.deleteJobsReformerJob = deleteJobsReformerJob;
+  window.clearDoneJobsReformer = clearDoneJobsReformer;
 })();
 </script>
 <script src="./mobile-v2.js"></script>
