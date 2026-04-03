@@ -8405,6 +8405,13 @@ function getLoggedInEmpId(){
     return "";
   }
 }
+function getStoredUserRole(){
+  try{
+    return localStorage.getItem("scadaUserRole") || sessionStorage.getItem("scadaUserRole") || "operator";
+  }catch(e){
+    return "operator";
+  }
+}
 function setSessionIdentityLabel(empId, isAdmin){
   var wrap = document.getElementById("operatorDisplay");
   if(!wrap) return;
@@ -8443,7 +8450,7 @@ function restoreAdminPortalSession(silent){
 async function finishPortalLogin(empId, matchedHash, isAdmin, errEl, afterInit){
   var adminLogin = !!isAdmin;
   setAdminPortalSessionActive(adminLogin);
-  persistLogin(empId);
+  persistLogin(empId, adminLogin ? "admin" : "operator");
   if(!adminLogin && matchedHash && typeof saveLocalDevicePasswordHash === "function"){
     saveLocalDevicePasswordHash(matchedHash);
   }
@@ -8466,12 +8473,15 @@ async function finishPortalLogin(empId, matchedHash, isAdmin, errEl, afterInit){
   }
   return true;
 }
-function persistLogin(empId){
+function persistLogin(empId, role){
+  var cleanRole = String(role || "operator").toLowerCase() === "admin" ? "admin" : "operator";
   try{
     localStorage.setItem("scadaLoggedIn", "true");
     localStorage.setItem("scadaEmpId", String(empId || ""));
+    localStorage.setItem("scadaUserRole", cleanRole);
     sessionStorage.setItem("scadaLoggedIn", "true");
     sessionStorage.setItem("scadaEmpId", String(empId || ""));
+    sessionStorage.setItem("scadaUserRole", cleanRole);
   }catch(e){}
 }
 function clearLoginState(){
@@ -8526,6 +8536,40 @@ async function sha256Hex(input){
   return Array.from(new Uint8Array(digest)).map(function(x){
     return x.toString(16).padStart(2, "0");
   }).join("");
+}
+function normalizeAdminAuthResponse(obj){
+  if(!obj || typeof obj !== "object") return null;
+  var data = (obj.data && typeof obj.data === "object") ? obj.data : obj;
+  var role = String(data.role || "").toLowerCase();
+  if(data.ok === true && (role === "admin" || data.isAdmin === true)){
+    return { ok:true, role:"admin" };
+  }
+  return null;
+}
+async function verifyAdminPortalCredentialServer(empId, password){
+  var cleanEmpId = String(empId || "").trim();
+  var rawPassword = String(password == null ? "" : password);
+  if(!cleanEmpId || !rawPassword) return false;
+  try{
+    var res = await fetchWithTimeout(ADMIN_PORTAL_AUTH_ENDPOINT, {
+      method:"POST",
+      cache:"no-store",
+      headers:{
+        "Content-Type":"application/json",
+        Accept:"application/json",
+        "Cache-Control":"no-cache"
+      },
+      body: JSON.stringify({
+        empId: cleanEmpId,
+        password: rawPassword
+      })
+    }, 5000);
+    if(!res || !res.ok) return false;
+    var payload = normalizeAdminAuthResponse(await res.json().catch(function(){ return null; }));
+    return !!(payload && payload.ok === true && payload.role === "admin");
+  }catch(e){
+    return false;
+  }
 }
 
 function getPasswordCandidates(pw){
@@ -8602,20 +8646,24 @@ async function login(){
   var _h = async function(s){const b=new TextEncoder().encode(String(s||""));const d=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");};
   var _valid = (typeof getEffectivePasswordHash === "function") ? await getEffectivePasswordHash() : SCADA_PASSWORD;
   var _localDev = (typeof getLocalDevicePasswordHash === "function") ? getLocalDevicePasswordHash() : "";
+  var _adminLogin = await verifyAdminPortalCredentialServer(empId2, pw);
+
+  if(_adminLogin){
+    await finishPortalLogin(empId2, "", true, err);
+    return true;
+  }
 
   var _cands = getPasswordCandidates(pw);
   var _ok = false;
   var _matched = "";
-  var _adminLogin = false;
   for(var _i=0; _i<_cands.length; _i++){
     var _hash = await _h(_cands[_i]);
-    if(typeof isAdminPortalCredential === "function" && isAdminPortalCredential(empId2, _hash)){ _ok = true; _matched = _hash; _adminLogin = true; break; }
     if(_hash === _valid || _hash === SCADA_PASSWORD || (_localDev && _hash === _localDev)){ _ok = true; _matched = _hash; break; }
 
   }
 
   if(_ok){
-    await finishPortalLogin(empId2, _matched, _adminLogin, err);
+    await finishPortalLogin(empId2, _matched, false, err);
     return true;
   } else {
     err.style.display="block";
@@ -8691,6 +8739,9 @@ function _bioRead(){
 function _bioWrite(obj){
   try{ localStorage.setItem(BIO_LOGIN_KEY, JSON.stringify(obj||{})); }catch(e){}
 }
+function isBiometricAdminRecord(rec){
+  return !!(rec && String(rec.role || "").toLowerCase() === "admin");
+}
 function updateBiometricLoginUI(){
   var btn = document.getElementById("ls-biometric-btn");
   if(!btn) return;
@@ -8699,7 +8750,7 @@ function updateBiometricLoginUI(){
     return;
   }
   var rec = _bioRead();
-  var adminOnly = !!(rec && rec.empId && typeof isAdminPortalEmpId === "function" && isAdminPortalEmpId(rec.empId));
+  var adminOnly = isBiometricAdminRecord(rec);
   btn.style.display = "flex";
   btn.disabled = !(rec && rec.credId && rec.empId) || adminOnly;
   btn.style.opacity = btn.disabled ? "0.6" : "1";
@@ -8708,7 +8759,6 @@ function updateBiometricLoginUI(){
     : (btn.disabled ? "Sign in once with password to enable fingerprint login" : "Use fingerprint to sign in");
 }
 async function enrollBiometricForEmp(empId){
-  if(typeof isAdminPortalEmpId === "function" && isAdminPortalEmpId(empId)) return false;
   if(!_bioAvailable()) return false;
   var challenge = crypto.getRandomValues(new Uint8Array(32));
   var userId = crypto.getRandomValues(new Uint8Array(16));
@@ -8731,6 +8781,7 @@ async function enrollBiometricForEmp(empId){
   _bioWrite({
     credId: _bufToB64url(credential.rawId),
     empId: String(empId || "").trim(),
+    role: "operator",
     createdAt: new Date().toISOString()
   });
   updateBiometricLoginUI();
@@ -8740,7 +8791,6 @@ async function maybeOfferBiometricEnrollment(empId){
   if(!_bioIsMobile() || !_bioAvailable()) return;
   var empKey = String(empId || "").trim();
   if(!empKey) return;
-  if(typeof isAdminPortalEmpId === "function" && isAdminPortalEmpId(empKey)) return;
   if(window._scadaBioOfferInFlight) return;
   var seenKey = "scadaBioOfferShown::" + empKey;
   try{
@@ -8780,7 +8830,7 @@ async function loginWithBiometric(){
     }
     return;
   }
-  if(typeof isAdminPortalEmpId === "function" && isAdminPortalEmpId(rec.empId)){
+  if(isBiometricAdminRecord(rec)){
     if(err){
       err.style.display = "block";
       err.textContent = "Admin sign-in requires ID and password.";
@@ -8799,12 +8849,11 @@ async function loginWithBiometric(){
     if(!assertion || !assertion.rawId) throw new Error("Biometric failed");
     if(_bufToB64url(assertion.rawId) !== rec.credId) throw new Error("Credential mismatch");
 
-    persistLogin(rec.empId);
+    persistLogin(rec.empId, "operator");
     primeMobileShellBootVisibility();
     document.getElementById("loginScreen").style.display="none";
     if(err) err.style.display="none";
-    var opEl = document.getElementById("operatorDisplay");
-    if(opEl) opEl.innerHTML = "<b>Operator:</b> EMP-" + rec.empId;
+    setSessionIdentityLabel(rec.empId, false);
     init();
     var serverOk = await autoImportFromServer(true);
     if(!serverOk) syncHealthMarkQueued("Server unavailable · local mode");
@@ -22534,8 +22583,7 @@ var alarmLog = [];
    CONSTANTS
 ================================================== */
 const SCADA_PASSWORD = "d06b2c4efe3519e98c052cced2f117599b7771edea220f6b45a4d7b63c8b9ca8"; /* SHA-256 */
-const ADMIN_LOGIN_EMP_ID = "15112019";
-const ADMIN_LOGIN_PASSWORD_HASH = "73f7169006184f3d26b47f939da25dc51aa33fe282f9d3830df0390b04f759f6"; /* SHA-256 */
+const ADMIN_PORTAL_AUTH_ENDPOINT = "/api/admin-login";
 const ADMIN_MODE_PIN_HASH = "dc19305e959e6753cbe6ff3e4156aac5fc5cd4e5393cadc06b7ff058ba324e4f";
 const ADMIN_MODE_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 const WALL_NAMES     = ["A","B","C","D"];
@@ -22561,14 +22609,6 @@ var adminModeLastActivityAt = 0;
 var adminModeExpiryTimer = 0;
 var adminModeActivityListenersBound = false;
 var adminPinVerifyBusy = false;
-
-function isAdminPortalEmpId(empId){
-  return String(empId || "").trim() === ADMIN_LOGIN_EMP_ID;
-}
-
-function isAdminPortalCredential(empId, passwordHash){
-  return isAdminPortalEmpId(empId) && String(passwordHash || "") === ADMIN_LOGIN_PASSWORD_HASH;
-}
 
 /* ==================================================
    LOGIN / LOGOUT
@@ -23517,7 +23557,7 @@ document.addEventListener("DOMContentLoaded",function(){
 if(isUserLoggedIn()){
   primeMobileShellBootVisibility();
   document.getElementById("loginScreen").style.display="none";
-  setSessionIdentityLabel(getLoggedInEmpId(), isAdminPortalSessionActive());
+  setSessionIdentityLabel(getLoggedInEmpId(), getStoredUserRole() === "admin" || isAdminPortalSessionActive());
 }
 
 /* ==================================================
@@ -30644,6 +30684,22 @@ async function loginWithFolderSupport(){
   var pw  = document.getElementById("passwordInput").value;
   var err = document.getElementById("ls-error");
   if(!empId){ err.style.display="block"; err.textContent="Please enter your Employee ID."; return false; }
+  var adminServerLogin = await verifyAdminPortalCredentialServer(empId, pw);
+  if(adminServerLogin){
+    await finishPortalLogin(empId, "", true, err, async function(){
+      syncHealthMarkSyncing("Checking server");
+      flushQueuedServerExport(false).catch(function(){});
+      var serverOkAdmin = await autoImportFromServer(true);
+      if(!serverOkAdmin){
+        syncHealthMarkQueued("Server unavailable · local mode");
+      }else{
+        markCurrentAutoSyncDigest();
+      }
+      refreshHeatMapAfterServerSync();
+      scheduleAutoRefreshOnOpen();
+    });
+    return true;
+  }
   /* SHA-256 verify — plaintext never compared directly */
   async function _sha256(s){const b=new TextEncoder().encode(s);const d=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");}
   var validHash = await getEffectivePasswordHash();
@@ -30652,15 +30708,13 @@ async function loginWithFolderSupport(){
   var _cands2 = getPasswordCandidates(pw);
   var _ok2 = false;
   var _matched2 = "";
-  var _adminLogin2 = false;
   for(var _j=0; _j<_cands2.length; _j++){
     var _h2 = await _sha256(_cands2[_j]);
-    if(typeof isAdminPortalCredential === "function" && isAdminPortalCredential(empId, _h2)){ _ok2 = true; _matched2 = _h2; _adminLogin2 = true; break; }
     if(_h2 === validHash || _h2 === SCADA_PASSWORD || (_localDev2 && _h2 === _localDev2)){ _ok2 = true; _matched2 = _h2; break; }
 
   }
   if(_ok2){
-    await finishPortalLogin(empId, _matched2, _adminLogin2, err, async function(){
+    await finishPortalLogin(empId, _matched2, false, err, async function(){
       syncHealthMarkSyncing("Checking server");
       flushQueuedServerExport(false).catch(function(){});
       var serverOk = await autoImportFromServer(true);
