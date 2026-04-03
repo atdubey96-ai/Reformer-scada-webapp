@@ -22330,25 +22330,84 @@ function handleAutoImport(event){
   });
 }
 
-function getHeaderActionToastRect(anchorId){
-  var el = document.getElementById(anchorId || "refreshDataBtn");
+var scadaActionToastAnchorEl = null;
+var scadaActionToastAnchorUntil = 0;
+var scadaActionToastCaptureBound = false;
+
+function normalizeActionToastText(value){
+  return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function findActionToastButton(source){
+  var btn = source && source.closest ? source.closest('button, input[type="button"], input[type="submit"], [role="button"], a') : null;
+  if(!btn || btn.disabled) return null;
+  if(btn.dataset && btn.dataset.toastAnchor === "action") return btn;
+  var text = normalizeActionToastText(btn.getAttribute("data-refresh-default-label") || btn.getAttribute("aria-label") || btn.textContent || btn.value || "");
+  var meta = normalizeActionToastText([btn.id || "", btn.className || "", btn.getAttribute("onclick") || "", btn.getAttribute("title") || ""].join(" "));
+  if(btn.id === "jobsdash-submit-btn" || btn.id === "td-save-btn" || btn.id === "td-plant-refresh-btn") return btn;
+  if(text.indexOf("latest data") !== -1) return btn;
+  if(/\b(refresh|save|sync)\b/.test(text)) return btn;
+  if(/\b(update entry|update job|save dates)\b/.test(text)) return btn;
+  if(/\b(refresh|save|sync)\b/.test(meta)) return btn;
+  if(meta.indexOf("cleartwincuboiddatefilter") !== -1) return btn;
+  if(meta.indexOf("addjobsreformerjob") !== -1) return btn;
+  if(meta.indexOf("savetempdata") !== -1) return btn;
+  if(meta.indexOf("savetipdata") !== -1) return btn;
+  if(meta.indexOf("saveburnerediteddates") !== -1) return btn;
+  return null;
+}
+
+function setActionToastAnchor(anchor, holdMs){
+  var el = anchor && anchor.nodeType === 1 ? anchor : null;
+  if(!el && typeof anchor === "string") el = document.getElementById(anchor);
+  if(!el || !document.documentElement.contains(el)) return null;
+  scadaActionToastAnchorEl = el;
+  scadaActionToastAnchorUntil = Date.now() + Math.max(3000, holdMs || 26000);
+  return el;
+}
+
+function getActionToastAnchor(anchor){
+  var el = anchor && anchor.nodeType === 1 ? anchor : null;
+  if(!el && typeof anchor === "string") el = document.getElementById(anchor);
+  if(!el && scadaActionToastAnchorEl && scadaActionToastAnchorUntil > Date.now() && document.documentElement.contains(scadaActionToastAnchorEl)){
+    el = scadaActionToastAnchorEl;
+  }
+  if(!el){
+    var fallback = document.getElementById("refreshDataBtn");
+    if(fallback && document.documentElement.contains(fallback)) el = fallback;
+  }
   if(!el || !el.getBoundingClientRect) return null;
   var rect = el.getBoundingClientRect();
   if(!rect || (!rect.width && !rect.height)) return null;
-  return rect;
+  return { element: el, rect: rect };
+}
+
+function bindActionToastCapture(){
+  if(scadaActionToastCaptureBound) return;
+  scadaActionToastCaptureBound = true;
+  document.addEventListener("click", function(evt){
+    var btn = findActionToastButton(evt.target);
+    if(btn) setActionToastAnchor(btn);
+  }, true);
 }
 
 function placeToastElement(t, options){
   options = options || {};
-  if(options.position === "header-action"){
-    var rect = getHeaderActionToastRect(options.anchorId || "refreshDataBtn");
+  if(options.position === "action-button"){
+    var anchorInfo = getActionToastAnchor(options.anchorEl || options.anchorId);
+    var rect = anchorInfo ? anchorInfo.rect : null;
     var availableLeft = rect ? Math.floor(rect.left) - 24 : 0;
-    if(rect && availableLeft >= 220){
+    var availableRight = rect ? Math.floor(window.innerWidth - rect.right) - 24 : 0;
+    var useLeft = availableLeft >= availableRight;
+    var availableSide = useLeft ? availableLeft : availableRight;
+    if(rect && availableSide >= 220){
       t.style.top = Math.max(12, Math.round(rect.top + rect.height / 2)) + "px";
-      t.style.left = Math.max(12, Math.round(rect.left - 10)) + "px";
+      t.style.left = useLeft
+        ? Math.max(12, Math.round(rect.left - 10)) + "px"
+        : Math.round(rect.right + 10) + "px";
       t.style.right = "auto";
       t.style.bottom = "auto";
-      t.style.transform = "translate(-100%, -50%)";
+      t.style.transform = useLeft ? "translate(-100%, -50%)" : "translate(0, -50%)";
       t.style.textAlign = "left";
       t.style.padding = "8px 16px";
       t.style.borderRadius = "999px";
@@ -22356,7 +22415,7 @@ function placeToastElement(t, options){
       t.style.lineHeight = "1.1";
       t.style.whiteSpace = "nowrap";
       t.style.width = "max-content";
-      t.style.maxWidth = availableLeft + "px";
+      t.style.maxWidth = Math.min(620, availableSide) + "px";
       return;
     }
   }
@@ -22375,12 +22434,19 @@ function placeToastElement(t, options){
   t.style.maxWidth = "min(calc(100vw - 32px), 420px)";
 }
 
+function showActionToast(msg, options){
+  options = options || {};
+  options.position = "action-button";
+  showToast(msg, options);
+}
+
 function showHeaderActionToast(msg){
-  showToast(msg, { position:"header-action", anchorId:"refreshDataBtn" });
+  showActionToast(msg);
 }
 
 function showToast(msg, options){
   options = options || {};
+  bindActionToastCapture();
   let t=document.getElementById("scada-toast");
   if(!t){
     t=document.createElement("div");
@@ -25228,7 +25294,7 @@ function _doImport(file, onDone, silent){
         setTimeout(function(){
           exportToExcel().catch(function(syncErr){
             console.warn("Auto sync after import failed:", syncErr);
-            showToast("⚠ Import done locally, but central sync failed.");
+            showActionToast("⚠ Import done locally, but central sync failed.");
           });
         }, 120);
       }
@@ -25300,7 +25366,7 @@ function saveTipData(){
   collectTipFromDOM();
   saveTipDataStore(tipRows);
   clearTipUnsaved();
-  showToast("✅ Burner tip data saved successfully!");
+  showActionToast("✅ Burner tip data saved successfully!");
   notifyAndBroadcast("burner_tip_data_saved", "Burner Tip Data Saved", "Burner tip inspection data has been saved.", "burner_tip_data_saved", 3000);
 }
 
@@ -25626,7 +25692,7 @@ function saveCleaningHistoryInlineEdit(){
   persistCleaningDatesForBurner(sel.wall, sel.key, dates);
   cleaningHistoryInlineEdit = { date:"", value:"" };
   buildCleaningTable();
-  showToast("✅ Cleaning date updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
+  showActionToast("✅ Cleaning date updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
 }
 function deleteCleaningHistoryDate(date){
   var sel = getCleaningHistorySelection();
@@ -25771,7 +25837,7 @@ function saveBurnerEditedDates(){
   setCleaningHistorySelection(sel.wall, sel.row, sel.burner);
   buildCleaningTable();
 
-  showToast("✅ Cleaning dates updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
+  showActionToast("✅ Cleaning dates updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
   setTimeout(showPostCleaningBurnerDataNudge, 900);
 }
 function renderBurnerHistoryPreview(){
@@ -29883,7 +29949,7 @@ async function flushQueuedServerExport(showMsg){
         });
         updateLastSyncLabel(new Date());
         syncHealthMarkOk(new Date(), "Queued upload sent");
-        if(showMsg) showToast("✅ Pending save synced to central server");
+        if(showMsg) showActionToast("✅ Pending save synced to central server");
         return true;
       }
       setCentralReachability(false);
@@ -29923,7 +29989,7 @@ async function autoImportFromServer(showMsg){
             syncHealthMarkOk(new Date(), "Downloaded");
             markCurrentAutoSyncDigest();
             refreshHeatMapAfterServerSync();
-            if(showMsg) showToast("✅ Auto-loaded from central server");
+            if(showMsg) showActionToast("✅ Auto-loaded from central server");
             return true;
           }
         }
@@ -29939,7 +30005,7 @@ async function autoImportFromServer(showMsg){
           syncHealthMarkOk(new Date(), "Downloaded");
           markCurrentAutoSyncDigest();
           refreshHeatMapAfterServerSync();
-          if(showMsg) showToast("✅ Auto-loaded from central server");
+          if(showMsg) showActionToast("✅ Auto-loaded from central server");
           return true;
         }
       }catch(err){
@@ -29955,7 +30021,7 @@ async function autoImportFromServer(showMsg){
       syncHealthMarkError("Server offline (local copy)");
       markCurrentAutoSyncDigest();
       refreshHeatMapAfterServerSync();
-      if(showMsg) showToast("📴 Server unreachable: loaded last synced local copy");
+      if(showMsg) showActionToast("📴 Server unreachable: loaded last synced local copy");
       return true;
     }
     syncHealthMarkError("No server data");
@@ -34002,14 +34068,14 @@ async function saveTempData(){
   if(typeof scheduleCuboidFrameDataPush === "function") scheduleCuboidFrameDataPush(14, false);
   renderTempDataTable();
   clearTempData();
-  showToast(wasEdit ? "✅ Temperature entry updated." : "✅ Temperature entry saved successfully!");
+  showActionToast(wasEdit ? "✅ Temperature entry updated." : "✅ Temperature entry saved successfully!");
   notifyAndBroadcast("tst_data_saved", wasEdit ? "TST Data Updated" : "TST Data Saved", wasEdit ? "A TST entry was updated successfully." : "A new TST entry was saved successfully.", "tst_data_saved", 5000);
 
   try{
     await exportToExcel();
   }catch(syncErr){
     console.warn("Auto save-to-file after TST save failed:", syncErr);
-    showToast("⚠ Entry saved, but burner data file sync failed.");
+    showActionToast("⚠ Entry saved, but burner data file sync failed.");
   }
 }
 
@@ -37438,13 +37504,13 @@ window.updateReformerDashComposition = updateReformerDashComposition;
         jobsReformerState.lastServerSyncAt = new Date().toISOString();
         jobsReformerSetSyncState("Synced to central server", "ok");
         if(showMsg && typeof showToast === "function"){
-          showToast("✅ Jobs Reformer synced to central server");
+          showActionToast("✅ Jobs Reformer synced to central server");
         }
         return true;
       }
       jobsReformerSetSyncState("Sync failed. Upload kept queued.", "bad");
       if(showMsg && typeof showToast === "function"){
-        showToast("📶 Jobs Reformer sync failed. Upload kept queued.");
+        showActionToast("📶 Jobs Reformer sync failed. Upload kept queued.");
       }
       return false;
     })();
@@ -37462,7 +37528,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
       if(loadJobsReformerQueuedExport()){
         jobsReformerSetSyncState("Pending local upload blocks import", "warn");
         if(showMsg && typeof showToast === "function"){
-          showToast("⚠ Jobs Reformer has pending local changes. Sync Now before importing.");
+          showActionToast("⚠ Jobs Reformer has pending local changes. Sync Now before importing.");
         }
         return false;
       }
@@ -37473,14 +37539,14 @@ window.updateReformerDashComposition = updateReformerDashComposition;
       if(typeof navigator !== "undefined" && navigator.onLine === false){
         jobsReformerSetSyncState("Offline. Using local jobs register.", "warn");
         if(showMsg && typeof showToast === "function"){
-          showToast("📴 Jobs Reformer is offline. Using local register.");
+          showActionToast("📴 Jobs Reformer is offline. Using local register.");
         }
         return false;
       }
       if(!jobsReformerHasSupabaseConfig()){
         jobsReformerSetSyncState("Supabase sync unavailable", "bad");
         if(showMsg && typeof showToast === "function"){
-          showToast("⚠ Supabase sync is unavailable for Jobs Reformer.");
+          showActionToast("⚠ Supabase sync is unavailable for Jobs Reformer.");
         }
         return false;
       }
@@ -37489,7 +37555,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
       if(!row || !row.data_base64){
         jobsReformerSetSyncState("No central jobs register found yet", "warn");
         if(showMsg && typeof showToast === "function"){
-          showToast("ℹ No central Jobs Reformer register found yet.");
+          showActionToast("ℹ No central Jobs Reformer register found yet.");
         }
         return false;
       }
@@ -37505,7 +37571,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
       if(!parsed){
         jobsReformerSetSyncState("Central jobs data could not be read", "bad");
         if(showMsg && typeof showToast === "function"){
-          showToast("⚠ Central Jobs Reformer data could not be read.");
+          showActionToast("⚠ Central Jobs Reformer data could not be read.");
         }
         return false;
       }
@@ -37526,7 +37592,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
       jobsReformerSetSyncState("Imported latest central register", "ok");
       renderJobsReformerFromState();
       if(showMsg && typeof showToast === "function"){
-        showToast("✅ Jobs Reformer imported from central server");
+        showActionToast("✅ Jobs Reformer imported from central server");
       }
       return true;
     })();
@@ -37545,7 +37611,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     if(!payload.data_base64){
       jobsReformerSetSyncState("Could not encode jobs register", "bad");
       if(showMsg && typeof showToast === "function"){
-        showToast("⚠ Jobs Reformer could not be prepared for sync.");
+        showActionToast("⚠ Jobs Reformer could not be prepared for sync.");
       }
       return false;
     }
@@ -37559,7 +37625,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     var flushed = await flushJobsReformerQueuedExport(false);
     if(loadJobsReformerQueuedExport() && !flushed){
       if(showMsg && typeof showToast === "function"){
-        showToast("📶 Pending Jobs Reformer upload is still queued.");
+        showActionToast("📶 Pending Jobs Reformer upload is still queued.");
       }
       return false;
     }
@@ -37604,7 +37670,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     jobsReformerPersistLocal(true);
     jobsReformerResetForm();
     if(editingJob && typeof showToast === "function"){
-      showToast("✅ Jobs Reformer entry updated.");
+      showActionToast("✅ Jobs Reformer entry updated.");
     }
   }
 
