@@ -1239,6 +1239,12 @@ body[data-user-mode="operator"] #tab-tempdata .td-plant-controls-right{
 body[data-user-mode="operator"] #tab-tempdata .td-plant-controls-right .td-plant-action-btn{
   flex:0 0 auto;
 }
+body[data-user-mode="operator"] #tab-reformerdash .refdash-shell{
+  gap:14px;
+}
+body[data-user-mode="operator"] #tab-reformerdash .refdash-hero{
+  padding:16px 18px;
+}
 @media (max-width: 900px){
   .admin-mode-badge{
     right:calc(100% + 8px);
@@ -10921,9 +10927,9 @@ body.light-theme #tab-reformerdash{
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
-  gap:18px;
-  padding:24px 26px;
-  border-radius:22px;
+  gap:14px;
+  padding:20px 22px;
+  border-radius:20px;
   background:var(--refdash-surface);
 }
 #tab-reformerdash .refdash-hero::before{
@@ -10936,11 +10942,11 @@ body.light-theme #tab-reformerdash{
   background:radial-gradient(circle, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0) 72%);
   pointer-events:none;
 }
-#tab-reformerdash .refdash-kicker{font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--refdash-accent);}
-#tab-reformerdash .refdash-title{margin:8px 0 10px;font-size:30px;line-height:1.05;color:var(--refdash-text);}
-#tab-reformerdash .refdash-copy{max-width:820px;font-size:13px;line-height:1.6;color:var(--refdash-dim);}
-#tab-reformerdash .refdash-hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:12px;min-width:220px;}
-#tab-reformerdash .refdash-live-strip{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,0.04);color:var(--refdash-dim);}
+#tab-reformerdash .refdash-kicker{font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--refdash-accent);}
+#tab-reformerdash .refdash-title{margin:5px 0 6px;font-size:24px;line-height:1.05;color:var(--refdash-text);}
+#tab-reformerdash .refdash-copy{max-width:760px;font-size:12px;line-height:1.45;color:var(--refdash-dim);}
+#tab-reformerdash .refdash-hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:180px;}
+#tab-reformerdash .refdash-live-strip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,0.04);color:var(--refdash-dim);font-size:11px;}
 #tab-reformerdash .refdash-live-dot{width:9px;height:9px;border-radius:999px;background:var(--refdash-green);box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset,0 0 12px rgba(34,197,94,0.45);animation:pulse 2s infinite;}
 #tab-reformerdash .refdash-live-dot.is-stale{background:var(--refdash-red);box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset,0 0 12px rgba(251,113,133,0.4);}
 #tab-reformerdash .refdash-refresh-btn{
@@ -21854,11 +21860,10 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <span id="refdash-live-dot" class="refdash-live-dot"></span>
             <span id="refdash-live-label" class="refdash-mono">Connecting...</span>
           </div>
-          <button type="button" class="refdash-refresh-btn" onclick="refreshReformerDashboard(true)">Refresh Data</button>
         </div>
       </div>
 
-      <div class="refdash-sync-bar refdash-mono">
+      <div class="refdash-sync-bar refdash-mono" data-admin-only="true">
         <span style="display:inline-flex;align-items:center;gap:8px;">Source:
           <span class="scada-source-toggle" data-plant-source-toggle>
             <button type="button" class="scada-source-btn" data-plant-source-option="live" onclick="setTdPlantSourceMode('live')">Live</button>
@@ -24827,7 +24832,13 @@ function setRefreshButtonBusy(busy){
   btn.disabled = !!busy;
   btn.style.opacity = busy ? "0.75" : "1";
   btn.style.pointerEvents = busy ? "none" : "auto";
-  btn.textContent = busy ? "⏳ Refreshing..." : "🔄 Refresh Data";
+  if(busy){
+    btn.setAttribute("data-refresh-busy", "1");
+    btn.textContent = "⏳ Refreshing...";
+  }else{
+    btn.removeAttribute("data-refresh-busy");
+    btn.textContent = btn.getAttribute("data-refresh-default-label") || "🔄 Refresh Data";
+  }
   if(busy) syncHealthMarkSyncing("Refreshing");
 }
 async function smartRefresh(){
@@ -26747,11 +26758,15 @@ function updateGlobalRefreshButtonLabel(tab){
   var btn = document.getElementById("refreshDataBtn");
   if(!btn) return;
   var key = String(tab || "").toLowerCase();
-  btn.textContent =
+  var label =
     key === "alarms" ? "↻ Refresh Alarms" :
     key === "jobsreformer" ? "↻ Refresh Jobs" :
+    key === "reformerdash" ? "↻ Refresh Reformer" :
     key === "cuboidstack" ? "↻ Refresh Data" :
     "🔄 Refresh Data";
+  btn.setAttribute("data-refresh-default-label", label);
+  if(btn.getAttribute("data-refresh-busy") === "1") return;
+  btn.textContent = label;
 }
 
 function initMobileMetaLogo(){
@@ -28144,6 +28159,12 @@ function handleGlobalRefreshClick(){
   }
   if(tab === 'jobsreformer' && typeof refreshJobsReformerTab === 'function'){
     refreshJobsReformerTab(true);
+    return;
+  }
+  if(tab === 'reformerdash' && typeof refreshReformerDashboard === 'function'){
+    refreshReformerDashboard(true).catch(function(err){
+      console.warn("Reformer dashboard top refresh failed:", err);
+    });
     return;
   }
   if(isCuboidDashboardTabName(tab)){
@@ -35983,9 +36004,28 @@ body.light-theme .btab-alarm-count{
 
   function setRefreshButtonState(loading){
     var btn = document.querySelector("#tab-reformerdash .refdash-refresh-btn");
-    if(!btn) return;
-    btn.disabled = !!loading;
-    btn.textContent = loading ? "Refreshing..." : "Refresh Data";
+    if(btn){
+      btn.disabled = !!loading;
+      btn.textContent = loading ? "Refreshing..." : "Refresh Data";
+    }
+    var topBtn = document.getElementById("refreshDataBtn");
+    if(!topBtn) return;
+    var active = document.querySelector(".tab-panel.tab-active");
+    var activeTab = active && active.id ? active.id.replace("tab-", "") : "";
+    if(loading){
+      if(activeTab !== "reformerdash") return;
+      topBtn.disabled = true;
+      topBtn.style.opacity = "0.75";
+      topBtn.style.pointerEvents = "none";
+      topBtn.setAttribute("data-refresh-busy", "1");
+      topBtn.textContent = "⏳ Refreshing Reformer...";
+      return;
+    }
+    topBtn.disabled = false;
+    topBtn.style.opacity = "1";
+    topBtn.style.pointerEvents = "auto";
+    topBtn.removeAttribute("data-refresh-busy");
+    updateGlobalRefreshButtonLabel(activeTab || "reformerdash");
   }
 
   function renderReformerStatus(){
