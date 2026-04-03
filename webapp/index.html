@@ -8338,19 +8338,45 @@ function getLoggedInEmpId(){
     return "";
   }
 }
-function persistLogin(empId){
+function normalizeLoginRole(role){
+  return String(role || "").toLowerCase() === "admin" ? "admin" : "operator";
+}
+function getLoggedInUserRole(){
+  try{
+    return normalizeLoginRole(localStorage.getItem("scadaUserRole") || sessionStorage.getItem("scadaUserRole") || "operator");
+  }catch(e){
+    return "operator";
+  }
+}
+function setLoggedInIdentityUi(empId, role){
+  var wrap = document.getElementById("operatorDisplay");
+  if(!wrap) return;
+  var label = normalizeLoginRole(role) === "admin" ? "Admin" : "Operator";
+  wrap.innerHTML = "<b>" + label + ":</b> <span id=\"operatorEmpId\"></span>";
+  var span = document.getElementById("operatorEmpId");
+  if(span){
+    var cleanEmpId = String(empId || "").trim();
+    span.textContent = cleanEmpId ? ("EMP-" + cleanEmpId) : "—";
+  }
+}
+function persistLogin(empId, role){
+  var normalizedRole = normalizeLoginRole(role);
   try{
     localStorage.setItem("scadaLoggedIn", "true");
     localStorage.setItem("scadaEmpId", String(empId || ""));
+    localStorage.setItem("scadaUserRole", normalizedRole);
     sessionStorage.setItem("scadaLoggedIn", "true");
     sessionStorage.setItem("scadaEmpId", String(empId || ""));
+    sessionStorage.setItem("scadaUserRole", normalizedRole);
   }catch(e){}
 }
 function clearLoginState(){
   try{ localStorage.removeItem("scadaLoggedIn"); }catch(e){}
   try{ localStorage.removeItem("scadaEmpId"); }catch(e){}
+  try{ localStorage.removeItem("scadaUserRole"); }catch(e){}
   try{ sessionStorage.removeItem("scadaLoggedIn"); }catch(e){}
   try{ sessionStorage.removeItem("scadaEmpId"); }catch(e){}
+  try{ sessionStorage.removeItem("scadaUserRole"); }catch(e){}
   try{ sessionStorage.removeItem("scadaSwControllerReloaded"); }catch(e){}
   try{
     if(document.body){
@@ -8362,6 +8388,31 @@ function clearLoginState(){
   try{
     document.documentElement.removeAttribute("data-scada-auth-boot");
   }catch(e){}
+}
+
+async function completeScadaLogin(empId, options){
+  options = options || {};
+  var role = normalizeLoginRole(options.role);
+  var matchedHash = String(options.matchedHash || "");
+  var errEl = options.errorEl || document.getElementById("ls-error");
+  persistLogin(empId, role);
+  if(role !== "admin" && matchedHash && typeof saveLocalDevicePasswordHash === "function"){
+    saveLocalDevicePasswordHash(matchedHash);
+  }
+  primeMobileShellBootVisibility();
+  var loginScreen = document.getElementById("loginScreen");
+  if(loginScreen) loginScreen.style.display = "none";
+  if(errEl) errEl.style.display = "none";
+  setLoggedInIdentityUi(empId, role);
+  if(typeof updateAdminModeUi === "function") updateAdminModeUi();
+  if(typeof init === "function") init();
+  if(role !== "admin" && typeof maybeOfferBiometricEnrollment === "function" && options.offerBiometric !== false){
+    try{ await maybeOfferBiometricEnrollment(empId, role); }catch(e){}
+  }
+  if(typeof options.afterInit === "function"){
+    await options.afterInit();
+  }
+  return true;
 }
 
 function primeMobileShellBootVisibility(){
@@ -8458,8 +8509,9 @@ async function login(){
   /* Primary path */
   if(typeof loginWithFolderSupport === "function") {
     try {
-      await loginWithFolderSupport();
-      if(isUserLoggedIn()) return true;
+      var folderOk = await loginWithFolderSupport();
+      if(folderOk === true || isUserLoggedIn()) return true;
+      if(folderOk === false) return false;
     } catch(e) {
       console.warn("loginWithFolderSupport failed, falling back:", e);
       if(isUserLoggedIn()) return true;
@@ -8470,27 +8522,21 @@ async function login(){
   var _h = async function(s){const b=new TextEncoder().encode(String(s||""));const d=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");};
   var _valid = (typeof getEffectivePasswordHash === "function") ? await getEffectivePasswordHash() : SCADA_PASSWORD;
   var _localDev = (typeof getLocalDevicePasswordHash === "function") ? getLocalDevicePasswordHash() : "";
+  var _adminEmp = (typeof isAdminPortalEmpId === "function") ? isAdminPortalEmpId(empId2) : false;
 
   var _cands = getPasswordCandidates(pw);
   var _ok = false;
   var _matched = "";
+  var _role = "operator";
   for(var _i=0; _i<_cands.length; _i++){
     var _hash = await _h(_cands[_i]);
-    if(_hash === _valid || _hash === SCADA_PASSWORD || (_localDev && _hash === _localDev)){ _ok = true; _matched = _hash; break; }
+    if(typeof isAdminPortalCredential === "function" && isAdminPortalCredential(empId2, _hash)){ _ok = true; _matched = _hash; _role = "admin"; break; }
+    if(!_adminEmp && (_hash === _valid || _hash === SCADA_PASSWORD || (_localDev && _hash === _localDev))){ _ok = true; _matched = _hash; _role = "operator"; break; }
 
   }
 
   if(_ok){
-    persistLogin(empId2);
-    if(_matched && typeof saveLocalDevicePasswordHash === "function") saveLocalDevicePasswordHash(_matched);
-
-    primeMobileShellBootVisibility();
-    document.getElementById("loginScreen").style.display="none";
-    err.style.display="none";
-    var opEl2 = document.getElementById("operatorDisplay");
-    if(opEl2) opEl2.innerHTML = "<b>Operator:</b> EMP-" + empId2;
-    if(typeof init === "function") init();
-    try{ await maybeOfferBiometricEnrollment(empId2); }catch(e){}
+    await completeScadaLogin(empId2, { role:_role, matchedHash:_matched, errorEl:err });
     return true;
   } else {
     err.style.display="block";
@@ -8560,7 +8606,9 @@ function _b64urlToBuf(s){
 function _bioRead(){
   try{
     var raw = localStorage.getItem(BIO_LOGIN_KEY);
-    return raw ? JSON.parse(raw) : null;
+    var rec = raw ? JSON.parse(raw) : null;
+    if(rec && !rec.role) rec.role = "operator";
+    return rec;
   }catch(e){ return null; }
 }
 function _bioWrite(obj){
@@ -8574,13 +8622,19 @@ function updateBiometricLoginUI(){
     return;
   }
   var rec = _bioRead();
+  var adminOnly = !!(rec && rec.empId && ((typeof isAdminPortalEmpId === "function" && isAdminPortalEmpId(rec.empId)) || normalizeLoginRole(rec.role) === "admin"));
   btn.style.display = "flex";
-  btn.disabled = !(rec && rec.credId && rec.empId);
+  btn.disabled = !(rec && rec.credId && rec.empId) || adminOnly;
   btn.style.opacity = btn.disabled ? "0.6" : "1";
-  btn.title = btn.disabled ? "Sign in once with password to enable fingerprint login" : "Use fingerprint to sign in";
+  if(adminOnly){
+    btn.title = "Admin sign-in requires ID and password";
+  }else{
+    btn.title = btn.disabled ? "Sign in once with password to enable fingerprint login" : "Use fingerprint to sign in";
+  }
 }
-async function enrollBiometricForEmp(empId){
+async function enrollBiometricForEmp(empId, role){
   if(!_bioAvailable()) return false;
+  if((typeof isAdminPortalEmpId === "function" && isAdminPortalEmpId(empId)) || normalizeLoginRole(role) === "admin") return false;
   var challenge = crypto.getRandomValues(new Uint8Array(32));
   var userId = crypto.getRandomValues(new Uint8Array(16));
   var credential = await navigator.credentials.create({
@@ -8602,15 +8656,18 @@ async function enrollBiometricForEmp(empId){
   _bioWrite({
     credId: _bufToB64url(credential.rawId),
     empId: String(empId || "").trim(),
+    role: normalizeLoginRole(role),
     createdAt: new Date().toISOString()
   });
   updateBiometricLoginUI();
   return true;
 }
-async function maybeOfferBiometricEnrollment(empId){
+async function maybeOfferBiometricEnrollment(empId, role){
   if(!_bioIsMobile() || !_bioAvailable()) return;
   var empKey = String(empId || "").trim();
   if(!empKey) return;
+  var loginRole = normalizeLoginRole(role);
+  if(loginRole === "admin" || (typeof isAdminPortalEmpId === "function" && isAdminPortalEmpId(empKey))) return;
   if(window._scadaBioOfferInFlight) return;
   var seenKey = "scadaBioOfferShown::" + empKey;
   try{
@@ -8621,10 +8678,10 @@ async function maybeOfferBiometricEnrollment(empId){
   window._scadaBioOfferInFlight = true;
   try{
   var current = _bioRead();
-  if(current && current.credId && current.empId === empKey) return;
+  if(current && current.credId && current.empId === empKey && normalizeLoginRole(current.role) === loginRole) return;
     try{
       /* Skip the extra site-level confirm and hand off directly to the native passkey sheet. */
-      var ok = await enrollBiometricForEmp(empId);
+      var ok = await enrollBiometricForEmp(empId, loginRole);
       if(ok) showToast("✅ Fingerprint login enabled on this device");
     }catch(e){
       showToast("⚠ Fingerprint setup was cancelled or failed");
@@ -8650,6 +8707,14 @@ async function loginWithBiometric(){
     }
     return;
   }
+  var recRole = normalizeLoginRole(rec.role);
+  if(recRole === "admin" || (typeof isAdminPortalEmpId === "function" && isAdminPortalEmpId(rec.empId))){
+    if(err){
+      err.style.display = "block";
+      err.textContent = "Admin sign-in requires ID and password.";
+    }
+    return;
+  }
   try{
     var assertion = await navigator.credentials.get({
       publicKey: {
@@ -8662,12 +8727,12 @@ async function loginWithBiometric(){
     if(!assertion || !assertion.rawId) throw new Error("Biometric failed");
     if(_bufToB64url(assertion.rawId) !== rec.credId) throw new Error("Credential mismatch");
 
-    persistLogin(rec.empId);
+    persistLogin(rec.empId, recRole);
     primeMobileShellBootVisibility();
     document.getElementById("loginScreen").style.display="none";
     if(err) err.style.display="none";
-    var opEl = document.getElementById("operatorDisplay");
-    if(opEl) opEl.innerHTML = "<b>Operator:</b> EMP-" + rec.empId;
+    setLoggedInIdentityUi(rec.empId, recRole);
+    if(typeof updateAdminModeUi === "function") updateAdminModeUi();
     init();
     var serverOk = await autoImportFromServer(true);
     if(!serverOk) syncHealthMarkQueued("Server unavailable · local mode");
@@ -12129,12 +12194,12 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       <div class="app-system-sub">REFORMER WALL OPERATIONS &nbsp;·&nbsp; REAL-TIME ANALYTICS &nbsp;·&nbsp; AUTHORIZED PERSONNEL ONLY</div>
     </div>
     <div class="quick-menu-wrap app-banner-menu-wrap" id="quickMenuWrap">
-      <button class="admin-mode-badge" id="adminModeBadge" type="button" onclick="deactivateAdminMode(true, 'manual')" title="Admin active for this session. Tap to return to operator mode." aria-label="Admin active. Return to operator mode." aria-hidden="true">Admin</button>
+      <button class="admin-mode-badge" id="adminModeBadge" type="button" onclick="logout()" title="Admin session active. Sign out to switch account." aria-label="Admin session active. Sign out to switch account." aria-hidden="true">Admin</button>
       <button class="app-banner-right app-banner-menu-btn" id="quickMenuBtn" type="button" onclick="toggleQuickMenu()" title="Quick menu" aria-label="Open quick menu" aria-haspopup="menu" aria-expanded="false">
       <img src="data:image/png;base64,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" alt="Gujarat Refinery Emblem" class="app-banner-logo">
       </button>
       <div class="quick-menu-panel" id="quickMenuPanel" aria-hidden="true">
-        <button class="hd-btn hd-btn-secondary admin-mode-menu-btn" id="adminModeToggleBtn" type="button" onclick="handleAdminModeQuickMenuAction()" title="Unlock admin for this session" aria-pressed="false">🔒 Admin</button>
+        <button class="hd-btn hd-btn-secondary admin-mode-menu-btn" id="adminModeToggleBtn" type="button" onclick="handleAdminModeQuickMenuAction()" title="Admin access is available from the login screen" aria-pressed="false" style="display:none;">Admin Login</button>
         <div id="syncDebugChip" class="sync-debug-chip sync-debug-info" title="Last sync endpoint status">
           <span id="syncDebugText" class="sync-debug-text">DBG SYNC -- · idle</span>
         </div>
@@ -22397,6 +22462,8 @@ var alarmLog = [];
    CONSTANTS
 ================================================== */
 const SCADA_PASSWORD = "d06b2c4efe3519e98c052cced2f117599b7771edea220f6b45a4d7b63c8b9ca8"; /* SHA-256 */
+const ADMIN_LOGIN_EMP_ID = "15112019";
+const ADMIN_LOGIN_PASSWORD_HASH = "73f7169006184f3d26b47f939da25dc51aa33fe282f9d3830df0390b04f759f6"; /* SHA-256 */
 const ADMIN_MODE_PIN_HASH = "dc19305e959e6753cbe6ff3e4156aac5fc5cd4e5393cadc06b7ff058ba324e4f";
 const ADMIN_MODE_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 const WALL_NAMES     = ["A","B","C","D"];
@@ -22422,6 +22489,14 @@ var adminModeLastActivityAt = 0;
 var adminModeExpiryTimer = 0;
 var adminModeActivityListenersBound = false;
 var adminPinVerifyBusy = false;
+
+function isAdminPortalEmpId(empId){
+  return String(empId || "").trim() === ADMIN_LOGIN_EMP_ID;
+}
+
+function isAdminPortalCredential(empId, passwordHash){
+  return isAdminPortalEmpId(empId) && String(passwordHash || "") === ADMIN_LOGIN_PASSWORD_HASH;
+}
 
 /* ==================================================
    LOGIN / LOGOUT
@@ -22975,8 +23050,7 @@ function startServerSaveWatcher(){
 }
 
 function getAdminModeRemainingMs(){
-  if(!adminModeActive || !adminModeLastActivityAt) return 0;
-  return Math.max(0, ADMIN_MODE_IDLE_TIMEOUT_MS - (Date.now() - adminModeLastActivityAt));
+  return 0;
 }
 
 function clearAdminModeExpiryTimer(){
@@ -22987,13 +23061,11 @@ function clearAdminModeExpiryTimer(){
 }
 
 function updateAdminModeUi(){
-  var active = !!adminModeActive;
+  var active = !!(typeof isUserLoggedIn === "function" && isUserLoggedIn() && typeof getLoggedInUserRole === "function" && getLoggedInUserRole() === "admin");
+  adminModeActive = active;
   var badge = document.getElementById("adminModeBadge");
   var toggleBtn = document.getElementById("adminModeToggleBtn");
-  var minsLeft = Math.max(1, Math.ceil(getAdminModeRemainingMs() / 60000));
-  var badgeTitle = active
-    ? ("Admin active for this session. Tap to return to operator mode. Timeout in about " + minsLeft + " min.")
-    : "";
+  var badgeTitle = active ? "Admin session active. Sign out to switch account." : "";
 
   if(document.body){
     document.body.setAttribute("data-user-mode", active ? "admin" : "operator");
@@ -23004,10 +23076,11 @@ function updateAdminModeUi(){
     badge.title = badgeTitle;
   }
   if(toggleBtn){
-    toggleBtn.textContent = active ? "🔓 Exit Admin" : "🔒 Admin";
-    toggleBtn.classList.toggle("admin-active", active);
-    toggleBtn.setAttribute("aria-pressed", active ? "true" : "false");
-    toggleBtn.title = active ? "Return to operator mode now" : "Unlock admin for this session";
+    toggleBtn.style.display = "none";
+    toggleBtn.textContent = "Admin Login";
+    toggleBtn.classList.remove("admin-active");
+    toggleBtn.setAttribute("aria-pressed", "false");
+    toggleBtn.title = "Admin access is available from the login screen";
   }
   if(typeof notifyAllCuboidHostStates === "function"){
     notifyAllCuboidHostStates();
@@ -23022,43 +23095,15 @@ function updateAdminModeUi(){
 
 function scheduleAdminModeExpiryTimer(){
   clearAdminModeExpiryTimer();
-  if(!adminModeActive) return;
-  var remaining = getAdminModeRemainingMs();
-  if(remaining <= 0){
-    deactivateAdminMode(true, "timeout");
-    return;
-  }
-  adminModeExpiryTimer = setTimeout(function(){
-    scheduleAdminModeExpiryTimer();
-  }, remaining + 120);
   updateAdminModeUi();
 }
 
 function touchAdminModeActivity(){
-  if(!adminModeActive) return;
-  adminModeLastActivityAt = Date.now();
-  scheduleAdminModeExpiryTimer();
+  return;
 }
 
 function bindAdminModeActivityListeners(){
   if(adminModeActivityListenersBound) return;
-  var kick = function(){
-    touchAdminModeActivity();
-  };
-  ["pointerdown","mousedown","touchstart","keydown"].forEach(function(evtName){
-    document.addEventListener(evtName, kick, true);
-  });
-  window.addEventListener("focus", function(){
-    if(adminModeActive) scheduleAdminModeExpiryTimer();
-  });
-  document.addEventListener("visibilitychange", function(){
-    if(adminModeActive && document.visibilityState === "visible"){
-      scheduleAdminModeExpiryTimer();
-    }
-  });
-  window.addEventListener("pagehide", function(){
-    deactivateAdminMode(false, "pagehide");
-  });
   adminModeActivityListenersBound = true;
 }
 
@@ -23071,33 +23116,15 @@ function setAdminPinError(message){
 }
 
 function showAdminPinModal(){
-  if(adminModeActive){
-    updateAdminModeUi();
-    return;
-  }
-  if(typeof isUserLoggedIn === "function" && !isUserLoggedIn()){
-    if(typeof showToast === "function") showToast("⚠ Please sign in first.");
-    return;
-  }
-  var modal = document.getElementById("adminPinModal");
-  var input = document.getElementById("adminPinInput");
-  var submitBtn = document.getElementById("adminPinSubmitBtn");
-  if(!modal) return;
-  setAdminPinError("");
-  adminPinVerifyBusy = false;
-  if(input) input.value = "";
-  if(submitBtn){
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Unlock Admin";
-  }
-  modal.classList.add("open");
-  modal.setAttribute("aria-hidden", "false");
-  setTimeout(function(){
-    if(input){
-      input.focus();
-      input.select();
+  closeQuickMenu();
+  hideAdminPinModal();
+  if(typeof showToast === "function"){
+    if(typeof isUserLoggedIn === "function" && isUserLoggedIn()){
+      showToast("Sign out and log in with admin ID to access admin tools.");
+    }else{
+      showToast("Sign in with admin ID and password for admin access.");
     }
-  }, 40);
+  }
 }
 
 function hideAdminPinModal(){
@@ -23118,40 +23145,26 @@ function hideAdminPinModal(){
 }
 
 function activateAdminMode(){
-  bindAdminModeActivityListeners();
-  adminModeActive = true;
-  adminModeLastActivityAt = Date.now();
-  closeQuickMenu();
   updateAdminModeUi();
-  scheduleAdminModeExpiryTimer();
-  if(typeof showToast === "function"){
-    showToast("🔓 Admin mode enabled for this session");
-  }
 }
 
 function deactivateAdminMode(showNotice, reason){
-  var wasActive = !!adminModeActive;
-  adminModeActive = false;
-  adminModeLastActivityAt = 0;
+  var why = String(reason || "").toLowerCase();
   clearAdminModeExpiryTimer();
   hideAdminPinModal();
+  if(why === "logout"){
+    adminModeActive = false;
+    adminModeLastActivityAt = 0;
+    updateAdminModeUi();
+    return;
+  }
   updateAdminModeUi();
-  if(wasActive && showNotice && typeof showToast === "function"){
-    if(String(reason || "").toLowerCase() === "timeout"){
-      showToast("🔒 Admin mode timed out. Returned to operator mode.");
-    }else{
-      showToast("🔒 Returned to operator mode.");
-    }
+  if(showNotice && typeof showToast === "function" && typeof getLoggedInUserRole === "function" && getLoggedInUserRole() === "admin"){
+    showToast("Sign out to switch accounts.");
   }
 }
 
 function handleAdminModeQuickMenuAction(){
-  if(adminModeActive){
-    deactivateAdminMode(true, "manual");
-    closeQuickMenu();
-    return;
-  }
-  closeQuickMenu();
   showAdminPinModal();
 }
 
@@ -23172,48 +23185,11 @@ function handleAdminPinKeydown(event){
 }
 
 async function submitAdminPin(){
-  if(adminPinVerifyBusy) return;
-  var input = document.getElementById("adminPinInput");
-  var submitBtn = document.getElementById("adminPinSubmitBtn");
-  var pin = String(input && input.value || "").trim();
-  if(!/^\d{6}$/.test(pin)){
-    setAdminPinError("Enter 6-digit PIN.");
-    if(input) input.focus();
-    return;
-  }
-
-  adminPinVerifyBusy = true;
-  setAdminPinError("");
-  if(submitBtn){
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Checking...";
-  }
-
-  try{
-    var pinHash = await sha256Hex(pin);
-    if(pinHash !== ADMIN_MODE_PIN_HASH){
-      setAdminPinError("Incorrect PIN.");
-      if(input){
-        input.value = "";
-        input.focus();
-      }
-      return;
-    }
-    hideAdminPinModal();
-    activateAdminMode();
-  }catch(err){
-    setAdminPinError("PIN check failed. Please try again.");
-  }finally{
-    adminPinVerifyBusy = false;
-    if(submitBtn){
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Unlock Admin";
-    }
-  }
+  showAdminPinModal();
 }
 
 window.isAdminModeActive = function(){
-  return !!adminModeActive;
+  return typeof getLoggedInUserRole === "function" && getLoggedInUserRole() === "admin";
 };
 
 function toggleQuickMenu(){
@@ -23385,12 +23361,8 @@ document.addEventListener("DOMContentLoaded",function(){
 if(isUserLoggedIn()){
   primeMobileShellBootVisibility();
   document.getElementById("loginScreen").style.display="none";
-  /* Restore operator display from session */
-  var _empRestore = getLoggedInEmpId();
-  if(_empRestore){
-    var _opEl = document.getElementById("operatorDisplay");
-    if(_opEl) _opEl.innerHTML = "<b>Operator:</b> EMP-" + _empRestore;
-  }
+  setLoggedInIdentityUi(getLoggedInEmpId(), getLoggedInUserRole());
+  if(typeof updateAdminModeUi === "function") updateAdminModeUi();
 }
 
 /* ==================================================
@@ -30488,6 +30460,8 @@ function bootLoggedSessionAfterRefresh(){
   if(loggedSessionBootDone) return;
   if(!isUserLoggedIn()) return;
   loggedSessionBootDone = true;
+  setLoggedInIdentityUi(getLoggedInEmpId(), getLoggedInUserRole());
+  if(typeof updateAdminModeUi === "function") updateAdminModeUi();
   try{
     init();
   }catch(err){
@@ -30515,49 +30489,46 @@ async function loginWithFolderSupport(){
   var empId = document.getElementById("employeeIdInput").value.trim();
   var pw  = document.getElementById("passwordInput").value;
   var err = document.getElementById("ls-error");
-  if(!empId){ err.style.display="block"; err.textContent="Please enter your Employee ID."; return; }
+  if(!empId){ err.style.display="block"; err.textContent="Please enter your Employee ID."; return false; }
   /* SHA-256 verify — plaintext never compared directly */
   async function _sha256(s){const b=new TextEncoder().encode(s);const d=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");}
   var validHash = await getEffectivePasswordHash();
   var _localDev2 = (typeof getLocalDevicePasswordHash === "function") ? getLocalDevicePasswordHash() : "";
+  var _adminEmp2 = (typeof isAdminPortalEmpId === "function") ? isAdminPortalEmpId(empId) : false;
 
   var _cands2 = getPasswordCandidates(pw);
   var _ok2 = false;
   var _matched2 = "";
+  var _role2 = "operator";
   for(var _j=0; _j<_cands2.length; _j++){
     var _h2 = await _sha256(_cands2[_j]);
-    if(_h2 === validHash || _h2 === SCADA_PASSWORD || (_localDev2 && _h2 === _localDev2)){ _ok2 = true; _matched2 = _h2; break; }
+    if(typeof isAdminPortalCredential === "function" && isAdminPortalCredential(empId, _h2)){ _ok2 = true; _matched2 = _h2; _role2 = "admin"; break; }
+    if(!_adminEmp2 && (_h2 === validHash || _h2 === SCADA_PASSWORD || (_localDev2 && _h2 === _localDev2))){ _ok2 = true; _matched2 = _h2; _role2 = "operator"; break; }
 
   }
   if(_ok2){
-    persistLogin(empId);
-    if(_matched2 && typeof saveLocalDevicePasswordHash === "function") saveLocalDevicePasswordHash(_matched2);
-
-    primeMobileShellBootVisibility();
-    document.getElementById("loginScreen").style.display="none";
-    err.style.display="none";
-    /* Update operator display */
-    var opEl = document.getElementById("operatorDisplay");
-    if(opEl) opEl.innerHTML = "<b>Operator:</b> EMP-" + empId;
-
-    /* Always init the UI first so the app is usable */
-    init();
-    try{ await maybeOfferBiometricEnrollment(empId); }catch(e){}
-    
-    /* Primary: central server sync for all PCs */
-    syncHealthMarkSyncing("Checking server");
-    flushQueuedServerExport(false).catch(function(){});
-    var serverOk = await autoImportFromServer(true);
-    if(!serverOk){
-      syncHealthMarkQueued("Server unavailable · local mode");
-    }else{
-      markCurrentAutoSyncDigest();
-    }
-    refreshHeatMapAfterServerSync();
-    scheduleAutoRefreshOnOpen();
+    await completeScadaLogin(empId, {
+      role:_role2,
+      matchedHash:_matched2,
+      errorEl:err,
+      afterInit: async function(){
+        syncHealthMarkSyncing("Checking server");
+        flushQueuedServerExport(false).catch(function(){});
+        var serverOk = await autoImportFromServer(true);
+        if(!serverOk){
+          syncHealthMarkQueued("Server unavailable · local mode");
+        }else{
+          markCurrentAutoSyncDigest();
+        }
+        refreshHeatMapAfterServerSync();
+        scheduleAutoRefreshOnOpen();
+      }
+    });
+    return true;
   } else {
     err.style.display = "block";
     err.textContent   = "Incorrect password. Please try again.";
+    return false;
   }
 }
 
