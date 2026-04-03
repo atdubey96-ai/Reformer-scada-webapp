@@ -9751,6 +9751,7 @@ function updateHeatMapAdjustmentLogic(snapshot){
     targets.forEach(function(el){
       if(el) el.innerHTML = html;
     });
+    initHistoryScrollHandoff();
   }
 
   var hmData = snapshot && snapshot.hmData ? snapshot.hmData : null;
@@ -16955,7 +16956,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           overflow-y:scroll;
           overflow-x:hidden;
           padding-right:12px;
-          overscroll-behavior:contain;
+          overscroll-behavior:auto;
+          overscroll-behavior-y:auto;
           scrollbar-gutter:stable;
           scrollbar-width:thin;
           scrollbar-color:rgba(148,163,184,0.5) transparent;
@@ -28445,7 +28447,7 @@ function bindVerticalScrollHandoff(el){
 }
 
 function initHistoryScrollHandoff(){
-  document.querySelectorAll(".td-saved-scroll, .burner-history-scroll").forEach(function(el){
+  document.querySelectorAll(".td-saved-scroll, .burner-history-scroll, .hm-adjust-suggest-list").forEach(function(el){
     bindVerticalScrollHandoff(el);
   });
 }
