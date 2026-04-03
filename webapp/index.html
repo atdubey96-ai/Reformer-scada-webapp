@@ -8681,10 +8681,155 @@ async function loginWithBiometric(){
 /* ==================================================
    REFORMER HEAT MAP
 ================================================== */
+var TEMP_ENTRY_PEEP_ROW_KEYS = ["ab-bot","cd-bot","ab-top","cd-top"];
+
+function normalizeTempEntryPeepRowKey(raw){
+  var s = String(raw == null ? "" : raw).toLowerCase().trim();
+  if(!s) return "";
+  s = s.replace(/[^a-z0-9]+/g, "");
+  if(s === "abbot" || s === "abbottom") return "ab-bot";
+  if(s === "cdbot" || s === "cdbottom") return "cd-bot";
+  if(s === "abtop") return "ab-top";
+  if(s === "cdtop") return "cd-top";
+  return "";
+}
+
+function normalizeTempEntryPeepIndex(raw){
+  var s = String(raw == null ? "" : raw).trim().toLowerCase();
+  if(!s) return -1;
+  if(/^\d+$/.test(s)){
+    var direct = parseInt(s, 10);
+    if(direct >= 1 && direct <= 15) return direct - 1;
+    if(direct >= 0 && direct < 15) return direct;
+  }
+  var match = s.match(/(\d{1,2})$/);
+  if(!match) return -1;
+  var n = parseInt(match[1], 10);
+  if(n >= 1 && n <= 15) return n - 1;
+  if(n >= 0 && n < 15) return n;
+  return -1;
+}
+
+function sanitizeTempEntryPeepRow(raw){
+  if(typeof raw === "string"){
+    var trimmed = raw.trim();
+    if(trimmed && (trimmed.charAt(0) === "[" || trimmed.charAt(0) === "{")){
+      try{
+        return sanitizeTempEntryPeepRow(JSON.parse(trimmed));
+      }catch(e){}
+    }
+  }
+
+  var out = Array(15).fill("");
+  function assignValue(idx, value){
+    if(idx < 0 || idx >= 15) return;
+    out[idx] = sanitizeTstValue(value);
+  }
+
+  if(Array.isArray(raw)){
+    for(var i=0; i<15; i++) assignValue(i, raw[i]);
+    return out;
+  }
+
+  if(raw && typeof raw === "object"){
+    Object.keys(raw).forEach(function(key){
+      assignValue(normalizeTempEntryPeepIndex(key), raw[key]);
+    });
+  }
+  return out;
+}
+
+function getLegacyTempEntryPeepRow(entry, rowKey){
+  if(!entry || typeof entry !== "object") return null;
+  if(rowKey === "ab-bot") return entry.abBot != null ? entry.abBot : entry.abBottom;
+  if(rowKey === "cd-bot") return entry.cdBot != null ? entry.cdBot : entry.cdBottom;
+  if(rowKey === "ab-top") return entry.abTop;
+  if(rowKey === "cd-top") return entry.cdTop;
+  return null;
+}
+
+function buildSanitizedTempEntryPeepHoles(entry){
+  var source = (entry && entry.peepHoles && typeof entry.peepHoles === "object") ? entry.peepHoles : {};
+  var out = {};
+  TEMP_ENTRY_PEEP_ROW_KEYS.forEach(function(rowKey){
+    var direct = source[rowKey];
+    if(direct == null){
+      var sourceKeys = Object.keys(source);
+      for(var i=0; i<sourceKeys.length; i++){
+        if(normalizeTempEntryPeepRowKey(sourceKeys[i]) === rowKey){
+          direct = source[sourceKeys[i]];
+          break;
+        }
+      }
+    }
+    if(direct == null) direct = getLegacyTempEntryPeepRow(entry, rowKey);
+    out[rowKey] = sanitizeTempEntryPeepRow(direct);
+  });
+  return out;
+}
+
+function sanitizeTempEntryRecord(entry){
+  if(!entry || typeof entry !== "object") return false;
+  var nextPeepHoles = buildSanitizedTempEntryPeepHoles(entry);
+  var prevRaw = "";
+  try{
+    prevRaw = JSON.stringify(entry.peepHoles || {});
+  }catch(e){}
+  var nextRaw = JSON.stringify(nextPeepHoles);
+  if(prevRaw === nextRaw) return false;
+  entry.peepHoles = nextPeepHoles;
+  return true;
+}
+
+function sanitizeTempEntriesCollection(entries){
+  if(!Array.isArray(entries)) return false;
+  var changed = false;
+  for(var i=0; i<entries.length; i++){
+    if(sanitizeTempEntryRecord(entries[i])) changed = true;
+  }
+  return changed;
+}
+
+function parseTempDataPeepHeader(raw){
+  var text = String(raw == null ? "" : raw).toLowerCase().trim();
+  if(!text) return null;
+  text = text.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  var match = text.match(/^(ab|cd)\s+(bot|bottom|top)\s+(?:(?:peep ?hole|peephole|ph)\s+)?(\d{1,2})$/i);
+  if(!match) return null;
+  var phNum = parseInt(match[3], 10);
+  if(!(phNum >= 1 && phNum <= 15)) return null;
+  return {
+    rowKey: match[1].toLowerCase() + "-" + (match[2].toLowerCase() === "top" ? "top" : "bot"),
+    phIndex: phNum - 1
+  };
+}
+
+function buildTempDataPeepColumnMap(headerRow){
+  var map = {};
+  var count = 0;
+  var headers = Array.isArray(headerRow) ? headerRow : [];
+  for(var i=0; i<headers.length; i++){
+    var parsed = parseTempDataPeepHeader(headers[i]);
+    if(!parsed) continue;
+    var key = parsed.rowKey + ":" + parsed.phIndex;
+    if(map[key] == null){
+      map[key] = i;
+      count++;
+    }
+  }
+  return { map: map, count: count };
+}
+
 function getAllTempEntries(){
   try{
     var saved = localStorage.getItem("tempDataEntries");
-    if(saved) return JSON.parse(saved) || [];
+    if(saved){
+      var parsed = JSON.parse(saved) || [];
+      if(Array.isArray(parsed) && sanitizeTempEntriesCollection(parsed)){
+        try{ localStorage.setItem("tempDataEntries", JSON.stringify(parsed)); }catch(ignorePersistError){}
+      }
+      return Array.isArray(parsed) ? parsed : [];
+    }
   }catch(e){}
   return [];
 }
@@ -8818,6 +8963,7 @@ function ensureTempEntriesHaveSnapshots(){
   for(var i=0; i<tempDataEntries.length; i++){
     var ent = tempDataEntries[i];
     if(!ent || typeof ent !== "object") continue;
+    if(sanitizeTempEntryRecord(ent)) changed = true;
     var snap = getEntryBurnerSnapshot(ent);
     var usedFallback = false;
     if(!snap && hasFallback){
@@ -25258,6 +25404,8 @@ function _doImport(file, onDone, silent){
             var idxSnapshot   = colIdx(["burner snapshot json","burner snapshot","snapshot"], -1);
             var idxOpeningSnapshot = colIdx(["burner opening snapshot json","burner opening snapshot","opening snapshot json","opening snapshot"], -1);
             var phRowKeys2    = ["ab-bot","cd-bot","ab-top","cd-top"];
+            var peepColumnMeta = buildTempDataPeepColumnMap(tdHeader);
+            var useExplicitPeepColumns = peepColumnMeta.count >= (phRowKeys2.length * 15);
             var scalarIndexes = [
               idxHguLoad, idxFeedFlowMixingPoint, idxAbCot, idxCdCot, idxFlue, idxExcessO2, idxPreMax, idxPreMin, idxMethane,
               idxPsa1Og, idxPsa2Og, idxNaphthaFuel, idxPsa1TipP, idxNgTipP, idxNaphthaTipP, idxNgFuelTemp, idxTag2411
@@ -25294,8 +25442,9 @@ function _doImport(file, onDone, silent){
               phRowKeys2.forEach(function(rk){
                 entry.peepHoles[rk] = [];
                 for(var ph=0;ph<15;ph++){
-                  entry.peepHoles[rk].push(row[colOffset]||"");
-                  colOffset++;
+                  var mappedIdx = useExplicitPeepColumns ? peepColumnMeta.map[rk + ":" + ph] : colOffset;
+                  entry.peepHoles[rk].push(sanitizeTstValue(mappedIdx != null ? row[mappedIdx] : ""));
+                  if(!useExplicitPeepColumns) colOffset++;
                 }
               });
               if(idxSnapshot >= 0){
@@ -25322,6 +25471,7 @@ function _doImport(file, onDone, silent){
                   entry.openingSnapshot = sanitizeBurnerOpeningShape(parsedOpeningSnap, entry.burnerSnapshot || data);
                 }
               }
+              sanitizeTempEntryRecord(entry);
               tempDataEntries.push(entry);
             });
             ensureTempEntriesHaveSnapshots();
@@ -34096,9 +34246,10 @@ async function saveTempData(){
     entry.peepHoles[rowKey] = [];
     for(var ph=1;ph<=15;ph++){
       var inp = document.getElementById("td-ph-"+rowKey+"-"+ph);
-      entry.peepHoles[rowKey].push(inp ? inp.value : "");
+      entry.peepHoles[rowKey].push(sanitizeTstValue(inp ? inp.value : ""));
     }
   });
+  sanitizeTempEntryRecord(entry);
 
   var wasEdit = tdEditingIndex >= 0;
   if(wasEdit){
