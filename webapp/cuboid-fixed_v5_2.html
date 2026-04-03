@@ -989,19 +989,19 @@ function paintWallFaceLetterCanvas(g, w, h, wallLetter) {
   g.font = "900 " + fontSize + "px 'Arial Black', 'Rajdhani', sans-serif";
 
   const haloGrad = g.createRadialGradient(centerX, centerY, fontSize * 0.10, centerX, centerY, fontSize * 0.86);
-  haloGrad.addColorStop(0.00, "rgba(8,12,18,0.22)");
-  haloGrad.addColorStop(0.40, "rgba(8,12,18,0.14)");
+  haloGrad.addColorStop(0.00, "rgba(8,12,18,0.14)");
+  haloGrad.addColorStop(0.40, "rgba(8,12,18,0.08)");
   haloGrad.addColorStop(1.00, "rgba(8,12,18,0.00)");
   g.fillStyle = haloGrad;
   g.beginPath();
   g.ellipse(centerX, centerY, fontSize * 0.72, fontSize * 0.56, 0, 0, Math.PI * 2);
   g.fill();
 
-  g.shadowColor = "rgba(0,0,0,0.40)";
-  g.shadowBlur = fontSize * 0.12;
-  g.shadowOffsetY = fontSize * 0.028;
-  g.strokeStyle = "rgba(8,12,18,0.46)";
-  g.lineWidth = Math.max(18, Math.round(fontSize * 0.072));
+  g.shadowColor = "rgba(0,0,0,0.26)";
+  g.shadowBlur = fontSize * 0.085;
+  g.shadowOffsetY = fontSize * 0.022;
+  g.strokeStyle = "rgba(8,12,18,0.28)";
+  g.lineWidth = Math.max(14, Math.round(fontSize * 0.058));
   g.strokeText(letter, centerX, centerY);
 
   const fillGrad = g.createLinearGradient(0, h * 0.18, 0, h * 0.84);
