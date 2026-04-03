@@ -959,7 +959,6 @@
       +     '<div class="m2-master-alarm-text">' + escapeHtml(getAlarmSummary(lead)) + '</div>'
       +   '</div>'
       +   '<div class="m2-master-alarm-actions">'
-      +     '<button class="m2-master-alarm-btn" type="button" data-action="open-alarm-banner">Open</button>'
       +     '<button class="m2-master-alarm-btn is-ack" type="button" data-action="ack-banner-alarm">Acknowledge</button>'
       +   '</div>'
       + '</div>';
@@ -2294,12 +2293,6 @@
     }
     if(action === "logout-shell"){
       if(typeof window.logout === "function") window.logout();
-      return;
-    }
-    if(action === "open-alarm-banner"){
-      state.activeTab = "alarms";
-      persistState();
-      scheduleRender();
       return;
     }
     if(action === "ack-banner-alarm"){

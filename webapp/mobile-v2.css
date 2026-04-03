@@ -50,7 +50,7 @@
   }
 
   #mobile-v2-root .m2-shell.has-alert-ribbon{
-    padding-bottom:calc(188px + env(safe-area-inset-bottom));
+    padding-bottom:calc(158px + env(safe-area-inset-bottom));
   }
 
   body[data-mobile-v2="1"][data-mobile-legacy="1"] #mobile-v2-root .m2-shell{
@@ -239,14 +239,14 @@
     bottom:calc(84px + env(safe-area-inset-bottom));
     z-index:55;
     display:flex;
-    align-items:flex-end;
+    align-items:center;
     justify-content:space-between;
-    gap:12px;
-    border-radius:24px;
+    gap:10px;
+    border-radius:20px;
     border:1px solid rgba(252,165,165,0.34);
     background:linear-gradient(180deg,rgba(98,22,33,0.96) 0%,rgba(65,17,26,0.98) 100%);
-    box-shadow:0 22px 36px rgba(46,9,16,0.28);
-    padding:14px 14px 13px;
+    box-shadow:0 18px 28px rgba(46,9,16,0.24);
+    padding:11px 12px;
   }
 
   #mobile-v2-root .m2-master-alarm.tone-major{
@@ -285,28 +285,32 @@
   #mobile-v2-root .m2-master-alarm-kicker{
     color:#ffd4dc;
     font-family:"Rajdhani",sans-serif;
-    font-size:11px;
+    font-size:10px;
     font-weight:800;
-    letter-spacing:1px;
+    letter-spacing:0.8px;
     text-transform:uppercase;
   }
 
   #mobile-v2-root .m2-master-alarm-title{
-    margin-top:4px;
+    margin-top:2px;
     color:#fff4f6;
     font-family:"Rajdhani",sans-serif;
-    font-size:15px;
+    font-size:13px;
     font-weight:800;
-    line-height:1.14;
+    line-height:1.08;
   }
 
   #mobile-v2-root .m2-master-alarm-text{
-    margin-top:4px;
+    margin-top:3px;
     color:#fecdd3;
     font-family:"Rajdhani",sans-serif;
-    font-size:12px;
+    font-size:11px;
     font-weight:700;
-    line-height:1.24;
+    line-height:1.15;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
   }
 
   body.light-theme #mobile-v2-root .m2-master-alarm-kicker{
@@ -323,8 +327,9 @@
 
   #mobile-v2-root .m2-master-alarm-actions{
     display:flex;
-    flex-direction:column;
-    gap:8px;
+    flex-direction:row;
+    align-items:center;
+    gap:0;
     flex:0 0 auto;
   }
 
@@ -333,13 +338,13 @@
     border:1px solid rgba(255,255,255,0.18);
     background:rgba(255,255,255,0.08);
     color:#fff7f8;
-    min-height:34px;
+    min-height:32px;
     border-radius:999px;
-    padding:0 12px;
+    padding:0 11px;
     font-family:"Rajdhani",sans-serif;
-    font-size:11px;
+    font-size:10px;
     font-weight:800;
-    letter-spacing:0.5px;
+    letter-spacing:0.45px;
     text-transform:uppercase;
     white-space:nowrap;
   }
