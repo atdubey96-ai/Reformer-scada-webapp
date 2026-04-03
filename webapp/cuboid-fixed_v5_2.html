@@ -977,7 +977,7 @@ function paintWallFaceLetterCanvas(g, w, h, wallLetter) {
   const letter = String(wallLetter || "").trim().toUpperCase();
   if (!letter) return;
 
-  const fontSize = Math.round(Math.min(w, h) * 0.56);
+  const fontSize = Math.round(Math.min(w, h) * 0.64);
   const centerX = w * 0.50;
   const centerY = h * 0.53;
 
@@ -988,26 +988,35 @@ function paintWallFaceLetterCanvas(g, w, h, wallLetter) {
   g.lineCap = "round";
   g.font = "900 " + fontSize + "px 'Arial Black', 'Rajdhani', sans-serif";
 
-  g.shadowColor = "rgba(0,0,0,0.22)";
-  g.shadowBlur = fontSize * 0.07;
-  g.shadowOffsetY = fontSize * 0.022;
-  g.strokeStyle = "rgba(10,16,22,0.20)";
-  g.lineWidth = Math.max(12, Math.round(fontSize * 0.048));
+  const haloGrad = g.createRadialGradient(centerX, centerY, fontSize * 0.10, centerX, centerY, fontSize * 0.86);
+  haloGrad.addColorStop(0.00, "rgba(8,12,18,0.22)");
+  haloGrad.addColorStop(0.40, "rgba(8,12,18,0.14)");
+  haloGrad.addColorStop(1.00, "rgba(8,12,18,0.00)");
+  g.fillStyle = haloGrad;
+  g.beginPath();
+  g.ellipse(centerX, centerY, fontSize * 0.72, fontSize * 0.56, 0, 0, Math.PI * 2);
+  g.fill();
+
+  g.shadowColor = "rgba(0,0,0,0.40)";
+  g.shadowBlur = fontSize * 0.12;
+  g.shadowOffsetY = fontSize * 0.028;
+  g.strokeStyle = "rgba(8,12,18,0.46)";
+  g.lineWidth = Math.max(18, Math.round(fontSize * 0.072));
   g.strokeText(letter, centerX, centerY);
 
   const fillGrad = g.createLinearGradient(0, h * 0.18, 0, h * 0.84);
-  fillGrad.addColorStop(0.00, "rgba(251,254,255,0.20)");
-  fillGrad.addColorStop(0.18, "rgba(232,241,248,0.16)");
-  fillGrad.addColorStop(0.54, "rgba(176,191,206,0.12)");
-  fillGrad.addColorStop(1.00, "rgba(110,126,144,0.09)");
+  fillGrad.addColorStop(0.00, "rgba(255,255,255,0.88)");
+  fillGrad.addColorStop(0.22, "rgba(246,251,255,0.80)");
+  fillGrad.addColorStop(0.58, "rgba(205,220,234,0.66)");
+  fillGrad.addColorStop(1.00, "rgba(136,152,170,0.54)");
   g.fillStyle = fillGrad;
   g.fillText(letter, centerX, centerY);
 
   g.shadowBlur = 0;
   g.shadowOffsetY = 0;
-  g.strokeStyle = "rgba(255,255,255,0.08)";
-  g.lineWidth = Math.max(4, Math.round(fontSize * 0.012));
-  g.strokeText(letter, centerX, centerY - (fontSize * 0.01));
+  g.strokeStyle = "rgba(255,255,255,0.22)";
+  g.lineWidth = Math.max(6, Math.round(fontSize * 0.018));
+  g.strokeText(letter, centerX, centerY - (fontSize * 0.012));
   g.restore();
 }
 
