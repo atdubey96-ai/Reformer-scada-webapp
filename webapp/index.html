@@ -21249,13 +21249,10 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         </div>
         <div class="jobsdash-hero-side">
           <div class="jobsdash-clock-strip"><span class="jobsdash-live-dot" aria-hidden="true"></span><span id="jobsdash-clock">--:--:-- IST</span></div>
-          <div class="jobsdash-action-row">
-            <button type="button" class="jobsdash-btn jobsdash-btn-primary" onclick="exportJobsReformerToServer(true)">Sync Now</button>
-          </div>
         </div>
       </div>
 
-      <div class="jobsdash-sync-bar jobsdash-mono">
+      <div class="jobsdash-sync-bar jobsdash-mono" data-admin-only="true">
         <div class="jobsdash-sync-meta">
           <span>Local Save: <strong id="jobsdash-local-save">—</strong></span>
           <span>Server Sync: <strong id="jobsdash-server-sync">—</strong></span>
@@ -26760,7 +26757,7 @@ function updateGlobalRefreshButtonLabel(tab){
   var key = String(tab || "").toLowerCase();
   var label =
     key === "alarms" ? "↻ Refresh Alarms" :
-    key === "jobsreformer" ? "↻ Refresh Jobs" :
+    key === "jobsreformer" ? "↻ Sync Jobs" :
     key === "reformerdash" ? "↻ Refresh Reformer" :
     key === "cuboidstack" ? "↻ Refresh Data" :
     "🔄 Refresh Data";
@@ -28157,8 +28154,10 @@ function handleGlobalRefreshClick(){
     showToast("↻ Alarm panel refreshed");
     return;
   }
-  if(tab === 'jobsreformer' && typeof refreshJobsReformerTab === 'function'){
-    refreshJobsReformerTab(true);
+  if(tab === 'jobsreformer' && typeof exportJobsReformerToServer === 'function'){
+    exportJobsReformerToServer(true).catch(function(err){
+      console.warn("Jobs Reformer top sync failed:", err);
+    });
     return;
   }
   if(tab === 'reformerdash' && typeof refreshReformerDashboard === 'function'){
