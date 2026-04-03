@@ -23505,40 +23505,41 @@ async function doChangePassword(){
   if(!newPw || newPw.length < 4){ errEl.textContent="New password must be at least 4 characters."; errEl.style.display="block"; return; }
   if(newPw !== conPw){ errEl.textContent="New passwords do not match."; errEl.style.display="block"; return; }
 
-  if(!supaClient){ errEl.textContent="Supabase connection unavailable."; errEl.style.display="block"; return; }
-
-  await fetchCentralAuthConfig();
-  if(!centralOtpHashCache){
-    errEl.textContent="Central OTP is not configured. Contact admin.";
-    errEl.style.display="block";
-    return;
-  }
-
   var enteredOtp = prompt("Enter OTP to confirm password change:");
   if(enteredOtp === null){ errEl.textContent="Password change cancelled. OTP not entered."; errEl.style.display="block"; return; }
-  var enteredOtpHash = await sha256Hex(String(enteredOtp).trim());
-  if(enteredOtpHash !== centralOtpHashCache){
-    errEl.textContent="Invalid OTP. Password not changed.";
+  enteredOtp = String(enteredOtp).trim();
+  if(!enteredOtp){
+    errEl.textContent="Password change cancelled. OTP not entered.";
     errEl.style.display="block";
     return;
   }
-
-  var newHash = await sha256Hex(newPw);
-  var upd = await supaClient
-    .from(AUTH_TABLE)
-    .update({
-      password_hash: newHash,
-      updated_by: empId,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", AUTH_ROW_ID);
-  if(upd.error){
-    errEl.textContent="Central password update failed: " + upd.error.message;
+  try{
+    var upd = await scadaServerApiSendJson("/password", "POST", {
+      empId: empId,
+      otp: enteredOtp,
+      newPassword: newPw
+    }, CENTRAL_AUTH_TIMEOUT_MS + 4000);
+    if(upd && isSha256Hex(upd.password_hash)){
+      centralPasswordHashCache = String(upd.password_hash).toLowerCase();
+      saveCentralAuthCacheToStorage();
+    }
+  }catch(e){
+    var payload = e && e.payload ? e.payload : null;
+    var code = String((payload && (payload.error || payload.message)) || "").trim();
+    if(code === "otp_not_configured"){
+      errEl.textContent="Central OTP is not configured. Contact admin.";
+    }else if(code === "invalid_otp"){
+      errEl.textContent="Invalid OTP. Password not changed.";
+    }else if(code === "invalid_new_password"){
+      errEl.textContent="New password must be at least 4 characters.";
+    }else if(code === "missing_emp_id"){
+      errEl.textContent="Please enter Employee ID.";
+    }else{
+      errEl.textContent="Central password update failed.";
+    }
     errEl.style.display="block";
     return;
   }
-
-  centralPasswordHashCache = newHash;
   clearLegacyPasswordOverrides();
   sucEl.textContent="Password changed successfully for all PCs.";
   sucEl.style.display="block";
@@ -29310,7 +29311,8 @@ var SUPABASE_URL = "https://xqkbrlcdbgykmatzwvct.supabase.co";
 var SUPABASE_TABLE = "scada_reports";
 var AUTH_TABLE = "scada_auth";
 var AUTH_ROW_ID = 1;
-var SUPABASE_DEFAULT_ANON_KEY = "sb_publishable_L99JfiV_68w79GJ10klTCg_R1H60L_D";
+var SUPABASE_DEFAULT_ANON_KEY = "";
+var SCADA_SERVER_API_BASE = "/api/scada";
 function purgeStaleSupabaseAnonKeyOverride(){
   try{
     if(window.SCADA_ALLOW_LOCAL_SUPABASE_KEY === true) return;
@@ -29338,6 +29340,72 @@ function getSupabaseAnonKey(){
   return SUPABASE_DEFAULT_ANON_KEY;
 }
 var SUPABASE_ANON_KEY = getSupabaseAnonKey();
+function getScadaServerApiBase(){
+  try{
+    if(window.SCADA_SERVER_API_BASE && String(window.SCADA_SERVER_API_BASE).trim()){
+      return trimTrailingSlash(String(window.SCADA_SERVER_API_BASE).trim());
+    }
+  }catch(e){}
+  return trimTrailingSlash(SCADA_SERVER_API_BASE || "/api/scada");
+}
+function buildScadaServerApiUrl(path, query){
+  var base = getScadaServerApiBase();
+  var rel = String(path || "").trim();
+  if(rel && rel.charAt(0) !== "/") rel = "/" + rel;
+  var url = base + rel;
+  if(query && typeof query === "object"){
+    var sp = new URLSearchParams();
+    Object.keys(query).forEach(function(key){
+      var value = query[key];
+      if(value === null || value === undefined) return;
+      var text = String(value).trim();
+      if(!text) return;
+      sp.set(key, text);
+    });
+    var qs = sp.toString();
+    if(qs){
+      url += (url.indexOf("?") >= 0 ? "&" : "?") + qs;
+    }
+  }
+  return url;
+}
+async function scadaServerApiRequest(path, method, payload, timeoutMs, query){
+  if(typeof fetch !== "function") throw new Error("browser-fetch-unavailable");
+  var m = String(method || "GET").toUpperCase();
+  return await fetchWithTimeout(buildScadaServerApiUrl(path, query), {
+    method: m,
+    cache: "no-store",
+    headers: Object.assign({
+      Accept: "application/json",
+      "Cache-Control": "no-cache"
+    }, (m !== "GET" && m !== "HEAD") ? { "Content-Type": "application/json" } : null),
+    body: (payload != null && m !== "GET" && m !== "HEAD") ? JSON.stringify(payload) : undefined
+  }, timeoutMs || 12000);
+}
+async function scadaServerApiGetJson(path, query, timeoutMs){
+  var res = await scadaServerApiRequest(path, "GET", null, timeoutMs, query);
+  var data = null;
+  try{ data = await res.json(); }catch(e){ data = null; }
+  if(!res || !res.ok){
+    var err = new Error((data && (data.message || data.error)) || ("HTTP " + (res ? res.status : "ERR")));
+    if(res) err.status = res.status;
+    err.payload = data;
+    throw err;
+  }
+  return data;
+}
+async function scadaServerApiSendJson(path, method, payload, timeoutMs, query){
+  var res = await scadaServerApiRequest(path, method || "POST", payload, timeoutMs, query);
+  var data = null;
+  try{ data = await res.json(); }catch(e){ data = null; }
+  if(!res || !res.ok){
+    var err = new Error((data && (data.message || data.error)) || ("HTTP " + (res ? res.status : "ERR")));
+    if(res) err.status = res.status;
+    err.payload = data;
+    throw err;
+  }
+  return data;
+}
 function trimTrailingSlash(v){
   return String(v || "").trim().replace(/\/+$/, "");
 }
@@ -29351,7 +29419,7 @@ function getQueryParam(name){
   }
 }
 var SYNC_RELAY_DEFAULT_URL = "https://scada-relay.iocscadasync.workers.dev";
-var SYNC_RELAY_DEFAULT_TOKEN = "8a5de7628e37e292e58ea748b8127675be94c95ee27217c6250ff0782aae7651";
+var SYNC_RELAY_DEFAULT_TOKEN = "";
 function getSyncRelayUrl(){
   try{
     var qp = getQueryParam("relay");
@@ -29433,9 +29501,7 @@ function loadCentralAuthCacheFromStorage(){
     if(parsed && isSha256Hex(parsed.password_hash)){
       centralPasswordHashCache = String(parsed.password_hash).toLowerCase();
     }
-    if(parsed && isSha256Hex(parsed.otp_hash)){
-      centralOtpHashCache = String(parsed.otp_hash).toLowerCase();
-    }
+    centralOtpHashCache = null;
     return true;
   }catch(e){
     return false;
@@ -29445,7 +29511,6 @@ function saveCentralAuthCacheToStorage(){
   try{
     localStorage.setItem(CENTRAL_AUTH_CACHE_KEY, JSON.stringify({
       password_hash: centralPasswordHashCache || null,
-      otp_hash: centralOtpHashCache || null,
       updated_at: new Date().toISOString()
     }));
   }catch(e){}
@@ -29640,46 +29705,26 @@ function normalizeReportPayload(obj){
   };
 }
 async function fetchCentralAuthConfigViaRelay(){
-  var paths = ["/scada/auth", "/api/scada/auth", "/auth"];
-  for(var i=0; i<paths.length; i++){
-    try{
-      var res = await relayRequest(paths[i], "GET", null, CENTRAL_AUTH_TIMEOUT_MS);
-      if(!res) return null;
-      if(!res.ok) continue;
-      var data = normalizeAuthPayload(await res.json());
-      if(data) return data;
-    }catch(e){}
+  try{
+    return normalizeAuthPayload(await scadaServerApiGetJson("/auth", null, CENTRAL_AUTH_TIMEOUT_MS));
+  }catch(e){
+    return null;
   }
-  return null;
 }
-async function fetchLatestServerReportViaRelay(){
-  var paths = ["/scada/report/latest", "/api/scada/report/latest", "/report/latest"];
-  for(var i=0; i<paths.length; i++){
-    try{
-      var res = await relayRequest(paths[i], "GET", null, SERVER_SYNC_TIMEOUT_MS);
-      if(!res) return null;
-      if(!res.ok) continue;
-      var row = normalizeReportPayload(await res.json());
-      if(row) return row;
-    }catch(e){}
+async function fetchLatestServerReportViaRelay(fileName){
+  try{
+    return normalizeReportPayload(await scadaServerApiGetJson("/report/latest", fileName ? { file_name: String(fileName || "") } : null, SERVER_SYNC_TIMEOUT_MS));
+  }catch(e){
+    return null;
   }
-  return null;
 }
 async function insertServerReportViaRelay(payload){
-  var paths = ["/scada/report", "/api/scada/report", "/report"];
-  for(var i=0; i<paths.length; i++){
-    for(var m=0; m<2; m++){
-      var method = m === 0 ? "POST" : "PUT";
-      try{
-        var res = await relayRequest(paths[i], method, payload, SERVER_SYNC_TIMEOUT_MS);
-        if(!res) return false;
-        if(res.ok || res.status === 201 || res.status === 202 || res.status === 204){
-          return true;
-        }
-      }catch(e){}
-    }
+  try{
+    var data = await scadaServerApiSendJson("/report", "POST", payload, SERVER_SYNC_TIMEOUT_MS);
+    return !data || data.ok !== false;
+  }catch(e){
+    return false;
   }
-  return false;
 }
 function ensureSupaClient(){
   if(supaClient) return true;
@@ -29692,24 +29737,7 @@ function ensureSupaClient(){
   return false;
 }
 async function fetchCentralAuthConfigViaRest(){
-  if(!SUPABASE_URL || !SUPABASE_ANON_KEY || typeof fetch !== "function") return null;
-  var url = SUPABASE_URL + "/rest/v1/" + encodeURIComponent(AUTH_TABLE)
-    + "?id=eq." + encodeURIComponent(String(AUTH_ROW_ID))
-    + "&select=password_hash,otp_hash";
-  var res = await fetchWithTimeout(url,{
-    method:"GET",
-    cache:"no-store",
-    headers:{
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: "Bearer " + SUPABASE_ANON_KEY,
-      Accept:"application/json",
-      "Cache-Control":"no-cache"
-    }
-  }, CENTRAL_AUTH_TIMEOUT_MS);
-  if(!res || !res.ok) return null;
-  var arr = await res.json();
-  if(!Array.isArray(arr) || !arr.length) return null;
-  return arr[0];
+  return await fetchCentralAuthConfigViaRelay();
 }
 
 loadCentralAuthCacheFromStorage();
@@ -29756,7 +29784,7 @@ async function fetchCentralAuthConfig(forceRefresh){
         if(!data) throw new Error("central-auth-empty");
 
         if(isSha256Hex(data.password_hash)) centralPasswordHashCache = String(data.password_hash).toLowerCase();
-        if(isSha256Hex(data.otp_hash)) centralOtpHashCache = String(data.otp_hash).toLowerCase();
+        centralOtpHashCache = null;
         saveCentralAuthCacheToStorage();
         centralAuthLastFetchAt = Date.now();
         setCentralReachability(true);
@@ -29970,6 +29998,7 @@ async function readResponseErrorText(res){
   }
 }
 async function supabaseRestRequest(path, method, body, preferHeader){
+  if(!SUPABASE_URL || !SUPABASE_ANON_KEY || typeof fetch !== "function") return null;
   var baseUrl = SUPABASE_URL + path;
   var urlWithKey = baseUrl + (baseUrl.indexOf("?") >= 0 ? "&" : "?") + "apikey=" + encodeURIComponent(SUPABASE_ANON_KEY);
   var modes = [
@@ -30740,7 +30769,7 @@ async function loginWithFolderSupport(){
 var tempDataEntries = [];
 var tdEditingIndex = -1;
 var TD_PLANT_DATA_SUPABASE_URL = "https://mozuuowwdfyqqvpiyetk.supabase.co";
-var TD_PLANT_DATA_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1venV1b3d3ZGZ5cXF2cGl5ZXRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTU3NjksImV4cCI6MjA5MDE5MTc2OX0.SqSAoPwxgPi6cVrYeIQC8xBebbVINZEaPw-odWdqUPo";
+var TD_PLANT_DATA_SUPABASE_KEY = "";
 var TD_HGU_LOAD_DIVISOR = 26636;
 var TD_HGU_LOAD_RAW_THRESHOLD = 500;
 var TD_PROCESS_FIELD_BINDINGS = [
@@ -30873,23 +30902,13 @@ function decodeTdDemoReportPayload(raw){
 }
 
 async function fetchTdDemoRowsFromReports(fileName){
-  var baseUrl = getTdDemoReportsUrl();
-  var key = getTdDemoReportsKey();
-  var table = typeof SUPABASE_TABLE === "string" && SUPABASE_TABLE ? SUPABASE_TABLE : "scada_reports";
-  if(!baseUrl || !key || typeof fetch !== "function") return [];
-  var url = baseUrl + "/rest/v1/" + encodeURIComponent(table)
-    + "?select=file_name,data_base64,created_at,uploaded_by"
-    + "&file_name=eq." + encodeURIComponent(String(fileName || "").trim())
-    + "&order=created_at.desc"
-    + "&limit=1";
-  var res = typeof fetchWithTimeout === "function"
-    ? await fetchWithTimeout(url, { method:"GET", cache:"no-store", headers:buildTdDemoReportsHeaders() }, 9000)
-    : await fetch(url, { method:"GET", cache:"no-store", headers:buildTdDemoReportsHeaders() });
-  if(!res || !res.ok){
-    throw new Error("Demo report HTTP " + (res ? res.status : "ERR"));
+  var row = await fetchLatestServerReportViaRelay(fileName);
+  if(!row){
+    row = normalizeReportPayload(await scadaServerApiGetJson("/report/latest", {
+      file_name: String(fileName || "").trim()
+    }, 9000));
   }
-  var rows = await res.json();
-  var payload = decodeTdDemoReportPayload(rows && rows[0] && rows[0].data_base64);
+  var payload = decodeTdDemoReportPayload(row && row.data_base64);
   return payload && Array.isArray(payload.rows) ? payload.rows : [];
 }
 
@@ -31514,9 +31533,8 @@ function setTdPlantImportStatus(state, text){
 }
 
 function isTdPlantImportConfigured(){
-  return !!(TD_PLANT_DATA_SUPABASE_URL && TD_PLANT_DATA_SUPABASE_KEY
-    && TD_PLANT_DATA_SUPABASE_URL.indexOf("YOUR_PROJECT_ID") === -1
-    && TD_PLANT_DATA_SUPABASE_KEY.indexOf("YOUR_ANON") === -1);
+  if(isTdPlantDemoMode()) return true;
+  return !!(typeof fetch === "function" && getScadaServerApiBase());
 }
 
 function parseTdPlantDate(raw){
@@ -31622,7 +31640,7 @@ function refreshTdPlantLiveHealthState(){
   var sourceLabel = getTdPlantSourceLabel();
   if(!isTdPlantImportConfigured()){
     setTdPlantLiveWarning("", "");
-    setTdPlantImportStatus("offline", "Plant import not configured");
+    setTdPlantImportStatus("offline", "Plant import unavailable");
     return;
   }
   if(tdPlantLastErrorMessage){
@@ -31671,7 +31689,7 @@ function ensureTdPlantMetaTicker(){
 
 function checkTdPlantImportConfig(){
   var ok = isTdPlantImportConfigured();
-  setTdPlantConfigBarVisible(!ok, "Live plant import is not configured. Set the plant data Supabase URL and key.");
+  setTdPlantConfigBarVisible(!ok, "Live plant import server route is not available right now.");
   if(!ok){
     tdPlantLastErrorMessage = "";
     tdPlantLatestByTag = new Map();
@@ -31681,7 +31699,7 @@ function checkTdPlantImportConfig(){
     tdPlantLastExcelPush = null;
     tdPlantLastPhdTime = null;
     setTdPlantLiveWarning("", "");
-    setTdPlantImportStatus("offline", "Plant import not configured");
+    setTdPlantImportStatus("offline", "Plant import unavailable");
     updateTdPlantImportStats(new Map(), 0);
   }
   return ok;
@@ -31741,28 +31759,15 @@ async function fetchTdPlantImportRows(){
   if(isTdPlantDemoMode()){
     return await fetchTdDemoCurrentRows();
   }
-  if(!TD_PLANT_DATA_SUPABASE_URL || !TD_PLANT_DATA_SUPABASE_KEY || typeof fetch !== "function") return null;
+  if(typeof fetch !== "function") return null;
   var wantedTags = getTdPlantMappedBindings().map(function(binding){
     return String(getTdPlantBindingTagId(binding) || "").trim();
   }).filter(Boolean);
-  var url = TD_PLANT_DATA_SUPABASE_URL + "/rest/v1/plant_data"
-    + "?select=tag_id,label,value,unit,synced_at,pushed_at"
-    + (wantedTags.length ? ("&tag_id=in.(" + wantedTags.join(",") + ")") : "")
-    + "&order=synced_at.desc"
-    + "&limit=200";
-  var res = await fetchWithTimeout(url, {
-    method: "GET",
-    cache: "no-store",
-    headers: {
-      apikey: TD_PLANT_DATA_SUPABASE_KEY,
-      Authorization: "Bearer " + TD_PLANT_DATA_SUPABASE_KEY,
-      Accept: "application/json",
-      "Cache-Control": "no-cache"
-    }
+  var rows = await scadaServerApiGetJson("/plant/current", {
+    tags: wantedTags.join(","),
+    limit: "200"
   }, 9000);
-  if(!res) throw new Error("No response from plant data service");
-  if(!res.ok) throw new Error("Plant data HTTP " + res.status);
-  return await res.json();
+  return Array.isArray(rows) ? rows : [];
 }
 
 function applyTdPlantImportToInputs(latestMap){
@@ -31841,7 +31846,7 @@ async function refreshTdPlantImportNow(force){
       return tdPlantLatestByTag;
     }catch(e){
       console.warn("TST plant import failed:", e);
-      tdPlantLastErrorMessage = "Unable to reach " + getTdPlantSourceLabel().toLowerCase() + " plant data right now. Check Supabase connectivity and try again.";
+      tdPlantLastErrorMessage = "Unable to reach " + getTdPlantSourceLabel().toLowerCase() + " plant data right now. Check server connectivity and try again.";
       refreshTdPlantLiveHealthState();
       return null;
     }finally{
@@ -36205,67 +36210,38 @@ body.light-theme .btab-alarm-count{
     };
   }
 
-  function buildPlantHeaders(){
-    return {
-      apikey: TD_PLANT_DATA_SUPABASE_KEY,
-      Authorization: "Bearer " + TD_PLANT_DATA_SUPABASE_KEY,
-      Accept: "application/json",
-      "Cache-Control": "no-cache"
-    };
-  }
-
   async function fetchReformerCurrentRows(){
     if(typeof fetchTdPlantImportRows === "function"){
       return await fetchTdPlantImportRows();
     }
-    if(!TD_PLANT_DATA_SUPABASE_URL || !TD_PLANT_DATA_SUPABASE_KEY || typeof fetch !== "function"){
-      throw new Error("Plant data service is not configured.");
-    }
-    var wantedTags = (typeof getTdPlantMappedBindings === "function" ? getTdPlantMappedBindings() : [])
-      .map(function(binding){ return String(typeof getTdPlantBindingTagId === "function" ? getTdPlantBindingTagId(binding) : (binding && binding.plantTagId) || "").trim(); })
-      .filter(Boolean);
-    var url = TD_PLANT_DATA_SUPABASE_URL + "/rest/v1/plant_data"
-      + "?select=tag_id,label,value,unit,synced_at,pushed_at"
-      + (wantedTags.length ? ("&tag_id=in.(" + wantedTags.join(",") + ")") : "")
-      + "&order=synced_at.desc"
-      + "&limit=200";
-    var res = typeof fetchWithTimeout === "function"
-      ? await fetchWithTimeout(url, { method:"GET", cache:"no-store", headers:buildPlantHeaders() }, 9000)
-      : await fetch(url, { method:"GET", cache:"no-store", headers:buildPlantHeaders() });
-    if(!res || !res.ok) throw new Error("Plant data HTTP " + (res ? res.status : "ERR"));
-    return await res.json();
+    throw new Error("Plant data service is not available.");
   }
 
   async function fetchReformerHistoryRows(){
     if(typeof isTdPlantDemoMode === "function" && isTdPlantDemoMode()){
       return await fetchTdDemoHistoryRows();
     }
-    if(!TD_PLANT_DATA_SUPABASE_URL || !TD_PLANT_DATA_SUPABASE_KEY || typeof fetch !== "function"){
-      return { rows: [], error: "History service is not configured." };
-    }
+    if(typeof fetch !== "function") return { rows: [], error: "History service is not available." };
     var wantedTags = (typeof getTdPlantMappedBindings === "function" ? getTdPlantMappedBindings() : [])
       .map(function(binding){ return String(typeof getTdPlantBindingTagId === "function" ? getTdPlantBindingTagId(binding) : (binding && binding.plantTagId) || "").trim(); })
       .filter(Boolean);
     var sinceIso = new Date(Date.now() - REFORMER_DASH_HISTORY_WINDOW_MS).toISOString();
-    var url = TD_PLANT_DATA_SUPABASE_URL + "/rest/v1/" + REFORMER_DASH_HISTORY_TABLE
-      + "?select=tag_id,label,value,recorded_at"
-      + "&recorded_at=gte." + encodeURIComponent(sinceIso)
-      + (wantedTags.length ? ("&tag_id=in.(" + wantedTags.join(",") + ")") : "")
-      + "&order=recorded_at.asc"
-      + "&limit=5000";
-    var res = typeof fetchWithTimeout === "function"
-      ? await fetchWithTimeout(url, { method:"GET", cache:"no-store", headers:buildPlantHeaders() }, 12000)
-      : await fetch(url, { method:"GET", cache:"no-store", headers:buildPlantHeaders() });
-    if(!res){
-      return { rows: [], error: "No response from history service." };
-    }
-    if(!res.ok){
-      if(res.status === 404){
-        return { rows: [], error: "History table not found in Supabase yet. Trends will appear after history logging is enabled." };
+    try{
+      var data = await scadaServerApiGetJson("/plant/history", {
+        tags: wantedTags.join(","),
+        since: sinceIso,
+        limit: "5000"
+      }, 12000);
+      return {
+        rows: Array.isArray(data && data.rows) ? data.rows : [],
+        error: String((data && data.error) || "")
+      };
+    }catch(e){
+      if(e && e.status === 404){
+        return { rows: [], error: "History table not found yet. Trends will appear after history logging is enabled." };
       }
-      return { rows: [], error: "History data HTTP " + res.status };
+      return { rows: [], error: "History data could not be loaded right now." };
     }
-    return { rows: await res.json(), error: "" };
   }
 
   function bucketHistoryRows(rows){
@@ -37335,17 +37311,9 @@ window.updateReformerDashComposition = updateReformerDashComposition;
   }
 
   function jobsReformerHasSupabaseConfig(){
-    var key = "";
-    try{
-      key = typeof getSupabaseAnonKey === "function"
-        ? String(getSupabaseAnonKey() || "")
-        : String(typeof SUPABASE_ANON_KEY === "string" ? SUPABASE_ANON_KEY : "");
-    }catch(e){
-      key = "";
-    }
     return jobsReformerIsSyncEnabled()
-      && typeof SUPABASE_URL === "string" && !!SUPABASE_URL
-      && !!key;
+      && typeof fetch === "function"
+      && !!getScadaServerApiBase();
   }
 
   function jobsReformerEncodeText(text){
@@ -37878,60 +37846,12 @@ window.updateReformerDashComposition = updateReformerDashComposition;
 
   async function jobsReformerFetchLatestRow(){
     if(!jobsReformerHasSupabaseConfig()) return null;
-    var row = null;
-    if(typeof ensureSupaClient === "function" && ensureSupaClient()){
-      try{
-        var q = await withTimeout(
-          supaClient
-            .from(SUPABASE_TABLE)
-            .select("file_name,data_base64,created_at,uploaded_by")
-            .eq("file_name", JOBS_REFORMER_FILE_NAME)
-            .order("created_at", { ascending: false })
-            .limit(1),
-          SERVER_SYNC_TIMEOUT_MS
-        );
-        if(q && !q.error && q.data && q.data.length){
-          row = q.data[0];
-        }
-      }catch(e){}
-    }
-    if(row) return row;
-    try{
-      var path = "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE)
-        + "?select=file_name,data_base64,created_at,uploaded_by"
-        + "&file_name=eq." + encodeURIComponent(JOBS_REFORMER_FILE_NAME)
-        + "&order=created_at.desc&limit=1";
-      var res = await supabaseRestRequest(path, "GET", null, null);
-      if(res && res.ok){
-        var rows = await res.json();
-        if(Array.isArray(rows) && rows.length) row = rows[0];
-      }
-    }catch(e){}
-    return row;
+    return await fetchLatestServerReportViaRelay(JOBS_REFORMER_FILE_NAME);
   }
 
   async function jobsReformerInsertRow(payload){
     if(!jobsReformerHasSupabaseConfig()) return false;
-    if(typeof ensureSupaClient === "function" && ensureSupaClient()){
-      try{
-        var ins = await withTimeout(
-          supaClient.from(SUPABASE_TABLE).insert(payload),
-          SERVER_SYNC_TIMEOUT_MS
-        );
-        if(ins && !ins.error) return true;
-      }catch(e){}
-    }
-    try{
-      var res = await supabaseRestRequest(
-        "/rest/v1/" + encodeURIComponent(SUPABASE_TABLE),
-        "POST",
-        payload,
-        "return=minimal"
-      );
-      return !!(res && (res.ok || res.status === 201 || res.status === 204));
-    }catch(e){
-      return false;
-    }
+    return await insertServerReportViaRelay(payload);
   }
 
   async function flushJobsReformerQueuedExport(showMsg){
@@ -37951,7 +37871,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
         return false;
       }
       if(!jobsReformerHasSupabaseConfig()){
-        jobsReformerSetSyncState("Supabase sync unavailable. Kept locally.", "bad");
+        jobsReformerSetSyncState("Server sync unavailable. Kept locally.", "bad");
         return false;
       }
       jobsReformerSetSyncState("Syncing register to central server...", "warn");
@@ -38009,9 +37929,9 @@ window.updateReformerDashComposition = updateReformerDashComposition;
         return false;
       }
       if(!jobsReformerHasSupabaseConfig()){
-        jobsReformerSetSyncState("Supabase sync unavailable", "bad");
+        jobsReformerSetSyncState("Server sync unavailable", "bad");
         if(showMsg && typeof showToast === "function"){
-          showActionToast("⚠ Supabase sync is unavailable for Jobs Reformer.");
+          showActionToast("⚠ Server sync is unavailable for Jobs Reformer.");
         }
         return false;
       }
