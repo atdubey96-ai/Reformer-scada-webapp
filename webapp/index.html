@@ -26855,6 +26855,50 @@ function cuboidSetFrameReady(frame, ready){
   if(shell) shell.classList.toggle("cuboid-shell-frame-ready", next);
 }
 
+function applyCuboidFrameHintVisibilityFix(frame){
+  try{
+    if(!frame || !frame.contentDocument) return;
+    var doc = frame.contentDocument;
+    var hint = doc.getElementById("hint");
+    if(!hint) return;
+    var styleId = "cuboid-host-hint-visibility-fix";
+    var styleEl = doc.getElementById(styleId);
+    if(!styleEl){
+      styleEl = doc.createElement("style");
+      styleEl.id = styleId;
+      styleEl.textContent =
+        "#hint{"
+          + "z-index:12 !important;"
+          + "bottom:12px !important;"
+          + "padding:7px 12px !important;"
+          + "border-radius:999px !important;"
+          + "background:linear-gradient(180deg,rgba(6,12,20,0.84),rgba(10,17,28,0.72)) !important;"
+          + "border:1px solid rgba(126,200,240,0.22) !important;"
+          + "box-shadow:0 10px 26px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.05) !important;"
+          + "color:rgba(237,245,255,0.84) !important;"
+          + "font-size:10px !important;"
+          + "font-weight:700 !important;"
+          + "letter-spacing:1.8px !important;"
+          + "text-shadow:0 1px 10px rgba(0,0,0,0.45) !important;"
+          + "backdrop-filter:blur(10px) saturate(120%) !important;"
+          + "-webkit-backdrop-filter:blur(10px) saturate(120%) !important;"
+        + "}"
+        + "@media (max-width:900px){"
+          + "#hint{"
+            + "bottom:10px !important;"
+            + "font-size:8px !important;"
+            + "letter-spacing:1.3px !important;"
+            + "padding:6px 10px !important;"
+            + "max-width:calc(100% - 18px) !important;"
+            + "white-space:normal !important;"
+            + "text-align:center !important;"
+          + "}"
+        + "}";
+      (doc.head || doc.documentElement).appendChild(styleEl);
+    }
+  }catch(e){}
+}
+
 function cuboidIsFrameReady(frame){
   return !!(frame && _cuboidFrameReady.get(frame));
 }
@@ -28243,6 +28287,7 @@ function handlePendingViewerTabSwitch(){
       var ready = !!currentSrc && currentSrc !== "about:blank";
       cuboidSetFrameReady(frame, ready);
       if(!ready) return;
+      applyCuboidFrameHintVisibilityFix(frame);
       var shell = frame.closest(".cuboid-tab-shell");
       notifyCuboidOverlayState(!!(shell && shell.classList.contains("cuboid-shell-expanded")), frame);
       notifyCuboidHostState(frame);
