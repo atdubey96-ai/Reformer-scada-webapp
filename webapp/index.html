@@ -5560,30 +5560,30 @@ body.light-theme #tab-cuboidstack .cuboid-twin-control-banner.is-empty{
   gap:3px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-card{
-  grid-template-columns:34px minmax(34px,1fr);
-  column-gap:5px;
+  grid-template-columns:30px minmax(0,1fr);
+  column-gap:4px;
   min-height:36px;
   padding:3px 4px 3px 3px;
   border-radius:10px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-badge{
-  width:28px;
-  height:30px;
+  width:26px;
+  height:28px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-copy{
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   justify-content:center;
   min-height:0;
   gap:0;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-name{
   width:100%;
-  font-size:8.8px;
+  font-size:9.6px;
   font-weight:800;
-  line-height:1.05;
-  letter-spacing:0.01em;
-  text-align:left;
+  line-height:1.02;
+  letter-spacing:0;
+  text-align:center;
   white-space:normal;
   overflow-wrap:break-word;
 }
@@ -21975,6 +21975,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           </section>
         </div>
         <section id="refdash-eff-hero" class="refdash-eff-hero"></section>
+        <section id="refdash-admin-calc-section" class="refdash-panel" style="display:none;"></section>
       </div>
 
       <div id="refdash-pane-trends" class="refdash-pane">
@@ -22864,6 +22865,12 @@ function updateAdminModeUi(){
   }
   if(typeof notifyAllCuboidHostStates === "function"){
     notifyAllCuboidHostStates();
+  }
+  if(updateAdminModeUi._lastAdminCalcState !== active){
+    updateAdminModeUi._lastAdminCalcState = active;
+    if(typeof renderHeatDutyAdminCalcSection === "function"){
+      renderHeatDutyAdminCalcSection();
+    }
   }
 }
 
@@ -36097,11 +36104,105 @@ body.light-theme .btab-alarm-count{
       absorbed: absorbed,
       flueLoss: flueLoss,
       otherLoss: otherLoss,
+      flueLossFactor: flueLossFactor,
+      slipLossFactor: slipLossFactor,
+      balanceLossFactor: balanceLossFactor,
+      totalLossFactor: totalLossFactor,
       efficiency: totalHeat > 0 ? (absorbed / totalHeat) * 100 : 0,
       avgCot: avgCot,
       cotImbalance: cotImbalance,
       preDeltaT: preDeltaT
     };
+  }
+
+  function buildHeatDutyCalcRow(label, formula, result, color){
+    return ''
+      + '<div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.035);border:1px solid rgba(126,200,240,0.08);">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">'
+      + '<div style="min-width:0;">'
+      + '<div style="font-size:10px;font-weight:700;letter-spacing:0.9px;text-transform:uppercase;color:var(--refdash-muted);">' + label + '</div>'
+      + '<div class="refdash-mono" style="margin-top:6px;font-size:11px;line-height:1.45;color:var(--refdash-dim);word-break:break-word;">' + formula + '</div>'
+      + '</div>'
+      + '<div class="refdash-mono" style="flex:0 0 auto;font-size:13px;font-weight:700;text-align:right;color:' + (color || "var(--refdash-text)") + ';">' + result + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  function buildHeatDutyCalcCard(title, color, rows, note){
+    return ''
+      + '<div style="padding:16px;border-radius:16px;background:var(--refdash-panel-strong);border:1px solid rgba(126,200,240,0.12);display:flex;flex-direction:column;gap:10px;">'
+      + '<div style="display:flex;align-items:center;gap:8px;">'
+      + '<span style="width:10px;height:10px;border-radius:999px;background:' + color + ';box-shadow:0 0 10px ' + color + '55;"></span>'
+      + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-text);">' + title + '</div>'
+      + '</div>'
+      + rows.join("")
+      + (note ? ('<div style="font-size:10px;line-height:1.45;color:var(--refdash-muted);">' + note + '</div>') : '')
+      + '</div>';
+  }
+
+  function renderHeatDutyAdminCalcSection(metricsArg, fuelsArg){
+    var calcRoot = getReformerDashEl("refdash-admin-calc-section");
+    if(!calcRoot) return;
+    var showAdminCalc = typeof isAdminModeActive === "function" && isAdminModeActive();
+    if(!showAdminCalc){
+      calcRoot.style.display = "none";
+      calcRoot.innerHTML = "";
+      return;
+    }
+    var metrics = metricsArg || calcReformerMetrics();
+    var pv = reformerDashState.data || makeEmptyData();
+    var totalOffGas = nz(pv.psa1Flow) + nz(pv.psa2Flow);
+    var fuels = Array.isArray(fuelsArg) ? fuelsArg : [
+      { name:"PSA-1 Off Gas", flow: reformerDashState.data.psa1Flow, flowUnit:"Nm3/h", ncv: metrics.psa1NCV, duty: metrics.psa1Heat, color:"var(--refdash-cyan)" },
+      { name:"PSA-2 Off Gas", flow: reformerDashState.data.psa2Flow, flowUnit:"Nm3/h", ncv: metrics.psa2NCV, duty: metrics.psa2Heat, color:"var(--refdash-purple)" },
+      { name:"Naphtha", flow: reformerDashState.data.naphthaFuel, flowUnit:"kg/h", ncv: REFORMER_DASH_NAPHTHA_NCV, duty: metrics.napHeat, color:"var(--refdash-accent-2)" },
+      { name:"Natural Gas (estimated)", flow: metrics.ngFuelFlow, flowUnit:"Nm3/h", ncv: metrics.ngNCV, duty: metrics.ngHeat, color:"var(--refdash-green)" }
+    ];
+    calcRoot.style.display = "block";
+    calcRoot.innerHTML = ''
+      + '<div class="refdash-section-head">'
+      + '<span class="refdash-section-bar refdash-accent"></span>'
+      + '<div>'
+      + '<h3 class="refdash-section-title">Admin Calculation Trace</h3>'
+      + '<p class="refdash-section-sub">How heat duty, loss factors, absorbed heat, and estimated efficiency are being calculated from the current live values.</p>'
+      + '</div>'
+      + '</div>'
+      + '<div class="refdash-info-bar refdash-mono" style="margin-bottom:16px;padding:14px 16px;">This section is visible only in admin mode and shows the exact formulas currently used by the dashboard model.</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;">'
+      + [
+        buildHeatDutyCalcCard("NCV Basis", "var(--refdash-accent)", [
+          buildHeatDutyCalcRow("PSA-1 NCV", "sum(component % / 100 x NCV reference)", formatValue(metrics.psa1NCV, 0) + " kcal/Nm3", "var(--refdash-cyan)"),
+          buildHeatDutyCalcRow("PSA-2 NCV", "sum(component % / 100 x NCV reference)", formatValue(metrics.psa2NCV, 0) + " kcal/Nm3", "var(--refdash-purple)"),
+          buildHeatDutyCalcRow("Natural Gas NCV", "sum(component % / 100 x NCV reference)", formatValue(metrics.ngNCV, 0) + " kcal/Nm3", "var(--refdash-green)"),
+          buildHeatDutyCalcRow("Naphtha NCV", "fixed reference", formatValue(REFORMER_DASH_NAPHTHA_NCV, 0) + " kcal/kg", "var(--refdash-accent-2)")
+        ], "PSA and NG NCVs come from the editable Composition tab, while naphtha uses the fixed reference NCV."),
+        buildHeatDutyCalcCard("Estimated NG Flow", "var(--refdash-green)", [
+          buildHeatDutyCalcRow("Total off gas", "PSA-1 flow + PSA-2 flow", formatValue(totalOffGas, 1) + " Nm3/h", "var(--refdash-cyan)"),
+          buildHeatDutyCalcRow("NG fuel flow", "max(0, 2400 - (totalOffGas x 0.018) - (naphthaFuel x 0.12))", formatValue(metrics.ngFuelFlow, 1) + " Nm3/h", "var(--refdash-green)")
+        ], "Natural gas is currently estimated from the off-gas and naphtha contribution rather than read as a direct live tag."),
+        buildHeatDutyCalcCard("Fuel Heat Duty", "var(--refdash-accent-2)", fuels.map(function(item){
+          return buildHeatDutyCalcRow(item.name, formatValue(item.flow, 1) + " x " + formatValue(item.ncv, 0) + " / 1,000,000", formatValue(item.duty, 3) + " Gcal/h", item.color);
+        }), "Each fuel contribution is calculated as flow multiplied by NCV and converted to Gcal/h."),
+        buildHeatDutyCalcCard("Loss Factors", "var(--refdash-red)", [
+          buildHeatDutyCalcRow("Flue loss factor", "clamp(0.065 + max(flueGas - 860, 0) x 0.00012 + max(excessO2 - 3.5, 0) x 0.009, 0.06, 0.19)", formatValue(metrics.flueLossFactor * 100, 2) + " %", "var(--refdash-red)"),
+          buildHeatDutyCalcRow("Slip loss factor", "clamp(methaneSlip x 0.005, 0, 0.045)", formatValue(metrics.slipLossFactor * 100, 2) + " %", "var(--refdash-purple)"),
+          buildHeatDutyCalcRow("Balance loss factor", "clamp(0.02 + cotDelta x 0.0008 + max(abs(preDeltaT - 20) - 6, 0) x 0.0007, 0.018, 0.07)", formatValue(metrics.balanceLossFactor * 100, 2) + " %", "var(--refdash-accent-2)"),
+          buildHeatDutyCalcRow("Total loss factor", "clamp(flue + slip + balance, 0.09, 0.30)", formatValue(metrics.totalLossFactor * 100, 2) + " %", "var(--refdash-red)")
+        ], "The dashboard uses a bounded operating-loss model driven by flue temperature, excess O2, methane slip, COT imbalance, and pre-reformer delta T."),
+        buildHeatDutyCalcCard("Heat Balance", "var(--refdash-blue)", [
+          buildHeatDutyCalcRow("Total heat input", "PSA-1 + PSA-2 + naphtha + natural gas duties", formatValue(metrics.totalHeat, 3) + " Gcal/h", "var(--refdash-accent-2)"),
+          buildHeatDutyCalcRow("Heat absorbed", "totalHeat x (1 - totalLossFactor)", formatValue(metrics.absorbed, 3) + " Gcal/h", "var(--refdash-green)"),
+          buildHeatDutyCalcRow("Flue gas loss", "totalHeat x flueLossFactor", formatValue(metrics.flueLoss, 3) + " Gcal/h", "var(--refdash-red)"),
+          buildHeatDutyCalcRow("Other losses", "totalHeat x (slipLossFactor + balanceLossFactor)", formatValue(metrics.otherLoss, 3) + " Gcal/h", "var(--refdash-purple)")
+        ], "Other losses aggregate the slip-based and balance-based model penalties after the flue gas loss is separated."),
+        buildHeatDutyCalcCard("Efficiency Result", "var(--refdash-green)", [
+          buildHeatDutyCalcRow("Average COT", "mean(AB COT, CD COT)", formatValue(metrics.avgCot, 1) + " degC", "var(--refdash-accent)"),
+          buildHeatDutyCalcRow("COT delta", "abs(AB COT - CD COT)", formatValue(metrics.cotImbalance, 1) + " degC", "var(--refdash-accent-2)"),
+          buildHeatDutyCalcRow("Pre-reformer delta T", "preOutlet - preInlet", formatValue(metrics.preDeltaT, 1) + " degC", "var(--refdash-cyan)"),
+          buildHeatDutyCalcRow("Estimated efficiency", "(absorbed / totalHeat) x 100", formatValue(metrics.efficiency, 2) + " %", "var(--refdash-green)")
+        ], "This is a dashboard operating estimate built from the current heat-balance model, not a laboratory-certified efficiency number.")
+      ].join("")
+      + '</div>';
   }
 
   function getStatusClass(value, min, max){
@@ -36376,6 +36477,7 @@ body.light-theme .btab-alarm-count{
         + '<div style="padding:16px;border-radius:12px;background:var(--refdash-panel-strong);border:1px solid rgba(126,200,240,0.1);text-align:center;"><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--refdash-muted);margin-bottom:4px;">Estimated Loss</div><div class="refdash-mono" style="font-size:21px;font-weight:700;color:var(--refdash-red);">' + formatValue(metrics.flueLoss + metrics.otherLoss, 2) + '</div><div style="font-size:10px;color:var(--refdash-dim);">Gcal/h</div></div>'
         + '</div>';
     }
+    renderHeatDutyAdminCalcSection(metrics, fuels);
     renderHeatBalanceChart(metrics);
   }
 
