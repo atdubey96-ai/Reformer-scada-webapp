@@ -22350,7 +22350,13 @@ function placeToastElement(t, options){
       t.style.bottom = "auto";
       t.style.transform = "translate(-100%, -50%)";
       t.style.textAlign = "left";
-      t.style.maxWidth = Math.min(420, availableLeft) + "px";
+      t.style.padding = "8px 16px";
+      t.style.borderRadius = "999px";
+      t.style.fontSize = "13px";
+      t.style.lineHeight = "1.1";
+      t.style.whiteSpace = "nowrap";
+      t.style.width = "max-content";
+      t.style.maxWidth = availableLeft + "px";
       return;
     }
   }
@@ -22360,6 +22366,12 @@ function placeToastElement(t, options){
   t.style.bottom = "28px";
   t.style.transform = "translateX(-50%)";
   t.style.textAlign = "center";
+  t.style.padding = "10px 24px";
+  t.style.borderRadius = "8px";
+  t.style.fontSize = "14px";
+  t.style.lineHeight = "1.35";
+  t.style.whiteSpace = "normal";
+  t.style.width = "auto";
   t.style.maxWidth = "min(calc(100vw - 32px), 420px)";
 }
 
@@ -22375,7 +22387,7 @@ function showToast(msg, options){
     t.id="scada-toast";
     t.style.cssText="position:fixed;bottom:28px;left:50%;transform:translateX(-50%);"
       +"background:#16a34a;color:#fff;padding:10px 24px;border-radius:8px;"
-      +"font-size:14px;font-weight:700;line-height:1.35;box-sizing:border-box;"
+      +"font-size:14px;font-weight:700;line-height:1.35;white-space:normal;box-sizing:border-box;"
       +"z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);"
       +"opacity:0;transition:opacity .3s;pointer-events:none;";
     document.body.appendChild(t);
