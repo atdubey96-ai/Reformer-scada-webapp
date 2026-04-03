@@ -9751,7 +9751,6 @@ function updateHeatMapAdjustmentLogic(snapshot){
     targets.forEach(function(el){
       if(el) el.innerHTML = html;
     });
-    initHistoryScrollHandoff();
   }
 
   var hmData = snapshot && snapshot.hmData ? snapshot.hmData : null;
@@ -28447,7 +28446,7 @@ function bindVerticalScrollHandoff(el){
 }
 
 function initHistoryScrollHandoff(){
-  document.querySelectorAll(".td-saved-scroll, .burner-history-scroll, .hm-adjust-suggest-list").forEach(function(el){
+  document.querySelectorAll(".td-saved-scroll, .burner-history-scroll").forEach(function(el){
     bindVerticalScrollHandoff(el);
   });
 }
