@@ -22440,6 +22440,41 @@ function showActionToast(msg, options){
   showToast(msg, options);
 }
 
+function isActionToastAnchorVisible(el){
+  if(!el || !document.documentElement.contains(el) || !el.getBoundingClientRect) return false;
+  var rect = el.getBoundingClientRect();
+  if(!rect || (!rect.width && !rect.height)) return false;
+  if(typeof window !== "undefined" && typeof window.getComputedStyle === "function"){
+    var cs = window.getComputedStyle(el);
+    if(!cs || cs.display === "none" || cs.visibility === "hidden") return false;
+  }
+  return true;
+}
+
+function getPreferredSaveToastAnchor(){
+  var active = document.querySelector(".tab-panel.tab-active");
+  var activeId = active && active.id ? active.id : "";
+  var candidates = [];
+  if(activeId === "tab-tempdata"){
+    candidates.push(document.getElementById("td-plant-refresh-btn"));
+  }
+  if(activeId === "tab-cuboidstack" || activeId === "tab-cuboid"){
+    candidates.push(active ? active.querySelector('.cuboid-twin-control-btn') : null);
+  }
+  if(activeId === "tab-reformerdash"){
+    candidates.push(active ? active.querySelector(".refdash-refresh-btn") : null);
+  }
+  candidates.push(document.getElementById("refreshDataBtn"));
+  for(var i=0; i<candidates.length; i++){
+    if(isActionToastAnchorVisible(candidates[i])) return candidates[i];
+  }
+  return null;
+}
+
+function showSaveActionToast(msg){
+  showToast(msg, { position:"action-button", anchorEl:getPreferredSaveToastAnchor() });
+}
+
 function showHeaderActionToast(msg){
   showActionToast(msg);
 }
@@ -24746,7 +24781,7 @@ let lastImportedFileName = "Burner_SCADA_Report.xlsx";
 
 function showPostCleaningBurnerDataNudge(){
   var body = "After burner cleaning, if burner condition changed, update inline Burner Data in Burner Data & Analysis tab.";
-  showHeaderActionToast("📝 Nudge: After cleaning, update inline Burner Data if condition changed.");
+  showSaveActionToast("📝 Nudge: After cleaning, update inline Burner Data if condition changed.");
   notifyAndBroadcast("post_cleaning_burner_nudge", "Post-Cleaning Nudge", body, "post_cleaning_burner_nudge", 4000);
 }
 
@@ -24759,7 +24794,7 @@ async function exportToExcel(options){
   if(hadBurnerPending){
     if(!refreshBurnerWallTablesInPlace()) render();
     if(!silent){
-      showHeaderActionToast("✅ Burner data saved successfully");
+      showSaveActionToast("✅ Burner data saved successfully");
       notifyAndBroadcast("burner_data_saved", "Burner Data Saved", "New burner data has been saved.", "burner_data_saved", 3000);
     }
   }
@@ -24770,7 +24805,7 @@ async function exportToExcel(options){
   if(hadCleaningPending){
     buildCleaningTable();
     if(!silent){
-      showHeaderActionToast("✅ Cleaning dates saved successfully");
+      showSaveActionToast("✅ Cleaning dates saved successfully");
       notifyAndBroadcast("burner_cleaning_saved", "Burner Cleaning Saved", "New burner cleaning data has been saved.", "burner_cleaning_saved", 3000);
       setTimeout(showPostCleaningBurnerDataNudge, 900);
     }
@@ -24911,7 +24946,7 @@ async function exportToExcel(options){
   if(saveStatus === true){
     syncHealthMarkOk(new Date(), "Uploaded");
     markCurrentAutoSyncDigest();
-    if(!silent) showHeaderActionToast("✅ Saved to central SCADA server");
+    if(!silent) showSaveActionToast("✅ Saved to central SCADA server");
     return true;
   }
   if(saveStatus === "queued"){
@@ -24922,11 +24957,11 @@ async function exportToExcel(options){
     }
     syncHealthMarkQueued(qTag ? ("Retry " + qTag) : "Waiting network");
     markCurrentAutoSyncDigest();
-    if(!silent) showHeaderActionToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : "") + relayHint);
+    if(!silent) showSaveActionToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : "") + relayHint);
     return "queued";
   }
   syncHealthMarkQueued("Central offline · local save");
-  if(!silent) showHeaderActionToast("📶 Central unavailable. Data kept locally and queued for auto-sync.");
+  if(!silent) showSaveActionToast("📶 Central unavailable. Data kept locally and queued for auto-sync.");
   return "queued";
 }
 
@@ -25294,7 +25329,7 @@ function _doImport(file, onDone, silent){
         setTimeout(function(){
           exportToExcel().catch(function(syncErr){
             console.warn("Auto sync after import failed:", syncErr);
-            showActionToast("⚠ Import done locally, but central sync failed.");
+            showSaveActionToast("⚠ Import done locally, but central sync failed.");
           });
         }, 120);
       }
@@ -25366,7 +25401,7 @@ function saveTipData(){
   collectTipFromDOM();
   saveTipDataStore(tipRows);
   clearTipUnsaved();
-  showActionToast("✅ Burner tip data saved successfully!");
+  showSaveActionToast("✅ Burner tip data saved successfully!");
   notifyAndBroadcast("burner_tip_data_saved", "Burner Tip Data Saved", "Burner tip inspection data has been saved.", "burner_tip_data_saved", 3000);
 }
 
@@ -25692,7 +25727,7 @@ function saveCleaningHistoryInlineEdit(){
   persistCleaningDatesForBurner(sel.wall, sel.key, dates);
   cleaningHistoryInlineEdit = { date:"", value:"" };
   buildCleaningTable();
-  showActionToast("✅ Cleaning date updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
+  showSaveActionToast("✅ Cleaning date updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
 }
 function deleteCleaningHistoryDate(date){
   var sel = getCleaningHistorySelection();
@@ -25837,7 +25872,7 @@ function saveBurnerEditedDates(){
   setCleaningHistorySelection(sel.wall, sel.row, sel.burner);
   buildCleaningTable();
 
-  showActionToast("✅ Cleaning dates updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
+  showSaveActionToast("✅ Cleaning dates updated for Wall " + sel.wall + " R" + sel.row + " B" + sel.burner);
   setTimeout(showPostCleaningBurnerDataNudge, 900);
 }
 function renderBurnerHistoryPreview(){
@@ -29949,7 +29984,7 @@ async function flushQueuedServerExport(showMsg){
         });
         updateLastSyncLabel(new Date());
         syncHealthMarkOk(new Date(), "Queued upload sent");
-        if(showMsg) showActionToast("✅ Pending save synced to central server");
+        if(showMsg) showSaveActionToast("✅ Pending save synced to central server");
         return true;
       }
       setCentralReachability(false);
@@ -34068,14 +34103,14 @@ async function saveTempData(){
   if(typeof scheduleCuboidFrameDataPush === "function") scheduleCuboidFrameDataPush(14, false);
   renderTempDataTable();
   clearTempData();
-  showActionToast(wasEdit ? "✅ Temperature entry updated." : "✅ Temperature entry saved successfully!");
+  showSaveActionToast(wasEdit ? "✅ Temperature entry updated." : "✅ Temperature entry saved successfully!");
   notifyAndBroadcast("tst_data_saved", wasEdit ? "TST Data Updated" : "TST Data Saved", wasEdit ? "A TST entry was updated successfully." : "A new TST entry was saved successfully.", "tst_data_saved", 5000);
 
   try{
     await exportToExcel();
   }catch(syncErr){
     console.warn("Auto save-to-file after TST save failed:", syncErr);
-    showActionToast("⚠ Entry saved, but burner data file sync failed.");
+    showSaveActionToast("⚠ Entry saved, but burner data file sync failed.");
   }
 }
 
@@ -37504,13 +37539,13 @@ window.updateReformerDashComposition = updateReformerDashComposition;
         jobsReformerState.lastServerSyncAt = new Date().toISOString();
         jobsReformerSetSyncState("Synced to central server", "ok");
         if(showMsg && typeof showToast === "function"){
-          showActionToast("✅ Jobs Reformer synced to central server");
+          showSaveActionToast("✅ Jobs Reformer synced to central server");
         }
         return true;
       }
       jobsReformerSetSyncState("Sync failed. Upload kept queued.", "bad");
       if(showMsg && typeof showToast === "function"){
-        showActionToast("📶 Jobs Reformer sync failed. Upload kept queued.");
+        showSaveActionToast("📶 Jobs Reformer sync failed. Upload kept queued.");
       }
       return false;
     })();
@@ -37611,7 +37646,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     if(!payload.data_base64){
       jobsReformerSetSyncState("Could not encode jobs register", "bad");
       if(showMsg && typeof showToast === "function"){
-        showActionToast("⚠ Jobs Reformer could not be prepared for sync.");
+        showSaveActionToast("⚠ Jobs Reformer could not be prepared for sync.");
       }
       return false;
     }
@@ -37625,7 +37660,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     var flushed = await flushJobsReformerQueuedExport(false);
     if(loadJobsReformerQueuedExport() && !flushed){
       if(showMsg && typeof showToast === "function"){
-        showActionToast("📶 Pending Jobs Reformer upload is still queued.");
+        showSaveActionToast("📶 Pending Jobs Reformer upload is still queued.");
       }
       return false;
     }
@@ -37670,7 +37705,7 @@ window.updateReformerDashComposition = updateReformerDashComposition;
     jobsReformerPersistLocal(true);
     jobsReformerResetForm();
     if(editingJob && typeof showToast === "function"){
-      showActionToast("✅ Jobs Reformer entry updated.");
+      showSaveActionToast("✅ Jobs Reformer entry updated.");
     }
   }
 
