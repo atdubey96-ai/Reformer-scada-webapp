@@ -8247,12 +8247,38 @@ body.light-theme .hm-adjust-empty{
   #loginScreen .ls-input-box{
     min-height:54px !important;
     border-radius:16px !important;
-    background:rgba(255,255,255,0.06) !important;
-    border-color:rgba(140,180,255,0.18) !important;
+    background:rgba(255,255,255,0.96) !important;
+    border-color:rgba(140,180,255,0.32) !important;
+    box-shadow:0 10px 26px rgba(15,23,42,0.14) !important;
+  }
+  #loginScreen .ls-input-box:focus-within{
+    background:#ffffff !important;
+    border-color:rgba(90,128,176,0.68) !important;
+    box-shadow:0 0 0 3px rgba(125,200,240,0.16),0 12px 28px rgba(15,23,42,0.18) !important;
   }
   #loginScreen .ls-input{
     font-size:16px !important;
     padding:13px 10px 13px 0 !important;
+    color:#1f3658 !important;
+    -webkit-text-fill-color:#1f3658 !important;
+    caret-color:#1f3658 !important;
+  }
+  #loginScreen .ls-input::placeholder{
+    color:#5a80b0 !important;
+    -webkit-text-fill-color:#5a80b0 !important;
+  }
+  #loginScreen .ls-input[readonly]{
+    color:#4d6588 !important;
+    -webkit-text-fill-color:#4d6588 !important;
+  }
+  #loginScreen .ls-input:-webkit-autofill,
+  #loginScreen .ls-input:-webkit-autofill:hover,
+  #loginScreen .ls-input:-webkit-autofill:focus{
+    -webkit-text-fill-color:#1f3658 !important;
+    caret-color:#1f3658 !important;
+    -webkit-box-shadow:0 0 0 1000px #ffffff inset !important;
+    box-shadow:0 0 0 1000px #ffffff inset !important;
+    transition:background-color 9999s ease-out 0s !important;
   }
   #loginScreen .ls-error{
     margin-top:6px !important;
