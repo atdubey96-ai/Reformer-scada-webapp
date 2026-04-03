@@ -22330,17 +22330,57 @@ function handleAutoImport(event){
   });
 }
 
-function showToast(msg){
+function getHeaderActionToastRect(anchorId){
+  var el = document.getElementById(anchorId || "refreshDataBtn");
+  if(!el || !el.getBoundingClientRect) return null;
+  var rect = el.getBoundingClientRect();
+  if(!rect || (!rect.width && !rect.height)) return null;
+  return rect;
+}
+
+function placeToastElement(t, options){
+  options = options || {};
+  if(options.position === "header-action"){
+    var rect = getHeaderActionToastRect(options.anchorId || "refreshDataBtn");
+    var availableLeft = rect ? Math.floor(rect.left) - 24 : 0;
+    if(rect && availableLeft >= 220){
+      t.style.top = Math.max(12, Math.round(rect.top + rect.height / 2)) + "px";
+      t.style.left = Math.max(12, Math.round(rect.left - 10)) + "px";
+      t.style.right = "auto";
+      t.style.bottom = "auto";
+      t.style.transform = "translate(-100%, -50%)";
+      t.style.textAlign = "left";
+      t.style.maxWidth = Math.min(420, availableLeft) + "px";
+      return;
+    }
+  }
+  t.style.top = "auto";
+  t.style.left = "50%";
+  t.style.right = "auto";
+  t.style.bottom = "28px";
+  t.style.transform = "translateX(-50%)";
+  t.style.textAlign = "center";
+  t.style.maxWidth = "min(calc(100vw - 32px), 420px)";
+}
+
+function showHeaderActionToast(msg){
+  showToast(msg, { position:"header-action", anchorId:"refreshDataBtn" });
+}
+
+function showToast(msg, options){
+  options = options || {};
   let t=document.getElementById("scada-toast");
   if(!t){
     t=document.createElement("div");
     t.id="scada-toast";
     t.style.cssText="position:fixed;bottom:28px;left:50%;transform:translateX(-50%);"
       +"background:#16a34a;color:#fff;padding:10px 24px;border-radius:8px;"
-      +"font-size:14px;font-weight:700;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);"
+      +"font-size:14px;font-weight:700;line-height:1.35;box-sizing:border-box;"
+      +"z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);"
       +"opacity:0;transition:opacity .3s;pointer-events:none;";
     document.body.appendChild(t);
   }
+  placeToastElement(t, options);
   t.textContent=msg;
   t.style.opacity="1";
   clearTimeout(t._timer);
@@ -24628,7 +24668,7 @@ let lastImportedFileName = "Burner_SCADA_Report.xlsx";
 
 function showPostCleaningBurnerDataNudge(){
   var body = "After burner cleaning, if burner condition changed, update inline Burner Data in Burner Data & Analysis tab.";
-  showToast("📝 Nudge: After cleaning, update inline Burner Data if condition changed.");
+  showHeaderActionToast("📝 Nudge: After cleaning, update inline Burner Data if condition changed.");
   notifyAndBroadcast("post_cleaning_burner_nudge", "Post-Cleaning Nudge", body, "post_cleaning_burner_nudge", 4000);
 }
 
@@ -24641,7 +24681,7 @@ async function exportToExcel(options){
   if(hadBurnerPending){
     if(!refreshBurnerWallTablesInPlace()) render();
     if(!silent){
-      showToast("✅ Burner data saved successfully");
+      showHeaderActionToast("✅ Burner data saved successfully");
       notifyAndBroadcast("burner_data_saved", "Burner Data Saved", "New burner data has been saved.", "burner_data_saved", 3000);
     }
   }
@@ -24652,7 +24692,7 @@ async function exportToExcel(options){
   if(hadCleaningPending){
     buildCleaningTable();
     if(!silent){
-      showToast("✅ Cleaning dates saved successfully");
+      showHeaderActionToast("✅ Cleaning dates saved successfully");
       notifyAndBroadcast("burner_cleaning_saved", "Burner Cleaning Saved", "New burner cleaning data has been saved.", "burner_cleaning_saved", 3000);
       setTimeout(showPostCleaningBurnerDataNudge, 900);
     }
@@ -24793,7 +24833,7 @@ async function exportToExcel(options){
   if(saveStatus === true){
     syncHealthMarkOk(new Date(), "Uploaded");
     markCurrentAutoSyncDigest();
-    if(!silent) showToast("✅ Saved to central SCADA server");
+    if(!silent) showHeaderActionToast("✅ Saved to central SCADA server");
     return true;
   }
   if(saveStatus === "queued"){
@@ -24804,11 +24844,11 @@ async function exportToExcel(options){
     }
     syncHealthMarkQueued(qTag ? ("Retry " + qTag) : "Waiting network");
     markCurrentAutoSyncDigest();
-    if(!silent) showToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : "") + relayHint);
+    if(!silent) showHeaderActionToast("📶 Weak network: save queued, will auto-sync" + (qTag ? " (" + qTag + ")" : "") + relayHint);
     return "queued";
   }
   syncHealthMarkQueued("Central offline · local save");
-  if(!silent) showToast("📶 Central unavailable. Data kept locally and queued for auto-sync.");
+  if(!silent) showHeaderActionToast("📶 Central unavailable. Data kept locally and queued for auto-sync.");
   return "queued";
 }
 
@@ -24840,13 +24880,13 @@ function setRefreshButtonBusy(busy){
 }
 async function smartRefresh(){
   if(smartRefreshInFlight){
-    showToast("⏳ Refresh already in progress");
+    showHeaderActionToast("⏳ Refresh already in progress");
     return false;
   }
   smartRefreshInFlight = true;
   setRefreshButtonBusy(true);
   clearSyncDebug("Manual refresh");
-  showToast("🔄 Refreshing...");
+  showHeaderActionToast("🔄 Refreshing...");
   flushQueuedServerExport(false).catch(function(){});
   try{
     var okServer = await withTimeout(autoImportFromServer(true), 22000);
@@ -24855,11 +24895,11 @@ async function smartRefresh(){
       var loadedLocal = await importServerReportPayload(localFallback);
       if(loadedLocal){
         syncHealthMarkQueued("Server offline · local snapshot");
-        showToast("📴 Server unavailable. Loaded last synced local copy.");
+        showHeaderActionToast("📴 Server unavailable. Loaded last synced local copy.");
         return true;
       }
       syncHealthMarkQueued("No central update");
-      showToast("ℹ No central update found. Keeping current local data.");
+      showHeaderActionToast("ℹ No central update found. Keeping current local data.");
       return true;
     }
     return true;
@@ -24869,12 +24909,12 @@ async function smartRefresh(){
       var loadedLocal2 = await importServerReportPayload(localFallback2);
       if(loadedLocal2){
         syncHealthMarkQueued("Refresh timeout · local snapshot");
-        showToast("📴 Refresh timed out. Showing last synced local copy.");
+        showHeaderActionToast("📴 Refresh timed out. Showing last synced local copy.");
         return true;
       }
     }catch(_ignore){}
     syncHealthMarkQueued("Refresh timeout");
-    showToast("📶 Refresh timed out. Keeping current local data.");
+    showHeaderActionToast("📶 Refresh timed out. Keeping current local data.");
     return true;
   }finally{
     setRefreshButtonBusy(false);
@@ -28151,7 +28191,7 @@ function handleGlobalRefreshClick(){
   var tab = active && active.id ? active.id.replace('tab-','') : '';
   if(tab === 'alarms'){
     refreshAlarmPanel();
-    showToast("↻ Alarm panel refreshed");
+    showHeaderActionToast("↻ Alarm panel refreshed");
     return;
   }
   if(tab === 'jobsreformer' && typeof exportJobsReformerToServer === 'function'){
@@ -28171,7 +28211,7 @@ function handleGlobalRefreshClick(){
     scheduleCuboidFrameDataPush(20, true);
     refreshCuboidLegendPanels(true);
     scheduleCuboidExtendedRefresh(60, true);
-    showToast("↻ Twin view refreshed");
+    showHeaderActionToast("↻ Twin view refreshed");
     return;
   }
   smartRefresh();
