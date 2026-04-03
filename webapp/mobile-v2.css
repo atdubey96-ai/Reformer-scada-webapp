@@ -49,6 +49,10 @@
       calc(112px + env(safe-area-inset-bottom));
   }
 
+  #mobile-v2-root .m2-shell.has-alert-ribbon{
+    padding-bottom:calc(188px + env(safe-area-inset-bottom));
+  }
+
   body[data-mobile-v2="1"][data-mobile-legacy="1"] #mobile-v2-root .m2-shell{
     display:none;
   }
@@ -226,6 +230,136 @@
 
   #mobile-v2-root .m2-pane.is-active{
     display:flex;
+  }
+
+  #mobile-v2-root .m2-master-alarm{
+    position:fixed;
+    left:16px;
+    right:16px;
+    bottom:calc(84px + env(safe-area-inset-bottom));
+    z-index:55;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    border-radius:24px;
+    border:1px solid rgba(252,165,165,0.34);
+    background:linear-gradient(180deg,rgba(98,22,33,0.96) 0%,rgba(65,17,26,0.98) 100%);
+    box-shadow:0 22px 36px rgba(46,9,16,0.28);
+    padding:14px 14px 13px;
+  }
+
+  #mobile-v2-root .m2-master-alarm.tone-major{
+    border-color:rgba(251,191,36,0.34);
+    background:linear-gradient(180deg,rgba(107,54,14,0.96) 0%,rgba(72,33,9,0.98) 100%);
+    box-shadow:0 22px 36px rgba(58,28,7,0.24);
+  }
+
+  #mobile-v2-root .m2-master-alarm.tone-warning{
+    border-color:rgba(253,224,71,0.32);
+    background:linear-gradient(180deg,rgba(103,74,12,0.96) 0%,rgba(69,48,7,0.98) 100%);
+    box-shadow:0 20px 34px rgba(53,38,5,0.24);
+  }
+
+  body.light-theme #mobile-v2-root .m2-master-alarm{
+    border-color:rgba(190,24,93,0.18);
+    background:linear-gradient(180deg,rgba(255,244,247,0.98) 0%,rgba(255,233,238,1) 100%);
+    box-shadow:0 16px 28px rgba(20,32,54,0.12);
+  }
+
+  body.light-theme #mobile-v2-root .m2-master-alarm.tone-major{
+    border-color:rgba(217,119,6,0.18);
+    background:linear-gradient(180deg,rgba(255,248,234,0.98) 0%,rgba(255,240,214,1) 100%);
+  }
+
+  body.light-theme #mobile-v2-root .m2-master-alarm.tone-warning{
+    border-color:rgba(202,138,4,0.18);
+    background:linear-gradient(180deg,rgba(255,250,219,0.98) 0%,rgba(255,244,193,1) 100%);
+  }
+
+  #mobile-v2-root .m2-master-alarm-copy{
+    min-width:0;
+    flex:1 1 auto;
+  }
+
+  #mobile-v2-root .m2-master-alarm-kicker{
+    color:#ffd4dc;
+    font-family:"Rajdhani",sans-serif;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
+
+  #mobile-v2-root .m2-master-alarm-title{
+    margin-top:4px;
+    color:#fff4f6;
+    font-family:"Rajdhani",sans-serif;
+    font-size:15px;
+    font-weight:800;
+    line-height:1.14;
+  }
+
+  #mobile-v2-root .m2-master-alarm-text{
+    margin-top:4px;
+    color:#fecdd3;
+    font-family:"Rajdhani",sans-serif;
+    font-size:12px;
+    font-weight:700;
+    line-height:1.24;
+  }
+
+  body.light-theme #mobile-v2-root .m2-master-alarm-kicker{
+    color:#9d174d;
+  }
+
+  body.light-theme #mobile-v2-root .m2-master-alarm-title{
+    color:#4a1020;
+  }
+
+  body.light-theme #mobile-v2-root .m2-master-alarm-text{
+    color:#7a2941;
+  }
+
+  #mobile-v2-root .m2-master-alarm-actions{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    flex:0 0 auto;
+  }
+
+  #mobile-v2-root .m2-master-alarm-btn{
+    appearance:none;
+    border:1px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.08);
+    color:#fff7f8;
+    min-height:34px;
+    border-radius:999px;
+    padding:0 12px;
+    font-family:"Rajdhani",sans-serif;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  #mobile-v2-root .m2-master-alarm-btn.is-ack{
+    background:rgba(255,245,247,0.96);
+    color:#7f1d1d;
+    border-color:rgba(255,255,255,0.42);
+  }
+
+  body.light-theme #mobile-v2-root .m2-master-alarm-btn{
+    background:rgba(255,255,255,0.7);
+    color:#5b1730;
+    border-color:rgba(157,23,77,0.12);
+  }
+
+  body.light-theme #mobile-v2-root .m2-master-alarm-btn.is-ack{
+    background:linear-gradient(180deg,#be123c 0%,#9f1239 100%);
+    color:#fff5f7;
+    border-color:transparent;
   }
 
   #mobile-v2-root .m2-card,

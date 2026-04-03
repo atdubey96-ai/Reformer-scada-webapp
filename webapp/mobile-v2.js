@@ -422,8 +422,12 @@
     if(!force && (now - lastAlarmRefreshAt) < 5000) return;
     lastAlarmRefreshAt = now;
     try{
-      if(typeof window.rebuildWallAlarms === "function") window.rebuildWallAlarms();
-      if(typeof window.rebuildFreqAlarms === "function") window.rebuildFreqAlarms();
+      if(typeof window.syncMasterAlarmBanner === "function"){
+        window.syncMasterAlarmBanner();
+      }else{
+        if(typeof window.rebuildWallAlarms === "function") window.rebuildWallAlarms();
+        if(typeof window.rebuildFreqAlarms === "function") window.rebuildFreqAlarms();
+      }
       if(typeof window.updateAlarmTabBadge === "function") window.updateAlarmTabBadge();
     }catch(e){}
   }
@@ -910,6 +914,55 @@
       return window.buildAlarmChipSummary(alarm);
     }
     return String(alarm && (alarm.desc || alarm.action || "") || "");
+  }
+
+  function getAlarmStableKeyLocal(alarm){
+    if(typeof window.getAlarmStableKey === "function"){
+      return window.getAlarmStableKey(alarm);
+    }
+    return [
+      alarm && alarm.type || "",
+      alarm && alarm.wall || "",
+      alarm && alarm.sev || "",
+      alarm && alarm.desc || "",
+      alarm && alarm.action || ""
+    ].join("|");
+  }
+
+  function getLeadActiveAlarm(active){
+    return (active || []).slice().sort(function(a, b){
+      var sevDiff = severityRank(getAlarmTone(b)) - severityRank(getAlarmTone(a));
+      if(sevDiff !== 0) return sevDiff;
+      var ta = parseDateSafe(a && a.ts);
+      var tb = parseDateSafe(b && b.ts);
+      return (tb ? tb.getTime() : 0) - (ta ? ta.getTime() : 0);
+    })[0] || null;
+  }
+
+  function buildMobileAlarmRibbonHtml(){
+    var active = getActiveAlarms();
+    if(!active.length) return "";
+    var reasonKey = typeof window.currentAlarmReasonKey === "string" && window.currentAlarmReasonKey
+      ? window.currentAlarmReasonKey
+      : active.map(getAlarmStableKeyLocal).join("||");
+    var silencedKey = typeof window.silencedAlarmReasonKey === "string" ? window.silencedAlarmReasonKey : "";
+    if(reasonKey && reasonKey === silencedKey) return "";
+    var lead = getLeadActiveAlarm(active);
+    if(!lead) return "";
+    var tone = severityTone(getAlarmTone(lead));
+    var countCopy = active.length > 1 ? (active.length + " active alarms") : "1 active alarm";
+    return ''
+      + '<div class="m2-master-alarm tone-' + tone + '">'
+      +   '<div class="m2-master-alarm-copy">'
+      +     '<div class="m2-master-alarm-kicker">' + escapeHtml(countCopy) + '</div>'
+      +     '<div class="m2-master-alarm-title">' + escapeHtml(getAlarmTitle(lead)) + '</div>'
+      +     '<div class="m2-master-alarm-text">' + escapeHtml(getAlarmSummary(lead)) + '</div>'
+      +   '</div>'
+      +   '<div class="m2-master-alarm-actions">'
+      +     '<button class="m2-master-alarm-btn" type="button" data-action="open-alarm-banner">Open</button>'
+      +     '<button class="m2-master-alarm-btn is-ack" type="button" data-action="ack-banner-alarm">Acknowledge</button>'
+      +   '</div>'
+      + '</div>';
   }
 
   function computeHealthScore(){
@@ -1837,8 +1890,9 @@
   }
 
   function buildShellHtml(){
+    var alarmRibbon = buildMobileAlarmRibbonHtml();
     return ''
-      + '<div class="m2-shell">'
+      + '<div class="m2-shell' + (alarmRibbon ? ' has-alert-ribbon' : '') + '">'
       +   '<header class="m2-head">'
       +     '<div class="m2-brand">'
       +       '<div class="m2-brand-kicker">Industrial monitoring</div>'
@@ -1865,6 +1919,7 @@
       +     buildNavButtonHtml("alarms", "ALARMS")
       +   '</nav>'
       + '</div>'
+      + alarmRibbon
       + buildSheetHtml();
   }
 
@@ -2239,6 +2294,20 @@
     }
     if(action === "logout-shell"){
       if(typeof window.logout === "function") window.logout();
+      return;
+    }
+    if(action === "open-alarm-banner"){
+      state.activeTab = "alarms";
+      persistState();
+      scheduleRender();
+      return;
+    }
+    if(action === "ack-banner-alarm"){
+      if(typeof window.acknowledgeAlarm === "function"){
+        window.acknowledgeAlarm();
+      }
+      ensureAlarmDataFresh(true);
+      scheduleRender();
       return;
     }
     if(action === "ack-all"){
