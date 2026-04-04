@@ -20,6 +20,7 @@ NS_DCTERMS = "http://purl.org/dc/terms/"
 NS_DCMITYPE = "http://purl.org/dc/dcmitype/"
 NS_XSI = "http://www.w3.org/2001/XMLSchema-instance"
 NS_VT = "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
+NS_APP = "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"
 
 
 ET.register_namespace("", NS_MAIN)
@@ -292,27 +293,24 @@ def build_core_xml() -> bytes:
 
 
 def build_app_xml() -> bytes:
-    properties = ET.Element("Properties", {
-        "xmlns": "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties",
-        "xmlns:vt": NS_VT,
-    })
-    ET.SubElement(properties, "Application").text = "Microsoft Excel"
-    ET.SubElement(properties, "DocSecurity").text = "0"
-    ET.SubElement(properties, "ScaleCrop").text = "false"
-    headings = ET.SubElement(properties, "HeadingPairs")
+    properties = ET.Element(f"{{{NS_APP}}}Properties")
+    ET.SubElement(properties, f"{{{NS_APP}}}Application").text = "Microsoft Excel"
+    ET.SubElement(properties, f"{{{NS_APP}}}DocSecurity").text = "0"
+    ET.SubElement(properties, f"{{{NS_APP}}}ScaleCrop").text = "false"
+    headings = ET.SubElement(properties, f"{{{NS_APP}}}HeadingPairs")
     vector = ET.SubElement(headings, f"{{{NS_VT}}}vector", {"size": "2", "baseType": "variant"})
     variant_1 = ET.SubElement(vector, f"{{{NS_VT}}}variant")
     ET.SubElement(variant_1, f"{{{NS_VT}}}lpstr").text = "Worksheets"
     variant_2 = ET.SubElement(vector, f"{{{NS_VT}}}variant")
     ET.SubElement(variant_2, f"{{{NS_VT}}}i4").text = "1"
-    titles = ET.SubElement(properties, "TitlesOfParts")
+    titles = ET.SubElement(properties, f"{{{NS_APP}}}TitlesOfParts")
     title_vector = ET.SubElement(titles, f"{{{NS_VT}}}vector", {"size": "1", "baseType": "lpstr"})
     ET.SubElement(title_vector, f"{{{NS_VT}}}lpstr").text = "Sheet1"
-    ET.SubElement(properties, "Company").text = ""
-    ET.SubElement(properties, "LinksUpToDate").text = "false"
-    ET.SubElement(properties, "SharedDoc").text = "false"
-    ET.SubElement(properties, "HyperlinksChanged").text = "false"
-    ET.SubElement(properties, "AppVersion").text = "16.0300"
+    ET.SubElement(properties, f"{{{NS_APP}}}Company").text = ""
+    ET.SubElement(properties, f"{{{NS_APP}}}LinksUpToDate").text = "false"
+    ET.SubElement(properties, f"{{{NS_APP}}}SharedDoc").text = "false"
+    ET.SubElement(properties, f"{{{NS_APP}}}HyperlinksChanged").text = "false"
+    ET.SubElement(properties, f"{{{NS_APP}}}AppVersion").text = "16.0300"
     return ET.tostring(properties, encoding="utf-8", xml_declaration=True)
 
 
