@@ -185,7 +185,7 @@ body.is-operator #vp{
     </div>
   </div>
   <div id="vp">
-    <div id="hint">DRAG TO ROTATE · DOUBLE-TAP FULLSCREEN</div>
+    <div id="hint">DRAG TO ROTATE · DOUBLE-TAP BURNER TO EDIT · DOUBLE-TAP EMPTY AREA FULLSCREEN</div>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -604,11 +604,11 @@ function isFullscreen(){
 
 function refreshHint(){
   const fullscreenText = isFullscreen()
-    ? "DOUBLE-TAP EXIT FULLSCREEN"
-    : "DOUBLE-TAP FULLSCREEN";
+    ? "DOUBLE-TAP EMPTY AREA EXIT FULLSCREEN"
+    : "DOUBLE-TAP EMPTY AREA FULLSCREEN";
   hint.textContent = viewMode === "inside-prep"
     ? "INSIDE PREP · FACE7 + FACE8 THROUGH UPPER LEFT PEEPHOLE · " + fullscreenText
-    : "DRAG TO ROTATE · " + fullscreenText;
+    : "DRAG TO ROTATE · DOUBLE-TAP BURNER TO EDIT · " + fullscreenText;
 }
 
 function canRenderNow(){
@@ -3995,6 +3995,8 @@ let lastFrameTs = 0;
 let hoverPointerClientX = null;
 let hoverPointerClientY = null;
 let viewportCursorMode = "";
+let lastTapType = "";
+let lastTapKey = "";
 
 function normalizeAngle(angle){
   let a = angle;
@@ -4109,6 +4111,12 @@ function stopDrag(){
   markDirty();
 }
 
+function clearTapGestureMemory(){
+  lastTapAt = 0;
+  lastTapType = "";
+  lastTapKey = "";
+}
+
 vp.addEventListener("pointerdown", function(event){
   if(event.pointerType === "mouse" && event.button !== 0) return;
   postCuboidHostMessage("cuboid-dismiss-burner-editor");
@@ -4148,22 +4156,31 @@ function endPointerGesture(event){
     refreshViewportCursorFromHover();
   }
   if(!wasTapCandidate){
-    lastTapAt = 0;
+    clearTapGestureMemory();
     return;
   }
   var burnerHit = findWallBurnerTapHit(event.clientX, event.clientY);
+  const now = Date.now();
   if(burnerHit){
-    postCuboidHostMessage("cuboid-open-burner-editor", burnerHit);
-    lastTapAt = 0;
+    var burnerKey = burnerHit.wallName + ":" + burnerHit.rowIndex + ":" + burnerHit.burnerIndex;
+    if((now - lastTapAt) < 320 && lastTapType === "burner" && lastTapKey === burnerKey){
+      postCuboidHostMessage("cuboid-open-burner-editor", burnerHit);
+      clearTapGestureMemory();
+      return;
+    }
+    lastTapAt = now;
+    lastTapType = "burner";
+    lastTapKey = burnerKey;
     return;
   }
-  const now = Date.now();
-  if(now - lastTapAt < 320){
+  if((now - lastTapAt) < 320 && lastTapType === "blank"){
     toggleFullscreen();
-    lastTapAt = 0;
+    clearTapGestureMemory();
     return;
   }
   lastTapAt = now;
+  lastTapType = "blank";
+  lastTapKey = "";
 }
 
 vp.addEventListener("pointerup", endPointerGesture);
@@ -4186,6 +4203,7 @@ window.addEventListener("blur", function(){
   activePointerId = null;
   hoverPointerClientX = null;
   hoverPointerClientY = null;
+  clearTapGestureMemory();
   stopDrag();
   refreshViewportCursorFromHover();
 });
