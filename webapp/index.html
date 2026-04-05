@@ -2525,17 +2525,6 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .cuboid-burner-editor{
   z-index:1915;
 }
-.cuboid-burner-editor-note{
-  margin-top:12px;
-  padding-top:10px;
-  border-top:1px solid rgba(148,163,184,0.14);
-  font-size:10px;
-  font-weight:700;
-  color:rgba(190,204,224,0.76);
-}
-.cuboid-burner-editor-note strong{
-  color:#f8fbff;
-}
 body.light-theme .burner-cell-editor{
   background:linear-gradient(180deg,rgba(248,251,255,0.98),rgba(234,241,248,0.98));
   border-color:rgba(91,122,165,0.34);
@@ -24527,9 +24516,7 @@ function ensureCuboidBurnerEditor(){
         + '<span class="burner-cell-editor-value" data-cuboid-burner-opening>0%</span>'
       + '</div>'
       + '<input class="burner-cell-editor-slider" data-cuboid-burner-slider type="range" min="' + BURNER_OPENING_MIN + '" max="' + BURNER_OPENING_MAX + '" step="' + BURNER_OPENING_STEP + '" value="100">'
-      + '<div class="burner-cell-editor-scale"><span>0</span><span></span><span>25</span><span></span><span>50</span><span></span><span>75</span><span></span><span></span><span></span><span>100</span></div>'
-    + '</div>'
-    + '<div class="cuboid-burner-editor-note">Unsaved until you click <strong>SAVE BURNER DATA</strong>.</div>';
+    + '</div>';
   document.body.appendChild(editor);
   editor.addEventListener("click", function(ev){ ev.stopPropagation(); });
   editor.addEventListener("click", function(ev){

@@ -46,7 +46,9 @@ body{color:rgba(140,180,220,0.85);}
   cursor:grab;
   touch-action:none;
 }
-#vp:active{cursor:grabbing;}
+#vp:active,
+#vp.vp-dragging{cursor:grabbing;}
+#vp.vp-burner-hover:not(.vp-dragging){cursor:pointer;}
 #vp canvas{
   position:absolute;
   inset:0;
@@ -562,6 +564,31 @@ function findWallBurnerTapHit(clientX, clientY){
     anchorClientX: rect.left + best.screenX,
     anchorClientY: rect.top + best.screenY
   };
+}
+
+function setViewportCursorMode(mode){
+  var nextMode = String(mode || "");
+  if(viewportCursorMode === nextMode) return;
+  viewportCursorMode = nextMode;
+  if(!vp || !vp.classList) return;
+  vp.classList.toggle("vp-dragging", nextMode === "dragging");
+  vp.classList.toggle("vp-burner-hover", nextMode === "burner");
+}
+
+function refreshViewportCursorFromHover(){
+  if(isDragging || activePointerId != null){
+    setViewportCursorMode("dragging");
+    return;
+  }
+  if(viewMode !== "shell"){
+    setViewportCursorMode("");
+    return;
+  }
+  if(hoverPointerClientX == null || hoverPointerClientY == null){
+    setViewportCursorMode("");
+    return;
+  }
+  setViewportCursorMode(findWallBurnerTapHit(hoverPointerClientX, hoverPointerClientY) ? "burner" : "");
 }
 
 function viewportWidth(){ return vp.clientWidth; }
@@ -3965,6 +3992,9 @@ let dragDistance = 0;
 let touchMoved = false;
 let lastTapAt = 0;
 let lastFrameTs = 0;
+let hoverPointerClientX = null;
+let hoverPointerClientY = null;
+let viewportCursorMode = "";
 
 function normalizeAngle(angle){
   let a = angle;
@@ -4025,6 +4055,7 @@ function setShellView(angle){
   targetCameraPos.copy(shellCameraPos);
   targetLookAt.copy(shellLookAt);
   refreshHint();
+  refreshViewportCursorFromHover();
   markDirty();
 }
 
@@ -4035,6 +4066,7 @@ function setInsidePrepView(){
   setRotationTarget(0);
   applyInsidePrepTargets();
   refreshHint();
+  refreshViewportCursorFromHover();
   markDirty();
 }
 
@@ -4046,6 +4078,7 @@ function startDrag(clientX){
   targetRotY = rotY;
   dragDistance = 0;
   touchMoved = false;
+  setViewportCursorMode("dragging");
   markDirty();
 }
 
@@ -4072,6 +4105,7 @@ function stopDrag(){
   if(!isDragging) return;
   isDragging = false;
   snapToNearestFace();
+  refreshViewportCursorFromHover();
   markDirty();
 }
 
@@ -4079,14 +4113,25 @@ vp.addEventListener("pointerdown", function(event){
   if(event.pointerType === "mouse" && event.button !== 0) return;
   postCuboidHostMessage("cuboid-dismiss-burner-editor");
   if(viewMode === "inside-prep") return;
+  if(event.pointerType === "mouse"){
+    hoverPointerClientX = event.clientX;
+    hoverPointerClientY = event.clientY;
+  }
   activePointerId = event.pointerId;
   if(vp.setPointerCapture) vp.setPointerCapture(event.pointerId);
   startDrag(event.clientX);
 });
 
 vp.addEventListener("pointermove", function(event){
-  if(activePointerId !== event.pointerId) return;
-  moveDrag(event.clientX);
+  if(activePointerId === event.pointerId){
+    moveDrag(event.clientX);
+    return;
+  }
+  if(event.pointerType === "mouse"){
+    hoverPointerClientX = event.clientX;
+    hoverPointerClientY = event.clientY;
+    refreshViewportCursorFromHover();
+  }
 });
 
 function endPointerGesture(event){
@@ -4097,6 +4142,11 @@ function endPointerGesture(event){
   activePointerId = null;
   const wasTapCandidate = dragDistance <= TAP_MOVE_TOLERANCE && !touchMoved;
   stopDrag();
+  if(event.pointerType === "mouse"){
+    hoverPointerClientX = event.clientX;
+    hoverPointerClientY = event.clientY;
+    refreshViewportCursorFromHover();
+  }
   if(!wasTapCandidate){
     lastTapAt = 0;
     return;
@@ -4118,15 +4168,26 @@ function endPointerGesture(event){
 
 vp.addEventListener("pointerup", endPointerGesture);
 vp.addEventListener("pointercancel", endPointerGesture);
+vp.addEventListener("pointerleave", function(event){
+  if(event.pointerType === "mouse" && activePointerId == null){
+    hoverPointerClientX = null;
+    hoverPointerClientY = null;
+    refreshViewportCursorFromHover();
+  }
+});
 vp.addEventListener("lostpointercapture", function(event){
   if(activePointerId !== event.pointerId) return;
   activePointerId = null;
   stopDrag();
+  refreshViewportCursorFromHover();
 });
 
 window.addEventListener("blur", function(){
   activePointerId = null;
+  hoverPointerClientX = null;
+  hoverPointerClientY = null;
   stopDrag();
+  refreshViewportCursorFromHover();
 });
 
 vp.addEventListener("dblclick", function(event){
@@ -4250,6 +4311,9 @@ function animate(now){
   }
 
   rigGroup.rotation.y = rotY;
+  if(hoverPointerClientX != null && hoverPointerClientY != null && activePointerId == null){
+    refreshViewportCursorFromHover();
+  }
   if(!frameNeedsRender) return;
 
   updateFaceLegend();
