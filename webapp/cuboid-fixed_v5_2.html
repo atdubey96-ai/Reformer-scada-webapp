@@ -4208,11 +4208,6 @@ window.addEventListener("blur", function(){
   refreshViewportCursorFromHover();
 });
 
-vp.addEventListener("dblclick", function(event){
-  event.preventDefault();
-  toggleFullscreen();
-});
-
 btnFront.addEventListener("click", function(){ setShellView(0); });
 btnBack.addEventListener("click", function(){ setShellView(Math.PI); });
 btnLeft.addEventListener("click", function(){ setShellView(-Math.PI / 2); });
