@@ -10030,6 +10030,816 @@ function updateHeatMapAdjustmentLogic(snapshot){
   setTargets(html || '<div class="hm-adjust-empty">No adjustment data available.</div>');
 }
 
+var CUBOID_AI_ZONE_META = [
+  { key:"abBot", rowKey:"ab-bot", label:"AB Bottom", priority:[{wall:"A",row:1},{wall:"B",row:1},{wall:"A",row:2},{wall:"B",row:2}] },
+  { key:"abTop", rowKey:"ab-top", label:"AB Top", priority:[{wall:"A",row:4},{wall:"B",row:4},{wall:"A",row:3},{wall:"B",row:3}] },
+  { key:"cdBot", rowKey:"cd-bot", label:"CD Bottom", priority:[{wall:"C",row:1},{wall:"D",row:1},{wall:"C",row:2},{wall:"D",row:2}] },
+  { key:"cdTop", rowKey:"cd-top", label:"CD Top", priority:[{wall:"C",row:4},{wall:"D",row:4},{wall:"C",row:3},{wall:"D",row:3}] }
+];
+var cuboidAiAdvisorState = { digest:"", runToken:0 };
+
+function cuboidAiGetRunButton(){
+  return document.getElementById("stack-ai-run-btn");
+}
+
+function cuboidAiGetBodyEl(){
+  return document.getElementById("stack-ai-body");
+}
+
+function cuboidAiSetStatus(text, tone){
+  var el = document.getElementById("stack-ai-status");
+  if(!el) return;
+  el.className = "stack-ai-status" + (tone ? (" is-" + tone) : "");
+  el.textContent = String(text || "");
+}
+
+function cuboidAiSetBodyHtml(html){
+  var body = cuboidAiGetBodyEl();
+  if(body) body.innerHTML = String(html || "");
+}
+
+function cuboidAiSetRunBusy(isBusy, label){
+  var btn = cuboidAiGetRunButton();
+  if(!btn) return;
+  btn.disabled = !!isBusy;
+  btn.textContent = isBusy ? String(label || "Analyzing...") : "Start AI Prediction";
+}
+
+function cuboidAiFormatEntryStamp(rawDt){
+  return formatTwinCuboidEntryStamp(rawDt || "");
+}
+
+function cuboidAiReadEntryNumber(entry, key){
+  if(!entry || !key) return NaN;
+  if(key === "hguLoad"){
+    return typeof normalizeTdHguLoadPercent === "function"
+      ? normalizeTdHguLoadPercent(entry[key])
+      : parseSavedEntryFilterNumber(entry[key]);
+  }
+  return parseSavedEntryFilterNumber(entry[key]);
+}
+
+function cuboidAiFormatValue(value, decimals){
+  var n = Number(value);
+  if(!isFinite(n)) return "—";
+  var places = typeof decimals === "number" ? decimals : 1;
+  if(Math.abs(n - Math.round(n)) < 0.000001) return String(Math.round(n));
+  return n.toFixed(places);
+}
+
+function cuboidAiFormatSigned(value, unit, decimals){
+  var n = Number(value);
+  if(!isFinite(n)) return "—";
+  var sign = n > 0 ? "+" : "";
+  return sign + cuboidAiFormatValue(n, decimals) + (unit || "");
+}
+
+function cuboidAiMedian(values){
+  var nums = (Array.isArray(values) ? values : []).filter(function(item){
+    return isFinite(Number(item));
+  }).map(function(item){
+    return Number(item);
+  }).sort(function(a, b){
+    return a - b;
+  });
+  if(!nums.length) return NaN;
+  var mid = Math.floor(nums.length / 2);
+  if(nums.length % 2) return nums[mid];
+  return (nums[mid - 1] + nums[mid]) / 2;
+}
+
+function cuboidAiGetZoneMeta(zoneKey){
+  for(var i = 0; i < CUBOID_AI_ZONE_META.length; i++){
+    if(CUBOID_AI_ZONE_META[i].key === zoneKey) return CUBOID_AI_ZONE_META[i];
+  }
+  return null;
+}
+
+function cuboidAiGetZoneValuesFromSnapshot(snapshot, zoneKey){
+  if(!snapshot || !zoneKey) return [];
+  var vals = snapshot[zoneKey];
+  return Array.isArray(vals) ? vals.slice() : [];
+}
+
+function cuboidAiGetZoneValuesFromEntry(entry, zoneKey){
+  var meta = cuboidAiGetZoneMeta(zoneKey);
+  if(!meta || !entry) return [];
+  return cuboidBuildPeepRow(entry, meta.rowKey);
+}
+
+function cuboidAiBuildZoneProfile(values){
+  var stats = hmZoneStats(values);
+  var out = {
+    stats: stats,
+    highCount: 0,
+    lowCount: 0,
+    criticalHighCount: 0,
+    criticalLowCount: 0,
+    highSeverity: 0,
+    lowSeverity: 0,
+    hottest: { ph:0, temp:NaN },
+    coldest: { ph:0, temp:NaN }
+  };
+  if(!stats || !stats.hasData) return out;
+  for(var i = 0; i < values.length; i++){
+    var temp = Number(values[i]);
+    if(!isFinite(temp)) continue;
+    if(!isFinite(out.hottest.temp) || temp > out.hottest.temp){
+      out.hottest = { ph:i + 1, temp:temp };
+    }
+    if(!isFinite(out.coldest.temp) || temp < out.coldest.temp){
+      out.coldest = { ph:i + 1, temp:temp };
+    }
+    if(temp > 970){
+      out.highCount++;
+      out.highSeverity += (temp - 970);
+      if(temp > 985){
+        out.criticalHighCount++;
+        out.highSeverity += (temp - 985) * 1.8;
+      }
+    }
+    if(temp < 910){
+      out.lowCount++;
+      out.lowSeverity += (910 - temp);
+      if(temp < 890){
+        out.criticalLowCount++;
+        out.lowSeverity += (890 - temp) * 1.8;
+      }
+    }
+  }
+  return out;
+}
+
+function cuboidAiBuildOverallProfile(zones){
+  var allTemps = [];
+  var highCount = 0;
+  var lowCount = 0;
+  var hottestZoneKey = "";
+  var coldestZoneKey = "";
+  var hottestTemp = NaN;
+  var coldestTemp = NaN;
+  Object.keys(zones || {}).forEach(function(zoneKey){
+    var zone = zones[zoneKey];
+    if(!zone || !zone.stats || !zone.stats.hasData) return;
+    highCount += zone.highCount || 0;
+    lowCount += zone.lowCount || 0;
+    if(isFinite(zone.hottest.temp) && (!isFinite(hottestTemp) || zone.hottest.temp > hottestTemp)){
+      hottestTemp = zone.hottest.temp;
+      hottestZoneKey = zoneKey;
+    }
+    if(isFinite(zone.coldest.temp) && (!isFinite(coldestTemp) || zone.coldest.temp < coldestTemp)){
+      coldestTemp = zone.coldest.temp;
+      coldestZoneKey = zoneKey;
+    }
+    CUBOID_AI_ZONE_META.forEach(function(meta){
+      if(meta.key !== zoneKey) return;
+      var vals = zone.values || [];
+      for(var i = 0; i < vals.length; i++){
+        var n = Number(vals[i]);
+        if(isFinite(n)) allTemps.push(n);
+      }
+    });
+  });
+  var overallStats = hmZoneStats(allTemps);
+  return {
+    stats: overallStats,
+    highCount: highCount,
+    lowCount: lowCount,
+    hottestZoneKey: hottestZoneKey,
+    coldestZoneKey: coldestZoneKey,
+    hottestTemp: hottestTemp,
+    coldestTemp: coldestTemp
+  };
+}
+
+function cuboidAiBuildStateFingerprint(hmData){
+  var counts = { B:0, O:0, N:0, C:0 };
+  var walls = ["A","B","C","D"];
+  var total = 0;
+  for(var wi = 0; wi < walls.length; wi++){
+    var wall = walls[wi];
+    var rows = hmData && hmData[wall];
+    for(var ri = 0; ri < 6; ri++){
+      for(var bi = 0; bi < 15; bi++){
+        var state = hmBurnerStateFromData(hmData, wall, ri + 1, bi + 1);
+        counts[state] = (counts[state] || 0) + 1;
+        total++;
+      }
+    }
+  }
+  return { counts:counts, total:total };
+}
+
+function cuboidAiBuildOpeningFingerprint(openingData, hmData){
+  var walls = ["A","B","C","D"];
+  var sumAll = 0;
+  var countAll = 0;
+  var sumLive = 0;
+  var countLive = 0;
+  for(var wi = 0; wi < walls.length; wi++){
+    var wall = walls[wi];
+    for(var ri = 0; ri < 6; ri++){
+      for(var bi = 0; bi < 15; bi++){
+        var state = hmBurnerStateFromData(hmData, wall, ri + 1, bi + 1);
+        var raw = openingData && openingData[wall] && openingData[wall][ri]
+          ? openingData[wall][ri][bi]
+          : "";
+        var val = typeof normalizeBurnerOpeningValue === "function"
+          ? normalizeBurnerOpeningValue(raw, state)
+          : parseSavedEntryFilterNumber(raw);
+        if(!isFinite(val)) continue;
+        sumAll += val;
+        countAll++;
+        if(state !== "C"){
+          sumLive += val;
+          countLive++;
+        }
+      }
+    }
+  }
+  return {
+    avgAll: countAll ? (sumAll / countAll) : NaN,
+    avgLive: countLive ? (sumLive / countLive) : NaN
+  };
+}
+
+function cuboidAiBuildProfileFromEntry(entry){
+  if(!entry) return null;
+  var hmData = getEntryBurnerSnapshot(entry) || cuboidLegendDefaultHmData();
+  var openingData = getEntryBurnerOpeningSnapshot(entry, hmData) || buildDefaultBurnerOpeningData(hmData);
+  var zones = {};
+  for(var i = 0; i < CUBOID_AI_ZONE_META.length; i++){
+    var meta = CUBOID_AI_ZONE_META[i];
+    var vals = cuboidAiGetZoneValuesFromEntry(entry, meta.key);
+    var zone = cuboidAiBuildZoneProfile(vals);
+    zone.values = vals;
+    zones[meta.key] = zone;
+  }
+  return {
+    entry: entry,
+    shift: normalizeTwinCuboidShift(entry.shift || "All"),
+    dt: String(entry.dt || ""),
+    timeMs: Date.parse(String(entry.dt || "")),
+    process: {
+      hguLoad: cuboidAiReadEntryNumber(entry, "hguLoad"),
+      abCot: cuboidAiReadEntryNumber(entry, "abCot"),
+      cdCot: cuboidAiReadEntryNumber(entry, "cdCot"),
+      flueGas: cuboidAiReadEntryNumber(entry, "flueGas"),
+      excessO2: cuboidAiReadEntryNumber(entry, "excessO2"),
+      preRefMin: cuboidAiReadEntryNumber(entry, "preRefMin"),
+      methaneSlip: cuboidAiReadEntryNumber(entry, "methaneSlip")
+    },
+    zones: zones,
+    overall: cuboidAiBuildOverallProfile(zones),
+    stateFingerprint: cuboidAiBuildStateFingerprint(hmData),
+    openingFingerprint: cuboidAiBuildOpeningFingerprint(openingData, hmData),
+    hmData: hmData,
+    openingData: openingData
+  };
+}
+
+function cuboidAiBuildCurrentProfile(snapshot, entry){
+  if(!snapshot || !entry) return null;
+  var hmData = snapshot.hmData || cuboidLegendDefaultHmData();
+  var openingData = snapshot.openingData || buildDefaultBurnerOpeningData(hmData);
+  var zones = {};
+  for(var i = 0; i < CUBOID_AI_ZONE_META.length; i++){
+    var meta = CUBOID_AI_ZONE_META[i];
+    var vals = cuboidAiGetZoneValuesFromSnapshot(snapshot, meta.key);
+    var zone = cuboidAiBuildZoneProfile(vals);
+    zone.values = vals;
+    zones[meta.key] = zone;
+  }
+  return {
+    entry: entry,
+    shift: normalizeTwinCuboidShift((snapshot.entryShift || entry.shift || "All")),
+    dt: String(snapshot.entryDt || entry.dt || ""),
+    timeMs: Date.parse(String(entry.dt || snapshot.entryDt || "")),
+    process: {
+      hguLoad: cuboidAiReadEntryNumber(entry, "hguLoad"),
+      abCot: cuboidAiReadEntryNumber(entry, "abCot"),
+      cdCot: cuboidAiReadEntryNumber(entry, "cdCot"),
+      flueGas: cuboidAiReadEntryNumber(entry, "flueGas"),
+      excessO2: cuboidAiReadEntryNumber(entry, "excessO2"),
+      preRefMin: cuboidAiReadEntryNumber(entry, "preRefMin"),
+      methaneSlip: cuboidAiReadEntryNumber(entry, "methaneSlip")
+    },
+    zones: zones,
+    overall: cuboidAiBuildOverallProfile(zones),
+    stateFingerprint: cuboidAiBuildStateFingerprint(hmData),
+    openingFingerprint: cuboidAiBuildOpeningFingerprint(openingData, hmData),
+    hmData: hmData,
+    openingData: openingData
+  };
+}
+
+function cuboidAiDetermineFocus(profile){
+  if(!profile || !profile.zones) return { type:"empty", zoneKey:"", zoneLabel:"No data", severity:0 };
+  var best = null;
+  for(var i = 0; i < CUBOID_AI_ZONE_META.length; i++){
+    var meta = CUBOID_AI_ZONE_META[i];
+    var zone = profile.zones[meta.key];
+    if(!zone || !zone.stats || !zone.stats.hasData) continue;
+    var highSeverity = Number(zone.highSeverity || 0);
+    var lowSeverity = Number(zone.lowSeverity || 0);
+    var severity = Math.max(highSeverity, lowSeverity);
+    if(severity <= 0) continue;
+    var type = highSeverity >= lowSeverity ? "high" : "low";
+    if(!best || severity > best.severity){
+      best = {
+        type: type,
+        zoneKey: meta.key,
+        zoneLabel: meta.label,
+        severity: severity,
+        zone: zone
+      };
+    }
+  }
+  if(best) return best;
+  return {
+    type:"stable",
+    zoneKey:"",
+    zoneLabel:"Balanced",
+    severity:0,
+    zone:null
+  };
+}
+
+function cuboidAiCompareProfiles(currentProfile, candidateProfile){
+  var distance = 0;
+  function addDiff(a, b, range, weight){
+    var na = Number(a);
+    var nb = Number(b);
+    if(!isFinite(na) || !isFinite(nb)) return;
+    distance += Math.min(Math.abs(na - nb) / range, 4) * weight;
+  }
+
+  addDiff(currentProfile.process.hguLoad, candidateProfile.process.hguLoad, 12, 1.15);
+  addDiff(currentProfile.process.abCot, candidateProfile.process.abCot, 25, 0.95);
+  addDiff(currentProfile.process.cdCot, candidateProfile.process.cdCot, 25, 0.95);
+  addDiff(currentProfile.process.flueGas, candidateProfile.process.flueGas, 30, 0.9);
+  addDiff(currentProfile.process.excessO2, candidateProfile.process.excessO2, 1.1, 0.75);
+  addDiff(currentProfile.process.preRefMin, candidateProfile.process.preRefMin, 28, 0.55);
+  addDiff(currentProfile.process.methaneSlip, candidateProfile.process.methaneSlip, 1.2, 0.75);
+
+  for(var i = 0; i < CUBOID_AI_ZONE_META.length; i++){
+    var key = CUBOID_AI_ZONE_META[i].key;
+    var currentZone = currentProfile.zones[key];
+    var candidateZone = candidateProfile.zones[key];
+    if(!currentZone || !candidateZone) continue;
+    addDiff(currentZone.stats.avg, candidateZone.stats.avg, 24, 1.5);
+    addDiff(currentZone.stats.max, candidateZone.stats.max, 32, 0.65);
+    addDiff(currentZone.stats.min, candidateZone.stats.min, 32, 0.55);
+    distance += Math.abs((currentZone.highCount || 0) - (candidateZone.highCount || 0)) * 0.2;
+    distance += Math.abs((currentZone.lowCount || 0) - (candidateZone.lowCount || 0)) * 0.2;
+  }
+
+  var states = ["B","O","N","C"];
+  for(var si = 0; si < states.length; si++){
+    var stateKey = states[si];
+    distance += Math.abs((currentProfile.stateFingerprint.counts[stateKey] || 0) - (candidateProfile.stateFingerprint.counts[stateKey] || 0)) / 42;
+  }
+  addDiff(currentProfile.openingFingerprint.avgLive, candidateProfile.openingFingerprint.avgLive, 22, 0.45);
+  if(currentProfile.shift && candidateProfile.shift && currentProfile.shift === candidateProfile.shift){
+    distance -= 0.8;
+  }
+
+  var score = Math.max(0, Math.min(100, Math.round((100 - distance * 7.8) * 10) / 10));
+  return {
+    score: score,
+    distance: Math.round(distance * 100) / 100
+  };
+}
+
+function cuboidAiFindFollowUpEntry(candidateEntry, ascendingEntries){
+  if(!candidateEntry || !Array.isArray(ascendingEntries) || !ascendingEntries.length) return null;
+  var startIndex = ascendingEntries.indexOf(candidateEntry);
+  var baseMs = Date.parse(String(candidateEntry.dt || ""));
+  if(startIndex < 0 || !isFinite(baseMs)) return null;
+  for(var i = startIndex + 1; i < ascendingEntries.length; i++){
+    var next = ascendingEntries[i];
+    var nextMs = Date.parse(String(next && next.dt || ""));
+    if(!isFinite(nextMs) || nextMs <= baseMs) continue;
+    if(((nextMs - baseMs) / 3600000) > 8) break;
+    return next;
+  }
+  return null;
+}
+
+function cuboidAiSummarizeFollowUp(candidateProfile, nextEntry, focus){
+  if(!candidateProfile || !nextEntry || !focus || !focus.zoneKey) return null;
+  var nextProfile = cuboidAiBuildProfileFromEntry(nextEntry);
+  if(!nextProfile) return null;
+  var beforeZone = candidateProfile.zones[focus.zoneKey];
+  var afterZone = nextProfile.zones[focus.zoneKey];
+  if(!beforeZone || !afterZone || !beforeZone.stats.hasData || !afterZone.stats.hasData) return null;
+  var deltaFocusAvg = Number(afterZone.stats.avg) - Number(beforeZone.stats.avg);
+  var deltaMax = Number(nextProfile.overall.hottestTemp) - Number(candidateProfile.overall.hottestTemp);
+  var verdict = "stable";
+  if(focus.type === "high"){
+    if(deltaFocusAvg <= -8 || deltaMax <= -10) verdict = "good";
+    else if(deltaFocusAvg >= 6 || deltaMax >= 8) verdict = "warn";
+  }else if(focus.type === "low"){
+    if(deltaFocusAvg >= 8) verdict = "good";
+    else if(deltaFocusAvg <= -6) verdict = "warn";
+  }
+  return {
+    nextEntry: nextEntry,
+    nextProfile: nextProfile,
+    deltaFocusAvg: deltaFocusAvg,
+    deltaMax: deltaMax,
+    verdict: verdict
+  };
+}
+
+function cuboidAiBuildFocusedActions(snapshot, focus, log, hist){
+  if(!snapshot || !focus || !focus.zoneKey || (focus.type !== "high" && focus.type !== "low")) return [];
+  var meta = cuboidAiGetZoneMeta(focus.zoneKey);
+  if(!meta) return [];
+  var vals = cuboidAiGetZoneValuesFromSnapshot(snapshot, meta.key);
+  var actions = [];
+  for(var ph = 1; ph <= 15; ph++){
+    var temp = Number(vals[ph - 1]);
+    if(!isFinite(temp)) continue;
+    var plan = hmGetOpeningAdjustmentPlan(temp);
+    if(!plan || plan.mode !== focus.type) continue;
+    var primary = hmPickPriorityBurnerForPeep(snapshot.hmData, meta.priority, ph, "offgas", focus.type, log, hist);
+    var chosen = primary;
+    var fuel = "offgas";
+    if(!chosen){
+      chosen = hmPickPriorityBurnerForPeep(snapshot.hmData, meta.priority, ph, "ng", focus.type, log, hist);
+      fuel = "ng";
+    }
+    var severity = focus.type === "high"
+      ? (temp - 970 + (temp > 985 ? ((temp - 985) * 1.8) : 0))
+      : (910 - temp + (temp < 890 ? ((890 - temp) * 1.8) : 0));
+    if(chosen){
+      var fuelLabel = fuel === "offgas" ? "Off-gas" : "NG";
+      var actionText = (focus.type === "high" && plan.targetOpening > 0 ? "Reduce" : plan.actionWord)
+        + " " + fuelLabel + " at Wall " + chosen.wall + " R" + chosen.row + " B" + chosen.burner
+        + " to " + plan.targetOpening + "%";
+      var noteText = plan.bandLabel + " · " + hmStateTransition(chosen.state, fuel, focus.type);
+      noteText += chosen.cleanedPriority ? " · recently cleaned burner prioritized" : " · row priority applied";
+      actions.push({
+        ph: ph,
+        temp: temp,
+        severity: severity,
+        actionText: actionText,
+        noteText: noteText
+      });
+    }else{
+      actions.push({
+        ph: ph,
+        temp: temp,
+        severity: severity,
+        actionText: "No eligible burner found in the priority rows for PH" + ph + ".",
+        noteText: plan.bandLabel + " · review burner state availability before actioning."
+      });
+    }
+  }
+  actions.sort(function(a, b){
+    return Number(b.severity || 0) - Number(a.severity || 0);
+  });
+  return actions.slice(0, 4);
+}
+
+function cuboidAiBuildParameterWatch(currentProfile, historyProfiles){
+  var meta = [
+    { key:"flueGas", label:"Flue Gas", unit:"°C", threshold:15, note:"above saved median; check draft and excess air before taking large fuel cuts." },
+    { key:"excessO2", label:"Excess O2", unit:" %Vol", threshold:0.45, note:"above saved median; air leakage or over-air may be contributing to high losses." },
+    { key:"methaneSlip", label:"Methane Slip", unit:" %Vol", threshold:0.35, note:"above saved median; keep an eye on reforming stability while changing firing." },
+    { key:"hguLoad", label:"HGU Load", unit:" %", threshold:4, note:"away from your saved median; compare suggestions with current production demand." },
+    { key:"preRefMin", label:"Pre-ref Min", unit:"°C", threshold:12, note:"away from saved median; use it as a secondary check before large burner moves." }
+  ];
+  var items = [];
+  for(var i = 0; i < meta.length; i++){
+    var field = meta[i];
+    var currentVal = Number(currentProfile.process[field.key]);
+    if(!isFinite(currentVal)) continue;
+    var samples = historyProfiles.map(function(profile){
+      return profile && profile.process ? profile.process[field.key] : NaN;
+    }).filter(function(val){
+      return isFinite(Number(val));
+    }).map(function(val){
+      return Number(val);
+    });
+    if(samples.length < 4) continue;
+    var median = cuboidAiMedian(samples);
+    if(!isFinite(median)) continue;
+    var delta = currentVal - median;
+    if(Math.abs(delta) < field.threshold) continue;
+    items.push({
+      label: field.label,
+      delta: delta,
+      text: field.label + " is " + (delta > 0 ? "above" : "below") + " the saved median by " + cuboidAiFormatValue(Math.abs(delta), 1) + field.unit + " and is " + field.note,
+      score: Math.abs(delta) / field.threshold
+    });
+  }
+  items.sort(function(a, b){
+    return Number(b.score || 0) - Number(a.score || 0);
+  });
+  return items.slice(0, 3);
+}
+
+function cuboidAiBuildConfidence(matches){
+  var topScore = matches.length ? Number(matches[0].score || 0) : 0;
+  var withFollowUp = matches.filter(function(item){ return !!item.followUp; }).length;
+  if(withFollowUp >= 3 && topScore >= 70) return { label:"High", tone:"good" };
+  if(matches.length >= 3 && topScore >= 58) return { label:"Medium", tone:"" };
+  return { label:"Low", tone:"warn" };
+}
+
+function cuboidAiBuildPrediction(matches, focus){
+  var followed = matches.filter(function(item){
+    return item && item.followUp;
+  });
+  if(!followed.length || !focus || !focus.zoneKey || (focus.type !== "high" && focus.type !== "low")){
+    return {
+      headline:"No matched follow-up trend was found in the saved history.",
+      detail:"The advisor can still rank local suggestions, but its forward prediction confidence stays limited until more sequential saved cases accumulate."
+    };
+  }
+  var deltaFocusAvg = cuboidAiMedian(followed.map(function(item){
+    return item.followUp.deltaFocusAvg;
+  }));
+  var deltaMax = cuboidAiMedian(followed.map(function(item){
+    return item.followUp.deltaMax;
+  }));
+  var detail = "";
+  if(focus.type === "high"){
+    detail = "Matched cases showed a median " + focus.zoneLabel + " average change of " + cuboidAiFormatSigned(deltaFocusAvg, "°C", 1) + " by the next saved record.";
+    detail += " Overall peak TST moved " + cuboidAiFormatSigned(deltaMax, "°C", 1) + ".";
+  }else{
+    detail = "Matched cases showed a median " + focus.zoneLabel + " average change of " + cuboidAiFormatSigned(deltaFocusAvg, "°C", 1) + " by the next saved record.";
+    detail += " Use the suggestions to lift the low zone without pushing peak TST too high.";
+  }
+  return {
+    headline: focus.type === "high"
+      ? (isFinite(deltaFocusAvg) && deltaFocusAvg < 0 ? "Historical follow-up points toward TST cooling after action." : "Historical follow-up suggests this high-TST condition can stay stubborn.")
+      : (isFinite(deltaFocusAvg) && deltaFocusAvg > 0 ? "Historical follow-up points toward TST recovery after action." : "Historical follow-up suggests the low-TST condition may need a stronger response."),
+    detail: detail
+  };
+}
+
+function cuboidAiBuildResultsHtml(result){
+  var summaryHtml = ''
+    + '<div class="stack-ai-summary-grid">'
+    + '<div class="stack-ai-summary-card">'
+    + '<div class="stack-ai-summary-label">Operating Focus</div>'
+    + '<div class="stack-ai-summary-value">' + hmEscapeHtml(result.focusLabel) + '</div>'
+    + '<div class="stack-ai-summary-note">' + hmEscapeHtml(result.focusNote) + '</div>'
+    + '</div>'
+    + '<div class="stack-ai-summary-card">'
+    + '<div class="stack-ai-summary-label">Confidence</div>'
+    + '<div class="stack-ai-summary-value">' + hmEscapeHtml(result.confidence.label) + '</div>'
+    + '<div class="stack-ai-summary-note">Top historical match score ' + hmEscapeHtml(cuboidAiFormatValue(result.topScore, 1)) + ' / 100</div>'
+    + '</div>'
+    + '<div class="stack-ai-summary-card">'
+    + '<div class="stack-ai-summary-label">Matched Cases</div>'
+    + '<div class="stack-ai-summary-value">' + hmEscapeHtml(String(result.matches.length)) + '</div>'
+    + '<div class="stack-ai-summary-note">' + hmEscapeHtml(String(result.followUpCount)) + ' cases had a saved follow-up record for trend comparison.</div>'
+    + '</div>'
+    + '<div class="stack-ai-summary-card">'
+    + '<div class="stack-ai-summary-label">Data Source</div>'
+    + '<div class="stack-ai-summary-value">' + hmEscapeHtml(result.sourceLabel) + '</div>'
+    + '<div class="stack-ai-summary-note">' + hmEscapeHtml(result.entryStamp) + '</div>'
+    + '</div>'
+    + '</div>';
+
+  var chipHtml = ''
+    + '<div class="stack-ai-chip-row">'
+    + '<span class="stack-ai-chip"><strong>Shift</strong> ' + hmEscapeHtml(result.shiftLabel) + '</span>'
+    + '<span class="stack-ai-chip"><strong>Peak TST</strong> ' + hmEscapeHtml(result.peakLabel) + '</span>'
+    + '<span class="stack-ai-chip"><strong>Band Check</strong> ' + hmEscapeHtml(result.bandLabel) + '</span>'
+    + '</div>';
+
+  var actionHtml = "";
+  if(result.actions.length){
+    for(var i = 0; i < result.actions.length; i++){
+      var action = result.actions[i];
+      actionHtml += ''
+        + '<div class="stack-ai-action-item">'
+        + '<div class="stack-ai-action-top">'
+        + '<div class="stack-ai-action-title">PH' + hmEscapeHtml(String(action.ph)) + ' @ ' + hmEscapeHtml(cuboidAiFormatValue(action.temp, 1)) + '°C · ' + hmEscapeHtml(action.actionText) + '</div>'
+        + '<span class="stack-ai-badge">Priority ' + hmEscapeHtml(String(i + 1)) + '</span>'
+        + '</div>'
+        + '<div class="stack-ai-action-meta">' + hmEscapeHtml(action.noteText) + '</div>'
+        + '</div>';
+    }
+  }else{
+    actionHtml = '<div class="stack-ai-empty">Current TST values are inside the preferred band, so the advisor does not see a strong burner move to prioritize right now.</div>';
+  }
+
+  var watchHtml = "";
+  if(result.parameterWatch.length){
+    for(var wi = 0; wi < result.parameterWatch.length; wi++){
+      var watch = result.parameterWatch[wi];
+      watchHtml += '<div class="stack-ai-watch-item"><div class="stack-ai-watch-meta">' + hmEscapeHtml(watch.text) + '</div></div>';
+    }
+  }else{
+    watchHtml = '<div class="stack-ai-empty">No major saved-history process deviation stands out right now.</div>';
+  }
+
+  var matchHtml = "";
+  if(result.matches.length){
+    for(var mi = 0; mi < result.matches.length; mi++){
+      var match = result.matches[mi];
+      var badgeClass = "stack-ai-badge";
+      var badgeText = "Similarity " + cuboidAiFormatValue(match.score, 1);
+      if(match.followUp && match.followUp.verdict === "good") badgeClass += " is-good";
+      if(match.followUp && match.followUp.verdict === "warn") badgeClass += " is-warn";
+      var followText = match.followUp
+        ? ("Next record: " + cuboidAiFormatEntryStamp(match.followUp.nextEntry.dt) + " · " + result.focusZoneLabel + " avg " + cuboidAiFormatSigned(match.followUp.deltaFocusAvg, "°C", 1))
+        : "No near-term saved follow-up record was found.";
+      matchHtml += ''
+        + '<div class="stack-ai-match-item">'
+        + '<div class="stack-ai-match-top">'
+        + '<div class="stack-ai-match-title">' + hmEscapeHtml(cuboidAiFormatEntryStamp(match.entry.dt)) + ' · ' + hmEscapeHtml(match.shiftLabel) + ' shift</div>'
+        + '<span class="' + badgeClass + '">' + hmEscapeHtml(badgeText) + '</span>'
+        + '</div>'
+        + '<div class="stack-ai-match-meta">Peak ' + hmEscapeHtml(cuboidAiFormatValue(match.profile.overall.hottestTemp, 1)) + '°C · HGU ' + hmEscapeHtml(cuboidAiFormatValue(match.profile.process.hguLoad, 1)) + '% · ' + hmEscapeHtml(followText) + '</div>'
+        + '</div>';
+    }
+  }else{
+    matchHtml = '<div class="stack-ai-empty">The advisor could not find close saved cases yet. Keep saving TST data to make this section smarter.</div>';
+  }
+
+  return ''
+    + summaryHtml
+    + '<div class="stack-ai-panel">'
+    + '<div class="stack-ai-panel-title">' + hmEscapeHtml(result.prediction.headline) + '</div>'
+    + '<div class="stack-ai-panel-sub">' + hmEscapeHtml(result.prediction.detail) + '</div>'
+    + chipHtml
+    + '</div>'
+    + '<div class="stack-ai-grid-two">'
+    + '<div class="stack-ai-panel">'
+    + '<div class="stack-ai-panel-title">Suggested Moves</div>'
+    + '<div class="stack-ai-panel-sub">Local prediction combines your current cuboid condition with saved history, then ranks the burner moves already allowed by your existing firing logic.</div>'
+    + '<div class="stack-ai-action-list">' + actionHtml + '</div>'
+    + '</div>'
+    + '<div class="stack-ai-panel">'
+    + '<div class="stack-ai-panel-title">Process Watch</div>'
+    + '<div class="stack-ai-panel-sub">These are the saved-history process deviations most worth checking alongside the burner moves.</div>'
+    + '<div class="stack-ai-watch-list">' + watchHtml + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="stack-ai-panel">'
+    + '<div class="stack-ai-panel-title">Matched Historical Cases</div>'
+    + '<div class="stack-ai-panel-sub">Closest saved TST cases from local history. Follow-up notes use the next saved record when one exists within 8 hours.</div>'
+    + '<div class="stack-ai-match-list">' + matchHtml + '</div>'
+    + '</div>';
+}
+
+function resetCuboidAiAdvisorPanel(snapshot){
+  var body = cuboidAiGetBodyEl();
+  if(!body) return;
+  var nextDigest = hashStringFNV1a(cuboidSafeStringify(snapshot || {}));
+  if(cuboidAiAdvisorState.digest === nextDigest) return;
+  cuboidAiAdvisorState.digest = nextDigest;
+  cuboidAiSetRunBusy(false);
+
+  if(!snapshot || (snapshot.heldSelection && !snapshot.entryFound)){
+    cuboidAiSetStatus("No saved TST snapshot is available for the selected cuboid filter.", "warn");
+    cuboidAiSetBodyHtml('<div class="stack-ai-empty">No saved cuboid TST snapshot is available for the current shift/date filter. Choose a saved TST case first, then run the local prediction.</div>');
+    return;
+  }
+
+  if(!snapshot.entryFound){
+    cuboidAiSetStatus("Save TST data to unlock the local AI prediction panel.", "warn");
+    cuboidAiSetBodyHtml('<div class="stack-ai-empty">This panel needs at least one saved TST entry with cuboid history. Save TST data first, then click Start AI Prediction.</div>');
+    return;
+  }
+
+  var sourceLabel = snapshot.filterActive ? "Saved burner + TST snapshot ready" : "Live burners + latest saved TST ready";
+  cuboidAiSetStatus(sourceLabel, "ready");
+  cuboidAiSetBodyHtml('<div class="stack-ai-empty">Click Start AI Prediction to compare <strong>' + hmEscapeHtml(cuboidAiFormatEntryStamp(snapshot.entryDt)) + '</strong> against saved historical TST cases and generate local suggestions.</div>');
+}
+
+function runCuboidAiPrediction(){
+  var runToken = ++cuboidAiAdvisorState.runToken;
+  cuboidAiSetRunBusy(true, "Analyzing...");
+  cuboidAiSetStatus("Scanning local history and current cuboid snapshot...", "busy");
+
+  setTimeout(function(){
+    if(runToken !== cuboidAiAdvisorState.runToken) return;
+
+    var snapshot = refreshCuboidRenderSnapshot(false) || getCuboidRenderSnapshot(false);
+    var resolved = cuboidResolveConfiguredTempEntry();
+    var entry = resolved && resolved.entry ? resolved.entry : null;
+
+    if(!snapshot || (snapshot.heldSelection && !snapshot.entryFound) || !entry){
+      cuboidAiSetRunBusy(false);
+      cuboidAiSetStatus("Prediction stopped because no saved TST snapshot is active.", "warn");
+      cuboidAiSetBodyHtml('<div class="stack-ai-empty">No saved TST snapshot is active for the current cuboid view. Pick a saved case or keep the cuboids on the latest saved TST, then run the advisor again.</div>');
+      return;
+    }
+
+    var currentProfile = cuboidAiBuildCurrentProfile(snapshot, entry);
+    if(!currentProfile){
+      cuboidAiSetRunBusy(false);
+      cuboidAiSetStatus("Prediction could not build the current cuboid profile.", "warn");
+      cuboidAiSetBodyHtml('<div class="stack-ai-empty">The current cuboid data could not be profiled. Try again after reloading the cuboid view.</div>');
+      return;
+    }
+
+    var allEntries = cuboidGetSortedTempEntries();
+    var historyEntries = allEntries.filter(function(item){
+      if(!item) return false;
+      if(item === entry) return false;
+      return String(item.dt || "") !== String(entry.dt || "");
+    });
+
+    if(!historyEntries.length){
+      cuboidAiSetRunBusy(false);
+      cuboidAiSetStatus("Only one saved TST case exists, so history matching is limited.", "warn");
+      cuboidAiSetBodyHtml('<div class="stack-ai-empty">The panel needs more than one saved TST case to match history. Keep saving TST entries and this section will become more useful.</div>');
+      return;
+    }
+
+    var historyProfiles = [];
+    for(var hi = 0; hi < historyEntries.length; hi++){
+      var profile = cuboidAiBuildProfileFromEntry(historyEntries[hi]);
+      if(profile) historyProfiles.push(profile);
+    }
+
+    if(!historyProfiles.length){
+      cuboidAiSetRunBusy(false);
+      cuboidAiSetStatus("Saved history could not be profiled.", "warn");
+      cuboidAiSetBodyHtml('<div class="stack-ai-empty">Saved TST history was found, but it could not be converted into comparison profiles yet.</div>');
+      return;
+    }
+
+    var focus = cuboidAiDetermineFocus(currentProfile);
+    var ascendingEntries = historyEntries.slice().sort(function(a, b){
+      var ta = Date.parse(String(a && a.dt || ""));
+      var tb = Date.parse(String(b && b.dt || ""));
+      ta = isFinite(ta) ? ta : 0;
+      tb = isFinite(tb) ? tb : 0;
+      return ta - tb;
+    });
+
+    var matches = historyProfiles.map(function(profile){
+      var similarity = cuboidAiCompareProfiles(currentProfile, profile);
+      return {
+        entry: profile.entry,
+        profile: profile,
+        score: similarity.score,
+        distance: similarity.distance,
+        shiftLabel: profile.shift || "All"
+      };
+    }).sort(function(a, b){
+      return Number(b.score || 0) - Number(a.score || 0);
+    }).slice(0, 5);
+
+    for(var mi = 0; mi < matches.length; mi++){
+      var nextEntry = cuboidAiFindFollowUpEntry(matches[mi].entry, ascendingEntries);
+      matches[mi].followUp = cuboidAiSummarizeFollowUp(matches[mi].profile, nextEntry, focus);
+    }
+
+    var confidence = cuboidAiBuildConfidence(matches);
+    var prediction = cuboidAiBuildPrediction(matches, focus);
+    var log = {};
+    var hist = {};
+    try{ if(typeof loadCleaningLog === "function") log = loadCleaningLog() || {}; }catch(ignoreLogError){}
+    try{ if(typeof loadCleaningHistory === "function") hist = loadCleaningHistory() || {}; }catch(ignoreHistError){}
+    var actions = cuboidAiBuildFocusedActions(snapshot, focus, log, hist);
+    var parameterWatch = cuboidAiBuildParameterWatch(currentProfile, historyProfiles);
+    var sourceLabel = snapshot.filterActive ? "Saved burner + TST" : "Live burners + latest saved TST";
+    var focusLabel = focus.type === "high"
+      ? (focus.zoneLabel + " high-TST focus")
+      : (focus.type === "low" ? (focus.zoneLabel + " low-TST focus") : "Balanced condition");
+    var focusNote = focus.type === "high"
+      ? ("Peak issue at " + focus.zoneLabel + " around PH" + focus.zone.hottest.ph + " @ " + cuboidAiFormatValue(focus.zone.hottest.temp, 1) + "°C.")
+      : (focus.type === "low"
+          ? ("Lowest issue at " + focus.zoneLabel + " around PH" + focus.zone.coldest.ph + " @ " + cuboidAiFormatValue(focus.zone.coldest.temp, 1) + "°C.")
+          : "All four zones are inside the preferred 910°C–970°C band.");
+    var bandLabel = currentProfile.overall.highCount > 0
+      ? (currentProfile.overall.highCount + " high PH readings above 970°C")
+      : (currentProfile.overall.lowCount > 0 ? (currentProfile.overall.lowCount + " low PH readings below 910°C") : "All PH readings inside target band");
+    var result = {
+      confidence: confidence,
+      topScore: matches.length ? matches[0].score : 0,
+      matches: matches,
+      followUpCount: matches.filter(function(item){ return !!item.followUp; }).length,
+      actions: actions,
+      parameterWatch: parameterWatch,
+      prediction: prediction,
+      sourceLabel: sourceLabel,
+      entryStamp: cuboidAiFormatEntryStamp(snapshot.entryDt),
+      shiftLabel: currentProfile.shift || "All",
+      peakLabel: isFinite(currentProfile.overall.hottestTemp) ? (cuboidAiFormatValue(currentProfile.overall.hottestTemp, 1) + "°C") : "—",
+      bandLabel: bandLabel,
+      focusLabel: focusLabel,
+      focusNote: focusNote,
+      focusZoneLabel: focus.zoneLabel || "Selected zone"
+    };
+
+    cuboidAiSetRunBusy(false);
+    cuboidAiSetStatus("Local AI prediction ready. Review the ranked moves and matched cases below.", "success");
+    cuboidAiSetBodyHtml(cuboidAiBuildResultsHtml(result));
+  }, 40);
+}
+
 function toggleHeatMapAdjustmentCard(forceOpenOrSource){
   var forceOpen = (typeof forceOpenOrSource === "boolean") ? forceOpenOrSource : null;
   var source = (forceOpenOrSource && typeof forceOpenOrSource === "object" && forceOpenOrSource.nodeType === 1)
@@ -17822,6 +18632,351 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           }
         }
       </style>
+      <style id="cuboid-ai-advisor-20260405">
+        #stack-ai-card{
+          position:relative;
+          padding:20px 22px 22px;
+          border-radius:18px;
+          border:1px solid rgba(125,220,247,0.24);
+          background:linear-gradient(160deg,rgba(7,16,29,0.98) 0%,rgba(10,23,40,0.94) 55%,rgba(10,29,44,0.96) 100%);
+          box-shadow:0 18px 36px rgba(2,8,23,0.32), inset 0 1px 0 rgba(255,255,255,0.05);
+          overflow:hidden;
+        }
+        #stack-ai-card::before{
+          content:"";
+          position:absolute;
+          inset:0;
+          background:
+            radial-gradient(circle at top right,rgba(125,220,247,0.12),transparent 34%),
+            radial-gradient(circle at bottom left,rgba(52,211,153,0.08),transparent 32%);
+          pointer-events:none;
+        }
+        #stack-ai-card .stack-ai-head{
+          position:relative;
+          z-index:1;
+          display:flex;
+          align-items:flex-start;
+          justify-content:space-between;
+          gap:18px;
+          flex-wrap:wrap;
+        }
+        #stack-ai-card .stack-ai-title{
+          margin:0;
+          display:flex;
+          align-items:center;
+          gap:10px;
+          font-size:26px;
+          font-weight:800;
+          letter-spacing:0.12px;
+          color:#f8fafc;
+        }
+        #stack-ai-card .stack-ai-sub{
+          margin-top:8px;
+          max-width:980px;
+          font-size:13.5px;
+          line-height:1.7;
+          color:#d4e1f2;
+        }
+        #stack-ai-card .stack-ai-head-actions{
+          position:relative;
+          z-index:1;
+          display:flex;
+          flex-direction:column;
+          align-items:flex-end;
+          gap:10px;
+          min-width:240px;
+        }
+        #stack-ai-card .stack-ai-run-btn{
+          min-height:40px;
+          padding:10px 18px;
+          border-radius:999px;
+          border:1px solid rgba(125,220,247,0.42);
+          background:linear-gradient(135deg,rgba(30,64,175,0.36),rgba(14,116,144,0.26));
+          color:#e0f2fe;
+          font-size:13px;
+          font-weight:800;
+          letter-spacing:0.25px;
+          cursor:pointer;
+          transition:transform .16s ease, filter .16s ease, border-color .16s ease;
+        }
+        #stack-ai-card .stack-ai-run-btn:hover{
+          transform:translateY(-1px);
+          filter:brightness(1.05);
+          border-color:rgba(125,220,247,0.62);
+        }
+        #stack-ai-card .stack-ai-run-btn:disabled{
+          cursor:wait;
+          opacity:0.78;
+          transform:none;
+          filter:none;
+        }
+        #stack-ai-card .stack-ai-status{
+          display:inline-flex;
+          align-items:center;
+          justify-content:flex-end;
+          gap:8px;
+          padding:7px 12px;
+          border-radius:999px;
+          border:1px solid rgba(148,163,184,0.2);
+          background:rgba(15,23,42,0.42);
+          color:#dbeafe;
+          font-size:11.5px;
+          font-weight:700;
+          text-align:right;
+        }
+        #stack-ai-card .stack-ai-status.is-ready{
+          border-color:rgba(125,220,247,0.26);
+          color:#cfe8ff;
+        }
+        #stack-ai-card .stack-ai-status.is-busy{
+          border-color:rgba(251,191,36,0.34);
+          color:#fde68a;
+        }
+        #stack-ai-card .stack-ai-status.is-warn{
+          border-color:rgba(248,113,113,0.34);
+          color:#fecaca;
+        }
+        #stack-ai-card .stack-ai-status.is-success{
+          border-color:rgba(74,222,128,0.34);
+          color:#bbf7d0;
+        }
+        #stack-ai-card .stack-ai-body{
+          position:relative;
+          z-index:1;
+          margin-top:16px;
+          display:flex;
+          flex-direction:column;
+          gap:14px;
+        }
+        #stack-ai-card .stack-ai-empty{
+          padding:18px 20px;
+          border-radius:16px;
+          border:1px dashed rgba(148,163,184,0.22);
+          background:rgba(15,23,42,0.32);
+          color:#d7e4f5;
+          font-size:13px;
+          line-height:1.65;
+        }
+        #stack-ai-card .stack-ai-summary-grid{
+          display:grid;
+          grid-template-columns:repeat(4,minmax(0,1fr));
+          gap:12px;
+        }
+        #stack-ai-card .stack-ai-summary-card{
+          padding:14px 14px 13px;
+          border-radius:16px;
+          border:1px solid rgba(148,163,184,0.16);
+          background:rgba(15,23,42,0.34);
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        #stack-ai-card .stack-ai-summary-label{
+          font-size:11px;
+          font-weight:700;
+          letter-spacing:0.45px;
+          text-transform:uppercase;
+          color:#93c5fd;
+        }
+        #stack-ai-card .stack-ai-summary-value{
+          margin-top:7px;
+          font-size:22px;
+          font-weight:800;
+          line-height:1.1;
+          color:#f8fafc;
+        }
+        #stack-ai-card .stack-ai-summary-note{
+          margin-top:7px;
+          font-size:11.5px;
+          line-height:1.55;
+          color:#c6d7ee;
+        }
+        #stack-ai-card .stack-ai-panel{
+          padding:15px 16px;
+          border-radius:16px;
+          border:1px solid rgba(148,163,184,0.16);
+          background:rgba(15,23,42,0.28);
+        }
+        #stack-ai-card .stack-ai-panel-title{
+          font-size:13px;
+          font-weight:800;
+          letter-spacing:0.2px;
+          color:#f8fafc;
+        }
+        #stack-ai-card .stack-ai-panel-sub{
+          margin-top:5px;
+          font-size:12px;
+          line-height:1.6;
+          color:#c7d6ea;
+        }
+        #stack-ai-card .stack-ai-chip-row{
+          display:flex;
+          flex-wrap:wrap;
+          gap:8px;
+          margin-top:11px;
+        }
+        #stack-ai-card .stack-ai-chip{
+          display:inline-flex;
+          align-items:center;
+          gap:6px;
+          padding:6px 10px;
+          border-radius:999px;
+          border:1px solid rgba(148,163,184,0.18);
+          background:rgba(15,23,42,0.4);
+          color:#e2e8f0;
+          font-size:11px;
+          font-weight:700;
+        }
+        #stack-ai-card .stack-ai-chip strong{
+          color:#f8fafc;
+          font-weight:800;
+        }
+        #stack-ai-card .stack-ai-action-list,
+        #stack-ai-card .stack-ai-match-list,
+        #stack-ai-card .stack-ai-watch-list{
+          margin-top:12px;
+          display:flex;
+          flex-direction:column;
+          gap:10px;
+        }
+        #stack-ai-card .stack-ai-action-item,
+        #stack-ai-card .stack-ai-match-item,
+        #stack-ai-card .stack-ai-watch-item{
+          padding:12px 13px;
+          border-radius:14px;
+          border:1px solid rgba(148,163,184,0.16);
+          background:rgba(8,15,28,0.42);
+        }
+        #stack-ai-card .stack-ai-action-top,
+        #stack-ai-card .stack-ai-match-top{
+          display:flex;
+          align-items:flex-start;
+          justify-content:space-between;
+          gap:12px;
+          flex-wrap:wrap;
+        }
+        #stack-ai-card .stack-ai-action-title,
+        #stack-ai-card .stack-ai-match-title{
+          font-size:12.5px;
+          font-weight:800;
+          color:#f8fafc;
+          line-height:1.55;
+        }
+        #stack-ai-card .stack-ai-action-meta,
+        #stack-ai-card .stack-ai-match-meta,
+        #stack-ai-card .stack-ai-watch-meta{
+          margin-top:6px;
+          font-size:11.5px;
+          line-height:1.6;
+          color:#c6d7ee;
+        }
+        #stack-ai-card .stack-ai-badge{
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          min-width:84px;
+          padding:5px 10px;
+          border-radius:999px;
+          border:1px solid rgba(96,165,250,0.28);
+          background:rgba(30,64,175,0.18);
+          color:#dbeafe;
+          font-size:10.5px;
+          font-weight:800;
+          white-space:nowrap;
+        }
+        #stack-ai-card .stack-ai-badge.is-good{
+          border-color:rgba(74,222,128,0.32);
+          background:rgba(21,128,61,0.16);
+          color:#bbf7d0;
+        }
+        #stack-ai-card .stack-ai-badge.is-warn{
+          border-color:rgba(248,113,113,0.3);
+          background:rgba(127,29,29,0.18);
+          color:#fecaca;
+        }
+        #stack-ai-card .stack-ai-grid-two{
+          display:grid;
+          grid-template-columns:minmax(0,1.15fr) minmax(0,0.85fr);
+          gap:14px;
+        }
+        body.light-theme #stack-ai-card{
+          border-color:rgba(191,205,222,0.86);
+          background:linear-gradient(180deg,#ffffff 0%,#fbfdff 55%,#eef5fb 100%);
+          box-shadow:0 18px 30px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.98);
+        }
+        body.light-theme #stack-ai-card::before{
+          background:
+            radial-gradient(circle at top right,rgba(96,165,250,0.12),transparent 34%),
+            radial-gradient(circle at bottom left,rgba(34,197,94,0.08),transparent 32%);
+        }
+        body.light-theme #stack-ai-card .stack-ai-title{ color:#0f172a; }
+        body.light-theme #stack-ai-card .stack-ai-sub,
+        body.light-theme #stack-ai-card .stack-ai-empty,
+        body.light-theme #stack-ai-card .stack-ai-summary-note,
+        body.light-theme #stack-ai-card .stack-ai-panel-sub,
+        body.light-theme #stack-ai-card .stack-ai-action-meta,
+        body.light-theme #stack-ai-card .stack-ai-match-meta,
+        body.light-theme #stack-ai-card .stack-ai-watch-meta{
+          color:#475569;
+        }
+        body.light-theme #stack-ai-card .stack-ai-status{
+          background:#ffffff;
+          border-color:rgba(191,205,222,0.9);
+          color:#1e293b;
+        }
+        body.light-theme #stack-ai-card .stack-ai-status.is-busy{ color:#92400e; }
+        body.light-theme #stack-ai-card .stack-ai-status.is-warn{ color:#991b1b; }
+        body.light-theme #stack-ai-card .stack-ai-status.is-success{ color:#166534; }
+        body.light-theme #stack-ai-card .stack-ai-run-btn{
+          border-color:rgba(96,165,250,0.42);
+          background:linear-gradient(135deg,#dbeafe,#eff6ff);
+          color:#1d4ed8;
+        }
+        body.light-theme #stack-ai-card .stack-ai-summary-card,
+        body.light-theme #stack-ai-card .stack-ai-panel,
+        body.light-theme #stack-ai-card .stack-ai-action-item,
+        body.light-theme #stack-ai-card .stack-ai-match-item,
+        body.light-theme #stack-ai-card .stack-ai-watch-item{
+          background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+          border-color:rgba(203,213,225,0.92);
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.98);
+        }
+        body.light-theme #stack-ai-card .stack-ai-summary-label{ color:#2563eb; }
+        body.light-theme #stack-ai-card .stack-ai-summary-value,
+        body.light-theme #stack-ai-card .stack-ai-panel-title,
+        body.light-theme #stack-ai-card .stack-ai-action-title,
+        body.light-theme #stack-ai-card .stack-ai-match-title,
+        body.light-theme #stack-ai-card .stack-ai-chip strong{
+          color:#0f172a;
+        }
+        body.light-theme #stack-ai-card .stack-ai-chip{
+          background:#ffffff;
+          border-color:rgba(191,205,222,0.92);
+          color:#334155;
+        }
+        @media (max-width:900px){
+          #stack-ai-card{
+            padding:16px 16px 18px;
+          }
+          #stack-ai-card .stack-ai-title{
+            font-size:21px;
+          }
+          #stack-ai-card .stack-ai-sub{
+            font-size:12.5px;
+          }
+          #stack-ai-card .stack-ai-head-actions{
+            width:100%;
+            align-items:stretch;
+            min-width:0;
+          }
+          #stack-ai-card .stack-ai-status{
+            justify-content:center;
+            text-align:center;
+          }
+          #stack-ai-card .stack-ai-summary-grid,
+          #stack-ai-card .stack-ai-grid-two{
+            grid-template-columns:1fr;
+          }
+        }
+      </style>
       <style id="heatmap-uploaded-cuboids-20260313">
         #tab-heatmap .hm-uploaded-viewer-shell.cb-dual-shell{
           display:block !important;
@@ -22257,6 +23412,24 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       </div>
       </div>
       <div class="cuboid-followup-stack">
+        <div id="stack-ai-card">
+          <div class="stack-ai-head">
+            <div>
+              <div class="stack-ai-title scada-panel-title">Local AI Prediction &amp; Suggestions</div>
+              <div class="stack-ai-sub">
+                Runs inside this website using saved TST history, the current cuboid snapshot, burner states, openings, cleaning data, and saved process fields. No external AI link is used.
+              </div>
+            </div>
+            <div class="stack-ai-head-actions">
+              <button type="button" id="stack-ai-run-btn" class="stack-ai-run-btn" onclick="runCuboidAiPrediction()">Start AI Prediction</button>
+              <div id="stack-ai-status" class="stack-ai-status is-ready">Ready to analyze the current cuboid condition.</div>
+            </div>
+          </div>
+          <div id="stack-ai-body" class="stack-ai-body">
+            <div class="stack-ai-empty">Click Start AI Prediction to compare the current cuboid condition with saved historical TST cases and generate local suggestions.</div>
+          </div>
+        </div>
+
         <div id="stack-adjust-card" class="hm-adjust-card" data-cuboid-adjust-card>
           <div class="hm-adjust-head">
             <div class="hm-adjust-title scada-panel-title">🎯 Burner Adjustment Logic (TST + Cleaning Priority)</div>
@@ -28994,6 +30167,7 @@ function refreshCuboidExtendedPanels(force){
     _cuboidExtendedDigests.temp = digests.temp;
   }
   if(typeof updateHeatMapAdjustmentLogic === "function" && snapshot && (force || digests.adjustment !== _cuboidExtendedDigests.adjustment)){
+    if(typeof resetCuboidAiAdvisorPanel === "function") resetCuboidAiAdvisorPanel(snapshot);
     updateHeatMapAdjustmentLogic(snapshot);
     _cuboidExtendedDigests.adjustment = digests.adjustment;
   }
