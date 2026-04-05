@@ -22322,11 +22322,10 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                     <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">CD Bot PH 1-15</th>
                     <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">AB Top PH 1-15</th>
                     <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">CD Top PH 1-15</th>
-                    <th style="padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">Action</th>
                   </tr>
                 </thead>
                 <tbody id="stack-td-saved-tbody">
-                  <tr><td colspan="14" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>
+                  <tr><td colspan="13" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -35352,12 +35351,14 @@ function renderBurnerHistoryTable(){
 function renderTempDataTableInto(tbodyId, display, totalCount){
   var tbody = document.getElementById(tbodyId);
   if(!tbody) return;
+  var showActions = tbodyId !== "stack-td-saved-tbody";
+  var columnCount = showActions ? 14 : 13;
   if(!totalCount){
-    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + columnCount + '" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
     return;
   }
   if(!display.length){
-    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:#94a3b8;padding:20px;">No entries match the selected shift/date/value filter.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + columnCount + '" style="text-align:center;color:#94a3b8;padding:20px;">No entries match the selected shift/date/value filter.</td></tr>';
     return;
   }
   var rows = "";
@@ -35384,16 +35385,18 @@ function renderTempDataTableInto(tbodyId, display, totalCount){
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"ab-bot") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-bot") + '</td>'
       + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"ab-top") + '</td>'
-      + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-top") + '</td>'
-      + '<td style="text-align:center;">'
+      + '<td style="text-align:center;font-size:11px;">' + phMinMax(ent,"cd-top") + '</td>';
+    if(showActions){
+      rows += '<td style="text-align:center;">'
         + '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">'
           + '<button onclick="event.stopPropagation();editTempEntry(' + originalIndex + ')" style="background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.45);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Edit entry">✏️ Edit</button>'
           + '<button onclick="event.stopPropagation();deleteTempEntry(' + originalIndex + ')" style="background:rgba(192,57,43,0.2);color:#f87171;border:1px solid rgba(192,57,43,0.4);border-radius:4px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:Rajdhani,sans-serif;" title="Delete entry">🗑 Del</button>'
         + '</div>'
-      + '</td>'
-      + '</tr>';
+      + '</td>';
+    }
+    rows += '</tr>';
   }
-  tbody.innerHTML = rows || '<tr><td colspan="14" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
+  tbody.innerHTML = rows || '<tr><td colspan="' + columnCount + '" style="text-align:center;color:#475569;padding:20px;">No entries saved yet.</td></tr>';
 }
 
 function renderTempDataTable(){
