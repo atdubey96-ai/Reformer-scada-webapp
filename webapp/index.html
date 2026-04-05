@@ -2522,6 +2522,20 @@ td select option{background:#1e293b;color:#e2e8f0;}
 .burner-cell-editor-scale span:last-child{
   text-align:right;
 }
+.cuboid-burner-editor{
+  z-index:1915;
+}
+.cuboid-burner-editor-note{
+  margin-top:12px;
+  padding-top:10px;
+  border-top:1px solid rgba(148,163,184,0.14);
+  font-size:10px;
+  font-weight:700;
+  color:rgba(190,204,224,0.76);
+}
+.cuboid-burner-editor-note strong{
+  color:#f8fbff;
+}
 body.light-theme .burner-cell-editor{
   background:linear-gradient(180deg,rgba(248,251,255,0.98),rgba(234,241,248,0.98));
   border-color:rgba(91,122,165,0.34);
@@ -24484,6 +24498,206 @@ function closeBurnerCellEditor(){
   }
 }
 
+var cuboidBurnerEditor = null;
+var cuboidBurnerEditorState = null;
+
+function ensureCuboidBurnerEditor(){
+  if(cuboidBurnerEditor) return cuboidBurnerEditor;
+  var editor = document.createElement("div");
+  editor.id = "cuboidBurnerEditor";
+  editor.className = "burner-cell-editor cuboid-burner-editor";
+  editor.hidden = true;
+  editor.innerHTML =
+    '<div class="burner-cell-editor-head">'
+      + '<div class="burner-cell-editor-loc" data-cuboid-burner-loc></div>'
+      + '<div class="burner-cell-editor-meta" data-cuboid-burner-meta></div>'
+    + '</div>'
+    + '<div class="burner-cell-editor-group">'
+      + '<div class="burner-cell-editor-label">Burner State</div>'
+      + '<div class="burner-cell-editor-state-grid">'
+        + '<button type="button" class="burner-cell-editor-state-btn" data-cuboid-burner-state="B" data-state="B"><span class="burner-cell-editor-state-code">B</span><span class="burner-cell-editor-state-name">Both</span></button>'
+        + '<button type="button" class="burner-cell-editor-state-btn" data-cuboid-burner-state="N" data-state="N"><span class="burner-cell-editor-state-code">N</span><span class="burner-cell-editor-state-name">NG</span></button>'
+        + '<button type="button" class="burner-cell-editor-state-btn" data-cuboid-burner-state="O" data-state="O"><span class="burner-cell-editor-state-code">O</span><span class="burner-cell-editor-state-name">Off Gas</span></button>'
+        + '<button type="button" class="burner-cell-editor-state-btn" data-cuboid-burner-state="C" data-state="C"><span class="burner-cell-editor-state-code">C</span><span class="burner-cell-editor-state-name">Cold</span></button>'
+      + '</div>'
+    + '</div>'
+    + '<div class="burner-cell-editor-group">'
+      + '<div class="burner-cell-editor-label-row">'
+        + '<span class="burner-cell-editor-label">Opening Percentage</span>'
+        + '<span class="burner-cell-editor-value" data-cuboid-burner-opening>0%</span>'
+      + '</div>'
+      + '<input class="burner-cell-editor-slider" data-cuboid-burner-slider type="range" min="' + BURNER_OPENING_MIN + '" max="' + BURNER_OPENING_MAX + '" step="' + BURNER_OPENING_STEP + '" value="100">'
+      + '<div class="burner-cell-editor-scale"><span>0</span><span></span><span>25</span><span></span><span>50</span><span></span><span>75</span><span></span><span></span><span></span><span>100</span></div>'
+    + '</div>'
+    + '<div class="cuboid-burner-editor-note">Unsaved until you click <strong>SAVE BURNER DATA</strong>.</div>';
+  document.body.appendChild(editor);
+  editor.addEventListener("click", function(ev){ ev.stopPropagation(); });
+  editor.addEventListener("click", function(ev){
+    var btn = ev.target && ev.target.closest ? ev.target.closest("[data-cuboid-burner-state]") : null;
+    if(!btn) return;
+    applyCuboidBurnerEditorPatch({
+      state: btn.getAttribute("data-cuboid-burner-state")
+    });
+  });
+  var slider = editor.querySelector("[data-cuboid-burner-slider]");
+  if(slider){
+    slider.addEventListener("input", function(){
+      if(slider.disabled) return;
+      applyCuboidBurnerEditorPatch({
+        opening: Number(slider.value)
+      });
+    });
+  }
+  document.addEventListener("click", function(ev){
+    if(!cuboidBurnerEditor || cuboidBurnerEditor.hidden) return;
+    if(cuboidBurnerEditor.contains(ev.target)) return;
+    closeCuboidBurnerEditor();
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape") closeCuboidBurnerEditor();
+  });
+  window.addEventListener("resize", closeCuboidBurnerEditor);
+  window.addEventListener("scroll", closeCuboidBurnerEditor, true);
+  cuboidBurnerEditor = editor;
+  return cuboidBurnerEditor;
+}
+
+function closeCuboidBurnerEditor(){
+  cuboidBurnerEditorState = null;
+  if(cuboidBurnerEditor){
+    cuboidBurnerEditor.hidden = true;
+  }
+}
+
+function isCuboidBurnerEditingLive(){
+  if(typeof isCuboidTabActive === "function" && !isCuboidTabActive()) return false;
+  var snapshot = refreshCuboidRenderSnapshot(false) || getCuboidRenderSnapshot(false);
+  return !!(
+    snapshot
+    && !snapshot.filterActive
+    && snapshot.burnerSource === "live"
+    && snapshot.openingSource === "live"
+  );
+}
+
+function updateCuboidBurnerEditorLinkedCell(){
+  if(!cuboidBurnerEditorState) return;
+  var td = document.querySelector(
+    '#walls .wall[data-wall="' + cuboidBurnerEditorState.wallName + '"] td[data-row="' + cuboidBurnerEditorState.ri + '"][data-col="' + cuboidBurnerEditorState.ci + '"]'
+  );
+  if(td) updateBurnerCellVisual(td, cuboidBurnerEditorState.wallName, cuboidBurnerEditorState.ri, cuboidBurnerEditorState.ci);
+}
+
+function positionCuboidBurnerEditor(){
+  if(!cuboidBurnerEditorState || !cuboidBurnerEditor || cuboidBurnerEditor.hidden) return;
+  var editorRect = cuboidBurnerEditor.getBoundingClientRect();
+  var margin = 10;
+  var x = Number(cuboidBurnerEditorState.anchorClientX || 0);
+  var y = Number(cuboidBurnerEditorState.anchorClientY || 0);
+  var top = y + 14;
+  var left = x - (editorRect.width / 2);
+  if(left < margin) left = margin;
+  if(left + editorRect.width > window.innerWidth - margin){
+    left = window.innerWidth - editorRect.width - margin;
+  }
+  if(top + editorRect.height > window.innerHeight - margin){
+    top = y - editorRect.height - 14;
+  }
+  if(top < margin) top = margin;
+  cuboidBurnerEditor.style.left = Math.round(left) + "px";
+  cuboidBurnerEditor.style.top = Math.round(top) + "px";
+}
+
+function updateCuboidBurnerEditorUI(){
+  if(!cuboidBurnerEditorState) return;
+  var editor = ensureCuboidBurnerEditor();
+  var wallName = cuboidBurnerEditorState.wallName;
+  var ri = cuboidBurnerEditorState.ri;
+  var ci = cuboidBurnerEditorState.ci;
+  var state = normalizeBurnerStateSnapshotValue(data[wallName][ri][ci]);
+  var opening = getBurnerOpeningValue(wallName, ri, ci, state);
+  editor.dataset.state = state;
+  var loc = editor.querySelector("[data-cuboid-burner-loc]");
+  var meta = editor.querySelector("[data-cuboid-burner-meta]");
+  var openingEl = editor.querySelector("[data-cuboid-burner-opening]");
+  var slider = editor.querySelector("[data-cuboid-burner-slider]");
+  if(loc) loc.textContent = "Wall " + wallName + " · R" + (ri + 1) + " B" + (ci + 1);
+  if(meta) meta.textContent = getBurnerStateLabel(state);
+  if(openingEl) openingEl.textContent = getBurnerOpeningDisplayText(opening, state);
+  if(slider){
+    slider.min = state === "C" ? String(BURNER_OPENING_MIN) : String(BURNER_OPENING_ACTIVE_MIN);
+    slider.value = String(opening);
+    slider.disabled = (state === "C");
+  }
+  editor.querySelectorAll("[data-cuboid-burner-state]").forEach(function(btn){
+    btn.classList.toggle("is-active", btn.getAttribute("data-cuboid-burner-state") === state);
+  });
+}
+
+function applyCuboidBurnerEditorPatch(patch){
+  if(!cuboidBurnerEditorState) return;
+  if(!isCuboidBurnerEditingLive()){
+    closeCuboidBurnerEditor();
+    showHeaderActionToast("Switch to Latest Data to edit live burners");
+    return;
+  }
+  var result = stageBurnerCellChange(
+    cuboidBurnerEditorState.wallName,
+    cuboidBurnerEditorState.ri,
+    cuboidBurnerEditorState.ci,
+    patch || {}
+  );
+  updateCuboidBurnerEditorLinkedCell();
+  if(result.stateChanged) generateAnalysis({ skipRender:true });
+  if(typeof scheduleCuboidPanelRefresh === "function") scheduleCuboidPanelRefresh(0, false);
+  if(typeof scheduleCuboidFrameDataPush === "function") scheduleCuboidFrameDataPush(0, true);
+  updateCuboidBurnerEditorUI();
+  positionCuboidBurnerEditor();
+}
+
+function openCuboidBurnerEditorFromViewer(sourceWindow, payload){
+  var frame = findCuboidFrameByWindow(sourceWindow);
+  if(!frame) return;
+  if(!isCuboidBurnerEditingLive()){
+    closeCuboidBurnerEditor();
+    showHeaderActionToast("Switch to Latest Data to edit live burners");
+    return;
+  }
+  var wallName = normalizeBurnerWallKey(payload && payload.wallName);
+  var ri = Math.floor(Number(payload && payload.rowIndex));
+  var ci = Math.floor(Number(payload && payload.burnerIndex));
+  if(!wallName || !isFinite(ri) || !isFinite(ci) || ri < 0 || ri >= ROWS || ci < 0 || ci >= BURNERS) return;
+  var frameRect = frame.getBoundingClientRect();
+  var rawAnchorX = Number(payload && payload.anchorClientX);
+  var rawAnchorY = Number(payload && payload.anchorClientY);
+  if(!isFinite(rawAnchorX)) rawAnchorX = frameRect.width / 2;
+  if(!isFinite(rawAnchorY)) rawAnchorY = frameRect.height / 2;
+  var anchorClientX = frameRect.left + Math.max(0, Math.min(frameRect.width, rawAnchorX));
+  var anchorClientY = frameRect.top + Math.max(0, Math.min(frameRect.height, rawAnchorY));
+  var editor = ensureCuboidBurnerEditor();
+  var sameBurner = cuboidBurnerEditorState
+    && cuboidBurnerEditorState.frame === frame
+    && cuboidBurnerEditorState.wallName === wallName
+    && cuboidBurnerEditorState.ri === ri
+    && cuboidBurnerEditorState.ci === ci
+    && !editor.hidden;
+  if(sameBurner){
+    closeCuboidBurnerEditor();
+    return;
+  }
+  cuboidBurnerEditorState = {
+    frame: frame,
+    wallName: wallName,
+    ri: ri,
+    ci: ci,
+    anchorClientX: anchorClientX,
+    anchorClientY: anchorClientY
+  };
+  editor.hidden = false;
+  updateCuboidBurnerEditorUI();
+  positionCuboidBurnerEditor();
+}
+
 function bindBurnerTableHover(gridWrap, tbl){
   if(!gridWrap || !tbl) return;
   var overlay = gridWrap.querySelector(".burner-grid-crosshair");
@@ -28803,14 +29017,19 @@ function bindCuboidLegendActions(){
   return;
 }
 
-function findCuboidShellByWindow(win){
+function findCuboidFrameByWindow(win){
   var frames = getCuboidFrames();
   for(var i=0;i<frames.length;i++){
     try{
-      if(frames[i].contentWindow === win) return frames[i].closest(".cuboid-tab-shell");
+      if(frames[i].contentWindow === win) return frames[i];
     }catch(e){}
   }
   return null;
+}
+
+function findCuboidShellByWindow(win){
+  var frame = findCuboidFrameByWindow(win);
+  return frame && frame.closest ? frame.closest(".cuboid-tab-shell") : null;
 }
 
 function ensureCuboidViewerLoaded(forceReload){
@@ -28846,6 +29065,7 @@ function notifyCuboidOverlayState(active, frame){
 function setCuboidOverlayActive(active, shell){
   var backdrop = document.getElementById("cuboid-overlay-backdrop");
   if(!backdrop) return;
+  closeCuboidBurnerEditor();
   var activePanel = shell && shell.closest ? shell.closest("[data-cuboid-dashboard]") : getActiveCuboidDashboardPanel();
   var shells = getCuboidShells(activePanel || document);
   var targetShell = shell || (activePanel ? activePanel.querySelector(".cuboid-tab-shell.cuboid-shell-expanded") : document.querySelector("[data-cuboid-dashboard] .cuboid-tab-shell.cuboid-shell-expanded")) || shells[0] || null;
@@ -28916,6 +29136,7 @@ function exitViewerFullscreenIfNeeded(nextTab){
 
 function switchTab(tab){
   tab = String(tab || "").toLowerCase();
+  closeCuboidBurnerEditor();
   if(tab === "cuboid") tab = "cuboidstack";
   if(tab === "heatmap" && typeof isHeatMapTabEnabled === "function" && !isHeatMapTabEnabled()){
     tab = getDefaultLiveTab();
@@ -29133,8 +29354,18 @@ window.addEventListener("storage", function(ev){
 });
 window.addEventListener("message", function(ev){
   var data = ev && ev.data ? ev.data : null;
-  if(!data || data.type !== "cuboid-toggle-overlay") return;
-  toggleCuboidOverlay(ev.source);
+  if(!data || typeof data !== "object") return;
+  if(data.type === "cuboid-toggle-overlay"){
+    toggleCuboidOverlay(ev.source);
+    return;
+  }
+  if(data.type === "cuboid-dismiss-burner-editor"){
+    closeCuboidBurnerEditor();
+    return;
+  }
+  if(data.type === "cuboid-open-burner-editor"){
+    openCuboidBurnerEditorFromViewer(ev.source, data);
+  }
 });
 document.addEventListener("keydown", function(e){
   if(e.key === "Escape"){

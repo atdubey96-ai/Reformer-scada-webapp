@@ -498,6 +498,72 @@ function cuboidGetWallKeyForFace(faceKey){
   return chamberZoneKey === "CD" ? "C" : "A";
 }
 
+function postCuboidHostMessage(type, payload){
+  try{
+    if(window.parent && window.parent !== window){
+      var message = (payload && typeof payload === "object") ? payload : {};
+      message.type = type;
+      window.parent.postMessage(message, "*");
+    }
+  }catch(_e){}
+}
+
+function getEditableShellFaceKey(){
+  if(viewMode !== "shell") return "";
+  var faceKey = nearestShellFaceKey(rotY);
+  return (faceKey === "face1" || faceKey === "face2") ? faceKey : "";
+}
+
+function findWallBurnerTapHit(clientX, clientY){
+  var faceKey = getEditableShellFaceKey();
+  if(!faceKey || !vp) return null;
+  var rect = vp.getBoundingClientRect();
+  if(!rect || !rect.width || !rect.height) return null;
+  var localX = clientX - rect.left;
+  var localY = clientY - rect.top;
+  if(localX < 0 || localY < 0 || localX > rect.width || localY > rect.height) return null;
+  rigGroup.rotation.y = rotY;
+  camera.position.copy(currentCameraPos);
+  camera.lookAt(currentLookAt);
+  camera.updateMatrixWorld();
+  rigGroup.updateMatrixWorld(true);
+  var worldPos = new THREE.Vector3();
+  var threshold = Math.max(18, Math.min(40, Math.round(rect.width * 0.028)));
+  var best = null;
+  var bestDist = Infinity;
+  for(var i = 0; i < wallNozzleFlameActors.length; i++){
+    var actor = wallNozzleFlameActors[i];
+    if(!actor || actor.faceKey !== faceKey || actor.rowIndex < 0 || actor.burnerIndex < 0 || !actor.flame) continue;
+    worldPos.setFromMatrixPosition(actor.flame.matrixWorld);
+    worldPos.project(camera);
+    if(!isFinite(worldPos.x) || !isFinite(worldPos.y) || !isFinite(worldPos.z)) continue;
+    if(worldPos.z < -1 || worldPos.z > 1) continue;
+    var screenX = (worldPos.x * 0.5 + 0.5) * rect.width;
+    var screenY = (-worldPos.y * 0.5 + 0.5) * rect.height;
+    var dx = localX - screenX;
+    var dy = localY - screenY;
+    var dist = Math.sqrt((dx * dx) + (dy * dy));
+    if(dist < bestDist){
+      bestDist = dist;
+      best = {
+        rowIndex: actor.rowIndex,
+        burnerIndex: actor.burnerIndex,
+        screenX: screenX,
+        screenY: screenY
+      };
+    }
+  }
+  if(!best || bestDist > threshold) return null;
+  return {
+    faceKey: faceKey,
+    wallName: cuboidGetWallKeyForFace(faceKey),
+    rowIndex: best.rowIndex,
+    burnerIndex: best.burnerIndex,
+    anchorClientX: rect.left + best.screenX,
+    anchorClientY: rect.top + best.screenY
+  };
+}
+
 function viewportWidth(){ return vp.clientWidth; }
 function viewportHeight(){ return vp.clientHeight; }
 
@@ -4011,6 +4077,7 @@ function stopDrag(){
 
 vp.addEventListener("pointerdown", function(event){
   if(event.pointerType === "mouse" && event.button !== 0) return;
+  postCuboidHostMessage("cuboid-dismiss-burner-editor");
   if(viewMode === "inside-prep") return;
   activePointerId = event.pointerId;
   if(vp.setPointerCapture) vp.setPointerCapture(event.pointerId);
@@ -4031,6 +4098,12 @@ function endPointerGesture(event){
   const wasTapCandidate = dragDistance <= TAP_MOVE_TOLERANCE && !touchMoved;
   stopDrag();
   if(!wasTapCandidate){
+    lastTapAt = 0;
+    return;
+  }
+  var burnerHit = findWallBurnerTapHit(event.clientX, event.clientY);
+  if(burnerHit){
+    postCuboidHostMessage("cuboid-open-burner-editor", burnerHit);
     lastTapAt = 0;
     return;
   }
