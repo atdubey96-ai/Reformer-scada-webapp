@@ -1605,23 +1605,47 @@ body:not(.heatmap-header-active) #hm-header-tools{
   min-height:36px;
   padding:6px 12px 6px 11px;
   border-radius:999px;
-  border:1px solid rgba(255,255,255,0.2);
-  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.22);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,0.14) 0%,rgba(255,255,255,0.08) 100%);
   color:#e2e8f0;
+  overflow:hidden;
+  isolation:isolate;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    0 10px 22px rgba(2,6,23,0.2);
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 12px 24px rgba(2,6,23,0.24);
+}
+.hd-alarm-pill::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:
+    radial-gradient(120% 120% at 0% 50%,rgba(249,115,22,0.16) 0%,rgba(249,115,22,0.02) 34%,rgba(249,115,22,0) 58%),
+    linear-gradient(90deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02) 42%,rgba(255,255,255,0.06) 100%);
+  opacity:0.95;
+}
+.hd-alarm-pill > *{
+  position:relative;
+  z-index:1;
 }
 .hd-alarm-pill:hover{
-  background:rgba(255,255,255,0.14);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,0.18) 0%,rgba(255,255,255,0.1) 100%);
   color:#ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    0 16px 26px rgba(2,6,23,0.28);
 }
 .hd-alarm-pill-dot{
-  width:10px;
-  height:10px;
+  width:12px;
+  height:12px;
   border-radius:999px;
-  background:#4ade80;
-  box-shadow:0 0 0 4px rgba(74,222,128,0.12);
+  background:#fb923c;
+  box-shadow:
+    0 0 0 5px rgba(251,146,60,0.14),
+    0 0 16px rgba(249,115,22,0.22);
   flex:0 0 auto;
 }
 .hd-alarm-pill-text{
@@ -1653,53 +1677,84 @@ body:not(.heatmap-header-active) #hm-header-tools{
   height:22px;
   padding:0 7px;
   border-radius:999px;
-  background:rgba(255,255,255,0.18);
-  border:1px solid rgba(255,255,255,0.24);
+  background:linear-gradient(180deg,rgba(255,255,255,0.24),rgba(255,255,255,0.18));
+  border:1px solid rgba(255,255,255,0.28);
   color:#ffffff;
   font-size:11px;
   font-weight:900;
   line-height:1;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    0 6px 14px rgba(2,6,23,0.18);
 }
 .hd-alarm-pill.is-active{
-  border-color:rgba(251,191,36,0.34);
+  border-color:rgba(255,237,213,0.72);
   background:
-    linear-gradient(135deg,rgba(124,45,18,0.92),rgba(220,38,38,0.88) 56%,rgba(185,28,28,0.94));
-  color:#fff7ed;
-  animation:headerAlarmBlink 1.18s ease-in-out infinite;
+    linear-gradient(135deg,#7c2d12 0%,#ea580c 20%,#fb923c 54%,#ef4444 100%);
+  color:#fffaf5;
+  box-shadow:
+    0 18px 30px rgba(239,68,68,0.34),
+    0 0 0 3px rgba(251,146,60,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.26);
+  animation:headerAlarmBlink 0.98s ease-in-out infinite;
+}
+.hd-alarm-pill.is-active::before{
+  background:
+    radial-gradient(125% 125% at 0% 50%,rgba(255,255,255,0.28) 0%,rgba(255,255,255,0.06) 32%,rgba(255,255,255,0) 58%),
+    linear-gradient(90deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02) 38%,rgba(255,255,255,0.14) 100%);
 }
 .hd-alarm-pill.is-active .hd-alarm-pill-dot{
-  background:#fde68a;
-  box-shadow:0 0 0 5px rgba(253,230,138,0.16), 0 0 18px rgba(248,113,113,0.4);
+  background:#fff7ed;
+  box-shadow:
+    0 0 0 6px rgba(255,247,237,0.22),
+    0 0 22px rgba(255,247,237,0.6);
+}
+.hd-alarm-pill.is-active .hd-alarm-pill-label,
+.hd-alarm-pill.is-active .hd-alarm-pill-count{
+  color:#7c2d12;
 }
 .hd-alarm-pill.is-active .hd-alarm-pill-state{
-  color:#fee2e2;
+  color:#fff7ed;
+}
+.hd-alarm-pill.is-active .hd-alarm-pill-count{
+  background:linear-gradient(180deg,#fffaf5,#ffedd5);
+  border-color:rgba(255,237,213,0.88);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.94),
+    0 8px 18px rgba(124,45,18,0.2);
 }
 .hd-alarm-pill.is-muted{
-  border-color:rgba(251,191,36,0.28);
+  border-color:rgba(251,191,36,0.38);
   background:
-    linear-gradient(135deg,rgba(91,33,17,0.84),rgba(154,52,18,0.8));
+    linear-gradient(135deg,rgba(120,53,15,0.9),rgba(217,119,6,0.86));
   color:#ffedd5;
+  box-shadow:
+    0 14px 24px rgba(180,83,9,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.18);
 }
 .hd-alarm-pill.is-muted .hd-alarm-pill-dot{
   background:#fbbf24;
-  box-shadow:0 0 0 4px rgba(251,191,36,0.14);
+  box-shadow:0 0 0 5px rgba(251,191,36,0.16), 0 0 16px rgba(251,191,36,0.28);
 }
 .hd-alarm-pill.is-muted .hd-alarm-pill-state{
   color:#fed7aa;
 }
 @keyframes headerAlarmBlink{
   0%,100%{
-    transform:translateY(0);
+    transform:translateY(0) scale(1);
+    filter:saturate(1);
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.08),
-      0 12px 24px rgba(127,29,29,0.34);
+      0 18px 30px rgba(239,68,68,0.32),
+      0 0 0 3px rgba(251,146,60,0.18),
+      inset 0 1px 0 rgba(255,255,255,0.24);
   }
   50%{
-    transform:translateY(-1px);
+    transform:translateY(-1px) scale(1.035);
+    filter:saturate(1.18) brightness(1.06);
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.12),
-      0 16px 28px rgba(185,28,28,0.42);
+      0 22px 34px rgba(239,68,68,0.4),
+      0 0 0 5px rgba(251,146,60,0.22),
+      inset 0 1px 0 rgba(255,255,255,0.3);
   }
 }
 .header-alarm-dropdown{
@@ -1810,43 +1865,64 @@ body:not(.heatmap-header-active) #hm-header-tools{
 }
 body.light-theme .hd-alarm-pill{
   border-color:rgba(191,205,222,0.88);
-  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+  background:
+    linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
   color:#0f172a;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.98),
-    0 10px 20px rgba(15,23,42,0.08);
+    0 12px 22px rgba(15,23,42,0.08);
 }
 body.light-theme .hd-alarm-pill:hover{
-  background:linear-gradient(180deg,#ffffff 0%,#f1f6fb 100%);
+  background:linear-gradient(180deg,#ffffff 0%,#eef5fd 100%);
 }
 body.light-theme .hd-alarm-pill-state{
   color:#64748b;
 }
 body.light-theme .hd-alarm-pill-count{
-  background:rgba(15,23,42,0.06);
+  background:linear-gradient(180deg,#f8fbff,#edf4fb);
   border-color:rgba(191,205,222,0.92);
   color:#0f172a;
 }
 body.light-theme .hd-alarm-pill.is-active{
-  border-color:rgba(249,115,22,0.34);
-  background:linear-gradient(135deg,#fff1e8,#ffe0d3 56%,#ffd7c5 100%);
+  border-color:rgba(249,115,22,0.62);
+  background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 16%,#fb923c 48%,#f97316 72%,#ef4444 100%);
   color:#7c2d12;
+  box-shadow:
+    0 18px 30px rgba(249,115,22,0.26),
+    0 0 0 4px rgba(251,146,60,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.98);
+}
+body.light-theme .hd-alarm-pill.is-active::before{
+  background:
+    radial-gradient(125% 125% at 0% 50%,rgba(255,255,255,0.54) 0%,rgba(255,255,255,0.16) 30%,rgba(255,255,255,0) 58%),
+    linear-gradient(90deg,rgba(255,255,255,0.28),rgba(255,255,255,0.06) 40%,rgba(255,255,255,0.18) 100%);
 }
 body.light-theme .hd-alarm-pill.is-active .hd-alarm-pill-dot{
-  background:#f97316;
-  box-shadow:0 0 0 5px rgba(249,115,22,0.12);
+  background:#ffffff;
+  box-shadow:0 0 0 6px rgba(255,255,255,0.32), 0 0 20px rgba(255,255,255,0.8);
+}
+body.light-theme .hd-alarm-pill.is-active .hd-alarm-pill-label,
+body.light-theme .hd-alarm-pill.is-active .hd-alarm-pill-count{
+  color:#7c2d12;
 }
 body.light-theme .hd-alarm-pill.is-active .hd-alarm-pill-state{
-  color:#9a3412;
+  color:#7f1d1d;
+}
+body.light-theme .hd-alarm-pill.is-active .hd-alarm-pill-count{
+  background:linear-gradient(180deg,#ffffff,#fff1e8);
+  border-color:rgba(255,255,255,0.96);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.98),
+    0 8px 18px rgba(124,45,18,0.16);
 }
 body.light-theme .hd-alarm-pill.is-muted{
-  border-color:rgba(234,179,8,0.28);
-  background:linear-gradient(135deg,#fffbeb,#fff3c4);
+  border-color:rgba(234,179,8,0.34);
+  background:linear-gradient(135deg,#fffbeb,#fde68a 68%,#fbbf24 100%);
   color:#854d0e;
 }
 body.light-theme .hd-alarm-pill.is-muted .hd-alarm-pill-dot{
   background:#eab308;
-  box-shadow:0 0 0 5px rgba(234,179,8,0.12);
+  box-shadow:0 0 0 5px rgba(234,179,8,0.16), 0 0 16px rgba(234,179,8,0.24);
 }
 body.light-theme .hd-alarm-pill.is-muted .hd-alarm-pill-state{
   color:#a16207;
