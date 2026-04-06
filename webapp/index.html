@@ -13843,7 +13843,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <span>🌙</span>
         </div>
         <button class="hd-btn hd-btn-secondary" id="notifyToggleBtn" onclick="toggleNotifications()" title="Enable browser notifications for saves and alarms">🔕 Notifications Off</button>
-        <button class="hd-btn hd-btn-secondary" id="alarmSoundToggleBtn" onclick="toggleAlarmSound()" title="Turn alarm sound on or off" aria-pressed="true">🔊 Alarm Sound On</button>
+        <button class="hd-btn hd-btn-secondary" id="alarmSoundToggleBtn" data-admin-only="true" onclick="toggleAlarmSound()" title="Turn alarm sound on or off" aria-pressed="false">🔇 Alarm Sound Off</button>
         <button class="hd-btn hd-btn-secondary" id="notifyTestBtn" data-admin-only="true" onclick="sendTestNotification()" title="Send a test notification">🧪 Test Alert</button>
         <div data-admin-only="true" style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:8px 10px;">
           <div style="font-size:11px;font-weight:700;color:#cbd5e1;letter-spacing:0.4px;">🚨 Alarm Sound</div>
@@ -24791,7 +24791,9 @@ function showToast(msg, options){
 var notificationsEnabled = false;
 var notificationLastFire = {};
 var alarmTonePreset = "classic";
-var alarmSoundEnabled = true;
+var alarmSoundEnabled = false;
+var ALARM_SOUND_DEFAULT_MODE_VERSION = "2026-04-06-default-off";
+var ALARM_SOUND_DEFAULT_MODE_KEY = "scada-alarm-sound-default-version";
 
 function loadNotificationPrefs(){
   try{
@@ -24800,14 +24802,22 @@ function loadNotificationPrefs(){
     if(!notificationLastFire || typeof notificationLastFire !== "object") notificationLastFire = {};
     var savedTone = localStorage.getItem("scada-alarm-tone");
     if(savedTone) alarmTonePreset = savedTone;
+    var savedDefaultVersion = localStorage.getItem(ALARM_SOUND_DEFAULT_MODE_KEY);
     var savedAlarmSound = localStorage.getItem("scada-alarm-sound-enabled");
-    if(savedAlarmSound === "0") alarmSoundEnabled = false;
-    else if(savedAlarmSound === "1") alarmSoundEnabled = true;
+    if(savedDefaultVersion !== ALARM_SOUND_DEFAULT_MODE_VERSION){
+      alarmSoundEnabled = false;
+      try{ localStorage.setItem(ALARM_SOUND_DEFAULT_MODE_KEY, ALARM_SOUND_DEFAULT_MODE_VERSION); }catch(e){}
+      try{ localStorage.setItem("scada-alarm-sound-enabled", "0"); }catch(e){}
+    }else if(savedAlarmSound === "1"){
+      alarmSoundEnabled = true;
+    }else{
+      alarmSoundEnabled = false;
+    }
   }catch(e){
     notificationsEnabled = false;
     notificationLastFire = {};
     alarmTonePreset = "classic";
-    alarmSoundEnabled = true;
+    alarmSoundEnabled = false;
   }
 }
 
@@ -24816,6 +24826,7 @@ function saveNotificationPrefs(){
   try{ localStorage.setItem("scada-notification-lastfire", JSON.stringify(notificationLastFire)); }catch(e){}
   try{ localStorage.setItem("scada-alarm-tone", alarmTonePreset || "classic"); }catch(e){}
   try{ localStorage.setItem("scada-alarm-sound-enabled", alarmSoundEnabled ? "1" : "0"); }catch(e){}
+  try{ localStorage.setItem(ALARM_SOUND_DEFAULT_MODE_KEY, ALARM_SOUND_DEFAULT_MODE_VERSION); }catch(e){}
 }
 
 function setAlarmTonePreset(tone){
