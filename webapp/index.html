@@ -6222,6 +6222,7 @@ body{ padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
     flex-wrap:wrap;
   }
   #notifyToggleBtn,
+  #alarmSoundToggleBtn,
   #notifyTestBtn{
     flex:1 1 100%;
   }
@@ -13842,6 +13843,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <span>🌙</span>
         </div>
         <button class="hd-btn hd-btn-secondary" id="notifyToggleBtn" onclick="toggleNotifications()" title="Enable browser notifications for saves and alarms">🔕 Notifications Off</button>
+        <button class="hd-btn hd-btn-secondary" id="alarmSoundToggleBtn" onclick="toggleAlarmSound()" title="Turn alarm sound on or off" aria-pressed="true">🔊 Alarm Sound On</button>
         <button class="hd-btn hd-btn-secondary" id="notifyTestBtn" data-admin-only="true" onclick="sendTestNotification()" title="Send a test notification">🧪 Test Alert</button>
         <div data-admin-only="true" style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:8px 10px;">
           <div style="font-size:11px;font-weight:700;color:#cbd5e1;letter-spacing:0.4px;">🚨 Alarm Sound</div>
@@ -24509,6 +24511,7 @@ document.addEventListener("DOMContentLoaded",function(){
   updateBiometricLoginUI();
   loadNotificationPrefs();
   updateNotificationToggleUI();
+  updateAlarmSoundToggleUI();
   updateAlarmToneUI();
   var m=document.getElementById("forgotModal");
   if(m) m.addEventListener("click",function(e){ if(e.target===this) hideForgotModal(); });
@@ -24788,6 +24791,7 @@ function showToast(msg, options){
 var notificationsEnabled = false;
 var notificationLastFire = {};
 var alarmTonePreset = "classic";
+var alarmSoundEnabled = true;
 
 function loadNotificationPrefs(){
   try{
@@ -24796,10 +24800,14 @@ function loadNotificationPrefs(){
     if(!notificationLastFire || typeof notificationLastFire !== "object") notificationLastFire = {};
     var savedTone = localStorage.getItem("scada-alarm-tone");
     if(savedTone) alarmTonePreset = savedTone;
+    var savedAlarmSound = localStorage.getItem("scada-alarm-sound-enabled");
+    if(savedAlarmSound === "0") alarmSoundEnabled = false;
+    else if(savedAlarmSound === "1") alarmSoundEnabled = true;
   }catch(e){
     notificationsEnabled = false;
     notificationLastFire = {};
     alarmTonePreset = "classic";
+    alarmSoundEnabled = true;
   }
 }
 
@@ -24807,6 +24815,7 @@ function saveNotificationPrefs(){
   try{ localStorage.setItem("scada-notifications-enabled", notificationsEnabled ? "1" : "0"); }catch(e){}
   try{ localStorage.setItem("scada-notification-lastfire", JSON.stringify(notificationLastFire)); }catch(e){}
   try{ localStorage.setItem("scada-alarm-tone", alarmTonePreset || "classic"); }catch(e){}
+  try{ localStorage.setItem("scada-alarm-sound-enabled", alarmSoundEnabled ? "1" : "0"); }catch(e){}
 }
 
 function setAlarmTonePreset(tone){
@@ -24820,6 +24829,43 @@ function setAlarmTonePreset(tone){
 function updateAlarmToneUI(){
   var sel = document.getElementById("alarmToneSelect");
   if(sel) sel.value = alarmTonePreset || "classic";
+}
+
+function updateAlarmSoundToggleUI(){
+  var btn = document.getElementById("alarmSoundToggleBtn");
+  if(!btn) return;
+  if(alarmSoundEnabled){
+    btn.textContent = "🔊 Alarm Sound On";
+    btn.classList.add("hd-btn-notify-on");
+    btn.setAttribute("aria-pressed", "true");
+    btn.title = "Turn alarm sound off";
+  }else{
+    btn.textContent = "🔇 Alarm Sound Off";
+    btn.classList.remove("hd-btn-notify-on");
+    btn.setAttribute("aria-pressed", "false");
+    btn.title = "Turn alarm sound on";
+  }
+}
+
+function hasUnackedActiveAlarms(){
+  return Array.isArray(alarmLog) && alarmLog.some(function(a){ return a && !a.acked; });
+}
+
+function toggleAlarmSound(){
+  alarmSoundEnabled = !alarmSoundEnabled;
+  saveNotificationPrefs();
+  updateAlarmSoundToggleUI();
+  if(!alarmSoundEnabled){
+    stopAlarm();
+    masterAlarmActive = false;
+    showToast("🔇 Alarm sound turned off.");
+  }else{
+    if(hasUnackedActiveAlarms() && currentAlarmReasonKey !== silencedAlarmReasonKey){
+      startAlarm();
+      masterAlarmActive = true;
+    }
+    showToast("🔊 Alarm sound turned on.");
+  }
 }
 
 function updateNotificationToggleUI(){
@@ -26482,6 +26528,7 @@ function bindBurnerTableHover(gridWrap, tbl){
 ================================================== */
 let audioCtx=null,alarmTimer=null;
 function playBeep(){
+  if(!alarmSoundEnabled) return;
   if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if(audioCtx.state === "suspended"){
     try{ audioCtx.resume(); }catch(e){}
@@ -26553,7 +26600,13 @@ function playBeep(){
     playTone(620, now + 0.12, 0.20, 0.048);
   }
 }
-function startAlarm(){ if(!alarmTimer) alarmTimer = setInterval(playBeep, 1200); }
+function startAlarm(){
+  if(!alarmSoundEnabled){
+    stopAlarm();
+    return;
+  }
+  if(!alarmTimer) alarmTimer = setInterval(playBeep, 1200);
+}
 function stopAlarm(){ clearInterval(alarmTimer); alarmTimer=null; }
 function getAlarmStableKey(a){
   return [a && a.type || "", a && a.wall || "", a && a.sev || "", a && a.desc || "", a && a.action || ""].join("|");
@@ -26707,11 +26760,13 @@ function syncMasterAlarmBanner(){
   }
   if(metaEl){
     metaEl.textContent = hasAny
-      ? (silenced
+      ? (!alarmSoundEnabled
+          ? "Alarm sound is off from Quick Menu. Visual alarms remain active below."
+          : (silenced
           ? "Alarm pulse acknowledged. Tap any alarm pill below for full details."
           : (activeAlarms.length === 1
               ? "1 active alarm is waiting for attention."
-              : (activeAlarms.length + " active alarms are waiting for attention.")))
+              : (activeAlarms.length + " active alarms are waiting for attention."))))
       : "No active alarms. All walls are within normal parameters.";
   }
   if(ackBtn){
@@ -26727,7 +26782,7 @@ function syncMasterAlarmBanner(){
   }
 
   if(hasAny){
-    if(!silenced){
+    if(!silenced && alarmSoundEnabled){
       if(!masterAlarmActive){
         masterAlarmActive = true;
         startAlarm();
