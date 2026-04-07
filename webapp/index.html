@@ -9140,7 +9140,7 @@ function renderDeviceLoginModal(data){
 
   if(!listEl) return;
   if(!devices.length){
-    listEl.innerHTML = '<div class="device-login-empty">No website logins were recorded in the last 24 hours.</div>';
+    listEl.innerHTML = '<div class="device-login-empty">No website logins were recorded in the last 72 hours.</div>';
     return;
   }
 
@@ -9203,11 +9203,11 @@ async function refreshDeviceLoginModal(){
   if(listEl){
     listEl.innerHTML = '<div class="device-login-empty">Loading recent device activity...</div>';
   }
-  setDeviceLoginModalStatus("Fetching login devices from the last 24 hours...", "info");
+  setDeviceLoginModalStatus("Fetching login devices from the last 72 hours...", "info");
   try{
     var data = await scadaServerApiGetJson(DEVICE_LOGIN_AUDIT_API_PATH, { hours: DEVICE_LOGIN_AUDIT_HOURS }, 12000);
     renderDeviceLoginModal(data || {});
-    setDeviceLoginModalStatus("Showing login devices from the last 24 hours.", "ok");
+    setDeviceLoginModalStatus("Showing login devices from the last 72 hours.", "ok");
   }catch(err){
     if(listEl){
       listEl.innerHTML = '<div class="device-login-empty">Could not load device logins right now.</div>';
@@ -14203,7 +14203,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   <div class="admin-pin-card device-login-card">
     <button class="admin-pin-close" type="button" onclick="closeDeviceLoginModal()" aria-label="Close login device popup">&#10005;</button>
     <div class="admin-pin-title" id="deviceLoginTitle">Login Devices</div>
-    <div class="admin-pin-sub">Past 24 hours of website logins. Device names are browser-detected labels for easier identification.</div>
+    <div class="admin-pin-sub">Past 72 hours of website logins. Device names are browser-detected labels for easier identification.</div>
     <div id="deviceLoginSummary" class="device-login-summary"></div>
     <div id="deviceLoginStatus" class="device-login-status" data-tone="info"></div>
     <div id="deviceLoginList" class="device-login-list">
@@ -14255,7 +14255,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         <button class="hd-btn hd-btn-secondary" id="notifyToggleBtn" onclick="toggleNotifications()" title="Enable browser notifications for saves and alarms">🔕 Notifications Off</button>
         <button class="hd-btn hd-btn-secondary" id="alarmSoundToggleBtn" data-admin-only="true" onclick="toggleAlarmSound()" title="Turn alarm sound on or off" aria-pressed="false">🔇 Alarm Sound Off</button>
         <button class="hd-btn hd-btn-secondary" id="notifyTestBtn" data-admin-only="true" onclick="sendTestNotification()" title="Send a test notification">🧪 Test Alert</button>
-        <button class="hd-btn hd-btn-secondary" data-admin-only="true" onclick="openDeviceLoginModal();closeQuickMenu();" title="Show devices that logged in during the last 24 hours">🖥 Login Devices</button>
+        <button class="hd-btn hd-btn-secondary" data-admin-only="true" onclick="openDeviceLoginModal();closeQuickMenu();" title="Show devices that logged in during the last 72 hours">🖥 Login Devices</button>
         <div data-admin-only="true" style="display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:8px 10px;">
           <div style="font-size:11px;font-weight:700;color:#cbd5e1;letter-spacing:0.4px;">🚨 Alarm Sound</div>
           <select id="alarmToneSelect" onchange="setAlarmTonePreset(this.value)" style="width:100%;background:#0f2744;border:1px solid #334155;border-radius:6px;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;padding:7px 8px;outline:none;cursor:pointer;">
@@ -24912,7 +24912,7 @@ var adminModeExpiryTimer = 0;
 var adminModeActivityListenersBound = false;
 var adminPinVerifyBusy = false;
 var deviceLoginAuditBusy = false;
-var DEVICE_LOGIN_AUDIT_HOURS = 24;
+var DEVICE_LOGIN_AUDIT_HOURS = 72;
 var DEVICE_LOGIN_AUDIT_API_PATH = "/device-logins";
 var DEVICE_LOGIN_AUDIT_ID_KEY = "scadaDeviceAuditIdV1";
 

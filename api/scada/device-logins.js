@@ -12,7 +12,7 @@ const {
 } = require("./_shared");
 
 const LOGIN_EVENT_PREFIX = "SCADA-DEVICE-LOGIN-";
-const DEFAULT_HOURS = 24;
+const DEFAULT_HOURS = 72;
 const MAX_HOURS = 168;
 const MAX_ROWS = 500;
 
