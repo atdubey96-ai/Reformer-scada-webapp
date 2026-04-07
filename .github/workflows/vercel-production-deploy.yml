@@ -32,6 +32,15 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
+      - name: Install Source Hardening Tooling
+        run: npm install --prefix /tmp/source-hardening-tools html-minifier-terser terser
+
+      - name: Minify Public Webapp HTML
+        run: NODE_PATH=/tmp/source-hardening-tools/node_modules node scripts/minify-webapp-source.cjs webapp/index.html webapp/index.html
+
+      - name: Validate Minified Inline Scripts
+        run: node scripts/validate-inline-scripts.cjs webapp/index.html
+
       - name: Pull Vercel Project Settings
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
         env:
