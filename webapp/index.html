@@ -9697,7 +9697,7 @@ function parseTempDataPeepHeader(raw){
   var text = String(raw == null ? "" : raw).toLowerCase().trim();
   if(!text) return null;
   text = text.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-  var match = text.match(/^(ab|cd)\s+(bot|bottom|top)\s+(?:(?:peep ?hole|peephole|ph)\s+)?(\d{1,2})$/i);
+  var match = text.match(/^(ab|cd)\s+(bot|bottom|top)\s+(?:(?:peep ?hole|peephole|ph)\s*)?(\d{1,2})$/i);
   if(!match) return null;
   var phNum = parseInt(match[3], 10);
   if(!(phNum >= 1 && phNum <= 15)) return null;
@@ -28283,7 +28283,7 @@ function _doImport(file, onDone, silent){
             var idxOpeningSnapshot = colIdx(["burner opening snapshot json","burner opening snapshot","opening snapshot json","opening snapshot"], -1);
             var phRowKeys2    = ["ab-bot","cd-bot","ab-top","cd-top"];
             var peepColumnMeta = buildTempDataPeepColumnMap(tdHeader);
-            var useExplicitPeepColumns = peepColumnMeta.count >= (phRowKeys2.length * 15);
+            var hasExplicitPeepColumns = peepColumnMeta.count > 0;
             var scalarIndexes = [
               idxHguLoad, idxFeedFlowMixingPoint, idxAbCot, idxCdCot, idxFlue, idxExcessO2, idxPreMax, idxPreMin, idxMethane,
               idxPsa1Og, idxPsa2Og, idxNaphthaFuel, idxPsa1TipP, idxNgTipP, idxNaphthaTipP, idxNgFuelTemp, idxTag2411
@@ -28320,9 +28320,10 @@ function _doImport(file, onDone, silent){
               phRowKeys2.forEach(function(rk){
                 entry.peepHoles[rk] = [];
                 for(var ph=0;ph<15;ph++){
-                  var mappedIdx = useExplicitPeepColumns ? peepColumnMeta.map[rk + ":" + ph] : colOffset;
+                  var explicitIdx = peepColumnMeta.map[rk + ":" + ph];
+                  var mappedIdx = (explicitIdx != null) ? explicitIdx : colOffset;
                   entry.peepHoles[rk].push(sanitizeTstValue(mappedIdx != null ? row[mappedIdx] : ""));
-                  if(!useExplicitPeepColumns) colOffset++;
+                  if(!hasExplicitPeepColumns || explicitIdx == null) colOffset++;
                 }
               });
               if(idxSnapshot >= 0){
