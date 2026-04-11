@@ -22,16 +22,27 @@ module.exports = async (req, res) => {
   const tags = splitCsvParam(req.query && req.query.tags);
   const limitRaw = Number(req.query && req.query.limit);
   const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 500) : 200;
-  let url =
-    buildPlantRestUrl(encodeURIComponent(getPlantCurrentTable())) +
-    "?select=tag_id,label,value,unit,synced_at,pushed_at";
+  const baseUrl = buildPlantRestUrl(encodeURIComponent(getPlantCurrentTable()));
+  let filterQuery = "";
   if (tags.length) {
-    url += "&tag_id=in.(" + buildSupabaseInFilter(tags) + ")";
+    filterQuery += "&tag_id=in.(" + buildSupabaseInFilter(tags) + ")";
   }
-  url += "&order=synced_at.desc&limit=" + encodeURIComponent(String(limit));
+  filterQuery += "&order=synced_at.desc&limit=" + encodeURIComponent(String(limit));
 
   try {
-    const out = await fetchJson(url, { method: "GET", headers: plantHeaders() });
+    let out = await fetchJson(
+      baseUrl + "?select=tag_id,label,value,unit,synced_at,pushed_at" + filterQuery,
+      { method: "GET", headers: plantHeaders() }
+    );
+    const errorMessage = String(
+      (out && out.json && (out.json.message || out.json.error || out.json.hint)) || ""
+    ).toLowerCase();
+    if (!out.ok && out.status === 400 && errorMessage.indexOf("pushed_at") !== -1) {
+      out = await fetchJson(
+        baseUrl + "?select=tag_id,label,value,unit,synced_at" + filterQuery,
+        { method: "GET", headers: plantHeaders() }
+      );
+    }
     if (!out.ok) {
       return sendJson(res, 502, {
         ok: false,
@@ -39,7 +50,15 @@ module.exports = async (req, res) => {
         status: out.status
       });
     }
-    return sendJson(res, 200, Array.isArray(out.json) ? out.json : []);
+    return sendJson(
+      res,
+      200,
+      (Array.isArray(out.json) ? out.json : []).map((row) =>
+        Object.assign({}, row, {
+          pushed_at: (row && (row.pushed_at || row.synced_at)) || null
+        })
+      )
+    );
   } catch (err) {
     return sendJson(res, 502, {
       ok: false,
