@@ -1,4 +1,26 @@
 const SERVICE_NAME = "scada-relay";
+const DEFAULT_PLANT_SUPABASE_URL = "https://mozuuowwdfyqqvpiyetk.supabase.co";
+const DEFAULT_PLANT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1venV1b3d3ZGZ5cXF2cGl5ZXRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTU3NjksImV4cCI6MjA5MDE5MTc2OX0.SqSAoPwxgPi6cVrYeIQC8xBebbVINZEaPw-odWdqUPo";
+const DEFAULT_PLANT_CURRENT_TABLE = "plant_data";
+const LIVE_HISTORY_REPORT_FILE_NAME = "SCADA_LIVE_PLANT_HISTORY.json";
+const LIVE_HISTORY_BUCKET_MS = 15 * 60 * 1000;
+const LIVE_HISTORY_RETENTION_MS = (8 * 60 * 60 * 1000) + LIVE_HISTORY_BUCKET_MS;
+const LIVE_HISTORY_TAGS = [
+  "GJA.2041fic2405.pv",
+  "GJA.2041ti2501.pv",
+  "GJA.2041ti2502.pv",
+  "GJA.2041ti2408.pv",
+  "GJA.2041ai2401.pv",
+  "GJA.2041ai2601.pv",
+  "GJA.2041fic2904.pv",
+  "GJA.2041fic3009.pv",
+  "GJA.2041fic6303a.pv",
+  "GJA.2041pi2501a.pv",
+  "GJA.2041pi2504a.pv",
+  "GJA.2041pi2507a.pv",
+  "GJA.2041tic2411.pv",
+  "GJA.2041ti2412.pv"
+];
 
 export default {
   async fetch(request, env) {
@@ -16,7 +38,7 @@ export default {
           {
             ok: true,
             service: SERVICE_NAME,
-            endpoints: ["/health", "/scada/auth", "/scada/report/latest", "/scada/report", "/scada/tst/ocr"]
+            endpoints: ["/health", "/scada/auth", "/scada/report/latest", "/scada/report", "/scada/tst/ocr", "/scada/live-history/snapshot"]
           },
           200
         );
@@ -64,6 +86,10 @@ export default {
         return await handleWriteReport(env, payload);
       }
 
+      if (path === "/scada/live-history/snapshot" && (method === "GET" || method === "POST")) {
+        return await handleLiveHistorySnapshot(env);
+      }
+
       return json({ error: "not_found" }, 404);
     } catch (err) {
       return json(
@@ -74,6 +100,9 @@ export default {
         502
       );
     }
+  },
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runScheduledLiveHistorySnapshot(env, event));
   }
 };
 
@@ -140,6 +169,232 @@ function safeJsonParse(text) {
     return JSON.parse(String(text || ""));
   } catch (_err) {
     return null;
+  }
+}
+
+function trimTrailingPlantSlash(value) {
+  return String(value || "").replace(/\/+$/, "");
+}
+
+function getPlantSupabaseUrl(env) {
+  return trimTrailingPlantSlash(
+    env.PLANT_SUPABASE_URL ||
+    env.TD_PLANT_SUPABASE_URL ||
+    DEFAULT_PLANT_SUPABASE_URL
+  );
+}
+
+function getPlantSupabaseAnonKey(env) {
+  return String(
+    env.PLANT_SUPABASE_ANON_KEY ||
+    env.TD_PLANT_SUPABASE_ANON_KEY ||
+    DEFAULT_PLANT_SUPABASE_ANON_KEY
+  ).trim();
+}
+
+function getPlantCurrentTable(env) {
+  return String(
+    env.PLANT_CURRENT_TABLE ||
+    env.TD_PLANT_CURRENT_TABLE ||
+    DEFAULT_PLANT_CURRENT_TABLE
+  ).trim();
+}
+
+function plantHeaders(env, extra) {
+  var key = getPlantSupabaseAnonKey(env);
+  return Object.assign(
+    {
+      apikey: key,
+      Authorization: "Bearer " + key,
+      Accept: "application/json",
+      "Cache-Control": "no-cache"
+    },
+    extra || {}
+  );
+}
+
+function buildSupabaseInFilter(items) {
+  return (Array.isArray(items) ? items : []).join(",");
+}
+
+function utf8ToBase64(value) {
+  var bytes = new TextEncoder().encode(String(value || ""));
+  var binary = "";
+  for (var i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function base64ToUtf8(value) {
+  var binary = atob(String(value || ""));
+  var bytes = new Uint8Array(binary.length);
+  for (var i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+function decodeBase64Json(raw) {
+  try {
+    return safeJsonParse(base64ToUtf8(raw));
+  } catch (_err) {
+    return null;
+  }
+}
+
+function encodeBase64Json(value) {
+  return utf8ToBase64(JSON.stringify(value || {}));
+}
+
+function collectLatestRows(rows) {
+  var latest = new Map();
+  (Array.isArray(rows) ? rows : []).forEach(function (row) {
+    if (!row || !row.tag_id) return;
+    var tagId = String(row.tag_id).trim();
+    if (!tagId || latest.has(tagId)) return;
+    latest.set(tagId, row);
+  });
+  return latest;
+}
+
+function getLiveHistoryBucketStart(dateLike) {
+  var dt = dateLike ? new Date(dateLike) : new Date();
+  var ms = dt.getTime();
+  if (!isFinite(ms)) ms = Date.now();
+  return new Date(Math.floor(ms / LIVE_HISTORY_BUCKET_MS) * LIVE_HISTORY_BUCKET_MS);
+}
+
+function trimLiveHistoryRows(rows) {
+  var cutoff = Date.now() - LIVE_HISTORY_RETENTION_MS;
+  return (Array.isArray(rows) ? rows : []).filter(function (row) {
+    var ms = Date.parse(row && row.recorded_at ? row.recorded_at : "");
+    return isFinite(ms) && ms >= cutoff;
+  });
+}
+
+async function fetchPlantCurrentRowsForHistory(env) {
+  var baseUrl = getPlantSupabaseUrl(env) + "/rest/v1/" + encodeURIComponent(getPlantCurrentTable(env));
+  var filterQuery = "&tag_id=in.(" + buildSupabaseInFilter(LIVE_HISTORY_TAGS) + ")&order=synced_at.desc&limit=200";
+  var out = await fetch(
+    baseUrl + "?select=tag_id,label,value,unit,synced_at,pushed_at" + filterQuery,
+    { method: "GET", headers: plantHeaders(env) }
+  );
+  var body = await readResponseJsonOrText(out);
+  if (!out.ok) {
+    var msg = String((body.json && (body.json.message || body.json.error || body.json.hint)) || "").toLowerCase();
+    if (out.status === 400 && msg.indexOf("pushed_at") !== -1) {
+      out = await fetch(
+        baseUrl + "?select=tag_id,label,value,unit,synced_at" + filterQuery,
+        { method: "GET", headers: plantHeaders(env) }
+      );
+      body = await readResponseJsonOrText(out);
+    }
+  }
+  if (!out.ok) {
+    throw new Error("plant_current_fetch_failed:" + out.status);
+  }
+  var rows = Array.isArray(body.json) ? body.json : [];
+  return Array.from(collectLatestRows(rows).values()).map(function (row) {
+    return Object.assign({}, row, {
+      pushed_at: row && (row.pushed_at || row.synced_at) ? (row.pushed_at || row.synced_at) : null
+    });
+  });
+}
+
+async function fetchLatestNamedReport(env, fileName) {
+  var u =
+    String(env.SUPABASE_URL).replace(/\/+$/, "") +
+    "/rest/v1/" +
+    sbTable(env) +
+    "?select=file_name,data_base64,created_at,uploaded_by&file_name=eq." +
+    encodeURIComponent(String(fileName || "")) +
+    "&order=created_at.desc&limit=1";
+  var res = await fetch(u, { method: "GET", headers: sbHeaders(env) });
+  if (!res.ok) return null;
+  var arr = await res.json().catch(function () { return []; });
+  return Array.isArray(arr) && arr.length ? arr[0] : null;
+}
+
+async function writeNamedReport(env, fileName, payload, uploadedBy) {
+  return await handleWriteReport(env, {
+    file_name: fileName,
+    data_base64: encodeBase64Json(payload),
+    uploaded_by: uploadedBy || "CLOUDFLARE_CRON"
+  });
+}
+
+async function buildAndStoreLiveHistorySnapshot(env) {
+  var currentRows = await fetchPlantCurrentRowsForHistory(env);
+  var bucketStart = getLiveHistoryBucketStart(new Date());
+  var bucketStartIso = bucketStart.toISOString();
+  var existingReport = await fetchLatestNamedReport(env, LIVE_HISTORY_REPORT_FILE_NAME);
+  var existingPayload = decodeBase64Json(existingReport && existingReport.data_base64) || {};
+  var existingRows = trimLiveHistoryRows(existingPayload.rows || []);
+  var byBucketTag = new Map();
+
+  existingRows.forEach(function (row) {
+    var key = String((row && row.recorded_at) || "") + "::" + String((row && row.tag_id) || "");
+    byBucketTag.set(key, row);
+  });
+
+  currentRows.forEach(function (row) {
+    var tagId = String(row && row.tag_id || "").trim();
+    if (!tagId) return;
+    byBucketTag.set(bucketStartIso + "::" + tagId, {
+      tag_id: tagId,
+      label: row.label || tagId,
+      value: row.value,
+      recorded_at: bucketStartIso
+    });
+  });
+
+  var mergedRows = trimLiveHistoryRows(Array.from(byBucketTag.values()).sort(function (a, b) {
+    return Date.parse(a.recorded_at || "") - Date.parse(b.recorded_at || "");
+  }));
+
+  var reportPayload = {
+    file_name: LIVE_HISTORY_REPORT_FILE_NAME,
+    generated_at: new Date().toISOString(),
+    bucket_ms: LIVE_HISTORY_BUCKET_MS,
+    retention_ms: LIVE_HISTORY_RETENTION_MS,
+    rows: mergedRows
+  };
+
+  var writeResponse = await writeNamedReport(env, LIVE_HISTORY_REPORT_FILE_NAME, reportPayload, "CLOUDFLARE_CRON");
+  if (!writeResponse || !writeResponse.ok) {
+    throw new Error("live_history_report_write_failed");
+  }
+
+  return {
+    ok: true,
+    bucket_start: bucketStartIso,
+    current_rows: currentRows.length,
+    stored_rows: mergedRows.length
+  };
+}
+
+async function handleLiveHistorySnapshot(env) {
+  try {
+    var result = await buildAndStoreLiveHistorySnapshot(env);
+    return json(result, 200);
+  } catch (err) {
+    return json(
+      {
+        ok: false,
+        error: "live_history_snapshot_failed",
+        message: String((err && err.message) || err || "unknown")
+      },
+      502
+    );
+  }
+}
+
+async function runScheduledLiveHistorySnapshot(env, event) {
+  try {
+    await buildAndStoreLiveHistorySnapshot(env);
+  } catch (err) {
+    console.error("scheduled live history snapshot failed", String((err && err.message) || err || "unknown"), event && event.cron);
   }
 }
 
