@@ -38700,8 +38700,10 @@ body.light-theme .btab-alarm-count{
     historyRows: [],
     historyPoints: [],
     historySynthetic: false,
+    historySessionOnly: false,
     historyLoaded: false,
     lastHistoryFetchAt: null,
+    liveSessionSamples: [],
     historyMessage: "",
     errorMessage: "",
     mappedCount: 0,
@@ -39075,6 +39077,68 @@ body.light-theme .btab-alarm-count{
     return points;
   }
 
+  function trimReformerLiveSessionSamples(){
+    var cutoffMs = Date.now() - REFORMER_DASH_HISTORY_WINDOW_MS;
+    reformerDashState.liveSessionSamples = (Array.isArray(reformerDashState.liveSessionSamples) ? reformerDashState.liveSessionSamples : []).filter(function(sample){
+      var dt = sample && sample.time instanceof Date ? sample.time : parseDashDate(sample && sample.time);
+      return !!(dt && dt.getTime() >= cutoffMs);
+    });
+  }
+
+  function captureReformerLiveSessionSample(data){
+    var sourceMode = typeof getTdPlantSourceMode === "function" ? getTdPlantSourceMode() : "live";
+    if(sourceMode !== "live") return;
+    var pv = data || reformerDashState.data || makeEmptyData();
+    var sample = {
+      time: new Date(),
+      sourceMode: sourceMode
+    };
+    var valueCount = 0;
+    for(var key in pv){
+      if(!Object.prototype.hasOwnProperty.call(pv, key) || key === "h2Production") continue;
+      if(!isFiniteNumber(pv[key])) continue;
+      sample[key] = pv[key];
+      valueCount += 1;
+    }
+    if(!valueCount) return;
+    sample.h2Production = sample.hguLoad;
+    reformerDashState.liveSessionSamples.push(sample);
+    trimReformerLiveSessionSamples();
+  }
+
+  function buildReformerLiveSessionHistoryPoints(){
+    trimReformerLiveSessionSamples();
+    var buckets = new Map();
+    (Array.isArray(reformerDashState.liveSessionSamples) ? reformerDashState.liveSessionSamples : []).forEach(function(sample){
+      if(!sample || sample.sourceMode !== "live") return;
+      var dt = sample.time instanceof Date ? sample.time : parseDashDate(sample.time);
+      if(!dt) return;
+      var bucketKey = Math.floor(dt.getTime() / REFORMER_DASH_BUCKET_MS) * REFORMER_DASH_BUCKET_MS;
+      if(!buckets.has(bucketKey)){
+        buckets.set(bucketKey, { time: new Date(bucketKey), values: {} });
+      }
+      var bucket = buckets.get(bucketKey);
+      for(var key in sample){
+        if(!Object.prototype.hasOwnProperty.call(sample, key) || key === "time" || key === "sourceMode" || key === "h2Production") continue;
+        if(!isFiniteNumber(sample[key])) continue;
+        if(!bucket.values[key]) bucket.values[key] = [];
+        bucket.values[key].push(sample[key]);
+      }
+    });
+    return Array.from(buckets.keys()).sort(function(a, b){ return a - b; }).map(function(key){
+      var bucket = buckets.get(key);
+      var point = { time: bucket.time, label: formatHistoryBucketLabel(bucket.time) };
+      for(var field in bucket.values){
+        if(!Object.prototype.hasOwnProperty.call(bucket.values, field)) continue;
+        var vals = bucket.values[field];
+        point[field] = vals.reduce(function(sum, item){ return sum + item; }, 0) / Math.max(vals.length, 1);
+      }
+      point.h2Production = point.hguLoad;
+      point.efficiency = calcReformerMetrics(point).efficiency;
+      return point;
+    });
+  }
+
   function formatHistoryBucketLabel(dt){
     if(!dt) return "";
     return dt.toLocaleDateString([], { day:"2-digit", month:"short" }) + " " + dt.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
@@ -39406,6 +39470,8 @@ body.light-theme .btab-alarm-count{
     if(historyEl){
       historyEl.textContent = reformerDashState.historySynthetic
         ? (String((reformerDashState.historyPoints || []).length) + " demo")
+        : reformerDashState.historySessionOnly
+          ? (String((reformerDashState.historyPoints || []).length) + " session")
         : String((reformerDashState.historyRows || []).length);
     }
     var sourceLabel = typeof getTdPlantSourceLabel === "function" ? getTdPlantSourceLabel() : "Live";
@@ -39425,7 +39491,9 @@ body.light-theme .btab-alarm-count{
       }else if(stale){
         liveLabel.textContent = sourceLabel + " stale · last push " + getDashAgoLabel(reformerDashState.lastPushAt);
       }else{
-        liveLabel.textContent = sourceLabel + " · " + reformerDashState.mappedCount + " mapped tags" + (reformerDashState.historySynthetic ? " · synthetic trend preview" : "");
+        liveLabel.textContent = sourceLabel + " · " + reformerDashState.mappedCount + " mapped tags"
+          + (reformerDashState.historySynthetic ? " · synthetic trend preview" : "")
+          + (reformerDashState.historySessionOnly ? " · session trend preview" : "");
       }
     }
     if(fetchEl && reformerDashState.lastFetchAt) fetchEl.title = "Dashboard fetched at " + formatDashDateTime(reformerDashState.lastFetchAt);
@@ -40009,12 +40077,14 @@ body.light-theme .btab-alarm-count{
         reformerDashState.rowMeta = mapped.rowMeta;
         reformerDashState.lastFetchAt = new Date();
         reformerDashState.errorMessage = "";
+        captureReformerLiveSessionSample(reformerDashState.data);
 
         if(forceHistory || !reformerDashState.historyLoaded || !reformerDashState.lastHistoryFetchAt || (Date.now() - reformerDashState.lastHistoryFetchAt.getTime()) >= (2 * 60 * 1000)){
           var historyResult = await fetchReformerHistoryRows();
           reformerDashState.historyRows = Array.isArray(historyResult.rows) ? historyResult.rows : [];
           reformerDashState.historyPoints = bucketHistoryRows(reformerDashState.historyRows);
           reformerDashState.historySynthetic = false;
+          reformerDashState.historySessionOnly = false;
           reformerDashState.historyLoaded = true;
           reformerDashState.lastHistoryFetchAt = new Date();
           reformerDashState.historyMessage = historyResult.error || "";
@@ -40024,6 +40094,12 @@ body.light-theme .btab-alarm-count{
             reformerDashState.historyMessage = reformerDashState.historySynthetic
               ? "Demo history is being synthesized from the current demo snapshot until stored demo history accumulates."
               : "No demo history samples were found yet. Start the demo publisher on your Mac and let it run for a few minutes.";
+          }else if(!reformerDashState.historyPoints.length && !reformerDashState.historyMessage){
+            reformerDashState.historyPoints = buildReformerLiveSessionHistoryPoints();
+            reformerDashState.historySessionOnly = reformerDashState.historyPoints.length > 0;
+            reformerDashState.historyMessage = reformerDashState.historySessionOnly
+              ? "Live current data is available, but plant_data_history has no rows yet. Showing trend captured from this browser session only."
+              : "Live current data is available, but plant_data_history has no rows yet. Leave the page open for a few refresh cycles or enable history logging to build the full 1-hour trend.";
           }else if(!reformerDashState.historyRows.length && !reformerDashState.historyMessage){
             reformerDashState.historyMessage = "No history samples were found in the last 1 hour. Trend charts will fill as new 2-minute history rows arrive.";
           }
