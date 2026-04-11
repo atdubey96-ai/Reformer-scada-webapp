@@ -23590,7 +23590,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               <span id="td-plant-live-warning-inline-text" class="td-plant-stat-value">—</span>
             </div>
             <div class="td-toolbar-pill"><span class="td-toolbar-label">Excel Last Push:</span><span id="td-plant-stat-push" class="td-plant-stat-value">—</span></div>
-            <div class="td-toolbar-pill" style="display:flex;align-items:center;gap:8px;">
+            <div class="td-toolbar-pill" data-admin-only="true" style="display:flex;align-items:center;gap:8px;">
               <span class="td-toolbar-label">Source:</span>
               <div class="scada-source-toggle" data-plant-source-toggle>
                 <button type="button" class="scada-source-btn" data-plant-source-option="live" onclick="setTdPlantSourceMode('live')">Live</button>
@@ -24619,7 +24619,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <span class="refdash-section-bar refdash-accent"></span>
             <div>
               <h3 class="refdash-section-title">Temperature Trends — Last 8 Hours</h3>
-              <p class="refdash-section-sub">15-minute buckets from Supabase history</p>
+              <p class="refdash-section-sub" data-admin-only="true">15-minute buckets from Supabase history</p>
             </div>
           </div>
           <div class="refdash-chart-frame refdash-chart-frame-xl"><canvas id="refdash-chart-temp-trend"></canvas></div>
@@ -39941,14 +39941,34 @@ body.light-theme .btab-alarm-count{
       data: {
         labels: labels,
         datasets: [
-          { label:"AB COT", data: reformerDashState.historyPoints.map(function(point){ return point.abCot; }), borderColor: theme.accent2, backgroundColor: "rgba(245,158,11,0.08)", tension:0.3, borderWidth:2, spanGaps:true },
-          { label:"CD COT", data: reformerDashState.historyPoints.map(function(point){ return point.cdCot; }), borderColor: theme.cyan, backgroundColor: "rgba(34,211,238,0.08)", tension:0.3, borderWidth:2, spanGaps:true },
-          { label:"Flue Gas", data: reformerDashState.historyPoints.map(function(point){ return point.flueGas; }), borderColor: theme.red, backgroundColor: "rgba(251,113,133,0.08)", tension:0.3, borderWidth:2, spanGaps:true },
-          { label:"Pre-Ref In", data: reformerDashState.historyPoints.map(function(point){ return point.preInlet; }), borderColor: theme.green, borderDash:[5,5], tension:0.3, borderWidth:1.6, spanGaps:true },
-          { label:"Pre-Ref Out", data: reformerDashState.historyPoints.map(function(point){ return point.preOutlet; }), borderColor: theme.purple, borderDash:[5,5], tension:0.3, borderWidth:1.6, spanGaps:true }
+          { label:"AB COT", data: reformerDashState.historyPoints.map(function(point){ return point.abCot; }), borderColor: theme.accent2, backgroundColor: "rgba(245,158,11,0.08)", tension:0.24, borderWidth:2.4, pointRadius:2.6, pointHoverRadius:4, spanGaps:true, yAxisID:"y" },
+          { label:"CD COT", data: reformerDashState.historyPoints.map(function(point){ return point.cdCot; }), borderColor: theme.cyan, backgroundColor: "rgba(34,211,238,0.08)", tension:0.24, borderWidth:2.4, pointRadius:2.6, pointHoverRadius:4, spanGaps:true, yAxisID:"y" },
+          { label:"Flue Gas", data: reformerDashState.historyPoints.map(function(point){ return point.flueGas; }), borderColor: theme.red, backgroundColor: "rgba(251,113,133,0.08)", tension:0.24, borderWidth:2.6, pointRadius:2.8, pointHoverRadius:4.2, spanGaps:true, yAxisID:"y" },
+          { label:"Pre-Ref In", data: reformerDashState.historyPoints.map(function(point){ return point.preInlet; }), borderColor: theme.green, borderDash:[6,5], tension:0.18, borderWidth:2, pointRadius:2.4, pointHoverRadius:3.8, spanGaps:true, yAxisID:"y1" },
+          { label:"Pre-Ref Out", data: reformerDashState.historyPoints.map(function(point){ return point.preOutlet; }), borderColor: theme.purple, borderDash:[6,5], tension:0.18, borderWidth:2, pointRadius:2.4, pointHoverRadius:3.8, spanGaps:true, yAxisID:"y1" }
         ]
       },
-      options: lineOptions(theme)
+      options: lineOptions(theme, {
+        interaction: { mode:"index", intersect:false },
+        scales: {
+          x: {
+            ticks: { color: theme.dim, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+            grid: { color: theme.border }
+          },
+          y: {
+            position: "left",
+            ticks: { color: theme.dim },
+            grid: { color: theme.border },
+            title: { display:true, text:"COT / Flue Gas (°C)", color:theme.muted }
+          },
+          y1: {
+            position: "right",
+            ticks: { color: theme.dim },
+            grid: { display:false },
+            title: { display:true, text:"Pre-Reformer (°C)", color:theme.muted }
+          }
+        }
+      })
     });
 
     replaceChart("combustionTrend", "refdash-chart-combustion", {
