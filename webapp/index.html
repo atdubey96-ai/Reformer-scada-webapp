@@ -5268,7 +5268,7 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   flex:1 1 auto;
   min-width:0;
   display:grid;
-  grid-template-columns:repeat(6,minmax(0,1.1fr)) repeat(4,minmax(0,0.88fr));
+  grid-template-columns:repeat(10,minmax(0,1fr));
   gap:6px;
 }
 #tab-cuboidstack .cuboid-twin-live-pill{
@@ -5282,9 +5282,6 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
     inset 0 1px 0 rgba(255,255,255,0.04),
     0 6px 14px rgba(2,8,23,0.12);
   overflow:hidden;
-}
-#tab-cuboidstack .cuboid-twin-live-pill.is-flow{
-  padding:7px 8px 7px 10px;
 }
 #tab-cuboidstack .cuboid-twin-live-pill::before{
   content:"";
@@ -5305,10 +5302,6 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   overflow:hidden;
   text-overflow:ellipsis;
 }
-#tab-cuboidstack .cuboid-twin-live-pill.is-flow .cuboid-twin-live-pill-label{
-  font-size:9px;
-  letter-spacing:0.68px;
-}
 #tab-cuboidstack .cuboid-twin-live-pill-value{
   display:block;
   margin-top:5px;
@@ -5320,10 +5313,6 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-}
-#tab-cuboidstack .cuboid-twin-live-pill.is-flow .cuboid-twin-live-pill-value{
-  margin-top:4px;
-  font-size:14px;
 }
 #tab-cuboidstack .cuboid-twin-live-meta{
   flex:0 0 210px;
@@ -13011,14 +13000,8 @@ html, body, body *, body *::before, body *::after, svg text{
   #tab-cuboidstack .cuboid-twin-live-pill{
     padding:9px 10px 9px 12px;
   }
-  #tab-cuboidstack .cuboid-twin-live-pill.is-flow{
-    padding:8px 10px 8px 12px;
-  }
   #tab-cuboidstack .cuboid-twin-live-pill-value{
     font-size:16px;
-  }
-  #tab-cuboidstack .cuboid-twin-live-pill.is-flow .cuboid-twin-live-pill-value{
-    font-size:15px;
   }
   #tab-cuboidstack .cuboid-twin-live-meta{
     width:100%;
