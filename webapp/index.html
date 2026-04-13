@@ -28332,6 +28332,11 @@ function appendReformerSettingsSheet(wb){
   var updatedAt = settings.updatedAt || new Date().toISOString();
   var updatedBy = settings.updatedBy || (typeof getLoggedInEmpId === "function" ? getLoggedInEmpId() : "");
   var rows = [["Section","Group","Key","Value","Updated At","Updated By"]];
+  var componentNcv = settings.componentNcv || {};
+  ["CH4","C2H6","C3H8","H2","CO","CO2","N2"].forEach(function(key){
+    if(componentNcv[key] == null) return;
+    rows.push(["Component NCV", "gas", key, componentNcv[key], updatedAt, updatedBy]);
+  });
   var composition = settings.composition || {};
   ["psa1","psa2","ng"].forEach(function(group){
     var mix = composition[group] || {};
@@ -28359,6 +28364,7 @@ function importReformerSettingsFromWorkbook(wb){
   if(!rows || rows.length < 2) return false;
   var payload = {
     version: 1,
+    componentNcv: {},
     composition: { psa1:{}, psa2:{}, ng:{} },
     naphtha: {},
     updatedAt: "",
@@ -28373,7 +28379,9 @@ function importReformerSettingsFromWorkbook(wb){
     if(!isFinite(num)) return;
     if(row && row[4] && !payload.updatedAt) payload.updatedAt = String(row[4]).trim();
     if(row && row[5] && !payload.updatedBy) payload.updatedBy = String(row[5]).trim();
-    if(section.indexOf("gas") >= 0 && payload.composition[group] && key){
+    if(section.indexOf("component") >= 0 && section.indexOf("ncv") >= 0 && key){
+      payload.componentNcv[key] = num;
+    }else if(section.indexOf("gas") >= 0 && payload.composition[group] && key){
       payload.composition[group][key] = num;
     }else if(section.indexOf("naphtha") >= 0 && key){
       if(/^density/i.test(key)) payload.naphtha.densityFactor = num;
@@ -39538,7 +39546,7 @@ body.light-theme .btab-alarm-count{
   var REFORMER_DASH_REFRESH_MS = 60000;
   var REFORMER_DASH_HISTORY_WINDOW_MS = 8 * 60 * 60 * 1000;
   var REFORMER_DASH_BUCKET_MS = 15 * 60 * 1000;
-  var REFORMER_DASH_NCV = {
+  var REFORMER_DASH_DEFAULT_NCV = {
     CH4: 8570,
     C2H6: 15370,
     C3H8: 22350,
@@ -39547,6 +39555,7 @@ body.light-theme .btab-alarm-count{
     CO2: 0,
     N2: 0
   };
+  var REFORMER_DASH_NCV = Object.assign({}, REFORMER_DASH_DEFAULT_NCV);
   var REFORMER_DASH_SETTINGS_STORAGE_KEY = "scadaReformerDashSettingsV1";
   var REFORMER_DASH_NAPHTHA_DEFAULT_DENSITY_FACTOR = 0.7;
   var REFORMER_DASH_NAPHTHA_DEFAULT_NCV = 10500;
@@ -39625,13 +39634,25 @@ body.light-theme .btab-alarm-count{
     return out;
   }
 
+  function cloneReformerNcvReference(source){
+    var src = source && typeof source === "object" ? source : {};
+    var out = {};
+    Object.keys(REFORMER_DASH_DEFAULT_NCV).forEach(function(key){
+      var n = parseNumberOrNull(src[key]);
+      out[key] = isFiniteNumber(n) ? clamp(n, 0, 100000) : REFORMER_DASH_DEFAULT_NCV[key];
+    });
+    return out;
+  }
+
   function sanitizeReformerDashSettings(raw){
     var source = raw && typeof raw === "object" ? raw : {};
     var naphtha = source.naphtha && typeof source.naphtha === "object" ? source.naphtha : {};
     var density = parseNumberOrNull(naphtha.densityFactor);
     var ncv = parseNumberOrNull(naphtha.ncv);
+    var componentNcvSource = source.componentNcv || source.ncvReference || source.ncv || {};
     return {
       version: 1,
+      componentNcv: cloneReformerNcvReference(componentNcvSource),
       composition: cloneReformerComposition(source.composition),
       naphtha: {
         densityFactor: isFiniteNumber(density) ? clamp(density, 0.01, 10) : REFORMER_DASH_NAPHTHA_DEFAULT_DENSITY_FACTOR,
@@ -39657,6 +39678,7 @@ body.light-theme .btab-alarm-count{
   }
 
   var initialReformerDashSettings = loadReformerDashSettingsFromStorage();
+  REFORMER_DASH_NCV = cloneReformerNcvReference(initialReformerDashSettings.componentNcv);
   REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = initialReformerDashSettings.naphtha.densityFactor;
   REFORMER_DASH_NAPHTHA_NCV = initialReformerDashSettings.naphtha.ncv;
 
@@ -39768,6 +39790,7 @@ body.light-theme .btab-alarm-count{
   function getReformerDashSettingsPayload(){
     return {
       version: 1,
+      componentNcv: cloneReformerNcvReference(REFORMER_DASH_NCV),
       composition: cloneReformerComposition(reformerDashState.composition),
       naphtha: {
         densityFactor: REFORMER_DASH_NAPHTHA_DENSITY_FACTOR,
@@ -39828,6 +39851,7 @@ body.light-theme .btab-alarm-count{
       return false;
     }
     reformerDashState.composition = incoming.composition;
+    REFORMER_DASH_NCV = cloneReformerNcvReference(incoming.componentNcv);
     REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = incoming.naphtha.densityFactor;
     REFORMER_DASH_NAPHTHA_NCV = incoming.naphtha.ncv;
     reformerDashState.settingsUpdatedAt = incoming.updatedAt || reformerDashState.settingsUpdatedAt || "";
@@ -40803,18 +40827,25 @@ body.light-theme .btab-alarm-count{
     if(refTable){
       var html = '<thead><tr><th>Component / Fuel</th><th class="refdash-right">NCV</th><th class="refdash-center">Unit</th><th class="refdash-right">Formula</th></tr></thead><tbody>';
       [
-        { name:"Methane", formula:"CH4", value:8570, unit:"kcal/Nm3" },
-        { name:"Ethane", formula:"C2H6", value:15370, unit:"kcal/Nm3" },
-        { name:"Propane", formula:"C3H8", value:22350, unit:"kcal/Nm3" },
-        { name:"Hydrogen", formula:"H2", value:2580, unit:"kcal/Nm3" },
-        { name:"Carbon Monoxide", formula:"CO", value:3020, unit:"kcal/Nm3" },
-        { name:"Carbon Dioxide", formula:"CO2", value:0, unit:"kcal/Nm3" },
-        { name:"Nitrogen", formula:"N2", value:0, unit:"kcal/Nm3" },
-        { name:"Naphtha", formula:"Saved basis", value:REFORMER_DASH_NAPHTHA_NCV, unit:"kcal/kg" }
+        { name:"Methane", formula:"CH4", key:"CH4", value:REFORMER_DASH_NCV.CH4, unit:"kcal/Nm3" },
+        { name:"Ethane", formula:"C2H6", key:"C2H6", value:REFORMER_DASH_NCV.C2H6, unit:"kcal/Nm3" },
+        { name:"Propane", formula:"C3H8", key:"C3H8", value:REFORMER_DASH_NCV.C3H8, unit:"kcal/Nm3" },
+        { name:"Hydrogen", formula:"H2", key:"H2", value:REFORMER_DASH_NCV.H2, unit:"kcal/Nm3" },
+        { name:"Carbon Monoxide", formula:"CO", key:"CO", value:REFORMER_DASH_NCV.CO, unit:"kcal/Nm3" },
+        { name:"Carbon Dioxide", formula:"CO2", key:"CO2", value:REFORMER_DASH_NCV.CO2, unit:"kcal/Nm3" },
+        { name:"Nitrogen", formula:"N2", key:"N2", value:REFORMER_DASH_NCV.N2, unit:"kcal/Nm3" },
+        { name:"Naphtha", formula:"Saved basis", key:"naphtha", value:REFORMER_DASH_NAPHTHA_NCV, unit:"kcal/kg" }
       ].forEach(function(item){
+        var inputHandler = item.key === "naphtha"
+          ? "updateReformerDashNaphthaBasis('ncv', this.value)"
+          : "updateReformerDashComponentNcv('" + item.key + "', this.value)";
+        var inputValue = formatValue(item.value, 0, "0");
         html += '<tr>'
           + '<td class="refdash-text">' + item.name + '</td>'
-          + '<td class="refdash-right refdash-strong" style="color:' + (item.value > 0 ? "var(--refdash-accent-2)" : "var(--refdash-muted)") + ';">' + item.value.toLocaleString() + '</td>'
+          + '<td class="refdash-right refdash-strong">'
+          + '<input class="refdash-comp-input refdash-mono" type="number" step="10" value="' + inputValue + '" onchange="' + inputHandler + '" '
+          + 'style="max-width:150px;text-align:right;color:' + (item.value > 0 ? "var(--refdash-accent-2)" : "var(--refdash-muted)") + ';font-weight:800;">'
+          + '</td>'
           + '<td class="refdash-center refdash-dim refdash-sm">' + item.unit + '</td>'
           + '<td class="refdash-right refdash-dim">' + item.formula + '</td>'
           + '</tr>';
@@ -41317,6 +41348,15 @@ body.light-theme .btab-alarm-count{
     renderReformerDashboardFromState();
   }
 
+  function updateReformerDashComponentNcv(key, value){
+    if(!Object.prototype.hasOwnProperty.call(REFORMER_DASH_DEFAULT_NCV, key)) return;
+    var num = parseNumberOrNull(value);
+    if(!isFiniteNumber(num)) return;
+    REFORMER_DASH_NCV[key] = clamp(num, 0, 100000);
+    markReformerDashSettingsEdited();
+    renderReformerDashboardFromState();
+  }
+
   if(window.__pendingReformerDashSyncSettings){
     applyReformerDashSyncSettings(window.__pendingReformerDashSyncSettings, { source:"server", render:false });
     window.__pendingReformerDashSyncSettings = null;
@@ -41328,6 +41368,7 @@ window.refreshReformerDashboardLite = refreshReformerDashboardLite;
 window.ensureReformerDashboardLoaded = ensureReformerDashboardLoaded;
 window.updateReformerDashComposition = updateReformerDashComposition;
 window.updateReformerDashNaphthaBasis = updateReformerDashNaphthaBasis;
+window.updateReformerDashComponentNcv = updateReformerDashComponentNcv;
 window.getReformerDashSyncSettings = getReformerDashSettingsPayload;
 window.applyReformerDashSyncSettings = applyReformerDashSyncSettings;
 window.saveReformerDashFuelBasis = saveReformerDashFuelBasis;
