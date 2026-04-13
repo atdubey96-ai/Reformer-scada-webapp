@@ -13239,7 +13239,7 @@ body.light-theme #tab-reformerdash{
   position:relative;
   overflow:hidden;
   display:flex;
-  justify-content:space-between;
+  justify-content:flex-start;
   align-items:center;
   gap:12px;
   padding:14px 18px;
@@ -13257,8 +13257,25 @@ body.light-theme #tab-reformerdash{
   pointer-events:none;
 }
 #tab-reformerdash .refdash-kicker{font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--refdash-accent);}
+#tab-reformerdash .refdash-hero-copy{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 auto;}
+#tab-reformerdash .refdash-title-row{display:flex;align-items:center;gap:14px;min-width:0;}
 #tab-reformerdash .refdash-title{margin:4px 0 0;font-size:22px;line-height:1.02;color:var(--refdash-text);}
-#tab-reformerdash .refdash-hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:150px;}
+#tab-reformerdash .refdash-hero-nav{
+  display:flex;
+  align-items:center;
+  min-width:0;
+  max-width:100%;
+  padding:4px;
+  border-radius:999px;
+  background:var(--refdash-panel-strong);
+  border:1px solid var(--refdash-border);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
+}
+#tab-reformerdash .refdash-title-row .refdash-subtab-list{
+  gap:5px;
+  overflow-x:auto;
+}
+#tab-reformerdash .refdash-hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:150px;margin-left:auto;flex:0 0 auto;}
 #tab-reformerdash .refdash-live-strip{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.04);color:var(--refdash-dim);font-size:10px;}
 #tab-reformerdash .refdash-live-dot{width:9px;height:9px;border-radius:999px;background:var(--refdash-green);box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset,0 0 12px rgba(34,197,94,0.45);animation:pulse 2s infinite;}
 #tab-reformerdash .refdash-live-dot.is-stale{background:var(--refdash-red);box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset,0 0 12px rgba(251,113,133,0.4);}
@@ -13290,11 +13307,14 @@ body.light-theme #tab-reformerdash{
 #tab-reformerdash .refdash-subtabs{
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:flex-end;
   gap:8px;
-  padding:7px;
-  border-radius:14px;
-  background:var(--refdash-panel);
+  padding:0;
+  border:none;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
   overflow:visible;
 }
 #tab-reformerdash .refdash-subtab-list{
@@ -13318,17 +13338,18 @@ body.light-theme #tab-reformerdash{
 }
 #tab-reformerdash .refdash-subtab{
   border:none;
-  border-radius:10px;
-  padding:8px 12px;
-  background:rgba(255,255,255,0.04);
+  border-radius:999px;
+  padding:7px 12px;
+  background:transparent;
   color:var(--refdash-dim);
   font-weight:700;
-  letter-spacing:0.5px;
+  font-size:12px;
+  letter-spacing:0.2px;
   cursor:pointer;
   white-space:nowrap;
 }
 #tab-reformerdash .refdash-subtab.is-active{
-  background:linear-gradient(135deg, rgba(126,200,240,0.2), rgba(245,158,11,0.18));
+  background:linear-gradient(135deg, rgba(126,200,240,0.22), rgba(245,158,11,0.18));
   color:var(--refdash-text);
   box-shadow:inset 0 0 0 1px rgba(126,200,240,0.18);
 }
@@ -13857,6 +13878,8 @@ body.light-theme .scada-source-btn.is-active{
 @media (max-width:900px){
   #tab-reformerdash{padding:18px 14px 122px;}
   #tab-reformerdash .refdash-hero{padding:14px 16px;flex-direction:column;align-items:stretch;}
+  #tab-reformerdash .refdash-title-row{flex-direction:column;align-items:flex-start;gap:10px;}
+  #tab-reformerdash .refdash-hero-nav{width:100%;}
   #tab-reformerdash .refdash-title{font-size:22px;}
   #tab-reformerdash .refdash-hero-side{align-items:stretch;min-width:0;}
   #tab-reformerdash .refdash-card-grid-6,
@@ -13870,10 +13893,10 @@ body.light-theme .scada-source-btn.is-active{
   #tab-reformerdash .refdash-gauge-grid{grid-template-columns:1fr;}
   #tab-reformerdash .refdash-section-title{font-size:16px;}
   #tab-reformerdash .refdash-subtabs{align-items:stretch;flex-wrap:wrap;}
-  #tab-reformerdash .refdash-subtab-list{flex:1 1 100%;}
+  #tab-reformerdash .refdash-title-row .refdash-subtab-list{flex:1 1 100%;width:100%;}
   #tab-reformerdash .refdash-subtab-actions{width:100%;margin-left:0;}
   #tab-reformerdash .refdash-comp-save-btn{width:100%;justify-content:center;}
-  #tab-reformerdash .refdash-subtab{padding:8px 10px;font-size:12px;}
+  #tab-reformerdash .refdash-subtab{padding:7px 10px;font-size:11px;}
 }
 </style>
 <style id="jobs-reformer-tab-20260402">
@@ -25007,7 +25030,17 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       <div class="refdash-hero">
         <div class="refdash-hero-copy">
           <div class="refdash-kicker">Reformer Monitoring</div>
-          <h2 class="refdash-title">Reformer Efficiency &amp; Heat Duty</h2>
+          <div class="refdash-title-row">
+            <h2 class="refdash-title">Reformer Efficiency &amp; Heat Duty</h2>
+            <div class="refdash-hero-nav">
+              <div class="refdash-subtab-list" role="tablist" aria-label="Reformer dashboard views">
+                <button type="button" id="refdash-tabbtn-overview" class="refdash-subtab is-active" onclick="switchReformerDashTab('overview')">Overview</button>
+                <button type="button" id="refdash-tabbtn-heatduty" class="refdash-subtab" onclick="switchReformerDashTab('heatduty')">Heat Duty</button>
+                <button type="button" id="refdash-tabbtn-trends" class="refdash-subtab" onclick="switchReformerDashTab('trends')">Trends</button>
+                <button type="button" id="refdash-tabbtn-composition" class="refdash-subtab" onclick="switchReformerDashTab('composition')">Fuel Comp</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="refdash-hero-side">
           <div class="refdash-live-strip">
@@ -25032,12 +25065,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       <div id="refdash-admin-monitor" class="plantmon-shell" data-admin-only="true"></div>
 
       <div class="refdash-subtabs">
-        <div class="refdash-subtab-list" role="tablist" aria-label="Reformer dashboard views">
-          <button type="button" id="refdash-tabbtn-overview" class="refdash-subtab is-active" onclick="switchReformerDashTab('overview')">Overview</button>
-          <button type="button" id="refdash-tabbtn-heatduty" class="refdash-subtab" onclick="switchReformerDashTab('heatduty')">Heat Duty</button>
-          <button type="button" id="refdash-tabbtn-trends" class="refdash-subtab" onclick="switchReformerDashTab('trends')">Trends</button>
-          <button type="button" id="refdash-tabbtn-composition" class="refdash-subtab" onclick="switchReformerDashTab('composition')">Fuel Comp</button>
-        </div>
         <div class="refdash-subtab-actions">
           <button type="button" id="refdash-comp-save-btn" class="refdash-comp-save-btn refdash-mono" onclick="saveReformerDashFuelBasis()">Save Fuel Basis</button>
         </div>
