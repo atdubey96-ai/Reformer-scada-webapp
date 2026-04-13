@@ -25605,7 +25605,7 @@ function getPreferredSaveToastAnchor(){
   var activeId = active && active.id ? active.id : "";
   var candidates = [];
   if(activeId === "tab-tempdata"){
-    candidates.push(document.querySelector("#td-plant-refresh-host #refreshDataBtn"));
+    candidates.push(document.getElementById("refreshDataBtn"));
   }
   if(activeId === "tab-cuboidstack" || activeId === "tab-cuboid"){
     candidates.push(active ? active.querySelector('.cuboid-twin-control-btn') : null);
@@ -30399,15 +30399,8 @@ function syncGlobalRefreshButtonDock(tab){
   var btn = document.getElementById("refreshDataBtn");
   if(!btn) return;
   var key = String(tab || "").toLowerCase();
-  var host = document.getElementById("td-plant-refresh-host");
   var metaRight = document.getElementById("appMetaRight");
   var headerAlarmWrap = document.getElementById("headerAlarmWrap");
-  if(key === "tempdata" && host){
-    if(btn.parentNode !== host) host.appendChild(btn);
-    btn.classList.add("td-plant-refresh-docked");
-    btn.setAttribute("title", "Refresh central data and fetch the latest mapped plant tags into the TST cells");
-    return;
-  }
   if(metaRight){
     if(headerAlarmWrap && headerAlarmWrap.parentNode === metaRight){
       if(btn.parentNode !== metaRight || btn.nextSibling !== headerAlarmWrap){
@@ -30418,7 +30411,9 @@ function syncGlobalRefreshButtonDock(tab){
     }
   }
   btn.classList.remove("td-plant-refresh-docked");
-  btn.setAttribute("title", "Refresh latest dashboard data");
+  btn.setAttribute("title", key === "tempdata"
+    ? "Refresh central data and fetch the latest mapped plant tags into the TST cells"
+    : "Refresh latest dashboard data");
 }
 
 function updateGlobalRefreshButtonLabel(tab){
