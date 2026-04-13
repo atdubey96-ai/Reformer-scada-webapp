@@ -40425,12 +40425,55 @@ body.light-theme .btab-alarm-count{
     throw new Error("Plant data service is not available.");
   }
 
-  async function fetchTdPlantHistoryRowsDirect(sinceIso){
-    var rows = await fetchTdPlantDirectJson(
-      encodeURIComponent(TD_PLANT_HISTORY_TABLE)
+  function buildReformerHistoryLimit(tagCount){
+    var tags = Math.max(1, parseInt(tagCount, 10) || 0);
+    return Math.max(5000, Math.min(10000, tags * 128));
+  }
+
+  async function fetchReformerHistoryRowsFromApi(sinceIso, wantedTags, limit){
+    if(typeof fetch !== "function") return [];
+    var query = [
+      "since=" + encodeURIComponent(String(sinceIso || "")),
+      "limit=" + encodeURIComponent(String(limit || 5000))
+    ];
+    if(Array.isArray(wantedTags) && wantedTags.length){
+      query.push("tags=" + encodeURIComponent(wantedTags.join(",")));
+    }
+    var response = await fetch("/api/scada/plant/history?" + query.join("&"), {
+      method: "GET",
+      cache: "no-store"
+    });
+    var text = await response.text().catch(function(){ return ""; });
+    var payload = null;
+    try{
+      payload = text ? JSON.parse(text) : null;
+    }catch(ignoreParseError){
+      payload = null;
+    }
+    if(!response.ok){
+      var err = new Error(parseTdPlantFetchErrorMessage(payload, "HTTP " + response.status));
+      err.status = response.status;
+      err.payload = payload;
+      err.responseText = text;
+      throw err;
+    }
+    if(Array.isArray(payload)) return payload;
+    if(payload && Array.isArray(payload.rows)) return payload.rows;
+    return [];
+  }
+
+  async function fetchTdPlantHistoryRowsDirect(sinceIso, wantedTags, limit){
+    var query = encodeURIComponent(TD_PLANT_HISTORY_TABLE)
       + "?select=tag_id,label,value,recorded_at"
-      + "&recorded_at=gte." + encodeURIComponent(String(sinceIso || ""))
-      + "&order=recorded_at.asc&limit=5000"
+      + "&recorded_at=gte." + encodeURIComponent(String(sinceIso || ""));
+    if(Array.isArray(wantedTags) && wantedTags.length){
+      query += "&tag_id=in.(" + wantedTags.map(function(tag){
+        return String(tag || "").trim();
+      }).filter(Boolean).join(",") + ")";
+    }
+    query += "&order=recorded_at.asc&limit=" + encodeURIComponent(String(limit || 5000));
+    var rows = await fetchTdPlantDirectJson(
+      query
     );
     return Array.isArray(rows) ? rows : [];
   }
@@ -40444,13 +40487,16 @@ body.light-theme .btab-alarm-count{
       .map(function(binding){ return String(typeof getTdPlantBindingTagId === "function" ? getTdPlantBindingTagId(binding) : (binding && binding.plantTagId) || "").trim(); })
       .filter(Boolean);
     var sinceIso = new Date(Date.now() - REFORMER_DASH_HISTORY_WINDOW_MS).toISOString();
+    var limit = buildReformerHistoryLimit(wantedTags.length);
     try{
-      var wanted = new Set(wantedTags);
-      var data = await fetchTdPlantHistoryRowsDirect(sinceIso);
+      var data = [];
+      try{
+        data = await fetchReformerHistoryRowsFromApi(sinceIso, wantedTags, limit);
+      }catch(apiErr){
+        data = await fetchTdPlantHistoryRowsDirect(sinceIso, wantedTags, limit);
+      }
       return {
-        rows: (Array.isArray(data) ? data : []).filter(function(row){
-          return wanted.has(String(row && row.tag_id || "").trim());
-        }),
+        rows: Array.isArray(data) ? data : [],
         error: ""
       };
     }catch(e){
