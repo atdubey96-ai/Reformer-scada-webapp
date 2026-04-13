@@ -13290,11 +13290,32 @@ body.light-theme #tab-reformerdash{
 #tab-reformerdash .refdash-sync-bar strong{color:var(--refdash-text);}
 #tab-reformerdash .refdash-subtabs{
   display:flex;
+  align-items:center;
+  justify-content:space-between;
   gap:10px;
   padding:10px;
   border-radius:18px;
   background:var(--refdash-panel);
+  overflow:visible;
+}
+#tab-reformerdash .refdash-subtab-list{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
   overflow-x:auto;
+  scrollbar-width:none;
+}
+#tab-reformerdash .refdash-subtab-list::-webkit-scrollbar{
+  display:none;
+}
+#tab-reformerdash .refdash-subtab-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  margin-left:auto;
+  flex:0 0 auto;
 }
 #tab-reformerdash .refdash-subtab{
   border:none;
@@ -13383,6 +13404,7 @@ body.light-theme #tab-reformerdash{
   text-transform:uppercase;
   cursor:pointer;
   box-shadow:0 12px 26px rgba(15,118,110,0.14);
+  white-space:nowrap;
 }
 #tab-reformerdash .refdash-comp-save-btn:hover{
   border-color:rgba(52,211,153,0.55);
@@ -13848,6 +13870,10 @@ body.light-theme .scada-source-btn.is-active{
 @media (max-width:640px){
   #tab-reformerdash .refdash-gauge-grid{grid-template-columns:1fr;}
   #tab-reformerdash .refdash-section-title{font-size:16px;}
+  #tab-reformerdash .refdash-subtabs{align-items:stretch;flex-wrap:wrap;}
+  #tab-reformerdash .refdash-subtab-list{flex:1 1 100%;}
+  #tab-reformerdash .refdash-subtab-actions{width:100%;margin-left:0;}
+  #tab-reformerdash .refdash-comp-save-btn{width:100%;justify-content:center;}
   #tab-reformerdash .refdash-subtab{padding:10px 14px;font-size:12px;}
 }
 </style>
@@ -25007,11 +25033,16 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       </div>
       <div id="refdash-admin-monitor" class="plantmon-shell" data-admin-only="true"></div>
 
-      <div class="refdash-subtabs" role="tablist" aria-label="Reformer dashboard views">
-        <button type="button" id="refdash-tabbtn-overview" class="refdash-subtab is-active" onclick="switchReformerDashTab('overview')">Overview</button>
-        <button type="button" id="refdash-tabbtn-heatduty" class="refdash-subtab" onclick="switchReformerDashTab('heatduty')">Heat Duty</button>
-        <button type="button" id="refdash-tabbtn-trends" class="refdash-subtab" onclick="switchReformerDashTab('trends')">Trends</button>
-        <button type="button" id="refdash-tabbtn-composition" class="refdash-subtab" onclick="switchReformerDashTab('composition')">Fuel Comp</button>
+      <div class="refdash-subtabs">
+        <div class="refdash-subtab-list" role="tablist" aria-label="Reformer dashboard views">
+          <button type="button" id="refdash-tabbtn-overview" class="refdash-subtab is-active" onclick="switchReformerDashTab('overview')">Overview</button>
+          <button type="button" id="refdash-tabbtn-heatduty" class="refdash-subtab" onclick="switchReformerDashTab('heatduty')">Heat Duty</button>
+          <button type="button" id="refdash-tabbtn-trends" class="refdash-subtab" onclick="switchReformerDashTab('trends')">Trends</button>
+          <button type="button" id="refdash-tabbtn-composition" class="refdash-subtab" onclick="switchReformerDashTab('composition')">Fuel Comp</button>
+        </div>
+        <div class="refdash-subtab-actions">
+          <button type="button" id="refdash-comp-save-btn" class="refdash-comp-save-btn refdash-mono" onclick="saveReformerDashFuelBasis()">Save Fuel Basis</button>
+        </div>
       </div>
 
       <div id="refdash-pane-overview" class="refdash-pane is-active">
@@ -25157,12 +25188,9 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       </div>
 
       <div id="refdash-pane-composition" class="refdash-pane">
-        <div class="refdash-info-bar refdash-mono refdash-comp-sync-row">
+        <div class="refdash-info-bar refdash-mono refdash-comp-sync-row" data-admin-only="true">
           <span class="refdash-comp-sync-copy">Gas NCV values recalculate instantly when you update the composition below. Save the fuel basis to sync manual values across devices. Naphtha uses live tag FI6303A with editable density and NCV basis.</span>
-          <span class="refdash-comp-sync-actions">
-            <span id="refdash-comp-save-status" class="refdash-comp-save-status">Local defaults</span>
-            <button type="button" id="refdash-comp-save-btn" class="refdash-comp-save-btn refdash-mono" onclick="saveReformerDashFuelBasis()">Save Fuel Basis</button>
-          </span>
+          <span id="refdash-comp-save-status" class="refdash-comp-save-status">Local defaults</span>
         </div>
         <div id="refdash-comp-panels" class="refdash-grid refdash-card-grid-4"></div>
         <div class="refdash-grid refdash-grid-2">
