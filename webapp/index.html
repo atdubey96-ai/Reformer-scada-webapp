@@ -13224,13 +13224,12 @@ body.light-theme #tab-reformerdash{
   --refdash-dim:#5f7288;
   --refdash-muted:#7a8da3;
 }
-#tab-reformerdash .refdash-shell{max-width:1560px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+#tab-reformerdash .refdash-shell{max-width:1560px;margin:0 auto;display:flex;flex-direction:column;gap:12px;}
 #tab-reformerdash .refdash-hero,
 #tab-reformerdash .refdash-sync-bar,
 #tab-reformerdash .refdash-panel,
 #tab-reformerdash .refdash-eff-hero,
-#tab-reformerdash .refdash-info-bar,
-#tab-reformerdash .refdash-subtabs{
+#tab-reformerdash .refdash-info-bar{
   border:1px solid var(--refdash-border);
   box-shadow:var(--refdash-shadow);
   backdrop-filter:blur(18px);
@@ -13241,9 +13240,9 @@ body.light-theme #tab-reformerdash{
   display:flex;
   justify-content:flex-start;
   align-items:center;
-  gap:12px;
-  padding:14px 18px;
-  border-radius:16px;
+  gap:10px;
+  padding:12px 16px;
+  border-radius:14px;
   background:var(--refdash-surface);
 }
 #tab-reformerdash .refdash-hero::before{
@@ -13256,27 +13255,27 @@ body.light-theme #tab-reformerdash{
   background:radial-gradient(circle, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0) 72%);
   pointer-events:none;
 }
-#tab-reformerdash .refdash-kicker{font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--refdash-accent);}
-#tab-reformerdash .refdash-hero-copy{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 auto;}
-#tab-reformerdash .refdash-title-row{display:flex;align-items:center;gap:14px;min-width:0;}
-#tab-reformerdash .refdash-title{margin:4px 0 0;font-size:22px;line-height:1.02;color:var(--refdash-text);}
+#tab-reformerdash .refdash-hero-copy{display:flex;min-width:0;flex:1 1 auto;}
+#tab-reformerdash .refdash-title-row{display:flex;align-items:center;gap:12px;min-width:0;width:100%;}
+#tab-reformerdash .refdash-title{margin:0;font-size:21px;line-height:1;color:var(--refdash-text);white-space:nowrap;flex:0 0 auto;}
 #tab-reformerdash .refdash-hero-nav{
   display:flex;
   align-items:center;
   min-width:0;
   max-width:100%;
-  padding:4px;
+  padding:3px;
   border-radius:999px;
   background:var(--refdash-panel-strong);
   border:1px solid var(--refdash-border);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
 }
 #tab-reformerdash .refdash-title-row .refdash-subtab-list{
-  gap:5px;
+  gap:4px;
   overflow-x:auto;
+  flex-wrap:nowrap;
 }
-#tab-reformerdash .refdash-hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:150px;margin-left:auto;flex:0 0 auto;}
-#tab-reformerdash .refdash-live-strip{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.04);color:var(--refdash-dim);font-size:10px;}
+#tab-reformerdash .refdash-hero-side{display:flex;align-items:center;gap:8px;min-width:auto;margin-left:auto;flex:0 0 auto;}
+#tab-reformerdash .refdash-live-strip{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.04);color:var(--refdash-dim);font-size:10px;white-space:nowrap;}
 #tab-reformerdash .refdash-live-dot{width:9px;height:9px;border-radius:999px;background:var(--refdash-green);box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset,0 0 12px rgba(34,197,94,0.45);animation:pulse 2s infinite;}
 #tab-reformerdash .refdash-live-dot.is-stale{background:var(--refdash-red);box-shadow:0 0 0 1px rgba(255,255,255,0.14) inset,0 0 12px rgba(251,113,133,0.4);}
 #tab-reformerdash .refdash-refresh-btn{
@@ -13304,19 +13303,6 @@ body.light-theme #tab-reformerdash{
   font-size:11px;
 }
 #tab-reformerdash .refdash-sync-bar strong{color:var(--refdash-text);}
-#tab-reformerdash .refdash-subtabs{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  gap:8px;
-  padding:0;
-  border:none;
-  border-radius:0;
-  background:transparent;
-  box-shadow:none;
-  backdrop-filter:none;
-  overflow:visible;
-}
 #tab-reformerdash .refdash-subtab-list{
   display:flex;
   align-items:center;
@@ -13339,11 +13325,11 @@ body.light-theme #tab-reformerdash{
 #tab-reformerdash .refdash-subtab{
   border:none;
   border-radius:999px;
-  padding:7px 12px;
+  padding:8px 14px;
   background:transparent;
   color:var(--refdash-dim);
-  font-weight:700;
-  font-size:12px;
+  font-weight:800;
+  font-size:14px;
   letter-spacing:0.2px;
   cursor:pointer;
   white-space:nowrap;
@@ -13416,10 +13402,11 @@ body.light-theme #tab-reformerdash{
 #tab-reformerdash .refdash-comp-save-btn{
   border:1px solid rgba(34,197,94,0.34);
   border-radius:10px;
-  padding:7px 11px;
+  padding:8px 13px;
   background:linear-gradient(135deg,rgba(34,197,94,0.18),rgba(20,184,166,0.14));
   color:var(--refdash-text);
   font-weight:800;
+  font-size:12px;
   letter-spacing:0.7px;
   text-transform:uppercase;
   cursor:pointer;
@@ -13877,11 +13864,11 @@ body.light-theme .scada-source-btn.is-active{
 }
 @media (max-width:900px){
   #tab-reformerdash{padding:18px 14px 122px;}
-  #tab-reformerdash .refdash-hero{padding:14px 16px;flex-direction:column;align-items:stretch;}
+  #tab-reformerdash .refdash-hero{padding:12px 14px;flex-direction:column;align-items:stretch;}
   #tab-reformerdash .refdash-title-row{flex-direction:column;align-items:flex-start;gap:10px;}
   #tab-reformerdash .refdash-hero-nav{width:100%;}
   #tab-reformerdash .refdash-title{font-size:22px;}
-  #tab-reformerdash .refdash-hero-side{align-items:stretch;min-width:0;}
+  #tab-reformerdash .refdash-hero-side{align-items:stretch;justify-content:space-between;min-width:0;}
   #tab-reformerdash .refdash-card-grid-6,
   #tab-reformerdash .refdash-card-grid-4,
   #tab-reformerdash .refdash-grid-2,
@@ -13892,11 +13879,10 @@ body.light-theme .scada-source-btn.is-active{
 @media (max-width:640px){
   #tab-reformerdash .refdash-gauge-grid{grid-template-columns:1fr;}
   #tab-reformerdash .refdash-section-title{font-size:16px;}
-  #tab-reformerdash .refdash-subtabs{align-items:stretch;flex-wrap:wrap;}
   #tab-reformerdash .refdash-title-row .refdash-subtab-list{flex:1 1 100%;width:100%;}
-  #tab-reformerdash .refdash-subtab-actions{width:100%;margin-left:0;}
-  #tab-reformerdash .refdash-comp-save-btn{width:100%;justify-content:center;}
-  #tab-reformerdash .refdash-subtab{padding:7px 10px;font-size:11px;}
+  #tab-reformerdash .refdash-hero-side{flex-wrap:wrap;justify-content:flex-start;}
+  #tab-reformerdash .refdash-comp-save-btn{justify-content:center;}
+  #tab-reformerdash .refdash-subtab{padding:7px 11px;font-size:13px;}
 }
 </style>
 <style id="jobs-reformer-tab-20260402">
@@ -25029,7 +25015,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     <div class="refdash-shell">
       <div class="refdash-hero">
         <div class="refdash-hero-copy">
-          <div class="refdash-kicker">Reformer Monitoring</div>
           <div class="refdash-title-row">
             <h2 class="refdash-title">Reformer Efficiency &amp; Heat Duty</h2>
             <div class="refdash-hero-nav">
@@ -25047,6 +25032,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <span id="refdash-live-dot" class="refdash-live-dot"></span>
             <span id="refdash-live-label" class="refdash-mono">Connecting...</span>
           </div>
+          <button type="button" id="refdash-comp-save-btn" class="refdash-comp-save-btn refdash-mono" onclick="saveReformerDashFuelBasis()">Save Fuel Basis</button>
         </div>
       </div>
 
@@ -25063,12 +25049,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         <span>History rows: <strong id="refdash-history-count">—</strong></span>
       </div>
       <div id="refdash-admin-monitor" class="plantmon-shell" data-admin-only="true"></div>
-
-      <div class="refdash-subtabs">
-        <div class="refdash-subtab-actions">
-          <button type="button" id="refdash-comp-save-btn" class="refdash-comp-save-btn refdash-mono" onclick="saveReformerDashFuelBasis()">Save Fuel Basis</button>
-        </div>
-      </div>
 
       <div id="refdash-pane-overview" class="refdash-pane is-active">
         <div id="refdash-kpi-overview" class="refdash-card-grid refdash-card-grid-6"></div>
