@@ -4997,7 +4997,8 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   display:flex;
   align-items:center;
   gap:10px;
-  flex-wrap:nowrap;
+  row-gap:8px;
+  flex-wrap:wrap;
   width:min(100%,1680px);
   margin:0 auto;
   padding:8px 12px;
@@ -5255,6 +5256,111 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   font-weight:800;
   letter-spacing:0.4px;
 }
+#tab-cuboidstack .cuboid-twin-live-summary{
+  width:100%;
+  display:flex;
+  align-items:stretch;
+  gap:10px;
+  padding-top:8px;
+  border-top:1px solid rgba(96,165,250,0.14);
+}
+#tab-cuboidstack .cuboid-twin-live-pills{
+  flex:1 1 auto;
+  min-width:0;
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:8px;
+}
+#tab-cuboidstack .cuboid-twin-live-pill{
+  position:relative;
+  min-width:0;
+  padding:8px 10px 8px 12px;
+  border-radius:12px;
+  border:1px solid rgba(148,163,184,0.2);
+  background:linear-gradient(180deg,rgba(15,23,42,0.86),rgba(9,14,22,0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 6px 14px rgba(2,8,23,0.12);
+  overflow:hidden;
+}
+#tab-cuboidstack .cuboid-twin-live-pill::before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:3px;
+  border-radius:12px 0 0 12px;
+  background:var(--cuboid-live-tone, rgba(125,220,247,0.65));
+}
+#tab-cuboidstack .cuboid-twin-live-pill-label{
+  display:block;
+  color:#92a7c0;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.8px;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#tab-cuboidstack .cuboid-twin-live-pill-value{
+  display:block;
+  margin-top:5px;
+  color:#f8fbff;
+  font-size:17px;
+  font-weight:800;
+  line-height:1.02;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#tab-cuboidstack .cuboid-twin-live-meta{
+  flex:0 0 220px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:4px;
+  padding:8px 12px;
+  border-radius:12px;
+  border:1px solid rgba(148,163,184,0.2);
+  background:linear-gradient(180deg,rgba(15,23,42,0.8),rgba(10,15,23,0.9));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+#tab-cuboidstack .cuboid-twin-live-meta-label{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  color:#92a7c0;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.9px;
+  text-transform:uppercase;
+}
+#tab-cuboidstack .cuboid-twin-live-meta-dot{
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:#22c55e;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.12), 0 0 10px rgba(34,197,94,0.35);
+  flex:0 0 auto;
+}
+#tab-cuboidstack .cuboid-twin-live-meta-text{
+  color:#eaf2fb;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.2;
+}
+#tab-cuboidstack .cuboid-twin-live-summary.is-warn .cuboid-twin-live-meta-dot{
+  background:#f59e0b;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.12), 0 0 10px rgba(245,158,11,0.35);
+}
+#tab-cuboidstack .cuboid-twin-live-summary.is-error .cuboid-twin-live-meta-dot{
+  background:#f87171;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.12), 0 0 10px rgba(248,113,113,0.35);
+}
+#tab-cuboidstack .cuboid-twin-live-summary.is-empty .cuboid-twin-live-meta-dot{
+  background:#94a3b8;
+  box-shadow:none;
+}
 body.light-theme #tab-cuboidstack .cuboid-twin-control-panel{
   border-color:#d3dde9;
   background:
@@ -5322,6 +5428,33 @@ body.light-theme #tab-cuboidstack .cuboid-twin-control-banner.is-empty{
   border-color:rgba(239,68,68,0.2);
   background:rgba(254,242,242,0.92);
   color:#b91c1c;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-live-summary{
+  border-top-color:rgba(59,130,246,0.14);
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-live-pill{
+  border-color:#d8e1eb;
+  background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(245,248,252,0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.8),
+    0 6px 14px rgba(15,23,42,0.06);
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-live-pill-label{
+  color:#6a7e95;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-live-pill-value{
+  color:#102033;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-live-meta{
+  border-color:#d8e1eb;
+  background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,248,252,0.98));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.85);
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-label{
+  color:#6a7e95;
+}
+body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
+  color:#203247;
 }
 [data-cuboid-dashboard] .cuboid-followup-stack,
 #tab-cuboidstack .cuboid-followup-stack{
@@ -12854,6 +12987,24 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-cuboidstack .cuboid-twin-control-banner{
     flex-basis:100%;
+  }
+  #tab-cuboidstack .cuboid-twin-live-summary{
+    padding-top:10px;
+    flex-wrap:wrap;
+  }
+  #tab-cuboidstack .cuboid-twin-live-pills{
+    width:100%;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  #tab-cuboidstack .cuboid-twin-live-pill{
+    padding:9px 10px 9px 12px;
+  }
+  #tab-cuboidstack .cuboid-twin-live-pill-value{
+    font-size:16px;
+  }
+  #tab-cuboidstack .cuboid-twin-live-meta{
+    width:100%;
+    flex:1 1 100%;
   }
   [data-cuboid-dashboard] .cuboid-tab-shell,
   #tab-cuboidstack .cuboid-tab-shell{
@@ -24588,6 +24739,41 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Data</button>
           </div>
         </div>
+        <div id="stack-cuboid-live-summary" class="cuboid-twin-live-summary is-empty" aria-label="Current reformer live summary">
+          <div class="cuboid-twin-live-pills">
+            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#60a5fa;">
+              <span class="cuboid-twin-live-pill-label">HGU Load</span>
+              <strong id="stack-cuboid-live-hgu" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
+            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#f59e0b;">
+              <span class="cuboid-twin-live-pill-label">AB COT</span>
+              <strong id="stack-cuboid-live-abcot" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
+            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#22d3ee;">
+              <span class="cuboid-twin-live-pill-label">CD COT</span>
+              <strong id="stack-cuboid-live-cdcot" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
+            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#fb7185;">
+              <span class="cuboid-twin-live-pill-label">Flue Gas</span>
+              <strong id="stack-cuboid-live-flue" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
+            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#14b8a6;">
+              <span class="cuboid-twin-live-pill-label">Excess O₂</span>
+              <strong id="stack-cuboid-live-o2" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
+            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#c084fc;">
+              <span class="cuboid-twin-live-pill-label">CH₄ Slip</span>
+              <strong id="stack-cuboid-live-slip" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
+          </div>
+          <div class="cuboid-twin-live-meta">
+            <span class="cuboid-twin-live-meta-label">
+              <span class="cuboid-twin-live-meta-dot" aria-hidden="true"></span>
+              Current Plant
+            </span>
+            <strong id="stack-cuboid-live-meta-text" class="cuboid-twin-live-meta-text">Waiting for live plant data</strong>
+          </div>
+        </div>
       </div>
       <div class="cuboid-tab-shell" data-cuboid-shell="stack-top">
         <div class="cuboid-tab-frame-wrap">
@@ -32101,12 +32287,15 @@ function switchTab(tab){
       ensureCleaningTableBuilt(false);
     }, 0);
   }
-  if(tab === 'tempdata'){
+  if(tab === 'tempdata' || isCuboidDashboardTabName(tab)){
     setTimeout(function(){
-      ensureTipTableBuilt(false);
-      applyMobileHorizontalScrollFixes();
+      if(tab === 'tempdata'){
+        ensureTipTableBuilt(false);
+        applyMobileHorizontalScrollFixes();
+      }
       bindTdPlantLiveInputs();
       startTdPlantDataRefresh();
+      if(typeof renderCuboidReformerSummary === "function") renderCuboidReformerSummary();
     }, 0);
   }else{
     stopTdPlantDataRefresh();
@@ -32119,6 +32308,7 @@ function switchTab(tab){
     if(tab === "cuboidstack"){
       setTimeout(function(){
         renderTwinCuboidFilterUi(getCuboidRenderSnapshot(false));
+        if(typeof renderCuboidReformerSummary === "function") renderCuboidReformerSummary();
       }, 0);
     }
     scheduleCuboidExtendedRefresh(190, tab === "cuboidstack");
@@ -34436,7 +34626,7 @@ function setTdPlantSourceMode(mode, options){
     reformerDashState.historyMessage = "";
     reformerDashState.lastHistoryFetchAt = null;
   }
-  if(isTempDataTabActive()){
+  if(isTdPlantRefreshTabActive()){
     refreshTdPlantImportNow(true).catch(function(){});
   }
   if(typeof refreshReformerDashboard === "function"){
@@ -34787,6 +34977,10 @@ function isTempDataTabActive(){
   return !!(panel && panel.classList.contains("tab-active"));
 }
 
+function isTdPlantRefreshTabActive(){
+  return isTempDataTabActive() || (typeof isCuboidTabActive === "function" && isCuboidTabActive());
+}
+
 function parseTdProcessNumericValue(raw){
   if(raw === null || raw === undefined) return null;
   var token = String(raw).trim().replace(/,/g, "");
@@ -35043,6 +35237,94 @@ function formatTdPlantStatMoment(dt){
   return ago ? (formatTdPlantTime(dt) + " (" + ago + ")") : formatTdPlantTime(dt);
 }
 
+function formatCuboidReformerSummaryValue(key, rawDisplay){
+  var display = String(rawDisplay == null ? "" : rawDisplay).trim();
+  if(!display) return "—";
+  if(/[%°]/.test(display)) return display;
+  if(key === "hguLoad") return display + "%";
+  if(key === "abCot" || key === "cdCot" || key === "flueGas") return display + "°C";
+  if(key === "excessO2" || key === "methaneSlip") return display + "%";
+  return display;
+}
+
+function getCuboidReformerSummaryFieldState(key){
+  var binding = getTdProcessBindingByKey(key);
+  var display = "";
+  var title = "";
+  if(binding){
+    var resolvedTagId = getTdPlantBindingTagId(binding);
+    var row = resolvedTagId && tdPlantLatestByTag && tdPlantLatestByTag.get ? tdPlantLatestByTag.get(resolvedTagId) : null;
+    if(row){
+      display = formatTdProcessFieldValue(binding, row.value);
+      title = (row.label || binding.exportLabel || key)
+        + (row.synced_at ? (" · PHD " + formatTdPlantDateTime(parseTdPlantDate(row.synced_at))) : "")
+        + ((row.pushed_at || row.synced_at) ? (" · Excel " + formatTdPlantDateTime(parseTdPlantDate(row.pushed_at || row.synced_at))) : "");
+    }else{
+      var input = getTdProcessFieldInput(binding);
+      if(input){
+        display = String(input.value || "").trim();
+        title = input.title || binding.exportLabel || key;
+      }
+    }
+  }
+  return {
+    display: formatCuboidReformerSummaryValue(key, display),
+    title: title
+  };
+}
+
+function renderCuboidReformerSummary(){
+  var root = document.getElementById("stack-cuboid-live-summary");
+  if(!root) return;
+  [
+    { key:"hguLoad", id:"stack-cuboid-live-hgu" },
+    { key:"abCot", id:"stack-cuboid-live-abcot" },
+    { key:"cdCot", id:"stack-cuboid-live-cdcot" },
+    { key:"flueGas", id:"stack-cuboid-live-flue" },
+    { key:"excessO2", id:"stack-cuboid-live-o2" },
+    { key:"methaneSlip", id:"stack-cuboid-live-slip" }
+  ].forEach(function(field){
+    var state = getCuboidReformerSummaryFieldState(field.key);
+    var el = document.getElementById(field.id);
+    if(!el) return;
+    el.textContent = state.display;
+    el.title = state.title || "";
+  });
+  var metaEl = document.getElementById("stack-cuboid-live-meta-text");
+  if(!metaEl) return;
+  root.classList.remove("is-live", "is-warn", "is-error", "is-empty");
+  var sourceLabel = getTdPlantSourceLabel();
+  var metaText = "";
+  var metaTitle = "";
+  if(!isTdPlantImportConfigured()){
+    root.classList.add("is-empty");
+    metaText = "Plant import unavailable";
+  }else if(tdPlantLastErrorMessage){
+    root.classList.add("is-error");
+    metaText = sourceLabel + " source error";
+    metaTitle = tdPlantLastErrorMessage;
+  }else if(!tdPlantLatestByTag || !tdPlantLatestByTag.size){
+    root.classList.add("is-empty");
+    metaText = "Waiting for " + sourceLabel.toLowerCase() + " plant data";
+  }else{
+    var pushAge = getTdPlantMinutesAgo(tdPlantLastExcelPush);
+    if(pushAge != null && pushAge > 10){
+      root.classList.add("is-warn");
+      metaText = sourceLabel + " stale · last push " + getTdPlantAgoLabel(tdPlantLastExcelPush);
+    }else{
+      root.classList.add("is-live");
+      metaText = sourceLabel + " · last push " + (getTdPlantAgoLabel(tdPlantLastExcelPush) || "just now");
+    }
+    metaTitle = [
+      tdPlantLastPhdTime ? ("PHD " + formatTdPlantDateTime(tdPlantLastPhdTime)) : "",
+      tdPlantLastExcelPush ? ("Excel " + formatTdPlantDateTime(tdPlantLastExcelPush)) : "",
+      tdPlantLastFetchTime ? ("Fetched " + formatTdPlantDateTime(tdPlantLastFetchTime)) : ""
+    ].filter(Boolean).join(" · ");
+  }
+  metaEl.textContent = metaText;
+  metaEl.title = metaTitle || metaText;
+}
+
 function setTdPlantStatTone(el, tone){
   if(!el) return;
   el.style.color = "";
@@ -35290,12 +35572,14 @@ function refreshTdPlantLiveHealthState(){
     setTdPlantLiveWarning("", "");
     setTdPlantImportStatus("offline", "Plant import unavailable");
     renderTdPlantAdminMonitors();
+    renderCuboidReformerSummary();
     return;
   }
   if(tdPlantLastErrorMessage){
     setTdPlantLiveWarning("error", tdPlantLastErrorMessage);
     setTdPlantImportStatus("offline", sourceLabel + " source error");
     renderTdPlantAdminMonitors();
+    renderCuboidReformerSummary();
     return;
   }
   if(!tdPlantLatestByTag || !tdPlantLatestByTag.size){
@@ -35307,6 +35591,7 @@ function refreshTdPlantLiveHealthState(){
       setTdPlantImportStatus("offline", "No data — waiting for sync");
     }
     renderTdPlantAdminMonitors();
+    renderCuboidReformerSummary();
     return;
   }
   var pushAge = getTdPlantMinutesAgo(tdPlantLastExcelPush);
@@ -35319,6 +35604,7 @@ function refreshTdPlantLiveHealthState(){
       setTdPlantImportStatus("stale", "Stale — last push " + getTdPlantAgoLabel(tdPlantLastExcelPush));
     }
     renderTdPlantAdminMonitors();
+    renderCuboidReformerSummary();
     return;
   }
   setTdPlantLiveWarning("", "");
@@ -35328,6 +35614,7 @@ function refreshTdPlantLiveHealthState(){
     setTdPlantImportStatus("online", sourceLabel + " plant data imported to process fields");
   }
   renderTdPlantAdminMonitors();
+  renderCuboidReformerSummary();
 }
 
 function ensureTdPlantMetaTicker(){
@@ -35513,7 +35800,7 @@ function applyTdPlantImportToInputs(latestMap){
 }
 
 async function refreshTdPlantImportNow(force){
-  if(!force && !isTempDataTabActive()) return tdPlantLatestByTag;
+  if(!force && !isTdPlantRefreshTabActive()) return tdPlantLatestByTag;
   if(!checkTdPlantImportConfig()) return null;
   if(tdPlantFetchInFlight) return tdPlantFetchInFlight;
   setTdPlantImportStatus("syncing", tdEditingIndex >= 0 ? "Syncing plant data while edit is paused" : "Syncing plant data...");
@@ -35539,7 +35826,7 @@ async function refreshTdPlantImportNow(force){
 }
 
 function restoreTdPlantImportedValues(){
-  if(!isTempDataTabActive()) return;
+  if(!isTdPlantRefreshTabActive()) return;
   if(tdEditingIndex >= 0) return;
   if(tdPlantLatestByTag && tdPlantLatestByTag.size){
     var mappedCount = applyTdPlantImportToInputs(tdPlantLatestByTag);
@@ -35559,7 +35846,7 @@ function stopTdPlantDataRefresh(){
 
 function startTdPlantDataRefresh(){
   stopTdPlantDataRefresh();
-  if(!isTempDataTabActive()) return;
+  if(!isTdPlantRefreshTabActive()) return;
   maybePromptTdPlantExcelPath();
   refreshTdPlantImportNow(true).catch(function(){});
   var select = getTdPlantRefreshSelect();
@@ -35567,7 +35854,7 @@ function startTdPlantDataRefresh(){
   updateTdPlantImportRateStat();
   if(!(sec > 0)) return;
   tdPlantDataRefreshTimer = setInterval(function(){
-    if(!isTempDataTabActive()){
+    if(!isTdPlantRefreshTabActive()){
       stopTdPlantDataRefresh();
       return;
     }
@@ -38054,7 +38341,7 @@ function fillTdPeepFieldsFromList(values, onlyNonEmpty){
         updateTstClaudeExtractButtonState();
       }
     });
-    if(isTempDataTabActive()) startTdPlantDataRefresh();
+    if(isTdPlantRefreshTabActive()) startTdPlantDataRefresh();
   });
 })();
 
