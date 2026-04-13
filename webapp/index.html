@@ -1447,6 +1447,10 @@ body[data-user-mode="operator"] #tab-tempdata .td-plant-controls-right{
   justify-content:flex-start;
   width:auto;
 }
+body[data-user-mode="operator"] #tab-tempdata .td-plant-refresh-host{
+  width:auto;
+  flex:0 0 auto;
+}
 body[data-user-mode="operator"] #tab-tempdata .td-plant-controls-right .td-plant-action-btn{
   flex:0 0 auto;
 }
@@ -6950,6 +6954,37 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   flex-wrap:wrap;
   margin-left:auto;
 }
+#tab-tempdata .td-plant-refresh-host{
+  display:flex;
+  align-items:center;
+  flex:0 0 auto;
+}
+#tab-tempdata .td-plant-refresh-host #refreshDataBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:8px 16px;
+  border-radius:10px;
+  border:1px solid rgba(220,38,38,0.4);
+  background:linear-gradient(135deg,#ef4444 0%,#dc2626 55%,#b91c1c 100%);
+  box-shadow:0 10px 22px rgba(220,38,38,0.22);
+  color:#ffffff !important;
+  font-family:'JetBrains Mono','Rajdhani',monospace;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.8px;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+#tab-tempdata .td-plant-refresh-host #refreshDataBtn:hover{
+  background:linear-gradient(135deg,#f87171 0%,#ef4444 52%,#dc2626 100%);
+  border-color:rgba(239,68,68,0.52);
+  box-shadow:0 14px 30px rgba(220,38,38,0.28);
+}
+#tab-tempdata .td-plant-refresh-host #refreshDataBtn:disabled{
+  box-shadow:0 8px 18px rgba(220,38,38,0.16);
+}
 #tab-tempdata .td-plant-action-btn{
   display:inline-flex;
   align-items:center;
@@ -7901,6 +7936,13 @@ body.light-theme #tab-tempdata .td-plant-modal-btn-save{
     flex:1 1 calc(50% - 8px);
     justify-content:center;
     text-align:center;
+  }
+  #tab-tempdata .td-plant-refresh-host{
+    width:100%;
+    flex:1 1 calc(50% - 8px);
+  }
+  #tab-tempdata .td-plant-refresh-host #refreshDataBtn{
+    width:100%;
   }
   #tab-tempdata .td-plant-excel-path-bar{
     align-items:flex-start;
@@ -24025,7 +24067,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <div class="td-plant-controls-right">
               <button type="button" id="td-plant-open-excel-btn" data-admin-only="true" class="td-plant-action-btn td-plant-open-btn" title="Open the dedicated Excel workbook with the local helper on this PC, or download it on any device">Update data</button>
               <button type="button" id="td-plant-download-btn" data-admin-only="true" class="td-plant-action-btn td-plant-download-btn" title="Download the dedicated Excel workbook">⬇ Download Excel</button>
-              <button type="button" id="td-plant-refresh-btn" class="td-plant-action-btn td-plant-refresh-btn" title="Fetch the latest mapped plant tags into the TST cells">↻ Refresh Now</button>
+              <div id="td-plant-refresh-host" class="td-plant-refresh-host"></div>
             </div>
           </div>
           </div>
@@ -25404,7 +25446,7 @@ function findActionToastButton(source){
   if(btn.dataset && btn.dataset.toastAnchor === "action") return btn;
   var text = normalizeActionToastText(btn.getAttribute("data-refresh-default-label") || btn.getAttribute("aria-label") || btn.textContent || btn.value || "");
   var meta = normalizeActionToastText([btn.id || "", btn.className || "", btn.getAttribute("onclick") || "", btn.getAttribute("title") || ""].join(" "));
-  if(btn.id === "jobsdash-submit-btn" || btn.id === "td-save-btn" || btn.id === "td-plant-refresh-btn") return btn;
+  if(btn.id === "jobsdash-submit-btn" || btn.id === "td-save-btn" || btn.id === "refreshDataBtn") return btn;
   if(text.indexOf("latest data") !== -1) return btn;
   if(/\b(refresh|save|sync)\b/.test(text)) return btn;
   if(/\b(update entry|update job|save dates)\b/.test(text)) return btn;
@@ -25563,7 +25605,7 @@ function getPreferredSaveToastAnchor(){
   var activeId = active && active.id ? active.id : "";
   var candidates = [];
   if(activeId === "tab-tempdata"){
-    candidates.push(document.getElementById("td-plant-refresh-btn"));
+    candidates.push(document.querySelector("#td-plant-refresh-host #refreshDataBtn"));
   }
   if(activeId === "tab-cuboidstack" || activeId === "tab-cuboid"){
     candidates.push(active ? active.querySelector('.cuboid-twin-control-btn') : null);
@@ -30353,11 +30395,39 @@ function getActiveCuboidDashboardPanel(){
   return !!(active && active.hasAttribute("data-cuboid-dashboard")) ? active : null;
 }
 
+function syncGlobalRefreshButtonDock(tab){
+  var btn = document.getElementById("refreshDataBtn");
+  if(!btn) return;
+  var key = String(tab || "").toLowerCase();
+  var host = document.getElementById("td-plant-refresh-host");
+  var metaRight = document.getElementById("appMetaRight");
+  var headerAlarmWrap = document.getElementById("headerAlarmWrap");
+  if(key === "tempdata" && host){
+    if(btn.parentNode !== host) host.appendChild(btn);
+    btn.classList.add("td-plant-refresh-docked");
+    btn.setAttribute("title", "Refresh central data and fetch the latest mapped plant tags into the TST cells");
+    return;
+  }
+  if(metaRight){
+    if(headerAlarmWrap && headerAlarmWrap.parentNode === metaRight){
+      if(btn.parentNode !== metaRight || btn.nextSibling !== headerAlarmWrap){
+        metaRight.insertBefore(btn, headerAlarmWrap);
+      }
+    }else if(btn.parentNode !== metaRight){
+      metaRight.appendChild(btn);
+    }
+  }
+  btn.classList.remove("td-plant-refresh-docked");
+  btn.setAttribute("title", "Refresh latest dashboard data");
+}
+
 function updateGlobalRefreshButtonLabel(tab){
   var btn = document.getElementById("refreshDataBtn");
   if(!btn) return;
   var key = String(tab || "").toLowerCase();
+  syncGlobalRefreshButtonDock(key);
   var label =
+    key === "tempdata" ? "↻ Refresh Data" :
     key === "alarms" ? "↻ Refresh Alarms" :
     key === "jobsreformer" ? "↻ Refresh Data" :
     key === "reformerdash" ? "↻ Refresh Data" :
@@ -31773,6 +31843,20 @@ function handleGlobalRefreshClick(){
     refreshReformerDashboard(true).catch(function(err){
       console.warn("Reformer dashboard top refresh failed:", err);
     });
+    return;
+  }
+  if(tab === 'tempdata'){
+    (async function(){
+      var refreshed = await smartRefresh();
+      if(refreshed === false) return;
+      if(typeof refreshTdPlantImportNow === 'function'){
+        try{
+          await refreshTdPlantImportNow(true);
+        }catch(err){
+          console.warn("TST top refresh failed:", err);
+        }
+      }
+    })();
     return;
   }
   if(isCuboidDashboardTabName(tab)){
@@ -35329,7 +35413,6 @@ function bindTdPlantLiveInputs(){
   var refreshSelect = getTdPlantRefreshSelect();
   var openBtn = document.getElementById("td-plant-open-excel-btn");
   var downloadBtn = document.getElementById("td-plant-download-btn");
-  var refreshBtn = document.getElementById("td-plant-refresh-btn");
   var pathPicker = getTdPlantPathPicker();
   if(refreshSelect){
     refreshSelect.addEventListener("change", function(){
@@ -35339,7 +35422,6 @@ function bindTdPlantLiveInputs(){
   }
   if(openBtn) openBtn.addEventListener("click", handleTdPlantOpenExcel);
   if(downloadBtn) downloadBtn.addEventListener("click", downloadTdPlantExcelWorkbook);
-  if(refreshBtn) refreshBtn.addEventListener("click", refreshTdPlantImportManual);
   if(pathPicker) pathPicker.addEventListener("change", handleTdPlantPathPickerChange);
   updateTdPlantExcelUi();
   refreshTdPlantSourceUi();
@@ -35349,10 +35431,6 @@ function bindTdPlantLiveInputs(){
   ensureTdPlantMetaTicker();
   checkTdPlantImportConfig();
   refreshTdPlantLiveHealthState();
-}
-
-function refreshTdPlantImportManual(){
-  refreshTdPlantImportNow(true).catch(function(){});
 }
 
 var TST_FORMAT_XLSX_B64 =
