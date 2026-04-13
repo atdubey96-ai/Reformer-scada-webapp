@@ -5268,13 +5268,13 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   flex:1 1 auto;
   min-width:0;
   display:grid;
-  grid-template-columns:repeat(6,minmax(0,1fr));
-  gap:8px;
+  grid-template-columns:repeat(6,minmax(0,1.1fr)) repeat(4,minmax(0,0.88fr));
+  gap:6px;
 }
 #tab-cuboidstack .cuboid-twin-live-pill{
   position:relative;
   min-width:0;
-  padding:8px 10px 8px 12px;
+  padding:8px 10px 8px 11px;
   border-radius:12px;
   border:1px solid rgba(148,163,184,0.2);
   background:linear-gradient(180deg,rgba(15,23,42,0.86),rgba(9,14,22,0.92));
@@ -5282,6 +5282,9 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
     inset 0 1px 0 rgba(255,255,255,0.04),
     0 6px 14px rgba(2,8,23,0.12);
   overflow:hidden;
+}
+#tab-cuboidstack .cuboid-twin-live-pill.is-flow{
+  padding:7px 8px 7px 10px;
 }
 #tab-cuboidstack .cuboid-twin-live-pill::before{
   content:"";
@@ -5302,6 +5305,10 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   overflow:hidden;
   text-overflow:ellipsis;
 }
+#tab-cuboidstack .cuboid-twin-live-pill.is-flow .cuboid-twin-live-pill-label{
+  font-size:9px;
+  letter-spacing:0.68px;
+}
 #tab-cuboidstack .cuboid-twin-live-pill-value{
   display:block;
   margin-top:5px;
@@ -5309,12 +5316,17 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   font-size:17px;
   font-weight:800;
   line-height:1.02;
+  font-variant-numeric:tabular-nums;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
+#tab-cuboidstack .cuboid-twin-live-pill.is-flow .cuboid-twin-live-pill-value{
+  margin-top:4px;
+  font-size:14px;
+}
 #tab-cuboidstack .cuboid-twin-live-meta{
-  flex:0 0 220px;
+  flex:0 0 210px;
   display:flex;
   flex-direction:column;
   justify-content:center;
@@ -12994,13 +13006,19 @@ html, body, body *, body *::before, body *::after, svg text{
   }
   #tab-cuboidstack .cuboid-twin-live-pills{
     width:100%;
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-columns:repeat(3,minmax(0,1fr));
   }
   #tab-cuboidstack .cuboid-twin-live-pill{
     padding:9px 10px 9px 12px;
   }
+  #tab-cuboidstack .cuboid-twin-live-pill.is-flow{
+    padding:8px 10px 8px 12px;
+  }
   #tab-cuboidstack .cuboid-twin-live-pill-value{
     font-size:16px;
+  }
+  #tab-cuboidstack .cuboid-twin-live-pill.is-flow .cuboid-twin-live-pill-value{
+    font-size:15px;
   }
   #tab-cuboidstack .cuboid-twin-live-meta{
     width:100%;
@@ -24765,6 +24783,22 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               <span class="cuboid-twin-live-pill-label">CH₄ Slip</span>
               <strong id="stack-cuboid-live-slip" class="cuboid-twin-live-pill-value">—</strong>
             </div>
+            <div class="cuboid-twin-live-pill is-flow" style="--cuboid-live-tone:#34d399;">
+              <span class="cuboid-twin-live-pill-label">PSA-1 Flow</span>
+              <strong id="stack-cuboid-live-psa1" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
+            <div class="cuboid-twin-live-pill is-flow" style="--cuboid-live-tone:#2dd4bf;">
+              <span class="cuboid-twin-live-pill-label">PSA-2 Flow</span>
+              <strong id="stack-cuboid-live-psa2" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
+            <div class="cuboid-twin-live-pill is-flow" style="--cuboid-live-tone:#f59e0b;">
+              <span class="cuboid-twin-live-pill-label">Naphtha</span>
+              <strong id="stack-cuboid-live-naphtha" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
+            <div class="cuboid-twin-live-pill is-flow" style="--cuboid-live-tone:#93c5fd;">
+              <span class="cuboid-twin-live-pill-label">NG Flow</span>
+              <strong id="stack-cuboid-live-ng" class="cuboid-twin-live-pill-value">—</strong>
+            </div>
           </div>
           <div class="cuboid-twin-live-meta">
             <span class="cuboid-twin-live-meta-label">
@@ -35241,16 +35275,27 @@ function formatCuboidReformerSummaryValue(key, rawDisplay){
   var display = String(rawDisplay == null ? "" : rawDisplay).trim();
   if(!display) return "—";
   if(/[%°]/.test(display)) return display;
+  if(key === "psa1Og" || key === "psa2Og" || key === "ngFuelFlow"){
+    var flowInt = parseTdProcessNumericValue(display);
+    return flowInt === null ? display : Math.round(flowInt).toLocaleString("en-US");
+  }
+  if(key === "naphthaFuel"){
+    var naphthaNum = parseTdProcessNumericValue(display);
+    return naphthaNum === null
+      ? display
+      : naphthaNum.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  }
   if(key === "hguLoad") return display + "%";
   if(key === "abCot" || key === "cdCot" || key === "flueGas") return display + "°C";
   if(key === "excessO2" || key === "methaneSlip") return display + "%";
   return display;
 }
 
-function getCuboidReformerSummaryFieldState(key){
+function getCuboidReformerBindingState(key){
   var binding = getTdProcessBindingByKey(key);
   var display = "";
   var title = "";
+  var numericValue = null;
   if(binding){
     var resolvedTagId = getTdPlantBindingTagId(binding);
     var row = resolvedTagId && tdPlantLatestByTag && tdPlantLatestByTag.get ? tdPlantLatestByTag.get(resolvedTagId) : null;
@@ -35262,14 +35307,46 @@ function getCuboidReformerSummaryFieldState(key){
     }else{
       var input = getTdProcessFieldInput(binding);
       if(input){
-        display = String(input.value || "").trim();
+        display = formatTdProcessFieldValue(binding, input.value);
         title = input.title || binding.exportLabel || key;
       }
     }
   }
+  numericValue = parseTdProcessNumericValue(display);
   return {
-    display: formatCuboidReformerSummaryValue(key, display),
-    title: title
+    binding: binding,
+    display: display,
+    title: title,
+    numericValue: numericValue
+  };
+}
+
+function getCuboidReformerSummaryFieldState(key){
+  if(key === "ngFuelFlow"){
+    var psa1State = getCuboidReformerBindingState("psa1Og");
+    var psa2State = getCuboidReformerBindingState("psa2Og");
+    var naphthaState = getCuboidReformerBindingState("naphthaFuel");
+    var hasFuelInputs = psa1State.numericValue !== null || psa2State.numericValue !== null || naphthaState.numericValue !== null;
+    if(!hasFuelInputs || typeof calcReformerMetrics !== "function"){
+      return {
+        display: "—",
+        title: "Estimated from current PSA-1, PSA-2, and Naphtha flow values"
+      };
+    }
+    var metrics = calcReformerMetrics({
+      psa1Flow: psa1State.numericValue,
+      psa2Flow: psa2State.numericValue,
+      naphthaFuel: naphthaState.numericValue
+    });
+    return {
+      display: formatCuboidReformerSummaryValue(key, metrics && isFiniteNumber(metrics.ngFuelFlow) ? formatValue(metrics.ngFuelFlow, 0) : ""),
+      title: "Estimated NG fuel flow · max(0, 2400 - (totalOffGas x 0.018) - (naphthaMassTph x 0.12))"
+    };
+  }
+  var state = getCuboidReformerBindingState(key);
+  return {
+    display: formatCuboidReformerSummaryValue(key, state.display),
+    title: state.title
   };
 }
 
@@ -35282,7 +35359,11 @@ function renderCuboidReformerSummary(){
     { key:"cdCot", id:"stack-cuboid-live-cdcot" },
     { key:"flueGas", id:"stack-cuboid-live-flue" },
     { key:"excessO2", id:"stack-cuboid-live-o2" },
-    { key:"methaneSlip", id:"stack-cuboid-live-slip" }
+    { key:"methaneSlip", id:"stack-cuboid-live-slip" },
+    { key:"psa1Og", id:"stack-cuboid-live-psa1" },
+    { key:"psa2Og", id:"stack-cuboid-live-psa2" },
+    { key:"naphthaFuel", id:"stack-cuboid-live-naphtha" },
+    { key:"ngFuelFlow", id:"stack-cuboid-live-ng" }
   ].forEach(function(field){
     var state = getCuboidReformerSummaryFieldState(field.key);
     var el = document.getElementById(field.id);
