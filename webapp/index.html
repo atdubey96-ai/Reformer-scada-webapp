@@ -13350,6 +13350,49 @@ body.light-theme #tab-reformerdash{
 #tab-reformerdash .refdash-legend-list{margin-top:12px;}
 #tab-reformerdash .refdash-mini-box{margin-top:20px;padding:14px;border-radius:14px;background:var(--refdash-panel-strong);border:1px solid rgba(126,200,240,0.12);}
 #tab-reformerdash .refdash-info-bar{font-size:12px;color:var(--refdash-dim);}
+#tab-reformerdash .refdash-comp-sync-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+}
+#tab-reformerdash .refdash-comp-sync-copy{
+  flex:1 1 320px;
+  min-width:220px;
+}
+#tab-reformerdash .refdash-comp-sync-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#tab-reformerdash .refdash-comp-save-status{
+  color:var(--refdash-muted);
+  font-size:11px;
+}
+#tab-reformerdash .refdash-comp-save-btn{
+  border:1px solid rgba(34,197,94,0.34);
+  border-radius:12px;
+  padding:9px 14px;
+  background:linear-gradient(135deg,rgba(34,197,94,0.18),rgba(20,184,166,0.14));
+  color:var(--refdash-text);
+  font-weight:800;
+  letter-spacing:0.7px;
+  text-transform:uppercase;
+  cursor:pointer;
+  box-shadow:0 12px 26px rgba(15,118,110,0.14);
+}
+#tab-reformerdash .refdash-comp-save-btn:hover{
+  border-color:rgba(52,211,153,0.55);
+  box-shadow:0 16px 32px rgba(15,118,110,0.2);
+}
+#tab-reformerdash .refdash-comp-save-btn:disabled{
+  opacity:0.65;
+  cursor:not-allowed;
+  box-shadow:none;
+}
 #tab-reformerdash .refdash-eff-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;background:linear-gradient(135deg, rgba(15,23,42,0.88), rgba(34,197,94,0.08));}
 #tab-reformerdash .refdash-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
 #tab-reformerdash .refdash-status-dot{display:inline-block;width:9px;height:9px;border-radius:999px;}
@@ -25114,7 +25157,13 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       </div>
 
       <div id="refdash-pane-composition" class="refdash-pane">
-        <div class="refdash-info-bar refdash-mono">Gas NCV values recalculate instantly when you update the composition below. Naphtha uses live tag FI6303A in Nm3/h and converts with the fixed 0.7 density factor for heat duty.</div>
+        <div class="refdash-info-bar refdash-mono refdash-comp-sync-row">
+          <span class="refdash-comp-sync-copy">Gas NCV values recalculate instantly when you update the composition below. Save the fuel basis to sync manual values across devices. Naphtha uses live tag FI6303A with editable density and NCV basis.</span>
+          <span class="refdash-comp-sync-actions">
+            <span id="refdash-comp-save-status" class="refdash-comp-save-status">Local defaults</span>
+            <button type="button" id="refdash-comp-save-btn" class="refdash-comp-save-btn refdash-mono" onclick="saveReformerDashFuelBasis()">Save Fuel Basis</button>
+          </span>
+        </div>
         <div id="refdash-comp-panels" class="refdash-grid refdash-card-grid-4"></div>
         <div class="refdash-grid refdash-grid-2">
           <section class="refdash-panel">
@@ -28273,6 +28322,72 @@ function showPostCleaningBurnerDataNudge(){
   notifyAndBroadcast("post_cleaning_burner_nudge", "Post-Cleaning Nudge", body, "post_cleaning_burner_nudge", 4000);
 }
 
+var REFORMER_SETTINGS_SHEET_NAME = "Reformer Settings";
+
+function appendReformerSettingsSheet(wb){
+  if(!wb || typeof XLSX === "undefined" || !XLSX.utils) return false;
+  if(typeof window.getReformerDashSyncSettings !== "function") return false;
+  var settings = window.getReformerDashSyncSettings();
+  if(!settings || typeof settings !== "object") return false;
+  var updatedAt = settings.updatedAt || new Date().toISOString();
+  var updatedBy = settings.updatedBy || (typeof getLoggedInEmpId === "function" ? getLoggedInEmpId() : "");
+  var rows = [["Section","Group","Key","Value","Updated At","Updated By"]];
+  var composition = settings.composition || {};
+  ["psa1","psa2","ng"].forEach(function(group){
+    var mix = composition[group] || {};
+    ["CH4","C2H6","C3H8","H2","CO","CO2","N2"].forEach(function(key){
+      if(mix[key] == null) return;
+      rows.push(["Gas Composition", group, key, mix[key], updatedAt, updatedBy]);
+    });
+  });
+  var naphtha = settings.naphtha || {};
+  rows.push(["Naphtha Basis", "naphtha", "densityFactor", naphtha.densityFactor, updatedAt, updatedBy]);
+  rows.push(["Naphtha Basis", "naphtha", "ncv", naphtha.ncv, updatedAt, updatedBy]);
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"] = [{wch:18},{wch:12},{wch:14},{wch:14},{wch:24},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, REFORMER_SETTINGS_SHEET_NAME);
+  return true;
+}
+
+function importReformerSettingsFromWorkbook(wb){
+  if(!wb || !wb.SheetNames || typeof XLSX === "undefined" || !XLSX.utils) return false;
+  var sheetName = wb.SheetNames.find(function(name){
+    return String(name || "").trim().toLowerCase() === REFORMER_SETTINGS_SHEET_NAME.toLowerCase();
+  });
+  if(!sheetName || !wb.Sheets[sheetName]) return false;
+  var rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header:1, raw:false, defval:"" });
+  if(!rows || rows.length < 2) return false;
+  var payload = {
+    version: 1,
+    composition: { psa1:{}, psa2:{}, ng:{} },
+    naphtha: {},
+    updatedAt: "",
+    updatedBy: ""
+  };
+  rows.slice(1).forEach(function(row){
+    var section = String(row && row[0] != null ? row[0] : "").trim().toLowerCase();
+    var group = String(row && row[1] != null ? row[1] : "").trim();
+    var key = String(row && row[2] != null ? row[2] : "").trim();
+    var value = row ? row[3] : "";
+    var num = Number(String(value == null ? "" : value).replace(/,/g, "").trim());
+    if(!isFinite(num)) return;
+    if(row && row[4] && !payload.updatedAt) payload.updatedAt = String(row[4]).trim();
+    if(row && row[5] && !payload.updatedBy) payload.updatedBy = String(row[5]).trim();
+    if(section.indexOf("gas") >= 0 && payload.composition[group] && key){
+      payload.composition[group][key] = num;
+    }else if(section.indexOf("naphtha") >= 0 && key){
+      if(/^density/i.test(key)) payload.naphtha.densityFactor = num;
+      else if(/^ncv/i.test(key)) payload.naphtha.ncv = num;
+    }
+  });
+  if(!payload.updatedAt) payload.updatedAt = new Date().toISOString();
+  if(typeof window.applyReformerDashSyncSettings === "function"){
+    return !!window.applyReformerDashSyncSettings(payload, { source:"server" });
+  }
+  window.__pendingReformerDashSyncSettings = payload;
+  return true;
+}
+
 async function exportToExcel(options){
   options = options || {};
   var silent = !!options.silent;
@@ -28425,6 +28540,8 @@ async function exportToExcel(options){
   var wsTD = XLSX.utils.aoa_to_sheet(tdRows);
   wsTD["!cols"] = tdHeaders.map(function(_,i){ return {wch: i<2?18:14}; });
   XLSX.utils.book_append_sheet(wb, wsTD, "Temp Data");
+
+  appendReformerSettingsSheet(wb);
 
   const fname = SERVER_SYNC_FILE_NAME || "Burner_SCADA_Report.xlsx";
 
@@ -28813,6 +28930,12 @@ function _doImport(file, onDone, silent){
         }
       } catch(tdErr){
         console.warn("Temp Data sheet import error:", tdErr);
+      }
+
+      try{
+        importReformerSettingsFromWorkbook(wb);
+      }catch(refSettingsErr){
+        console.warn("Reformer Settings sheet import error:", refSettingsErr);
       }
 
       setTimeout(()=>{
@@ -33693,7 +33816,16 @@ function getAutoSyncDigest(){
     var cleanPart = JSON.stringify((typeof loadCleaningLog === "function") ? (loadCleaningLog() || {}) : {});
     var cleanHistPart = JSON.stringify((typeof loadCleaningHistory === "function") ? (loadCleaningHistory() || {}) : {});
     var tipPart = JSON.stringify((typeof loadTipData === "function") ? (loadTipData() || []) : []);
-    return hashStringFNV1a([dataPart,tempPart,cleanPart,cleanHistPart,tipPart].join("|"));
+    var reformerSettingsPart = "";
+    try{
+      if(typeof window.getReformerDashSyncSettings === "function"){
+        reformerSettingsPart = JSON.stringify(window.getReformerDashSyncSettings() || {});
+      }
+    }catch(_refDigestFn){}
+    if(!reformerSettingsPart){
+      try{ reformerSettingsPart = String(localStorage.getItem("scadaReformerDashSettingsV1") || ""); }catch(_refDigestLs){}
+    }
+    return hashStringFNV1a([dataPart,tempPart,cleanPart,cleanHistPart,tipPart,reformerSettingsPart].join("|"));
   }catch(e){
     return "";
   }
@@ -39415,8 +39547,11 @@ body.light-theme .btab-alarm-count{
     CO2: 0,
     N2: 0
   };
-  var REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = 0.7;
-  var REFORMER_DASH_NAPHTHA_NCV = 10500;
+  var REFORMER_DASH_SETTINGS_STORAGE_KEY = "scadaReformerDashSettingsV1";
+  var REFORMER_DASH_NAPHTHA_DEFAULT_DENSITY_FACTOR = 0.7;
+  var REFORMER_DASH_NAPHTHA_DEFAULT_NCV = 10500;
+  var REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = REFORMER_DASH_NAPHTHA_DEFAULT_DENSITY_FACTOR;
+  var REFORMER_DASH_NAPHTHA_NCV = REFORMER_DASH_NAPHTHA_DEFAULT_NCV;
   var REFORMER_DASH_FIELD_ALIAS = {
     hguLoad: "hguLoad",
     abCot: "abCot",
@@ -39477,6 +39612,54 @@ body.light-theme .btab-alarm-count{
     };
   }
 
+  function cloneReformerComposition(source){
+    var defaults = makeDefaultComposition();
+    var out = makeDefaultComposition();
+    ["psa1","psa2","ng"].forEach(function(group){
+      var src = source && source[group] && typeof source[group] === "object" ? source[group] : {};
+      Object.keys(defaults[group]).forEach(function(key){
+        var n = parseNumberOrNull(src[key]);
+        out[group][key] = isFiniteNumber(n) ? clamp(n, 0, 100) : defaults[group][key];
+      });
+    });
+    return out;
+  }
+
+  function sanitizeReformerDashSettings(raw){
+    var source = raw && typeof raw === "object" ? raw : {};
+    var naphtha = source.naphtha && typeof source.naphtha === "object" ? source.naphtha : {};
+    var density = parseNumberOrNull(naphtha.densityFactor);
+    var ncv = parseNumberOrNull(naphtha.ncv);
+    return {
+      version: 1,
+      composition: cloneReformerComposition(source.composition),
+      naphtha: {
+        densityFactor: isFiniteNumber(density) ? clamp(density, 0.01, 10) : REFORMER_DASH_NAPHTHA_DEFAULT_DENSITY_FACTOR,
+        ncv: isFiniteNumber(ncv) ? clamp(ncv, 0, 50000) : REFORMER_DASH_NAPHTHA_DEFAULT_NCV
+      },
+      updatedAt: String(source.updatedAt || source.updated_at || "").trim(),
+      updatedBy: String(source.updatedBy || source.updated_by || "").trim()
+    };
+  }
+
+  function loadReformerDashSettingsFromStorage(){
+    var parsed = null;
+    try{
+      var raw = localStorage.getItem(REFORMER_DASH_SETTINGS_STORAGE_KEY);
+      if(raw) parsed = JSON.parse(raw);
+    }catch(e){}
+    if(!parsed && window.__pendingReformerDashSyncSettings){
+      parsed = window.__pendingReformerDashSyncSettings;
+    }
+    var settings = sanitizeReformerDashSettings(parsed || {});
+    if(!settings.updatedAt) settings.updatedAt = "";
+    return settings;
+  }
+
+  var initialReformerDashSettings = loadReformerDashSettingsFromStorage();
+  REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = initialReformerDashSettings.naphtha.densityFactor;
+  REFORMER_DASH_NAPHTHA_NCV = initialReformerDashSettings.naphtha.ncv;
+
   var reformerDashState = window.__reformerDashState || (window.__reformerDashState = {
     initialized: false,
     resizeBound: false,
@@ -39484,7 +39667,11 @@ body.light-theme .btab-alarm-count{
     fetchPromise: null,
     activePane: "overview",
     charts: {},
-    composition: makeDefaultComposition(),
+    composition: initialReformerDashSettings.composition,
+    settingsUpdatedAt: initialReformerDashSettings.updatedAt,
+    settingsUpdatedBy: initialReformerDashSettings.updatedBy,
+    settingsDirty: false,
+    settingsSaving: false,
     data: makeEmptyData(),
     rowMeta: {},
     latestMap: new Map(),
@@ -39576,6 +39763,109 @@ body.light-theme .btab-alarm-count{
     if(diff < 60) return diff + " min ago";
     var hours = Math.round(diff / 60);
     return hours === 1 ? "1 hr ago" : (hours + " hr ago");
+  }
+
+  function getReformerDashSettingsPayload(){
+    return {
+      version: 1,
+      composition: cloneReformerComposition(reformerDashState.composition),
+      naphtha: {
+        densityFactor: REFORMER_DASH_NAPHTHA_DENSITY_FACTOR,
+        ncv: REFORMER_DASH_NAPHTHA_NCV
+      },
+      updatedAt: reformerDashState.settingsUpdatedAt || "",
+      updatedBy: reformerDashState.settingsUpdatedBy || ""
+    };
+  }
+
+  function persistReformerDashSettings(){
+    try{
+      localStorage.setItem(REFORMER_DASH_SETTINGS_STORAGE_KEY, JSON.stringify(getReformerDashSettingsPayload()));
+    }catch(e){}
+  }
+
+  function getReformerDashEditorId(){
+    try{
+      if(typeof getLoggedInEmpId === "function") return getLoggedInEmpId() || "";
+    }catch(e){}
+    return "";
+  }
+
+  function markReformerDashSettingsEdited(){
+    reformerDashState.settingsUpdatedAt = new Date().toISOString();
+    reformerDashState.settingsUpdatedBy = getReformerDashEditorId();
+    reformerDashState.settingsDirty = true;
+    persistReformerDashSettings();
+    renderReformerDashSettingsStatus();
+  }
+
+  function renderReformerDashSettingsStatus(){
+    var status = getReformerDashEl("refdash-comp-save-status");
+    var btn = getReformerDashEl("refdash-comp-save-btn");
+    if(btn) btn.disabled = !!reformerDashState.settingsSaving;
+    if(!status) return;
+    if(reformerDashState.settingsSaving){
+      status.textContent = "Saving to central...";
+      return;
+    }
+    var savedAt = parseDashDate(reformerDashState.settingsUpdatedAt);
+    var stamp = savedAt ? (formatDashDateTime(savedAt) + " (" + getDashAgoLabel(savedAt) + ")") : "defaults";
+    var by = reformerDashState.settingsUpdatedBy ? (" by " + reformerDashState.settingsUpdatedBy) : "";
+    if(!savedAt && !reformerDashState.settingsDirty){
+      status.textContent = "Local default fuel basis";
+      return;
+    }
+    status.textContent = (reformerDashState.settingsDirty ? "Unsaved fuel basis · " : "Synced fuel basis · ") + stamp + by;
+  }
+
+  function applyReformerDashSyncSettings(raw, opts){
+    var options = opts || {};
+    var incoming = sanitizeReformerDashSettings(raw || {});
+    var incomingMs = incoming.updatedAt ? Date.parse(incoming.updatedAt) : 0;
+    var localMs = reformerDashState.settingsUpdatedAt ? Date.parse(reformerDashState.settingsUpdatedAt) : 0;
+    if(options.source === "server" && reformerDashState.settingsDirty && localMs && incomingMs && incomingMs < localMs){
+      renderReformerDashSettingsStatus();
+      return false;
+    }
+    reformerDashState.composition = incoming.composition;
+    REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = incoming.naphtha.densityFactor;
+    REFORMER_DASH_NAPHTHA_NCV = incoming.naphtha.ncv;
+    reformerDashState.settingsUpdatedAt = incoming.updatedAt || reformerDashState.settingsUpdatedAt || "";
+    reformerDashState.settingsUpdatedBy = incoming.updatedBy || "";
+    reformerDashState.settingsDirty = options.source !== "server" && !!options.dirty;
+    persistReformerDashSettings();
+    if(options.render !== false) renderReformerDashboardFromState();
+    else renderReformerDashSettingsStatus();
+    return true;
+  }
+
+  async function saveReformerDashFuelBasis(){
+    persistReformerDashSettings();
+    reformerDashState.settingsSaving = true;
+    renderReformerDashSettingsStatus();
+    try{
+      if(typeof exportToExcel !== "function") throw new Error("Central save is not available.");
+      var result = await exportToExcel({ silent:true, source:"reformer-fuel-basis" });
+      if(result === true || result === "queued"){
+        reformerDashState.settingsDirty = false;
+        persistReformerDashSettings();
+        renderReformerDashSettingsStatus();
+        if(typeof showSaveActionToast === "function"){
+          showSaveActionToast(result === true ? "✅ Fuel basis synced across devices" : "📶 Fuel basis queued for central sync");
+        }
+        return result;
+      }
+      throw new Error("Central save did not complete.");
+    }catch(err){
+      if(typeof showSaveActionToast === "function"){
+        showSaveActionToast("⚠ Fuel basis saved locally, central sync failed.");
+      }
+      console.warn("Fuel basis save failed:", err);
+      return false;
+    }finally{
+      reformerDashState.settingsSaving = false;
+      renderReformerDashSettingsStatus();
+    }
   }
 
   function getDashTheme(){
@@ -40138,21 +40428,21 @@ body.light-theme .btab-alarm-count{
           buildHeatDutyCalcRow("PSA-1 NCV", "sum(component % / 100 x NCV reference)", formatValue(metrics.psa1NCV, 0) + " kcal/Nm3", "var(--refdash-cyan)"),
           buildHeatDutyCalcRow("PSA-2 NCV", "sum(component % / 100 x NCV reference)", formatValue(metrics.psa2NCV, 0) + " kcal/Nm3", "var(--refdash-purple)"),
           buildHeatDutyCalcRow("Natural Gas NCV", "sum(component % / 100 x NCV reference)", formatValue(metrics.ngNCV, 0) + " kcal/Nm3", "var(--refdash-green)"),
-          buildHeatDutyCalcRow("Naphtha NCV", "fixed reference", formatValue(REFORMER_DASH_NAPHTHA_NCV, 0) + " kcal/kg", "var(--refdash-accent-2)")
-        ], "PSA and NG NCVs come from the editable gas composition, while naphtha uses the fixed liquid-fuel NCV reference."),
+          buildHeatDutyCalcRow("Naphtha NCV", "saved fuel-basis value", formatValue(REFORMER_DASH_NAPHTHA_NCV, 0) + " kcal/kg", "var(--refdash-accent-2)")
+        ], "PSA and NG NCVs come from the editable gas composition, while naphtha uses the saved liquid-fuel NCV basis."),
         buildHeatDutyCalcCard("Naphtha Conversion", "var(--refdash-accent-2)", [
           buildHeatDutyCalcRow("Live FI6303A flow", "plant tag value", formatValue(pv.naphthaFuel, 1) + " Nm3/h", "var(--refdash-accent-2)"),
-          buildHeatDutyCalcRow("Density factor", "fixed conversion", formatValue(REFORMER_DASH_NAPHTHA_DENSITY_FACTOR, 2) + " t/Nm3", "var(--refdash-accent-2)"),
-          buildHeatDutyCalcRow("Converted mass flow", "naphthaFuel x 0.7", formatValue(metrics.naphthaMassTph, 1) + " t/h", "var(--refdash-accent-2)"),
+          buildHeatDutyCalcRow("Density factor", "saved conversion basis", formatValue(REFORMER_DASH_NAPHTHA_DENSITY_FACTOR, 2) + " t/Nm3", "var(--refdash-accent-2)"),
+          buildHeatDutyCalcRow("Converted mass flow", "naphthaFuel x density factor", formatValue(metrics.naphthaMassTph, 1) + " t/h", "var(--refdash-accent-2)"),
           buildHeatDutyCalcRow("Heat basis flow", "converted t/h x 1000", formatValue(metrics.naphthaMassKgh, 0) + " kg/h", "var(--refdash-accent-2)")
         ], "FI6303A is treated as Nm3/h. The model converts it to mass flow before naphtha heat duty is calculated."),
         buildHeatDutyCalcCard("Estimated NG Flow", "var(--refdash-green)", [
           buildHeatDutyCalcRow("Total off gas", "PSA-1 flow + PSA-2 flow", formatValue(totalOffGas, 1) + " Nm3/h", "var(--refdash-cyan)"),
           buildHeatDutyCalcRow("NG fuel flow", "max(0, 2400 - (totalOffGas x 0.018) - (naphthaMassTph x 0.12))", formatValue(metrics.ngFuelFlow, 1) + " Nm3/h", "var(--refdash-green)")
-        ], "Natural gas is still estimated by the model, but FI6303A naphtha is first converted to t/h using the 0.7 factor."),
+        ], "Natural gas is still estimated by the model, but FI6303A naphtha is first converted to t/h using the saved density factor."),
         buildHeatDutyCalcCard("Fuel Heat Duty", "var(--refdash-accent-2)", fuels.map(function(item){
           return buildHeatDutyCalcRow(item.name, item.formula, formatValue(item.duty, 3) + " Gcal/h", item.color);
-        }), "Gas duties use Nm3/h x kcal/Nm3. Naphtha duty uses FI6303A Nm3/h x 0.7 x 1000 x kcal/kg."),
+        }), "Gas duties use Nm3/h x kcal/Nm3. Naphtha duty uses FI6303A Nm3/h x saved density factor x 1000 x kcal/kg."),
         buildHeatDutyCalcCard("Loss Factors", "var(--refdash-red)", [
           buildHeatDutyCalcRow("Flue loss factor", "clamp(0.065 + max(flueGas - 860, 0) x 0.00012 + max(excessO2 - 3.5, 0) x 0.009, 0.06, 0.19)", formatValue(metrics.flueLossFactor * 100, 2) + " %", "var(--refdash-red)"),
           buildHeatDutyCalcRow("Slip loss factor", "clamp(methaneSlip x 0.005, 0, 0.045)", formatValue(metrics.slipLossFactor * 100, 2) + " %", "var(--refdash-purple)"),
@@ -40470,6 +40760,14 @@ body.light-theme .btab-alarm-count{
           + (note ? ('<div class="refdash-comp-note">' + note + '</div>') : '')
           + '</div>';
       }
+      function buildEditableCompCell(label, value, step, handler, note){
+        return ''
+          + '<div class="refdash-comp-field">'
+          + '<div class="refdash-comp-label refdash-mono">' + label + '</div>'
+          + '<input class="refdash-comp-input refdash-mono" type="number" step="' + step + '" value="' + value + '" onchange="' + handler + '">'
+          + (note ? ('<div class="refdash-comp-note">' + note + '</div>') : '')
+          + '</div>';
+      }
       panelRoot.innerHTML = groups.map(function(group){
         var mix = reformerDashState.composition[group.key];
         var total = Object.keys(mix).reduce(function(sum, item){ return sum + nz(mix[item]); }, 0);
@@ -40493,13 +40791,14 @@ body.light-theme .btab-alarm-count{
         + '<div class="refdash-comp-title refdash-mono">Naphtha Fuel Basis (FI6303A)</div>'
         + '<div class="refdash-comp-grid">'
         + buildStaticCompCell("Live Flow", isFiniteNumber(reformerDashState.data.naphthaFuel) ? (formatValue(reformerDashState.data.naphthaFuel, 1) + " Nm3/h") : "—")
-        + buildStaticCompCell("Density Factor", formatValue(REFORMER_DASH_NAPHTHA_DENSITY_FACTOR, 2) + " t/Nm3")
+        + buildEditableCompCell("Density Factor", formatValue(REFORMER_DASH_NAPHTHA_DENSITY_FACTOR, 2, "0.70"), "0.01", "updateReformerDashNaphthaBasis('densityFactor', this.value)", "t/Nm3")
         + buildStaticCompCell("Converted Flow", isFiniteNumber(metrics.naphthaMassTph) ? (formatValue(metrics.naphthaMassTph, 1) + " t/h") : "—", isFiniteNumber(metrics.naphthaMassKgh) ? (formatValue(metrics.naphthaMassKgh, 0) + " kg/h heat basis") : "")
-        + buildStaticCompCell("NCV Basis", formatValue(REFORMER_DASH_NAPHTHA_NCV, 0) + " kcal/kg")
+        + buildEditableCompCell("NCV Basis", formatValue(REFORMER_DASH_NAPHTHA_NCV, 0, "10500"), "10", "updateReformerDashNaphthaBasis('ncv', this.value)", "kcal/kg")
         + '</div>'
-        + '<div class="refdash-comp-summary refdash-mono">Heat duty = FI6303A x 0.7 x 1000 x ' + formatValue(REFORMER_DASH_NAPHTHA_NCV, 0) + ' / 1,000,000</div>'
+        + '<div class="refdash-comp-summary refdash-mono">Heat duty = FI6303A x ' + formatValue(REFORMER_DASH_NAPHTHA_DENSITY_FACTOR, 2) + ' x 1000 x ' + formatValue(REFORMER_DASH_NAPHTHA_NCV, 0) + ' / 1,000,000</div>'
         + '</div>';
     }
+    renderReformerDashSettingsStatus();
     var refTable = getReformerDashEl("refdash-ncv-ref-table");
     if(refTable){
       var html = '<thead><tr><th>Component / Fuel</th><th class="refdash-right">NCV</th><th class="refdash-center">Unit</th><th class="refdash-right">Formula</th></tr></thead><tbody>';
@@ -40511,7 +40810,7 @@ body.light-theme .btab-alarm-count{
         { name:"Carbon Monoxide", formula:"CO", value:3020, unit:"kcal/Nm3" },
         { name:"Carbon Dioxide", formula:"CO2", value:0, unit:"kcal/Nm3" },
         { name:"Nitrogen", formula:"N2", value:0, unit:"kcal/Nm3" },
-        { name:"Naphtha", formula:"Fixed", value:REFORMER_DASH_NAPHTHA_NCV, unit:"kcal/kg" }
+        { name:"Naphtha", formula:"Saved basis", value:REFORMER_DASH_NAPHTHA_NCV, unit:"kcal/kg" }
       ].forEach(function(item){
         html += '<tr>'
           + '<td class="refdash-text">' + item.name + '</td>'
@@ -40999,8 +41298,28 @@ body.light-theme .btab-alarm-count{
 
   function updateReformerDashComposition(group, key, value){
     if(!reformerDashState.composition[group] || !Object.prototype.hasOwnProperty.call(reformerDashState.composition[group], key)) return;
-    reformerDashState.composition[group][key] = nz(parseNumberOrNull(value));
+    reformerDashState.composition[group][key] = clamp(nz(parseNumberOrNull(value)), 0, 100);
+    markReformerDashSettingsEdited();
     renderReformerDashboardFromState();
+  }
+
+  function updateReformerDashNaphthaBasis(key, value){
+    var num = parseNumberOrNull(value);
+    if(!isFiniteNumber(num)) return;
+    if(key === "densityFactor"){
+      REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = clamp(num, 0.01, 10);
+    }else if(key === "ncv"){
+      REFORMER_DASH_NAPHTHA_NCV = clamp(num, 0, 50000);
+    }else{
+      return;
+    }
+    markReformerDashSettingsEdited();
+    renderReformerDashboardFromState();
+  }
+
+  if(window.__pendingReformerDashSyncSettings){
+    applyReformerDashSyncSettings(window.__pendingReformerDashSyncSettings, { source:"server", render:false });
+    window.__pendingReformerDashSyncSettings = null;
   }
 
 window.switchReformerDashTab = switchReformerDashTab;
@@ -41008,6 +41327,10 @@ window.refreshReformerDashboard = refreshReformerDashboard;
 window.refreshReformerDashboardLite = refreshReformerDashboardLite;
 window.ensureReformerDashboardLoaded = ensureReformerDashboardLoaded;
 window.updateReformerDashComposition = updateReformerDashComposition;
+window.updateReformerDashNaphthaBasis = updateReformerDashNaphthaBasis;
+window.getReformerDashSyncSettings = getReformerDashSettingsPayload;
+window.applyReformerDashSyncSettings = applyReformerDashSyncSettings;
+window.saveReformerDashFuelBasis = saveReformerDashFuelBasis;
 })();
 </script>
 <script>
