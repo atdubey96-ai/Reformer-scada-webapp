@@ -41294,6 +41294,11 @@ body.light-theme .btab-alarm-count{
         message = reformerDashState.historyMessage;
       }else if(!reformerDashState.historyPoints.length){
         message = "No history samples were found in the last 8 hours. Trend charts will fill as new 15-minute history rows arrive.";
+      }else{
+        var lastPoint = reformerDashState.historyPoints[reformerDashState.historyPoints.length - 1];
+        if(lastPoint && lastPoint.time){
+          message = "History through " + formatDashMoment(lastPoint.time) + " · " + String(reformerDashState.historyPoints.length) + " buckets";
+        }
       }
       status.style.display = message ? "block" : "none";
       status.textContent = message || "";
@@ -41363,6 +41368,25 @@ body.light-theme .btab-alarm-count{
       }
     }
     return base;
+  }
+
+  function buildReformerTrendXAxis(theme){
+    var points = Array.isArray(reformerDashState.historyPoints) ? reformerDashState.historyPoints : [];
+    return {
+      ticks: {
+        color: theme.dim,
+        maxRotation: 0,
+        autoSkip: false,
+        callback: function(value, index){
+          var total = points.length;
+          if(!total) return "";
+          if(index === 0 || index === total - 1) return points[index] && points[index].label ? points[index].label : "";
+          if((index % 4) === 0) return points[index] && points[index].label ? points[index].label : "";
+          return "";
+        }
+      },
+      grid: { color: theme.border }
+    };
   }
 
   function renderTempProfileChart(){
@@ -41508,10 +41532,7 @@ body.light-theme .btab-alarm-count{
       options: lineOptions(theme, {
         interaction: { mode:"index", intersect:false },
         scales: {
-          x: {
-            ticks: { color: theme.dim, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
-            grid: { color: theme.border }
-          },
+          x: buildReformerTrendXAxis(theme),
           y: {
             position: "left",
             ticks: { color: theme.dim },
@@ -41552,7 +41573,7 @@ body.light-theme .btab-alarm-count{
       },
       options: lineOptions(theme, {
         scales: {
-          x: { ticks:{ color:theme.dim, maxRotation:0, autoSkip:true, maxTicksLimit:8 }, grid:{ color:theme.border } },
+          x: buildReformerTrendXAxis(theme),
           y: { position:"left", ticks:{ color:theme.dim }, grid:{ color:theme.border }, title:{ display:true, text:"Nm3/h", color:theme.muted } },
           y1: { position:"right", ticks:{ color:theme.dim }, grid:{ display:false }, title:{ display:true, text:"Nm3/h (FI6303A)", color:theme.muted } }
         }
@@ -41576,7 +41597,7 @@ body.light-theme .btab-alarm-count{
       },
       options: lineOptions(theme, {
         scales: {
-          x: { ticks:{ color:theme.dim, maxRotation:0, autoSkip:true, maxTicksLimit:8 }, grid:{ color:theme.border } },
+          x: buildReformerTrendXAxis(theme),
           y: { ticks:{ color:theme.dim }, grid:{ color:theme.border }, min: 72, max: 92 }
         }
       })
