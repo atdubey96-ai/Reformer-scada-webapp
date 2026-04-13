@@ -7121,12 +7121,12 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 #tab-reformerdash .plantmon-shell{
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:12px;
 }
 #tab-tempdata .plantmon-shell{
-  --plantmon-panel:rgba(255,255,255,0.05);
-  --plantmon-panel-strong:rgba(255,255,255,0.07);
-  --plantmon-border:rgba(126,200,240,0.14);
+  --plantmon-panel:linear-gradient(180deg, rgba(14,25,44,0.86) 0%, rgba(9,17,32,0.94) 100%);
+  --plantmon-panel-strong:rgba(9,17,32,0.9);
+  --plantmon-border:rgba(126,200,240,0.18);
   --plantmon-shadow:0 18px 38px rgba(2,6,23,0.18);
   --plantmon-text:#eff6ff;
   --plantmon-dim:#a5b4c8;
@@ -7136,6 +7136,19 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   --plantmon-error:#f87171;
   --plantmon-cyan:#7dd3fc;
   margin-bottom:16px;
+}
+body.light-theme #tab-tempdata .plantmon-shell{
+  --plantmon-panel:linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,248,252,0.98) 100%);
+  --plantmon-panel-strong:rgba(248,251,254,0.98);
+  --plantmon-border:rgba(148,163,184,0.22);
+  --plantmon-shadow:0 12px 30px rgba(148,163,184,0.16);
+  --plantmon-text:#102238;
+  --plantmon-dim:#6b7f97;
+  --plantmon-muted:#5c7088;
+  --plantmon-ok:#1f9d68;
+  --plantmon-warn:#d18a00;
+  --plantmon-error:#df5a6d;
+  --plantmon-cyan:#2a9fd6;
 }
 #tab-reformerdash .plantmon-shell{
   --plantmon-panel:var(--refdash-panel);
@@ -7163,7 +7176,7 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 #tab-reformerdash .plantmon-kpi{
   position:relative;
   overflow:hidden;
-  padding:16px 18px;
+  padding:15px 18px 16px;
   border-radius:18px;
   border:1px solid var(--plantmon-border);
   background:var(--plantmon-panel);
@@ -7201,9 +7214,20 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 #tab-reformerdash .plantmon-kpi-value{
   margin-top:8px;
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-size:30px;
-  line-height:1.03;
+  font-size:clamp(22px,1.9vw,28px);
+  line-height:1.08;
   color:var(--plantmon-text);
+  word-break:break-word;
+}
+#tab-tempdata .plantmon-kpi-value-number,
+#tab-reformerdash .plantmon-kpi-value-number{
+  font-size:clamp(30px,2.8vw,42px);
+  letter-spacing:-0.03em;
+}
+#tab-tempdata .plantmon-kpi-value-long,
+#tab-reformerdash .plantmon-kpi-value-long{
+  font-size:clamp(18px,1.7vw,24px);
+  line-height:1.16;
 }
 #tab-tempdata .plantmon-kpi-sub,
 #tab-reformerdash .plantmon-kpi-sub{
@@ -7225,13 +7249,14 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   border:1px solid var(--plantmon-border);
   background:var(--plantmon-panel);
   box-shadow:var(--plantmon-shadow);
+  min-height:126px;
 }
 #tab-tempdata .plantmon-source-card.is-ok,
-#tab-reformerdash .plantmon-source-card.is-ok{background:linear-gradient(180deg, rgba(52,211,153,0.08), var(--plantmon-panel));}
+#tab-reformerdash .plantmon-source-card.is-ok{background:linear-gradient(180deg, rgba(52,211,153,0.12), var(--plantmon-panel));}
 #tab-tempdata .plantmon-source-card.is-warn,
-#tab-reformerdash .plantmon-source-card.is-warn{background:linear-gradient(180deg, rgba(245,158,11,0.08), var(--plantmon-panel));}
+#tab-reformerdash .plantmon-source-card.is-warn{background:linear-gradient(180deg, rgba(245,158,11,0.12), var(--plantmon-panel));}
 #tab-tempdata .plantmon-source-card.is-error,
-#tab-reformerdash .plantmon-source-card.is-error{background:linear-gradient(180deg, rgba(248,113,113,0.08), var(--plantmon-panel));}
+#tab-reformerdash .plantmon-source-card.is-error{background:linear-gradient(180deg, rgba(248,113,113,0.12), var(--plantmon-panel));}
 #tab-tempdata .plantmon-source-top,
 #tab-reformerdash .plantmon-source-top{
   display:flex;
@@ -7272,7 +7297,8 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 #tab-tempdata .plantmon-source-status,
 #tab-reformerdash .plantmon-source-status{
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-size:17px;
+  font-size:19px;
+  font-weight:700;
   color:var(--plantmon-text);
 }
 #tab-tempdata .plantmon-source-detail,
@@ -7298,6 +7324,51 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   border:1px solid var(--plantmon-border);
   background:var(--plantmon-panel);
   box-shadow:var(--plantmon-shadow);
+}
+#tab-tempdata .plantmon-health-body,
+#tab-reformerdash .plantmon-health-body{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 220px;
+  gap:18px;
+  align-items:start;
+}
+#tab-tempdata .plantmon-health-main,
+#tab-reformerdash .plantmon-health-main{
+  min-width:0;
+}
+#tab-tempdata .plantmon-health-side,
+#tab-reformerdash .plantmon-health-side{
+  display:grid;
+  gap:12px;
+}
+#tab-tempdata .plantmon-mini-stat,
+#tab-reformerdash .plantmon-mini-stat{
+  padding:14px 16px;
+  border-radius:14px;
+  border:1px solid var(--plantmon-border);
+  background:var(--plantmon-panel-strong);
+}
+#tab-tempdata .plantmon-mini-label,
+#tab-reformerdash .plantmon-mini-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:var(--plantmon-dim);
+}
+#tab-tempdata .plantmon-mini-value,
+#tab-reformerdash .plantmon-mini-value{
+  margin-top:8px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:22px;
+  line-height:1.08;
+  color:var(--plantmon-text);
+}
+#tab-tempdata .plantmon-mini-sub,
+#tab-reformerdash .plantmon-mini-sub{
+  margin-top:6px;
+  font-size:11px;
+  color:var(--plantmon-muted);
 }
 #tab-tempdata .plantmon-health-head,
 #tab-reformerdash .plantmon-health-head{
@@ -7329,10 +7400,11 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 }
 #tab-tempdata .plantmon-timeline,
 #tab-reformerdash .plantmon-timeline{
-  display:flex;
-  flex-wrap:wrap;
+  display:grid;
+  grid-template-columns:repeat(13,minmax(28px,1fr));
   gap:10px;
   align-items:flex-end;
+  min-width:0;
 }
 #tab-tempdata .plantmon-slot,
 #tab-reformerdash .plantmon-slot{
@@ -7343,7 +7415,7 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
 }
 #tab-tempdata .plantmon-slot-bar,
 #tab-reformerdash .plantmon-slot-bar{
-  width:28px;
+  width:100%;
   height:54px;
   border-radius:8px;
   border:1px solid rgba(148,163,184,0.18);
@@ -7414,6 +7486,14 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   #tab-reformerdash .plantmon-grid-kpi{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
+  #tab-tempdata .plantmon-health-body,
+  #tab-reformerdash .plantmon-health-body{
+    grid-template-columns:1fr;
+  }
+  #tab-tempdata .plantmon-health-side,
+  #tab-reformerdash .plantmon-health-side{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
   #tab-tempdata .plantmon-source-row,
   #tab-reformerdash .plantmon-source-row{
     grid-template-columns:1fr;
@@ -7429,6 +7509,10 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   #tab-reformerdash .plantmon-grid-kpi{
     grid-template-columns:1fr;
   }
+  #tab-tempdata .plantmon-health-side,
+  #tab-reformerdash .plantmon-health-side{
+    grid-template-columns:1fr;
+  }
   #tab-tempdata .plantmon-health-head,
   #tab-reformerdash .plantmon-health-head{
     flex-direction:column;
@@ -7437,9 +7521,9 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
   #tab-reformerdash .plantmon-health-summary{
     text-align:left;
   }
-  #tab-tempdata .plantmon-legend-spacer,
-  #tab-reformerdash .plantmon-legend-spacer{
-    margin-left:0;
+  #tab-tempdata .plantmon-timeline,
+  #tab-reformerdash .plantmon-timeline{
+    grid-template-columns:repeat(7,minmax(28px,1fr));
   }
 }
 #tab-tempdata .td-plant-settings-btn{
@@ -33815,6 +33899,8 @@ var TD_PLANT_CURRENT_TABLE = "plant_data";
 var TD_PLANT_HISTORY_TABLE = "plant_data_history";
 var TD_PLANT_DIRECT_FETCH_LIMIT = 300;
 var TD_PLANT_PUSH_INTERVAL_MINUTES = 5;
+var TD_PLANT_PUSH_HISTORY_SLOT_COUNT = 12;
+var TD_PLANT_PUSH_FUTURE_SLOT_COUNT = 1;
 var TD_HGU_LOAD_DIVISOR = 26636;
 var TD_HGU_LOAD_RAW_THRESHOLD = 500;
 var TD_PROCESS_FIELD_BINDINGS = [
@@ -34744,7 +34830,7 @@ function deriveTdPlantTimeline(latestMap){
   var currentBucket = getTdPlantBucketDate(new Date());
   var currentKey = getTdPlantBucketKey(currentBucket);
   var slotCount = 0;
-  for(var offset = -6; offset <= 1; offset++){
+  for(var offset = -(TD_PLANT_PUSH_HISTORY_SLOT_COUNT - 1); offset <= TD_PLANT_PUSH_FUTURE_SLOT_COUNT; offset++){
     var slotTime = new Date(currentBucket.getTime() + (offset * TD_PLANT_PUSH_INTERVAL_MINUTES * 60000));
     var slotKey = getTdPlantBucketKey(slotTime);
     var isFuture = slotTime > currentBucket;
@@ -34808,7 +34894,7 @@ function buildTdPlantTimelineSlots(){
   var currentBucket = getTdPlantBucketDate(new Date());
   var currentKey = getTdPlantBucketKey(currentBucket);
   var slots = [];
-  for(var offset = -6; offset <= 1; offset++){
+  for(var offset = -(TD_PLANT_PUSH_HISTORY_SLOT_COUNT - 1); offset <= TD_PLANT_PUSH_FUTURE_SLOT_COUNT; offset++){
     var slotTime = new Date(currentBucket.getTime() + (offset * TD_PLANT_PUSH_INTERVAL_MINUTES * 60000));
     var slotKey = getTdPlantBucketKey(slotTime);
     var isFuture = slotTime > currentBucket;
@@ -34855,10 +34941,10 @@ function buildTdPlantAdminMonitorHtml(){
   var slots = buildTdPlantTimelineSlots();
   return ''
     + '<div class="plantmon-grid plantmon-grid-kpi">'
-    + '<div class="plantmon-kpi plantmon-tone-ok"><div class="plantmon-kpi-label">Active Tags</div><div class="plantmon-kpi-value">' + activeTags + '</div><div class="plantmon-kpi-sub">' + sourceName + '</div></div>'
-    + '<div class="plantmon-kpi plantmon-tone-warn"><div class="plantmon-kpi-label">Last Excel Push</div><div class="plantmon-kpi-value">' + getTdPlantMonitorTimestamp(tdPlantLastExcelPush) + '</div><div class="plantmon-kpi-sub">' + (getTdPlantAgoLabel(tdPlantLastExcelPush) || "Waiting for push") + '</div></div>'
-    + '<div class="plantmon-kpi plantmon-tone-cyan"><div class="plantmon-kpi-label">PHD Sample Time</div><div class="plantmon-kpi-value">' + getTdPlantMonitorTimestamp(tdPlantLastPhdTime) + '</div><div class="plantmon-kpi-sub">' + (getTdPlantAgoLabel(tdPlantLastPhdTime) || "Waiting for sample") + '</div></div>'
-    + '<div class="plantmon-kpi plantmon-tone-' + healthTone + '"><div class="plantmon-kpi-label">Push Health (1h)</div><div class="plantmon-kpi-value">' + healthValue + '</div><div class="plantmon-kpi-sub">' + healthSummary + '</div></div>'
+    + '<div class="plantmon-kpi plantmon-tone-ok"><div class="plantmon-kpi-label">Active Tags</div><div class="plantmon-kpi-value plantmon-kpi-value-number">' + activeTags + '</div><div class="plantmon-kpi-sub">' + sourceName + '</div></div>'
+    + '<div class="plantmon-kpi plantmon-tone-warn"><div class="plantmon-kpi-label">Last Excel Push</div><div class="plantmon-kpi-value plantmon-kpi-value-long">' + getTdPlantMonitorTimestamp(tdPlantLastExcelPush) + '</div><div class="plantmon-kpi-sub">' + (getTdPlantAgoLabel(tdPlantLastExcelPush) || "Waiting for push") + '</div></div>'
+    + '<div class="plantmon-kpi plantmon-tone-cyan"><div class="plantmon-kpi-label">PHD Sample Time</div><div class="plantmon-kpi-value plantmon-kpi-value-long">' + getTdPlantMonitorTimestamp(tdPlantLastPhdTime) + '</div><div class="plantmon-kpi-sub">' + (getTdPlantAgoLabel(tdPlantLastPhdTime) || "Waiting for sample") + '</div></div>'
+    + '<div class="plantmon-kpi plantmon-tone-' + healthTone + '"><div class="plantmon-kpi-label">Push Health (1h)</div><div class="plantmon-kpi-value plantmon-kpi-value-number">' + healthValue + '</div><div class="plantmon-kpi-sub">' + healthSummary + '</div></div>'
     + '</div>'
     + '<div class="plantmon-source-row">'
     + '<div class="plantmon-source-card is-' + cards.excel.tone + '"><div class="plantmon-source-top"><div class="plantmon-source-name">Excel / VBA</div><span class="plantmon-source-dot"></span></div><div class="plantmon-source-status">' + cards.excel.title + '</div><div class="plantmon-source-detail">' + cards.excel.detail + '</div></div>'
@@ -34868,22 +34954,29 @@ function buildTdPlantAdminMonitorHtml(){
     + '<div class="plantmon-source-card is-' + cards.supabase.tone + '"><div class="plantmon-source-top"><div class="plantmon-source-name">Supabase DB</div><span class="plantmon-source-dot"></span></div><div class="plantmon-source-status">' + cards.supabase.title + '</div><div class="plantmon-source-detail">' + cards.supabase.detail + '</div></div>'
     + '</div>'
     + '<div class="plantmon-health">'
-    + '<div class="plantmon-health-head"><div><div class="plantmon-health-title">Excel Push Timeline — Last 1 Hour</div><div class="plantmon-health-sub">5-minute buckets from direct plant feed</div></div><div class="plantmon-health-summary">' + healthSummary + '</div></div>'
+    + '<div class="plantmon-health-head"><div><div class="plantmon-health-title">Excel Push Timeline — Last 1 Hour</div><div class="plantmon-health-sub">5-minute buckets · ' + TD_PLANT_PUSH_HISTORY_SLOT_COUNT + ' expected windows</div></div><div class="plantmon-health-summary">' + healthSummary + '</div></div>'
+    + '<div class="plantmon-health-body">'
+    + '<div class="plantmon-health-main">'
     + '<div class="plantmon-timeline">'
     + slots.map(function(slot){
-      return ''
-        + '<div class="plantmon-slot">'
-        + '<div class="plantmon-slot-bar is-' + slot.status + '" title="' + slot.tooltip.replace(/"/g, "&quot;") + '"></div>'
-        + '<div class="plantmon-slot-label">' + slot.label + '</div>'
-        + '</div>';
-    }).join("")
+        return ''
+          + '<div class="plantmon-slot">'
+          + '<div class="plantmon-slot-bar is-' + slot.status + '" title="' + slot.tooltip.replace(/"/g, "&quot;") + '"></div>'
+          + '<div class="plantmon-slot-label">' + slot.label + '</div>'
+          + '</div>';
+      }).join("")
     + '</div>'
     + '<div class="plantmon-legend">'
     + '<span class="plantmon-legend-item"><span class="plantmon-legend-dot is-ok"></span>Push received</span>'
     + '<span class="plantmon-legend-item"><span class="plantmon-legend-dot is-missed"></span>Missed</span>'
     + '<span class="plantmon-legend-item"><span class="plantmon-legend-dot is-current"></span>Current window</span>'
     + '<span class="plantmon-legend-item"><span class="plantmon-legend-dot is-future"></span>Upcoming</span>'
-    + '<span class="plantmon-legend-item plantmon-legend-spacer">Mapped: ' + String(tdPlantLastMappedCount || 0) + ' / ' + mappedTotal + '</span>'
+    + '</div>'
+    + '</div>'
+    + '<div class="plantmon-health-side">'
+    + '<div class="plantmon-mini-stat"><div class="plantmon-mini-label">Expected</div><div class="plantmon-mini-value">' + TD_PLANT_PUSH_HISTORY_SLOT_COUNT + '</div><div class="plantmon-mini-sub">5-minute windows</div></div>'
+    + '<div class="plantmon-mini-stat"><div class="plantmon-mini-label">Mapped</div><div class="plantmon-mini-value">' + String(tdPlantLastMappedCount || 0) + ' / ' + mappedTotal + '</div><div class="plantmon-mini-sub">current live fields</div></div>'
+    + '</div>'
     + '</div>'
     + '</div>';
 }
