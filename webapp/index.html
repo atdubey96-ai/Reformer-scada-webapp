@@ -7117,6 +7117,331 @@ td.burner-pending.C{ box-shadow:inset 0 0 0 2px rgba(2,6,23,0.96),0 0 0 1px rgba
     font-size:10px;
   }
 }
+#tab-tempdata .plantmon-shell,
+#tab-reformerdash .plantmon-shell{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+#tab-tempdata .plantmon-shell{
+  --plantmon-panel:rgba(255,255,255,0.05);
+  --plantmon-panel-strong:rgba(255,255,255,0.07);
+  --plantmon-border:rgba(126,200,240,0.14);
+  --plantmon-shadow:0 18px 38px rgba(2,6,23,0.18);
+  --plantmon-text:#eff6ff;
+  --plantmon-dim:#a5b4c8;
+  --plantmon-muted:#7b8da5;
+  --plantmon-ok:#34d399;
+  --plantmon-warn:#f59e0b;
+  --plantmon-error:#f87171;
+  --plantmon-cyan:#7dd3fc;
+  margin-bottom:16px;
+}
+#tab-reformerdash .plantmon-shell{
+  --plantmon-panel:var(--refdash-panel);
+  --plantmon-panel-strong:var(--refdash-panel-strong);
+  --plantmon-border:var(--refdash-border);
+  --plantmon-shadow:var(--refdash-shadow);
+  --plantmon-text:var(--refdash-text);
+  --plantmon-dim:var(--refdash-dim);
+  --plantmon-muted:var(--refdash-muted);
+  --plantmon-ok:var(--refdash-green);
+  --plantmon-warn:var(--refdash-accent-2);
+  --plantmon-error:var(--refdash-red);
+  --plantmon-cyan:var(--refdash-cyan);
+}
+#tab-tempdata .plantmon-grid,
+#tab-reformerdash .plantmon-grid{
+  display:grid;
+  gap:12px;
+}
+#tab-tempdata .plantmon-grid-kpi,
+#tab-reformerdash .plantmon-grid-kpi{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+#tab-tempdata .plantmon-kpi,
+#tab-reformerdash .plantmon-kpi{
+  position:relative;
+  overflow:hidden;
+  padding:16px 18px;
+  border-radius:18px;
+  border:1px solid var(--plantmon-border);
+  background:var(--plantmon-panel);
+  box-shadow:var(--plantmon-shadow);
+}
+#tab-tempdata .plantmon-kpi::before,
+#tab-reformerdash .plantmon-kpi::before{
+  content:"";
+  position:absolute;
+  inset:0 auto auto 0;
+  width:100%;
+  height:3px;
+  background:var(--plantmon-accent,var(--plantmon-ok));
+  opacity:0.9;
+}
+#tab-tempdata .plantmon-tone-ok,
+#tab-reformerdash .plantmon-tone-ok{--plantmon-accent:var(--plantmon-ok);}
+#tab-tempdata .plantmon-tone-warn,
+#tab-reformerdash .plantmon-tone-warn{--plantmon-accent:var(--plantmon-warn);}
+#tab-tempdata .plantmon-tone-error,
+#tab-reformerdash .plantmon-tone-error{--plantmon-accent:var(--plantmon-error);}
+#tab-tempdata .plantmon-tone-cyan,
+#tab-reformerdash .plantmon-tone-cyan{--plantmon-accent:var(--plantmon-cyan);}
+#tab-tempdata .plantmon-tone-muted,
+#tab-reformerdash .plantmon-tone-muted{--plantmon-accent:rgba(148,163,184,0.55);}
+#tab-tempdata .plantmon-kpi-label,
+#tab-reformerdash .plantmon-kpi-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1.6px;
+  text-transform:uppercase;
+  color:var(--plantmon-dim);
+}
+#tab-tempdata .plantmon-kpi-value,
+#tab-reformerdash .plantmon-kpi-value{
+  margin-top:8px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:30px;
+  line-height:1.03;
+  color:var(--plantmon-text);
+}
+#tab-tempdata .plantmon-kpi-sub,
+#tab-reformerdash .plantmon-kpi-sub{
+  margin-top:7px;
+  font-size:11px;
+  color:var(--plantmon-muted);
+}
+#tab-tempdata .plantmon-source-row,
+#tab-reformerdash .plantmon-source-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr) 36px minmax(0,1fr);
+  align-items:stretch;
+  gap:0;
+}
+#tab-tempdata .plantmon-source-card,
+#tab-reformerdash .plantmon-source-card{
+  padding:16px 18px;
+  border-radius:18px;
+  border:1px solid var(--plantmon-border);
+  background:var(--plantmon-panel);
+  box-shadow:var(--plantmon-shadow);
+}
+#tab-tempdata .plantmon-source-card.is-ok,
+#tab-reformerdash .plantmon-source-card.is-ok{background:linear-gradient(180deg, rgba(52,211,153,0.08), var(--plantmon-panel));}
+#tab-tempdata .plantmon-source-card.is-warn,
+#tab-reformerdash .plantmon-source-card.is-warn{background:linear-gradient(180deg, rgba(245,158,11,0.08), var(--plantmon-panel));}
+#tab-tempdata .plantmon-source-card.is-error,
+#tab-reformerdash .plantmon-source-card.is-error{background:linear-gradient(180deg, rgba(248,113,113,0.08), var(--plantmon-panel));}
+#tab-tempdata .plantmon-source-top,
+#tab-reformerdash .plantmon-source-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+#tab-tempdata .plantmon-source-name,
+#tab-reformerdash .plantmon-source-name{
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--plantmon-dim);
+}
+#tab-tempdata .plantmon-source-dot,
+#tab-reformerdash .plantmon-source-dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:rgba(148,163,184,0.45);
+}
+#tab-tempdata .plantmon-source-card.is-ok .plantmon-source-dot,
+#tab-reformerdash .plantmon-source-card.is-ok .plantmon-source-dot{
+  background:var(--plantmon-ok);
+  box-shadow:0 0 12px rgba(52,211,153,0.35);
+}
+#tab-tempdata .plantmon-source-card.is-warn .plantmon-source-dot,
+#tab-reformerdash .plantmon-source-card.is-warn .plantmon-source-dot{
+  background:var(--plantmon-warn);
+  box-shadow:0 0 12px rgba(245,158,11,0.28);
+}
+#tab-tempdata .plantmon-source-card.is-error .plantmon-source-dot,
+#tab-reformerdash .plantmon-source-card.is-error .plantmon-source-dot{
+  background:var(--plantmon-error);
+  box-shadow:0 0 12px rgba(248,113,113,0.24);
+}
+#tab-tempdata .plantmon-source-status,
+#tab-reformerdash .plantmon-source-status{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:17px;
+  color:var(--plantmon-text);
+}
+#tab-tempdata .plantmon-source-detail,
+#tab-reformerdash .plantmon-source-detail{
+  margin-top:5px;
+  font-size:11px;
+  line-height:1.45;
+  color:var(--plantmon-muted);
+}
+#tab-tempdata .plantmon-source-arrow,
+#tab-reformerdash .plantmon-source-arrow{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--plantmon-muted);
+  font-size:20px;
+  opacity:0.45;
+}
+#tab-tempdata .plantmon-health,
+#tab-reformerdash .plantmon-health{
+  padding:16px 18px;
+  border-radius:18px;
+  border:1px solid var(--plantmon-border);
+  background:var(--plantmon-panel);
+  box-shadow:var(--plantmon-shadow);
+}
+#tab-tempdata .plantmon-health-head,
+#tab-reformerdash .plantmon-health-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+}
+#tab-tempdata .plantmon-health-title,
+#tab-reformerdash .plantmon-health-title{
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--plantmon-dim);
+}
+#tab-tempdata .plantmon-health-sub,
+#tab-reformerdash .plantmon-health-sub{
+  margin-top:4px;
+  font-size:11px;
+  color:var(--plantmon-muted);
+}
+#tab-tempdata .plantmon-health-summary,
+#tab-reformerdash .plantmon-health-summary{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  color:var(--plantmon-dim);
+  text-align:right;
+}
+#tab-tempdata .plantmon-timeline,
+#tab-reformerdash .plantmon-timeline{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:flex-end;
+}
+#tab-tempdata .plantmon-slot,
+#tab-reformerdash .plantmon-slot{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+}
+#tab-tempdata .plantmon-slot-bar,
+#tab-reformerdash .plantmon-slot-bar{
+  width:28px;
+  height:54px;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,0.18);
+  background:rgba(15,23,42,0.36);
+}
+#tab-tempdata .plantmon-slot-bar.is-ok,
+#tab-reformerdash .plantmon-slot-bar.is-ok{
+  background:rgba(52,211,153,0.28);
+  border-color:rgba(52,211,153,0.55);
+}
+#tab-tempdata .plantmon-slot-bar.is-missed,
+#tab-reformerdash .plantmon-slot-bar.is-missed{
+  background:rgba(248,113,113,0.26);
+  border-color:rgba(248,113,113,0.52);
+}
+#tab-tempdata .plantmon-slot-bar.is-current,
+#tab-reformerdash .plantmon-slot-bar.is-current{
+  background:rgba(245,158,11,0.26);
+  border-color:rgba(245,158,11,0.5);
+}
+#tab-tempdata .plantmon-slot-bar.is-future,
+#tab-reformerdash .plantmon-slot-bar.is-future{
+  opacity:0.35;
+}
+#tab-tempdata .plantmon-slot-label,
+#tab-reformerdash .plantmon-slot-label{
+  font-size:10px;
+  color:var(--plantmon-muted);
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+}
+#tab-tempdata .plantmon-legend,
+#tab-reformerdash .plantmon-legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+  margin-top:12px;
+}
+#tab-tempdata .plantmon-legend-item,
+#tab-reformerdash .plantmon-legend-item{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  color:var(--plantmon-muted);
+}
+#tab-tempdata .plantmon-legend-dot,
+#tab-reformerdash .plantmon-legend-dot{
+  width:11px;
+  height:11px;
+  border-radius:3px;
+  border:1px solid rgba(148,163,184,0.16);
+  background:rgba(15,23,42,0.36);
+}
+#tab-tempdata .plantmon-legend-dot.is-ok,
+#tab-reformerdash .plantmon-legend-dot.is-ok{background:rgba(52,211,153,0.42);}
+#tab-tempdata .plantmon-legend-dot.is-missed,
+#tab-reformerdash .plantmon-legend-dot.is-missed{background:rgba(248,113,113,0.42);}
+#tab-tempdata .plantmon-legend-dot.is-current,
+#tab-reformerdash .plantmon-legend-dot.is-current{background:rgba(245,158,11,0.42);}
+#tab-tempdata .plantmon-legend-spacer,
+#tab-reformerdash .plantmon-legend-spacer{
+  margin-left:auto;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (max-width:1180px){
+  #tab-tempdata .plantmon-grid-kpi,
+  #tab-reformerdash .plantmon-grid-kpi{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  #tab-tempdata .plantmon-source-row,
+  #tab-reformerdash .plantmon-source-row{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  #tab-tempdata .plantmon-source-arrow,
+  #tab-reformerdash .plantmon-source-arrow{
+    display:none;
+  }
+}
+@media (max-width:720px){
+  #tab-tempdata .plantmon-grid-kpi,
+  #tab-reformerdash .plantmon-grid-kpi{
+    grid-template-columns:1fr;
+  }
+  #tab-tempdata .plantmon-health-head,
+  #tab-reformerdash .plantmon-health-head{
+    flex-direction:column;
+  }
+  #tab-tempdata .plantmon-health-summary,
+  #tab-reformerdash .plantmon-health-summary{
+    text-align:left;
+  }
+  #tab-tempdata .plantmon-legend-spacer,
+  #tab-reformerdash .plantmon-legend-spacer{
+    margin-left:0;
+  }
+}
 #tab-tempdata .td-plant-settings-btn{
   padding:8px 11px;
   min-width:42px;
@@ -23625,6 +23950,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           Live plant import is not configured. Set the plant data Supabase URL and key.
         </div>
         <div id="td-plant-live-warning" data-admin-only="true" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;"></div>
+        <div id="td-plant-admin-monitor" class="plantmon-shell" data-admin-only="true"></div>
         <div id="td-process-manual-grid" class="td-manual-grid">
 
           <!-- HGU Load -->
@@ -24510,6 +24836,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         <span>Excel Push: <strong id="refdash-excel-push">—</strong></span>
         <span>History rows: <strong id="refdash-history-count">—</strong></span>
       </div>
+      <div id="refdash-admin-monitor" class="plantmon-shell" data-admin-only="true"></div>
 
       <div class="refdash-subtabs" role="tablist" aria-label="Reformer dashboard views">
         <button type="button" id="refdash-tabbtn-overview" class="refdash-subtab is-active" onclick="switchReformerDashTab('overview')">Overview</button>
@@ -33483,6 +33810,11 @@ var tempDataEntries = [];
 var tdEditingIndex = -1;
 var TD_PLANT_DATA_SUPABASE_URL = "https://mozuuowwdfyqqvpiyetk.supabase.co";
 var TD_PLANT_DATA_SUPABASE_KEY = "";
+var TD_PLANT_DATA_SUPABASE_DEFAULT_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1venV1b3d3ZGZ5cXF2cGl5ZXRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTU3NjksImV4cCI6MjA5MDE5MTc2OX0.SqSAoPwxgPi6cVrYeIQC8xBebbVINZEaPw-odWdqUPo";
+var TD_PLANT_CURRENT_TABLE = "plant_data";
+var TD_PLANT_HISTORY_TABLE = "plant_data_history";
+var TD_PLANT_DIRECT_FETCH_LIMIT = 300;
+var TD_PLANT_PUSH_INTERVAL_MINUTES = 5;
 var TD_HGU_LOAD_DIVISOR = 26636;
 var TD_HGU_LOAD_RAW_THRESHOLD = 500;
 var TD_PROCESS_FIELD_BINDINGS = [
@@ -33509,12 +33841,17 @@ var tdPlantSourceMode = loadTdPlantSourceMode();
 var tdPlantDataRefreshTimer = null;
 var tdPlantFetchInFlight = null;
 var tdPlantLatestByTag = new Map();
+var tdPlantRawRows = [];
 var tdPlantSnapshotRows = [];
 var tdPlantLastMappedCount = 0;
 var tdPlantLastFetchTime = null;
 var tdPlantLastExcelPush = null;
 var tdPlantLastPhdTime = null;
 var tdPlantLastErrorMessage = "";
+var tdPlantPushBuckets = new Map();
+var tdPlantPushHealthPct = null;
+var tdPlantPushOkCount = 0;
+var tdPlantPushMissedCount = 0;
 var tdPlantMetaTickTimer = null;
 var tdPlantControlsBound = false;
 var tdPlantExcelHandle = null;
@@ -33637,6 +33974,63 @@ async function fetchTdDemoHistoryRows(){
   }
 }
 
+function getTdPlantSupabaseUrl(){
+  return String(TD_PLANT_DATA_SUPABASE_URL || "").trim().replace(/\/+$/, "");
+}
+
+function getTdPlantSupabaseKey(){
+  return String(TD_PLANT_DATA_SUPABASE_KEY || TD_PLANT_DATA_SUPABASE_DEFAULT_KEY || "").trim();
+}
+
+function buildTdPlantSupabaseHeaders(){
+  var key = getTdPlantSupabaseKey();
+  return {
+    apikey: key,
+    Authorization: "Bearer " + key,
+    Accept: "application/json",
+    "Cache-Control": "no-cache"
+  };
+}
+
+function buildTdPlantRestUrl(pathAndQuery){
+  return getTdPlantSupabaseUrl() + "/rest/v1/" + String(pathAndQuery || "");
+}
+
+function parseTdPlantFetchErrorMessage(payload, fallback){
+  if(payload && typeof payload === "object"){
+    if(payload.message) return String(payload.message);
+    if(payload.error_description) return String(payload.error_description);
+    if(payload.error) return String(payload.error);
+    if(Array.isArray(payload.errors) && payload.errors.length && payload.errors[0] && payload.errors[0].message){
+      return String(payload.errors[0].message);
+    }
+  }
+  return String(fallback || "").trim();
+}
+
+async function fetchTdPlantDirectJson(pathAndQuery){
+  var response = await fetch(buildTdPlantRestUrl(pathAndQuery), {
+    method: "GET",
+    cache: "no-store",
+    headers: buildTdPlantSupabaseHeaders()
+  });
+  var text = await response.text().catch(function(){ return ""; });
+  var payload = null;
+  try{
+    payload = text ? JSON.parse(text) : null;
+  }catch(ignoreParseError){
+    payload = null;
+  }
+  if(!response.ok){
+    var err = new Error(parseTdPlantFetchErrorMessage(payload, "HTTP " + response.status));
+    err.status = response.status;
+    err.payload = payload;
+    err.responseText = text;
+    throw err;
+  }
+  return payload;
+}
+
 function getTdPlantSourceTagId(tagId){
   var raw = String(tagId || "").trim();
   if(!raw) return "";
@@ -33650,12 +34044,17 @@ function getTdPlantBindingTagId(binding){
 
 function resetTdPlantImportCaches(){
   tdPlantLatestByTag = new Map();
+  tdPlantRawRows = [];
   tdPlantSnapshotRows = [];
   tdPlantLastMappedCount = 0;
   tdPlantLastFetchTime = null;
   tdPlantLastExcelPush = null;
   tdPlantLastPhdTime = null;
   tdPlantLastErrorMessage = "";
+  tdPlantPushBuckets = new Map();
+  tdPlantPushHealthPct = null;
+  tdPlantPushOkCount = 0;
+  tdPlantPushMissedCount = 0;
 }
 
 function refreshTdPlantSourceUi(){
@@ -34247,7 +34646,7 @@ function setTdPlantImportStatus(state, text){
 
 function isTdPlantImportConfigured(){
   if(isTdPlantDemoMode()) return true;
-  return !!(typeof fetch === "function" && getScadaServerApiBase());
+  return !!(typeof fetch === "function" && getTdPlantSupabaseUrl() && getTdPlantSupabaseKey());
 }
 
 function parseTdPlantDate(raw){
@@ -34281,6 +34680,25 @@ function getTdPlantAgoLabel(dt){
   return hrs + " hr ago";
 }
 
+function getTdPlantBucketDate(raw){
+  var dt = parseTdPlantDate(raw);
+  if(!dt) return null;
+  var bucket = new Date(dt.getTime());
+  bucket.setSeconds(0, 0);
+  bucket.setMinutes(Math.floor(bucket.getMinutes() / TD_PLANT_PUSH_INTERVAL_MINUTES) * TD_PLANT_PUSH_INTERVAL_MINUTES);
+  return bucket;
+}
+
+function getTdPlantBucketKey(raw){
+  var dt = raw instanceof Date ? raw : getTdPlantBucketDate(raw);
+  if(!dt) return "";
+  return dt.getFullYear()
+    + "-" + String(dt.getMonth() + 1).padStart(2, "0")
+    + "-" + String(dt.getDate()).padStart(2, "0")
+    + " " + String(dt.getHours()).padStart(2, "0")
+    + ":" + String(dt.getMinutes()).padStart(2, "0");
+}
+
 function formatTdPlantStatMoment(dt){
   if(!dt) return "—";
   var ago = getTdPlantAgoLabel(dt);
@@ -34298,12 +34716,183 @@ function setTdPlantStatTone(el, tone){
 function deriveTdPlantTimeline(latestMap){
   tdPlantLastPhdTime = null;
   tdPlantLastExcelPush = null;
-  if(!latestMap || !latestMap.size) return;
-  latestMap.forEach(function(row){
-    var phdDt = parseTdPlantDate(row && row.synced_at);
+  tdPlantPushBuckets = new Map();
+  tdPlantPushHealthPct = null;
+  tdPlantPushOkCount = 0;
+  tdPlantPushMissedCount = 0;
+  if(latestMap && latestMap.size){
+    latestMap.forEach(function(row){
+      var phdDt = parseTdPlantDate(row && row.synced_at);
+      var pushDt = parseTdPlantDate(row && (row.pushed_at || row.synced_at));
+      if(phdDt && (!tdPlantLastPhdTime || phdDt > tdPlantLastPhdTime)) tdPlantLastPhdTime = phdDt;
+      if(pushDt && (!tdPlantLastExcelPush || pushDt > tdPlantLastExcelPush)) tdPlantLastExcelPush = pushDt;
+    });
+  }
+  if(!Array.isArray(tdPlantRawRows) || !tdPlantRawRows.length) return;
+  var oneHourAgo = new Date(Date.now() - (70 * 60 * 1000));
+  tdPlantRawRows.forEach(function(row){
     var pushDt = parseTdPlantDate(row && (row.pushed_at || row.synced_at));
-    if(phdDt && (!tdPlantLastPhdTime || phdDt > tdPlantLastPhdTime)) tdPlantLastPhdTime = phdDt;
-    if(pushDt && (!tdPlantLastExcelPush || pushDt > tdPlantLastExcelPush)) tdPlantLastExcelPush = pushDt;
+    if(!pushDt || pushDt < oneHourAgo) return;
+    var bucket = getTdPlantBucketDate(pushDt);
+    var key = getTdPlantBucketKey(bucket);
+    var current = key ? tdPlantPushBuckets.get(key) : null;
+    if(!key) return;
+    if(!current || pushDt > current.time){
+      tdPlantPushBuckets.set(key, { pushed: true, time: pushDt, bucket: bucket });
+    }
+  });
+  var currentBucket = getTdPlantBucketDate(new Date());
+  var currentKey = getTdPlantBucketKey(currentBucket);
+  var slotCount = 0;
+  for(var offset = -6; offset <= 1; offset++){
+    var slotTime = new Date(currentBucket.getTime() + (offset * TD_PLANT_PUSH_INTERVAL_MINUTES * 60000));
+    var slotKey = getTdPlantBucketKey(slotTime);
+    var isFuture = slotTime > currentBucket;
+    var isCurrent = slotKey === currentKey;
+    if(isFuture) continue;
+    slotCount += 1;
+    if(tdPlantPushBuckets.has(slotKey)){
+      tdPlantPushOkCount += 1;
+    }else if(!isCurrent){
+      tdPlantPushMissedCount += 1;
+    }
+  }
+  tdPlantPushHealthPct = slotCount > 0 ? Math.round((tdPlantPushOkCount / slotCount) * 100) : null;
+}
+
+function getTdPlantMonitorTimestamp(dt){
+  return dt ? dt.toLocaleDateString([], { day:"2-digit", month:"short" }) + " " + dt.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : "—";
+}
+
+function getTdPlantSourceStatusCards(){
+  var excel = { tone: "error", title: "UNKNOWN", detail: "No push received yet" };
+  if(tdPlantLastExcelPush){
+    var excelAge = getTdPlantMinutesAgo(tdPlantLastExcelPush);
+    if(excelAge <= 12){
+      excel = { tone: "ok", title: "OPEN & PUSHING", detail: "Last push: " + getTdPlantAgoLabel(tdPlantLastExcelPush) };
+    }else if(excelAge <= 25){
+      excel = { tone: "warn", title: "DELAYED", detail: "No push for " + excelAge + " min" };
+    }else{
+      excel = { tone: "error", title: "LIKELY CLOSED", detail: "No push for " + excelAge + " min" };
+    }
+  }
+
+  var phd = { tone: "error", title: "UNKNOWN", detail: "No PHD data received" };
+  if(tdPlantLastPhdTime){
+    var phdAge = getTdPlantMinutesAgo(tdPlantLastPhdTime);
+    var excelOk = tdPlantLastExcelPush && getTdPlantMinutesAgo(tdPlantLastExcelPush) <= 15;
+    if(phdAge <= 15){
+      phd = { tone: "ok", title: "LIVE", detail: "Sample: " + getTdPlantAgoLabel(tdPlantLastPhdTime) };
+    }else if(excelOk){
+      phd = { tone: "error", title: "SERVER ISSUE", detail: "PHD stale " + phdAge + " min — Excel is OK" };
+    }else{
+      phd = { tone: "warn", title: "STALE", detail: "Data " + phdAge + " min old" };
+    }
+  }
+
+  var supabase = { tone: "error", title: "UNREACHABLE", detail: "Check network" };
+  if(tdPlantLastErrorMessage){
+    supabase = { tone: "error", title: "SOURCE ERROR", detail: tdPlantLastErrorMessage };
+  }else if(tdPlantLastFetchTime){
+    supabase = { tone: "ok", title: "CONNECTED", detail: "Fetched: " + getTdPlantAgoLabel(tdPlantLastFetchTime) };
+  }
+
+  return {
+    excel: excel,
+    phd: phd,
+    supabase: supabase
+  };
+}
+
+function buildTdPlantTimelineSlots(){
+  var currentBucket = getTdPlantBucketDate(new Date());
+  var currentKey = getTdPlantBucketKey(currentBucket);
+  var slots = [];
+  for(var offset = -6; offset <= 1; offset++){
+    var slotTime = new Date(currentBucket.getTime() + (offset * TD_PLANT_PUSH_INTERVAL_MINUTES * 60000));
+    var slotKey = getTdPlantBucketKey(slotTime);
+    var isFuture = slotTime > currentBucket;
+    var isCurrent = slotKey === currentKey;
+    var status = "future";
+    var tooltip = "Expected at " + getTdPlantMonitorTimestamp(slotTime);
+    if(isCurrent){
+      if(tdPlantPushBuckets.has(slotKey)){
+        status = "ok";
+        tooltip = "Pushed at " + getTdPlantMonitorTimestamp(tdPlantPushBuckets.get(slotKey).time);
+      }else{
+        status = "current";
+        tooltip = "Waiting — due " + getTdPlantMonitorTimestamp(slotTime);
+      }
+    }else if(!isFuture){
+      if(tdPlantPushBuckets.has(slotKey)){
+        status = "ok";
+        tooltip = "Pushed at " + getTdPlantMonitorTimestamp(tdPlantPushBuckets.get(slotKey).time);
+      }else{
+        status = "missed";
+        tooltip = "Missed — expected " + getTdPlantMonitorTimestamp(slotTime);
+      }
+    }
+    slots.push({
+      time: slotTime,
+      status: status,
+      tooltip: tooltip,
+      label: slotTime.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })
+    });
+  }
+  return slots;
+}
+
+function buildTdPlantAdminMonitorHtml(){
+  var activeTags = tdPlantLatestByTag && tdPlantLatestByTag.size ? tdPlantLatestByTag.size : 0;
+  var mappedTotal = getTdPlantMappedBindings().length;
+  var cards = getTdPlantSourceStatusCards();
+  var sourceName = isTdPlantDemoMode() ? "plant_data demo" : "plant_data table";
+  var healthValue = tdPlantPushHealthPct == null ? "—" : (String(tdPlantPushHealthPct) + "%");
+  var healthTone = tdPlantPushHealthPct == null ? "muted" : (tdPlantPushHealthPct < 45 ? "error" : tdPlantPushHealthPct < 75 ? "warn" : "ok");
+  var healthSummary = tdPlantPushHealthPct == null
+    ? "Waiting for recent push buckets"
+    : (tdPlantPushOkCount + " ok, " + tdPlantPushMissedCount + " missed (last 1h)");
+  var slots = buildTdPlantTimelineSlots();
+  return ''
+    + '<div class="plantmon-grid plantmon-grid-kpi">'
+    + '<div class="plantmon-kpi plantmon-tone-ok"><div class="plantmon-kpi-label">Active Tags</div><div class="plantmon-kpi-value">' + activeTags + '</div><div class="plantmon-kpi-sub">' + sourceName + '</div></div>'
+    + '<div class="plantmon-kpi plantmon-tone-warn"><div class="plantmon-kpi-label">Last Excel Push</div><div class="plantmon-kpi-value">' + getTdPlantMonitorTimestamp(tdPlantLastExcelPush) + '</div><div class="plantmon-kpi-sub">' + (getTdPlantAgoLabel(tdPlantLastExcelPush) || "Waiting for push") + '</div></div>'
+    + '<div class="plantmon-kpi plantmon-tone-cyan"><div class="plantmon-kpi-label">PHD Sample Time</div><div class="plantmon-kpi-value">' + getTdPlantMonitorTimestamp(tdPlantLastPhdTime) + '</div><div class="plantmon-kpi-sub">' + (getTdPlantAgoLabel(tdPlantLastPhdTime) || "Waiting for sample") + '</div></div>'
+    + '<div class="plantmon-kpi plantmon-tone-' + healthTone + '"><div class="plantmon-kpi-label">Push Health (1h)</div><div class="plantmon-kpi-value">' + healthValue + '</div><div class="plantmon-kpi-sub">' + healthSummary + '</div></div>'
+    + '</div>'
+    + '<div class="plantmon-source-row">'
+    + '<div class="plantmon-source-card is-' + cards.excel.tone + '"><div class="plantmon-source-top"><div class="plantmon-source-name">Excel / VBA</div><span class="plantmon-source-dot"></span></div><div class="plantmon-source-status">' + cards.excel.title + '</div><div class="plantmon-source-detail">' + cards.excel.detail + '</div></div>'
+    + '<div class="plantmon-source-arrow">→</div>'
+    + '<div class="plantmon-source-card is-' + cards.phd.tone + '"><div class="plantmon-source-top"><div class="plantmon-source-name">PHD / Uniformance</div><span class="plantmon-source-dot"></span></div><div class="plantmon-source-status">' + cards.phd.title + '</div><div class="plantmon-source-detail">' + cards.phd.detail + '</div></div>'
+    + '<div class="plantmon-source-arrow">→</div>'
+    + '<div class="plantmon-source-card is-' + cards.supabase.tone + '"><div class="plantmon-source-top"><div class="plantmon-source-name">Supabase DB</div><span class="plantmon-source-dot"></span></div><div class="plantmon-source-status">' + cards.supabase.title + '</div><div class="plantmon-source-detail">' + cards.supabase.detail + '</div></div>'
+    + '</div>'
+    + '<div class="plantmon-health">'
+    + '<div class="plantmon-health-head"><div><div class="plantmon-health-title">Excel Push Timeline — Last 1 Hour</div><div class="plantmon-health-sub">5-minute buckets from direct plant feed</div></div><div class="plantmon-health-summary">' + healthSummary + '</div></div>'
+    + '<div class="plantmon-timeline">'
+    + slots.map(function(slot){
+      return ''
+        + '<div class="plantmon-slot">'
+        + '<div class="plantmon-slot-bar is-' + slot.status + '" title="' + slot.tooltip.replace(/"/g, "&quot;") + '"></div>'
+        + '<div class="plantmon-slot-label">' + slot.label + '</div>'
+        + '</div>';
+    }).join("")
+    + '</div>'
+    + '<div class="plantmon-legend">'
+    + '<span class="plantmon-legend-item"><span class="plantmon-legend-dot is-ok"></span>Push received</span>'
+    + '<span class="plantmon-legend-item"><span class="plantmon-legend-dot is-missed"></span>Missed</span>'
+    + '<span class="plantmon-legend-item"><span class="plantmon-legend-dot is-current"></span>Current window</span>'
+    + '<span class="plantmon-legend-item"><span class="plantmon-legend-dot is-future"></span>Upcoming</span>'
+    + '<span class="plantmon-legend-item plantmon-legend-spacer">Mapped: ' + String(tdPlantLastMappedCount || 0) + ' / ' + mappedTotal + '</span>'
+    + '</div>'
+    + '</div>';
+}
+
+function renderTdPlantAdminMonitors(){
+  ["td-plant-admin-monitor", "refdash-admin-monitor"].forEach(function(id){
+    var root = document.getElementById(id);
+    if(!root) return;
+    root.innerHTML = buildTdPlantAdminMonitorHtml();
   });
 }
 
@@ -34347,6 +34936,7 @@ function updateTdPlantImportStats(latestMap, mappedCount){
     setTdPlantStatTone(fetchEl, tdPlantLastFetchTime ? "green" : "");
   }
   updateTdPlantImportRateStat();
+  renderTdPlantAdminMonitors();
 }
 
 function refreshTdPlantLiveHealthState(){
@@ -34354,11 +34944,13 @@ function refreshTdPlantLiveHealthState(){
   if(!isTdPlantImportConfigured()){
     setTdPlantLiveWarning("", "");
     setTdPlantImportStatus("offline", "Plant import unavailable");
+    renderTdPlantAdminMonitors();
     return;
   }
   if(tdPlantLastErrorMessage){
     setTdPlantLiveWarning("error", tdPlantLastErrorMessage);
     setTdPlantImportStatus("offline", sourceLabel + " source error");
+    renderTdPlantAdminMonitors();
     return;
   }
   if(!tdPlantLatestByTag || !tdPlantLatestByTag.size){
@@ -34369,6 +34961,7 @@ function refreshTdPlantLiveHealthState(){
       setTdPlantLiveWarning("warn", "No data received yet. Make sure Excel is open with macros enabled and auto-sync is running.");
       setTdPlantImportStatus("offline", "No data — waiting for sync");
     }
+    renderTdPlantAdminMonitors();
     return;
   }
   var pushAge = getTdPlantMinutesAgo(tdPlantLastExcelPush);
@@ -34380,6 +34973,7 @@ function refreshTdPlantLiveHealthState(){
       setTdPlantLiveWarning("warn", "Excel has not pushed in over 10 minutes — data may be stale. Check that the Excel file is open with macros enabled.");
       setTdPlantImportStatus("stale", "Stale — last push " + getTdPlantAgoLabel(tdPlantLastExcelPush));
     }
+    renderTdPlantAdminMonitors();
     return;
   }
   setTdPlantLiveWarning("", "");
@@ -34388,6 +34982,7 @@ function refreshTdPlantLiveHealthState(){
   }else{
     setTdPlantImportStatus("online", sourceLabel + " plant data imported to process fields");
   }
+  renderTdPlantAdminMonitors();
 }
 
 function ensureTdPlantMetaTicker(){
@@ -34402,10 +34997,11 @@ function ensureTdPlantMetaTicker(){
 
 function checkTdPlantImportConfig(){
   var ok = isTdPlantImportConfigured();
-  setTdPlantConfigBarVisible(!ok, "Live plant import server route is not available right now.");
+  setTdPlantConfigBarVisible(!ok, "Live plant data Supabase is not configured right now.");
   if(!ok){
     tdPlantLastErrorMessage = "";
     tdPlantLatestByTag = new Map();
+    tdPlantRawRows = [];
     tdPlantSnapshotRows = [];
     tdPlantLastMappedCount = 0;
     tdPlantLastFetchTime = null;
@@ -34468,19 +35064,48 @@ function collectTdPlantLatestRows(rows){
   return latest;
 }
 
+function syncTdPlantSharedState(rows, fetchTime, mappedCount){
+  tdPlantRawRows = Array.isArray(rows) ? rows.slice() : [];
+  tdPlantLatestByTag = collectTdPlantLatestRows(tdPlantRawRows);
+  tdPlantLastFetchTime = fetchTime instanceof Date ? fetchTime : new Date();
+  tdPlantLastErrorMessage = "";
+  updateTdPlantImportStats(tdPlantLatestByTag, typeof mappedCount === "number" ? mappedCount : tdPlantLastMappedCount);
+  refreshTdPlantLiveHealthState();
+  return tdPlantLatestByTag;
+}
+
+async function fetchTdPlantCurrentRowsDirect(){
+  var baseQuery = encodeURIComponent(TD_PLANT_CURRENT_TABLE) + "?select=tag_id,label,value,unit,synced_at,pushed_at&order=synced_at.desc&limit=" + encodeURIComponent(String(TD_PLANT_DIRECT_FETCH_LIMIT));
+  try{
+    var rows = await fetchTdPlantDirectJson(baseQuery);
+    return Array.isArray(rows) ? rows : [];
+  }catch(err){
+    var msg = String((err && err.message) || "").toLowerCase();
+    if(err && err.status === 400 && msg.indexOf("pushed_at") >= 0){
+      var fallbackRows = await fetchTdPlantDirectJson(
+        encodeURIComponent(TD_PLANT_CURRENT_TABLE) + "?select=tag_id,label,value,unit,synced_at&order=synced_at.desc&limit=" + encodeURIComponent(String(TD_PLANT_DIRECT_FETCH_LIMIT))
+      );
+      return (Array.isArray(fallbackRows) ? fallbackRows : []).map(function(row){
+        return {
+          tag_id: row && row.tag_id ? row.tag_id : "",
+          label: row && row.label ? row.label : "",
+          value: row ? row.value : null,
+          unit: row && row.unit ? row.unit : "",
+          synced_at: row && row.synced_at ? row.synced_at : null,
+          pushed_at: row && row.synced_at ? row.synced_at : null
+        };
+      });
+    }
+    throw err;
+  }
+}
+
 async function fetchTdPlantImportRows(){
   if(isTdPlantDemoMode()){
     return await fetchTdDemoCurrentRows();
   }
   if(typeof fetch !== "function") return null;
-  var wantedTags = getTdPlantMappedBindings().map(function(binding){
-    return String(getTdPlantBindingTagId(binding) || "").trim();
-  }).filter(Boolean);
-  var rows = await scadaServerApiGetJson("/plant/current", {
-    tags: wantedTags.join(","),
-    limit: "200"
-  }, 9000);
-  return Array.isArray(rows) ? rows : [];
+  return await fetchTdPlantCurrentRowsDirect();
 }
 
 function applyTdPlantImportToInputs(latestMap){
@@ -34550,12 +35175,11 @@ async function refreshTdPlantImportNow(force){
   tdPlantFetchInFlight = (async function(){
     try{
       var rows = await fetchTdPlantImportRows();
-      tdPlantLastErrorMessage = "";
-      tdPlantLastFetchTime = new Date();
-      tdPlantLatestByTag = collectTdPlantLatestRows(rows);
-      var mappedCount = applyTdPlantImportToInputs(tdPlantLatestByTag);
-      updateTdPlantImportStats(tdPlantLatestByTag, mappedCount);
-      refreshTdPlantLiveHealthState();
+      var fetchTime = new Date();
+      var latestMap = collectTdPlantLatestRows(rows);
+      tdPlantLatestByTag = latestMap;
+      var mappedCount = applyTdPlantImportToInputs(latestMap);
+      syncTdPlantSharedState(rows, fetchTime, mappedCount);
       return tdPlantLatestByTag;
     }catch(e){
       console.warn("TST plant import failed:", e);
@@ -38937,6 +39561,16 @@ body.light-theme .btab-alarm-count{
     throw new Error("Plant data service is not available.");
   }
 
+  async function fetchTdPlantHistoryRowsDirect(sinceIso){
+    var rows = await fetchTdPlantDirectJson(
+      encodeURIComponent(TD_PLANT_HISTORY_TABLE)
+      + "?select=tag_id,label,value,recorded_at"
+      + "&recorded_at=gte." + encodeURIComponent(String(sinceIso || ""))
+      + "&order=recorded_at.asc&limit=5000"
+    );
+    return Array.isArray(rows) ? rows : [];
+  }
+
   async function fetchReformerHistoryRows(){
     if(typeof isTdPlantDemoMode === "function" && isTdPlantDemoMode()){
       return await fetchTdDemoHistoryRows();
@@ -38947,19 +39581,15 @@ body.light-theme .btab-alarm-count{
       .filter(Boolean);
     var sinceIso = new Date(Date.now() - REFORMER_DASH_HISTORY_WINDOW_MS).toISOString();
     try{
-      var data = await scadaServerApiGetJson("/plant/history", {
-        tags: wantedTags.join(","),
-        since: sinceIso,
-        limit: "5000"
-      }, 12000);
+      var wanted = new Set(wantedTags);
+      var data = await fetchTdPlantHistoryRowsDirect(sinceIso);
       return {
-        rows: Array.isArray(data && data.rows) ? data.rows : [],
-        error: String((data && data.error) || "")
+        rows: (Array.isArray(data) ? data : []).filter(function(row){
+          return wanted.has(String(row && row.tag_id || "").trim());
+        }),
+        error: ""
       };
     }catch(e){
-      if(e && e.status === 404){
-        return { rows: [], error: "History table not found yet. Trends will appear after history logging is enabled." };
-      }
       return { rows: [], error: "History data could not be loaded right now." };
     }
   }
@@ -40093,11 +40723,15 @@ body.light-theme .btab-alarm-count{
         }
         var rows = await fetchReformerCurrentRows();
         var mapped = mapCurrentRowsToState(rows || []);
+        var fetchTime = new Date();
         reformerDashState.latestMap = mapped.latestMap;
         reformerDashState.data = mapped.data;
         reformerDashState.rowMeta = mapped.rowMeta;
-        reformerDashState.lastFetchAt = new Date();
+        reformerDashState.lastFetchAt = fetchTime;
         reformerDashState.errorMessage = "";
+        if(typeof syncTdPlantSharedState === "function"){
+          syncTdPlantSharedState(rows || [], fetchTime, Object.keys(mapped.rowMeta || {}).length);
+        }
         captureReformerLiveSessionSample(reformerDashState.data);
 
         if(forceHistory || !reformerDashState.historyLoaded || !reformerDashState.lastHistoryFetchAt || (Date.now() - reformerDashState.lastHistoryFetchAt.getTime()) >= (2 * 60 * 1000)){
@@ -40128,6 +40762,10 @@ body.light-theme .btab-alarm-count{
       }catch(err){
         reformerDashState.errorMessage = err && err.message ? err.message : String(err || "Unknown error");
         console.warn("Reformer dashboard refresh failed:", err);
+        if(typeof tdPlantLastErrorMessage !== "undefined"){
+          tdPlantLastErrorMessage = reformerDashState.errorMessage;
+          if(typeof refreshTdPlantLiveHealthState === "function") refreshTdPlantLiveHealthState();
+        }
       }finally{
         if(opts.render !== false){
           renderReformerDashboardFromState();
