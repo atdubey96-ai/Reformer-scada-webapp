@@ -25386,9 +25386,10 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     #tab-cuboidstack .csr5-bsl-item{
       display:flex;
       align-items:center;
-      gap:8px;
-      padding:5px 9px;
-      border-radius:7px;
+      gap:10px;
+      min-height:44px;
+      padding:6px 12px 6px 10px;
+      border-radius:10px;
       border:1px solid #e8f0fe;
       background:#f8faff;
       white-space:nowrap;
@@ -25412,16 +25413,16 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       background:linear-gradient(135deg,#ffedd5,#fff7ed);
     }
     #tab-cuboidstack .csr5-bsl-icon{
-      width:22px;
-      height:28px;
+      width:30px;
+      height:36px;
       display:flex;
       align-items:center;
       justify-content:center;
       flex:0 0 auto;
     }
     #tab-cuboidstack .csr5-bsl-icon canvas{
-      width:20px;
-      height:26px;
+      width:28px;
+      height:34px;
       display:block;
     }
     #tab-cuboidstack .csr5-bsl-name{
@@ -25433,10 +25434,11 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       display:flex;
       flex-direction:column;
       align-items:center;
-      gap:3px;
-      min-width:54px;
-      padding:5px 8px;
-      border-radius:7px;
+      gap:4px;
+      min-width:60px;
+      min-height:48px;
+      padding:6px 9px 7px;
+      border-radius:10px;
       border:1px solid #e2e8f0;
       background:#f8fafc;
     }
@@ -25445,15 +25447,15 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       background:#fff7ed;
     }
     #tab-cuboidstack .csr5-og-icon{
-      width:20px;
-      height:24px;
+      width:24px;
+      height:32px;
       display:flex;
       align-items:center;
       justify-content:center;
     }
     #tab-cuboidstack .csr5-og-icon canvas{
-      width:20px;
-      height:24px;
+      width:24px;
+      height:30px;
       display:block;
     }
     #tab-cuboidstack .csr5-og-pct{
@@ -32800,16 +32802,16 @@ function paintCuboidLegendGlyphCanvas(canvas){
   opening = normalizeBurnerOpeningValue(canvas.getAttribute("data-glyph-opening"), state);
   role = canvas.classList.contains("cuboid-legend-opening-canvas") ? "opening" : "state";
   if(role === "opening"){
-    scale = Math.min(cssW / 33, cssH / 36);
+    scale = Math.min(cssW / 24, cssH / 30);
   }else if(state === "C"){
-    scale = Math.min(cssW / 37, cssH / 41);
+    scale = Math.min(cssW / 28, cssH / 34);
   }else{
-    scale = Math.min(cssW / 41, cssH / 47);
+    scale = Math.min(cssW / 28, cssH / 34);
   }
   cuboidLegendDrawBurnerGlyph(
     ctx,
     cssW / 2,
-    role === "opening" ? (cssH * 0.58) : (state === "C" ? (cssH * 0.64) : (cssH * 0.66)),
+    role === "opening" ? (cssH * 0.60) : (state === "C" ? (cssH * 0.62) : (cssH * 0.64)),
     state,
     0.92,
     scale,
