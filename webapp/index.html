@@ -5362,6 +5362,133 @@ body.light-theme .scada-footer-bottom a{ color:#2563eb; }
   background:#94a3b8;
   box-shadow:none;
 }
+#tab-cuboidstack .cuboid-twin-shared-legend{
+  flex:1 1 100%;
+  width:100%;
+  max-width:none;
+  margin:2px 0 0;
+  padding:4px 9px 5px;
+  border-radius:13px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-scroll{
+  grid-template-columns:minmax(0,1.82fr) minmax(322px,1.12fr) minmax(210px,0.74fr) minmax(242px,0.8fr);
+  gap:8px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-block{
+  padding:0 7px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-openings{
+  max-width:none;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-state-row{
+  gap:5px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-title{
+  margin-bottom:4px;
+  font-size:7px;
+  letter-spacing:1.9px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-openings .cuboid-legend-title,
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-clean .cuboid-legend-title{
+  font-size:calc(7px * 1.25);
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-state-card{
+  grid-template-columns:34px minmax(0,1fr);
+  column-gap:6px;
+  min-height:38px;
+  padding:4px 7px 4px 6px;
+  border-radius:12px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-badge{
+  width:30px;
+  height:30px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-state-copy{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  min-height:0;
+  gap:0;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-state-name{
+  width:100%;
+  font-size:11.4px;
+  font-weight:800;
+  line-height:1;
+  letter-spacing:0.05em;
+  text-align:left;
+  white-space:nowrap;
+  overflow-wrap:normal;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-state-count{
+  display:none;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-opening-row{
+  gap:5px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-opening-item{
+  display:grid;
+  grid-template-columns:24px minmax(0,1fr);
+  align-items:center;
+  justify-items:start;
+  gap:6px;
+  min-height:38px;
+  padding:4px 8px 4px 6px;
+  border-radius:12px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-opening-burner{
+  width:24px;
+  height:30px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-opening-label{
+  font-size:10px;
+  text-align:left;
+  line-height:1;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-clean-list{
+  gap:4px;
+  padding-top:0;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-clean-item{
+  gap:6px;
+  min-height:25px;
+  padding:2px 7px;
+  font-size:9px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-clean-bullet{
+  width:10px;
+  height:10px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-clean-value{
+  min-width:30px;
+  min-height:20px;
+  padding:0 7px;
+  font-size:11px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-tst-head{
+  gap:8px;
+  margin-bottom:5px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-tst-chip{
+  min-width:54px;
+  min-height:22px;
+  padding:0 8px;
+  font-size:7px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-tst-bar{
+  height:10px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-tst-limits{
+  gap:6px;
+  margin-top:5px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-tst-min,
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-tst-max{
+  font-size:8.4px;
+}
+#tab-cuboidstack .cuboid-twin-control-panel .cuboid-legend-tst-range-label{
+  font-size:6.2px;
+}
 body.light-theme #tab-cuboidstack .cuboid-twin-control-panel{
   border-color:#d3dde9;
   background:
@@ -5506,12 +5633,7 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   z-index:1;
 }
 #tab-cuboidstack .cuboid-tab-shell{
-  display:grid;
-  grid-template-columns:minmax(0,1fr);
-  grid-template-areas:
-    "legend"
-    "frame";
-  gap:8px;
+  display:block;
   padding:10px;
   align-items:start;
 }
@@ -5524,7 +5646,6 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   isolation:isolate;
 }
 #tab-cuboidstack .cuboid-tab-frame-wrap{
-  grid-area:frame;
   min-height:0;
 }
 [data-cuboid-dashboard] .cuboid-tab-frame,
@@ -5603,14 +5724,6 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   opacity:0;
   visibility:hidden;
   pointer-events:none;
-}
-#tab-cuboidstack .cuboid-tab-shell .cuboid-legend-panel{
-  grid-area:legend;
-  width:auto;
-  max-width:none;
-  margin:0;
-  align-self:stretch;
-  min-width:0;
 }
 [data-cuboid-dashboard] .cuboid-legend-panel{
   position:relative;
@@ -24857,6 +24970,101 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <strong id="stack-cuboid-live-meta-text" class="cuboid-twin-live-meta-text">Waiting for live plant data</strong>
           </div>
         </div>
+        <div class="cuboid-legend-panel cuboid-twin-shared-legend" id="stack-legend-panel-shared" data-cuboid-legend="shared" aria-label="Shared burner state legend">
+          <div class="cuboid-legend-scroll">
+            <section class="cuboid-legend-block cuboid-legend-states">
+              <div class="cuboid-legend-title">Burner State Legend</div>
+              <div class="cuboid-legend-state-band">
+                <div class="cuboid-legend-state-row">
+                  <div class="cuboid-legend-state-card" data-state="B">
+                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
+                    <div class="cuboid-legend-state-copy">
+                      <div class="cuboid-legend-state-name">Both</div>
+                    </div>
+                    <div class="cuboid-legend-state-count" aria-label="Both burner state">Both</div>
+                  </div>
+                  <div class="cuboid-legend-state-card" data-state="C">
+                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
+                    <div class="cuboid-legend-state-copy">
+                      <div class="cuboid-legend-state-name">Closed</div>
+                    </div>
+                    <div class="cuboid-legend-state-count" aria-label="Closed burner state">Closed</div>
+                  </div>
+                  <div class="cuboid-legend-state-card" data-state="O">
+                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
+                    <div class="cuboid-legend-state-copy">
+                      <div class="cuboid-legend-state-name">Off Gas</div>
+                    </div>
+                    <div class="cuboid-legend-state-count" aria-label="Off gas burner state">Off Gas</div>
+                  </div>
+                  <div class="cuboid-legend-state-card" data-state="N">
+                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
+                    <div class="cuboid-legend-state-copy">
+                      <div class="cuboid-legend-state-name">NG</div>
+                    </div>
+                    <div class="cuboid-legend-state-count" aria-label="NG burner state">NG</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-openings">
+              <div class="cuboid-legend-title">Opening Guide</div>
+              <div class="cuboid-legend-opening-row">
+                <div class="cuboid-legend-opening-item" data-open="25">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="25"></canvas>
+                  </div>
+                  <div class="cuboid-legend-opening-label">25%</div>
+                </div>
+                <div class="cuboid-legend-opening-item" data-open="50">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="50"></canvas>
+                  </div>
+                  <div class="cuboid-legend-opening-label">50%</div>
+                </div>
+                <div class="cuboid-legend-opening-item" data-open="75">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="75"></canvas>
+                  </div>
+                  <div class="cuboid-legend-opening-label">75%</div>
+                </div>
+                <div class="cuboid-legend-opening-item" data-open="100">
+                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
+                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas>
+                  </div>
+                  <div class="cuboid-legend-opening-label">100%</div>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-clean">
+              <div class="cuboid-legend-title">Cleaning</div>
+              <div class="cuboid-legend-clean-list">
+                <div class="cuboid-legend-clean-item">
+                  <span class="cuboid-legend-clean-bullet is-clean"></span>
+                  <span class="cuboid-legend-clean-text">Cleaned burners</span>
+                  <strong class="cuboid-legend-clean-value" data-legend-value="cleaned">0</strong>
+                </div>
+                <div class="cuboid-legend-clean-item">
+                  <span class="cuboid-legend-clean-bullet"></span>
+                  <span class="cuboid-legend-clean-text">Not cleaned</span>
+                  <strong class="cuboid-legend-clean-value" data-legend-value="uncleaned">0</strong>
+                </div>
+              </div>
+            </section>
+            <section class="cuboid-legend-block cuboid-legend-tst">
+              <div class="cuboid-legend-tst-head">
+                <div class="cuboid-legend-title">TST Gradient</div>
+                <div class="cuboid-legend-tst-chip">PH TST</div>
+              </div>
+              <div class="cuboid-legend-tst-bar"></div>
+              <div class="cuboid-legend-tst-limits">
+                <span class="cuboid-legend-tst-min" data-legend-value="tst-min">--</span>
+                <span class="cuboid-legend-tst-range-label">TST Range</span>
+                <span class="cuboid-legend-tst-max" data-legend-value="tst-max">--</span>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
       <div class="cuboid-tab-shell" data-cuboid-shell="stack-top">
         <div class="cuboid-tab-frame-wrap">
@@ -24877,104 +25085,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             allowfullscreen
           ></iframe>
         </div>
-        <div class="cuboid-tab-legend-row">
-          <div class="cuboid-legend-state-reformer">AB Chamber</div>
-          <div class="cuboid-legend-panel" id="stack-legend-panel-ab" data-cuboid-legend="ab">
-            <div class="cuboid-legend-scroll">
-            <section class="cuboid-legend-block cuboid-legend-states">
-              <div class="cuboid-legend-title">Burner State Legend</div>
-              <div class="cuboid-legend-state-band">
-                <div class="cuboid-legend-state-row">
-                  <div class="cuboid-legend-state-card" data-state="B">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Both</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="Both burner state">Both</div>
-                  </div>
-                  <div class="cuboid-legend-state-card" data-state="C">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Closed</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="Closed burner state">Closed</div>
-                  </div>
-                  <div class="cuboid-legend-state-card" data-state="O">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Off Gas</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="Off gas burner state">Off Gas</div>
-                  </div>
-                  <div class="cuboid-legend-state-card" data-state="N">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">NG</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="NG burner state">NG</div>
-                  </div>
-                </div>
-              </div>
-            </section>
-            <section class="cuboid-legend-block cuboid-legend-openings">
-              <div class="cuboid-legend-title">Opening Guide</div>
-              <div class="cuboid-legend-opening-row">
-                <div class="cuboid-legend-opening-item" data-open="25">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="25"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">25%</div>
-                </div>
-                <div class="cuboid-legend-opening-item" data-open="50">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="50"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">50%</div>
-                </div>
-                <div class="cuboid-legend-opening-item" data-open="75">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="75"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">75%</div>
-                </div>
-                <div class="cuboid-legend-opening-item" data-open="100">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">100%</div>
-                </div>
-              </div>
-            </section>
-            <section class="cuboid-legend-block cuboid-legend-clean">
-              <div class="cuboid-legend-title">Cleaning</div>
-              <div class="cuboid-legend-clean-list">
-                <div class="cuboid-legend-clean-item">
-                  <span class="cuboid-legend-clean-bullet is-clean"></span>
-                  <span class="cuboid-legend-clean-text">Cleaned burners</span>
-                  <strong class="cuboid-legend-clean-value" data-legend-value="cleaned">0</strong>
-                </div>
-                <div class="cuboid-legend-clean-item">
-                  <span class="cuboid-legend-clean-bullet"></span>
-                  <span class="cuboid-legend-clean-text">Not cleaned</span>
-                  <strong class="cuboid-legend-clean-value" data-legend-value="uncleaned">0</strong>
-                </div>
-              </div>
-            </section>
-            <section class="cuboid-legend-block cuboid-legend-tst">
-              <div class="cuboid-legend-tst-head">
-                <div class="cuboid-legend-title">TST Gradient</div>
-                <div class="cuboid-legend-tst-chip">PH TST</div>
-              </div>
-              <div class="cuboid-legend-tst-bar"></div>
-              <div class="cuboid-legend-tst-limits">
-                <span class="cuboid-legend-tst-min" data-legend-value="tst-min">--</span>
-                <span class="cuboid-legend-tst-range-label">TST Range</span>
-                <span class="cuboid-legend-tst-max" data-legend-value="tst-max">--</span>
-              </div>
-            </section>
-            </div>
-          </div>
-        </div>
       </div>
       <div class="cuboid-tab-shell" data-cuboid-shell="stack-bottom">
         <div class="cuboid-tab-frame-wrap">
@@ -24994,104 +25104,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             allow="fullscreen"
             allowfullscreen
           ></iframe>
-        </div>
-        <div class="cuboid-tab-legend-row">
-          <div class="cuboid-legend-state-reformer">CD Chamber</div>
-          <div class="cuboid-legend-panel" id="stack-legend-panel-cd" data-cuboid-legend="cd">
-            <div class="cuboid-legend-scroll">
-            <section class="cuboid-legend-block cuboid-legend-states">
-              <div class="cuboid-legend-title">Burner State Legend</div>
-              <div class="cuboid-legend-state-band">
-                <div class="cuboid-legend-state-row">
-                  <div class="cuboid-legend-state-card" data-state="B">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Both</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="Both burner state">Both</div>
-                  </div>
-                  <div class="cuboid-legend-state-card" data-state="C">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Closed</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="Closed burner state">Closed</div>
-                  </div>
-                  <div class="cuboid-legend-state-card" data-state="O">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Off Gas</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="Off gas burner state">Off Gas</div>
-                  </div>
-                  <div class="cuboid-legend-state-card" data-state="N">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">NG</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="NG burner state">NG</div>
-                  </div>
-                </div>
-              </div>
-            </section>
-            <section class="cuboid-legend-block cuboid-legend-openings">
-              <div class="cuboid-legend-title">Opening Guide</div>
-              <div class="cuboid-legend-opening-row">
-                <div class="cuboid-legend-opening-item" data-open="25">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="25"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">25%</div>
-                </div>
-                <div class="cuboid-legend-opening-item" data-open="50">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="50"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">50%</div>
-                </div>
-                <div class="cuboid-legend-opening-item" data-open="75">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="75"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">75%</div>
-                </div>
-                <div class="cuboid-legend-opening-item" data-open="100">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">100%</div>
-                </div>
-              </div>
-            </section>
-            <section class="cuboid-legend-block cuboid-legend-clean">
-              <div class="cuboid-legend-title">Cleaning</div>
-              <div class="cuboid-legend-clean-list">
-                <div class="cuboid-legend-clean-item">
-                  <span class="cuboid-legend-clean-bullet is-clean"></span>
-                  <span class="cuboid-legend-clean-text">Cleaned burners</span>
-                  <strong class="cuboid-legend-clean-value" data-legend-value="cleaned">0</strong>
-                </div>
-                <div class="cuboid-legend-clean-item">
-                  <span class="cuboid-legend-clean-bullet"></span>
-                  <span class="cuboid-legend-clean-text">Not cleaned</span>
-                  <strong class="cuboid-legend-clean-value" data-legend-value="uncleaned">0</strong>
-                </div>
-              </div>
-            </section>
-            <section class="cuboid-legend-block cuboid-legend-tst">
-              <div class="cuboid-legend-tst-head">
-                <div class="cuboid-legend-title">TST Gradient</div>
-                <div class="cuboid-legend-tst-chip">PH TST</div>
-              </div>
-              <div class="cuboid-legend-tst-bar"></div>
-              <div class="cuboid-legend-tst-limits">
-                <span class="cuboid-legend-tst-min" data-legend-value="tst-min">--</span>
-                <span class="cuboid-legend-tst-range-label">TST Range</span>
-                <span class="cuboid-legend-tst-max" data-legend-value="tst-max">--</span>
-              </div>
-            </section>
-            </div>
-          </div>
         </div>
       </div>
       </div>
@@ -32111,6 +32123,7 @@ function refreshCuboidLegendPanels(force){
   }catch(e){
     log = {};
   }
+  var allWalls = ["A","B","C","D"];
   ["ab","cd"].forEach(function(chamber){
     var panels = getCuboidLegendPanelsByChamber(chamber);
     if(!panels.length) return;
@@ -32142,6 +32155,40 @@ function refreshCuboidLegendPanels(force){
       cuboidLegendSetText(panel, "tst-max", max);
     });
   });
+  var sharedPanels = getCuboidLegendPanelsByChamber("shared");
+  if(sharedPanels.length){
+    var sharedHmData = cuboidLegendLoadHmData();
+    var sharedCounts = hmCountStatesForWalls(sharedHmData, allWalls);
+    var sharedCleaning = cuboidLegendCountCleaning(log, allWalls);
+    var abSnapshot = cuboidLegendBuildSnapshot("ab");
+    var cdSnapshot = cuboidLegendBuildSnapshot("cd");
+    var sharedTemps = hmToNumericTemps(
+      (abSnapshot.top || []).concat(abSnapshot.bot || [], cdSnapshot.top || [], cdSnapshot.bot || [])
+    );
+    var sharedMin = "--";
+    var sharedMax = "--";
+    if(sharedTemps.length){
+      var sharedLo = sharedTemps[0];
+      var sharedHi = sharedTemps[0];
+      for(var ti = 0; ti < sharedTemps.length; ti++){
+        var temp = sharedTemps[ti];
+        if(temp < sharedLo) sharedLo = temp;
+        if(temp > sharedHi) sharedHi = temp;
+      }
+      sharedMin = Math.round(sharedLo) + "°C";
+      sharedMax = Math.round(sharedHi) + "°C";
+    }
+    sharedPanels.forEach(function(panel){
+      cuboidLegendSetText(panel, "count-b", sharedCounts.B || 0);
+      cuboidLegendSetText(panel, "count-c", sharedCounts.C || 0);
+      cuboidLegendSetText(panel, "count-o", sharedCounts.O || 0);
+      cuboidLegendSetText(panel, "count-n", sharedCounts.N || 0);
+      cuboidLegendSetText(panel, "cleaned", sharedCleaning.cleaned);
+      cuboidLegendSetText(panel, "uncleaned", sharedCleaning.uncleaned);
+      cuboidLegendSetText(panel, "tst-min", sharedMin);
+      cuboidLegendSetText(panel, "tst-max", sharedMax);
+    });
+  }
   renderCuboidLegendGlyphs();
   return true;
 }
