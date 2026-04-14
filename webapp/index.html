@@ -5619,23 +5619,29 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   box-sizing:border-box;
   margin:-2px auto 6px;
   padding:7px 14px 9px;
-  border:1px solid rgba(70,102,148,0.46);
-  border-radius:12px;
-  background:linear-gradient(180deg,rgba(14,20,30,0.98),rgba(8,12,19,0.98));
-  box-shadow:0 14px 28px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
+  border:1px solid rgba(86,115,162,0.42);
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(94,147,255,0.13), transparent 28%),
+    radial-gradient(circle at 100% 100%, rgba(249,176,77,0.08), transparent 22%),
+    linear-gradient(180deg,rgba(17,24,37,0.985),rgba(9,13,21,0.99));
+  box-shadow:
+    0 16px 30px rgba(0,0,0,0.26),
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -18px 30px rgba(0,0,0,0.08);
 }
 [data-cuboid-dashboard] .cuboid-legend-panel::before{
   content:"";
   position:absolute;
   inset:0;
-  border:1px solid rgba(82,120,176,0.28);
+  border:1px solid rgba(120,156,214,0.18);
   border-radius:inherit;
   pointer-events:none;
 }
 [data-cuboid-dashboard] .cuboid-legend-scroll{
   display:grid;
   grid-template-columns:minmax(0,2.88fr) minmax(230px,0.84fr) minmax(188px,0.62fr) minmax(270px,0.8fr);
-  align-items:start;
+  align-items:stretch;
   gap:10px;
   overflow:visible;
 }
@@ -5645,7 +5651,7 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   padding:0 10px;
 }
 [data-cuboid-dashboard] .cuboid-legend-block + .cuboid-legend-block{
-  border-left:1px solid rgba(64,84,114,0.38);
+  border-left:1px solid rgba(82,103,135,0.24);
 }
 [data-cuboid-dashboard] .cuboid-legend-states{ padding-left:2px; }
 [data-cuboid-dashboard] .cuboid-legend-openings,
@@ -5663,10 +5669,12 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
 }
 [data-cuboid-dashboard] .cuboid-legend-title{
   margin-bottom:7px;
-  font-size:8px;
-  letter-spacing:2.2px;
+  font-family:Rajdhani,Segoe UI,sans-serif;
+  font-size:8.6px;
+  font-weight:700;
+  letter-spacing:2px;
   text-transform:uppercase;
-  color:rgba(184,191,206,0.82);
+  color:rgba(198,208,226,0.9);
 }
 [data-cuboid-dashboard] .cuboid-legend-openings .cuboid-legend-title,
 [data-cuboid-dashboard] .cuboid-legend-clean .cuboid-legend-title{
@@ -5678,6 +5686,7 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   gap:6px;
 }
 [data-cuboid-dashboard] .cuboid-legend-state-card{
+  --legend-state-edge:rgba(120,153,209,0.35);
   display:grid;
   grid-template-columns:46px minmax(0,1fr) minmax(28px,auto);
   align-items:center;
@@ -5688,20 +5697,35 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   border:1px solid rgba(76,102,146,0.35);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
   overflow:hidden;
+  position:relative;
+  isolation:isolate;
+}
+[data-cuboid-dashboard] .cuboid-legend-state-card::before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:3px;
+  background:linear-gradient(180deg,rgba(255,255,255,0.32),var(--legend-state-edge));
+  opacity:0.92;
+  pointer-events:none;
 }
 [data-cuboid-dashboard] .cuboid-legend-state-card[data-state="B"]{
+  --legend-state-edge:rgba(84,143,255,0.82);
   background:linear-gradient(135deg,rgba(27,46,92,0.94),rgba(18,27,45,0.96));
   border-color:rgba(61,114,225,0.48);
 }
 [data-cuboid-dashboard] .cuboid-legend-state-card[data-state="C"]{
+  --legend-state-edge:rgba(153,168,194,0.7);
   background:linear-gradient(135deg,rgba(42,50,68,0.92),rgba(22,28,40,0.96));
   border-color:rgba(108,124,154,0.44);
 }
 [data-cuboid-dashboard] .cuboid-legend-state-card[data-state="O"]{
+  --legend-state-edge:rgba(72,212,124,0.78);
   background:linear-gradient(135deg,rgba(18,74,53,0.94),rgba(13,36,29,0.96));
   border-color:rgba(42,165,108,0.44);
 }
 [data-cuboid-dashboard] .cuboid-legend-state-card[data-state="N"]{
+  --legend-state-edge:rgba(255,181,68,0.82);
   background:linear-gradient(135deg,rgba(92,55,16,0.92),rgba(40,30,22,0.96));
   border-color:rgba(176,122,28,0.44);
 }
@@ -5818,8 +5842,10 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   overflow:hidden;
 }
 [data-cuboid-dashboard] .cuboid-legend-state-name{
-  font-size:9px;
+  font-family:Rajdhani,Segoe UI,sans-serif;
+  font-size:9.8px;
   font-weight:700;
+  letter-spacing:0.06em;
   color:#eef4ff;
   line-height:1.08;
   white-space:nowrap;
@@ -5893,8 +5919,10 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   padding:7px 5px 6px;
   border-radius:14px;
   border:1px solid rgba(72,96,128,0.28);
-  background:linear-gradient(180deg,rgba(17,22,32,0.9),rgba(8,12,18,0.94));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+  background:
+    linear-gradient(180deg,rgba(19,24,36,0.92),rgba(8,12,18,0.95)),
+    radial-gradient(circle at 50% 0%, rgba(255,191,87,0.08), transparent 40%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), 0 5px 14px rgba(0,0,0,0.12);
 }
 [data-cuboid-dashboard] .cuboid-legend-opening-item[data-open="25"]{
   --legend-open-ratio:0.25;
@@ -6032,9 +6060,10 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   box-shadow:0 0 8px rgba(245,158,11,0.34);
 }
 [data-cuboid-dashboard] .cuboid-legend-opening-label{
+  font-family:Rajdhani,Segoe UI,sans-serif;
   font-size:calc(10px * 1.25);
   font-weight:700;
-  letter-spacing:0.5px;
+  letter-spacing:0.08em;
   color:#eef4ff;
 }
 [data-cuboid-dashboard] .cuboid-legend-clean-list{
@@ -6044,11 +6073,18 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   padding-top:2px;
 }
 [data-cuboid-dashboard] .cuboid-legend-clean-item{
-  display:flex;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
   align-items:center;
   gap:8px;
+  min-height:28px;
+  padding:3px 8px;
+  border-radius:11px;
+  border:1px solid rgba(86,106,138,0.22);
+  background:linear-gradient(180deg,rgba(18,24,36,0.72),rgba(10,14,22,0.84));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
   font-size:calc(9px * 1.25);
-  color:rgba(214,223,236,0.9);
+  color:rgba(222,229,240,0.94);
 }
 [data-cuboid-dashboard] .cuboid-legend-clean-bullet{
   width:14px;
@@ -6065,12 +6101,28 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
 }
 [data-cuboid-dashboard] .cuboid-legend-clean-text{
   flex:1 1 auto;
-  line-height:1.25;
+  font-family:Rajdhani,Segoe UI,sans-serif;
+  font-weight:600;
+  letter-spacing:0.03em;
+  line-height:1.1;
 }
 [data-cuboid-dashboard] .cuboid-legend-clean-value{
-  font-size:calc(14px * 1.25);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:34px;
+  min-height:22px;
+  padding:0 8px;
+  border-radius:999px;
+  border:1px solid rgba(124,144,176,0.26);
+  background:linear-gradient(180deg,rgba(35,41,58,0.96),rgba(15,20,30,0.96));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+  font-family:Rajdhani,Segoe UI,sans-serif;
+  font-size:calc(12px * 1.25);
   font-weight:700;
   color:#ffffff;
+  letter-spacing:0.04em;
+  font-variant-numeric:tabular-nums;
 }
 [data-cuboid-dashboard] .cuboid-legend-tst-head{
   display:flex;
@@ -6090,12 +6142,15 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   min-height:30px;
   padding:0 10px;
   border-radius:12px;
-  border:1px solid rgba(176,108,44,0.58);
-  background:linear-gradient(180deg,rgba(49,37,28,0.92),rgba(26,23,21,0.94));
+  border:1px solid rgba(193,132,62,0.52);
+  background:
+    radial-gradient(circle at 50% 10%, rgba(255,219,160,0.12), transparent 55%),
+    linear-gradient(180deg,rgba(58,42,30,0.94),rgba(29,23,18,0.96));
   color:#fff6e8;
+  font-family:Rajdhani,Segoe UI,sans-serif;
   font-size:9px;
   font-weight:700;
-  letter-spacing:0.5px;
+  letter-spacing:0.1em;
   text-transform:uppercase;
 }
 [data-cuboid-dashboard] .cuboid-legend-tst-bar{
@@ -6106,9 +6161,14 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   overflow:hidden;
   isolation:isolate;
   border-radius:5px;
-  background:linear-gradient(90deg,#32d061 0%,#ffe227 48%,#ff7e2e 76%,#ff5252 100%);
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,0.08) 0 1px,transparent 1px 28px),
+    linear-gradient(90deg,#36d36a 0%,#f6ea3e 46%,#ff9134 76%,#ff5b5b 100%);
   border:1px solid rgba(255,255,255,0.12);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.20), inset 0 -1px 0 rgba(0,0,0,0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 0 0 1px rgba(74,102,146,0.18);
 }
 [data-cuboid-dashboard] .cuboid-legend-tst-bar::before,
 [data-cuboid-dashboard] .cuboid-legend-tst-bar::after{
@@ -6158,15 +6218,15 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   height:clamp(728px,calc(100svh - 92px),1268px);
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-panel{
-  padding:4px 8px 5px;
-  border-radius:11px;
+  padding:4px 9px 5px;
+  border-radius:13px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-tab-legend-row{
   grid-area:legend;
   display:grid;
   grid-template-columns:max-content minmax(0,1fr);
-  gap:10px;
-  align-items:start;
+  gap:12px;
+  align-items:stretch;
   min-width:0;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-tab-legend-row .cuboid-legend-panel{
@@ -6174,11 +6234,11 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   min-width:0;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-scroll{
-  grid-template-columns:minmax(0,1.88fr) minmax(336px,1.24fr) minmax(178px,0.54fr) minmax(238px,0.76fr);
-  gap:6px;
+  grid-template-columns:minmax(0,1.82fr) minmax(322px,1.12fr) minmax(210px,0.74fr) minmax(242px,0.8fr);
+  gap:8px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-block{
-  padding:0 5px;
+  padding:0 7px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-openings{
   max-width:none;
@@ -6195,22 +6255,23 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   width:clamp(190px,16vw,330px);
   min-width:0;
   min-height:50px;
-  padding:0 18px;
+  padding:0 20px;
   box-sizing:border-box;
-  border-radius:19px;
-  border:1px solid rgba(96,148,244,0.58);
+  border-radius:21px;
+  border:1px solid rgba(112,156,244,0.52);
   background:
-    radial-gradient(circle at 18% 22%, rgba(118,176,255,0.18), transparent 42%),
+    radial-gradient(circle at 18% 22%, rgba(118,176,255,0.2), transparent 42%),
     radial-gradient(circle at 86% 78%, rgba(255,182,88,0.14), transparent 34%),
-    linear-gradient(135deg,rgba(45,63,118,0.96),rgba(25,32,54,0.98) 52%,rgba(18,25,42,0.98));
+    linear-gradient(135deg,rgba(49,69,126,0.96),rgba(24,31,53,0.985) 50%,rgba(16,22,38,0.99));
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    inset 0 0 26px rgba(96,148,244,0.08),
-    0 10px 22px rgba(0,0,0,0.18);
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    inset 0 0 30px rgba(96,148,244,0.08),
+    0 12px 24px rgba(0,0,0,0.17);
   color:#f2f7ff;
-  font-size:15px;
+  font-family:"EB Garamond",Georgia,serif;
+  font-size:14px;
   font-weight:800;
-  letter-spacing:0.12em;
+  letter-spacing:0.1em;
   line-height:1;
   text-transform:uppercase;
   text-align:center;
@@ -6221,43 +6282,43 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-title{
   margin-bottom:4px;
-  font-size:6px;
-  letter-spacing:1.4px;
+  font-size:7px;
+  letter-spacing:1.9px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-openings .cuboid-legend-title,
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-clean .cuboid-legend-title{
   font-size:calc(6px * 1.25);
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-row{
-  gap:3px;
+  gap:5px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-card{
-  grid-template-columns:30px minmax(0,1fr);
-  column-gap:4px;
-  min-height:36px;
-  padding:3px 4px 3px 3px;
-  border-radius:10px;
+  grid-template-columns:34px minmax(0,1fr);
+  column-gap:6px;
+  min-height:38px;
+  padding:4px 7px 4px 6px;
+  border-radius:12px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-badge{
-  width:26px;
-  height:28px;
+  width:30px;
+  height:30px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-copy{
   display:flex;
   align-items:center;
-  justify-content:center;
+  justify-content:flex-start;
   min-height:0;
   gap:0;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-name{
   width:100%;
-  font-size:10.2px;
+  font-size:11.4px;
   font-weight:800;
   line-height:1;
-  letter-spacing:0;
-  text-align:center;
-  white-space:normal;
-  overflow-wrap:break-word;
+  letter-spacing:0.05em;
+  text-align:left;
+  white-space:nowrap;
+  overflow-wrap:normal;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-state-count{
   display:none;
@@ -6267,20 +6328,20 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-opening-item{
   display:grid;
-  grid-template-columns:22px minmax(0,1fr);
+  grid-template-columns:24px minmax(0,1fr);
   align-items:center;
   justify-items:start;
-  gap:5px;
-  min-height:39px;
-  padding:4px 6px;
-  border-radius:10px;
+  gap:6px;
+  min-height:38px;
+  padding:4px 8px 4px 6px;
+  border-radius:12px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-opening-burner{
-  width:22px;
-  height:28px;
+  width:24px;
+  height:30px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-opening-label{
-  font-size:calc(7px * 1.25);
+  font-size:10px;
   text-align:left;
   line-height:1;
 }
@@ -6289,25 +6350,30 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
   padding-top:0;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-clean-item{
-  gap:5px;
-  font-size:calc(7px * 1.25);
+  gap:6px;
+  min-height:25px;
+  padding:2px 7px;
+  font-size:9px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-clean-bullet{
-  width:9px;
-  height:9px;
+  width:10px;
+  height:10px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-clean-value{
-  font-size:calc(9px * 1.25);
+  min-width:30px;
+  min-height:20px;
+  padding:0 7px;
+  font-size:11px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-tst-head{
-  gap:6px;
+  gap:8px;
   margin-bottom:5px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-tst-chip{
-  min-width:48px;
-  min-height:20px;
-  padding:0 7px;
-  font-size:6px;
+  min-width:54px;
+  min-height:22px;
+  padding:0 8px;
+  font-size:7px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-tst-bar{
   height:10px;
@@ -6318,10 +6384,10 @@ body.light-theme #tab-cuboidstack .cuboid-twin-live-meta-text{
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-tst-min,
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-tst-max{
-  font-size:8px;
+  font-size:8.4px;
 }
 #tab-cuboidstack .cuboid-tab-shell .cuboid-legend-tst-range-label{
-  font-size:6px;
+  font-size:6.2px;
 }
 @media (max-width:1400px){
   [data-cuboid-dashboard] .cuboid-legend-scroll{
@@ -24884,12 +24950,12 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               <div class="cuboid-legend-clean-list">
                 <div class="cuboid-legend-clean-item">
                   <span class="cuboid-legend-clean-bullet is-clean"></span>
-                  <span class="cuboid-legend-clean-text">Green Dot = Burner Cleaned</span>
+                  <span class="cuboid-legend-clean-text">Cleaned burners</span>
                   <strong class="cuboid-legend-clean-value" data-legend-value="cleaned">0</strong>
                 </div>
                 <div class="cuboid-legend-clean-item">
                   <span class="cuboid-legend-clean-bullet"></span>
-                  <span class="cuboid-legend-clean-text">Empty Dot = Burner Not Cleaned</span>
+                  <span class="cuboid-legend-clean-text">Not cleaned</span>
                   <strong class="cuboid-legend-clean-value" data-legend-value="uncleaned">0</strong>
                 </div>
               </div>
@@ -25002,12 +25068,12 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               <div class="cuboid-legend-clean-list">
                 <div class="cuboid-legend-clean-item">
                   <span class="cuboid-legend-clean-bullet is-clean"></span>
-                  <span class="cuboid-legend-clean-text">Green Dot = Burner Cleaned</span>
+                  <span class="cuboid-legend-clean-text">Cleaned burners</span>
                   <strong class="cuboid-legend-clean-value" data-legend-value="cleaned">0</strong>
                 </div>
                 <div class="cuboid-legend-clean-item">
                   <span class="cuboid-legend-clean-bullet"></span>
-                  <span class="cuboid-legend-clean-text">Empty Dot = Burner Not Cleaned</span>
+                  <span class="cuboid-legend-clean-text">Not cleaned</span>
                   <strong class="cuboid-legend-clean-value" data-legend-value="uncleaned">0</strong>
                 </div>
               </div>
