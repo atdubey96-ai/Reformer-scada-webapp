@@ -37,14 +37,22 @@ function decodeHistoryReportPayload(raw) {
 function filterFallbackRows(rows, tags, since, limit) {
   const wanted = new Set((Array.isArray(tags) ? tags : []).map((tag) => String(tag || "").trim()).filter(Boolean));
   const sinceMs = Date.parse(String(since || ""));
-  const filtered = (Array.isArray(rows) ? rows : []).filter((row) => {
+  const filtered = sortRowsAscending((Array.isArray(rows) ? rows : []).filter((row) => {
     const tagId = String(row && row.tag_id || "").trim();
     if (wanted.size && !wanted.has(tagId)) return false;
     const stampMs = Date.parse(String((row && (row.pushed_at || row.synced_at || row.recorded_at)) || ""));
     if (Number.isFinite(sinceMs) && (!Number.isFinite(stampMs) || stampMs < sinceMs)) return false;
     return !!tagId;
-  });
+  }));
   return Number.isFinite(limit) && limit > 0 ? filtered.slice(-limit) : filtered;
+}
+
+function sortRowsAscending(rows) {
+  return (Array.isArray(rows) ? rows : []).slice().sort((left, right) => {
+    const leftMs = Date.parse(String((left && (left.pushed_at || left.synced_at || left.recorded_at)) || "")) || 0;
+    const rightMs = Date.parse(String((right && (right.pushed_at || right.synced_at || right.recorded_at)) || "")) || 0;
+    return leftMs - rightMs;
+  });
 }
 
 async function fetchFallbackHistoryRows(tags, since, limit) {
@@ -68,6 +76,7 @@ module.exports = async (req, res) => {
 
   const tags = splitCsvParam(req.query && req.query.tags);
   const since = String((req.query && req.query.since) || "").trim();
+  const preferLive = String((req.query && req.query.prefer_live) || "").trim() === "1";
   const limitRaw = Number(req.query && req.query.limit);
   const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 10000) : 5000;
 
@@ -80,13 +89,13 @@ module.exports = async (req, res) => {
     "?select=tag_id,label,value,pushed_at,synced_at,recorded_at" +
     (since ? "&pushed_at=gte." + encodeURIComponent(since) : "") +
     tagFilter +
-    "&order=pushed_at.asc&limit=" + encodeURIComponent(String(limit));
+    "&order=pushed_at.desc&limit=" + encodeURIComponent(String(limit));
   const recordedQuery =
     baseUrl +
     "?select=tag_id,label,value,recorded_at,synced_at" +
     (since ? "&recorded_at=gte." + encodeURIComponent(since) : "") +
     tagFilter +
-    "&order=recorded_at.asc&limit=" + encodeURIComponent(String(limit));
+    "&order=recorded_at.desc&limit=" + encodeURIComponent(String(limit));
 
   try {
     let out = await fetchJson(pushedQuery, { method: "GET", headers: plantHeaders() });
@@ -97,10 +106,17 @@ module.exports = async (req, res) => {
       out = await fetchJson(recordedQuery, { method: "GET", headers: plantHeaders() });
     }
     if (!out.ok) {
+      if (preferLive) {
+        return sendJson(res, 502, {
+          ok: false,
+          error: "plant_history_fetch_failed",
+          status: out.status
+        });
+      }
       const fallbackRows = await fetchFallbackHistoryRows(tags, since, limit);
       if (fallbackRows.length) {
         return sendJson(res, 200, {
-          rows: fallbackRows,
+          rows: sortRowsAscending(fallbackRows),
           error: ""
         });
       }
@@ -110,18 +126,24 @@ module.exports = async (req, res) => {
         status: out.status
       });
     }
-    const directRows = Array.isArray(out.json) ? out.json : [];
+    const directRows = filterFallbackRows(Array.isArray(out.json) ? out.json : [], tags, since, limit);
     if (!directRows.length) {
+      if (preferLive) {
+        return sendJson(res, 200, {
+          rows: [],
+          error: ""
+        });
+      }
       const fallbackRows = await fetchFallbackHistoryRows(tags, since, limit);
       if (fallbackRows.length) {
         return sendJson(res, 200, {
-          rows: fallbackRows,
+          rows: sortRowsAscending(fallbackRows),
           error: ""
         });
       }
     }
     return sendJson(res, 200, {
-      rows: directRows,
+      rows: sortRowsAscending(directRows),
       error: ""
     });
   } catch (err) {

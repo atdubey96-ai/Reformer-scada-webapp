@@ -40422,14 +40422,36 @@ body.light-theme .btab-alarm-count{
 
   function buildReformerHistoryLimit(tagCount){
     var tags = Math.max(1, parseInt(tagCount, 10) || 0);
-    return Math.max(5000, Math.min(10000, tags * 128));
+    return Math.min(10000, Math.max(6000, tags * 960));
+  }
+
+  function getReformerHistoryStampMs(row){
+    return Date.parse(String((row && (row.pushed_at || row.synced_at || row.recorded_at || row.created_at)) || "")) || 0;
+  }
+
+  function normalizeReformerHistoryRows(rows, sinceIso, limit){
+    var sinceMs = Date.parse(String(sinceIso || ""));
+    var filtered = (Array.isArray(rows) ? rows : []).filter(function(row){
+      if(!row || !String(row.tag_id || "").trim()) return false;
+      var stampMs = getReformerHistoryStampMs(row);
+      if(isFinite(sinceMs) && (!stampMs || stampMs < sinceMs)) return false;
+      return !!stampMs;
+    }).sort(function(left, right){
+      return getReformerHistoryStampMs(left) - getReformerHistoryStampMs(right);
+    });
+    if(Number.isFinite(limit) && limit > 0 && filtered.length > limit){
+      filtered = filtered.slice(-limit);
+    }
+    return filtered;
   }
 
   async function fetchReformerHistoryRowsFromApi(sinceIso, wantedTags, limit){
     if(typeof fetch !== "function") return [];
     var query = [
       "since=" + encodeURIComponent(String(sinceIso || "")),
-      "limit=" + encodeURIComponent(String(limit || 5000))
+      "limit=" + encodeURIComponent(String(limit || 5000)),
+      "prefer_live=1",
+      "_ts=" + encodeURIComponent(String(Date.now()))
     ];
     if(Array.isArray(wantedTags) && wantedTags.length){
       query.push("tags=" + encodeURIComponent(wantedTags.join(",")));
@@ -40452,8 +40474,8 @@ body.light-theme .btab-alarm-count{
       err.responseText = text;
       throw err;
     }
-    if(Array.isArray(payload)) return payload;
-    if(payload && Array.isArray(payload.rows)) return payload.rows;
+    if(Array.isArray(payload)) return normalizeReformerHistoryRows(payload, sinceIso, limit);
+    if(payload && Array.isArray(payload.rows)) return normalizeReformerHistoryRows(payload.rows, sinceIso, limit);
     return [];
   }
 
@@ -40468,10 +40490,10 @@ body.light-theme .btab-alarm-count{
       + "?select=tag_id,label,value,pushed_at,synced_at,recorded_at"
       + "&pushed_at=gte." + encodeURIComponent(String(sinceIso || ""))
       + tagsFilter
-      + "&order=pushed_at.asc&limit=" + encodeURIComponent(String(limit || 5000));
+      + "&order=pushed_at.desc&limit=" + encodeURIComponent(String(limit || 5000));
     try{
       var pushedRows = await fetchTdPlantDirectJson(pushQuery);
-      return Array.isArray(pushedRows) ? pushedRows : [];
+      return normalizeReformerHistoryRows(pushedRows, sinceIso, limit);
     }catch(pushErr){
       var pushMsg = String((pushErr && (pushErr.message || pushErr.responseText)) || "").toLowerCase();
       if(!(pushErr && pushErr.status === 400 && pushMsg.indexOf("pushed_at") >= 0)){
@@ -40482,11 +40504,11 @@ body.light-theme .btab-alarm-count{
       + "?select=tag_id,label,value,recorded_at,synced_at"
       + "&recorded_at=gte." + encodeURIComponent(String(sinceIso || ""))
       + tagsFilter;
-    query += "&order=recorded_at.asc&limit=" + encodeURIComponent(String(limit || 5000));
+    query += "&order=recorded_at.desc&limit=" + encodeURIComponent(String(limit || 5000));
     var rows = await fetchTdPlantDirectJson(
       query
     );
-    return Array.isArray(rows) ? rows : [];
+    return normalizeReformerHistoryRows(rows, sinceIso, limit);
   }
 
   async function fetchReformerHistoryRows(){
@@ -40502,12 +40524,12 @@ body.light-theme .btab-alarm-count{
     try{
       var data = [];
       try{
-        data = await fetchTdPlantHistoryRowsDirect(sinceIso, wantedTags, limit);
-      }catch(directErr){
         data = await fetchReformerHistoryRowsFromApi(sinceIso, wantedTags, limit);
+      }catch(apiErr){
+        data = await fetchTdPlantHistoryRowsDirect(sinceIso, wantedTags, limit);
       }
       return {
-        rows: Array.isArray(data) ? data : [],
+        rows: normalizeReformerHistoryRows(data, sinceIso, limit),
         error: ""
       };
     }catch(e){
