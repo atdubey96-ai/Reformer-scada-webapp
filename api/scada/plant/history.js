@@ -40,8 +40,8 @@ function filterFallbackRows(rows, tags, since, limit) {
   const filtered = (Array.isArray(rows) ? rows : []).filter((row) => {
     const tagId = String(row && row.tag_id || "").trim();
     if (wanted.size && !wanted.has(tagId)) return false;
-    const recordedMs = Date.parse(String((row && row.recorded_at) || ""));
-    if (Number.isFinite(sinceMs) && (!Number.isFinite(recordedMs) || recordedMs < sinceMs)) return false;
+    const stampMs = Date.parse(String((row && (row.pushed_at || row.synced_at || row.recorded_at)) || ""));
+    if (Number.isFinite(sinceMs) && (!Number.isFinite(stampMs) || stampMs < sinceMs)) return false;
     return !!tagId;
   });
   return Number.isFinite(limit) && limit > 0 ? filtered.slice(-limit) : filtered;
@@ -71,19 +71,31 @@ module.exports = async (req, res) => {
   const limitRaw = Number(req.query && req.query.limit);
   const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 10000) : 5000;
 
-  let url =
-    buildPlantRestUrl(encodeURIComponent(getPlantHistoryTable())) +
-    "?select=tag_id,label,value,recorded_at";
-  if (since) {
-    url += "&recorded_at=gte." + encodeURIComponent(since);
-  }
-  if (tags.length) {
-    url += "&tag_id=in.(" + buildSupabaseInFilter(tags) + ")";
-  }
-  url += "&order=recorded_at.asc&limit=" + encodeURIComponent(String(limit));
+  const baseUrl = buildPlantRestUrl(encodeURIComponent(getPlantHistoryTable()));
+  const tagFilter = tags.length
+    ? "&tag_id=in.(" + buildSupabaseInFilter(tags) + ")"
+    : "";
+  const pushedQuery =
+    baseUrl +
+    "?select=tag_id,label,value,pushed_at,synced_at,recorded_at" +
+    (since ? "&pushed_at=gte." + encodeURIComponent(since) : "") +
+    tagFilter +
+    "&order=pushed_at.asc&limit=" + encodeURIComponent(String(limit));
+  const recordedQuery =
+    baseUrl +
+    "?select=tag_id,label,value,recorded_at,synced_at" +
+    (since ? "&recorded_at=gte." + encodeURIComponent(since) : "") +
+    tagFilter +
+    "&order=recorded_at.asc&limit=" + encodeURIComponent(String(limit));
 
   try {
-    const out = await fetchJson(url, { method: "GET", headers: plantHeaders() });
+    let out = await fetchJson(pushedQuery, { method: "GET", headers: plantHeaders() });
+    const errorMessage = String(
+      (out && out.json && (out.json.message || out.json.error || out.json.hint)) || ""
+    ).toLowerCase();
+    if (!out.ok && out.status === 400 && errorMessage.indexOf("pushed_at") !== -1) {
+      out = await fetchJson(recordedQuery, { method: "GET", headers: plantHeaders() });
+    }
     if (!out.ok) {
       const fallbackRows = await fetchFallbackHistoryRows(tags, since, limit);
       if (fallbackRows.length) {

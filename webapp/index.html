@@ -40463,14 +40463,30 @@ body.light-theme .btab-alarm-count{
   }
 
   async function fetchTdPlantHistoryRowsDirect(sinceIso, wantedTags, limit){
-    var query = encodeURIComponent(TD_PLANT_HISTORY_TABLE)
-      + "?select=tag_id,label,value,recorded_at"
-      + "&recorded_at=gte." + encodeURIComponent(String(sinceIso || ""));
+    var tagsFilter = "";
     if(Array.isArray(wantedTags) && wantedTags.length){
-      query += "&tag_id=in.(" + wantedTags.map(function(tag){
+      tagsFilter = "&tag_id=in.(" + wantedTags.map(function(tag){
         return String(tag || "").trim();
       }).filter(Boolean).join(",") + ")";
     }
+    var pushQuery = encodeURIComponent(TD_PLANT_HISTORY_TABLE)
+      + "?select=tag_id,label,value,pushed_at,synced_at,recorded_at"
+      + "&pushed_at=gte." + encodeURIComponent(String(sinceIso || ""))
+      + tagsFilter
+      + "&order=pushed_at.asc&limit=" + encodeURIComponent(String(limit || 5000));
+    try{
+      var pushedRows = await fetchTdPlantDirectJson(pushQuery);
+      return Array.isArray(pushedRows) ? pushedRows : [];
+    }catch(pushErr){
+      var pushMsg = String((pushErr && (pushErr.message || pushErr.responseText)) || "").toLowerCase();
+      if(!(pushErr && pushErr.status === 400 && pushMsg.indexOf("pushed_at") >= 0)){
+        throw pushErr;
+      }
+    }
+    var query = encodeURIComponent(TD_PLANT_HISTORY_TABLE)
+      + "?select=tag_id,label,value,recorded_at,synced_at"
+      + "&recorded_at=gte." + encodeURIComponent(String(sinceIso || ""))
+      + tagsFilter;
     query += "&order=recorded_at.asc&limit=" + encodeURIComponent(String(limit || 5000));
     var rows = await fetchTdPlantDirectJson(
       query
@@ -40491,9 +40507,9 @@ body.light-theme .btab-alarm-count{
     try{
       var data = [];
       try{
-        data = await fetchReformerHistoryRowsFromApi(sinceIso, wantedTags, limit);
-      }catch(apiErr){
         data = await fetchTdPlantHistoryRowsDirect(sinceIso, wantedTags, limit);
+      }catch(directErr){
+        data = await fetchReformerHistoryRowsFromApi(sinceIso, wantedTags, limit);
       }
       return {
         rows: Array.isArray(data) ? data : [],
@@ -40509,7 +40525,7 @@ body.light-theme .btab-alarm-count{
     (Array.isArray(rows) ? rows : []).forEach(function(row){
       var stateKey = getStateKeyFromHistoryRow(row);
       if(!stateKey) return;
-      var dt = parseDashDate(row.recorded_at || row.synced_at || row.created_at);
+      var dt = parseDashDate(row.pushed_at || row.synced_at || row.recorded_at || row.created_at);
       if(!dt) return;
       var num = parseNumberOrNull(row.value);
       if(!isFiniteNumber(num)) return;
@@ -41744,6 +41760,9 @@ body.light-theme .btab-alarm-count{
       if(btn) btn.classList.toggle("is-active", key === target);
     });
     setTimeout(resizeCharts, 50);
+    if(target === "trends"){
+      refreshReformerDashboard(true).catch(function(){});
+    }
   }
 
   function startReformerDashboardRefreshLoop(){
@@ -41768,6 +41787,21 @@ body.light-theme .btab-alarm-count{
         reformerDashState.resizeBound = true;
         window.addEventListener("resize", function(){
           setTimeout(resizeCharts, 60);
+        });
+      }
+      if(!reformerDashState.wakeRefreshBound){
+        reformerDashState.wakeRefreshBound = true;
+        var refreshHistoryOnWake = function(){
+          if(typeof document !== "undefined" && document.visibilityState && document.visibilityState !== "visible") return;
+          var tab = getReformerDashEl("tab-reformerdash");
+          if(!tab || !tab.classList.contains("tab-active")) return;
+          if(reformerDashState.activePane !== "trends") return;
+          refreshReformerDashboard(true).catch(function(){});
+        };
+        window.addEventListener("focus", refreshHistoryOnWake);
+        window.addEventListener("pageshow", refreshHistoryOnWake);
+        document.addEventListener("visibilitychange", function(){
+          if(document.visibilityState === "visible") refreshHistoryOnWake();
         });
       }
     }
