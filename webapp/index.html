@@ -39431,7 +39431,7 @@ function tempToColorInline(val, minT, maxT){
         });
       }).catch(function(){});
 
-      var swBuild = "20260324-uploaded-overlay-visibility-2";
+      var swBuild = "20260414-reformer-trend-hotfix-1";
       navigator.serviceWorker.register("./sw.js?v=" + encodeURIComponent(swBuild), { scope: swScope, updateViaCache: "none" }).then(function(reg){
         if(reg.waiting){
           reg.waiting.postMessage({type:"SKIP_WAITING"});
@@ -39456,11 +39456,6 @@ function tempToColorInline(val, minT, maxT){
     navigator.serviceWorker.addEventListener("controllerchange", function(){
       if(window.__scadaSwControllerHandled) return;
       window.__scadaSwControllerHandled = true;
-      try{
-        if(localStorage.getItem("scadaLoggedIn") === "true" || sessionStorage.getItem("scadaLoggedIn") === "true"){
-          return;
-        }
-      }catch(e){}
       try{
         if(sessionStorage.getItem("scadaSwControllerReloaded") === "1") return;
         sessionStorage.setItem("scadaSwControllerReloaded", "1");
