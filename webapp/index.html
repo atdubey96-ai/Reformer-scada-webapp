@@ -112,6 +112,7 @@ html[data-scada-auth-boot="1"] #loginScreen{
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -25019,186 +25020,764 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     </div>
   </div>
 
+  <style id="cuboid-sections-replacement-5-20260415">
+    body.light-theme #tab-cuboidstack{
+      background:#f0f2f5;
+    }
+    #tab-cuboidstack .cuboid-chamber-boundary{
+      width:100%;
+      max-width:none;
+      margin:0;
+      padding:0;
+      border:none;
+      border-radius:0;
+      background:transparent;
+      box-shadow:none;
+    }
+    #tab-cuboidstack .cuboid-twin-control-panel{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      width:100%;
+      max-width:none;
+      margin:0;
+      padding:0;
+      border:none;
+      border-radius:0;
+      background:transparent;
+      box-shadow:none;
+      overflow:visible;
+    }
+    #tab-cuboidstack .cuboid-twin-control-panel::before{ display:none; }
+    #tab-cuboidstack .csr5-filter,
+    #tab-cuboidstack .cuboid-twin-live-summary,
+    #tab-cuboidstack .cuboid-legend-panel.csr5-legends{
+      background:#ffffff;
+      border:1px solid #e2e8f0;
+      border-radius:10px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.06);
+    }
+    #tab-cuboidstack .csr5-filter{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:10px 16px;
+    }
+    #tab-cuboidstack .csr5-filter,
+    #tab-cuboidstack .csr5-filter *{
+      font-family:'Inter','Segoe UI',sans-serif !important;
+    }
+    #tab-cuboidstack .csr5-filter-label{
+      font-size:10px;
+      font-weight:600;
+      color:#64748b;
+      letter-spacing:1.2px;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+    #tab-cuboidstack .csr5-filter-label-main{
+      color:#6b7c96;
+      letter-spacing:1.2px;
+    }
+    #tab-cuboidstack .csr5-filter-sep{
+      width:1px;
+      height:22px;
+      background:#e2e8f0;
+      flex:0 0 auto;
+    }
+    #tab-cuboidstack .csr5-select-shell,
+    #tab-cuboidstack .csr5-date-shell{
+      position:relative;
+      display:flex;
+      align-items:center;
+      min-height:36px;
+      border:1px solid #e2e8f0;
+      border-radius:7px;
+      background:#f8fafc;
+      color:#1e293b;
+    }
+    #tab-cuboidstack .csr5-select-shell{
+      min-width:138px;
+      padding-left:34px;
+      padding-right:12px;
+    }
+    #tab-cuboidstack .csr5-date-shell{
+      min-width:190px;
+      padding-left:12px;
+      padding-right:34px;
+      cursor:pointer;
+    }
+    #tab-cuboidstack .csr5-select-icon,
+    #tab-cuboidstack .csr5-date-btn{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#64748b;
+      font-size:14px;
+      line-height:1;
+    }
+    #tab-cuboidstack .csr5-select-icon{
+      left:12px;
+      width:16px;
+      height:16px;
+    }
+    #tab-cuboidstack .csr5-date-btn{
+      right:10px;
+      width:20px;
+      height:20px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      padding:0;
+    }
+    #tab-cuboidstack .csr5-select,
+    #tab-cuboidstack .csr5-date-input{
+      width:100%;
+      min-height:34px;
+      border:none;
+      background:transparent;
+      color:#1e293b;
+      font-size:12px;
+      font-weight:500;
+      outline:none;
+      font-family:'Inter','Segoe UI',sans-serif !important;
+    }
+    #tab-cuboidstack .csr5-select{
+      appearance:none;
+      padding-right:18px;
+      cursor:pointer;
+    }
+    #tab-cuboidstack .csr5-date-input{
+      padding-right:0;
+      cursor:pointer;
+      color-scheme:light;
+    }
+    #tab-cuboidstack .csr5-date-input::-webkit-calendar-picker-indicator{
+      opacity:0;
+      width:1px;
+      height:1px;
+      pointer-events:none;
+    }
+    #tab-cuboidstack .csr5-filter-chip{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      min-height:36px;
+      padding:5px 12px 5px 28px;
+      border-radius:100px;
+      border:1px solid #bfdbfe;
+      background:linear-gradient(135deg,#eff6ff,#f0fdf4);
+      color:#1d4ed8;
+      font-size:11px;
+      font-weight:600;
+      white-space:nowrap;
+      position:relative;
+      min-width:0;
+      max-width:min(100%,580px);
+    }
+    #tab-cuboidstack .csr5-filter-chip::before{
+      content:"";
+      position:absolute;
+      left:11px;
+      top:50%;
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      transform:translateY(-50%);
+      background:#22c55e;
+      box-shadow:0 0 0 1px rgba(34,197,94,0.12);
+      animation:csr5-badge-blink 2s ease-in-out infinite;
+    }
+    @keyframes csr5-badge-blink{
+      0%,100%{ opacity:1; }
+      50%{ opacity:0.4; }
+    }
+    #tab-cuboidstack .csr5-filter-chip.is-empty{
+      border-color:#fed7aa;
+      background:#fff7ed;
+      color:#c2410c;
+    }
+    #tab-cuboidstack .csr5-filter-chip.is-empty::before{ background:#f59e0b; }
+    #tab-cuboidstack .csr5-filter-chip > *{
+      min-width:0;
+      white-space:nowrap;
+    }
+    #tab-cuboidstack .csr5-filter-spacer{ flex:1 1 auto; }
+    #tab-cuboidstack .csr5-latest-btn{
+      min-height:36px;
+      padding:6px 16px;
+      border-radius:8px;
+      border:1px solid #e2e8f0;
+      background:#f8fafc;
+      color:#475569;
+      font-size:12px;
+      font-weight:600;
+      cursor:pointer;
+      font-family:'Inter','Segoe UI',sans-serif !important;
+      transition:background 0.15s ease,border-color 0.15s ease,color 0.15s ease;
+    }
+    #tab-cuboidstack .csr5-latest-btn:hover{
+      background:#eff6ff;
+      border-color:#bfdbfe;
+      color:#1d4ed8;
+    }
+    #tab-cuboidstack .cuboid-twin-live-summary{
+      padding:0;
+      border-top:none;
+      width:100%;
+      margin:0;
+    }
+    #tab-cuboidstack .csr5-params-row{
+      display:flex;
+      overflow-x:auto;
+      scrollbar-width:thin;
+      scrollbar-color:#d8dee8 transparent;
+    }
+    #tab-cuboidstack .csr5-params-row::-webkit-scrollbar{ height:4px; }
+    #tab-cuboidstack .csr5-params-row::-webkit-scrollbar-thumb{
+      background:#d8dee8;
+      border-radius:999px;
+    }
+    #tab-cuboidstack .csr5-param-card{
+      --param-bar:#94a3b8;
+      flex:1 0 0;
+      min-width:110px;
+      padding:10px 14px 10px;
+      border-right:1px solid #f1f5f9;
+      position:relative;
+      background:#ffffff;
+      transition:background 0.15s ease;
+      cursor:default;
+    }
+    #tab-cuboidstack .csr5-param-card:last-child{ border-right:none; }
+    #tab-cuboidstack .csr5-param-card:hover{ background:#f8fafc; }
+    #tab-cuboidstack .csr5-param-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:2.5px;
+      background:var(--param-bar);
+      opacity:0.85;
+    }
+    #tab-cuboidstack .csr5-param-card,
+    #tab-cuboidstack .csr5-param-card *{
+      font-family:'Inter','Segoe UI',sans-serif !important;
+    }
+    #tab-cuboidstack .csr5-param-card-current{
+      flex:0 0 260px;
+      min-width:260px;
+    }
+    #tab-cuboidstack .csr5-param-label{
+      font-size:9px;
+      font-weight:600;
+      color:#94a3b8;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      margin-bottom:5px;
+    }
+    #tab-cuboidstack .csr5-param-value{
+      display:flex;
+      align-items:flex-end;
+      gap:1px;
+      min-height:18px;
+      color:#0f172a;
+      line-height:1;
+    }
+    #tab-cuboidstack .cuboid-param-main,
+    #tab-cuboidstack .cuboid-param-unit{
+      font-family:'JetBrains Mono','SFMono-Regular','Consolas',monospace !important;
+      letter-spacing:-0.45px;
+      font-weight:700;
+    }
+    #tab-cuboidstack .cuboid-param-main{
+      font-size:16px;
+      color:#0f172a;
+    }
+    #tab-cuboidstack .cuboid-param-unit{
+      font-size:11px;
+      color:#94a3b8;
+      margin-left:1px;
+      font-weight:500;
+    }
+    #tab-cuboidstack .csr5-param-value.is-empty .cuboid-param-main{
+      color:#94a3b8;
+    }
+    #tab-cuboidstack .csr5-param-sub{
+      margin-top:4px;
+      font-size:9px;
+      color:#94a3b8;
+      line-height:1.35;
+    }
+    #tab-cuboidstack .csr5-current-label{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:10px;
+      font-weight:700;
+      color:#64748b;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+    #tab-cuboidstack .csr5-current-dot{
+      width:9px;
+      height:9px;
+      border-radius:50%;
+      background:#cbd5e1;
+      box-shadow:0 0 0 1px rgba(148,163,184,0.14);
+      flex:0 0 auto;
+    }
+    #tab-cuboidstack .csr5-current-text{
+      display:block;
+      color:#1e293b;
+      font-size:13px;
+      font-weight:700;
+      line-height:1.28;
+      font-family:'Inter','Segoe UI',sans-serif !important;
+    }
+    #tab-cuboidstack #stack-cuboid-live-summary.is-live .csr5-current-dot{ background:#22c55e; }
+    #tab-cuboidstack #stack-cuboid-live-summary.is-warn .csr5-current-dot{ background:#f59e0b; }
+    #tab-cuboidstack #stack-cuboid-live-summary.is-error .csr5-current-dot{ background:#ef4444; }
+    #tab-cuboidstack #stack-cuboid-live-summary.is-empty .csr5-current-dot{ background:#cbd5e1; }
+    #tab-cuboidstack .cuboid-legend-panel.csr5-legends{
+      width:100%;
+      max-width:none;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+    }
+    #tab-cuboidstack .csr5-legends-inner{
+      display:flex;
+      align-items:stretch;
+    }
+    #tab-cuboidstack .csr5-legends-inner,
+    #tab-cuboidstack .csr5-legends-inner *{
+      font-family:'Inter','Segoe UI',sans-serif !important;
+    }
+    #tab-cuboidstack .csr5-leg-block{
+      padding:8px 14px;
+      border-right:1px solid #f1f5f9;
+      flex-shrink:0;
+    }
+    #tab-cuboidstack .csr5-leg-block:last-child{
+      border-right:none;
+      flex:1 1 auto;
+      min-width:280px;
+    }
+    #tab-cuboidstack .csr5-leg-title{
+      font-size:9px;
+      font-weight:700;
+      color:#94a3b8;
+      letter-spacing:1.5px;
+      text-transform:uppercase;
+      margin-bottom:7px;
+    }
+    #tab-cuboidstack .csr5-bsl-row,
+    #tab-cuboidstack .csr5-og-row,
+    #tab-cuboidstack .csr5-cl-row{
+      display:flex;
+      gap:6px;
+      align-items:center;
+    }
+    #tab-cuboidstack .csr5-bsl-item{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:5px 9px;
+      border-radius:7px;
+      border:1px solid #e8f0fe;
+      background:#f8faff;
+      white-space:nowrap;
+      transition:background 0.15s ease;
+    }
+    #tab-cuboidstack .csr5-bsl-item:hover{ background:#eff6ff; }
+    #tab-cuboidstack .csr5-bsl-both{
+      border-color:#93c5fd;
+      background:linear-gradient(135deg,#dbeafe,#eff6ff);
+    }
+    #tab-cuboidstack .csr5-bsl-closed{
+      border-color:#cbd5e1;
+      background:linear-gradient(135deg,#e2e8f0,#f8fafc);
+    }
+    #tab-cuboidstack .csr5-bsl-offgas{
+      border-color:#86efac;
+      background:linear-gradient(135deg,#dcfce7,#f0fdf4);
+    }
+    #tab-cuboidstack .csr5-bsl-ng{
+      border-color:#fdba74;
+      background:linear-gradient(135deg,#ffedd5,#fff7ed);
+    }
+    #tab-cuboidstack .csr5-bsl-icon{
+      width:22px;
+      height:28px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    }
+    #tab-cuboidstack .csr5-bsl-icon canvas{
+      width:20px;
+      height:26px;
+      display:block;
+    }
+    #tab-cuboidstack .csr5-bsl-name{
+      font-size:11px;
+      font-weight:700;
+      color:#1e293b;
+    }
+    #tab-cuboidstack .csr5-og-item{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:3px;
+      min-width:54px;
+      padding:5px 8px;
+      border-radius:7px;
+      border:1px solid #e2e8f0;
+      background:#f8fafc;
+    }
+    #tab-cuboidstack .csr5-og-item.is-active{
+      border-color:#fed7aa;
+      background:#fff7ed;
+    }
+    #tab-cuboidstack .csr5-og-icon{
+      width:20px;
+      height:24px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    #tab-cuboidstack .csr5-og-icon canvas{
+      width:20px;
+      height:24px;
+      display:block;
+    }
+    #tab-cuboidstack .csr5-og-pct{
+      font-family:'JetBrains Mono','SFMono-Regular','Consolas',monospace !important;
+      font-size:11px;
+      font-weight:700;
+      color:#334155;
+    }
+    #tab-cuboidstack .csr5-og-item.is-active .csr5-og-pct{ color:#ea580c; }
+    #tab-cuboidstack .csr5-og-row .csr5-og-item:nth-child(1){ opacity:0.45; }
+    #tab-cuboidstack .csr5-og-row .csr5-og-item:nth-child(2){ opacity:0.65; }
+    #tab-cuboidstack .csr5-og-row .csr5-og-item:nth-child(3){ opacity:0.85; }
+    #tab-cuboidstack .csr5-cl-row{
+      gap:6px;
+      flex-wrap:nowrap;
+    }
+    #tab-cuboidstack .csr5-cl-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      min-width:182px;
+      padding:5px 8px;
+      border-radius:7px;
+      border:1px solid #e2e8f0;
+    }
+    #tab-cuboidstack .csr5-cl-item.is-cleaned{
+      background:#f0fdf4;
+      border-color:#bbf7d0;
+    }
+    #tab-cuboidstack .csr5-cl-item.is-notclean{
+      background:#f8fafc;
+    }
+    #tab-cuboidstack .csr5-cl-left{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      min-width:0;
+    }
+    #tab-cuboidstack .csr5-cl-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      flex:0 0 auto;
+    }
+    #tab-cuboidstack .csr5-cl-label{
+      font-size:11px;
+      color:#475569;
+      white-space:nowrap;
+    }
+    #tab-cuboidstack .csr5-cl-val{
+      font-family:'JetBrains Mono','SFMono-Regular','Consolas',monospace !important;
+      font-size:13px;
+      font-weight:700;
+      color:#475569;
+    }
+    #tab-cuboidstack .csr5-cl-item.is-cleaned .csr5-cl-val{ color:#16a34a; }
+    #tab-cuboidstack .csr5-tst-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:7px;
+    }
+    #tab-cuboidstack .csr5-tst-sub{
+      font-size:11px;
+      color:#64748b;
+    }
+    #tab-cuboidstack .csr5-tst-badge{
+      padding:3px 9px;
+      border-radius:5px;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      color:#fff;
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:0.5px;
+      text-transform:uppercase;
+    }
+    #tab-cuboidstack .csr5-tst-bar{
+      height:9px;
+      border-radius:999px;
+      background:linear-gradient(90deg,#3b82f6 0%,#22c55e 25%,#f59e0b 55%,#ef4444 80%,#7f1d1d 100%);
+      position:relative;
+      box-shadow:inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+    #tab-cuboidstack .csr5-tst-marker{
+      position:absolute;
+      top:-4px;
+      left:94%;
+      width:3px;
+      height:17px;
+      border-radius:2px;
+      background:#1e293b;
+      box-shadow:0 1px 4px rgba(0,0,0,0.28);
+    }
+    #tab-cuboidstack .csr5-tst-labels{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      margin-top:5px;
+      font-family:'JetBrains Mono','SFMono-Regular','Consolas',monospace !important;
+      font-size:9px;
+      color:#94a3b8;
+    }
+    #tab-cuboidstack .csr5-tst-labels span{
+      white-space:nowrap;
+    }
+    @media (max-width: 900px){
+      #tab-cuboidstack .csr5-filter{
+        padding:10px 14px;
+        gap:8px;
+      }
+      #tab-cuboidstack .csr5-filter-label-main,
+      #tab-cuboidstack .csr5-filter-chip{
+        width:100%;
+        max-width:none;
+      }
+      #tab-cuboidstack .csr5-filter-sep{
+        display:none;
+      }
+      #tab-cuboidstack .csr5-select-shell,
+      #tab-cuboidstack .csr5-date-shell{
+        min-width:min(100%,220px);
+      }
+      #tab-cuboidstack .csr5-filter-spacer{
+        display:none;
+      }
+      #tab-cuboidstack .csr5-latest-btn{
+        width:100%;
+      }
+      #tab-cuboidstack .csr5-param-card{
+        min-width:150px;
+      }
+      #tab-cuboidstack .csr5-param-card-current{
+        min-width:220px;
+        flex-basis:220px;
+      }
+      #tab-cuboidstack .csr5-legends-inner{
+        flex-direction:column;
+      }
+      #tab-cuboidstack .csr5-leg-block{
+        border-right:none;
+        border-bottom:1px solid #f1f5f9;
+      }
+      #tab-cuboidstack .csr5-leg-block:last-child{
+        border-bottom:none;
+      }
+      #tab-cuboidstack .csr5-bsl-row,
+      #tab-cuboidstack .csr5-og-row{
+        flex-wrap:wrap;
+      }
+      #tab-cuboidstack .csr5-cl-item{
+        width:100%;
+      }
+      #tab-cuboidstack .csr5-tst-labels{
+        overflow-x:auto;
+        padding-bottom:3px;
+      }
+    }
+  </style>
+
   <div id="tab-cuboidstack" class="tab-panel tab-active" data-cuboid-dashboard="stack">
     <div class="cuboid-tab-stack">
       <div class="cuboid-chamber-boundary">
       <div class="cuboid-twin-control-panel">
-        <div class="cuboid-twin-control-head">
-          <div>
-            <div class="cuboid-twin-control-title">View data of particular Shift/Date</div>
-            <div class="cuboid-twin-control-sub">Choose a shift/date for that saved burner and TST snapshot. Leave it on All Shifts with no date for live burners plus the latest saved TST.</div>
+        <div class="csr5-filter">
+          <span class="csr5-filter-label csr5-filter-label-main">View Data of Particular Shift / Date</span>
+          <div class="csr5-filter-sep" aria-hidden="true"></div>
+          <label class="csr5-filter-label" for="stack-cuboid-shift-select">Shift</label>
+          <div class="csr5-select-shell">
+            <span class="csr5-select-icon" aria-hidden="true">↺</span>
+            <select id="stack-cuboid-shift-select" class="csr5-select" onchange="onTwinCuboidShiftChanged()" aria-label="Twin cuboid shift selector">
+              <option value="All">All Shifts</option>
+              <option value="Morning">Morning</option>
+              <option value="Evening">Evening</option>
+              <option value="Night">Night</option>
+            </select>
           </div>
-        </div>
-        <div class="cuboid-twin-control-grid">
-            <div class="cuboid-twin-control-field">
-              <label class="cuboid-twin-control-label" for="stack-cuboid-shift-select">Shift</label>
-              <div class="cuboid-twin-control-field-shell is-select">
-                <span class="cuboid-twin-control-field-icon" aria-hidden="true">↻</span>
-                <select id="stack-cuboid-shift-select" class="cuboid-twin-control-input" onchange="onTwinCuboidShiftChanged()" aria-label="Twin cuboid shift selector">
-                  <option value="All">All Shifts</option>
-                  <option value="Morning">Morning</option>
-                  <option value="Evening">Evening</option>
-                  <option value="Night">Night</option>
-                </select>
-                <span class="cuboid-twin-control-field-caret" aria-hidden="true">⌄</span>
-              </div>
-            </div>
-            <div class="cuboid-twin-control-field">
-              <label class="cuboid-twin-control-label" for="stack-cuboid-date-input">Date</label>
-              <div class="cuboid-twin-control-field-shell is-date" onclick="openTwinCuboidDatePicker(event)">
-                <input type="date" id="stack-cuboid-date-input" class="cuboid-twin-control-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
-                <button type="button" class="cuboid-twin-control-datebtn" onclick="openTwinCuboidDatePicker(event)" aria-label="Open twin cuboid date selector">📅</button>
-              </div>
-            </div>
-        </div>
-        <div class="cuboid-twin-control-meta">
-          <div id="stack-cuboid-filter-badge" class="cuboid-twin-control-badge">Live Burners + Latest TST</div>
-          <div class="cuboid-twin-control-actions">
-            <button type="button" class="cuboid-twin-control-btn" onclick="clearTwinCuboidDateFilter()">Latest Data</button>
+          <label class="csr5-filter-label" for="stack-cuboid-date-input">Date</label>
+          <div class="csr5-date-shell" onclick="openTwinCuboidDatePicker(event)">
+            <input type="date" id="stack-cuboid-date-input" class="csr5-date-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
+            <button type="button" class="csr5-date-btn" onclick="openTwinCuboidDatePicker(event)" aria-label="Open twin cuboid date selector">📅</button>
           </div>
+          <div class="csr5-filter-sep" aria-hidden="true"></div>
+          <div id="stack-cuboid-filter-badge" class="csr5-filter-chip">Live Burners + Latest TST</div>
+          <div class="csr5-filter-spacer"></div>
+          <button type="button" class="csr5-latest-btn" onclick="clearTwinCuboidDateFilter()">Latest Data ↗</button>
         </div>
         <div id="stack-cuboid-live-summary" class="cuboid-twin-live-summary is-empty" aria-label="Current reformer live summary">
-          <div class="cuboid-twin-live-pills">
-            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#60a5fa;">
-              <span class="cuboid-twin-live-pill-label">HGU Load</span>
-              <strong id="stack-cuboid-live-hgu" class="cuboid-twin-live-pill-value">—</strong>
+          <div class="csr5-params-row">
+            <div class="csr5-param-card" style="--param-bar:#f97316;">
+              <div class="csr5-param-label">HGU Load</div>
+              <strong id="stack-cuboid-live-hgu" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">Hydrogen Gen Unit</div>
             </div>
-            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#f59e0b;">
-              <span class="cuboid-twin-live-pill-label">AB COT</span>
-              <strong id="stack-cuboid-live-abcot" class="cuboid-twin-live-pill-value">—</strong>
+            <div class="csr5-param-card" style="--param-bar:#ef4444;">
+              <div class="csr5-param-label">AB COT</div>
+              <strong id="stack-cuboid-live-abcot" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">Coil Outlet · Wall A/B</div>
             </div>
-            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#22d3ee;">
-              <span class="cuboid-twin-live-pill-label">CD COT</span>
-              <strong id="stack-cuboid-live-cdcot" class="cuboid-twin-live-pill-value">—</strong>
+            <div class="csr5-param-card" style="--param-bar:#f97316;">
+              <div class="csr5-param-label">CD COT</div>
+              <strong id="stack-cuboid-live-cdcot" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">Coil Outlet · Wall C/D</div>
             </div>
-            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#fb7185;">
-              <span class="cuboid-twin-live-pill-label">Flue Gas</span>
-              <strong id="stack-cuboid-live-flue" class="cuboid-twin-live-pill-value">—</strong>
+            <div class="csr5-param-card" style="--param-bar:#dc2626;">
+              <div class="csr5-param-label">Flue Gas</div>
+              <strong id="stack-cuboid-live-flue" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">Stack temperature</div>
             </div>
-            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#14b8a6;">
-              <span class="cuboid-twin-live-pill-label">Excess O₂</span>
-              <strong id="stack-cuboid-live-o2" class="cuboid-twin-live-pill-value">—</strong>
+            <div class="csr5-param-card" style="--param-bar:#3b82f6;">
+              <div class="csr5-param-label">Excess O₂</div>
+              <strong id="stack-cuboid-live-o2" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">Combustion efficiency</div>
             </div>
-            <div class="cuboid-twin-live-pill" style="--cuboid-live-tone:#c084fc;">
-              <span class="cuboid-twin-live-pill-label">CH₄ Slip</span>
-              <strong id="stack-cuboid-live-slip" class="cuboid-twin-live-pill-value">—</strong>
+            <div class="csr5-param-card" style="--param-bar:#8b5cf6;">
+              <div class="csr5-param-label">CH₄ Slip</div>
+              <strong id="stack-cuboid-live-slip" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">Methane leakage</div>
             </div>
-            <div class="cuboid-twin-live-pill is-flow" style="--cuboid-live-tone:#34d399;">
-              <span class="cuboid-twin-live-pill-label">PSA-1 Flow</span>
-              <strong id="stack-cuboid-live-psa1" class="cuboid-twin-live-pill-value">—</strong>
+            <div class="csr5-param-card" style="--param-bar:#0d9488;">
+              <div class="csr5-param-label">PSA-1 Flow</div>
+              <strong id="stack-cuboid-live-psa1" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">Nm³/hr · Unit 1</div>
             </div>
-            <div class="cuboid-twin-live-pill is-flow" style="--cuboid-live-tone:#2dd4bf;">
-              <span class="cuboid-twin-live-pill-label">PSA-2 Flow</span>
-              <strong id="stack-cuboid-live-psa2" class="cuboid-twin-live-pill-value">—</strong>
+            <div class="csr5-param-card" style="--param-bar:#0891b2;">
+              <div class="csr5-param-label">PSA-2 Flow</div>
+              <strong id="stack-cuboid-live-psa2" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">Nm³/hr · Unit 2</div>
             </div>
-            <div class="cuboid-twin-live-pill is-flow" style="--cuboid-live-tone:#f59e0b;">
-              <span class="cuboid-twin-live-pill-label">Naphtha</span>
-              <strong id="stack-cuboid-live-naphtha" class="cuboid-twin-live-pill-value">—</strong>
+            <div class="csr5-param-card" style="--param-bar:#ca8a04;">
+              <div class="csr5-param-label">Naphtha</div>
+              <strong id="stack-cuboid-live-naphtha" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">kg/hr · Feed rate</div>
             </div>
-            <div class="cuboid-twin-live-pill is-flow" style="--cuboid-live-tone:#93c5fd;">
-              <span class="cuboid-twin-live-pill-label">NG Flow</span>
-              <strong id="stack-cuboid-live-ng" class="cuboid-twin-live-pill-value">—</strong>
+            <div class="csr5-param-card" style="--param-bar:#6366f1;">
+              <div class="csr5-param-label">NG Flow</div>
+              <strong id="stack-cuboid-live-ng" class="csr5-param-value"><span class="cuboid-param-main">—</span><span class="cuboid-param-unit" style="display:none;"></span></strong>
+              <div class="csr5-param-sub">Natural Gas</div>
             </div>
-          </div>
-          <div class="cuboid-twin-live-meta">
-            <span class="cuboid-twin-live-meta-label">
-              <span class="cuboid-twin-live-meta-dot" aria-hidden="true"></span>
-              Current Plant
-            </span>
-            <strong id="stack-cuboid-live-meta-text" class="cuboid-twin-live-meta-text">Waiting for live plant data</strong>
+            <div class="csr5-param-card csr5-param-card-current" style="--param-bar:#22c55e;">
+              <div class="csr5-current-label"><span class="csr5-current-dot" aria-hidden="true"></span><span>Current Plant</span></div>
+              <strong id="stack-cuboid-live-meta-text" class="csr5-current-text">Waiting for live plant data</strong>
+            </div>
           </div>
         </div>
-        <div class="cuboid-legend-panel cuboid-twin-shared-legend" id="stack-legend-panel-shared" data-cuboid-legend="shared" aria-label="Shared burner state legend">
-          <div class="cuboid-legend-scroll">
-            <section class="cuboid-legend-block cuboid-legend-states">
-              <div class="cuboid-legend-title">Burner State Legend</div>
-              <div class="cuboid-legend-state-band">
-                <div class="cuboid-legend-state-row">
-                  <div class="cuboid-legend-state-card" data-state="B">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Both</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="Both burner state">Both</div>
-                  </div>
-                  <div class="cuboid-legend-state-card" data-state="C">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Closed</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="Closed burner state">Closed</div>
-                  </div>
-                  <div class="cuboid-legend-state-card" data-state="O">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">Off Gas</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="Off gas burner state">Off Gas</div>
-                  </div>
-                  <div class="cuboid-legend-state-card" data-state="N">
-                    <div class="cuboid-legend-badge" aria-hidden="true"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
-                    <div class="cuboid-legend-state-copy">
-                      <div class="cuboid-legend-state-name">NG</div>
-                    </div>
-                    <div class="cuboid-legend-state-count" aria-label="NG burner state">NG</div>
-                  </div>
+        <div class="cuboid-legend-panel cuboid-twin-shared-legend csr5-legends" id="stack-legend-panel-shared" data-cuboid-legend="shared" aria-label="Shared burner state legend">
+          <div class="csr5-legends-inner">
+            <section class="csr5-leg-block">
+              <div class="csr5-leg-title">Burner State Legend</div>
+              <div class="csr5-bsl-row">
+                <div class="csr5-bsl-item csr5-bsl-both">
+                  <div class="csr5-bsl-icon"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="B" data-glyph-opening="100"></canvas></div>
+                  <span class="csr5-bsl-name">Both</span>
+                </div>
+                <div class="csr5-bsl-item csr5-bsl-closed">
+                  <div class="csr5-bsl-icon"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="C" data-glyph-opening="0"></canvas></div>
+                  <span class="csr5-bsl-name">Closed</span>
+                </div>
+                <div class="csr5-bsl-item csr5-bsl-offgas">
+                  <div class="csr5-bsl-icon"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="O" data-glyph-opening="100"></canvas></div>
+                  <span class="csr5-bsl-name">Off Gas</span>
+                </div>
+                <div class="csr5-bsl-item csr5-bsl-ng">
+                  <div class="csr5-bsl-icon"><canvas class="cuboid-legend-glyph-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
+                  <span class="csr5-bsl-name">NG</span>
                 </div>
               </div>
             </section>
-            <section class="cuboid-legend-block cuboid-legend-openings">
-              <div class="cuboid-legend-title">Opening Guide</div>
-              <div class="cuboid-legend-opening-row">
-                <div class="cuboid-legend-opening-item" data-open="25">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="25"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">25%</div>
+            <section class="csr5-leg-block">
+              <div class="csr5-leg-title">Opening Guide</div>
+              <div class="csr5-og-row">
+                <div class="csr5-og-item">
+                  <div class="csr5-og-icon"><canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="25"></canvas></div>
+                  <div class="csr5-og-pct">25%</div>
                 </div>
-                <div class="cuboid-legend-opening-item" data-open="50">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="50"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">50%</div>
+                <div class="csr5-og-item">
+                  <div class="csr5-og-icon"><canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="50"></canvas></div>
+                  <div class="csr5-og-pct">50%</div>
                 </div>
-                <div class="cuboid-legend-opening-item" data-open="75">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="75"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">75%</div>
+                <div class="csr5-og-item">
+                  <div class="csr5-og-icon"><canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="75"></canvas></div>
+                  <div class="csr5-og-pct">75%</div>
                 </div>
-                <div class="cuboid-legend-opening-item" data-open="100">
-                  <div class="cuboid-legend-opening-burner" aria-hidden="true">
-                    <canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas>
-                  </div>
-                  <div class="cuboid-legend-opening-label">100%</div>
+                <div class="csr5-og-item is-active">
+                  <div class="csr5-og-icon"><canvas class="cuboid-legend-glyph-canvas cuboid-legend-opening-canvas" data-glyph-state="N" data-glyph-opening="100"></canvas></div>
+                  <div class="csr5-og-pct">100%</div>
                 </div>
               </div>
             </section>
-            <section class="cuboid-legend-block cuboid-legend-clean">
-              <div class="cuboid-legend-title">Cleaning</div>
-              <div class="cuboid-legend-clean-list">
-                <div class="cuboid-legend-clean-item">
-                  <span class="cuboid-legend-clean-bullet is-clean"></span>
-                  <span class="cuboid-legend-clean-text">Cleaned burners</span>
-                  <strong class="cuboid-legend-clean-value" data-legend-value="cleaned">0</strong>
+            <section class="csr5-leg-block">
+              <div class="csr5-leg-title">Cleaning</div>
+              <div class="csr5-cl-row">
+                <div class="csr5-cl-item is-cleaned">
+                  <div class="csr5-cl-left">
+                    <span class="csr5-cl-dot" style="background:#22c55e;"></span>
+                    <span class="csr5-cl-label">Cleaned burners</span>
+                  </div>
+                  <span class="csr5-cl-val" data-legend-value="cleaned">0</span>
                 </div>
-                <div class="cuboid-legend-clean-item">
-                  <span class="cuboid-legend-clean-bullet"></span>
-                  <span class="cuboid-legend-clean-text">Not cleaned</span>
-                  <strong class="cuboid-legend-clean-value" data-legend-value="uncleaned">0</strong>
+                <div class="csr5-cl-item is-notclean">
+                  <div class="csr5-cl-left">
+                    <span class="csr5-cl-dot" style="background:#cbd5e1;border:1px solid #94a3b8;"></span>
+                    <span class="csr5-cl-label">Not cleaned</span>
+                  </div>
+                  <span class="csr5-cl-val" data-legend-value="uncleaned">0</span>
                 </div>
               </div>
             </section>
-            <section class="cuboid-legend-block cuboid-legend-tst">
-              <div class="cuboid-legend-tst-head">
-                <div class="cuboid-legend-title">TST Gradient</div>
-                <div class="cuboid-legend-tst-chip">PH TST</div>
+            <section class="csr5-leg-block">
+              <div class="csr5-leg-title">TST Gradient</div>
+              <div class="csr5-tst-header">
+                <span class="csr5-tst-sub">Tube Skin Temperature</span>
+                <div class="csr5-tst-badge">PH TST</div>
               </div>
-              <div class="cuboid-legend-tst-bar"></div>
-              <div class="cuboid-legend-tst-limits">
-                <span class="cuboid-legend-tst-min" data-legend-value="tst-min">--</span>
-                <span class="cuboid-legend-tst-range-label">TST Range</span>
-                <span class="cuboid-legend-tst-max" data-legend-value="tst-max">--</span>
+              <div class="csr5-tst-bar">
+                <div class="csr5-tst-marker"></div>
+              </div>
+              <div class="csr5-tst-labels">
+                <span data-legend-value="tst-min">--</span>
+                <span>250°C</span>
+                <span>500°C</span>
+                <span>750°C</span>
+                <span data-legend-value="tst-max">--</span>
               </div>
             </section>
           </div>
@@ -35525,6 +36104,57 @@ function formatCuboidReformerSummaryValue(key, rawDisplay){
   return display;
 }
 
+function splitCuboidReformerSummaryDisplay(key, rawDisplay){
+  var display = String(rawDisplay == null ? "" : rawDisplay).trim() || "—";
+  var tempMatch;
+  var pctMatch;
+  var decMatch;
+  if(display === "—") return { main:"—", tail:"" };
+  if(key === "abCot" || key === "cdCot" || key === "flueGas"){
+    tempMatch = display.match(/^(-?[\d,]+)(\.\d+)?(°C)$/);
+    if(tempMatch){
+      return {
+        main: tempMatch[1],
+        tail: (tempMatch[2] || "") + tempMatch[3]
+      };
+    }
+  }
+  if(key === "hguLoad" || key === "excessO2" || key === "methaneSlip"){
+    pctMatch = display.match(/^(.+?)(%)$/);
+    if(pctMatch){
+      return {
+        main: pctMatch[1],
+        tail: pctMatch[2]
+      };
+    }
+  }
+  if(key === "naphthaFuel"){
+    decMatch = display.match(/^(-?[\d,]+)(\.\d+)$/);
+    if(decMatch){
+      return {
+        main: decMatch[1],
+        tail: decMatch[2]
+      };
+    }
+  }
+  return { main: display, tail:"" };
+}
+
+function setCuboidReformerSummaryFieldContent(el, key, display){
+  if(!el) return;
+  var parts = splitCuboidReformerSummaryDisplay(key, display);
+  var mainEl = el.querySelector(".cuboid-param-main");
+  var tailEl = el.querySelector(".cuboid-param-unit");
+  if(mainEl && tailEl){
+    mainEl.textContent = parts.main || "—";
+    tailEl.textContent = parts.tail || "";
+    tailEl.style.display = parts.tail ? "" : "none";
+    el.classList.toggle("is-empty", parts.main === "—" && !parts.tail);
+  }else{
+    el.textContent = display;
+  }
+}
+
 function getCuboidReformerBindingState(key){
   var binding = getTdProcessBindingByKey(key);
   var display = "";
@@ -35602,8 +36232,12 @@ function renderCuboidReformerSummary(){
     var state = getCuboidReformerSummaryFieldState(field.key);
     var el = document.getElementById(field.id);
     if(!el) return;
-    el.textContent = state.display;
+    setCuboidReformerSummaryFieldContent(el, field.key, state.display);
     el.title = state.title || "";
+    try{
+      var card = el.closest(".csr5-param-card");
+      if(card) card.title = state.title || "";
+    }catch(e){}
   });
   var metaEl = document.getElementById("stack-cuboid-live-meta-text");
   if(!metaEl) return;
