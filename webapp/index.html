@@ -3489,9 +3489,7 @@ body.light-theme .burner-cell-editor-state-btn{
   color:#94a3b8;
 }
 .td-tst-trend-layout{
-  display:grid;
-  grid-template-columns:minmax(0,1.45fr) minmax(320px,0.9fr);
-  gap:14px;
+  display:block;
 }
 .td-tst-trend-card{
   min-width:0;
@@ -3628,7 +3626,7 @@ body.light-theme .burner-cell-editor-state-btn{
 }
 .td-tst-trend-chart-wrap{
   position:relative;
-  min-height:320px;
+  min-height:360px;
 }
 .td-tst-trend-empty{
   padding:18px 16px;
@@ -3713,11 +3711,6 @@ body.light-theme .td-tst-trend-hm-row.is-selected{
 body.light-theme .td-tst-trend-hm-cell.is-empty{
   background:#e2e8f0;
   color:#64748b;
-}
-@media (max-width:1200px){
-  .td-tst-trend-layout{
-    grid-template-columns:1fr;
-  }
 }
 @media (max-width:900px){
   .td-tst-trend-kpis{
@@ -25141,18 +25134,9 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <div class="td-tst-trend-top">
             <div>
               <div class="td-tst-trend-title">7-Day TST Trends</div>
-              <div id="td-tst-trend-subtitle" class="td-tst-trend-subtitle">Shift-wise peep-hole temperature trends from saved TST history.</div>
+              <div id="td-tst-trend-subtitle" class="td-tst-trend-subtitle">Simple 7-day line trend from saved TST history in date and shift order.</div>
             </div>
             <div class="td-tst-trend-controls">
-              <div class="td-tst-trend-control">
-                <label class="td-tst-trend-label" for="td-tst-trend-shift">Shift View</label>
-                <select id="td-tst-trend-shift" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend shift filter">
-                  <option value="All">All shifts</option>
-                  <option value="Morning">Morning</option>
-                  <option value="Evening">Evening</option>
-                  <option value="Night">Night</option>
-                </select>
-              </div>
               <div class="td-tst-trend-control">
                 <label class="td-tst-trend-label" for="td-tst-trend-section">Section</label>
                 <select id="td-tst-trend-section" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend section filter">
@@ -25203,25 +25187,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <div class="td-tst-trend-card">
               <div class="td-tst-trend-card-head">
                 <div>
-                  <div class="td-tst-trend-card-title">15 Peep-Hole Heatmap</div>
-                  <div id="td-tst-trend-heatmap-sub" class="td-tst-trend-card-sub">Click a row or cell to focus a peep-hole trend.</div>
-                </div>
-                <div class="td-tst-trend-legend">
-                  <span class="td-tst-trend-legend-item"><span class="td-tst-trend-legend-dot" style="background:#3b82f6;"></span>Cool</span>
-                  <span class="td-tst-trend-legend-item"><span class="td-tst-trend-legend-dot" style="background:#facc15;"></span>Mid</span>
-                  <span class="td-tst-trend-legend-item"><span class="td-tst-trend-legend-dot" style="background:#ef4444;"></span>Hot</span>
-                </div>
-              </div>
-              <div id="td-tst-trend-heatmap-empty" class="td-tst-trend-empty" style="display:none;"></div>
-              <div id="td-tst-trend-heatmap-scroll" class="td-tst-trend-heatmap-scroll">
-                <div id="td-tst-trend-heatmap" class="td-tst-trend-heatmap"></div>
-              </div>
-            </div>
-            <div class="td-tst-trend-card">
-              <div class="td-tst-trend-card-head">
-                <div>
-                  <div id="td-tst-trend-chart-title" class="td-tst-trend-card-title">Peep-Hole Trend</div>
-                  <div id="td-tst-trend-chart-sub" class="td-tst-trend-card-sub">Morning, Evening, Night comparison over the selected 7-day window.</div>
+                  <div id="td-tst-trend-chart-title" class="td-tst-trend-card-title">7-Day Line Trend</div>
+                  <div id="td-tst-trend-chart-sub" class="td-tst-trend-card-sub">Points are plotted in order: date Morning, date Evening, date Night.</div>
                 </div>
               </div>
               <div id="td-tst-trend-chart-empty" class="td-tst-trend-empty" style="display:none;"></div>
@@ -40562,13 +40529,14 @@ function destroySavedTempTrendChart(){
 function buildSavedTempTrendModel(){
   var entries = getSavedTempTrendEntries();
   var state = sanitizeSavedTempTrendState(savedTempTrendState);
+  state.shift = "All";
   var bounds = getSavedTempTrendDateBounds(entries);
   var todayIso = getSavedTempTrendTodayIso();
   var endDateResolved = state.endDate || todayIso;
   var dates = endDateResolved ? buildSavedTempTrendDateWindow(endDateResolved, 7) : [];
   var dateLookup = {};
   dates.forEach(function(dateIso){ dateLookup[dateIso] = true; });
-  var shifts = state.shift === "All" ? SAVED_TEMP_TREND_SHIFT_ORDER.slice() : [state.shift];
+  var shifts = SAVED_TEMP_TREND_SHIFT_ORDER.slice();
   var bucketMap = {};
 
   entries.forEach(function(entry){
@@ -40590,73 +40558,28 @@ function buildSavedTempTrendModel(){
   });
 
   var columns = [];
-  if(state.shift === "All"){
-    dates.forEach(function(dateIso){
-      shifts.forEach(function(shift){
-        columns.push({
-          dateIso: dateIso,
-          shift: shift,
-          bucket: bucketMap[dateIso + "|" + shift] || null
-        });
-      });
-    });
-  }else{
-    dates.forEach(function(dateIso){
+  dates.forEach(function(dateIso){
+    shifts.forEach(function(shift){
       columns.push({
         dateIso: dateIso,
-        shift: state.shift,
-        bucket: bucketMap[dateIso + "|" + state.shift] || null
+        shift: shift,
+        bucket: bucketMap[dateIso + "|" + shift] || null
       });
     });
-  }
+  });
 
-  var scaleValues = [];
-  var heatmapRows = [];
-  for(var holeIndex = 0; holeIndex < 15; holeIndex++){
-    var rowValues = [];
-    for(var ci = 0; ci < columns.length; ci++){
-      var bucket = columns[ci].bucket;
-      var value = bucket ? getSavedTempTrendPeepValue(bucket.entry, state.section, holeIndex) : null;
-      rowValues.push(value);
-      if(savedTempTrendIsFiniteNumber(value)) scaleValues.push(value);
-    }
-    heatmapRows.push(rowValues);
-  }
-
-  var chartLabels = dates.map(function(dateIso){ return formatSavedTempTrendShortDate(dateIso); });
   var selectedHoleIndex = state.hole - 1;
-  var datasets = [];
-
-  if(state.shift === "All"){
-    shifts.forEach(function(shift){
-      var values = dates.map(function(dateIso){
-        var bucket = bucketMap[dateIso + "|" + shift];
-        return bucket ? getSavedTempTrendPeepValue(bucket.entry, state.section, selectedHoleIndex) : null;
-      });
-      datasets.push({
-        label: shift,
-        borderColor: getSavedTempTrendShiftColor(shift),
-        backgroundColor: getSavedTempTrendShiftColor(shift),
-        data: values
-      });
-    });
-  }else{
-    datasets.push({
-      label: state.shift,
-      borderColor: getSavedTempTrendShiftColor(state.shift),
-      backgroundColor: getSavedTempTrendShiftColor(state.shift),
-      data: dates.map(function(dateIso){
-        var bucket = bucketMap[dateIso + "|" + state.shift];
-        return bucket ? getSavedTempTrendPeepValue(bucket.entry, state.section, selectedHoleIndex) : null;
-      })
-    });
-  }
-
-  var selectedValues = [];
-  datasets.forEach(function(dataset){
-    (Array.isArray(dataset.data) ? dataset.data : []).forEach(function(value){
-      if(savedTempTrendIsFiniteNumber(value)) selectedValues.push(value);
-    });
+  var chartLabels = [];
+  var chartTooltipLabels = [];
+  var pointColors = [];
+  var dataPoints = columns.map(function(column){
+    chartLabels.push([formatSavedTempTrendShortDate(column.dateIso), getSavedTempTrendShiftShort(column.shift)]);
+    chartTooltipLabels.push(formatSavedTempTrendFullDate(column.dateIso) + " · " + column.shift);
+    pointColors.push(getSavedTempTrendShiftColor(column.shift));
+    return column.bucket ? getSavedTempTrendPeepValue(column.bucket.entry, state.section, selectedHoleIndex) : null;
+  });
+  var selectedValues = dataPoints.filter(function(value){
+    return savedTempTrendIsFiniteNumber(value);
   });
 
   var latestReading = null;
@@ -40672,12 +40595,12 @@ function buildSavedTempTrendModel(){
     }
   }
 
-  var expectedCount = state.shift === "All" ? (dates.length * shifts.length) : dates.length;
+  var expectedCount = columns.length;
   var stats = computeSavedTempTrendStats(selectedValues);
   var emptyMessage = "";
   if(!entries.length){
     emptyMessage = "No saved TST entries are available yet.";
-  }else if(!scaleValues.length){
+  }else if(!selectedValues.length){
     emptyMessage = "No saved " + getSavedTempTrendSectionLabel(state.section) + " readings were found in this 7-day window.";
   }
 
@@ -40690,11 +40613,11 @@ function buildSavedTempTrendModel(){
     dates: dates,
     shifts: shifts,
     columns: columns,
-    heatmapRows: heatmapRows,
-    scaleMin: scaleValues.length ? Math.min.apply(null, scaleValues) : null,
-    scaleMax: scaleValues.length ? Math.max.apply(null, scaleValues) : null,
     chartLabels: chartLabels,
-    datasets: datasets,
+    chartTooltipLabels: chartTooltipLabels,
+    pointColors: pointColors,
+    datasetLabel: getSavedTempTrendSectionLabel(state.section) + " · PH " + state.hole,
+    dataPoints: dataPoints,
     stats: stats,
     latestReading: latestReading,
     selectedCount: selectedValues.length,
@@ -40743,7 +40666,7 @@ function setSavedTempTrendFromControls(sourceEl){
 
 function resetSavedTempTrendState(){
   savedTempTrendState = sanitizeSavedTempTrendState({
-    shift: savedTempTrendState.shift,
+    shift: "All",
     section: savedTempTrendState.section,
     hole: savedTempTrendState.hole,
     endDate: ""
@@ -40767,7 +40690,7 @@ function openSavedTempTrendDatePicker(){
 
 function selectSavedTempTrendHoleFromHeatmap(hole){
   savedTempTrendState = sanitizeSavedTempTrendState({
-    shift: savedTempTrendState.shift,
+    shift: "All",
     section: savedTempTrendState.section,
     hole: hole,
     endDate: savedTempTrendState.endDate
@@ -40790,14 +40713,13 @@ function renderSavedTempTrendSummary(model){
   var selectedLabel = model.sectionLabel + " · PH " + model.state.hole;
 
   if(subtitleEl){
-    subtitleEl.textContent = selectedLabel + (model.state.shift === "All"
-      ? " · Morning/Evening/Night comparison"
-      : " · " + model.state.shift + " shift only");
+    subtitleEl.textContent = selectedLabel + " · 7-day line trend in Morning → Evening → Night order";
   }
   if(rangeEl){
     if(model.dates.length){
       rangeEl.textContent = "Window: " + formatSavedTempTrendFullDate(model.dates[0]) + " to " + formatSavedTempTrendFullDate(model.dates[model.dates.length - 1])
-        + (savedTempTrendState.endDate ? " · anchored to selected date" : " · anchored to today");
+        + (savedTempTrendState.endDate ? " · selected end date" : " · ending today")
+        + " · every day is plotted as Morning, Evening, Night";
     }else{
       rangeEl.textContent = "No 7-day TST window can be built until saved TST entries are available.";
     }
@@ -40809,7 +40731,7 @@ function renderSavedTempTrendSummary(model){
   if(maxEl) maxEl.textContent = formatSavedTempTrendValue(model.stats.max);
   if(maxSubEl) maxSubEl.textContent = selectedLabel + " maximum";
   if(coverageEl) coverageEl.textContent = model.expectedCount ? (model.selectedCount + "/" + model.expectedCount) : "—";
-  if(coverageSubEl) coverageSubEl.textContent = "Buckets with a saved " + selectedLabel + " reading";
+  if(coverageSubEl) coverageSubEl.textContent = "Shift intervals with a saved " + selectedLabel + " reading";
 }
 
 function renderSavedTempTrendHeatmap(model){
@@ -40871,19 +40793,17 @@ function renderSavedTempTrendChart(model){
   var emptyEl = document.getElementById("td-tst-trend-chart-empty");
   var titleEl = document.getElementById("td-tst-trend-chart-title");
   var subEl = document.getElementById("td-tst-trend-chart-sub");
-  if(titleEl) titleEl.textContent = model.sectionLabel + " · PH " + model.state.hole + " Trend";
+  if(titleEl) titleEl.textContent = model.sectionLabel + " · PH " + model.state.hole + " · 7-Day Line Trend";
   if(subEl){
-    subEl.textContent = model.state.shift === "All"
-      ? "Morning, Evening, Night comparison across the selected 7-day window."
-      : (model.state.shift + " readings across the selected 7-day window.");
+    subEl.textContent = "Sequence is continuous: date Morning, date Evening, date Night across all 7 days.";
   }
   if(!canvas || !emptyEl){
     destroySavedTempTrendChart();
     return;
   }
 
-  var hasData = model.datasets.some(function(dataset){
-    return (Array.isArray(dataset.data) ? dataset.data : []).some(function(value){ return savedTempTrendIsFiniteNumber(value); });
+  var hasData = (Array.isArray(model.dataPoints) ? model.dataPoints : []).some(function(value){
+    return savedTempTrendIsFiniteNumber(value);
   });
 
   if(model.emptyMessage || !hasData || !window.Chart){
@@ -40901,20 +40821,22 @@ function renderSavedTempTrendChart(model){
     type: "line",
     data: {
       labels: model.chartLabels,
-      datasets: model.datasets.map(function(dataset){
-        return {
-          label: dataset.label,
-          data: dataset.data,
-          borderColor: dataset.borderColor,
-          backgroundColor: dataset.backgroundColor,
-          borderWidth: 3,
-          pointRadius: 3.5,
-          pointHoverRadius: 5,
-          tension: 0.28,
-          fill: false,
-          spanGaps: false
-        };
-      })
+      datasets: [{
+        label: model.datasetLabel,
+        data: model.dataPoints,
+        borderColor: "#7ec8f0",
+        backgroundColor: "rgba(126,200,240,0.18)",
+        pointBackgroundColor: model.pointColors,
+        pointBorderColor: model.pointColors,
+        pointHoverBackgroundColor: model.pointColors,
+        pointHoverBorderColor: model.pointColors,
+        borderWidth: 3,
+        pointRadius: 4,
+        pointHoverRadius: 5.5,
+        tension: 0.22,
+        fill: false,
+        spanGaps: false
+      }]
     },
     options: {
       responsive: true,
@@ -40923,13 +40845,7 @@ function renderSavedTempTrendChart(model){
       layout: { padding:{ top:6, right:8, bottom:2, left:4 } },
       plugins: {
         legend: {
-          position: "bottom",
-          labels: {
-            color: theme.dim,
-            boxWidth: 12,
-            padding: 14,
-            font: { family:"ui-monospace,SFMono-Regular,Menlo,Consolas,monospace", size:10 }
-          }
+          display: false
         },
         tooltip: {
           backgroundColor: theme.panel,
@@ -40939,16 +40855,26 @@ function renderSavedTempTrendChart(model){
           titleColor: theme.text,
           bodyColor: theme.dim,
           callbacks: {
+            title: function(items){
+              var first = Array.isArray(items) && items.length ? items[0] : null;
+              var idx = first && typeof first.dataIndex === "number" ? first.dataIndex : -1;
+              return idx >= 0 && model.chartTooltipLabels[idx] ? model.chartTooltipLabels[idx] : "";
+            },
             label: function(context){
               var value = context && context.parsed ? context.parsed.y : null;
-              return (context.dataset ? context.dataset.label + ": " : "") + (savedTempTrendIsFiniteNumber(value) ? (Math.round(value) + "°C") : "—");
+              return savedTempTrendIsFiniteNumber(value) ? (Math.round(value) + "°C") : "—";
             }
           }
         }
       },
       scales: {
         x: {
-          ticks: { color: theme.axis, maxRotation: 0, autoSkip: false },
+          ticks: {
+            color: theme.axis,
+            maxRotation: 0,
+            autoSkip: false,
+            font: { size:9 }
+          },
           grid: { color: theme.grid }
         },
         y: {
@@ -40971,7 +40897,6 @@ function renderSavedTempTrendPanel(){
   var model = buildSavedTempTrendModel();
   syncSavedTempTrendControls(model);
   renderSavedTempTrendSummary(model);
-  renderSavedTempTrendHeatmap(model);
   renderSavedTempTrendChart(model);
 }
 
