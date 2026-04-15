@@ -25160,29 +25160,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               </div>
             </div>
           </div>
-          <div id="td-tst-trend-range" class="td-tst-trend-range">Preparing the current 7-day TST window...</div>
-          <div class="td-tst-trend-kpis">
-            <div class="td-tst-trend-kpi">
-              <div class="td-tst-trend-kpi-label">Latest</div>
-              <div id="td-tst-trend-kpi-latest" class="td-tst-trend-kpi-value">—</div>
-              <div id="td-tst-trend-kpi-latest-sub" class="td-tst-trend-kpi-sub">No saved reading yet</div>
-            </div>
-            <div class="td-tst-trend-kpi">
-              <div class="td-tst-trend-kpi-label">7-Day Min</div>
-              <div id="td-tst-trend-kpi-min" class="td-tst-trend-kpi-value">—</div>
-              <div id="td-tst-trend-kpi-min-sub" class="td-tst-trend-kpi-sub">Selected peep-hole minimum</div>
-            </div>
-            <div class="td-tst-trend-kpi">
-              <div class="td-tst-trend-kpi-label">7-Day Max</div>
-              <div id="td-tst-trend-kpi-max" class="td-tst-trend-kpi-value">—</div>
-              <div id="td-tst-trend-kpi-max-sub" class="td-tst-trend-kpi-sub">Selected peep-hole maximum</div>
-            </div>
-            <div class="td-tst-trend-kpi">
-              <div class="td-tst-trend-kpi-label">Coverage</div>
-              <div id="td-tst-trend-kpi-coverage" class="td-tst-trend-kpi-value">—</div>
-              <div id="td-tst-trend-kpi-coverage-sub" class="td-tst-trend-kpi-sub">Buckets with saved readings</div>
-            </div>
-          </div>
           <div class="td-tst-trend-layout">
             <div class="td-tst-trend-card">
               <div class="td-tst-trend-card-head">
@@ -40700,38 +40677,12 @@ function selectSavedTempTrendHoleFromHeatmap(hole){
 }
 
 function renderSavedTempTrendSummary(model){
-  var rangeEl = document.getElementById("td-tst-trend-range");
   var subtitleEl = document.getElementById("td-tst-trend-subtitle");
-  var latestEl = document.getElementById("td-tst-trend-kpi-latest");
-  var latestSubEl = document.getElementById("td-tst-trend-kpi-latest-sub");
-  var minEl = document.getElementById("td-tst-trend-kpi-min");
-  var minSubEl = document.getElementById("td-tst-trend-kpi-min-sub");
-  var maxEl = document.getElementById("td-tst-trend-kpi-max");
-  var maxSubEl = document.getElementById("td-tst-trend-kpi-max-sub");
-  var coverageEl = document.getElementById("td-tst-trend-kpi-coverage");
-  var coverageSubEl = document.getElementById("td-tst-trend-kpi-coverage-sub");
   var selectedLabel = model.sectionLabel + " · PH " + model.state.hole;
 
   if(subtitleEl){
     subtitleEl.textContent = selectedLabel + " · 7-day line trend in Morning → Evening → Night order";
   }
-  if(rangeEl){
-    if(model.dates.length){
-      rangeEl.textContent = "Window: " + formatSavedTempTrendFullDate(model.dates[0]) + " to " + formatSavedTempTrendFullDate(model.dates[model.dates.length - 1])
-        + (savedTempTrendState.endDate ? " · selected end date" : " · ending today")
-        + " · every day is plotted as Morning, Evening, Night";
-    }else{
-      rangeEl.textContent = "No 7-day TST window can be built until saved TST entries are available.";
-    }
-  }
-  if(latestEl) latestEl.textContent = model.latestReading ? formatSavedTempTrendValue(model.latestReading.value) : "—";
-  if(latestSubEl) latestSubEl.textContent = model.latestReading ? model.latestReading.label : "No saved reading in this window";
-  if(minEl) minEl.textContent = formatSavedTempTrendValue(model.stats.min);
-  if(minSubEl) minSubEl.textContent = selectedLabel + " minimum";
-  if(maxEl) maxEl.textContent = formatSavedTempTrendValue(model.stats.max);
-  if(maxSubEl) maxSubEl.textContent = selectedLabel + " maximum";
-  if(coverageEl) coverageEl.textContent = model.expectedCount ? (model.selectedCount + "/" + model.expectedCount) : "—";
-  if(coverageSubEl) coverageSubEl.textContent = "Shift intervals with a saved " + selectedLabel + " reading";
 }
 
 function renderSavedTempTrendHeatmap(model){
