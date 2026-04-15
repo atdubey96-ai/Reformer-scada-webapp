@@ -25130,16 +25130,16 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <button type="button" class="td-saved-filter-clear" onclick="clearSavedEntryFilter()">Clear</button>
           <span class="td-saved-filter-status" data-saved-filter-status></span>
         </div>
-        <div class="td-tst-trend-panel" id="td-tst-trend-panel">
+        <div class="td-tst-trend-panel" id="td-tst-trend-panel" data-tst-trend-panel>
           <div class="td-tst-trend-top">
             <div>
               <div class="td-tst-trend-title">7-Day TST Trends</div>
-              <div id="td-tst-trend-subtitle" class="td-tst-trend-subtitle">Simple 7-day line trend from saved TST history in date and shift order.</div>
+              <div id="td-tst-trend-subtitle" data-tst-trend-role="subtitle" class="td-tst-trend-subtitle">Simple 7-day line trend from saved TST history in date and shift order.</div>
             </div>
             <div class="td-tst-trend-controls">
               <div class="td-tst-trend-control">
                 <label class="td-tst-trend-label" for="td-tst-trend-section">Section</label>
-                <select id="td-tst-trend-section" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend section filter">
+                <select id="td-tst-trend-section" data-tst-trend-role="section" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend section filter">
                   <option value="ab-bot">AB Bottom</option>
                   <option value="cd-bot">CD Bottom</option>
                   <option value="ab-top">AB Top</option>
@@ -25148,14 +25148,14 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               </div>
               <div class="td-tst-trend-control">
                 <label class="td-tst-trend-label" for="td-tst-trend-hole">Peep Hole</label>
-                <select id="td-tst-trend-hole" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend peep hole selector"></select>
+                <select id="td-tst-trend-hole" data-tst-trend-role="hole" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend peep hole selector"></select>
               </div>
               <div class="td-tst-trend-control">
                 <label class="td-tst-trend-label" for="td-tst-trend-end-date">Window End</label>
-                <input type="date" id="td-tst-trend-end-date" class="td-tst-trend-date" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend ending date">
+                <input type="date" id="td-tst-trend-end-date" data-tst-trend-role="end-date" class="td-tst-trend-date" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend ending date">
               </div>
               <div class="td-tst-trend-button-row">
-                <button type="button" class="td-tst-trend-manual-btn" onclick="openSavedTempTrendDatePicker()">Change Date</button>
+                <button type="button" class="td-tst-trend-manual-btn" onclick="openSavedTempTrendDatePicker(this)">Change Date</button>
                 <button type="button" class="td-tst-trend-reset" onclick="resetSavedTempTrendState()">Use Today</button>
               </div>
             </div>
@@ -25164,13 +25164,13 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <div class="td-tst-trend-card">
               <div class="td-tst-trend-card-head">
                 <div>
-                  <div id="td-tst-trend-chart-title" class="td-tst-trend-card-title">7-Day Line Trend</div>
-                  <div id="td-tst-trend-chart-sub" class="td-tst-trend-card-sub">Points are plotted in order: date Morning, date Evening, date Night.</div>
+                  <div id="td-tst-trend-chart-title" data-tst-trend-role="chart-title" class="td-tst-trend-card-title">7-Day Line Trend</div>
+                  <div id="td-tst-trend-chart-sub" data-tst-trend-role="chart-sub" class="td-tst-trend-card-sub">Points are plotted in order: date Morning, date Evening, date Night.</div>
                 </div>
               </div>
-              <div id="td-tst-trend-chart-empty" class="td-tst-trend-empty" style="display:none;"></div>
+              <div id="td-tst-trend-chart-empty" data-tst-trend-role="chart-empty" class="td-tst-trend-empty" style="display:none;"></div>
               <div class="td-tst-trend-chart-wrap">
-                <canvas id="td-tst-trend-chart"></canvas>
+                <canvas id="td-tst-trend-chart" data-tst-trend-role="chart-canvas"></canvas>
               </div>
             </div>
           </div>
@@ -26536,6 +26536,51 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               <input type="number" step="any" class="td-saved-filter-input" data-saved-filter-max oninput="setSavedEntryFilterFromControls(this)" placeholder="Max" aria-label="Twin view saved entries maximum value">
               <button type="button" class="td-saved-filter-clear" onclick="clearSavedEntryFilter()">Clear</button>
               <span class="td-saved-filter-status" data-saved-filter-status></span>
+            </div>
+            <div class="td-tst-trend-panel" data-tst-trend-panel>
+              <div class="td-tst-trend-top">
+                <div>
+                  <div class="td-tst-trend-title">7-Day TST Trends</div>
+                  <div data-tst-trend-role="subtitle" class="td-tst-trend-subtitle">Simple 7-day line trend from saved TST history in date and shift order.</div>
+                </div>
+                <div class="td-tst-trend-controls">
+                  <div class="td-tst-trend-control">
+                    <label class="td-tst-trend-label">Section</label>
+                    <select data-tst-trend-role="section" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="Twin view TST trend section filter">
+                      <option value="ab-bot">AB Bottom</option>
+                      <option value="cd-bot">CD Bottom</option>
+                      <option value="ab-top">AB Top</option>
+                      <option value="cd-top">CD Top</option>
+                    </select>
+                  </div>
+                  <div class="td-tst-trend-control">
+                    <label class="td-tst-trend-label">Peep Hole</label>
+                    <select data-tst-trend-role="hole" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="Twin view TST trend peep hole selector"></select>
+                  </div>
+                  <div class="td-tst-trend-control">
+                    <label class="td-tst-trend-label">Window End</label>
+                    <input type="date" data-tst-trend-role="end-date" class="td-tst-trend-date" onchange="setSavedTempTrendFromControls(this)" aria-label="Twin view TST trend ending date">
+                  </div>
+                  <div class="td-tst-trend-button-row">
+                    <button type="button" class="td-tst-trend-manual-btn" onclick="openSavedTempTrendDatePicker(this)">Change Date</button>
+                    <button type="button" class="td-tst-trend-reset" onclick="resetSavedTempTrendState()">Use Today</button>
+                  </div>
+                </div>
+              </div>
+              <div class="td-tst-trend-layout">
+                <div class="td-tst-trend-card">
+                  <div class="td-tst-trend-card-head">
+                    <div>
+                      <div data-tst-trend-role="chart-title" class="td-tst-trend-card-title">7-Day Line Trend</div>
+                      <div data-tst-trend-role="chart-sub" class="td-tst-trend-card-sub">Points are plotted in order: date Morning, date Evening, date Night.</div>
+                    </div>
+                  </div>
+                  <div data-tst-trend-role="chart-empty" class="td-tst-trend-empty" style="display:none;"></div>
+                  <div class="td-tst-trend-chart-wrap">
+                    <canvas data-tst-trend-role="chart-canvas"></canvas>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="td-saved-scroll">
               <table id="stack-td-saved-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
@@ -40337,16 +40382,25 @@ function persistSavedTempTrendState(){
   }catch(e){}
 }
 
+function getSavedTempTrendPanels(){
+  return Array.prototype.slice.call(document.querySelectorAll("[data-tst-trend-panel]"));
+}
+
+function getSavedTempTrendPanelEl(panel, role){
+  return panel && panel.querySelector ? panel.querySelector('[data-tst-trend-role="' + role + '"]') : null;
+}
+
 function ensureSavedTempTrendHoleOptions(){
-  var select = document.getElementById("td-tst-trend-hole");
-  if(!select) return;
-  if(select.getAttribute("data-options-ready") === "1") return;
-  var options = '<option value="all">All 15</option>';
-  for(var i=1; i<=15; i++){
-    options += '<option value="' + i + '">PH ' + i + '</option>';
-  }
-  select.innerHTML = options;
-  select.setAttribute("data-options-ready", "1");
+  getSavedTempTrendPanels().forEach(function(panel){
+    var select = getSavedTempTrendPanelEl(panel, "hole");
+    if(!select || select.getAttribute("data-options-ready") === "1") return;
+    var options = '<option value="all">All 15</option>';
+    for(var i=1; i<=15; i++){
+      options += '<option value="' + i + '">PH ' + i + '</option>';
+    }
+    select.innerHTML = options;
+    select.setAttribute("data-options-ready", "1");
+  });
 }
 
 function getSavedTempTrendEntries(){
@@ -40509,10 +40563,13 @@ function getSavedTempTrendCellTone(value, minValue, maxValue){
 }
 
 function destroySavedTempTrendChart(){
-  if(savedTempTrendChart){
-    try{ savedTempTrendChart.destroy(); }catch(e){}
-    savedTempTrendChart = null;
-  }
+  getSavedTempTrendPanels().forEach(function(panel){
+    var canvas = getSavedTempTrendPanelEl(panel, "chart-canvas");
+    if(canvas && canvas.__savedTempTrendChart){
+      try{ canvas.__savedTempTrendChart.destroy(); }catch(e){}
+      canvas.__savedTempTrendChart = null;
+    }
+  });
 }
 
 function buildSavedTempTrendModel(){
@@ -40656,32 +40713,35 @@ function buildSavedTempTrendModel(){
 function syncSavedTempTrendControls(model){
   ensureSavedTempTrendHoleOptions();
   var state = model && model.state ? model.state : sanitizeSavedTempTrendState(savedTempTrendState);
-  var shiftEl = document.getElementById("td-tst-trend-shift");
-  var sectionEl = document.getElementById("td-tst-trend-section");
-  var holeEl = document.getElementById("td-tst-trend-hole");
-  var endDateEl = document.getElementById("td-tst-trend-end-date");
-  if(shiftEl) shiftEl.value = state.shift;
-  if(sectionEl) sectionEl.value = state.section;
-  if(holeEl) holeEl.value = String(state.hole);
-  if(endDateEl){
-    var todayIso = (model && model.todayIso) || getSavedTempTrendTodayIso();
-    endDateEl.max = todayIso;
-    endDateEl.min = model && model.earliestDate ? model.earliestDate : "";
-    endDateEl.value = state.endDate || model.endDateResolved || "";
-  }
+  getSavedTempTrendPanels().forEach(function(panel){
+    var sectionEl = getSavedTempTrendPanelEl(panel, "section");
+    var holeEl = getSavedTempTrendPanelEl(panel, "hole");
+    var endDateEl = getSavedTempTrendPanelEl(panel, "end-date");
+    if(sectionEl) sectionEl.value = state.section;
+    if(holeEl) holeEl.value = String(state.hole);
+    if(endDateEl){
+      var todayIso = (model && model.todayIso) || getSavedTempTrendTodayIso();
+      endDateEl.max = todayIso;
+      endDateEl.min = model && model.earliestDate ? model.earliestDate : "";
+      endDateEl.value = state.endDate || model.endDateResolved || "";
+    }
+  });
 }
 
 function setSavedTempTrendFromControls(sourceEl){
-  var shiftEl = document.getElementById("td-tst-trend-shift");
-  var sectionEl = document.getElementById("td-tst-trend-section");
-  var holeEl = document.getElementById("td-tst-trend-hole");
-  var endDateEl = document.getElementById("td-tst-trend-end-date");
+  var panel = sourceEl && sourceEl.closest ? sourceEl.closest("[data-tst-trend-panel]") : null;
+  if(!panel){
+    var panels = getSavedTempTrendPanels();
+    panel = panels.length ? panels[0] : null;
+  }
+  var sectionEl = getSavedTempTrendPanelEl(panel, "section");
+  var holeEl = getSavedTempTrendPanelEl(panel, "hole");
+  var endDateEl = getSavedTempTrendPanelEl(panel, "end-date");
   var nextEndDate = savedTempTrendState && savedTempTrendState.endDate ? savedTempTrendState.endDate : "";
-  if(sourceEl && sourceEl.id === "td-tst-trend-end-date"){
+  if(sourceEl === endDateEl){
     nextEndDate = endDateEl ? endDateEl.value : "";
   }
   savedTempTrendState = sanitizeSavedTempTrendState({
-    shift: shiftEl ? shiftEl.value : "All",
     section: sectionEl ? sectionEl.value : "ab-top",
     hole: holeEl ? holeEl.value : 1,
     endDate: nextEndDate
@@ -40702,7 +40762,12 @@ function resetSavedTempTrendState(){
 }
 
 function openSavedTempTrendDatePicker(){
-  var endDateEl = document.getElementById("td-tst-trend-end-date");
+  var panel = arguments.length ? (arguments[0] && arguments[0].closest ? arguments[0].closest("[data-tst-trend-panel]") : null) : null;
+  if(!panel){
+    var panels = getSavedTempTrendPanels();
+    panel = panels.length ? panels[0] : null;
+  }
+  var endDateEl = getSavedTempTrendPanelEl(panel, "end-date");
   if(!endDateEl) return;
   try{
     if(typeof endDateEl.showPicker === "function"){
@@ -40726,14 +40791,16 @@ function selectSavedTempTrendHoleFromHeatmap(hole){
 }
 
 function renderSavedTempTrendSummary(model){
-  var subtitleEl = document.getElementById("td-tst-trend-subtitle");
   var selectedLabel = model.isAllHoles
     ? (model.sectionLabel + " · All 15 peep holes")
     : (model.sectionLabel + " · PH " + model.state.hole);
 
-  if(subtitleEl){
-    subtitleEl.textContent = selectedLabel + " · 7-day line trend in Morning → Evening → Night order";
-  }
+  getSavedTempTrendPanels().forEach(function(panel){
+    var subtitleEl = getSavedTempTrendPanelEl(panel, "subtitle");
+    if(subtitleEl){
+      subtitleEl.textContent = selectedLabel + " · 7-day line trend in Morning → Evening → Night order";
+    }
+  });
 }
 
 function renderSavedTempTrendHeatmap(model){
@@ -40791,25 +40858,6 @@ function renderSavedTempTrendHeatmap(model){
 }
 
 function renderSavedTempTrendChart(model){
-  var canvas = document.getElementById("td-tst-trend-chart");
-  var emptyEl = document.getElementById("td-tst-trend-chart-empty");
-  var titleEl = document.getElementById("td-tst-trend-chart-title");
-  var subEl = document.getElementById("td-tst-trend-chart-sub");
-  if(titleEl){
-    titleEl.textContent = model.isAllHoles
-      ? (model.sectionLabel + " · All 15 Peep Holes · 7-Day Line Trend")
-      : (model.sectionLabel + " · PH " + model.state.hole + " · 7-Day Line Trend");
-  }
-  if(subEl){
-    subEl.textContent = model.isAllHoles
-      ? "All 15 peep-hole trends are plotted together across the 7-day Morning → Evening → Night sequence."
-      : "Sequence is continuous: date Morning, date Evening, date Night across all 7 days.";
-  }
-  if(!canvas || !emptyEl){
-    destroySavedTempTrendChart();
-    return;
-  }
-
   var datasets = Array.isArray(model.datasets) ? model.datasets : [];
   var hasData = datasets.some(function(dataset){
     return (Array.isArray(dataset.data) ? dataset.data : []).some(function(value){
@@ -40817,111 +40865,140 @@ function renderSavedTempTrendChart(model){
     });
   });
 
-  if(model.emptyMessage || !hasData || !window.Chart){
-    destroySavedTempTrendChart();
-    emptyEl.style.display = "block";
-    emptyEl.textContent = model.emptyMessage
-      || (!window.Chart ? "Chart library is not available right now." : "No saved peep-hole trend points are available for the selected window.");
-    return;
-  }
-
-  emptyEl.style.display = "none";
   var theme = getSavedTempTrendTheme();
-  destroySavedTempTrendChart();
-  savedTempTrendChart = new Chart(canvas, {
-    type: "line",
-    data: {
-      labels: model.chartLabels,
-      datasets: datasets.map(function(dataset){
-        var lineColor = dataset.borderColor || "#7ec8f0";
-        var fillColor = dataset.backgroundColor || "rgba(126,200,240,0.18)";
-        var pointBg = dataset.pointBackgroundColor || lineColor;
-        var pointBorder = dataset.pointBorderColor || lineColor;
-        return {
-          label: dataset.label,
-          data: dataset.data,
-          borderColor: lineColor,
-          backgroundColor: fillColor,
-          pointBackgroundColor: pointBg,
-          pointBorderColor: pointBorder,
-          pointHoverBackgroundColor: pointBg,
-          pointHoverBorderColor: pointBorder,
-          borderWidth: model.isAllHoles ? 2 : 3,
-          pointRadius: model.isAllHoles ? 2.2 : 4,
-          pointHoverRadius: model.isAllHoles ? 4 : 5.5,
-          tension: 0.22,
-          fill: false,
-          spanGaps: false
-        };
-      })
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode:"index", intersect:false },
-      layout: { padding:{ top:6, right:8, bottom:2, left:4 } },
-      plugins: {
-        legend: {
-          display: !!model.isAllHoles,
-          position: "bottom",
-          labels: {
-            color: theme.dim,
-            boxWidth: 10,
-            boxHeight: 10,
-            usePointStyle: true,
-            pointStyle: "circle",
-            padding: 12,
-            font: { size:10 }
-          }
-        },
-        tooltip: {
-          backgroundColor: theme.panel,
-          borderColor: theme.border,
-          borderWidth: 1,
-          cornerRadius: 10,
-          titleColor: theme.text,
-          bodyColor: theme.dim,
-          callbacks: {
-            title: function(items){
-              var first = Array.isArray(items) && items.length ? items[0] : null;
-              var idx = first && typeof first.dataIndex === "number" ? first.dataIndex : -1;
-              return idx >= 0 && model.chartTooltipLabels[idx] ? model.chartTooltipLabels[idx] : "";
-            },
-            label: function(context){
-              var value = context && context.parsed ? context.parsed.y : null;
-              if(!savedTempTrendIsFiniteNumber(value)) return (context.dataset ? context.dataset.label + ": " : "") + "—";
-              return (model.isAllHoles && context.dataset ? (context.dataset.label + ": ") : "") + Math.round(value) + "°C";
-            }
-          }
-        }
+  getSavedTempTrendPanels().forEach(function(panel){
+    var canvas = getSavedTempTrendPanelEl(panel, "chart-canvas");
+    var emptyEl = getSavedTempTrendPanelEl(panel, "chart-empty");
+    var titleEl = getSavedTempTrendPanelEl(panel, "chart-title");
+    var subEl = getSavedTempTrendPanelEl(panel, "chart-sub");
+    if(titleEl){
+      titleEl.textContent = model.isAllHoles
+        ? (model.sectionLabel + " · All 15 Peep Holes · 7-Day Line Trend")
+        : (model.sectionLabel + " · PH " + model.state.hole + " · 7-Day Line Trend");
+    }
+    if(subEl){
+      subEl.textContent = model.isAllHoles
+        ? "All 15 peep-hole trends are plotted together across the 7-day Morning → Evening → Night sequence."
+        : "Sequence is continuous: date Morning, date Evening, date Night across all 7 days.";
+    }
+    if(!canvas || !emptyEl){
+      if(canvas && canvas.__savedTempTrendChart){
+        try{ canvas.__savedTempTrendChart.destroy(); }catch(e){}
+        canvas.__savedTempTrendChart = null;
+      }
+      return;
+    }
+
+    if(model.emptyMessage || !hasData || !window.Chart){
+      if(canvas.__savedTempTrendChart){
+        try{ canvas.__savedTempTrendChart.destroy(); }catch(e){}
+        canvas.__savedTempTrendChart = null;
+      }
+      emptyEl.style.display = "block";
+      emptyEl.textContent = model.emptyMessage
+        || (!window.Chart ? "Chart library is not available right now." : "No saved peep-hole trend points are available for the selected window.");
+      return;
+    }
+
+    emptyEl.style.display = "none";
+    if(canvas.__savedTempTrendChart){
+      try{ canvas.__savedTempTrendChart.destroy(); }catch(e){}
+      canvas.__savedTempTrendChart = null;
+    }
+    canvas.__savedTempTrendChart = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: model.chartLabels,
+        datasets: datasets.map(function(dataset){
+          var lineColor = dataset.borderColor || "#7ec8f0";
+          var fillColor = dataset.backgroundColor || "rgba(126,200,240,0.18)";
+          var pointBg = dataset.pointBackgroundColor || lineColor;
+          var pointBorder = dataset.pointBorderColor || lineColor;
+          return {
+            label: dataset.label,
+            data: dataset.data,
+            borderColor: lineColor,
+            backgroundColor: fillColor,
+            pointBackgroundColor: pointBg,
+            pointBorderColor: pointBorder,
+            pointHoverBackgroundColor: pointBg,
+            pointHoverBorderColor: pointBorder,
+            borderWidth: model.isAllHoles ? 2 : 3,
+            pointRadius: model.isAllHoles ? 2.2 : 4,
+            pointHoverRadius: model.isAllHoles ? 4 : 5.5,
+            tension: 0.22,
+            fill: false,
+            spanGaps: false
+          };
+        })
       },
-      scales: {
-        x: {
-          ticks: {
-            color: theme.axis,
-            maxRotation: 0,
-            autoSkip: false,
-            font: { size:9 }
-          },
-          grid: { color: theme.grid }
-        },
-        y: {
-          ticks: {
-            color: theme.axis,
-            callback: function(value){
-              return Math.round(value) + "°C";
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode:"index", intersect:false },
+        layout: { padding:{ top:6, right:8, bottom:2, left:4 } },
+        plugins: {
+          legend: {
+            display: !!model.isAllHoles,
+            position: "bottom",
+            labels: {
+              color: theme.dim,
+              boxWidth: 10,
+              boxHeight: 10,
+              usePointStyle: true,
+              pointStyle: "circle",
+              padding: 12,
+              font: { size:10 }
             }
           },
-          grid: { color: theme.grid }
+          tooltip: {
+            backgroundColor: theme.panel,
+            borderColor: theme.border,
+            borderWidth: 1,
+            cornerRadius: 10,
+            titleColor: theme.text,
+            bodyColor: theme.dim,
+            callbacks: {
+              title: function(items){
+                var first = Array.isArray(items) && items.length ? items[0] : null;
+                var idx = first && typeof first.dataIndex === "number" ? first.dataIndex : -1;
+                return idx >= 0 && model.chartTooltipLabels[idx] ? model.chartTooltipLabels[idx] : "";
+              },
+              label: function(context){
+                var value = context && context.parsed ? context.parsed.y : null;
+                if(!savedTempTrendIsFiniteNumber(value)) return (context.dataset ? context.dataset.label + ": " : "") + "—";
+                return (model.isAllHoles && context.dataset ? (context.dataset.label + ": ") : "") + Math.round(value) + "°C";
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: theme.axis,
+              maxRotation: 0,
+              autoSkip: false,
+              font: { size:9 }
+            },
+            grid: { color: theme.grid }
+          },
+          y: {
+            ticks: {
+              color: theme.axis,
+              callback: function(value){
+                return Math.round(value) + "°C";
+              }
+            },
+            grid: { color: theme.grid }
+          }
         }
       }
-    }
+    });
   });
 }
 
 function renderSavedTempTrendPanel(){
-  var panel = document.getElementById("td-tst-trend-panel");
-  if(!panel) return;
+  if(!getSavedTempTrendPanels().length) return;
   var model = buildSavedTempTrendModel();
   syncSavedTempTrendControls(model);
   renderSavedTempTrendSummary(model);
