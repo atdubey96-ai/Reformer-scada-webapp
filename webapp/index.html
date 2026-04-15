@@ -25059,6 +25059,20 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       overflow:visible;
     }
     #tab-cuboidstack .cuboid-twin-control-panel::before{ display:none; }
+    #tab-cuboidstack .cuboid-tab-shell.cuboid-tab-shell-with-filter{
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      gap:8px;
+    }
+    #tab-cuboidstack .cuboid-tab-shell.cuboid-tab-shell-with-filter .cuboid-tab-frame-wrap{
+      flex:1 1 auto;
+      min-height:0;
+    }
+    #tab-cuboidstack .cuboid-tab-shell.cuboid-tab-shell-with-filter.cuboid-shell-expanded .cuboid-tab-frame-wrap,
+    #tab-cuboidstack .cuboid-tab-shell.cuboid-tab-shell-with-filter.cuboid-shell-expanded .cuboid-tab-frame{
+      height:auto;
+    }
     #tab-cuboidstack .csr5-filter,
     #tab-cuboidstack .cuboid-twin-live-summary,
     #tab-cuboidstack .cuboid-legend-panel.csr5-legends{
@@ -25073,6 +25087,11 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       gap:10px;
       flex-wrap:wrap;
       padding:10px 16px;
+    }
+    #tab-cuboidstack .csr5-filter.csr5-filter-in-canvas{
+      width:100%;
+      margin:0;
+      flex:0 0 auto;
     }
     #tab-cuboidstack .csr5-filter,
     #tab-cuboidstack .csr5-filter *{
@@ -25958,7 +25977,9 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             </section>
           </div>
         </div>
-        <div class="csr5-filter">
+      </div>
+      <div class="cuboid-tab-shell cuboid-tab-shell-with-filter" data-cuboid-shell="stack-top">
+        <div class="csr5-filter csr5-filter-in-canvas">
           <span class="csr5-filter-label csr5-filter-label-main">View Data of Particular Shift / Date</span>
           <div class="csr5-filter-sep" aria-hidden="true"></div>
           <label class="csr5-filter-label" for="stack-cuboid-shift-select">Shift</label>
@@ -25981,8 +26002,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <div class="csr5-filter-spacer"></div>
           <button type="button" class="csr5-latest-btn" onclick="clearTwinCuboidDateFilter()">Latest Data ↗</button>
         </div>
-      </div>
-      <div class="cuboid-tab-shell" data-cuboid-shell="stack-top">
         <div class="cuboid-tab-frame-wrap">
           <div class="cuboid-tab-frame-mask" aria-hidden="true">
               <div class="cuboid-tab-frame-mask-copy">
