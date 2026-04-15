@@ -3416,21 +3416,39 @@ body.light-theme .burner-cell-editor-state-btn{
 .td-tst-trend-date{
   min-width:148px;
 }
+.td-tst-trend-button-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:flex-end;
+}
+.td-tst-trend-manual-btn,
 .td-tst-trend-reset{
   height:38px;
-  border:none;
   border-radius:10px;
   padding:0 14px;
   font-size:12px;
   font-weight:700;
   letter-spacing:0.7px;
   text-transform:uppercase;
+  cursor:pointer;
+}
+.td-tst-trend-manual-btn{
+  border:1px solid rgba(126,200,240,0.22);
+  color:#e2e8f0;
+  background:rgba(2,6,23,0.62);
+  box-shadow:0 10px 20px rgba(2,6,23,0.16), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.td-tst-trend-reset{
+  border:none;
   color:#f8fafc;
   background:linear-gradient(135deg,#0f766e,#155e75);
   box-shadow:0 10px 20px rgba(2,6,23,0.24), inset 0 1px 0 rgba(255,255,255,0.12);
-  cursor:pointer;
 }
-.td-tst-trend-reset:hover{
+.td-tst-trend-manual-btn:hover,
+.td-tst-trend-manual-btn:focus-visible,
+.td-tst-trend-reset:hover,
+.td-tst-trend-reset:focus-visible{
   filter:brightness(1.06);
 }
 .td-tst-trend-range{
@@ -3646,6 +3664,12 @@ body.light-theme .td-tst-trend-date{
   background:#ffffff;
   border-color:#cbd5e1;
   color:#111827;
+}
+body.light-theme .td-tst-trend-manual-btn{
+  background:#ffffff;
+  border-color:#cbd5e1;
+  color:#0f172a;
+  box-shadow:0 8px 18px rgba(148,163,184,0.12);
 }
 body.light-theme .td-tst-trend-range,
 body.light-theme .td-tst-trend-card-sub,
@@ -25146,10 +25170,13 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 <label class="td-tst-trend-label" for="td-tst-trend-end-date">Window End</label>
                 <input type="date" id="td-tst-trend-end-date" class="td-tst-trend-date" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend ending date">
               </div>
-              <button type="button" class="td-tst-trend-reset" onclick="resetSavedTempTrendState()">Latest 7 Days</button>
+              <div class="td-tst-trend-button-row">
+                <button type="button" class="td-tst-trend-manual-btn" onclick="openSavedTempTrendDatePicker()">Change Date</button>
+                <button type="button" class="td-tst-trend-reset" onclick="resetSavedTempTrendState()">Use Today</button>
+              </div>
             </div>
           </div>
-          <div id="td-tst-trend-range" class="td-tst-trend-range">Preparing the latest 7-day TST window...</div>
+          <div id="td-tst-trend-range" class="td-tst-trend-range">Preparing the current 7-day TST window...</div>
           <div class="td-tst-trend-kpis">
             <div class="td-tst-trend-kpi">
               <div class="td-tst-trend-kpi-label">Latest</div>
@@ -40347,7 +40374,11 @@ function sanitizeSavedTempTrendState(raw){
 function loadSavedTempTrendState(){
   try{
     var saved = localStorage.getItem(SAVED_TEMP_TREND_STORAGE_KEY);
-    if(saved) return sanitizeSavedTempTrendState(JSON.parse(saved));
+    if(saved){
+      var state = sanitizeSavedTempTrendState(JSON.parse(saved));
+      state.endDate = "";
+      return state;
+    }
   }catch(e){}
   return { shift:"All", section:"ab-top", hole:1, endDate:"" };
 }
@@ -40401,13 +40432,28 @@ function getSavedTempTrendDateBounds(entries){
   return { earliest: earliest, latest: latest };
 }
 
+function formatSavedTempTrendLocalDateIso(dateObj){
+  if(!(dateObj instanceof Date) || !isFinite(dateObj.getTime())) return "";
+  var year = dateObj.getFullYear();
+  var month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  var day = String(dateObj.getDate()).padStart(2, "0");
+  return year + "-" + month + "-" + day;
+}
+
+function getSavedTempTrendTodayIso(){
+  return formatSavedTempTrendLocalDateIso(new Date());
+}
+
 function buildSavedTempTrendDateWindow(endDateIso, days){
-  var endMs = Date.parse(String(endDateIso || "") + "T00:00:00");
-  if(!isFinite(endMs)) return [];
+  var match = String(endDateIso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  var endDate = match
+    ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : new Date(String(endDateIso || "") + "T00:00:00");
+  if(!isFinite(endDate.getTime())) return [];
   var list = [];
   for(var i = (days - 1); i >= 0; i--){
-    var dt = new Date(endMs - (i * 86400000));
-    list.push(dt.toISOString().slice(0, 10));
+    var dt = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() - i);
+    list.push(formatSavedTempTrendLocalDateIso(dt));
   }
   return list;
 }
@@ -40517,7 +40563,8 @@ function buildSavedTempTrendModel(){
   var entries = getSavedTempTrendEntries();
   var state = sanitizeSavedTempTrendState(savedTempTrendState);
   var bounds = getSavedTempTrendDateBounds(entries);
-  var endDateResolved = state.endDate || bounds.latest || "";
+  var todayIso = getSavedTempTrendTodayIso();
+  var endDateResolved = state.endDate || todayIso;
   var dates = endDateResolved ? buildSavedTempTrendDateWindow(endDateResolved, 7) : [];
   var dateLookup = {};
   dates.forEach(function(dateIso){ dateLookup[dateIso] = true; });
@@ -40638,6 +40685,7 @@ function buildSavedTempTrendModel(){
     state: state,
     earliestDate: bounds.earliest,
     latestDate: bounds.latest,
+    todayIso: todayIso,
     endDateResolved: endDateResolved,
     dates: dates,
     shifts: shifts,
@@ -40667,32 +40715,54 @@ function syncSavedTempTrendControls(model){
   if(sectionEl) sectionEl.value = state.section;
   if(holeEl) holeEl.value = String(state.hole);
   if(endDateEl){
-    var todayIso = new Date().toISOString().slice(0, 10);
+    var todayIso = (model && model.todayIso) || getSavedTempTrendTodayIso();
     endDateEl.max = todayIso;
     endDateEl.min = model && model.earliestDate ? model.earliestDate : "";
     endDateEl.value = state.endDate || model.endDateResolved || "";
   }
 }
 
-function setSavedTempTrendFromControls(){
+function setSavedTempTrendFromControls(sourceEl){
   var shiftEl = document.getElementById("td-tst-trend-shift");
   var sectionEl = document.getElementById("td-tst-trend-section");
   var holeEl = document.getElementById("td-tst-trend-hole");
   var endDateEl = document.getElementById("td-tst-trend-end-date");
+  var nextEndDate = savedTempTrendState && savedTempTrendState.endDate ? savedTempTrendState.endDate : "";
+  if(sourceEl && sourceEl.id === "td-tst-trend-end-date"){
+    nextEndDate = endDateEl ? endDateEl.value : "";
+  }
   savedTempTrendState = sanitizeSavedTempTrendState({
     shift: shiftEl ? shiftEl.value : "All",
     section: sectionEl ? sectionEl.value : "ab-top",
     hole: holeEl ? holeEl.value : 1,
-    endDate: endDateEl ? endDateEl.value : ""
+    endDate: nextEndDate
   });
   persistSavedTempTrendState();
   renderSavedTempTrendPanel();
 }
 
 function resetSavedTempTrendState(){
-  savedTempTrendState = { shift:"All", section:"ab-top", hole:1, endDate:"" };
+  savedTempTrendState = sanitizeSavedTempTrendState({
+    shift: savedTempTrendState.shift,
+    section: savedTempTrendState.section,
+    hole: savedTempTrendState.hole,
+    endDate: ""
+  });
   persistSavedTempTrendState();
   renderSavedTempTrendPanel();
+}
+
+function openSavedTempTrendDatePicker(){
+  var endDateEl = document.getElementById("td-tst-trend-end-date");
+  if(!endDateEl) return;
+  try{
+    if(typeof endDateEl.showPicker === "function"){
+      endDateEl.showPicker();
+      return;
+    }
+  }catch(e){}
+  endDateEl.focus();
+  endDateEl.click();
 }
 
 function selectSavedTempTrendHoleFromHeatmap(hole){
@@ -40727,7 +40797,7 @@ function renderSavedTempTrendSummary(model){
   if(rangeEl){
     if(model.dates.length){
       rangeEl.textContent = "Window: " + formatSavedTempTrendFullDate(model.dates[0]) + " to " + formatSavedTempTrendFullDate(model.dates[model.dates.length - 1])
-        + (savedTempTrendState.endDate ? " · anchored to selected date" : " · anchored to latest saved date");
+        + (savedTempTrendState.endDate ? " · anchored to selected date" : " · anchored to today");
     }else{
       rangeEl.textContent = "No 7-day TST window can be built until saved TST entries are available.";
     }
