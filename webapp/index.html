@@ -40298,6 +40298,8 @@ function normalizeSavedTempTrendSection(raw){
 }
 
 function normalizeSavedTempTrendHole(raw){
+  var value = String(raw == null ? "" : raw).trim().toLowerCase();
+  if(value === "all") return "all";
   var num = parseInt(raw, 10);
   if(Number.isFinite(num) && num >= 1 && num <= 15) return num;
   return 1;
@@ -40339,7 +40341,7 @@ function ensureSavedTempTrendHoleOptions(){
   var select = document.getElementById("td-tst-trend-hole");
   if(!select) return;
   if(select.getAttribute("data-options-ready") === "1") return;
-  var options = "";
+  var options = '<option value="all">All 15</option>';
   for(var i=1; i<=15; i++){
     options += '<option value="' + i + '">PH ' + i + '</option>';
   }
@@ -40482,6 +40484,16 @@ function getSavedTempTrendShiftColor(shift){
   return "#7ec8f0";
 }
 
+function getSavedTempTrendHoleColor(holeNumber){
+  var palette = [
+    "#60a5fa", "#f97316", "#34d399", "#f43f5e", "#facc15",
+    "#a78bfa", "#22d3ee", "#fb7185", "#84cc16", "#38bdf8",
+    "#fb923c", "#4ade80", "#c084fc", "#f87171", "#2dd4bf"
+  ];
+  var index = Math.max(0, Math.min(palette.length - 1, Number(holeNumber || 1) - 1));
+  return palette[index];
+}
+
 function getSavedTempTrendCellTone(value, minValue, maxValue){
   if(!savedTempTrendIsFiniteNumber(value)){
     return { bg:"rgba(15,23,42,0.56)", text:"#64748b" };
@@ -40545,34 +40557,71 @@ function buildSavedTempTrendModel(){
     });
   });
 
-  var selectedHoleIndex = state.hole - 1;
   var chartLabels = [];
   var chartTooltipLabels = [];
-  var pointColors = [];
-  var dataPoints = columns.map(function(column){
+  columns.forEach(function(column){
     chartLabels.push([formatSavedTempTrendShortDate(column.dateIso), getSavedTempTrendShiftShort(column.shift)]);
     chartTooltipLabels.push(formatSavedTempTrendFullDate(column.dateIso) + " · " + column.shift);
-    pointColors.push(getSavedTempTrendShiftColor(column.shift));
-    return column.bucket ? getSavedTempTrendPeepValue(column.bucket.entry, state.section, selectedHoleIndex) : null;
   });
-  var selectedValues = dataPoints.filter(function(value){
-    return savedTempTrendIsFiniteNumber(value);
+  var isAllHoles = state.hole === "all";
+  var pointColors = columns.map(function(column){
+    return getSavedTempTrendShiftColor(column.shift);
   });
+  var datasets = [];
+  var selectedValues = [];
+
+  if(isAllHoles){
+    for(var holeNumber = 1; holeNumber <= 15; holeNumber++){
+      var holeData = columns.map(function(column){
+        return column.bucket ? getSavedTempTrendPeepValue(column.bucket.entry, state.section, holeNumber - 1) : null;
+      });
+      holeData.forEach(function(value){
+        if(savedTempTrendIsFiniteNumber(value)) selectedValues.push(value);
+      });
+      datasets.push({
+        label: "PH " + holeNumber,
+        data: holeData,
+        borderColor: getSavedTempTrendHoleColor(holeNumber),
+        backgroundColor: getSavedTempTrendHoleColor(holeNumber),
+        pointBackgroundColor: getSavedTempTrendHoleColor(holeNumber),
+        pointBorderColor: getSavedTempTrendHoleColor(holeNumber)
+      });
+    }
+  }else{
+    var selectedHoleIndex = state.hole - 1;
+    var dataPoints = columns.map(function(column){
+      return column.bucket ? getSavedTempTrendPeepValue(column.bucket.entry, state.section, selectedHoleIndex) : null;
+    });
+    dataPoints.forEach(function(value){
+      if(savedTempTrendIsFiniteNumber(value)) selectedValues.push(value);
+    });
+    datasets.push({
+      label: "PH " + state.hole,
+      data: dataPoints,
+      borderColor: "#7ec8f0",
+      backgroundColor: "rgba(126,200,240,0.18)",
+      pointBackgroundColor: pointColors,
+      pointBorderColor: pointColors
+    });
+  }
 
   var latestReading = null;
-  for(var index = columns.length - 1; index >= 0; index--){
-    var current = columns[index];
-    var currentValue = current && current.bucket ? getSavedTempTrendPeepValue(current.bucket.entry, state.section, selectedHoleIndex) : null;
-    if(savedTempTrendIsFiniteNumber(currentValue)){
-      latestReading = {
-        value: currentValue,
-        label: formatSavedTempTrendFullDate(current.dateIso) + " · " + current.shift
-      };
-      break;
+  if(!isAllHoles){
+    var latestHoleIndex = state.hole - 1;
+    for(var index = columns.length - 1; index >= 0; index--){
+      var current = columns[index];
+      var currentValue = current && current.bucket ? getSavedTempTrendPeepValue(current.bucket.entry, state.section, latestHoleIndex) : null;
+      if(savedTempTrendIsFiniteNumber(currentValue)){
+        latestReading = {
+          value: currentValue,
+          label: formatSavedTempTrendFullDate(current.dateIso) + " · " + current.shift
+        };
+        break;
+      }
     }
   }
 
-  var expectedCount = columns.length;
+  var expectedCount = isAllHoles ? (columns.length * 15) : columns.length;
   var stats = computeSavedTempTrendStats(selectedValues);
   var emptyMessage = "";
   if(!entries.length){
@@ -40593,8 +40642,8 @@ function buildSavedTempTrendModel(){
     chartLabels: chartLabels,
     chartTooltipLabels: chartTooltipLabels,
     pointColors: pointColors,
-    datasetLabel: getSavedTempTrendSectionLabel(state.section) + " · PH " + state.hole,
-    dataPoints: dataPoints,
+    datasets: datasets,
+    isAllHoles: isAllHoles,
     stats: stats,
     latestReading: latestReading,
     selectedCount: selectedValues.length,
@@ -40678,7 +40727,9 @@ function selectSavedTempTrendHoleFromHeatmap(hole){
 
 function renderSavedTempTrendSummary(model){
   var subtitleEl = document.getElementById("td-tst-trend-subtitle");
-  var selectedLabel = model.sectionLabel + " · PH " + model.state.hole;
+  var selectedLabel = model.isAllHoles
+    ? (model.sectionLabel + " · All 15 peep holes")
+    : (model.sectionLabel + " · PH " + model.state.hole);
 
   if(subtitleEl){
     subtitleEl.textContent = selectedLabel + " · 7-day line trend in Morning → Evening → Night order";
@@ -40744,17 +40795,26 @@ function renderSavedTempTrendChart(model){
   var emptyEl = document.getElementById("td-tst-trend-chart-empty");
   var titleEl = document.getElementById("td-tst-trend-chart-title");
   var subEl = document.getElementById("td-tst-trend-chart-sub");
-  if(titleEl) titleEl.textContent = model.sectionLabel + " · PH " + model.state.hole + " · 7-Day Line Trend";
+  if(titleEl){
+    titleEl.textContent = model.isAllHoles
+      ? (model.sectionLabel + " · All 15 Peep Holes · 7-Day Line Trend")
+      : (model.sectionLabel + " · PH " + model.state.hole + " · 7-Day Line Trend");
+  }
   if(subEl){
-    subEl.textContent = "Sequence is continuous: date Morning, date Evening, date Night across all 7 days.";
+    subEl.textContent = model.isAllHoles
+      ? "All 15 peep-hole trends are plotted together across the 7-day Morning → Evening → Night sequence."
+      : "Sequence is continuous: date Morning, date Evening, date Night across all 7 days.";
   }
   if(!canvas || !emptyEl){
     destroySavedTempTrendChart();
     return;
   }
 
-  var hasData = (Array.isArray(model.dataPoints) ? model.dataPoints : []).some(function(value){
-    return savedTempTrendIsFiniteNumber(value);
+  var datasets = Array.isArray(model.datasets) ? model.datasets : [];
+  var hasData = datasets.some(function(dataset){
+    return (Array.isArray(dataset.data) ? dataset.data : []).some(function(value){
+      return savedTempTrendIsFiniteNumber(value);
+    });
   });
 
   if(model.emptyMessage || !hasData || !window.Chart){
@@ -40772,22 +40832,28 @@ function renderSavedTempTrendChart(model){
     type: "line",
     data: {
       labels: model.chartLabels,
-      datasets: [{
-        label: model.datasetLabel,
-        data: model.dataPoints,
-        borderColor: "#7ec8f0",
-        backgroundColor: "rgba(126,200,240,0.18)",
-        pointBackgroundColor: model.pointColors,
-        pointBorderColor: model.pointColors,
-        pointHoverBackgroundColor: model.pointColors,
-        pointHoverBorderColor: model.pointColors,
-        borderWidth: 3,
-        pointRadius: 4,
-        pointHoverRadius: 5.5,
-        tension: 0.22,
-        fill: false,
-        spanGaps: false
-      }]
+      datasets: datasets.map(function(dataset){
+        var lineColor = dataset.borderColor || "#7ec8f0";
+        var fillColor = dataset.backgroundColor || "rgba(126,200,240,0.18)";
+        var pointBg = dataset.pointBackgroundColor || lineColor;
+        var pointBorder = dataset.pointBorderColor || lineColor;
+        return {
+          label: dataset.label,
+          data: dataset.data,
+          borderColor: lineColor,
+          backgroundColor: fillColor,
+          pointBackgroundColor: pointBg,
+          pointBorderColor: pointBorder,
+          pointHoverBackgroundColor: pointBg,
+          pointHoverBorderColor: pointBorder,
+          borderWidth: model.isAllHoles ? 2 : 3,
+          pointRadius: model.isAllHoles ? 2.2 : 4,
+          pointHoverRadius: model.isAllHoles ? 4 : 5.5,
+          tension: 0.22,
+          fill: false,
+          spanGaps: false
+        };
+      })
     },
     options: {
       responsive: true,
@@ -40796,7 +40862,17 @@ function renderSavedTempTrendChart(model){
       layout: { padding:{ top:6, right:8, bottom:2, left:4 } },
       plugins: {
         legend: {
-          display: false
+          display: !!model.isAllHoles,
+          position: "bottom",
+          labels: {
+            color: theme.dim,
+            boxWidth: 10,
+            boxHeight: 10,
+            usePointStyle: true,
+            pointStyle: "circle",
+            padding: 12,
+            font: { size:10 }
+          }
         },
         tooltip: {
           backgroundColor: theme.panel,
@@ -40813,7 +40889,8 @@ function renderSavedTempTrendChart(model){
             },
             label: function(context){
               var value = context && context.parsed ? context.parsed.y : null;
-              return savedTempTrendIsFiniteNumber(value) ? (Math.round(value) + "°C") : "—";
+              if(!savedTempTrendIsFiniteNumber(value)) return (context.dataset ? context.dataset.label + ": " : "") + "—";
+              return (model.isAllHoles && context.dataset ? (context.dataset.label + ": ") : "") + Math.round(value) + "°C";
             }
           }
         }
