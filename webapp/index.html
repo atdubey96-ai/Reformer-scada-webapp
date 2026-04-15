@@ -3348,6 +3348,372 @@ body.light-theme .burner-cell-editor-state-btn{
 .td-saved-filter-bar .burner-history-shift-box{
   padding:8px 12px;
 }
+.td-tst-trend-panel{
+  margin-bottom:14px;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid rgba(126,200,240,0.20);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(14,165,233,0.08) 0%, rgba(14,165,233,0) 38%),
+    linear-gradient(180deg, rgba(15,23,42,0.86), rgba(10,16,28,0.78));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 14px 28px rgba(2,6,23,0.24);
+}
+.td-tst-trend-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.td-tst-trend-title{
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:0.3px;
+  color:#f8fafc;
+}
+.td-tst-trend-subtitle{
+  margin-top:4px;
+  font-size:12px;
+  color:#93c5fd;
+}
+.td-tst-trend-controls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:flex-end;
+}
+.td-tst-trend-control{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:110px;
+}
+.td-tst-trend-label{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.7px;
+  text-transform:uppercase;
+  color:#7ec8f0;
+}
+.td-tst-trend-select,
+.td-tst-trend-date{
+  height:38px;
+  border-radius:10px;
+  border:1px solid rgba(126,200,240,0.22);
+  background:rgba(2,6,23,0.62);
+  color:#e2e8f0;
+  padding:0 12px;
+  font-size:13px;
+  font-weight:700;
+  font-family:'Times New Roman', Times, serif;
+}
+.td-tst-trend-select{
+  min-width:144px;
+}
+.td-tst-trend-date{
+  min-width:148px;
+}
+.td-tst-trend-reset{
+  height:38px;
+  border:none;
+  border-radius:10px;
+  padding:0 14px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.7px;
+  text-transform:uppercase;
+  color:#f8fafc;
+  background:linear-gradient(135deg,#0f766e,#155e75);
+  box-shadow:0 10px 20px rgba(2,6,23,0.24), inset 0 1px 0 rgba(255,255,255,0.12);
+  cursor:pointer;
+}
+.td-tst-trend-reset:hover{
+  filter:brightness(1.06);
+}
+.td-tst-trend-range{
+  margin-bottom:12px;
+  font-size:12px;
+  color:#cbd5e1;
+}
+.td-tst-trend-kpis{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:10px;
+  margin-bottom:14px;
+}
+.td-tst-trend-kpi{
+  padding:12px 13px;
+  border-radius:12px;
+  border:1px solid rgba(126,200,240,0.14);
+  background:linear-gradient(180deg, rgba(15,23,42,0.72), rgba(15,23,42,0.46));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.td-tst-trend-kpi-label{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.7px;
+  text-transform:uppercase;
+  color:#7ec8f0;
+}
+.td-tst-trend-kpi-value{
+  margin-top:6px;
+  font-size:24px;
+  font-weight:800;
+  line-height:1;
+  color:#f8fafc;
+}
+.td-tst-trend-kpi-sub{
+  margin-top:6px;
+  font-size:12px;
+  color:#94a3b8;
+}
+.td-tst-trend-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1.45fr) minmax(320px,0.9fr);
+  gap:14px;
+}
+.td-tst-trend-card{
+  min-width:0;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(126,200,240,0.14);
+  background:linear-gradient(180deg, rgba(15,23,42,0.66), rgba(15,23,42,0.34));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.td-tst-trend-card-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.td-tst-trend-card-title{
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:0.3px;
+  color:#f8fafc;
+}
+.td-tst-trend-card-sub{
+  margin-top:4px;
+  font-size:12px;
+  color:#94a3b8;
+}
+.td-tst-trend-legend{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.td-tst-trend-legend-item{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  font-weight:700;
+  color:#cbd5e1;
+}
+.td-tst-trend-legend-dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  display:inline-block;
+}
+.td-tst-trend-heatmap-scroll{
+  overflow:auto;
+  border-radius:12px;
+  border:1px solid rgba(126,200,240,0.10);
+  background:rgba(2,6,23,0.18);
+}
+.td-tst-trend-heatmap{
+  display:grid;
+  gap:2px;
+  min-width:max-content;
+}
+.td-tst-trend-hm-corner,
+.td-tst-trend-hm-col,
+.td-tst-trend-hm-row,
+.td-tst-trend-hm-cell{
+  min-height:44px;
+  padding:7px 6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  border-radius:10px;
+}
+.td-tst-trend-hm-corner,
+.td-tst-trend-hm-col,
+.td-tst-trend-hm-row{
+  background:rgba(15,23,42,0.82);
+  border:1px solid rgba(126,200,240,0.12);
+}
+.td-tst-trend-hm-corner{
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.6px;
+  text-transform:uppercase;
+  color:#7ec8f0;
+  line-height:1.2;
+}
+.td-tst-trend-hm-col{
+  flex-direction:column;
+  gap:2px;
+  min-width:66px;
+}
+.td-tst-trend-hm-col-main{
+  font-size:11px;
+  font-weight:800;
+  color:#f8fafc;
+  line-height:1.1;
+}
+.td-tst-trend-hm-col-sub{
+  font-size:10px;
+  font-weight:700;
+  color:#94a3b8;
+  letter-spacing:0.3px;
+  line-height:1.1;
+}
+.td-tst-trend-hm-row{
+  font-size:12px;
+  font-weight:800;
+  color:#cbd5e1;
+  cursor:pointer;
+}
+.td-tst-trend-hm-row.is-selected{
+  border-color:rgba(59,130,246,0.45);
+  box-shadow:0 0 0 1px rgba(59,130,246,0.20);
+  color:#f8fafc;
+}
+.td-tst-trend-hm-cell{
+  min-width:66px;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.05;
+  border:1px solid rgba(255,255,255,0.06);
+  cursor:pointer;
+  transition:transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.td-tst-trend-hm-cell:hover{
+  transform:translateY(-1px);
+  border-color:rgba(255,255,255,0.18);
+}
+.td-tst-trend-hm-cell.is-empty{
+  background:rgba(15,23,42,0.56);
+  color:#64748b;
+}
+.td-tst-trend-hm-cell.is-selected{
+  border-color:rgba(59,130,246,0.58);
+  box-shadow:0 0 0 1px rgba(59,130,246,0.28), 0 10px 18px rgba(2,6,23,0.16);
+}
+.td-tst-trend-chart-wrap{
+  position:relative;
+  min-height:320px;
+}
+.td-tst-trend-empty{
+  padding:18px 16px;
+  border-radius:12px;
+  border:1px dashed rgba(126,200,240,0.18);
+  background:rgba(15,23,42,0.30);
+  color:#94a3b8;
+  font-size:13px;
+  font-weight:700;
+}
+body.light-theme .td-tst-trend-panel{
+  border-color:rgba(59,130,246,0.18);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0) 38%),
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.92),
+    0 10px 22px rgba(148,163,184,0.20);
+}
+body.light-theme .td-tst-trend-title,
+body.light-theme .td-tst-trend-card-title{
+  color:#0f172a;
+}
+body.light-theme .td-tst-trend-subtitle{
+  color:#1d4ed8;
+}
+body.light-theme .td-tst-trend-label,
+body.light-theme .td-tst-trend-kpi-label{
+  color:#334155;
+}
+body.light-theme .td-tst-trend-select,
+body.light-theme .td-tst-trend-date{
+  background:#ffffff;
+  border-color:#cbd5e1;
+  color:#111827;
+}
+body.light-theme .td-tst-trend-range,
+body.light-theme .td-tst-trend-card-sub,
+body.light-theme .td-tst-trend-kpi-sub,
+body.light-theme .td-tst-trend-legend-item,
+body.light-theme .td-tst-trend-empty{
+  color:#475569;
+}
+body.light-theme .td-tst-trend-kpi{
+  border-color:rgba(59,130,246,0.12);
+  background:linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.94));
+}
+body.light-theme .td-tst-trend-kpi-value{
+  color:#0f172a;
+}
+body.light-theme .td-tst-trend-card{
+  border-color:rgba(59,130,246,0.12);
+  background:linear-gradient(180deg, rgba(255,255,255,0.88), rgba(248,250,252,0.92));
+}
+body.light-theme .td-tst-trend-hm-corner,
+body.light-theme .td-tst-trend-hm-col,
+body.light-theme .td-tst-trend-hm-row{
+  background:#ffffff;
+  border-color:#dbe4ef;
+}
+body.light-theme .td-tst-trend-hm-corner{
+  color:#334155;
+}
+body.light-theme .td-tst-trend-hm-col-main{
+  color:#0f172a;
+}
+body.light-theme .td-tst-trend-hm-col-sub{
+  color:#64748b;
+}
+body.light-theme .td-tst-trend-hm-row{
+  color:#334155;
+}
+body.light-theme .td-tst-trend-hm-row.is-selected{
+  color:#0f172a;
+}
+body.light-theme .td-tst-trend-hm-cell.is-empty{
+  background:#e2e8f0;
+  color:#64748b;
+}
+@media (max-width:1200px){
+  .td-tst-trend-layout{
+    grid-template-columns:1fr;
+  }
+}
+@media (max-width:900px){
+  .td-tst-trend-kpis{
+    grid-template-columns:repeat(2, minmax(0,1fr));
+  }
+}
+@media (max-width:640px){
+  .td-tst-trend-kpis{
+    grid-template-columns:1fr;
+  }
+  .td-tst-trend-control,
+  .td-tst-trend-select,
+  .td-tst-trend-date{
+    width:100%;
+    min-width:0;
+  }
+  .td-tst-trend-reset{
+    width:100%;
+  }
+}
 body.light-theme .td-saved-entries-outline{
   border-color:rgba(59,130,246,0.35);
   box-shadow:
@@ -24747,6 +25113,97 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <button type="button" class="td-saved-filter-clear" onclick="clearSavedEntryFilter()">Clear</button>
           <span class="td-saved-filter-status" data-saved-filter-status></span>
         </div>
+        <div class="td-tst-trend-panel" id="td-tst-trend-panel">
+          <div class="td-tst-trend-top">
+            <div>
+              <div class="td-tst-trend-title">7-Day TST Trends</div>
+              <div id="td-tst-trend-subtitle" class="td-tst-trend-subtitle">Shift-wise peep-hole temperature trends from saved TST history.</div>
+            </div>
+            <div class="td-tst-trend-controls">
+              <div class="td-tst-trend-control">
+                <label class="td-tst-trend-label" for="td-tst-trend-shift">Shift View</label>
+                <select id="td-tst-trend-shift" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend shift filter">
+                  <option value="All">All shifts</option>
+                  <option value="Morning">Morning</option>
+                  <option value="Evening">Evening</option>
+                  <option value="Night">Night</option>
+                </select>
+              </div>
+              <div class="td-tst-trend-control">
+                <label class="td-tst-trend-label" for="td-tst-trend-section">Section</label>
+                <select id="td-tst-trend-section" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend section filter">
+                  <option value="ab-bot">AB Bottom</option>
+                  <option value="cd-bot">CD Bottom</option>
+                  <option value="ab-top">AB Top</option>
+                  <option value="cd-top">CD Top</option>
+                </select>
+              </div>
+              <div class="td-tst-trend-control">
+                <label class="td-tst-trend-label" for="td-tst-trend-hole">Peep Hole</label>
+                <select id="td-tst-trend-hole" class="td-tst-trend-select" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend peep hole selector"></select>
+              </div>
+              <div class="td-tst-trend-control">
+                <label class="td-tst-trend-label" for="td-tst-trend-end-date">Window End</label>
+                <input type="date" id="td-tst-trend-end-date" class="td-tst-trend-date" onchange="setSavedTempTrendFromControls(this)" aria-label="TST trend ending date">
+              </div>
+              <button type="button" class="td-tst-trend-reset" onclick="resetSavedTempTrendState()">Latest 7 Days</button>
+            </div>
+          </div>
+          <div id="td-tst-trend-range" class="td-tst-trend-range">Preparing the latest 7-day TST window...</div>
+          <div class="td-tst-trend-kpis">
+            <div class="td-tst-trend-kpi">
+              <div class="td-tst-trend-kpi-label">Latest</div>
+              <div id="td-tst-trend-kpi-latest" class="td-tst-trend-kpi-value">—</div>
+              <div id="td-tst-trend-kpi-latest-sub" class="td-tst-trend-kpi-sub">No saved reading yet</div>
+            </div>
+            <div class="td-tst-trend-kpi">
+              <div class="td-tst-trend-kpi-label">7-Day Min</div>
+              <div id="td-tst-trend-kpi-min" class="td-tst-trend-kpi-value">—</div>
+              <div id="td-tst-trend-kpi-min-sub" class="td-tst-trend-kpi-sub">Selected peep-hole minimum</div>
+            </div>
+            <div class="td-tst-trend-kpi">
+              <div class="td-tst-trend-kpi-label">7-Day Max</div>
+              <div id="td-tst-trend-kpi-max" class="td-tst-trend-kpi-value">—</div>
+              <div id="td-tst-trend-kpi-max-sub" class="td-tst-trend-kpi-sub">Selected peep-hole maximum</div>
+            </div>
+            <div class="td-tst-trend-kpi">
+              <div class="td-tst-trend-kpi-label">Coverage</div>
+              <div id="td-tst-trend-kpi-coverage" class="td-tst-trend-kpi-value">—</div>
+              <div id="td-tst-trend-kpi-coverage-sub" class="td-tst-trend-kpi-sub">Buckets with saved readings</div>
+            </div>
+          </div>
+          <div class="td-tst-trend-layout">
+            <div class="td-tst-trend-card">
+              <div class="td-tst-trend-card-head">
+                <div>
+                  <div class="td-tst-trend-card-title">15 Peep-Hole Heatmap</div>
+                  <div id="td-tst-trend-heatmap-sub" class="td-tst-trend-card-sub">Click a row or cell to focus a peep-hole trend.</div>
+                </div>
+                <div class="td-tst-trend-legend">
+                  <span class="td-tst-trend-legend-item"><span class="td-tst-trend-legend-dot" style="background:#3b82f6;"></span>Cool</span>
+                  <span class="td-tst-trend-legend-item"><span class="td-tst-trend-legend-dot" style="background:#facc15;"></span>Mid</span>
+                  <span class="td-tst-trend-legend-item"><span class="td-tst-trend-legend-dot" style="background:#ef4444;"></span>Hot</span>
+                </div>
+              </div>
+              <div id="td-tst-trend-heatmap-empty" class="td-tst-trend-empty" style="display:none;"></div>
+              <div id="td-tst-trend-heatmap-scroll" class="td-tst-trend-heatmap-scroll">
+                <div id="td-tst-trend-heatmap" class="td-tst-trend-heatmap"></div>
+              </div>
+            </div>
+            <div class="td-tst-trend-card">
+              <div class="td-tst-trend-card-head">
+                <div>
+                  <div id="td-tst-trend-chart-title" class="td-tst-trend-card-title">Peep-Hole Trend</div>
+                  <div id="td-tst-trend-chart-sub" class="td-tst-trend-card-sub">Morning, Evening, Night comparison over the selected 7-day window.</div>
+                </div>
+              </div>
+              <div id="td-tst-trend-chart-empty" class="td-tst-trend-empty" style="display:none;"></div>
+              <div class="td-tst-trend-chart-wrap">
+                <canvas id="td-tst-trend-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="td-saved-scroll">
           <table id="td-saved-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
             <thead>
@@ -39848,6 +40305,606 @@ function getFilteredTempDataEntries(){
   });
 }
 
+var SAVED_TEMP_TREND_STORAGE_KEY = "scadaSavedTempTrendStateV1";
+var SAVED_TEMP_TREND_SHIFT_ORDER = ["Morning", "Evening", "Night"];
+var SAVED_TEMP_TREND_SECTION_META = {
+  "ab-bot": { label:"AB Bottom", color:"#f97316" },
+  "cd-bot": { label:"CD Bottom", color:"#06b6d4" },
+  "ab-top": { label:"AB Top", color:"#fb923c" },
+  "cd-top": { label:"CD Top", color:"#38bdf8" }
+};
+var savedTempTrendChart = null;
+
+function normalizeSavedTempTrendShift(raw){
+  var s = String(raw || "All").trim();
+  if(s === "Morning" || s === "Evening" || s === "Night") return s;
+  return "All";
+}
+
+function normalizeSavedTempTrendSection(raw){
+  var s = String(raw || "ab-top").trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(SAVED_TEMP_TREND_SECTION_META, s) ? s : "ab-top";
+}
+
+function normalizeSavedTempTrendHole(raw){
+  var num = parseInt(raw, 10);
+  if(Number.isFinite(num) && num >= 1 && num <= 15) return num;
+  return 1;
+}
+
+function sanitizeSavedTempTrendState(raw){
+  if(!raw || typeof raw !== "object"){
+    return { shift:"All", section:"ab-top", hole:1, endDate:"" };
+  }
+  return {
+    shift: normalizeSavedTempTrendShift(raw.shift),
+    section: normalizeSavedTempTrendSection(raw.section),
+    hole: normalizeSavedTempTrendHole(raw.hole),
+    endDate: normalizeImportedCleaningDate(raw.endDate || "")
+  };
+}
+
+function loadSavedTempTrendState(){
+  try{
+    var saved = localStorage.getItem(SAVED_TEMP_TREND_STORAGE_KEY);
+    if(saved) return sanitizeSavedTempTrendState(JSON.parse(saved));
+  }catch(e){}
+  return { shift:"All", section:"ab-top", hole:1, endDate:"" };
+}
+
+var savedTempTrendState = loadSavedTempTrendState();
+
+function persistSavedTempTrendState(){
+  try{
+    localStorage.setItem(SAVED_TEMP_TREND_STORAGE_KEY, JSON.stringify(savedTempTrendState));
+  }catch(e){}
+}
+
+function ensureSavedTempTrendHoleOptions(){
+  var select = document.getElementById("td-tst-trend-hole");
+  if(!select) return;
+  if(select.getAttribute("data-options-ready") === "1") return;
+  var options = "";
+  for(var i=1; i<=15; i++){
+    options += '<option value="' + i + '">PH ' + i + '</option>';
+  }
+  select.innerHTML = options;
+  select.setAttribute("data-options-ready", "1");
+}
+
+function getSavedTempTrendEntries(){
+  var list = Array.isArray(tempDataEntries) ? tempDataEntries.slice() : [];
+  if(!list.length) list = getAllTempEntries().slice();
+  sanitizeTempEntriesCollection(list);
+  return list;
+}
+
+function getSavedTempTrendEntryTimestamp(entry){
+  var raw = String(entry && (entry.dt || entry.date || entry.createdAt || entry.created_at) || "").trim();
+  if(!raw) return 0;
+  var stamp = Date.parse(raw);
+  if(Number.isFinite(stamp)) return stamp;
+  var iso = getTempEntryDateIso(raw);
+  stamp = iso ? Date.parse(iso + "T00:00:00") : NaN;
+  return Number.isFinite(stamp) ? stamp : 0;
+}
+
+function getSavedTempTrendDateBounds(entries){
+  var earliest = "";
+  var latest = "";
+  (Array.isArray(entries) ? entries : []).forEach(function(entry){
+    var iso = getTempEntryDateIso(entry && entry.dt);
+    if(!iso) return;
+    if(!earliest || iso < earliest) earliest = iso;
+    if(!latest || iso > latest) latest = iso;
+  });
+  return { earliest: earliest, latest: latest };
+}
+
+function buildSavedTempTrendDateWindow(endDateIso, days){
+  var endMs = Date.parse(String(endDateIso || "") + "T00:00:00");
+  if(!isFinite(endMs)) return [];
+  var list = [];
+  for(var i = (days - 1); i >= 0; i--){
+    var dt = new Date(endMs - (i * 86400000));
+    list.push(dt.toISOString().slice(0, 10));
+  }
+  return list;
+}
+
+function formatSavedTempTrendShortDate(iso){
+  var parts = formatTempEntryDateTime(iso);
+  var label = String(parts && parts.date || iso || "").trim();
+  return label ? label.replace(/\s+\d{4}$/, "") : "—";
+}
+
+function formatSavedTempTrendFullDate(iso){
+  var parts = formatTempEntryDateTime(iso);
+  return String(parts && parts.date || iso || "").trim() || "—";
+}
+
+function getSavedTempTrendShiftShort(shift){
+  if(shift === "Morning") return "Mor";
+  if(shift === "Evening") return "Eve";
+  if(shift === "Night") return "Ngt";
+  return shift || "—";
+}
+
+function getSavedTempTrendSectionLabel(section){
+  return SAVED_TEMP_TREND_SECTION_META[section] ? SAVED_TEMP_TREND_SECTION_META[section].label : "AB Top";
+}
+
+function getSavedTempTrendPeepValue(entry, section, holeIndex){
+  var vals = entry && entry.peepHoles && Array.isArray(entry.peepHoles[section]) ? entry.peepHoles[section] : [];
+  var value = vals[holeIndex];
+  var num = parseSavedEntryFilterNumber(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function formatSavedTempTrendValue(value){
+  return Number.isFinite(value) ? (Math.round(value) + "°C") : "—";
+}
+
+function savedTempTrendIsFiniteNumber(value){
+  return typeof value === "number" && isFinite(value);
+}
+
+function computeSavedTempTrendStats(values){
+  var nums = (Array.isArray(values) ? values : []).filter(function(value){
+    return savedTempTrendIsFiniteNumber(value);
+  });
+  if(!nums.length){
+    return { min:null, max:null, avg:null };
+  }
+  var total = nums.reduce(function(sum, value){ return sum + value; }, 0);
+  return {
+    min: Math.min.apply(null, nums),
+    max: Math.max.apply(null, nums),
+    avg: total / nums.length
+  };
+}
+
+function getSavedTempTrendTheme(){
+  var light = !!(document.body && document.body.classList.contains("light-theme"));
+  return light
+    ? {
+        axis:"#475569",
+        grid:"rgba(148,163,184,0.22)",
+        text:"#0f172a",
+        dim:"#64748b",
+        panel:"#ffffff",
+        border:"rgba(148,163,184,0.24)"
+      }
+    : {
+        axis:"#94a3b8",
+        grid:"rgba(125,155,201,0.18)",
+        text:"#f8fafc",
+        dim:"#cbd5e1",
+        panel:"rgba(15,23,42,0.96)",
+        border:"rgba(126,200,240,0.18)"
+      };
+}
+
+function getSavedTempTrendShiftColor(shift){
+  if(shift === "Morning") return "#34d399";
+  if(shift === "Evening") return "#fb923c";
+  if(shift === "Night") return "#818cf8";
+  return "#7ec8f0";
+}
+
+function getSavedTempTrendCellTone(value, minValue, maxValue){
+  if(!savedTempTrendIsFiniteNumber(value)){
+    return { bg:"rgba(15,23,42,0.56)", text:"#64748b" };
+  }
+  var ratio = maxValue === minValue ? 0.5 : Math.max(0, Math.min(1, (value - minValue) / Math.max(1, maxValue - minValue)));
+  var hue = 214 - (ratio * 214);
+  var sat = 84;
+  var lightness = 62 - (ratio * 14);
+  return {
+    bg:"hsl(" + hue + "," + sat + "%," + lightness + "%)",
+    text: ratio > 0.56 ? "#ffffff" : "#0f172a"
+  };
+}
+
+function destroySavedTempTrendChart(){
+  if(savedTempTrendChart){
+    try{ savedTempTrendChart.destroy(); }catch(e){}
+    savedTempTrendChart = null;
+  }
+}
+
+function buildSavedTempTrendModel(){
+  var entries = getSavedTempTrendEntries();
+  var state = sanitizeSavedTempTrendState(savedTempTrendState);
+  var bounds = getSavedTempTrendDateBounds(entries);
+  var endDateResolved = state.endDate || bounds.latest || "";
+  var dates = endDateResolved ? buildSavedTempTrendDateWindow(endDateResolved, 7) : [];
+  var dateLookup = {};
+  dates.forEach(function(dateIso){ dateLookup[dateIso] = true; });
+  var shifts = state.shift === "All" ? SAVED_TEMP_TREND_SHIFT_ORDER.slice() : [state.shift];
+  var bucketMap = {};
+
+  entries.forEach(function(entry){
+    var dateIso = getTempEntryDateIso(entry && entry.dt);
+    if(!dateIso || !dateLookup[dateIso]) return;
+    var shift = normalizeSavedTempTrendShift(entry && entry.shift);
+    if(shifts.indexOf(shift) === -1) return;
+    var key = dateIso + "|" + shift;
+    var stamp = getSavedTempTrendEntryTimestamp(entry);
+    var prev = bucketMap[key];
+    if(!prev || stamp >= prev.stamp){
+      bucketMap[key] = {
+        entry: entry,
+        stamp: stamp,
+        dateIso: dateIso,
+        shift: shift
+      };
+    }
+  });
+
+  var columns = [];
+  if(state.shift === "All"){
+    dates.forEach(function(dateIso){
+      shifts.forEach(function(shift){
+        columns.push({
+          dateIso: dateIso,
+          shift: shift,
+          bucket: bucketMap[dateIso + "|" + shift] || null
+        });
+      });
+    });
+  }else{
+    dates.forEach(function(dateIso){
+      columns.push({
+        dateIso: dateIso,
+        shift: state.shift,
+        bucket: bucketMap[dateIso + "|" + state.shift] || null
+      });
+    });
+  }
+
+  var scaleValues = [];
+  var heatmapRows = [];
+  for(var holeIndex = 0; holeIndex < 15; holeIndex++){
+    var rowValues = [];
+    for(var ci = 0; ci < columns.length; ci++){
+      var bucket = columns[ci].bucket;
+      var value = bucket ? getSavedTempTrendPeepValue(bucket.entry, state.section, holeIndex) : null;
+      rowValues.push(value);
+      if(savedTempTrendIsFiniteNumber(value)) scaleValues.push(value);
+    }
+    heatmapRows.push(rowValues);
+  }
+
+  var chartLabels = dates.map(function(dateIso){ return formatSavedTempTrendShortDate(dateIso); });
+  var selectedHoleIndex = state.hole - 1;
+  var datasets = [];
+
+  if(state.shift === "All"){
+    shifts.forEach(function(shift){
+      var values = dates.map(function(dateIso){
+        var bucket = bucketMap[dateIso + "|" + shift];
+        return bucket ? getSavedTempTrendPeepValue(bucket.entry, state.section, selectedHoleIndex) : null;
+      });
+      datasets.push({
+        label: shift,
+        borderColor: getSavedTempTrendShiftColor(shift),
+        backgroundColor: getSavedTempTrendShiftColor(shift),
+        data: values
+      });
+    });
+  }else{
+    datasets.push({
+      label: state.shift,
+      borderColor: getSavedTempTrendShiftColor(state.shift),
+      backgroundColor: getSavedTempTrendShiftColor(state.shift),
+      data: dates.map(function(dateIso){
+        var bucket = bucketMap[dateIso + "|" + state.shift];
+        return bucket ? getSavedTempTrendPeepValue(bucket.entry, state.section, selectedHoleIndex) : null;
+      })
+    });
+  }
+
+  var selectedValues = [];
+  datasets.forEach(function(dataset){
+    (Array.isArray(dataset.data) ? dataset.data : []).forEach(function(value){
+      if(savedTempTrendIsFiniteNumber(value)) selectedValues.push(value);
+    });
+  });
+
+  var latestReading = null;
+  for(var index = columns.length - 1; index >= 0; index--){
+    var current = columns[index];
+    var currentValue = current && current.bucket ? getSavedTempTrendPeepValue(current.bucket.entry, state.section, selectedHoleIndex) : null;
+    if(savedTempTrendIsFiniteNumber(currentValue)){
+      latestReading = {
+        value: currentValue,
+        label: formatSavedTempTrendFullDate(current.dateIso) + " · " + current.shift
+      };
+      break;
+    }
+  }
+
+  var expectedCount = state.shift === "All" ? (dates.length * shifts.length) : dates.length;
+  var stats = computeSavedTempTrendStats(selectedValues);
+  var emptyMessage = "";
+  if(!entries.length){
+    emptyMessage = "No saved TST entries are available yet.";
+  }else if(!scaleValues.length){
+    emptyMessage = "No saved " + getSavedTempTrendSectionLabel(state.section) + " readings were found in this 7-day window.";
+  }
+
+  return {
+    state: state,
+    earliestDate: bounds.earliest,
+    latestDate: bounds.latest,
+    endDateResolved: endDateResolved,
+    dates: dates,
+    shifts: shifts,
+    columns: columns,
+    heatmapRows: heatmapRows,
+    scaleMin: scaleValues.length ? Math.min.apply(null, scaleValues) : null,
+    scaleMax: scaleValues.length ? Math.max.apply(null, scaleValues) : null,
+    chartLabels: chartLabels,
+    datasets: datasets,
+    stats: stats,
+    latestReading: latestReading,
+    selectedCount: selectedValues.length,
+    expectedCount: expectedCount,
+    sectionLabel: getSavedTempTrendSectionLabel(state.section),
+    emptyMessage: emptyMessage
+  };
+}
+
+function syncSavedTempTrendControls(model){
+  ensureSavedTempTrendHoleOptions();
+  var state = model && model.state ? model.state : sanitizeSavedTempTrendState(savedTempTrendState);
+  var shiftEl = document.getElementById("td-tst-trend-shift");
+  var sectionEl = document.getElementById("td-tst-trend-section");
+  var holeEl = document.getElementById("td-tst-trend-hole");
+  var endDateEl = document.getElementById("td-tst-trend-end-date");
+  if(shiftEl) shiftEl.value = state.shift;
+  if(sectionEl) sectionEl.value = state.section;
+  if(holeEl) holeEl.value = String(state.hole);
+  if(endDateEl){
+    var todayIso = new Date().toISOString().slice(0, 10);
+    endDateEl.max = todayIso;
+    endDateEl.min = model && model.earliestDate ? model.earliestDate : "";
+    endDateEl.value = state.endDate || model.endDateResolved || "";
+  }
+}
+
+function setSavedTempTrendFromControls(){
+  var shiftEl = document.getElementById("td-tst-trend-shift");
+  var sectionEl = document.getElementById("td-tst-trend-section");
+  var holeEl = document.getElementById("td-tst-trend-hole");
+  var endDateEl = document.getElementById("td-tst-trend-end-date");
+  savedTempTrendState = sanitizeSavedTempTrendState({
+    shift: shiftEl ? shiftEl.value : "All",
+    section: sectionEl ? sectionEl.value : "ab-top",
+    hole: holeEl ? holeEl.value : 1,
+    endDate: endDateEl ? endDateEl.value : ""
+  });
+  persistSavedTempTrendState();
+  renderSavedTempTrendPanel();
+}
+
+function resetSavedTempTrendState(){
+  savedTempTrendState = { shift:"All", section:"ab-top", hole:1, endDate:"" };
+  persistSavedTempTrendState();
+  renderSavedTempTrendPanel();
+}
+
+function selectSavedTempTrendHoleFromHeatmap(hole){
+  savedTempTrendState = sanitizeSavedTempTrendState({
+    shift: savedTempTrendState.shift,
+    section: savedTempTrendState.section,
+    hole: hole,
+    endDate: savedTempTrendState.endDate
+  });
+  persistSavedTempTrendState();
+  renderSavedTempTrendPanel();
+}
+
+function renderSavedTempTrendSummary(model){
+  var rangeEl = document.getElementById("td-tst-trend-range");
+  var subtitleEl = document.getElementById("td-tst-trend-subtitle");
+  var latestEl = document.getElementById("td-tst-trend-kpi-latest");
+  var latestSubEl = document.getElementById("td-tst-trend-kpi-latest-sub");
+  var minEl = document.getElementById("td-tst-trend-kpi-min");
+  var minSubEl = document.getElementById("td-tst-trend-kpi-min-sub");
+  var maxEl = document.getElementById("td-tst-trend-kpi-max");
+  var maxSubEl = document.getElementById("td-tst-trend-kpi-max-sub");
+  var coverageEl = document.getElementById("td-tst-trend-kpi-coverage");
+  var coverageSubEl = document.getElementById("td-tst-trend-kpi-coverage-sub");
+  var selectedLabel = model.sectionLabel + " · PH " + model.state.hole;
+
+  if(subtitleEl){
+    subtitleEl.textContent = selectedLabel + (model.state.shift === "All"
+      ? " · Morning/Evening/Night comparison"
+      : " · " + model.state.shift + " shift only");
+  }
+  if(rangeEl){
+    if(model.dates.length){
+      rangeEl.textContent = "Window: " + formatSavedTempTrendFullDate(model.dates[0]) + " to " + formatSavedTempTrendFullDate(model.dates[model.dates.length - 1])
+        + (savedTempTrendState.endDate ? " · anchored to selected date" : " · anchored to latest saved date");
+    }else{
+      rangeEl.textContent = "No 7-day TST window can be built until saved TST entries are available.";
+    }
+  }
+  if(latestEl) latestEl.textContent = model.latestReading ? formatSavedTempTrendValue(model.latestReading.value) : "—";
+  if(latestSubEl) latestSubEl.textContent = model.latestReading ? model.latestReading.label : "No saved reading in this window";
+  if(minEl) minEl.textContent = formatSavedTempTrendValue(model.stats.min);
+  if(minSubEl) minSubEl.textContent = selectedLabel + " minimum";
+  if(maxEl) maxEl.textContent = formatSavedTempTrendValue(model.stats.max);
+  if(maxSubEl) maxSubEl.textContent = selectedLabel + " maximum";
+  if(coverageEl) coverageEl.textContent = model.expectedCount ? (model.selectedCount + "/" + model.expectedCount) : "—";
+  if(coverageSubEl) coverageSubEl.textContent = "Buckets with a saved " + selectedLabel + " reading";
+}
+
+function renderSavedTempTrendHeatmap(model){
+  var wrap = document.getElementById("td-tst-trend-heatmap-scroll");
+  var grid = document.getElementById("td-tst-trend-heatmap");
+  var emptyEl = document.getElementById("td-tst-trend-heatmap-empty");
+  var subEl = document.getElementById("td-tst-trend-heatmap-sub");
+  if(!wrap || !grid || !emptyEl) return;
+
+  if(subEl){
+    subEl.textContent = model.state.shift === "All"
+      ? "Each day is split into Morning, Evening, and Night buckets. Click any row or cell to focus a peep-hole."
+      : (model.state.shift + " shift only across the last 7 saved days. Click any row or cell to focus a peep-hole.");
+  }
+
+  if(model.emptyMessage){
+    emptyEl.style.display = "block";
+    emptyEl.textContent = model.emptyMessage;
+    wrap.style.display = "none";
+    grid.innerHTML = "";
+    return;
+  }
+
+  emptyEl.style.display = "none";
+  wrap.style.display = "block";
+  grid.style.gridTemplateColumns = "78px repeat(" + model.columns.length + ", minmax(66px,1fr))";
+
+  var html = '<div class="td-tst-trend-hm-corner">Peep<br>Hole</div>';
+  model.columns.forEach(function(column){
+    html += '<div class="td-tst-trend-hm-col">'
+      + '<div class="td-tst-trend-hm-col-main">' + formatSavedTempTrendShortDate(column.dateIso) + '</div>'
+      + '<div class="td-tst-trend-hm-col-sub">' + getSavedTempTrendShiftShort(column.shift) + '</div>'
+      + '</div>';
+  });
+
+  for(var holeIndex = 0; holeIndex < 15; holeIndex++){
+    var rowClass = "td-tst-trend-hm-row" + ((holeIndex + 1) === model.state.hole ? " is-selected" : "");
+    html += '<div class="' + rowClass + '" onclick="selectSavedTempTrendHoleFromHeatmap(' + (holeIndex + 1) + ')" title="Focus PH ' + (holeIndex + 1) + ' trend">PH ' + (holeIndex + 1) + '</div>';
+    for(var ci = 0; ci < model.columns.length; ci++){
+      var column = model.columns[ci];
+      var value = model.heatmapRows[holeIndex][ci];
+      if(!savedTempTrendIsFiniteNumber(value)){
+        html += '<div class="td-tst-trend-hm-cell is-empty" onclick="selectSavedTempTrendHoleFromHeatmap(' + (holeIndex + 1) + ')" title="PH ' + (holeIndex + 1) + ' · ' + model.sectionLabel + ' · ' + formatSavedTempTrendFullDate(column.dateIso) + ' · ' + column.shift + ': no saved reading">—</div>';
+        continue;
+      }
+      var tone = getSavedTempTrendCellTone(value, model.scaleMin, model.scaleMax);
+      var selectedClass = (holeIndex + 1) === model.state.hole ? " is-selected" : "";
+      html += '<div class="td-tst-trend-hm-cell' + selectedClass + '"'
+        + ' onclick="selectSavedTempTrendHoleFromHeatmap(' + (holeIndex + 1) + ')"'
+        + ' title="PH ' + (holeIndex + 1) + ' · ' + model.sectionLabel + ' · ' + formatSavedTempTrendFullDate(column.dateIso) + ' · ' + column.shift + ': ' + Math.round(value) + '°C"'
+        + ' style="background:' + tone.bg + ';color:' + tone.text + ';">' + Math.round(value) + '°</div>';
+    }
+  }
+  grid.innerHTML = html;
+}
+
+function renderSavedTempTrendChart(model){
+  var canvas = document.getElementById("td-tst-trend-chart");
+  var emptyEl = document.getElementById("td-tst-trend-chart-empty");
+  var titleEl = document.getElementById("td-tst-trend-chart-title");
+  var subEl = document.getElementById("td-tst-trend-chart-sub");
+  if(titleEl) titleEl.textContent = model.sectionLabel + " · PH " + model.state.hole + " Trend";
+  if(subEl){
+    subEl.textContent = model.state.shift === "All"
+      ? "Morning, Evening, Night comparison across the selected 7-day window."
+      : (model.state.shift + " readings across the selected 7-day window.");
+  }
+  if(!canvas || !emptyEl){
+    destroySavedTempTrendChart();
+    return;
+  }
+
+  var hasData = model.datasets.some(function(dataset){
+    return (Array.isArray(dataset.data) ? dataset.data : []).some(function(value){ return savedTempTrendIsFiniteNumber(value); });
+  });
+
+  if(model.emptyMessage || !hasData || !window.Chart){
+    destroySavedTempTrendChart();
+    emptyEl.style.display = "block";
+    emptyEl.textContent = model.emptyMessage
+      || (!window.Chart ? "Chart library is not available right now." : "No saved peep-hole trend points are available for the selected window.");
+    return;
+  }
+
+  emptyEl.style.display = "none";
+  var theme = getSavedTempTrendTheme();
+  destroySavedTempTrendChart();
+  savedTempTrendChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: model.chartLabels,
+      datasets: model.datasets.map(function(dataset){
+        return {
+          label: dataset.label,
+          data: dataset.data,
+          borderColor: dataset.borderColor,
+          backgroundColor: dataset.backgroundColor,
+          borderWidth: 3,
+          pointRadius: 3.5,
+          pointHoverRadius: 5,
+          tension: 0.28,
+          fill: false,
+          spanGaps: false
+        };
+      })
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:"index", intersect:false },
+      layout: { padding:{ top:6, right:8, bottom:2, left:4 } },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: theme.dim,
+            boxWidth: 12,
+            padding: 14,
+            font: { family:"ui-monospace,SFMono-Regular,Menlo,Consolas,monospace", size:10 }
+          }
+        },
+        tooltip: {
+          backgroundColor: theme.panel,
+          borderColor: theme.border,
+          borderWidth: 1,
+          cornerRadius: 10,
+          titleColor: theme.text,
+          bodyColor: theme.dim,
+          callbacks: {
+            label: function(context){
+              var value = context && context.parsed ? context.parsed.y : null;
+              return (context.dataset ? context.dataset.label + ": " : "") + (savedTempTrendIsFiniteNumber(value) ? (Math.round(value) + "°C") : "—");
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: theme.axis, maxRotation: 0, autoSkip: false },
+          grid: { color: theme.grid }
+        },
+        y: {
+          ticks: {
+            color: theme.axis,
+            callback: function(value){
+              return Math.round(value) + "°C";
+            }
+          },
+          grid: { color: theme.grid }
+        }
+      }
+    }
+  });
+}
+
+function renderSavedTempTrendPanel(){
+  var panel = document.getElementById("td-tst-trend-panel");
+  if(!panel) return;
+  var model = buildSavedTempTrendModel();
+  syncSavedTempTrendControls(model);
+  renderSavedTempTrendSummary(model);
+  renderSavedTempTrendHeatmap(model);
+  renderSavedTempTrendChart(model);
+}
+
 var BURNER_HISTORY_SHIFT_STORAGE_KEY = "scadaBurnerHistoryShiftFilter";
 var BURNER_HISTORY_FILTER_STORAGE_KEY = "scadaBurnerHistoryFilter";
 
@@ -40093,6 +41150,7 @@ function renderTempDataTable(){
   renderTempDataTableInto("td-saved-tbody", display, tempDataEntries.length);
   renderTempDataTableInto("hm-td-saved-tbody", display, tempDataEntries.length);
   renderTempDataTableInto("stack-td-saved-tbody", display, tempDataEntries.length);
+  renderSavedTempTrendPanel();
   renderBurnerHistoryTable();
 }
 
