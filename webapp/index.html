@@ -25797,29 +25797,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     <div class="cuboid-tab-stack">
       <div class="cuboid-chamber-boundary">
       <div class="cuboid-twin-control-panel">
-        <div class="csr5-filter">
-          <span class="csr5-filter-label csr5-filter-label-main">View Data of Particular Shift / Date</span>
-          <div class="csr5-filter-sep" aria-hidden="true"></div>
-          <label class="csr5-filter-label" for="stack-cuboid-shift-select">Shift</label>
-          <div class="csr5-select-shell">
-            <span class="csr5-select-icon" aria-hidden="true">↺</span>
-            <select id="stack-cuboid-shift-select" class="csr5-select" onchange="onTwinCuboidShiftChanged()" aria-label="Twin cuboid shift selector">
-              <option value="All">All Shifts</option>
-              <option value="Morning">Morning</option>
-              <option value="Evening">Evening</option>
-              <option value="Night">Night</option>
-            </select>
-          </div>
-          <label class="csr5-filter-label" for="stack-cuboid-date-input">Date</label>
-          <div class="csr5-date-shell" onclick="openTwinCuboidDatePicker(event)">
-            <input type="date" id="stack-cuboid-date-input" class="csr5-date-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
-            <button type="button" class="csr5-date-btn" onclick="openTwinCuboidDatePicker(event)" aria-label="Open twin cuboid date selector">📅</button>
-          </div>
-          <div class="csr5-filter-sep" aria-hidden="true"></div>
-          <div id="stack-cuboid-filter-badge" class="csr5-filter-chip">Live Burners + Latest TST</div>
-          <div class="csr5-filter-spacer"></div>
-          <button type="button" class="csr5-latest-btn" onclick="clearTwinCuboidDateFilter()">Latest Data ↗</button>
-        </div>
         <div id="stack-cuboid-live-summary" class="cuboid-twin-live-summary is-empty" aria-label="Current reformer live summary">
           <div class="csr5-params-row">
             <div class="csr5-param-card" style="--param-bar:#f97316;">
@@ -25980,6 +25957,29 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               </div>
             </section>
           </div>
+        </div>
+        <div class="csr5-filter">
+          <span class="csr5-filter-label csr5-filter-label-main">View Data of Particular Shift / Date</span>
+          <div class="csr5-filter-sep" aria-hidden="true"></div>
+          <label class="csr5-filter-label" for="stack-cuboid-shift-select">Shift</label>
+          <div class="csr5-select-shell">
+            <span class="csr5-select-icon" aria-hidden="true">↺</span>
+            <select id="stack-cuboid-shift-select" class="csr5-select" onchange="onTwinCuboidShiftChanged()" aria-label="Twin cuboid shift selector">
+              <option value="All">All Shifts</option>
+              <option value="Morning">Morning</option>
+              <option value="Evening">Evening</option>
+              <option value="Night">Night</option>
+            </select>
+          </div>
+          <label class="csr5-filter-label" for="stack-cuboid-date-input">Date</label>
+          <div class="csr5-date-shell" onclick="openTwinCuboidDatePicker(event)">
+            <input type="date" id="stack-cuboid-date-input" class="csr5-date-input" onchange="onTwinCuboidDateChanged()" aria-label="Twin cuboid date selector">
+            <button type="button" class="csr5-date-btn" onclick="openTwinCuboidDatePicker(event)" aria-label="Open twin cuboid date selector">📅</button>
+          </div>
+          <div class="csr5-filter-sep" aria-hidden="true"></div>
+          <div id="stack-cuboid-filter-badge" class="csr5-filter-chip">Live Burners + Latest TST</div>
+          <div class="csr5-filter-spacer"></div>
+          <button type="button" class="csr5-latest-btn" onclick="clearTwinCuboidDateFilter()">Latest Data ↗</button>
         </div>
       </div>
       <div class="cuboid-tab-shell" data-cuboid-shell="stack-top">
