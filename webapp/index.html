@@ -26883,7 +26883,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
 
       <div id="refdash-pane-composition" class="refdash-pane">
         <div class="refdash-info-bar refdash-mono refdash-comp-sync-row" data-admin-only="true">
-          <span class="refdash-comp-sync-copy">Gas NCV values recalculate instantly when you update the composition below. Save the fuel basis to sync manual values across devices. Naphtha uses live tag FI6303A with editable density and NCV basis.</span>
+          <span class="refdash-comp-sync-copy">Gas NCV values recalculate instantly when you update the composition below. Save the fuel basis to sync manual values across devices. Naphtha uses live tag FI6303A with editable density and NCV basis, and HGU load uses FIC2405 with an admin-selected Naphtha or NG divisor.</span>
           <span id="refdash-comp-save-status" class="refdash-comp-save-status">Local defaults</span>
         </div>
         <div id="refdash-comp-panels" class="refdash-grid refdash-card-grid-4"></div>
@@ -30070,6 +30070,11 @@ function appendReformerSettingsSheet(wb){
   var naphtha = settings.naphtha || {};
   rows.push(["Naphtha Basis", "naphtha", "densityFactor", naphtha.densityFactor, updatedAt, updatedBy]);
   rows.push(["Naphtha Basis", "naphtha", "ncv", naphtha.ncv, updatedAt, updatedBy]);
+  var hgu = settings.hgu || {};
+  var hguDivisors = hgu.divisors || {};
+  rows.push(["HGU Basis", "hgu", "mode", hgu.mode || "naphtha", updatedAt, updatedBy]);
+  rows.push(["HGU Basis", "hgu", "naphthaDivisor", hguDivisors.naphtha, updatedAt, updatedBy]);
+  rows.push(["HGU Basis", "hgu", "ngDivisor", hguDivisors.ng, updatedAt, updatedBy]);
   var ws = XLSX.utils.aoa_to_sheet(rows);
   ws["!cols"] = [{wch:18},{wch:12},{wch:14},{wch:14},{wch:24},{wch:14}];
   XLSX.utils.book_append_sheet(wb, ws, REFORMER_SETTINGS_SHEET_NAME);
@@ -30089,6 +30094,7 @@ function importReformerSettingsFromWorkbook(wb){
     componentNcv: {},
     composition: { psa1:{}, psa2:{}, ng:{} },
     naphtha: {},
+    hgu: { mode:"naphtha", divisors:{} },
     updatedAt: "",
     updatedBy: ""
   };
@@ -30097,10 +30103,18 @@ function importReformerSettingsFromWorkbook(wb){
     var group = String(row && row[1] != null ? row[1] : "").trim();
     var key = String(row && row[2] != null ? row[2] : "").trim();
     var value = row ? row[3] : "";
-    var num = Number(String(value == null ? "" : value).replace(/,/g, "").trim());
-    if(!isFinite(num)) return;
+    var textValue = String(value == null ? "" : value).trim();
     if(row && row[4] && !payload.updatedAt) payload.updatedAt = String(row[4]).trim();
     if(row && row[5] && !payload.updatedBy) payload.updatedBy = String(row[5]).trim();
+    if(section.indexOf("hgu") >= 0 && key){
+      if(/^mode/i.test(key)){
+        if(/^ng/i.test(textValue)) payload.hgu.mode = "ng";
+        else if(/^naphtha/i.test(textValue)) payload.hgu.mode = "naphtha";
+        return;
+      }
+    }
+    var num = Number(String(value == null ? "" : value).replace(/,/g, "").trim());
+    if(!isFinite(num)) return;
     if(section.indexOf("component") >= 0 && section.indexOf("ncv") >= 0 && key){
       payload.componentNcv[key] = num;
     }else if(section.indexOf("gas") >= 0 && payload.composition[group] && key){
@@ -30108,6 +30122,9 @@ function importReformerSettingsFromWorkbook(wb){
     }else if(section.indexOf("naphtha") >= 0 && key){
       if(/^density/i.test(key)) payload.naphtha.densityFactor = num;
       else if(/^ncv/i.test(key)) payload.naphtha.ncv = num;
+    }else if(section.indexOf("hgu") >= 0 && key){
+      if(/^naphtha/i.test(key)) payload.hgu.divisors.naphtha = num;
+      else if(/^ng/i.test(key)) payload.hgu.divisors.ng = num;
     }
   });
   if(!payload.updatedAt) payload.updatedAt = new Date().toISOString();
@@ -36536,11 +36553,24 @@ function formatTdProcessNumericValue(raw, decimals){
     .replace(/(\.\d*?)0+$/, "$1");
 }
 
+function getTdConfiguredHguLoadDivisor(){
+  var divisor = null;
+  try{
+    if(typeof window.getActiveReformerHguLoadDivisor === "function"){
+      divisor = window.getActiveReformerHguLoadDivisor();
+    }
+  }catch(ignoreHguDivisorError){}
+  return (typeof divisor === "number" && isFinite(divisor) && divisor > 0)
+    ? divisor
+    : TD_HGU_LOAD_DIVISOR;
+}
+
 function normalizeTdHguLoadPercent(raw){
   var num = parseTdProcessNumericValue(raw);
   if(num === null) return null;
-  if(Math.abs(num) > TD_HGU_LOAD_RAW_THRESHOLD && TD_HGU_LOAD_DIVISOR > 0){
-    num = (num / TD_HGU_LOAD_DIVISOR) * 100;
+  var divisor = getTdConfiguredHguLoadDivisor();
+  if(Math.abs(num) > TD_HGU_LOAD_RAW_THRESHOLD && divisor > 0){
+    num = (num / divisor) * 100;
   }
   return num;
 }
@@ -42199,8 +42229,15 @@ body.light-theme .btab-alarm-count{
   var REFORMER_DASH_SETTINGS_STORAGE_KEY = "scadaReformerDashSettingsV1";
   var REFORMER_DASH_NAPHTHA_DEFAULT_DENSITY_FACTOR = 0.7;
   var REFORMER_DASH_NAPHTHA_DEFAULT_NCV = 10500;
+  var REFORMER_DASH_HGU_DEFAULT_MODE = "naphtha";
+  var REFORMER_DASH_HGU_DEFAULT_DIVISOR = (typeof TD_HGU_LOAD_DIVISOR === "number" && isFinite(TD_HGU_LOAD_DIVISOR) && TD_HGU_LOAD_DIVISOR > 0) ? TD_HGU_LOAD_DIVISOR : 26636;
   var REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = REFORMER_DASH_NAPHTHA_DEFAULT_DENSITY_FACTOR;
   var REFORMER_DASH_NAPHTHA_NCV = REFORMER_DASH_NAPHTHA_DEFAULT_NCV;
+  var REFORMER_DASH_HGU_MODE = REFORMER_DASH_HGU_DEFAULT_MODE;
+  var REFORMER_DASH_HGU_DIVISORS = {
+    naphtha: REFORMER_DASH_HGU_DEFAULT_DIVISOR,
+    ng: REFORMER_DASH_HGU_DEFAULT_DIVISOR
+  };
   var REFORMER_DASH_FIELD_ALIAS = {
     hguLoad: "hguLoad",
     abCot: "abCot",
@@ -42284,9 +42321,52 @@ body.light-theme .btab-alarm-count{
     return out;
   }
 
+  function getReformerDashHguModeLabel(mode){
+    return String(mode || "").toLowerCase() === "ng" ? "NG Mode" : "Naphtha Mode";
+  }
+
+  function sanitizeReformerDashHguMode(raw){
+    var mode = String(raw || "").trim().toLowerCase();
+    return mode === "ng" ? "ng" : "naphtha";
+  }
+
+  function cloneReformerHguBasis(source){
+    var src = source && typeof source === "object" ? source : {};
+    var divisors = src.divisors && typeof src.divisors === "object" ? src.divisors : src;
+    var naphtha = parseNumberOrNull(divisors.naphtha != null ? divisors.naphtha : (src.naphthaDivisor != null ? src.naphthaDivisor : src.divisor));
+    var ng = parseNumberOrNull(divisors.ng != null ? divisors.ng : src.ngDivisor);
+    return {
+      mode: sanitizeReformerDashHguMode(src.mode || src.activeMode || REFORMER_DASH_HGU_DEFAULT_MODE),
+      divisors: {
+        naphtha: isFiniteNumber(naphtha) ? clamp(naphtha, 1, 1000000) : REFORMER_DASH_HGU_DEFAULT_DIVISOR,
+        ng: isFiniteNumber(ng) ? clamp(ng, 1, 1000000) : REFORMER_DASH_HGU_DEFAULT_DIVISOR
+      }
+    };
+  }
+
+  function getActiveReformerHguLoadDivisor(){
+    return sanitizeReformerDashHguMode(REFORMER_DASH_HGU_MODE) === "ng"
+      ? REFORMER_DASH_HGU_DIVISORS.ng
+      : REFORMER_DASH_HGU_DIVISORS.naphtha;
+  }
+
+  function getCurrentReformerHguFeedFlowRaw(){
+    try{
+      if(typeof getTdProcessBindingByKey !== "function" || typeof getTdPlantBindingTagId !== "function") return null;
+      var binding = getTdProcessBindingByKey("hguLoad");
+      var tagId = getTdPlantBindingTagId(binding);
+      var row = tagId && tdPlantLatestByTag && tdPlantLatestByTag.get ? tdPlantLatestByTag.get(tagId) : null;
+      var rawValue = row ? parseNumberOrNull(row.value) : null;
+      return isFiniteNumber(rawValue) ? rawValue : null;
+    }catch(ignoreHguRawError){
+      return null;
+    }
+  }
+
   function sanitizeReformerDashSettings(raw){
     var source = raw && typeof raw === "object" ? raw : {};
     var naphtha = source.naphtha && typeof source.naphtha === "object" ? source.naphtha : {};
+    var hgu = cloneReformerHguBasis(source.hgu || source.hguLoad || {});
     var density = parseNumberOrNull(naphtha.densityFactor);
     var ncv = parseNumberOrNull(naphtha.ncv);
     var componentNcvSource = source.componentNcv || source.ncvReference || source.ncv || {};
@@ -42298,6 +42378,7 @@ body.light-theme .btab-alarm-count{
         densityFactor: isFiniteNumber(density) ? clamp(density, 0.01, 10) : REFORMER_DASH_NAPHTHA_DEFAULT_DENSITY_FACTOR,
         ncv: isFiniteNumber(ncv) ? clamp(ncv, 0, 50000) : REFORMER_DASH_NAPHTHA_DEFAULT_NCV
       },
+      hgu: hgu,
       updatedAt: String(source.updatedAt || source.updated_at || "").trim(),
       updatedBy: String(source.updatedBy || source.updated_by || "").trim()
     };
@@ -42321,6 +42402,8 @@ body.light-theme .btab-alarm-count{
   REFORMER_DASH_NCV = cloneReformerNcvReference(initialReformerDashSettings.componentNcv);
   REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = initialReformerDashSettings.naphtha.densityFactor;
   REFORMER_DASH_NAPHTHA_NCV = initialReformerDashSettings.naphtha.ncv;
+  REFORMER_DASH_HGU_MODE = initialReformerDashSettings.hgu.mode;
+  REFORMER_DASH_HGU_DIVISORS = cloneReformerHguBasis(initialReformerDashSettings.hgu).divisors;
 
   var reformerDashState = window.__reformerDashState || (window.__reformerDashState = {
     initialized: false,
@@ -42436,6 +42519,13 @@ body.light-theme .btab-alarm-count{
         densityFactor: REFORMER_DASH_NAPHTHA_DENSITY_FACTOR,
         ncv: REFORMER_DASH_NAPHTHA_NCV
       },
+      hgu: {
+        mode: REFORMER_DASH_HGU_MODE,
+        divisors: {
+          naphtha: REFORMER_DASH_HGU_DIVISORS.naphtha,
+          ng: REFORMER_DASH_HGU_DIVISORS.ng
+        }
+      },
       updatedAt: reformerDashState.settingsUpdatedAt || "",
       updatedBy: reformerDashState.settingsUpdatedBy || ""
     };
@@ -42462,6 +42552,15 @@ body.light-theme .btab-alarm-count{
     renderReformerDashSettingsStatus();
   }
 
+  function refreshReformerHguDerivedViews(){
+    if(typeof restoreTdPlantImportedValues === "function"){
+      restoreTdPlantImportedValues();
+    }
+    if(typeof renderCuboidReformerSummary === "function"){
+      renderCuboidReformerSummary();
+    }
+  }
+
   function renderReformerDashSettingsStatus(){
     var status = getReformerDashEl("refdash-comp-save-status");
     var btn = getReformerDashEl("refdash-comp-save-btn");
@@ -42475,10 +42574,10 @@ body.light-theme .btab-alarm-count{
     var stamp = savedAt ? (formatDashDateTime(savedAt) + " (" + getDashAgoLabel(savedAt) + ")") : "defaults";
     var by = reformerDashState.settingsUpdatedBy ? (" by " + reformerDashState.settingsUpdatedBy) : "";
     if(!savedAt && !reformerDashState.settingsDirty){
-      status.textContent = "Local default fuel basis";
+      status.textContent = "Local default reformer basis";
       return;
     }
-    status.textContent = (reformerDashState.settingsDirty ? "Unsaved fuel basis · " : "Synced fuel basis · ") + stamp + by;
+    status.textContent = (reformerDashState.settingsDirty ? "Unsaved reformer basis · " : "Synced reformer basis · ") + stamp + by;
   }
 
   function applyReformerDashSyncSettings(raw, opts){
@@ -42494,10 +42593,13 @@ body.light-theme .btab-alarm-count{
     REFORMER_DASH_NCV = cloneReformerNcvReference(incoming.componentNcv);
     REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = incoming.naphtha.densityFactor;
     REFORMER_DASH_NAPHTHA_NCV = incoming.naphtha.ncv;
+    REFORMER_DASH_HGU_MODE = incoming.hgu.mode;
+    REFORMER_DASH_HGU_DIVISORS = cloneReformerHguBasis(incoming.hgu).divisors;
     reformerDashState.settingsUpdatedAt = incoming.updatedAt || reformerDashState.settingsUpdatedAt || "";
     reformerDashState.settingsUpdatedBy = incoming.updatedBy || "";
     reformerDashState.settingsDirty = options.source !== "server" && !!options.dirty;
     persistReformerDashSettings();
+    refreshReformerHguDerivedViews();
     if(options.render !== false) renderReformerDashboardFromState();
     else renderReformerDashSettingsStatus();
     return true;
@@ -42515,7 +42617,7 @@ body.light-theme .btab-alarm-count{
         persistReformerDashSettings();
         renderReformerDashSettingsStatus();
         if(typeof showSaveActionToast === "function"){
-          showSaveActionToast(result === true ? "✅ Fuel basis synced across devices" : "📶 Fuel basis queued for central sync");
+          showSaveActionToast(result === true ? "✅ Reformer basis synced across devices" : "📶 Reformer basis queued for central sync");
         }
         return result;
       }
@@ -43158,6 +43260,10 @@ body.light-theme .btab-alarm-count{
     }
     var metrics = metricsArg || calcReformerMetrics();
     var pv = reformerDashState.data || makeEmptyData();
+    var hguRaw = getCurrentReformerHguFeedFlowRaw();
+    var hguMode = sanitizeReformerDashHguMode(REFORMER_DASH_HGU_MODE);
+    var hguDivisor = getActiveReformerHguLoadDivisor();
+    var hguUsesDivisor = isFiniteNumber(hguRaw) && Math.abs(hguRaw) > TD_HGU_LOAD_RAW_THRESHOLD && hguDivisor > 0;
     var totalOffGas = nz(pv.psa1Flow) + nz(pv.psa2Flow);
     var fuels = Array.isArray(fuelsArg) ? fuelsArg : buildReformerFuelModel(metrics, pv);
     calcRoot.style.display = "block";
@@ -43172,6 +43278,12 @@ body.light-theme .btab-alarm-count{
       + '<div class="refdash-info-bar refdash-inline-bar refdash-mono">This section is visible only in admin mode and shows the exact formulas currently used by the dashboard model.</div>'
       + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;">'
       + [
+        buildHeatDutyCalcCard("HGU Load Basis", "var(--refdash-accent)", [
+          buildHeatDutyCalcRow("Active mode", "manual admin selector", getReformerDashHguModeLabel(hguMode), "var(--refdash-accent)"),
+          buildHeatDutyCalcRow("Active divisor", hguMode === "ng" ? "saved NG divisor" : "saved naphtha divisor", formatValue(hguDivisor, 0), "var(--refdash-accent)"),
+          buildHeatDutyCalcRow("Live FIC2405", "current feed-flow mixing-point tag", isFiniteNumber(hguRaw) ? (formatValue(hguRaw, 2) + " Nm3/h") : "—", "var(--refdash-cyan)"),
+          buildHeatDutyCalcRow("Displayed HGU Load", hguUsesDivisor ? ("(" + formatValue(hguRaw, 2) + " / " + formatValue(hguDivisor, 0) + ") x 100") : "raw FIC2405 direct % when abs(FIC2405) <= 500", formatValue(pv.hguLoad, 2) + " %", "var(--refdash-green)")
+        ], "FIC2405 values above 500 are converted using the active divisor. Values at or below 500 are treated as already being percentage load."),
         buildHeatDutyCalcCard("NCV Basis", "var(--refdash-accent)", [
           buildHeatDutyCalcRow("PSA-1 NCV", "sum(component % / 100 x NCV reference)", formatValue(metrics.psa1NCV, 0) + " kcal/Nm3", "var(--refdash-cyan)"),
           buildHeatDutyCalcRow("PSA-2 NCV", "sum(component % / 100 x NCV reference)", formatValue(metrics.psa2NCV, 0) + " kcal/Nm3", "var(--refdash-purple)"),
@@ -43493,6 +43605,10 @@ body.light-theme .btab-alarm-count{
 
   function renderCompositionPane(){
     var metrics = calcReformerMetrics();
+    var showAdminTools = typeof isAdminModeActive === "function" && isAdminModeActive();
+    var hguRaw = getCurrentReformerHguFeedFlowRaw();
+    var activeHguMode = sanitizeReformerDashHguMode(REFORMER_DASH_HGU_MODE);
+    var activeHguDivisor = getActiveReformerHguLoadDivisor();
     var groups = [
       { key:"psa1", title:"PSA-1 Off Gas (%Vol)", color:"var(--refdash-cyan)" },
       { key:"psa2", title:"PSA-2 Off Gas (%Vol)", color:"var(--refdash-purple)" },
@@ -43513,6 +43629,20 @@ body.light-theme .btab-alarm-count{
           + '<div class="refdash-comp-field">'
           + '<div class="refdash-comp-label refdash-mono">' + label + '</div>'
           + '<input class="refdash-comp-input refdash-mono" type="number" step="' + step + '" value="' + value + '" onchange="' + handler + '">'
+          + (note ? ('<div class="refdash-comp-note">' + note + '</div>') : '')
+          + '</div>';
+      }
+      function buildSelectCompCell(label, value, handler, options, note){
+        var items = Array.isArray(options) ? options : [];
+        return ''
+          + '<div class="refdash-comp-field">'
+          + '<div class="refdash-comp-label refdash-mono">' + label + '</div>'
+          + '<select class="refdash-comp-input refdash-mono" onchange="' + handler + '">'
+          + items.map(function(item){
+            var selected = String(item.value) === String(value) ? ' selected' : '';
+            return '<option value="' + item.value + '"' + selected + '>' + item.label + '</option>';
+          }).join("")
+          + '</select>'
           + (note ? ('<div class="refdash-comp-note">' + note + '</div>') : '')
           + '</div>';
       }
@@ -43544,7 +43674,23 @@ body.light-theme .btab-alarm-count{
         + buildEditableCompCell("NCV Basis", formatValue(REFORMER_DASH_NAPHTHA_NCV, 0, "10500"), "10", "updateReformerDashNaphthaBasis('ncv', this.value)", "kcal/kg")
         + '</div>'
         + '<div class="refdash-comp-summary refdash-mono">Heat duty = FI6303A x ' + formatValue(REFORMER_DASH_NAPHTHA_DENSITY_FACTOR, 2) + ' x 1000 x ' + formatValue(REFORMER_DASH_NAPHTHA_NCV, 0) + ' / 1,000,000</div>'
-        + '</div>';
+        + '</div>'
+        + (showAdminTools ? (
+          '<div class="refdash-comp-panel refdash-comp-panel-toned" data-admin-only="true"' + buildRefdashStyleVars({ "--refdash-tone": "var(--refdash-accent)" }) + '>'
+          + '<div class="refdash-comp-title refdash-mono">HGU Load Basis (FIC2405)</div>'
+          + '<div class="refdash-comp-grid">'
+          + buildSelectCompCell("Active Mode", activeHguMode, "updateReformerDashHguBasisMode(this.value)", [
+              { value:"naphtha", label:"Naphtha Mode" },
+              { value:"ng", label:"NG Mode" }
+            ], "Selected mode decides which divisor is applied.")
+          + buildEditableCompCell("Naphtha Divisor", formatValue(REFORMER_DASH_HGU_DIVISORS.naphtha, 0, String(REFORMER_DASH_HGU_DEFAULT_DIVISOR)), "1", "updateReformerDashHguBasisDivisor('naphtha', this.value)", "Used when Naphtha mode is active")
+          + buildEditableCompCell("NG Divisor", formatValue(REFORMER_DASH_HGU_DIVISORS.ng, 0, String(REFORMER_DASH_HGU_DEFAULT_DIVISOR)), "1", "updateReformerDashHguBasisDivisor('ng', this.value)", "Used when NG mode is active")
+          + buildStaticCompCell("Live FIC2405", isFiniteNumber(hguRaw) ? (formatValue(hguRaw, 2) + " Nm3/h") : "—", Math.abs(nz(hguRaw)) > TD_HGU_LOAD_RAW_THRESHOLD ? ("Current HGU Load = " + formatValue(reformerDashState.data.hguLoad, 2) + "%") : "If FIC2405 is 500 or below, the raw value is treated as % directly.")
+          + '</div>'
+          + '<div class="refdash-comp-summary refdash-mono">HGU Load = ' + (isFiniteNumber(hguRaw) && Math.abs(hguRaw) > TD_HGU_LOAD_RAW_THRESHOLD ? ('FIC2405 / ' + formatValue(activeHguDivisor, 0) + ' x 100') : 'raw FIC2405 (direct %)') + ' · Active ' + getReformerDashHguModeLabel(activeHguMode) + '</div>'
+          + '</div>'
+        ) : '')
+        ;
     }
     renderReformerDashSettingsStatus();
     var refTable = getReformerDashEl("refdash-ncv-ref-table");
@@ -44111,6 +44257,23 @@ body.light-theme .btab-alarm-count{
     renderReformerDashboardFromState();
   }
 
+  function updateReformerDashHguBasisMode(value){
+    REFORMER_DASH_HGU_MODE = sanitizeReformerDashHguMode(value);
+    markReformerDashSettingsEdited();
+    refreshReformerHguDerivedViews();
+    renderReformerDashboardFromState();
+  }
+
+  function updateReformerDashHguBasisDivisor(mode, value){
+    var targetMode = sanitizeReformerDashHguMode(mode);
+    var num = parseNumberOrNull(value);
+    if(!isFiniteNumber(num)) return;
+    REFORMER_DASH_HGU_DIVISORS[targetMode] = clamp(num, 1, 1000000);
+    markReformerDashSettingsEdited();
+    refreshReformerHguDerivedViews();
+    renderReformerDashboardFromState();
+  }
+
   function updateReformerDashComponentNcv(key, value){
     if(!Object.prototype.hasOwnProperty.call(REFORMER_DASH_DEFAULT_NCV, key)) return;
     var num = parseNumberOrNull(value);
@@ -44129,8 +44292,11 @@ window.switchReformerDashTab = switchReformerDashTab;
 window.refreshReformerDashboard = refreshReformerDashboard;
 window.refreshReformerDashboardLite = refreshReformerDashboardLite;
 window.ensureReformerDashboardLoaded = ensureReformerDashboardLoaded;
+window.getActiveReformerHguLoadDivisor = getActiveReformerHguLoadDivisor;
 window.updateReformerDashComposition = updateReformerDashComposition;
 window.updateReformerDashNaphthaBasis = updateReformerDashNaphthaBasis;
+window.updateReformerDashHguBasisMode = updateReformerDashHguBasisMode;
+window.updateReformerDashHguBasisDivisor = updateReformerDashHguBasisDivisor;
 window.updateReformerDashComponentNcv = updateReformerDashComponentNcv;
 window.getReformerDashSyncSettings = getReformerDashSettingsPayload;
 window.applyReformerDashSyncSettings = applyReformerDashSyncSettings;
