@@ -10589,10 +10589,12 @@ function getPasswordCandidates(pw){
   return out;
 }
 function showForgotModal(){
-  document.getElementById("forgotModal").classList.add("open");
+  var modal = document.getElementById("forgotModal");
+  if(modal) modal.classList.add("open");
 }
 function hideForgotModal(){
-  document.getElementById("forgotModal").classList.remove("open");
+  var modal = document.getElementById("forgotModal");
+  if(modal) modal.classList.remove("open");
 }
 function openChangePasswordFromForgot(){
   hideForgotModal();
@@ -15410,7 +15412,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       <div>
         <div class="ls-brand-name">IndianOil</div>
         <div class="ls-brand-full">Indian Oil Corporation Limited</div>
-        <div class="ls-brand-govt">Under Ministry of Petroleum &amp; Natural Gas, Govt. of India</div>
       </div>
     </div>
 
@@ -15440,9 +15441,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         </div>
         <div class="ls-desc">
           Real-time monitoring and management of reformer<br>
-          burner operations across refinery walls.<br>
-          <strong style="color:#F37022;font-weight:700;">Authorized Personnel Only.</strong>
-          Unauthorized access is<br>prohibited and subject to disciplinary action.
+          burner operations across refinery walls.
         </div>
         <div class="ls-badges">
           <span class="ls-badge">🏭 Refinery Operations</span>
@@ -15480,7 +15479,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <button type="button" class="ls-eye-btn" id="passwordEyeBtn" onclick="toggleLoginPasswordVisibility()" aria-label="Show password" title="Show password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
         </div>
         <div id="ls-error" class="ls-error">
-          ⚠&nbsp; Invalid credentials. Please try again or contact IT Helpdesk.
+          ⚠&nbsp; Invalid credentials. Please try again.
         </div>
       </div>
 
@@ -15491,15 +15490,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       <button class="ls-btn ls-btn-bio" id="ls-biometric-btn" style="display:none;" onclick="loginWithBiometric()">
         <span>👆 Use Fingerprint Login</span>
       </button>
-
-      <div class="ls-helper">
-        <button class="ls-forgot-link" onclick="showForgotModal()">🔑 Forgot Password? Contact IT Helpdesk</button>
-      </div>
-
-      <div class="ls-helpdesk">
-        <span>🛟 IT Helpdesk</span>
-        <span><b>8476056756</b>&nbsp;|&nbsp;<b><a href="mailto:dubeya1@indianoil.in" style="color:#fff;font-weight:700;text-decoration:none;">dubeya1@indianoil.in</a></b></span>
-      </div>
     </div>
   </div><!-- /ls-body -->
 
@@ -15508,29 +15498,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     <button class="install-fab" id="installAppFab" data-install-app data-install-autohide title="Install this dashboard app">⬇️ Install App</button>
   </div>
 
-
-<!-- Forgot Password Modal -->
-<div id="forgotModal">
-  <div class="fm-box">
-    <button class="fm-close" onclick="hideForgotModal()">&#10005;</button>
-    <div class="fm-icon">🔑</div>
-    <div class="fm-title">Forgot Password?</div>
-    <div class="fm-sub">Please contact the IT Helpdesk to reset your IOCL portal password. Mention your Employee ID for faster resolution.</div>
-    <div class="fm-card">
-      <div class="fm-label">📞 Helpdesk Phone</div>
-      <div class="fm-value">8476056756</div>
-    </div>
-    <div class="fm-card">
-      <div class="fm-label">✉️ Helpdesk Email</div>
-      <div class="fm-value"><a href="mailto:dubeya1@indianoil.in" style="color:#F37022;text-decoration:none;">dubeya1@indianoil.in</a></div>
-    </div>
-    <div class="fm-note">Support available during office hours (Mon–Sat, 8 AM – 6 PM).<br>Please quote your Employee ID when contacting support.</div>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button class="fm-btn" onclick="openChangePasswordFromForgot()">Change Password</button>
-      <button class="fm-btn" onclick="hideForgotModal()" style="background:linear-gradient(90deg,#334155,#475569);">Close</button>
-    </div>
-  </div>
-</div>
 </div><!-- /loginScreen -->
 
 <!-- Change Password Modal -->
