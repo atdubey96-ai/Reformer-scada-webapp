@@ -15479,7 +15479,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <button type="button" class="ls-eye-btn" id="passwordEyeBtn" onclick="toggleLoginPasswordVisibility()" aria-label="Show password" title="Show password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
         </div>
         <div id="ls-error" class="ls-error">
-          ⚠&nbsp; Invalid credentials. Please try again.
+          ⚠&nbsp; Invalid credentials. Please try again or contact IT Helpdesk.
         </div>
       </div>
 
@@ -15490,6 +15490,15 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       <button class="ls-btn ls-btn-bio" id="ls-biometric-btn" style="display:none;" onclick="loginWithBiometric()">
         <span>👆 Use Fingerprint Login</span>
       </button>
+
+      <div class="ls-helper">
+        <button class="ls-forgot-link" onclick="showForgotModal()">🔑 Forgot Password? Contact IT Helpdesk</button>
+      </div>
+
+      <div class="ls-helpdesk">
+        <span>🛟 IT Helpdesk</span>
+        <span><b>8476056756</b>&nbsp;|&nbsp;<b><a href="mailto:dubeya1@indianoil.in" style="color:#fff;font-weight:700;text-decoration:none;">dubeya1@indianoil.in</a></b></span>
+      </div>
     </div>
   </div><!-- /ls-body -->
 
@@ -15499,6 +15508,29 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   </div>
 
 </div><!-- /loginScreen -->
+
+<!-- Forgot Password Modal -->
+<div id="forgotModal">
+  <div class="fm-box">
+    <button class="fm-close" onclick="hideForgotModal()">&#10005;</button>
+    <div class="fm-icon">🔑</div>
+    <div class="fm-title">Forgot Password?</div>
+    <div class="fm-sub">Please contact the IT Helpdesk to reset your IOCL portal password. Mention your Employee ID for faster resolution.</div>
+    <div class="fm-card">
+      <div class="fm-label">📞 Helpdesk Phone</div>
+      <div class="fm-value">8476056756</div>
+    </div>
+    <div class="fm-card">
+      <div class="fm-label">✉️ Helpdesk Email</div>
+      <div class="fm-value"><a href="mailto:dubeya1@indianoil.in" style="color:#F37022;text-decoration:none;">dubeya1@indianoil.in</a></div>
+    </div>
+    <div class="fm-note">Support available during office hours (Mon–Sat, 8 AM – 6 PM).<br>Please quote your Employee ID when contacting support.</div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="fm-btn" onclick="openChangePasswordFromForgot()">Change Password</button>
+      <button class="fm-btn" onclick="hideForgotModal()" style="background:linear-gradient(90deg,#334155,#475569);">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- Change Password Modal -->
 <div id="changePwModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
