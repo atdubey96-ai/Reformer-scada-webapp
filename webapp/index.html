@@ -696,7 +696,7 @@ body.light-theme .interface-mode-note{color:#64748b;}
 }
 .ls-btn-bio:hover{box-shadow:0 7px 30px rgba(37,99,235,0.58);}
 .ls-helper{
-  text-align:center;margin-top:14px;font-size:12px;
+  text-align:center;margin-top:12px;font-size:12px;
   color:#7090b8;  /* was #2a4068 — now clearly visible */
 }
 .ls-forgot-link{
@@ -736,37 +736,6 @@ body.light-theme .interface-mode-note{color:#64748b;}
   color:#c8dff8;  /* was #3a5a7a — now clearly legible */
   font-weight:700;
 }
-.ls-helpdesk{
-  margin-top:16px;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(243,112,34,0.2);
-  border-radius:6px;padding:10px 14px;
-  font-size:11.5px;
-  color:#90b8e0;  /* was #3a5a7a — now readable */
-  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;
-}
-.ls-helpdesk a{
-  color:#ffffff;
-  text-decoration:none;
-  font-weight:700;
-  letter-spacing:0.3px;
-}
-.ls-helpdesk a:hover{
-  color:#F37022;
-  text-decoration:underline;
-}
-.ls-helpdesk b{
-  color:#F37022;
-  font-weight:700;
-}
-
-/* Forgot Password Modal */
-#forgotModal{
-  display:none;position:fixed;inset:0;z-index:99999;
-  background:rgba(0,0,0,0.7);
-  align-items:center;justify-content:center;
-}
-#forgotModal.open{display:flex;}
 .fm-box{
   background:linear-gradient(175deg,#071e54 0%,#030f3a 100%);
   border:1px solid rgba(243,112,34,0.5);
@@ -916,11 +885,6 @@ body.light-theme .interface-mode-note{color:#64748b;}
   .ls-security{
     margin-top:14px;
     padding-top:12px;
-  }
-  .ls-helpdesk{
-    margin-top:10px;
-    padding:8px 10px;
-    font-size:10px;
   }
   /* Clean mobile sign-in mode (no overlap) */
   #loginScreen{
@@ -10125,16 +10089,6 @@ body.light-theme .hm-adjust-empty{
     border-radius:14px !important;
     background:rgba(255,255,255,0.05) !important;
   }
-  #loginScreen .ls-helpdesk{
-    display:flex !important;
-    margin-top:14px !important;
-    padding:11px 12px !important;
-    border-radius:16px !important;
-    background:rgba(96,176,240,0.08) !important;
-    font-size:11px !important;
-    gap:8px !important;
-    flex-wrap:wrap !important;
-  }
   #loginScreen .ls-credit-row{
     display:flex !important;
     flex-direction:column !important;
@@ -10587,18 +10541,6 @@ function getPasswordCandidates(pw){
     out.push(k);
   }
   return out;
-}
-function showForgotModal(){
-  var modal = document.getElementById("forgotModal");
-  if(modal) modal.classList.add("open");
-}
-function hideForgotModal(){
-  var modal = document.getElementById("forgotModal");
-  if(modal) modal.classList.remove("open");
-}
-function openChangePasswordFromForgot(){
-  hideForgotModal();
-  showChangePasswordModal();
 }
 async function login(){
   if(window._scadaLoginInFlight) return false;
@@ -15479,7 +15421,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <button type="button" class="ls-eye-btn" id="passwordEyeBtn" onclick="toggleLoginPasswordVisibility()" aria-label="Show password" title="Show password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
         </div>
         <div id="ls-error" class="ls-error">
-          ⚠&nbsp; Invalid credentials. Please try again or contact IT Helpdesk.
+          ⚠&nbsp; Invalid credentials. Please try again.
         </div>
       </div>
 
@@ -15492,12 +15434,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       </button>
 
       <div class="ls-helper">
-        <button class="ls-forgot-link" onclick="showForgotModal()">🔑 Forgot Password? Contact IT Helpdesk</button>
-      </div>
-
-      <div class="ls-helpdesk">
-        <span>🛟 IT Helpdesk</span>
-        <span><b>8476056756</b>&nbsp;|&nbsp;<b><a href="mailto:dubeya1@indianoil.in" style="color:#fff;font-weight:700;text-decoration:none;">dubeya1@indianoil.in</a></b></span>
+        <button class="ls-forgot-link" onclick="showChangePasswordModal()">Change Password</button>
       </div>
     </div>
   </div><!-- /ls-body -->
@@ -15508,29 +15445,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   </div>
 
 </div><!-- /loginScreen -->
-
-<!-- Forgot Password Modal -->
-<div id="forgotModal">
-  <div class="fm-box">
-    <button class="fm-close" onclick="hideForgotModal()">&#10005;</button>
-    <div class="fm-icon">🔑</div>
-    <div class="fm-title">Forgot Password?</div>
-    <div class="fm-sub">Please contact the IT Helpdesk to reset your IOCL portal password. Mention your Employee ID for faster resolution.</div>
-    <div class="fm-card">
-      <div class="fm-label">📞 Helpdesk Phone</div>
-      <div class="fm-value">8476056756</div>
-    </div>
-    <div class="fm-card">
-      <div class="fm-label">✉️ Helpdesk Email</div>
-      <div class="fm-value"><a href="mailto:dubeya1@indianoil.in" style="color:#F37022;text-decoration:none;">dubeya1@indianoil.in</a></div>
-    </div>
-    <div class="fm-note">Support available during office hours (Mon–Sat, 8 AM – 6 PM).<br>Please quote your Employee ID when contacting support.</div>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button class="fm-btn" onclick="openChangePasswordFromForgot()">Change Password</button>
-      <button class="fm-btn" onclick="hideForgotModal()" style="background:linear-gradient(90deg,#334155,#475569);">Close</button>
-    </div>
-  </div>
-</div>
 
 <!-- Change Password Modal -->
 <div id="changePwModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
@@ -27151,8 +27065,6 @@ document.addEventListener("DOMContentLoaded",function(){
   updateNotificationToggleUI();
   updateAlarmSoundToggleUI();
   updateAlarmToneUI();
-  var m=document.getElementById("forgotModal");
-  if(m) m.addEventListener("click",function(e){ if(e.target===this) hideForgotModal(); });
   var adminModal = document.getElementById("adminPinModal");
   if(adminModal) adminModal.addEventListener("click",function(e){ if(e.target===this) hideAdminPinModal(); });
   var deviceLoginModal = document.getElementById("deviceLoginModal");
