@@ -1,9 +1,10 @@
 // Relay for the office Excel push: forwards /api/sb/rest/v1/<table> to the plant Supabase REST API.
 // Lets the office PC reach Supabase through the vercel.app domain when the proxy blocks *.supabase.co.
-const { getPlantSupabaseUrl } = require("../../../scada/_shared");
+const { getPlantSupabaseUrl, getPlantSupabaseAnonKey } = require("../../../scada/_shared");
 
 const ALLOWED_TABLES = new Set(["plant_data", "plant_data_history", "h2_material_balance"]);
-const FORWARD_HEADERS = ["apikey", "authorization", "content-type", "prefer", "accept"];
+// apikey/authorization are always set server-side (new project anon key), so old Excel keys still work.
+const FORWARD_HEADERS = ["content-type", "prefer", "accept"];
 
 module.exports = async (req, res) => {
   const table = String((req.query && req.query.table) || "");
@@ -24,6 +25,9 @@ module.exports = async (req, res) => {
   for (const h of FORWARD_HEADERS) {
     if (req.headers[h]) headers[h] = req.headers[h];
   }
+  const anonKey = getPlantSupabaseAnonKey();
+  headers.apikey = anonKey;
+  headers.authorization = "Bearer " + anonKey;
 
   let body;
   if (req.method !== "GET") {
