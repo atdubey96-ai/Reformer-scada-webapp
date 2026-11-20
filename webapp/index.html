@@ -24721,12 +24721,12 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <button type="button" id="td-ocr-operator-btn" data-operator-only="true" onclick="openTstOperatorOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload scanned TST file. Operator mode processes automatically with protected OCR routing and emergency fallback when needed.">
             📄 Drop Scanned TST file
           </button>
-          <input type="file" id="td-ocr-claude-file" data-admin-only="true" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstClaudeOcrSelect(event)">
-          <button type="button" id="td-ocr-claude-btn" data-admin-only="true" onclick="openTstClaudeOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Vision OCR">
+          <input type="file" id="td-ocr-claude-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstClaudeOcrSelect(event)">
+          <button type="button" id="td-ocr-claude-btn" onclick="openTstClaudeOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using Vision OCR">
             🤖 Vision OCR
           </button>
-          <input type="file" id="td-ocr-pdf-file" data-admin-only="true" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
-          <button type="button" id="td-ocr-pdf-btn" data-admin-only="true" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using GPT-4 Vision OCR">
+          <input type="file" id="td-ocr-pdf-file" accept="application/pdf,.pdf,image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif" style="display:none;" onchange="handleTstPdfOcrSelect(event)">
+          <button type="button" id="td-ocr-pdf-btn" onclick="openTstPdfOcrPicker()" class="td-toolbar-btn td-toolbar-btn-soft" title="Upload PDF or photo and fill TST cells using GPT-4 Vision OCR">
             🧠 GPT-4 Vision
           </button>
           <div class="td-fill-menu-wrap" data-admin-only="true">
@@ -24750,7 +24750,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           </button>
         </div>
       </div>
-      <div id="td-ocr-quota-hint" class="td-ocr-quota-hint" data-admin-only="true" aria-live="polite">Shared OCR quota: Today 0/6 · Week 0/25 · Month 0/100.</div>
+      <div id="td-ocr-quota-hint" class="td-ocr-quota-hint" aria-live="polite">Shared OCR quota: Today 0/6 · Week 0/25 · Month 0/100.</div>
 
       <div class="td-entry-layout">
       <!-- ── Section 1: Peep Hole Temperatures ── -->
@@ -26384,7 +26384,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       </div>
       </div>
       <div class="cuboid-followup-stack">
-        <div id="stack-ai-card" data-admin-only="true">
+        <div id="stack-ai-card">
           <div class="stack-ai-head">
             <div>
               <div class="stack-ai-title scada-panel-title">Local AI Prediction &amp; Suggestions</div>
