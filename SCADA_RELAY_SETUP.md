@@ -6,7 +6,7 @@ Host a relay on your own domain and point the app to it.
 ## 1) Deploy relay
 - Deploy `/Users/ashutoshdubey/Documents/New project/scada-relay-worker.js` as a Cloudflare Worker.
 - Add Worker variables/secrets:
-  - `SUPABASE_URL` = `https://xqkbrlcdbgykmatzwvct.supabase.co`
+  - `SUPABASE_URL` = `https://lawrglgxkrfibajixfkp.supabase.co`
   - `SUPABASE_SERVICE_ROLE_KEY` = your Supabase service role key
   - `SUPABASE_TABLE` = `scada_reports`
   - `AUTH_TABLE` = `scada_auth`

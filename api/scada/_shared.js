@@ -1,14 +1,14 @@
 const crypto = require("crypto");
 
-const DEFAULT_SCADA_SUPABASE_URL = "https://xqkbrlcdbgykmatzwvct.supabase.co";
-const DEFAULT_SCADA_SUPABASE_ANON_KEY = "sb_publishable_L99JfiV_68w79GJ10klTCg_R1H60L_D";
+const DEFAULT_SCADA_SUPABASE_URL = "https://lawrglgxkrfibajixfkp.supabase.co";
+const DEFAULT_SCADA_SUPABASE_ANON_KEY = "sb_publishable_YORtHpVEY8ylS90jnOMjxQ_zfBPVLrA";
 const DEFAULT_SCADA_REPORT_TABLE = "scada_reports";
 const DEFAULT_SCADA_AUTH_TABLE = "scada_auth";
 const DEFAULT_SCADA_AUTH_ROW_ID = "1";
 const DEFAULT_SCADA_REPORT_FILE_NAME = "Burner_SCADA_Report.xlsx";
 
-const DEFAULT_PLANT_SUPABASE_URL = "https://mozuuowwdfyqqvpiyetk.supabase.co";
-const DEFAULT_PLANT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1venV1b3d3ZGZ5cXF2cGl5ZXRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MTU3NjksImV4cCI6MjA5MDE5MTc2OX0.SqSAoPwxgPi6cVrYeIQC8xBebbVINZEaPw-odWdqUPo";
+const DEFAULT_PLANT_SUPABASE_URL = "https://lawrglgxkrfibajixfkp.supabase.co";
+const DEFAULT_PLANT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxhd3JnbGd4a3JmaWJhaml4ZmtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUxNTM5NjYsImV4cCI6MjExMDcyOTk2Nn0.Nj6Akeof0-kAfspgBCoAmm0htFO7iFG315QTg-htOSo";
 const DEFAULT_PLANT_CURRENT_TABLE = "plant_data";
 const DEFAULT_PLANT_HISTORY_TABLE = "plant_data_history";
 
