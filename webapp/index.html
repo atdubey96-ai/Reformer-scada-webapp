@@ -26402,6 +26402,602 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           </div>
         </div>
 
+        <!-- ===== Reformer Tube Remaining Life (creep, API 530 Larson-Miller + Robinson life fraction) ===== -->
+        <div id="tube-life-card">
+          <style id="tube-life-style-20261120">
+            #tube-life-card{
+              --tl-ok:#34d399; --tl-watch:#fbbf24; --tl-crit:#f87171; --tl-accent:#7ddcf7;
+              --tl-text:#f8fafc; --tl-sub:#cbd5e1; --tl-muted:#94a3b8; --tl-line:rgba(148,163,184,0.18);
+              --tl-panel:rgba(15,23,42,0.36); --tl-input:rgba(2,6,23,0.55);
+              position:relative; margin-top:18px; padding:20px 22px 22px; border-radius:18px;
+              border:1px solid rgba(251,146,60,0.26);
+              background:linear-gradient(160deg,rgba(18,12,24,0.98) 0%,rgba(14,20,36,0.95) 55%,rgba(10,26,40,0.96) 100%);
+              box-shadow:0 18px 36px rgba(2,8,23,0.32), inset 0 1px 0 rgba(255,255,255,0.05);
+              color:var(--tl-text); overflow:hidden;
+            }
+            #tube-life-card::before{content:"";position:absolute;inset:0;pointer-events:none;
+              background:radial-gradient(circle at top right,rgba(251,146,60,0.12),transparent 36%),radial-gradient(circle at bottom left,rgba(125,220,247,0.07),transparent 34%);}
+            #tube-life-card > *{position:relative;z-index:1;}
+            #tube-life-card .tl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;}
+            #tube-life-card .tl-title{margin:0;font-size:26px;font-weight:800;letter-spacing:0.12px;color:var(--tl-text);}
+            #tube-life-card .tl-sub{margin-top:8px;max-width:980px;font-size:13.5px;line-height:1.7;color:var(--tl-sub);}
+            #tube-life-card .tl-actions{display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:240px;}
+            #tube-life-card .tl-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+            #tube-life-card .tl-btn{min-height:38px;padding:9px 16px;border-radius:999px;border:1px solid rgba(251,146,60,0.45);
+              background:linear-gradient(135deg,rgba(194,65,12,0.34),rgba(14,116,144,0.22));color:#ffedd5;font-size:13px;font-weight:800;cursor:pointer;}
+            #tube-life-card .tl-btn.tl-btn-soft{border-color:rgba(148,163,184,0.35);background:rgba(15,23,42,0.45);color:#e2e8f0;}
+            #tube-life-card .tl-btn:disabled{opacity:0.7;cursor:wait;}
+            #tube-life-card .tl-status{padding:7px 12px;border-radius:999px;border:1px solid var(--tl-line);background:rgba(15,23,42,0.42);
+              color:#dbeafe;font-size:11.5px;font-weight:700;text-align:right;max-width:460px;}
+            #tube-life-card .tl-status.is-warn{border-color:rgba(248,113,113,0.34);color:#fecaca;}
+            #tube-life-card .tl-status.is-ok{border-color:rgba(74,222,128,0.34);color:#bbf7d0;}
+            #tube-life-card .tl-body{margin-top:16px;display:flex;flex-direction:column;gap:14px;}
+            #tube-life-card .tl-note{padding:10px 14px;border-radius:12px;border:1px dashed rgba(148,163,184,0.28);background:rgba(15,23,42,0.3);
+              font-size:12.5px;line-height:1.6;color:var(--tl-sub);}
+            #tube-life-card .tl-note.is-warn{border-color:rgba(251,191,36,0.4);color:#fde68a;}
+            #tube-life-card .tl-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;}
+            #tube-life-card .tl-kpi{padding:14px 14px 12px;border-radius:16px;border:1px solid var(--tl-line);background:var(--tl-panel);}
+            #tube-life-card .tl-kpi-label{font-size:10.5px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#fdba74;}
+            #tube-life-card .tl-kpi-value{margin-top:7px;font-size:25px;font-weight:800;color:var(--tl-text);line-height:1.1;}
+            #tube-life-card .tl-kpi-value small{font-size:13px;font-weight:700;color:var(--tl-muted);margin-left:3px;}
+            #tube-life-card .tl-kpi-meta{margin-top:6px;font-size:11.5px;line-height:1.45;color:var(--tl-muted);}
+            #tube-life-card .tl-kpi.is-ok{border-color:rgba(52,211,153,0.35);} #tube-life-card .tl-kpi.is-watch{border-color:rgba(251,191,36,0.42);}
+            #tube-life-card .tl-kpi.is-crit{border-color:rgba(248,113,113,0.5);}
+            #tube-life-card .tl-grid2{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;}
+            #tube-life-card .tl-panel{padding:14px 16px;border-radius:16px;border:1px solid var(--tl-line);background:var(--tl-panel);min-width:0;}
+            #tube-life-card .tl-panel-title{font-size:12px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#93c5fd;margin-bottom:10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+            #tube-life-card .tl-panel-title span{color:var(--tl-muted);font-weight:700;text-transform:none;letter-spacing:0;}
+            #tube-life-card .tl-zone{display:grid;grid-template-columns:110px minmax(0,1fr) 150px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--tl-line);font-size:12.5px;}
+            #tube-life-card .tl-zone:last-child{border-bottom:0;}
+            #tube-life-card .tl-zone-name{font-weight:800;color:var(--tl-text);}
+            #tube-life-card .tl-bar{height:12px;border-radius:999px;background:rgba(148,163,184,0.16);overflow:hidden;}
+            #tube-life-card .tl-bar > i{display:block;height:100%;border-radius:999px;}
+            #tube-life-card .tl-zone-meta{text-align:right;color:var(--tl-sub);line-height:1.35;}
+            #tube-life-card .tl-map{display:grid;grid-template-columns:78px repeat(15,minmax(0,1fr));gap:3px;font-size:10.5px;}
+            #tube-life-card .tl-map-lab{color:var(--tl-muted);font-weight:700;align-self:center;}
+            #tube-life-card .tl-map-hd{color:var(--tl-muted);text-align:center;font-weight:700;}
+            #tube-life-card .tl-cell{height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b1220;cursor:default;}
+            #tube-life-card .tl-cell.is-empty{background:rgba(148,163,184,0.12);color:var(--tl-muted);}
+            #tube-life-card .tl-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--tl-muted);}
+            #tube-life-card .tl-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+            #tube-life-card table.tl-table{width:100%;border-collapse:collapse;border-spacing:0;table-layout:auto;font-size:12.5px;}
+            #tube-life-card .tl-table th, #tube-life-card .tl-table td{text-align:left;background:transparent;border:0;border-radius:0;height:auto;cursor:default;transition:none;}
+            #tube-life-card .tl-table th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--tl-muted);padding:6px 6px;border-bottom:1px solid var(--tl-line);}
+            #tube-life-card .tl-table td{padding:7px 6px;border-bottom:1px solid var(--tl-line);color:var(--tl-text);}
+            #tube-life-card .tl-table td.num, #tube-life-card .tl-table th.num{text-align:right;font-variant-numeric:tabular-nums;}
+            #tube-life-card .tl-chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800;}
+            #tube-life-card .tl-chip.is-ok{background:rgba(52,211,153,0.16);color:#6ee7b7;} #tube-life-card .tl-chip.is-watch{background:rgba(251,191,36,0.16);color:#fcd34d;}
+            #tube-life-card .tl-chip.is-crit{background:rgba(248,113,113,0.18);color:#fca5a5;}
+            #tube-life-card .tl-chart svg{width:100%;height:auto;display:block;}
+            #tube-life-card details.tl-details{border-radius:16px;border:1px solid var(--tl-line);background:var(--tl-panel);}
+            #tube-life-card details.tl-details > summary{cursor:pointer;padding:12px 16px;font-size:13px;font-weight:800;color:var(--tl-text);list-style:none;}
+            #tube-life-card details.tl-details > summary::-webkit-details-marker{display:none;}
+            #tube-life-card details.tl-details > summary::before{content:"▸ ";color:#fdba74;}
+            #tube-life-card details.tl-details[open] > summary::before{content:"▾ ";}
+            #tube-life-card .tl-details-body{padding:4px 16px 16px;}
+            #tube-life-card .tl-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+            #tube-life-card fieldset{margin:0;padding:10px 12px 12px;border:1px solid var(--tl-line);border-radius:12px;min-width:0;}
+            #tube-life-card legend{padding:0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.4px;color:#fdba74;}
+            #tube-life-card .tl-field{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:8px;align-items:center;margin-top:7px;font-size:12px;color:var(--tl-sub);}
+            #tube-life-card .tl-field input, #tube-life-card .tl-field select{width:100%;box-sizing:border-box;padding:6px 8px;border-radius:8px;border:1px solid rgba(148,163,184,0.3);
+              background:var(--tl-input);color:var(--tl-text);font-size:12.5px;}
+            #tube-life-card .tl-field.tl-wide{grid-template-columns:minmax(0,1fr) 190px;}
+            #tube-life-card .tl-form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;align-items:center;}
+            #tube-life-card .tl-form-actions .tl-hint{flex:1;font-size:11.5px;color:var(--tl-muted);}
+            #tube-life-card .tl-method{font-size:12.5px;line-height:1.7;color:var(--tl-sub);}
+            #tube-life-card .tl-method code{font-size:12px;color:#fde68a;background:rgba(2,6,23,0.4);padding:1px 5px;border-radius:5px;}
+            #tube-life-card .tl-method a{color:#7dd3fc;}
+            #tube-life-card .tl-method ol, #tube-life-card .tl-method ul{margin:6px 0;padding-left:20px;}
+            @media (max-width:1280px){ #tube-life-card .tl-kpis{grid-template-columns:repeat(3,minmax(0,1fr));} }
+            @media (max-width:1000px){ #tube-life-card .tl-grid2, #tube-life-card .tl-form{grid-template-columns:minmax(0,1fr);} }
+            @media (max-width:640px){ #tube-life-card{padding:16px;} #tube-life-card .tl-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+              #tube-life-card .tl-title{font-size:21px;} #tube-life-card .tl-actions{align-items:stretch;min-width:0;width:100%;}
+              #tube-life-card .tl-zone{grid-template-columns:80px minmax(0,1fr);} #tube-life-card .tl-zone-meta{grid-column:1 / -1;text-align:left;}
+              #tube-life-card .tl-table-wrap{overflow-x:auto;} }
+            body.light-theme #tube-life-card{--tl-text:#0f172a;--tl-sub:#334155;--tl-muted:#64748b;--tl-line:rgba(148,163,184,0.35);--tl-panel:#ffffff;--tl-input:#f8fafc;
+              background:linear-gradient(180deg,#ffffff 0%,#fffaf5 55%,#f4f8fc 100%);border-color:rgba(251,146,60,0.35);box-shadow:0 12px 26px rgba(15,23,42,0.08);}
+            body.light-theme #tube-life-card .tl-btn{background:linear-gradient(135deg,#ffedd5,#fff7ed);color:#9a3412;border-color:rgba(234,88,12,0.4);}
+            body.light-theme #tube-life-card .tl-btn.tl-btn-soft{background:#ffffff;color:#1e293b;border-color:rgba(148,163,184,0.5);}
+            body.light-theme #tube-life-card .tl-status{background:#ffffff;color:#1e293b;}
+            body.light-theme #tube-life-card .tl-kpi-label, body.light-theme #tube-life-card legend{color:#c2410c;}
+            body.light-theme #tube-life-card .tl-panel-title{color:#1d4ed8;}
+            body.light-theme #tube-life-card .tl-note.is-warn{color:#92400e;}
+            body.light-theme #tube-life-card .tl-chip.is-ok{color:#047857;} body.light-theme #tube-life-card .tl-chip.is-watch{color:#92400e;}
+            body.light-theme #tube-life-card .tl-chip.is-crit{color:#b91c1c;}
+            body.light-theme #tube-life-card .tl-method code{color:#9a3412;background:#fff7ed;}
+            body.light-theme #tube-life-card .tl-method a{color:#1d4ed8;}
+          </style>
+          <div class="tl-head">
+            <div>
+              <div class="tl-title scada-panel-title">Reformer Tube Remaining Life (Creep)</div>
+              <div class="tl-sub">
+                API 530 / API 579 style creep-life model: Larson–Miller rupture curve for the tube alloy, hoop stress from pressure and wall, and Robinson's rule (sum of hourly life fractions) over the TMT history. TMT comes from saved peep-hole TST readings, carried hour by hour with the COT trend from plant history.
+              </div>
+            </div>
+            <div class="tl-actions">
+              <div class="tl-btns">
+                <button type="button" id="tube-life-run-btn" class="tl-btn" onclick="tubeLifeRun(true)">Recalculate Tube Life</button>
+                <button type="button" class="tl-btn tl-btn-soft" onclick="tubeLifeToggleInputs()">Design Inputs</button>
+              </div>
+              <div id="tube-life-status" class="tl-status">Loads automatically when this dashboard opens.</div>
+            </div>
+          </div>
+          <div id="tube-life-body" class="tl-body">
+            <div class="tl-note">Click Recalculate Tube Life to run the creep model.</div>
+          </div>
+          <details class="tl-details" id="tube-life-inputs" style="margin-top:14px;">
+            <summary>Design &amp; model inputs (editable defaults, saved in this browser)</summary>
+            <div class="tl-details-body"><div id="tube-life-form"></div></div>
+          </details>
+          <details class="tl-details" style="margin-top:12px;">
+            <summary>Method, Technip Energies alignment &amp; sources</summary>
+            <div class="tl-details-body tl-method">
+              <b>Calculation steps</b>
+              <ol>
+                <li><b>Hoop stress</b> (API 530 elastic formula): <code>σ = (P/2)·(Do/t − 1)</code>, using operating pressure and minimum sound wall after corrosion allowance.</li>
+                <li><b>Rupture curve</b>: the alloy's 100,000 h rupture stress at 900/950/1000/1050 °C is converted to Larson–Miller points <code>LMP = T[K]·(C + log₁₀ 100000)</code>. log σ is interpolated against LMP. "Minimum" basis uses 80% of the supplier average strength, as API 530 designs to minimum rupture data.</li>
+                <li><b>Time to rupture</b> at each hour: <code>t_r = 10^(LMP(σ)/T[K] − C)</code>.</li>
+                <li><b>Robinson's rule (linear life fraction)</b>: <code>D = Σ Δt / t_r(T,σ)</code>. Hours with COT below the offline limit add no creep. Hours with no history use the in-service availability and that tube's median TMT. Service before the record uses the prior-period TMT.</li>
+                <li><b>Remaining life</b> = <code>(1 − D) / (annual damage at current TMT)</code>. <b>Expected life at current TMT</b> = rupture life of a new tube held at today's TMT. <b>TMT limit to reach design life</b> = temperature at which the remaining fraction lasts exactly the remaining design hours.</li>
+                <li><b>Hourly TMT</b>: each peep-hole position takes its nearest saved TST reading (plus pyrometer correction) and shifts it by the change in that side's COT (AB: TI-2501, CD: TI-2502), limited to ±60 °C. With no TST saved, TMT = COT + the editable COT→TMT offset, per side.</li>
+              </ol>
+              <b>Technip Energies alignment</b>
+              <ul>
+                <li>Technip Energies does not publish its in-house tube-life model. Public information shows that reformer licensors design tubes to API 530 for a typical 100,000 h life and use their own Larson–Miller curves for HP micro-alloys, which API 530 does not cover. This module follows that structure: the rupture curve is editable so the tube supplier's or Technip datasheet curve can be entered.</li>
+                <li>For a formal remaining-life assessment, API 579-1/ASME FFS-1 Part 10 (creep, including the MPC Omega method) and inspection data (diametral growth, laser profilometry, H-scan/eddy current) should be combined with this TMT-based estimate.</li>
+                <li>Rules of thumb shown in the panel: about +20 °C above design TMT can halve tube life; uncorrected IR pyrometers can read 20–40 °C high, so set the pyrometer correction from your Gold-cup or emissivity check.</li>
+              </ul>
+              <b>Sources</b>
+              <ul>
+                <li><a href="https://heat-exchanger-world.com/?p=50721" target="_blank" rel="noopener">Heat Exchanger World: Steam reformer tubes, lifecycle and integrity management</a> (API 530, 100,000 h, licensor LMP curves, +20 °C halves life, pyrometer bias)</li>
+                <li><a href="https://ammoniaknowhow.com/optimizing-reformer-tube-life-by-employing-a-realistic-condition-based-methodology/" target="_blank" rel="noopener">Ammonia Knowhow: Optimizing reformer tube life with a condition-based methodology</a> (LMP = T(log t<sub>r</sub> + C), 100,000 h basis, HP-Nb / micro-alloy)</li>
+                <li><a href="https://digitalrefining.com/article/1003081/steam-methane-reformer-tube-lifecycle-improvement-best-practices" target="_blank" rel="noopener">Digital Refining: SMR tube lifecycle improvement best practices</a> (100,000 h design guideline, contact pyrometry)</li>
+                <li><a href="https://www.tcradvanced.com/creep-and-stress-rupture-in-fired-heater-tubes-the-clock-api-530-started-the-day" target="_blank" rel="noopener">TCR: Creep and stress rupture in fired heater tubes (API 530)</a></li>
+                <li>API Std 530 (Calculation of Heater-tube Thickness in Petroleum Refineries) and API 579-1/ASME FFS-1 Part 10.</li>
+              </ul>
+              <b>Limits</b>: default rupture strengths are indicative published values for each alloy class, not a supplier certificate. Thermal cycling, carburisation and weld defects are not in the creep sum. Treat the result as a screening and trending tool, not a run/repair decision on its own.
+            </div>
+          </details>
+          <script>
+          (function(){
+            var TL_KEY = "tubeLifeInputsV1";
+            var TL_TEMPS = [900, 950, 1000, 1050];
+            var TL_ZONES = [
+              { key:"ab-bot", label:"AB Bottom", side:"ab" },
+              { key:"ab-top", label:"AB Top", side:"ab" },
+              { key:"cd-bot", label:"CD Bottom", side:"cd" },
+              { key:"cd-top", label:"CD Top", side:"cd" }
+            ];
+            var TL_COT_TAGS = { ab:"GJA.2041ti2501.pv", cd:"GJA.2041ti2502.pv" };
+            var TL_MATERIALS = {
+              hpmicro:{ label:"HP-Nb microalloy (25Cr-35Ni-Nb-Ti)", s:[25, 16, 9.8, 5.8] },
+              hpnb:{ label:"HP-Nb modified (25Cr-35Ni-Nb)", s:[21, 13.5, 8.3, 5.0] },
+              hk40:{ label:"HK-40 (25Cr-20Ni)", s:[13.5, 8.6, 5.4, 3.3] },
+              custom:{ label:"Custom (enter supplier curve)", s:null }
+            };
+            var TL_DEFAULTS = {
+              material:"hpmicro", s900:25, s950:16, s1000:9.8, s1050:5.8, basis:"min", lmpC:20,
+              od:125, wall:11, corr:0, pDesign:32, pOper:27, designLife:100000,
+              serviceStart:"", priorTmt:"", availability:96,
+              pyroCorr:0, cotOffset:60, offlineCot:600, alarmUsed:80
+            };
+            var TL_FIELDS = [
+              { group:"Tube design", items:[
+                { k:"od", label:"Outside diameter (mm)", type:"number", step:"0.1" },
+                { k:"wall", label:"Min. sound wall (mm)", type:"number", step:"0.1" },
+                { k:"corr", label:"Corrosion / wall loss (mm)", type:"number", step:"0.1" },
+                { k:"pDesign", label:"Design pressure (kg/cm²g)", type:"number", step:"0.1" },
+                { k:"pOper", label:"Operating pressure (kg/cm²g)", type:"number", step:"0.1" },
+                { k:"designLife", label:"Design life (h)", type:"number", step:"1000" }
+              ]},
+              { group:"Material & creep data", items:[
+                { k:"material", label:"Tube alloy", type:"select", wide:true },
+                { k:"s900", label:"100 kh rupture σ @ 900 °C (MPa)", type:"number", step:"0.1" },
+                { k:"s950", label:"100 kh rupture σ @ 950 °C (MPa)", type:"number", step:"0.1" },
+                { k:"s1000", label:"100 kh rupture σ @ 1000 °C (MPa)", type:"number", step:"0.1" },
+                { k:"s1050", label:"100 kh rupture σ @ 1050 °C (MPa)", type:"number", step:"0.1" },
+                { k:"basis", label:"Rupture data basis", type:"basis" },
+                { k:"lmpC", label:"Larson–Miller constant C", type:"number", step:"0.5" }
+              ]},
+              { group:"Operation & measurement", items:[
+                { k:"serviceStart", label:"Tube in-service date", type:"date" },
+                { k:"priorTmt", label:"Avg TMT before record (°C, blank = tube median)", type:"number", step:"1" },
+                { k:"availability", label:"Availability for gaps / forecast (%)", type:"number", step:"1" },
+                { k:"pyroCorr", label:"Pyrometer correction on TST (°C)", type:"number", step:"1" },
+                { k:"cotOffset", label:"COT → TMT offset if no TST (°C)", type:"number", step:"1" },
+                { k:"offlineCot", label:"Offline if COT below (°C)", type:"number", step:"10" },
+                { k:"alarmUsed", label:"Alarm at life used (%)", type:"number", step:"1" }
+              ]}
+            ];
+            var tlState = { inputs:null, cot:null, cotAt:0, busy:false, ran:false, last:null };
+
+            function esc(v){ return String(v == null ? "" : v).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+            function num(v, d){ var n = Number(v); return (v === "" || v == null || !isFinite(n)) ? d : n; }
+            function fmt(v, d){ var n = Number(v); if(!isFinite(n)) return "—"; return n.toLocaleString("en-IN", { minimumFractionDigits:d||0, maximumFractionDigits:d||0 }); }
+            function fmtYears(y){ if(!isFinite(y)) return "> 50"; if(y > 50) return "> 50"; return y < 10 ? y.toFixed(1) : String(Math.round(y)); }
+            function setStatus(text, tone){ var el = document.getElementById("tube-life-status"); if(!el) return; el.className = "tl-status" + (tone ? " is-" + tone : ""); el.textContent = text; }
+
+            function loadInputs(){
+              var out = {}; var k;
+              for(k in TL_DEFAULTS) out[k] = TL_DEFAULTS[k];
+              try{ var saved = JSON.parse(localStorage.getItem(TL_KEY) || "null"); if(saved && typeof saved === "object"){ for(k in TL_DEFAULTS){ if(saved[k] !== undefined) out[k] = saved[k]; } } }catch(e){}
+              return out;
+            }
+            function saveInputs(obj){ try{ localStorage.setItem(TL_KEY, JSON.stringify(obj)); }catch(e){} }
+
+            /* ---------- Creep engine ---------- */
+            function buildModel(inp){
+              var C = num(inp.lmpC, 20);
+              var factor = inp.basis === "avg" ? 1 : 0.8;
+              var pts = [];
+              var sv = [num(inp.s900, NaN), num(inp.s950, NaN), num(inp.s1000, NaN), num(inp.s1050, NaN)];
+              for(var i = 0; i < TL_TEMPS.length; i++){
+                if(isFinite(sv[i]) && sv[i] > 0) pts.push({ P:(TL_TEMPS[i] + 273.15) * (C + 5), ls:Math.log(sv[i] * factor) / Math.LN10 });
+              }
+              pts.sort(function(a, b){ return a.P - b.P; });
+              var od = num(inp.od, 125), t = num(inp.wall, 11) - num(inp.corr, 0);
+              var mpa = 0.0980665;
+              function hoop(pKg){ return (t > 0 && od > t) ? (pKg * mpa / 2) * (od / t - 1) : NaN; }
+              var sigOp = hoop(num(inp.pOper, 27)), sigDes = hoop(num(inp.pDesign, 32));
+              function lmpFromStress(sig){
+                if(pts.length < 2 || !(sig > 0)) return NaN;
+                var ls = Math.log(sig) / Math.LN10, a, b;
+                for(var j = 0; j < pts.length - 1; j++){
+                  a = pts[j]; b = pts[j + 1];
+                  if(ls <= a.ls && ls >= b.ls) break;
+                }
+                if(ls > pts[0].ls){ a = pts[0]; b = pts[1]; }
+                else if(ls < pts[pts.length - 1].ls){ a = pts[pts.length - 2]; b = pts[pts.length - 1]; }
+                if(a.ls === b.ls) return a.P;
+                return a.P + (ls - a.ls) * (b.P - a.P) / (b.ls - a.ls);
+              }
+              var pOp = lmpFromStress(sigOp), pDes = lmpFromStress(sigDes);
+              function rupt(Tc, P){ var tk = Tc + 273.15; if(!(tk > 300) || !isFinite(P)) return Infinity; var e = P / tk - C; return e > 9 ? 1e9 : Math.pow(10, e); }
+              function tempFor(hours, P){ return (isFinite(P) && hours > 0) ? P / (C + Math.log(hours) / Math.LN10) - 273.15 : NaN; }
+              return {
+                C:C, sigOp:sigOp, sigDes:sigDes, pOp:pOp, valid:pts.length >= 2 && isFinite(pOp),
+                tr:function(Tc){ return rupt(Tc, pOp); },
+                tempForHours:function(h){ return tempFor(h, pOp); },
+                designTmt:tempFor(num(inp.designLife, 100000), pDes),
+                operTmtLimit100k:tempFor(num(inp.designLife, 100000), pOp)
+              };
+            }
+
+            /* ---------- Data ---------- */
+            function getEntries(){
+              var list = [];
+              try{ list = (Array.isArray(window.tempDataEntries) && window.tempDataEntries.length) ? window.tempDataEntries : (typeof getAllTempEntries === "function" ? getAllTempEntries() : []); }catch(e){ list = []; }
+              return Array.isArray(list) ? list : [];
+            }
+            function hourKey(ms){ return Math.floor(ms / 3600000); }
+            function fetchCot(inp){
+              if(tlState.cot && (Date.now() - tlState.cotAt) < 15 * 60000) return Promise.resolve(tlState.cot);
+              var url = (typeof getTdPlantSupabaseUrl === "function" ? getTdPlantSupabaseUrl() : "https://lawrglgxkrfibajixfkp.supabase.co").replace(/\/+$/, "");
+              var key = typeof getTdPlantSupabaseKey === "function" ? getTdPlantSupabaseKey() : "";
+              var from = new Date(Date.now() - 400 * 86400000).toISOString();
+              return fetch(url + "/rest/v1/rpc/tube_life_hourly", {
+                method:"POST",
+                headers:{ "apikey":key, "Authorization":"Bearer " + key, "Content-Type":"application/json" },
+                body:JSON.stringify({ p_tags:[TL_COT_TAGS.ab, TL_COT_TAGS.cd], p_from:from })
+              }).then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then(function(rows){
+                var map = {}, minH = Infinity, maxH = -Infinity;
+                (Array.isArray(rows) ? rows : []).forEach(function(r){
+                  var ms = Date.parse(r.h); var v = Number(r.v); if(!isFinite(ms) || !isFinite(v)) return;
+                  if(v < 0 || v > 1000) return; /* transmitter spikes */
+                  var hk = hourKey(ms); var side = r.t === TL_COT_TAGS.ab ? "ab" : (r.t === TL_COT_TAGS.cd ? "cd" : ""); if(!side) return;
+                  if(!map[hk]) map[hk] = {}; map[hk][side] = v;
+                  if(hk < minH) minH = hk; if(hk > maxH) maxH = hk;
+                });
+                tlState.cot = { map:map, minH:minH, maxH:maxH, count:Object.keys(map).length };
+                tlState.cotAt = Date.now();
+                return tlState.cot;
+              });
+            }
+            function collectReadings(inp, cot){
+              var corr = num(inp.pyroCorr, 0), byPos = {}, total = 0, entries = getEntries(), lastMs = -Infinity;
+              entries.forEach(function(ent){
+                if(!ent || !ent.peepHoles) return;
+                var ms = Date.parse(String(ent.dt || ent.date || ent.createdAt || "")); if(!isFinite(ms)) return;
+                var hk = hourKey(ms);
+                TL_ZONES.forEach(function(z){
+                  var vals = ent.peepHoles[z.key]; if(!Array.isArray(vals)) return;
+                  var entCot = Number(z.side === "ab" ? ent.abCot : ent.cdCot);
+                  if(!(entCot > 300 && entCot < 1000)){ var c = cot && cot.map[hk]; entCot = c ? Number(c[z.side]) : NaN; }
+                  for(var i = 0; i < 15; i++){
+                    var v = Number(vals[i]); if(!(v > 500 && v < 1200)) continue;
+                    var id = z.key + "-" + (i + 1);
+                    if(!byPos[id]) byPos[id] = { id:id, zone:z.key, zoneLabel:z.label, side:z.side, idx:i + 1, label:z.label + " · PH" + (i + 1), readings:[] };
+                    byPos[id].readings.push({ h:hk, ms:ms, v:v + corr, cot:entCot });
+                    total++; if(ms > lastMs) lastMs = ms;
+                  }
+                });
+              });
+              var list = Object.keys(byPos).map(function(k){ var p = byPos[k]; p.readings.sort(function(a, b){ return a.h - b.h; }); return p; });
+              return { positions:list, total:total, entryCount:entries.length, lastMs:lastMs };
+            }
+
+            /* ---------- Simulation (Robinson's rule) ---------- */
+            function simulate(inp, model, cot, rd){
+              var avail = Math.min(1, Math.max(0.05, num(inp.availability, 96) / 100));
+              var offCot = num(inp.offlineCot, 600), offset = num(inp.cotOffset, 60), designLife = num(inp.designLife, 100000);
+              var measured = rd.positions.length > 0;
+              var positions = measured ? rd.positions : [
+                { id:"ab-est", zone:"ab", zoneLabel:"AB side", side:"ab", label:"AB side (COT-estimated)", readings:[] },
+                { id:"cd-est", zone:"cd", zoneLabel:"CD side", side:"cd", label:"CD side (COT-estimated)", readings:[] }
+              ];
+              var hasCot = cot && cot.count > 0;
+              var startH = hasCot ? cot.minH : Infinity, endH = hasCot ? cot.maxH : -Infinity;
+              positions.forEach(function(p){ if(p.readings.length){ startH = Math.min(startH, p.readings[0].h); endH = Math.max(endH, p.readings[p.readings.length - 1].h); } });
+              if(!isFinite(startH)) return null;
+              var svcStartMs = Date.parse(String(inp.serviceStart || ""));
+              var priorHoursCal = (isFinite(svcStartMs) && hourKey(svcStartMs) < startH) ? (startH - hourKey(svcStartMs)) : 0;
+              var online = 0, offline = 0, gap = 0, cycles = 0, wasOn = null;
+              var daily = {};
+              positions.forEach(function(p){ p.D = 0; p.onH = 0; p.maxT = -Infinity; p.hist = {}; p.ri = 0; p.curT = NaN; p.curH = -Infinity; p.D30 = 0; p.recent = []; });
+              var recentFrom = endH - 30 * 24;
+              for(var h = startH; h <= endH; h++){
+                var c = hasCot ? cot.map[h] : null;
+                var anyCot = c && (isFinite(c.ab) || isFinite(c.cd));
+                var on = anyCot ? (Math.max(isFinite(c.ab) ? c.ab : -1, isFinite(c.cd) ? c.cd : -1) >= offCot) : null;
+                if(on === null){ gap++; wasOn = null; continue; }
+                if(!on){ offline++; if(wasOn === true) cycles++; wasOn = false; continue; }
+                wasOn = true; online++;
+                var dk = Math.floor(h / 24);
+                for(var i = 0; i < positions.length; i++){
+                  var p = positions[i], sc = c[p.side]; if(!isFinite(sc)) sc = isFinite(c.ab) ? c.ab : c.cd;
+                  if(!(sc >= offCot)) continue; /* this side offline or transmitter fault */
+                  var T;
+                  if(measured){
+                    while(p.ri < p.readings.length - 1 && p.readings[p.ri + 1].h <= h) p.ri++;
+                    var r = p.readings[p.ri];
+                    var shift = isFinite(r.cot) ? Math.max(-60, Math.min(60, sc - r.cot)) : 0;
+                    T = r.v + shift;
+                  } else {
+                    T = sc + offset;
+                  }
+                  var dd = 1 / model.tr(T);
+                  p.D += dd; p.onH++; if(h >= recentFrom) p.D30 += dd;
+                  if(T > p.maxT) p.maxT = T;
+                  var bin = Math.round(T); p.hist[bin] = (p.hist[bin] || 0) + 1;
+                  p.recent.push(T); if(p.recent.length > 72) p.recent.shift(); p.curH = h;
+                  if(!daily[dk]) daily[dk] = {};
+                  if(!(daily[dk][p.id] >= T)) daily[dk][p.id] = T;
+                }
+              }
+              positions.forEach(function(p){
+                var keys = Object.keys(p.hist).map(Number).sort(function(a, b){ return a - b; }), acc = 0, med = NaN;
+                for(var j = 0; j < keys.length; j++){ acc += p.hist[keys[j]]; if(acc >= p.onH / 2){ med = keys[j]; break; } }
+                if(!isFinite(med) && p.readings.length){ med = p.readings[p.readings.length - 1].v; }
+                p.medT = med;
+                if(p.recent.length){ var rs = p.recent.slice().sort(function(a, b){ return a - b; }); p.curT = rs[Math.floor(rs.length / 2)]; }
+                if(measured && p.readings.length){
+                  var lr = p.readings[p.readings.length - 1];
+                  if(lr.h >= p.curH || !isFinite(p.curT)){ p.curT = lr.v; p.curH = lr.h; }
+                }
+                var gapD = isFinite(med) ? gap * avail / model.tr(med) : 0;
+                var priorT = num(inp.priorTmt, med);
+                var priorH = priorHoursCal * avail;
+                var priorD = isFinite(priorT) ? priorH / model.tr(priorT) : 0;
+                p.Dtrack = p.D; p.Dgap = gapD; p.Dprior = priorD;
+                p.Dtot = p.D + gapD + priorD;
+                p.svcH = priorH + p.onH + gap * avail;
+                var trNow = model.tr(p.curT);
+                p.trNow = trNow;
+                p.ratePerYear = 8760 * avail / trNow;
+                p.remYears = Math.max(0, 1 - p.Dtot) / p.ratePerYear;
+                p.lifeAtCurYears = trNow / (8760 * avail);
+                var remDesignH = designLife - p.svcH;
+                p.remDesignH = remDesignH;
+                p.tLimit = (remDesignH > 0 && p.Dtot < 1) ? model.tempForHours(remDesignH / (1 - p.Dtot)) : NaN;
+                p.sens10 = 1 - model.tr(p.curT + 10) / trNow;
+                var usedPct = p.Dtot * 100, alarm = num(inp.alarmUsed, 80);
+                p.status = (usedPct >= alarm || p.remYears < 2) ? "crit" : ((usedPct >= 50 || (isFinite(p.tLimit) && p.curT > p.tLimit) || p.remYears < 5) ? "watch" : "ok");
+              });
+              return { positions:positions, measured:measured, online:online, offline:offline, gap:gap, cycles:cycles, startH:startH, endH:endH,
+                priorHoursCal:priorHoursCal, avail:avail, daily:daily };
+            }
+
+            /* ---------- Rendering ---------- */
+            function statusColor(s){ return s === "crit" ? "var(--tl-crit)" : (s === "watch" ? "var(--tl-watch)" : "var(--tl-ok)"); }
+            function statusLabel(s){ return s === "crit" ? "At risk" : (s === "watch" ? "Watch" : "Healthy"); }
+            function usedColor(pct){ return pct >= 80 ? "#f87171" : (pct >= 50 ? "#fb923c" : (pct >= 25 ? "#fbbf24" : "#34d399")); }
+            function hDate(h){ var d = new Date(h * 3600000); return d.toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }); }
+
+            function kpi(label, value, unit, meta, tone){
+              return '<div class="tl-kpi' + (tone ? " is-" + tone : "") + '"><div class="tl-kpi-label">' + label + '</div><div class="tl-kpi-value">' + value + (unit ? '<small>' + unit + '</small>' : '') + '</div><div class="tl-kpi-meta">' + meta + '</div></div>';
+            }
+
+            function chartSvg(sim, model, worst){
+              var days = Object.keys(sim.daily).map(Number).sort(function(a, b){ return a - b; });
+              if(days.length < 2) return '<div class="tl-note">Not enough online history for a trend yet.</div>';
+              var ser = [], fleet = [];
+              days.forEach(function(d){
+                var row = sim.daily[d], mx = -Infinity, w = row[worst.id];
+                for(var k in row){ if(row[k] > mx) mx = row[k]; }
+                ser.push({ d:d, v:isFinite(w) ? w : NaN }); fleet.push({ d:d, v:mx });
+              });
+              var lines = [model.operTmtLimit100k, worst.tLimit].filter(function(v){ return isFinite(v); });
+              var vals = fleet.map(function(p){ return p.v; }).concat(lines).filter(function(v){ return isFinite(v); });
+              var lo = Math.floor((Math.min.apply(null, vals) - 10) / 10) * 10, hi = Math.ceil((Math.max.apply(null, vals) + 10) / 10) * 10;
+              var W = 640, H = 210, L = 44, R = 26, Tm = 12, B = 26, d0 = days[0], d1 = days[days.length - 1];
+              function x(d){ return L + (W - L - R) * (d - d0) / Math.max(1, d1 - d0); }
+              function y(v){ return Tm + (H - Tm - B) * (1 - (v - lo) / Math.max(1, hi - lo)); }
+              function path(arr){ var s = "", pen = false, pd = -1; arr.forEach(function(p){ if(!isFinite(p.v) || (pd >= 0 && p.d - pd > 2)) pen = false; if(!isFinite(p.v)) return; s += (pen ? "L" : "M") + x(p.d).toFixed(1) + " " + y(p.v).toFixed(1) + " "; pen = true; pd = p.d; }); return s; }
+              var g = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Daily maximum TMT trend">';
+              for(var t = lo; t <= hi; t += Math.max(10, Math.round((hi - lo) / 5 / 10) * 10)){
+                g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="rgba(148,163,184,0.16)"/>';
+                g += '<text x="' + (L - 6) + '" y="' + (y(t) + 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">' + t + '</text>';
+              }
+              var ticks = 5;
+              for(var i = 0; i <= ticks; i++){
+                var dd = Math.round(d0 + (d1 - d0) * i / ticks);
+                g += '<text x="' + x(dd) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="#94a3b8">' + new Date(dd * 86400000).toLocaleDateString("en-GB", { day:"2-digit", month:"short" }) + '</text>';
+              }
+              if(isFinite(model.operTmtLimit100k)){
+                g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(model.operTmtLimit100k) + '" y2="' + y(model.operTmtLimit100k) + '" stroke="#f87171" stroke-dasharray="5 4" stroke-width="1.4"/>';
+                g += '<text x="' + (W - R) + '" y="' + (y(model.operTmtLimit100k) - 5) + '" text-anchor="end" font-size="10.5" fill="#fca5a5">100 kh limit ' + fmt(model.operTmtLimit100k) + ' °C</text>';
+              }
+              if(isFinite(worst.tLimit)){
+                g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(worst.tLimit) + '" y2="' + y(worst.tLimit) + '" stroke="#fbbf24" stroke-dasharray="2 4" stroke-width="1.4"/>';
+                g += '<text x="' + (L + 4) + '" y="' + (y(worst.tLimit) - 5) + '" font-size="10.5" fill="#fcd34d">TMT limit for remaining design life ' + fmt(worst.tLimit) + ' °C</text>';
+              }
+              g += '<path d="' + path(fleet) + '" fill="none" stroke="#fb923c" stroke-width="1.8"/>';
+              if(sim.positions.length > 1) g += '<path d="' + path(ser) + '" fill="none" stroke="#7ddcf7" stroke-width="1.4" opacity="0.85"/>';
+              g += '</svg>';
+              return g + '<div class="tl-legend"><span><i style="background:#fb923c"></i>Hottest tube, daily max</span>' + (sim.positions.length > 1 ? '<span><i style="background:#7ddcf7"></i>' + esc(worst.label) + '</span>' : '') + '</div>';
+            }
+
+            function render(inp, model, sim, rd, cot){
+              var body = document.getElementById("tube-life-body"); if(!body) return;
+              var P = sim.positions.slice().sort(function(a, b){ return a.remYears - b.remYears; });
+              var worst = P[0];
+              var hottest = sim.positions.slice().sort(function(a, b){ return b.curT - a.curT; })[0];
+              var avgUsed = sim.positions.reduce(function(s, p){ return s + p.Dtot; }, 0) / sim.positions.length * 100;
+              var html = "";
+              var notes = [];
+              if(!sim.measured) notes.push('No saved TST readings found in this browser, so TMT is estimated as COT + ' + fmt(num(inp.cotOffset, 60)) + ' °C per side. Save TST entries (TST Data tab) to rank individual peep-hole positions.');
+              if(!inp.serviceStart) notes.push('Tube in-service date is not set, so life used counts only from ' + hDate(sim.startH) + '. Enter it under Design Inputs for full-life accounting.');
+              if(!(cot && cot.count)) notes.push('Plant COT history could not be loaded; only the saved TST readings are used.');
+              notes.forEach(function(n){ html += '<div class="tl-note is-warn">' + esc(n) + '</div>'; });
+
+              var usedW = worst.Dtot * 100;
+              html += '<div class="tl-kpis">'
+                + kpi("Life used · worst tube", fmt(usedW, usedW < 10 ? 2 : 1), "%", esc(worst.label) + "<br>Fleet average " + fmt(avgUsed, avgUsed < 10 ? 2 : 1) + "%", worst.status)
+                + kpi("Remaining life", fmtYears(worst.remYears), "yrs", "At current TMT (72 h online median) " + fmt(worst.curT) + " °C, " + fmt(sim.avail * 100) + "% availability", worst.status)
+                + kpi("Expected life at current TMT", fmtYears(worst.lifeAtCurYears), "yrs", "New tube held at " + fmt(worst.curT) + " °C (" + fmt(Math.min(worst.trNow, 9.99e6)) + " h rupture life)", "")
+                + kpi("Hottest tube now", fmt(hottest.curT), "°C", esc(hottest.label) + "<br>Peak in record " + fmt(hottest.maxT) + " °C", hottest.status)
+                + kpi("TMT limit for design life", fmt(worst.tLimit), "°C", isFinite(worst.tLimit) ? ("Worst tube is " + (worst.curT > worst.tLimit ? "+" : "") + fmt(worst.curT - worst.tLimit) + " °C vs limit. +10 °C cuts life " + fmt(worst.sens10 * 100) + "%") : "Design life reached", isFinite(worst.tLimit) && worst.curT > worst.tLimit ? "watch" : "")
+                + kpi("Hoop stress", fmt(model.sigOp, 1), "MPa", "Operating. Design " + fmt(model.sigDes, 1) + " MPa → design TMT " + fmt(model.designTmt) + " °C for " + fmt(num(inp.designLife, 100000)) + " h", "")
+                + '</div>';
+
+              /* zones */
+              var zoneRows = "", zoneKeys = sim.measured ? TL_ZONES.map(function(z){ return z.key; }) : ["ab", "cd"];
+              zoneKeys.forEach(function(zk){
+                var zp = sim.positions.filter(function(p){ return p.zone === zk; }); if(!zp.length) return;
+                var w = zp.slice().sort(function(a, b){ return a.remYears - b.remYears; })[0];
+                var mxT = Math.max.apply(null, zp.map(function(p){ return p.curT; }));
+                var pct = Math.min(100, w.Dtot * 100);
+                zoneRows += '<div class="tl-zone"><div class="tl-zone-name">' + esc(w.zoneLabel) + '</div><div><div class="tl-bar"><i style="width:' + Math.max(1.5, pct).toFixed(1) + '%;background:' + usedColor(pct) + '"></i></div></div>'
+                  + '<div class="tl-zone-meta"><b>' + fmt(w.Dtot * 100, w.Dtot < 0.1 ? 2 : 1) + '%</b> used · ' + fmtYears(w.remYears) + ' yrs left<br>Max TMT now ' + fmt(mxT) + ' °C</div></div>';
+              });
+              var left = '<div class="tl-panel"><div class="tl-panel-title">Zone life used (worst tube per zone)<span>' + (sim.measured ? zoneKeys.length + " zones · " + sim.positions.length + " positions" : "Estimated per side") + '</span></div>' + zoneRows;
+              if(sim.measured){
+                left += '<div style="margin-top:12px" class="tl-map"><div></div>';
+                for(var c = 1; c <= 15; c++) left += '<div class="tl-map-hd">' + c + '</div>';
+                TL_ZONES.forEach(function(z){
+                  left += '<div class="tl-map-lab">' + z.label + '</div>';
+                  for(var i = 1; i <= 15; i++){
+                    var p = sim.positions.filter(function(q){ return q.id === z.key + "-" + i; })[0];
+                    if(!p){ left += '<div class="tl-cell is-empty">·</div>'; continue; }
+                    var u = p.Dtot * 100, dl = p.curT - p.tLimit;
+                    var cc = (u >= 50 || dl >= 0) ? "#f87171" : (dl >= -10 ? "#fb923c" : (dl >= -20 ? "#fbbf24" : "#34d399"));
+                    left += '<div class="tl-cell" style="background:' + cc + '" title="' + esc(p.label) + ': ' + fmt(p.curT) + ' °C now, ' + fmt(u, 2) + '% used, ' + fmtYears(p.remYears) + ' yrs left">' + fmt(p.curT) + '</div>';
+                  }
+                });
+                left += '</div><div class="tl-legend"><span>Cell = current TMT °C. Margin to design-life TMT limit:</span><span><i style="background:#34d399"></i>&gt; 20 °C</span><span><i style="background:#fbbf24"></i>10–20 °C</span><span><i style="background:#fb923c"></i>0–10 °C</span><span><i style="background:#f87171"></i>above limit or &gt; 50% used</span></div>';
+              }
+              left += '</div>';
+              var right = '<div class="tl-panel tl-chart"><div class="tl-panel-title">TMT history used in the creep sum<span>' + hDate(sim.startH) + ' – ' + hDate(sim.endH) + '</span></div>' + chartSvg(sim, model, worst) + '</div>';
+              html += '<div class="tl-grid2">' + left + right + '</div>';
+
+              /* at-risk table */
+              var rows = P.slice(0, 10).map(function(p){
+                return '<tr><td>' + esc(p.label) + '</td><td class="num">' + fmt(p.curT) + '</td><td class="num">' + fmt(p.maxT) + '</td><td class="num">' + fmt(p.Dtot * 100, 2) + '%</td><td class="num">' + fmt(p.ratePerYear * 100, 2) + '%</td><td class="num">' + fmtYears(p.remYears) + '</td><td class="num">' + fmt(p.tLimit) + '</td><td><span class="tl-chip is-' + p.status + '">' + statusLabel(p.status) + '</span></td></tr>';
+              }).join("");
+              html += '<div class="tl-panel"><div class="tl-panel-title">Hottest / at-risk tubes<span>Ranked by remaining life</span></div><div class="tl-table-wrap"><table class="tl-table"><thead><tr><th>Position</th><th class="num">TMT now °C</th><th class="num">Peak °C</th><th class="num">Life used</th><th class="num">Use / yr</th><th class="num">Remaining yrs</th><th class="num">TMT limit °C</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+
+              html += '<div class="tl-note">Basis: ' + esc(TL_MATERIALS[inp.material] ? TL_MATERIALS[inp.material].label : "Custom") + ', ' + (inp.basis === "avg" ? "average" : "minimum") + ' rupture data, OD ' + fmt(num(inp.od, 125)) + ' mm × ' + fmt(num(inp.wall, 11) - num(inp.corr, 0), 1) + ' mm wall, ' + fmt(num(inp.pOper, 27), 1) + ' kg/cm²g. '
+                + 'History: ' + fmt(sim.online) + ' h online, ' + fmt(sim.offline) + ' h offline (' + sim.cycles + ' shutdowns), ' + fmt(sim.gap) + ' h without data'
+                + (sim.priorHoursCal ? ', plus ' + fmt(sim.priorHoursCal) + ' calendar h before the record' : '') + '. '
+                + 'TST readings used: ' + fmt(rd.total) + ' from ' + fmt(rd.entryCount) + ' saved entries.</div>';
+              body.innerHTML = html;
+              tlState.last = { worst:worst, usedPct:usedW, remYears:worst.remYears };
+            }
+
+            /* ---------- Inputs form ---------- */
+            function buildForm(){
+              var host = document.getElementById("tube-life-form"); if(!host) return;
+              var inp = tlState.inputs || loadInputs();
+              var html = '<div class="tl-form">';
+              TL_FIELDS.forEach(function(g){
+                html += '<fieldset><legend>' + g.group + '</legend>';
+                g.items.forEach(function(f){
+                  var v = inp[f.k], ctl;
+                  if(f.type === "select"){
+                    ctl = '<select data-tl="' + f.k + '" onchange="tubeLifeMaterialChanged(this.value)">' + Object.keys(TL_MATERIALS).map(function(m){ return '<option value="' + m + '"' + (m === v ? ' selected' : '') + '>' + esc(TL_MATERIALS[m].label) + '</option>'; }).join("") + '</select>';
+                  } else if(f.type === "basis"){
+                    ctl = '<select data-tl="basis"><option value="min"' + (v !== "avg" ? ' selected' : '') + '>Minimum (API 530, 80% of avg)</option><option value="avg"' + (v === "avg" ? ' selected' : '') + '>Average</option></select>';
+                  } else {
+                    ctl = '<input data-tl="' + f.k + '" type="' + f.type + '"' + (f.step ? ' step="' + f.step + '"' : '') + ' value="' + esc(v) + '">';
+                  }
+                  html += '<label class="tl-field' + (f.wide || f.type === "basis" ? ' tl-wide' : '') + '"><span>' + f.label + '</span>' + ctl + '</label>';
+                });
+                html += '</fieldset>';
+              });
+              html += '</div><div class="tl-form-actions"><div class="tl-hint">Defaults are typical values. Replace them with your tube datasheet (Technip / supplier) and inspection data. Saved only in this browser.</div>'
+                + '<button type="button" class="tl-btn tl-btn-soft" onclick="tubeLifeResetInputs()">Reset defaults</button><button type="button" class="tl-btn" onclick="tubeLifeApplyInputs()">Apply &amp; recalculate</button></div>';
+              host.innerHTML = html;
+            }
+            function readForm(){
+              var out = {}; var k;
+              for(k in TL_DEFAULTS) out[k] = (tlState.inputs || TL_DEFAULTS)[k];
+              var els = document.querySelectorAll("#tube-life-form [data-tl]");
+              for(var i = 0; i < els.length; i++){
+                var key = els[i].getAttribute("data-tl"), val = els[i].value;
+                out[key] = (els[i].type === "number") ? (val === "" ? "" : Number(val)) : val;
+              }
+              return out;
+            }
+            window.tubeLifeMaterialChanged = function(m){
+              var mat = TL_MATERIALS[m]; if(!mat || !mat.s) return;
+              ["s900", "s950", "s1000", "s1050"].forEach(function(k, i){ var el = document.querySelector('#tube-life-form [data-tl="' + k + '"]'); if(el) el.value = mat.s[i]; });
+            };
+            window.tubeLifeApplyInputs = function(){ tlState.inputs = readForm(); saveInputs(tlState.inputs); tubeLifeRun(false); };
+            window.tubeLifeResetInputs = function(){ try{ localStorage.removeItem(TL_KEY); }catch(e){} tlState.inputs = loadInputs(); buildForm(); tubeLifeRun(false); };
+            window.tubeLifeToggleInputs = function(){ var d = document.getElementById("tube-life-inputs"); if(d){ d.open = !d.open; if(d.open) d.scrollIntoView({ behavior:"smooth", block:"nearest" }); } };
+
+            /* ---------- Run ---------- */
+            window.tubeLifeRun = function(forceFetch){
+              if(tlState.busy) return;
+              tlState.busy = true; tlState.ran = true;
+              var btn = document.getElementById("tube-life-run-btn"); if(btn){ btn.disabled = true; btn.textContent = "Calculating..."; }
+              if(forceFetch) tlState.cotAt = 0;
+              var inp = tlState.inputs || (tlState.inputs = loadInputs());
+              setStatus("Loading plant COT history and saved TST readings...", "");
+              var done = function(){ tlState.busy = false; if(btn){ btn.disabled = false; btn.textContent = "Recalculate Tube Life"; } };
+              fetchCot(inp).catch(function(err){ console.warn("[TubeLife] COT history unavailable", err); return null; }).then(function(cot){
+                try{
+                  var model = buildModel(inp);
+                  if(!model.valid){ setStatus("Check the rupture curve and tube inputs.", "warn"); document.getElementById("tube-life-body").innerHTML = '<div class="tl-note is-warn">The rupture curve or tube dimensions are invalid. Open Design Inputs and check them.</div>'; return; }
+                  var rd = collectReadings(inp, cot);
+                  var sim = simulate(inp, model, cot, rd);
+                  if(!sim){ setStatus("No TMT history available yet.", "warn"); document.getElementById("tube-life-body").innerHTML = '<div class="tl-note is-warn">No plant COT history or saved TST readings were found, so tube life cannot be calculated yet.</div>'; return; }
+                  render(inp, model, sim, rd, cot);
+                  var w = tlState.last;
+                  setStatus("Updated " + new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + " · data to " + hDate(sim.endH) + " · worst tube " + fmt(w.usedPct, w.usedPct < 10 ? 2 : 1) + "% used", w.worst.status === "ok" ? "ok" : "warn");
+                }catch(e){
+                  console.error("[TubeLife]", e);
+                  setStatus("Tube life calculation failed. See console.", "warn");
+                } finally { done(); }
+              });
+            };
+
+            function init(){
+              tlState.inputs = loadInputs();
+              buildForm();
+              var card = document.getElementById("tube-life-card"); if(!card) return;
+              var start = function(){ if(!tlState.ran) setTimeout(function(){ window.tubeLifeRun(false); }, 400); };
+              if("IntersectionObserver" in window){
+                var io = new IntersectionObserver(function(list){ list.forEach(function(e){ if(e.isIntersecting){ io.disconnect(); start(); } }); }, { rootMargin:"300px" });
+                io.observe(card);
+              } else { setTimeout(start, 3000); }
+            }
+            window.tubeLifeEngine = { buildModel:buildModel, simulate:simulate, collectReadings:collectReadings, defaults:TL_DEFAULTS };
+            if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+          })();
+          </script>
+        </div>
+
         <div id="stack-adjust-card" class="hm-adjust-card" data-cuboid-adjust-card>
           <div class="hm-adjust-head">
             <div class="hm-adjust-title scada-panel-title">🎯 Burner Adjustment Logic (TST + Cleaning Priority)</div>
