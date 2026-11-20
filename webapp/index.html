@@ -26733,7 +26733,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               var priorHoursCal = (isFinite(svcStartMs) && hourKey(svcStartMs) < startH) ? (startH - hourKey(svcStartMs)) : 0;
               var online = 0, offline = 0, gap = 0, cycles = 0, wasOn = null;
               var daily = {};
-              positions.forEach(function(p){ p.D = 0; p.onH = 0; p.maxT = -Infinity; p.hist = {}; p.ri = 0; p.curT = NaN; p.curH = -Infinity; p.D30 = 0; });
+              positions.forEach(function(p){ p.D = 0; p.onH = 0; p.maxT = -Infinity; p.hist = {}; p.ri = 0; p.curT = NaN; p.curH = -Infinity; p.D30 = 0; p.recent = []; });
               var recentFrom = endH - 30 * 24;
               for(var h = startH; h <= endH; h++){
                 var c = hasCot ? cot.map[h] : null;
@@ -26745,6 +26745,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 var dk = Math.floor(h / 24);
                 for(var i = 0; i < positions.length; i++){
                   var p = positions[i], sc = c[p.side]; if(!isFinite(sc)) sc = isFinite(c.ab) ? c.ab : c.cd;
+                  if(!(sc >= offCot)) continue; /* this side offline or transmitter fault */
                   var T;
                   if(measured){
                     while(p.ri < p.readings.length - 1 && p.readings[p.ri + 1].h <= h) p.ri++;
@@ -26758,7 +26759,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                   p.D += dd; p.onH++; if(h >= recentFrom) p.D30 += dd;
                   if(T > p.maxT) p.maxT = T;
                   var bin = Math.round(T); p.hist[bin] = (p.hist[bin] || 0) + 1;
-                  p.curT = T; p.curH = h;
+                  p.recent.push(T); if(p.recent.length > 72) p.recent.shift(); p.curH = h;
                   if(!daily[dk]) daily[dk] = {};
                   if(!(daily[dk][p.id] >= T)) daily[dk][p.id] = T;
                 }
@@ -26768,6 +26769,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 for(var j = 0; j < keys.length; j++){ acc += p.hist[keys[j]]; if(acc >= p.onH / 2){ med = keys[j]; break; } }
                 if(!isFinite(med) && p.readings.length){ med = p.readings[p.readings.length - 1].v; }
                 p.medT = med;
+                if(p.recent.length){ var rs = p.recent.slice().sort(function(a, b){ return a - b; }); p.curT = rs[Math.floor(rs.length / 2)]; }
                 if(measured && p.readings.length){
                   var lr = p.readings[p.readings.length - 1];
                   if(lr.h >= p.curH || !isFinite(p.curT)){ p.curT = lr.v; p.curH = lr.h; }
@@ -26820,7 +26822,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               var W = 640, H = 210, L = 44, R = 26, Tm = 12, B = 26, d0 = days[0], d1 = days[days.length - 1];
               function x(d){ return L + (W - L - R) * (d - d0) / Math.max(1, d1 - d0); }
               function y(v){ return Tm + (H - Tm - B) * (1 - (v - lo) / Math.max(1, hi - lo)); }
-              function path(arr){ var s = "", pen = false; arr.forEach(function(p){ if(!isFinite(p.v)){ pen = false; return; } s += (pen ? "L" : "M") + x(p.d).toFixed(1) + " " + y(p.v).toFixed(1) + " "; pen = true; }); return s; }
+              function path(arr){ var s = "", pen = false, pd = -1; arr.forEach(function(p){ if(!isFinite(p.v) || (pd >= 0 && p.d - pd > 2)) pen = false; if(!isFinite(p.v)) return; s += (pen ? "L" : "M") + x(p.d).toFixed(1) + " " + y(p.v).toFixed(1) + " "; pen = true; pd = p.d; }); return s; }
               var g = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Daily maximum TMT trend">';
               for(var t = lo; t <= hi; t += Math.max(10, Math.round((hi - lo) / 5 / 10) * 10)){
                 g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="rgba(148,163,184,0.16)"/>';
@@ -26861,7 +26863,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               var usedW = worst.Dtot * 100;
               html += '<div class="tl-kpis">'
                 + kpi("Life used · worst tube", fmt(usedW, usedW < 10 ? 2 : 1), "%", esc(worst.label) + "<br>Fleet average " + fmt(avgUsed, avgUsed < 10 ? 2 : 1) + "%", worst.status)
-                + kpi("Remaining life", fmtYears(worst.remYears), "yrs", "At current TMT " + fmt(worst.curT) + " °C, " + fmt(sim.avail * 100) + "% availability", worst.status)
+                + kpi("Remaining life", fmtYears(worst.remYears), "yrs", "At current TMT (72 h online median) " + fmt(worst.curT) + " °C, " + fmt(sim.avail * 100) + "% availability", worst.status)
                 + kpi("Expected life at current TMT", fmtYears(worst.lifeAtCurYears), "yrs", "New tube held at " + fmt(worst.curT) + " °C (" + fmt(Math.min(worst.trNow, 9.99e6)) + " h rupture life)", "")
                 + kpi("Hottest tube now", fmt(hottest.curT), "°C", esc(hottest.label) + "<br>Peak in record " + fmt(hottest.maxT) + " °C", hottest.status)
                 + kpi("TMT limit for design life", fmt(worst.tLimit), "°C", isFinite(worst.tLimit) ? ("Worst tube is " + (worst.curT > worst.tLimit ? "+" : "") + fmt(worst.curT - worst.tLimit) + " °C vs limit. +10 °C cuts life " + fmt(worst.sens10 * 100) + "%") : "Design life reached", isFinite(worst.tLimit) && worst.curT > worst.tLimit ? "watch" : "")
