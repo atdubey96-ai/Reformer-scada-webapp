@@ -12745,7 +12745,13 @@ function cuboidAiBuildResultsHtml(result){
     matchHtml = '<div class="stack-ai-empty">The advisor could not find close saved cases yet. Keep saving TST data to make this section smarter.</div>';
   }
 
-  return ''
+  var lxTone = result.actions.length ? "watch" : "ok";
+  var lxHead = result.actions.length
+    ? ("Do now: PH" + result.actions[0].ph + " " + result.actions[0].actionText)
+    : "No burner change needed. TST is inside the preferred band.";
+  var lxLine = (result.focusLabel ? (result.focusLabel + ". ") : "") + "Based on " + result.matches.length + " similar past cases, confidence " + String(result.confidence.label).toLowerCase() + ". " + result.prediction.headline;
+  var verdictHtml = '<div class="lx-verdict is-' + lxTone + '"><div class="lx-verdict-icon">' + (lxTone === "ok" ? "✓" : "!") + '</div><div><div class="lx-verdict-head">' + hmEscapeHtml(lxHead) + '</div><div class="lx-verdict-line">' + hmEscapeHtml(lxLine) + '</div></div></div>';
+  return verdictHtml
     + summaryHtml
     + '<div class="stack-ai-panel">'
     + '<div class="stack-ai-panel-title">' + hmEscapeHtml(result.prediction.headline) + '</div>'
@@ -26389,17 +26395,31 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       <div class="cuboid-followup-stack">
         <div id="stack-ai-card">
           <div class="stack-ai-head">
-            <div>
-              <div class="stack-ai-title scada-panel-title">Local AI Prediction &amp; Suggestions</div>
-              <div class="stack-ai-sub">
-                Runs inside this website using saved TST history, the current cuboid snapshot, burner states, openings, cleaning data, and saved process fields. No external AI link is used.
-              </div>
+            <div class="lx-head-text">
+              <div class="lx-eyebrow"><span class="lx-dot"></span>Advisory module · Case-based AI</div>
+              <div class="stack-ai-title lx-title">Local AI Prediction &amp; Suggestions</div>
+              <div class="stack-ai-sub lx-sub">Finds the past furnace conditions most like today, checks what happened next, and suggests which burners to adjust. Runs fully inside this website, no external AI.</div>
             </div>
             <div class="stack-ai-head-actions">
               <button type="button" id="stack-ai-run-btn" class="stack-ai-run-btn" onclick="runCuboidAiPrediction()">Start AI Prediction</button>
               <div id="stack-ai-status" class="stack-ai-status is-ready">Ready to analyze the current cuboid condition.</div>
             </div>
           </div>
+          <div class="lx-spec" aria-label="Model specification">
+            <div class="lx-spec-cell"><span>Model</span><b>Weighted k-NN case-based reasoning</b></div>
+            <div class="lx-spec-cell"><span>Features</span><b>7 process tags · 4 TST zones (60 PH) · burner states · openings · shift</b></div>
+            <div class="lx-spec-cell"><span>Outputs</span><b>Similarity 0–100 · next-record outlook · ranked burner moves · process watch</b></div>
+            <div class="lx-spec-cell"><span>Confidence</span><b>High ≥ 70 score + 3 follow-ups · Medium ≥ 58</b></div>
+          </div>
+          <details class="lx-how">
+            <summary>How it works</summary>
+            <ol class="lx-steps">
+              <li><b>Read today</b><span>Current TST in 4 zones, COT, HGU load, flue gas, O₂, pre-reformer, CH₄ slip, burner fuel states and openings.</span><code>profile = {process, zone avg/max/min, hot/cold count, state mix}</code></li>
+              <li><b>Find look-alikes</b><span>Compares with every saved TST case and scores how close each one is.</span><code>d = Σ wᵢ·min(|xᵢ−yᵢ|/rangeᵢ, 4); score = 100 − 7.8·d</code></li>
+              <li><b>Check what happened next</b><span>For the closest cases, looks at the next saved record (within 8 h) to see if TST cooled or recovered.</span><code>outlook = median Δ(zone avg), median Δ(peak TST)</code></li>
+              <li><b>Suggest moves</b><span>Ranks burner moves already allowed by the firing logic for the hottest or coldest zone, and flags process deviations.</span><code>priority = zone deviation × allowed move</code></li>
+            </ol>
+          </details>
           <div id="stack-ai-body" class="stack-ai-body">
             <div class="stack-ai-empty">Click Start AI Prediction to compare the current cuboid condition with saved historical TST cases and generate local suggestions.</div>
           </div>
@@ -26510,10 +26530,94 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             body.light-theme #tube-life-card .tl-method code{color:#9a3412;background:#fff7ed;}
             body.light-theme #tube-life-card .tl-method a{color:#1d4ed8;}
           </style>
+          <style id="lx-licensor-style-20261125">
+            #stack-ai-card, #tube-life-card{
+              --lx-acc:#38bdf8; --lx-acc2:#f97316; --lx-ink:#f8fafc; --lx-sub:#cbd5e1; --lx-mute:#94a3b8;
+              --lx-line:rgba(148,163,184,0.16); --lx-cell:rgba(2,6,23,0.38);
+              border-radius:14px !important; padding:0 0 18px !important;
+              border:1px solid rgba(148,163,184,0.22) !important;
+              background:linear-gradient(180deg,#0b1424 0%,#0a1220 100%) !important;
+              box-shadow:0 1px 0 rgba(255,255,255,0.04) inset, 0 14px 32px rgba(2,8,23,0.28) !important;
+              font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+            }
+            #tube-life-card{ --lx-acc:#f97316; --lx-acc2:#38bdf8; }
+            #stack-ai-card::before, #tube-life-card::before{ background:none !important; }
+            #stack-ai-card::after, #tube-life-card::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+              background:linear-gradient(90deg,var(--lx-acc),var(--lx-acc2));border-radius:14px 14px 0 0;pointer-events:none;}
+            #stack-ai-card > *, #tube-life-card > *{ margin-left:20px; margin-right:20px; }
+            #stack-ai-card > style, #tube-life-card > style, #tube-life-card > script{ margin:0; }
+            #stack-ai-card .stack-ai-head, #tube-life-card .tl-head{ padding-top:18px; align-items:flex-start; gap:16px; }
+            #stack-ai-card .lx-head-text, #tube-life-card .tl-head > div:first-child{ min-width:0; flex:1 1 420px; }
+            .lx-eyebrow{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--lx-mute);}
+            .lx-dot{width:7px;height:7px;border-radius:50%;background:var(--lx-acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--lx-acc) 22%,transparent);}
+            #stack-ai-card .lx-title, #tube-life-card .lx-title{margin:6px 0 0 !important;padding:0 !important;border:0 !important;background:none !important;box-shadow:none !important;
+              font-size:22px !important;font-weight:750 !important;letter-spacing:-0.2px !important;color:var(--lx-ink) !important;line-height:1.25;}
+            #stack-ai-card .lx-title::after, #tube-life-card .lx-title::after{display:none !important;}
+            #stack-ai-card .lx-sub, #tube-life-card .lx-sub{margin-top:6px !important;font-size:13.5px !important;line-height:1.55 !important;color:var(--lx-sub) !important;max-width:760px;}
+            #tube-life-card .lx-sub-hidden{display:none !important;}
+            .lx-spec{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;border:1px solid var(--lx-line);border-radius:10px;overflow:hidden;background:var(--lx-cell);}
+            .lx-spec-cell{padding:10px 12px;border-right:1px solid var(--lx-line);min-width:0;}
+            .lx-spec-cell:last-child{border-right:0;}
+            .lx-spec-cell span{display:block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--lx-acc);}
+            .lx-spec-cell b{display:block;margin-top:3px;font-size:12.5px;font-weight:600;line-height:1.4;color:var(--lx-ink);}
+            .lx-spec-cell i{font-style:normal;}
+            details.lx-how{margin-top:10px;border:1px solid var(--lx-line);border-radius:10px;background:transparent;}
+            details.lx-how > summary{cursor:pointer;list-style:none;padding:9px 12px;font-size:12px;font-weight:700;color:var(--lx-sub);}
+            details.lx-how > summary::-webkit-details-marker{display:none;}
+            details.lx-how > summary::before{content:"＋";display:inline-block;width:16px;color:var(--lx-acc);font-weight:800;}
+            details.lx-how[open] > summary::before{content:"－";}
+            .lx-steps{list-style:none;counter-reset:lx;margin:0;padding:0 12px 12px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+            .lx-steps li{counter-increment:lx;position:relative;padding:10px 10px 10px 38px;border-radius:8px;background:var(--lx-cell);border:1px solid var(--lx-line);min-width:0;}
+            .lx-steps li::before{content:counter(lx);position:absolute;left:10px;top:10px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+              font-size:11px;font-weight:800;color:#0b1424;background:var(--lx-acc);}
+            .lx-steps b{display:block;font-size:12.5px;color:var(--lx-ink);}
+            .lx-steps span{display:block;margin-top:3px;font-size:12px;line-height:1.45;color:var(--lx-sub);}
+            .lx-steps code{display:block;margin-top:6px;font:11px/1.4 "JetBrains Mono",ui-monospace,Consolas,monospace;color:var(--lx-mute);white-space:normal;word-break:break-word;}
+            /* buttons + status */
+            #stack-ai-card .stack-ai-run-btn, #tube-life-card .tl-btn{border-radius:8px !important;min-height:36px;padding:8px 14px !important;font-weight:700 !important;font-size:13px !important;
+              background:var(--lx-acc) !important;color:#0b1424 !important;border:1px solid transparent !important;box-shadow:none !important;}
+            #tube-life-card .tl-btn.tl-btn-soft{background:transparent !important;color:var(--lx-ink) !important;border-color:rgba(148,163,184,0.4) !important;}
+            #stack-ai-card .stack-ai-status, #tube-life-card .tl-status{border-radius:8px !important;font-size:11.5px !important;font-weight:600 !important;}
+            /* panels + KPIs */
+            #stack-ai-card .stack-ai-panel, #stack-ai-card .stack-ai-summary-card, #tube-life-card .tl-panel, #tube-life-card .tl-kpi, #tube-life-card details.tl-details{
+              border-radius:10px !important;border-color:var(--lx-line) !important;background:var(--lx-cell) !important;box-shadow:none !important;}
+            #stack-ai-card .stack-ai-summary-label, #tube-life-card .tl-kpi-label, #stack-ai-card .stack-ai-panel-title, #tube-life-card .tl-panel-title{
+              letter-spacing:1px !important;font-size:10.5px !important;font-weight:700 !important;text-transform:uppercase;color:var(--lx-acc) !important;}
+            #stack-ai-card .stack-ai-panel-title{font-size:12px !important;text-transform:none;letter-spacing:0 !important;color:var(--lx-ink) !important;}
+            #stack-ai-card .stack-ai-summary-value, #tube-life-card .tl-kpi-value{font-variant-numeric:tabular-nums;font-weight:750 !important;letter-spacing:-0.3px;}
+            #tube-life-card .tl-kpi{position:relative;}
+            #tube-life-card .tl-kpi.is-ok::before, #tube-life-card .tl-kpi.is-watch::before, #tube-life-card .tl-kpi.is-crit::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;}
+            #tube-life-card .tl-kpi.is-ok::before{background:var(--tl-ok);} #tube-life-card .tl-kpi.is-watch::before{background:var(--tl-watch);} #tube-life-card .tl-kpi.is-crit::before{background:var(--tl-crit);}
+            #stack-ai-card .stack-ai-badge, #stack-ai-card .stack-ai-chip, #tube-life-card .tl-chip{border-radius:6px !important;}
+            #tube-life-card .tl-note{border-radius:8px !important;border-style:solid !important;}
+            @media (max-width:1100px){ .lx-spec{grid-template-columns:repeat(2,minmax(0,1fr));} .lx-spec-cell:nth-child(2n){border-right:0;} .lx-spec-cell:nth-child(-n+2){border-bottom:1px solid var(--lx-line);}
+              .lx-steps{grid-template-columns:repeat(2,minmax(0,1fr));} }
+            @media (max-width:640px){ #stack-ai-card > *, #tube-life-card > *{margin-left:14px;margin-right:14px;} .lx-spec, .lx-steps{grid-template-columns:minmax(0,1fr);}
+              .lx-spec-cell{border-right:0;border-bottom:1px solid var(--lx-line);} .lx-spec-cell:last-child{border-bottom:0;} #stack-ai-card .lx-title, #tube-life-card .lx-title{font-size:19px !important;} }
+            #stack-ai-card, #stack-ai-card *:not(code), #tube-life-card, #tube-life-card *:not(code){font-family:"Inter","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif !important;}
+            .lx-verdict{display:flex;gap:14px;align-items:center;margin:0 0 14px;padding:14px 16px;border-radius:10px;border:1px solid var(--lx-line);background:var(--lx-cell);}
+            .lx-verdict-icon{flex:0 0 36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#0b1424;background:#34d399;}
+            .lx-verdict.is-watch .lx-verdict-icon{background:#fbbf24;} .lx-verdict.is-crit .lx-verdict-icon{background:#f87171;}
+            .lx-verdict.is-ok{border-color:rgba(52,211,153,0.45);} .lx-verdict.is-watch{border-color:rgba(251,191,36,0.5);} .lx-verdict.is-crit{border-color:rgba(248,113,113,0.55);}
+            .lx-verdict-head{font-size:17px;font-weight:750;line-height:1.3;color:var(--lx-ink);}
+            .lx-verdict-line{margin-top:3px;font-size:12.5px;line-height:1.5;color:var(--lx-sub);}
+            /* light theme */
+            body.light-theme #stack-ai-card .stack-ai-empty, body.light-theme #tube-life-card .tl-note{background:#f8fafc !important;color:#334155 !important;border-color:rgba(15,23,42,0.12) !important;}
+            body.light-theme #tube-life-card .tl-note.is-warn{background:#fffbeb !important;color:#92400e !important;border-color:rgba(217,119,6,0.35) !important;}
+            body.light-theme .lx-verdict.is-ok{background:#ecfdf5;} body.light-theme .lx-verdict.is-watch{background:#fffbeb;} body.light-theme .lx-verdict.is-crit{background:#fef2f2;}
+            body.light-theme #stack-ai-card, body.light-theme #tube-life-card{--lx-ink:#0f172a;--lx-sub:#334155;--lx-mute:#64748b;--lx-line:rgba(15,23,42,0.1);--lx-cell:#f8fafc;
+              background:#ffffff !important;border-color:rgba(15,23,42,0.12) !important;box-shadow:0 1px 2px rgba(15,23,42,0.05),0 10px 24px rgba(15,23,42,0.06) !important;}
+            body.light-theme #stack-ai-card{--lx-acc:#0284c7;} body.light-theme #tube-life-card{--lx-acc:#ea580c;}
+            body.light-theme #stack-ai-card .stack-ai-run-btn, body.light-theme #tube-life-card .tl-btn{color:#ffffff !important;}
+            body.light-theme #tube-life-card .tl-btn.tl-btn-soft{background:#ffffff !important;color:#0f172a !important;}
+            body.light-theme .lx-steps li::before{color:#ffffff;}
+          </style>
           <div class="tl-head">
             <div>
-              <div class="tl-title scada-panel-title">Reformer Tube Remaining Life (Creep)</div>
-              <div class="tl-sub">
+              <div class="lx-eyebrow"><span class="lx-dot"></span>Integrity module · API 530 creep life</div>
+              <div class="tl-title lx-title">Reformer Tube Remaining Life (Creep)</div>
+              <div class="tl-sub lx-sub">How much of each tube's creep life has been used since installation, and how long it will last at today's tube skin temperature.</div>
+              <div class="tl-sub lx-sub-hidden">
                 API 530 / API 579 style creep-life model: Larson–Miller rupture curve for the tube alloy, hoop stress from pressure and wall, and Robinson's rule (sum of hourly life fractions) over the TMT history. TMT comes from saved peep-hole TST readings, carried hour by hour with the COT trend from plant history.
               </div>
             </div>
@@ -26525,6 +26629,21 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               <div id="tube-life-status" class="tl-status">Loads automatically when this dashboard opens.</div>
             </div>
           </div>
+          <div class="lx-spec" aria-label="Model specification">
+            <div class="lx-spec-cell"><span>Standard</span><b>API 530 · API 579-1 Part 10 screening</b></div>
+            <div class="lx-spec-cell"><span>Model</span><b>Larson–Miller rupture + Robinson life fraction</b></div>
+            <div class="lx-spec-cell"><span>Design basis</span><b>TST limit <i id="tl-spec-limit">970</i> °C = <i id="tl-spec-life">100,000</i> h</b></div>
+            <div class="lx-spec-cell"><span>Data</span><b>Hourly COT TI-2503B/C + peep-hole TST since <i id="tl-spec-start">05 Sep 2026</i></b></div>
+          </div>
+          <details class="lx-how">
+            <summary>How it works</summary>
+            <ol class="lx-steps">
+              <li><b>Tube stress</b><span>Pressure and wall thickness give the hoop stress in the tube wall.</span><code>σ = (P/2)·(Do/t − 1)</code></li>
+              <li><b>Life at a temperature</b><span>A tube held at the TST limit lasts the design life; every 20 °C hotter roughly halves it.</span><code>t_r = 10^(LMP/T[K] − C), LMP = T_lim·(C + log t_design)</code></li>
+              <li><b>Life used</b><span>Each running hour uses a small fraction of life at that hour's tube temperature.</span><code>D = Σ Δt / t_r(T)</code></li>
+              <li><b>Life left</b><span>Remaining fraction divided by the yearly rate at today's TMT.</span><code>years = (1 − D) / (8760·avail / t_r(T_now))</code></li>
+            </ol>
+          </details>
           <div id="tube-life-body" class="tl-body">
             <div class="tl-note">Click Recalculate Tube Life to run the creep model.</div>
           </div>
@@ -26542,7 +26661,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 <li><b>Time to rupture</b> at each hour: <code>t_r = 10^(LMP(σ)/T[K] − C)</code>.</li>
                 <li><b>Robinson's rule (linear life fraction)</b>: <code>D = Σ Δt / t_r(T,σ)</code>. Hours with COT below the offline limit add no creep. Hours with no history use the in-service availability and that tube's median TMT. Service before the record uses the prior-period TMT.</li>
                 <li><b>Remaining life</b> = <code>(1 − D) / (annual damage at current TMT)</code>. <b>Expected life at current TMT</b> = rupture life of a new tube held at today's TMT. <b>TMT limit to reach design life</b> = temperature at which the remaining fraction lasts exactly the remaining design hours.</li>
-                <li><b>Hourly TMT</b>: each peep-hole position takes its nearest saved TST reading (plus pyrometer correction) and shifts it by the change in that side's COT (AB: TI-2501, CD: TI-2502), limited to ±60 °C. With no TST saved, TMT = COT + the editable COT→TMT offset, per side.</li>
+                <li><b>Hourly TMT</b>: each peep-hole position takes its nearest saved TST reading (plus pyrometer correction) and shifts it by the change in that side's COT (AB: TI-2503B, CD: TI-2503C; TI-2501/2502 before 20 Nov 2026), limited to ±60 °C. With no TST saved, TMT = COT + the editable COT→TMT offset, per side.</li>
               </ol>
               <b>Technip Energies alignment</b>
               <ul>
@@ -26871,6 +26990,10 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
 
             function render(inp, model, sim, rd, cot){
               var body = document.getElementById("tube-life-body"); if(!body) return;
+              (function(){ function setT(id, v){ var el = document.getElementById(id); if(el) el.textContent = v; }
+                setT("tl-spec-limit", isFinite(model.tmtLimit) ? fmt(model.tmtLimit) : fmt(model.operTmtLimit100k));
+                setT("tl-spec-life", fmt(num(inp.designLife, 100000)));
+                var sv = Date.parse(String(inp.serviceStart || "")); setT("tl-spec-start", isFinite(sv) ? new Date(sv).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }) : "first record"); })();
               var P = sim.positions.slice().sort(function(a, b){ return a.remYears - b.remYears; });
               var worst = P[0];
               var hottest = sim.positions.slice().sort(function(a, b){ return b.curT - a.curT; })[0];
@@ -26882,9 +27005,17 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               if(!(cot && cot.count)) notes.push('Plant COT history could not be loaded; only the saved TST readings are used.');
               if(rd && rd.dropped) notes.push(rd.dropped + ' TST value(s) were ignored as outliers (more than 80 °C from that zone\'s median). Check those entries for typos.');
               if(inp.serviceStart) notes.push('Life is counted from tube in-service date ' + inp.serviceStart + '. Earlier COT and TST data belongs to the previous tubes and is ignored.');
-              notes.forEach(function(n){ html += '<div class="tl-note is-warn">' + esc(n) + '</div>'; });
+              var notesHtml = ""; notes.forEach(function(n){ notesHtml += '<div class="tl-note is-warn">' + esc(n) + '</div>'; });
 
               var usedW = worst.Dtot * 100;
+              var limV = isFinite(model.tmtLimit) ? model.tmtLimit : model.operTmtLimit100k;
+              var vTone = worst.status, vHead, vLine;
+              if(vTone === "crit") vHead = "At risk: " + esc(worst.label) + " needs attention";
+              else if(vTone === "watch") vHead = "Watch: tubes OK, but " + esc(worst.label) + " is running close to its limit";
+              else vHead = "Tubes healthy: about " + fmtYears(worst.remYears) + " years of life left";
+              vLine = "Hottest tube now " + fmt(hottest.curT) + " °C vs limit " + fmt(limV) + " °C (" + (hottest.curT > limV ? fmt(hottest.curT - limV) + " °C over" : fmt(limV - hottest.curT) + " °C margin") + "). "
+                + "Life used so far " + fmt(usedW, usedW < 10 ? 2 : 1) + "% on the worst tube. Every +20 °C roughly halves tube life.";
+              html += '<div class="lx-verdict is-' + vTone + '"><div class="lx-verdict-icon">' + (vTone === "ok" ? "✓" : "!") + '</div><div><div class="lx-verdict-head">' + vHead + '</div><div class="lx-verdict-line">' + vLine + '</div></div></div>' + notesHtml;
               html += '<div class="tl-kpis">'
                 + kpi("Life used · worst tube", fmt(usedW, usedW < 10 ? 2 : 1), "%", esc(worst.label) + "<br>Fleet average " + fmt(avgUsed, avgUsed < 10 ? 2 : 1) + "%", worst.status)
                 + kpi("Remaining life", fmtYears(worst.remYears), "yrs", "At current TMT (72 h online median) " + fmt(worst.curT) + " °C, " + fmt(sim.avail * 100) + "% availability", worst.status)
