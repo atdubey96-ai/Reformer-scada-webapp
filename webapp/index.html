@@ -26651,7 +26651,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <summary>Design &amp; model inputs (saved to cloud, shared by all devices)</summary>
             <div class="tl-details-body"><div id="tube-life-form"></div></div>
           </details>
-          <details class="tl-details" style="margin-top:12px;">
+          <details class="tl-details" data-admin-only="true" style="margin-top:12px;">
             <summary>Method, Technip Energies alignment &amp; sources</summary>
             <div class="tl-details-body tl-method">
               <b>Calculation steps</b>
@@ -27023,8 +27023,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               if(!sim.measured) notes.push('No saved TST readings found in this browser, so TMT is estimated as COT + ' + fmt(num(inp.cotOffset, 60)) + ' °C per side. Save TST entries (TST Data tab) to rank individual peep-hole positions.');
               if(!inp.serviceStart) notes.push('Tube in-service date is not set, so life used counts only from ' + hDate(sim.startH) + '. Enter it under Design Inputs for full-life accounting.');
               if(!(cot && cot.count)) notes.push('Plant COT history could not be loaded; only the saved TST readings are used.');
-              if(rd && rd.dropped) notes.push(rd.dropped + ' TST value(s) were ignored as outliers (more than 80 °C from that zone\'s median). Check those entries for typos.');
-              if(inp.serviceStart) notes.push('Life is counted from tube in-service date ' + inp.serviceStart + '. Earlier COT and TST data belongs to the previous tubes and is ignored.');
               var notesHtml = ""; notes.forEach(function(n){ notesHtml += '<div class="tl-note is-warn">' + esc(n) + '</div>'; });
 
               var usedW = worst.Dtot * 100;
@@ -36350,7 +36348,6 @@ function hasPendingLocalEdits(){
   return burner || cleaning;
 }
 async function autoSaveToServerIfNeeded(reason, forceSave){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return false;
   if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return false;
   if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight) return false;
 
@@ -36380,7 +36377,6 @@ async function autoSaveToServerIfNeeded(reason, forceSave){
   return res;
 }
 async function autoRefreshFromServer(reason){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return false;
   if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return false;
   if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight || smartRefreshInFlight) return false;
   if(typeof navigator !== "undefined" && navigator.onLine === false){
@@ -36399,7 +36395,6 @@ async function autoRefreshFromServer(reason){
 }
 async function runAutoSyncCycle(reason, opts){
   opts = opts || {};
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return false;
   if(autoSyncCycleInFlight) return false;
   if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return false;
   autoSyncCycleInFlight = true;
@@ -36416,7 +36411,6 @@ async function runAutoSyncCycle(reason, opts){
   }
 }
 function scheduleAutoRefreshOnOpen(){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(autoRefreshOnOpenDone) return;
   autoRefreshOnOpenDone = true;
   setTimeout(function(){
@@ -36443,7 +36437,6 @@ function isSyncBootstrapLikelyStuck(){
 }
 
 function ensureStartupServerSyncRecovery(){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(!SERVER_SYNC_ENABLED || !isUserLoggedIn()) return;
   if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight || smartRefreshInFlight) return;
   if(!isSyncBootstrapLikelyStuck()) return;
@@ -36465,7 +36458,6 @@ function ensureStartupServerSyncRecovery(){
 }
 
 function triggerServerAutoImport(reason){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(!SERVER_SYNC_ENABLED) return;
   if(!isUserLoggedIn()) return;
   if(typeof navigator !== "undefined" && navigator.onLine === false) return;
@@ -36479,30 +36471,25 @@ function triggerServerAutoImport(reason){
 }
 
 window.addEventListener("online", function(){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   syncHealthMarkSyncing("Network restored");
   flushQueuedServerExport(true).catch(function(){});
   triggerServerAutoImport("online");
 });
 window.addEventListener("focus", function(){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   flushQueuedServerExport(false).catch(function(){});
   triggerServerAutoImport("focus");
 });
 window.addEventListener("pageshow", function(){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   flushQueuedServerExport(false).catch(function(){});
   triggerServerAutoImport("pageshow");
 });
 document.addEventListener("visibilitychange", function(){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(document.visibilityState === "visible"){
     flushQueuedServerExport(false).catch(function(){});
     triggerServerAutoImport("visible");
   }
 });
 setInterval(function(){
-  if(typeof isMobileLandingViewport === "function" && isMobileLandingViewport()) return;
   if(!SERVER_SYNC_ENABLED) return;
   if(serverImportInFlight || serverExportInFlight || serverQueueFlushInFlight) return;
   if(typeof navigator !== "undefined" && navigator.onLine === false) return;
