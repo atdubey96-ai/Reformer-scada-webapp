@@ -26749,13 +26749,14 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               try{ var saved = JSON.parse(localStorage.getItem(TL_KEY) || "null"); if(saved && typeof saved === "object"){ for(k in TL_DEFAULTS){ if(saved[k] !== undefined && !((k === "serviceStart" || k === "tmtLimit") && (saved[k] === "" || saved[k] == null))) out[k] = saved[k]; } } }catch(e){}
               return out;
             }
-            function saveInputs(obj){ try{ localStorage.setItem(TL_KEY, JSON.stringify(obj)); }catch(e){} }
+            function saveInputs(obj, stampMs){ try{ localStorage.setItem(TL_KEY, JSON.stringify(obj)); localStorage.setItem(TL_KEY + "_at", String(stampMs || Date.now())); }catch(e){} }
+            function localSavedAt(){ try{ return Number(localStorage.getItem(TL_KEY + "_at")) || 0; }catch(e){ return 0; } }
             /* ---------- Cloud sync (Supabase app_settings via /api/sb relay) ---------- */
             var TL_CLOUD_URL = "/api/sb/rest/v1/app_settings";
             function cloudLoadInputs(){
               return fetch(TL_CLOUD_URL + "?key=eq.tube_life_inputs&select=value,updated_at", { headers:{ "Accept":"application/json" } })
                 .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-                .then(function(rows){ return (Array.isArray(rows) && rows[0] && rows[0].value && typeof rows[0].value === "object") ? rows[0].value : null; });
+                .then(function(rows){ if(!(Array.isArray(rows) && rows[0] && rows[0].value && typeof rows[0].value === "object")) return null; var v = rows[0].value; v.__at = Date.parse(rows[0].updated_at) || 0; return v; });
             }
             function cloudSaveInputs(obj){
               return fetch(TL_CLOUD_URL + "?on_conflict=key", { method:"POST",
@@ -26764,10 +26765,17 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return true; });
             }
             function mergeCloud(remote){
-              if(!remote) return false; var saved = {}, k, changed = false;
-              try{ saved = JSON.parse(localStorage.getItem(TL_KEY) || "{}") || {}; }catch(e){ saved = {}; }
+              if(!remote) return false; var saved = null, k, changed = false;
+              try{ saved = JSON.parse(localStorage.getItem(TL_KEY) || "null"); }catch(e){ saved = null; }
+              var localAt = localSavedAt();
+              if(saved && localAt > (remote.__at || 0)){
+                /* this device has newer edits than the cloud: push them up instead of overwriting */
+                cloudSaveInputs(loadInputs()).catch(function(e){ console.warn("[TubeLife] cloud push failed", e); });
+                return false;
+              }
+              saved = saved || {};
               for(k in TL_DEFAULTS){ if(remote[k] !== undefined && String(saved[k]) !== String(remote[k])){ saved[k] = remote[k]; changed = true; } }
-              if(changed){ saveInputs(saved); }
+              if(changed || !localAt){ saveInputs(saved, remote.__at || Date.now()); }
               return changed;
             }
 
@@ -27107,9 +27115,10 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 });
                 html += '</fieldset>';
               });
-              html += '</div><div class="tl-form-actions"><div class="tl-hint">Defaults are typical values. Replace them with your tube datasheet (Technip / supplier) and inspection data. Saved only in this browser.</div>'
+              html += '</div><div class="tl-form-actions"><div class="tl-hint">Defaults are typical values. Replace them with your tube datasheet (Technip / supplier) and inspection data. Changes save automatically and sync to all devices.</div>'
                 + '<button type="button" class="tl-btn tl-btn-soft" onclick="tubeLifeResetInputs()">Reset defaults</button><button type="button" class="tl-btn" onclick="tubeLifeApplyInputs()">Apply &amp; recalculate</button></div>';
               host.innerHTML = html;
+              if(!host.__tlAuto){ host.__tlAuto = true; host.addEventListener("change", function(ev){ if(ev.target && ev.target.hasAttribute && ev.target.hasAttribute("data-tl")) window.tubeLifeApplyInputs(); }); }
             }
             function readForm(){
               var out = {}; var k;
