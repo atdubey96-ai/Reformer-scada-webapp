@@ -26648,7 +26648,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <div class="tl-note">Click Recalculate Tube Life to run the creep model.</div>
           </div>
           <details class="tl-details" id="tube-life-inputs" style="margin-top:14px;">
-            <summary>Design &amp; model inputs (editable defaults, saved in this browser)</summary>
+            <summary>Design &amp; model inputs (saved to cloud, shared by all devices)</summary>
             <div class="tl-details-body"><div id="tube-life-form"></div></div>
           </details>
           <details class="tl-details" style="margin-top:12px;">
@@ -26750,6 +26750,26 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               return out;
             }
             function saveInputs(obj){ try{ localStorage.setItem(TL_KEY, JSON.stringify(obj)); }catch(e){} }
+            /* ---------- Cloud sync (Supabase app_settings via /api/sb relay) ---------- */
+            var TL_CLOUD_URL = "/api/sb/rest/v1/app_settings";
+            function cloudLoadInputs(){
+              return fetch(TL_CLOUD_URL + "?key=eq.tube_life_inputs&select=value,updated_at", { headers:{ "Accept":"application/json" } })
+                .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+                .then(function(rows){ return (Array.isArray(rows) && rows[0] && rows[0].value && typeof rows[0].value === "object") ? rows[0].value : null; });
+            }
+            function cloudSaveInputs(obj){
+              return fetch(TL_CLOUD_URL + "?on_conflict=key", { method:"POST",
+                headers:{ "Content-Type":"application/json", "Prefer":"resolution=merge-duplicates,return=minimal" },
+                body:JSON.stringify([{ key:"tube_life_inputs", value:obj, updated_at:new Date().toISOString() }]) })
+                .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return true; });
+            }
+            function mergeCloud(remote){
+              if(!remote) return false; var saved = {}, k, changed = false;
+              try{ saved = JSON.parse(localStorage.getItem(TL_KEY) || "{}") || {}; }catch(e){ saved = {}; }
+              for(k in TL_DEFAULTS){ if(remote[k] !== undefined && String(saved[k]) !== String(remote[k])){ saved[k] = remote[k]; changed = true; } }
+              if(changed){ saveInputs(saved); }
+              return changed;
+            }
 
             /* ---------- Creep engine ---------- */
             function buildModel(inp){
@@ -27107,8 +27127,10 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               var mat = TL_MATERIALS[m]; if(!mat || !mat.s) return;
               ["s900", "s950", "s1000", "s1050"].forEach(function(k, i){ var el = document.querySelector('#tube-life-form [data-tl="' + k + '"]'); if(el) el.value = mat.s[i]; });
             };
-            window.tubeLifeApplyInputs = function(){ tlState.inputs = readForm(); saveInputs(tlState.inputs); tubeLifeRun(false); };
-            window.tubeLifeResetInputs = function(){ try{ localStorage.removeItem(TL_KEY); }catch(e){} tlState.inputs = loadInputs(); buildForm(); tubeLifeRun(false); };
+            window.tubeLifeApplyInputs = function(){ tlState.inputs = readForm(); saveInputs(tlState.inputs); tubeLifeRun(false);
+              cloudSaveInputs(tlState.inputs).then(function(){ setStatus("Design inputs saved to cloud. All devices will use them.", "ok"); })
+                .catch(function(e){ console.warn("[TubeLife] cloud save failed", e); setStatus("Saved on this device only. Cloud sync failed.", "warn"); }); };
+            window.tubeLifeResetInputs = function(){ try{ localStorage.removeItem(TL_KEY); }catch(e){} tlState.inputs = loadInputs(); buildForm(); tubeLifeRun(false); cloudSaveInputs(tlState.inputs).catch(function(){}); };
             window.tubeLifeToggleInputs = function(){ var d = document.getElementById("tube-life-inputs"); if(d){ d.open = !d.open; if(d.open) d.scrollIntoView({ behavior:"smooth", block:"nearest" }); } };
 
             /* ---------- Run ---------- */
@@ -27140,6 +27162,9 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             function init(){
               tlState.inputs = loadInputs();
               buildForm();
+              cloudLoadInputs().then(function(remote){
+                if(mergeCloud(remote)){ tlState.inputs = loadInputs(); buildForm(); if(tlState.ran && !tlState.busy) window.tubeLifeRun(false); }
+              }).catch(function(e){ console.warn("[TubeLife] cloud inputs unavailable", e); });
               var card = document.getElementById("tube-life-card"); if(!card) return;
               var start = function(){ if(!tlState.ran) setTimeout(function(){ window.tubeLifeRun(false); }, 400); };
               if("IntersectionObserver" in window){

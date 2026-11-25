@@ -2,7 +2,7 @@
 // Lets the office PC reach Supabase through the vercel.app domain when the proxy blocks *.supabase.co.
 const { getPlantSupabaseUrl, getPlantSupabaseAnonKey } = require("../../../scada/_shared");
 
-const ALLOWED_TABLES = new Set(["plant_data", "plant_data_history", "h2_material_balance"]);
+const ALLOWED_TABLES = new Set(["plant_data", "plant_data_history", "h2_material_balance", "app_settings"]);
 // apikey/authorization are always set server-side (new project anon key), so old Excel keys still work.
 const FORWARD_HEADERS = ["content-type", "prefer", "accept"];
 
