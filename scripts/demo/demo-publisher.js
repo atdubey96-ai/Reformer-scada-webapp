@@ -28,8 +28,8 @@ const SKIP_WORKBOOK = process.env.SCADA_DEMO_SKIP_WORKBOOK === "1";
 
 const TAGS = [
   { tagId: "GJA.2041fic2405.pv", label: "Feed Flow Mixing Point", unit: "Nm3/h", sheetCell: "H4", fallbackValue: 19479.43 },
-  { tagId: "GJA.2041ti2501.pv", label: "AB Side COT", unit: "degC", sheetCell: "H5", fallbackValue: 838.42 },
-  { tagId: "GJA.2041ti2502.pv", label: "CD Side COT", unit: "degC", sheetCell: "H6", fallbackValue: 828.99 },
+  { tagId: "GJA.2041ti2503b.pv", label: "AB Side COT", unit: "degC", sheetCell: "H5", fallbackValue: 838.42 },
+  { tagId: "GJA.2041ti2503c.pv", label: "CD Side COT", unit: "degC", sheetCell: "H6", fallbackValue: 828.99 },
   { tagId: "GJA.2041ti2408.pv", label: "Flue Gas Temp", unit: "degC", sheetCell: "H7", fallbackValue: 911.8 },
   { tagId: "GJA.2041tic2411.pv", label: "Pre-reformer Inlet", unit: "degC", sheetCell: "H8", fallbackValue: 447.32 },
   { tagId: "GJA.2041ti2412.pv", label: "Pre-reformer Outlet", unit: "degC", sheetCell: "H9", fallbackValue: 485.7 },
