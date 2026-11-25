@@ -12835,6 +12835,9 @@ function runCuboidAiPrediction(){
       if(item === entry) return false;
       return String(item.dt || "") !== String(entry.dt || "");
     });
+    if(typeof window.furnaceOptRun === "function"){
+      try{ window.furnaceOptRun(currentProfile, historyEntries.map(cuboidAiBuildProfileFromEntry).filter(Boolean)); }catch(foErr){ console.warn("[FurnaceOpt]", foErr); }
+    }
 
     if(!historyEntries.length){
       cuboidAiSetRunBusy(false);
@@ -26398,7 +26401,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             <div class="lx-head-text">
               <div class="lx-eyebrow"><span class="lx-dot"></span>Advisory module · Case-based AI</div>
               <div class="stack-ai-title lx-title">Local AI Prediction &amp; Suggestions</div>
-              <div class="stack-ai-sub lx-sub">Finds the past furnace conditions most like today, checks what happened next, and suggests which burners to adjust. Runs fully inside this website, no external AI.</div>
+              <div class="stack-ai-sub lx-sub">Predicts every tube's skin temperature from the burner pattern, then finds the burner opening changes that lower the hottest tubes and even out heating, while holding COT and methane slip. Runs fully inside this website.</div>
             </div>
             <div class="stack-ai-head-actions">
               <button type="button" id="stack-ai-run-btn" class="stack-ai-run-btn" onclick="runCuboidAiPrediction()">Start AI Prediction</button>
@@ -26406,25 +26409,303 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             </div>
           </div>
           <div class="lx-spec" aria-label="Model specification">
-            <div class="lx-spec-cell"><span>Model</span><b>Weighted k-NN case-based reasoning</b></div>
-            <div class="lx-spec-cell"><span>Features</span><b>7 process tags · 4 TST zones (60 PH) · burner states · openings · shift</b></div>
-            <div class="lx-spec-cell"><span>Outputs</span><b>Similarity 0–100 · next-record outlook · ranked burner moves · process watch</b></div>
-            <div class="lx-spec-cell"><span>Confidence</span><b>High ≥ 70 score + 3 follow-ups · Medium ≥ 58</b></div>
+            <div class="lx-spec-cell"><span>Heat model</span><b>Burner-to-tube influence kernel + ridge regression on saved TST surveys</b></div>
+            <div class="lx-spec-cell"><span>Optimiser</span><b>Duty-neutral burner moves minimising peak TST, spread and creep damage</b></div>
+            <div class="lx-spec-cell"><span>Process</span><b>CH₄ slip ↔ COT trade-off · 30-day KPI drift (robust σ)</b></div>
+            <div class="lx-spec-cell"><span>Confidence</span><b>± band from leave-one-survey-out error · k-NN cases as evidence</b></div>
           </div>
           <details class="lx-how">
             <summary>How it works</summary>
             <ol class="lx-steps">
-              <li><b>Read today</b><span>Current TST in 4 zones, COT, HGU load, flue gas, O₂, pre-reformer, CH₄ slip, burner fuel states and openings.</span><code>profile = {process, zone avg/max/min, hot/cold count, state mix}</code></li>
-              <li><b>Find look-alikes</b><span>Compares with every saved TST case and scores how close each one is.</span><code>d = Σ wᵢ·min(|xᵢ−yᵢ|/rangeᵢ, 4); score = 100 − 7.8·d</code></li>
-              <li><b>Check what happened next</b><span>For the closest cases, looks at the next saved record (within 8 h) to see if TST cooled or recovered.</span><code>outlook = median Δ(zone avg), median Δ(peak TST)</code></li>
-              <li><b>Suggest moves</b><span>Ranks burner moves already allowed by the firing logic for the hottest or coldest zone, and flags process deviations.</span><code>priority = zone deviation × allowed move</code></li>
+              <li><b>Map the heat</b><span>Each lit burner heats the tubes near it, fading with distance. Fuel type and opening set its strength.</span><code>H(p) = Σ f_b·exp(−Δcol²/2σ² − Δrow²/2σ²), f = w_fuel·open%</code></li>
+              <li><b>Learn from surveys</b><span>Fits how strongly heat and COT move each peep hole's TST, using every saved survey. More surveys make it sharper.</span><code>TST = a_zone + β·H + γ·(COT−860) + bias_PH (ridge)</code></li>
+              <li><b>Optimise burners</b><span>Moves 25% opening from burners heating the hottest tubes to those heating the coldest, on the same side, so duty and COT hold.</span><code>min peak + 2σ + 10·log₂(creep rate)</code></li>
+              <li><b>COT &amp; CH₄ slip</b><span>Finds the COT that meets your methane slip target and shows what it costs in tube temperature and life.</span><code>ln(slip) slope −1.7%/°C · TST shift = γ·ΔCOT</code></li>
             </ol>
           </details>
+          <div class="fo-section-t">Furnace Optimiser <span>burner moves · COT &amp; CH₄ slip · tube life · process KPIs</span></div>
+          <div id="stack-opt-body" class="stack-ai-body fo-body"><div class="stack-ai-empty">Click Start AI Prediction to run the optimiser on the latest saved TST survey.</div></div>
+          <div class="fo-section-t">Similar past cases <span>case-based evidence (k-NN)</span></div>
           <div id="stack-ai-body" class="stack-ai-body">
             <div class="stack-ai-empty">Click Start AI Prediction to compare the current cuboid condition with saved historical TST cases and generate local suggestions.</div>
           </div>
         </div>
 
+        <script>
+/* ===== Furnace Optimiser: physics-informed TST model + constrained burner optimiser + CH4/COT + KPIs ===== */
+(function(){
+  var WALLS = { ab:["A","B"], cd:["C","D"] };
+  var ZONES = [
+    { key:"abBot", ch:"ab", label:"AB Bottom", rowC:1.5 },
+    { key:"abTop", ch:"ab", label:"AB Top", rowC:3.5 },
+    { key:"cdBot", ch:"cd", label:"CD Bottom", rowC:1.5 },
+    { key:"cdTop", ch:"cd", label:"CD Top", rowC:3.5 }
+  ];
+  var FUEL_W = { B:1.0, N:0.6, O:0.5, C:0 };
+  var SIG_C = 1.0, SIG_R = 1.0, STEP = 25;
+  var PRIOR = { beta:18, gamma:1.0 };
+  var CH4_LN_SLOPE = -0.017; /* d ln(CH4 slip)/d COT, steam-reformer equilibrium prior */
+  var TAGS = {
+    cotAB:["GJA.2041ti2503b.pv","GJA.2041ti2501.pv"], cotCD:["GJA.2041ti2503c.pv","GJA.2041ti2502.pv"],
+    ch4:"GJA.2041ai2601.pv", o2:"GJA.2041ai2401.pv", flue:"GJA.2041ti2408.pv", feed:"GJA.2041fic2405.pv",
+    steam:"GJA.2041fic2904.pv", offgas:"GJA.2041fic3009.pv"
+  };
+  var RANGE = { cot:[750,950], ch4:[0.3,10], o2:[0.3,15], flue:[800,1100], feed:[5000,30000], steam:[10000,90000], offgas:[0,6000] };
+  var st = { dcs:null, dcsAt:0 };
+
+  function num(v){ var n = Number(v); return isFinite(n) ? n : NaN; }
+  function esc(v){ return String(v == null ? "" : v).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function f1(v, d){ return isFinite(v) ? Number(v).toFixed(d == null ? 0 : d) : "—"; }
+  function median(a){ a = a.filter(isFinite).sort(function(x, y){ return x - y; }); if(!a.length) return NaN; var m = Math.floor(a.length / 2); return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; }
+  function mean(a){ a = a.filter(isFinite); return a.length ? a.reduce(function(s, x){ return s + x; }, 0) / a.length : NaN; }
+  function sd(a){ a = a.filter(isFinite); if(a.length < 2) return 0; var m = mean(a); return Math.sqrt(a.reduce(function(s, x){ return s + (x - m) * (x - m); }, 0) / a.length); }
+
+  function tubeLimit(){
+    try{ var t = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}"); var n = Number(t && t.tmtLimit); if(n > 600) return { lim:n, life:Number(t.designLife) > 0 ? Number(t.designLife) : 100000 }; }catch(e){}
+    return { lim:970, life:100000 };
+  }
+  function makeRupture(){ var tl = tubeLimit(), C = 20, P = (tl.lim + 273.15) * (C + Math.log(tl.life) / Math.LN10);
+    return function(T){ var e = P / (T + 273.15) - C; return Math.pow(10, Math.min(9, e)); }; }
+
+  /* ---------- firing + influence ---------- */
+  function firingMap(hmData, openingData){
+    var f = {};
+    ["A","B","C","D"].forEach(function(w){
+      f[w] = [];
+      for(var r = 1; r <= 6; r++){
+        f[w][r] = [];
+        for(var b = 1; b <= 15; b++){
+          var s = hmBurnerStateFromData(hmData, w, r, b);
+          var raw = openingData && openingData[w] && openingData[w][r - 1] ? openingData[w][r - 1][b - 1] : "";
+          var o = typeof normalizeBurnerOpeningValue === "function" ? normalizeBurnerOpeningValue(raw, s) : (s === "C" ? 0 : 100);
+          f[w][r][b] = { s:s, open:o, v:(FUEL_W[s] || 0) * o / 100 };
+        }
+      }
+    });
+    return f;
+  }
+  var KCACHE = null;
+  function kern(){ /* K[zoneIdx][ph][wall,row,b] sparse list */
+    if(KCACHE) return KCACHE;
+    KCACHE = ZONES.map(function(z){
+      var out = [];
+      for(var ph = 1; ph <= 15; ph++){
+        var list = [];
+        WALLS[z.ch].forEach(function(w){
+          for(var r = 1; r <= 6; r++) for(var b = Math.max(1, ph - 3); b <= Math.min(15, ph + 3); b++){
+            var dc = b - ph, dr = r - z.rowC, k = Math.exp(-(dc * dc) / (2 * SIG_C * SIG_C) - (dr * dr) / (2 * SIG_R * SIG_R));
+            if(k > 0.02) list.push({ w:w, r:r, b:b, k:k });
+          }
+        });
+        out[ph] = list;
+      }
+      return out;
+    });
+    return KCACHE;
+  }
+  function heatField(f){ /* returns H[zi][ph] centred per chamber */
+    var K = kern(), H = [];
+    ZONES.forEach(function(z, zi){ H[zi] = []; for(var ph = 1; ph <= 15; ph++){ var s = 0; K[zi][ph].forEach(function(c){ s += f[c.w][c.r][c.b].v * c.k; }); H[zi][ph] = s; } });
+    ["ab","cd"].forEach(function(ch){
+      var vals = []; ZONES.forEach(function(z, zi){ if(z.ch === ch) for(var ph = 1; ph <= 15; ph++) vals.push(H[zi][ph]); });
+      var m = mean(vals); ZONES.forEach(function(z, zi){ if(z.ch === ch) for(var ph = 1; ph <= 15; ph++) H[zi][ph] -= m; });
+    });
+    return H;
+  }
+
+  /* ---------- survey dataset ---------- */
+  function surveyFromProfile(p){
+    if(!p || !p.zones) return null;
+    var f = firingMap(p.hmData, p.openingData), H = heatField(f), obs = [];
+    var cot = { ab:num(p.process && p.process.abCot), cd:num(p.process && p.process.cdCot) };
+    ZONES.forEach(function(z, zi){
+      var vals = (p.zones[z.key] && p.zones[z.key].values) || [];
+      var ok = vals.map(Number).filter(function(v){ return v > 700 && v < 1100; }), zm = median(ok);
+      for(var ph = 1; ph <= 15; ph++){
+        var y = Number(vals[ph - 1]); if(!(y > 700 && y < 1100) || (isFinite(zm) && Math.abs(y - zm) > 80)) continue;
+        obs.push({ zi:zi, ph:ph, y:y, h:H[zi][ph], c:isFinite(cot[z.ch]) && cot[z.ch] > 700 ? cot[z.ch] - 860 : 0 });
+      }
+    });
+    return obs.length >= 10 ? { obs:obs, f:f, H:H, cot:cot, dt:p.dt } : null;
+  }
+  function solve(A, b){ var n = b.length, M = A.map(function(r, i){ return r.concat([b[i]]); });
+    for(var i = 0; i < n; i++){ var p = i; for(var j = i + 1; j < n; j++) if(Math.abs(M[j][i]) > Math.abs(M[p][i])) p = j;
+      var t = M[i]; M[i] = M[p]; M[p] = t; if(Math.abs(M[i][i]) < 1e-12) continue;
+      for(var j2 = 0; j2 < n; j2++){ if(j2 === i) continue; var fct = M[j2][i] / M[i][i]; for(var k = i; k <= n; k++) M[j2][k] -= fct * M[i][k]; } }
+    return M.map(function(r, i){ return Math.abs(r[i]) < 1e-12 ? 0 : r[n] / r[i]; }); }
+  function fit(surveys){
+    var obs = []; surveys.forEach(function(s){ obs = obs.concat(s.obs); });
+    var n = 6, A = [], b = [], i, j;
+    for(i = 0; i < n; i++){ A.push([0,0,0,0,0,0]); b.push(0); }
+    var zm = [0,1,2,3].map(function(zi){ var m = mean(obs.filter(function(o){ return o.zi === zi; }).map(function(o){ return o.y; })); return isFinite(m) ? m : 940; });
+    var prior = [zm[0], zm[1], zm[2], zm[3], PRIOR.beta, PRIOR.gamma], lam = [0.01, 0.01, 0.01, 0.01, 25, 40];
+    obs.forEach(function(o){ var x = [0,0,0,0,o.h,o.c]; x[o.zi] = 1; for(i = 0; i < n; i++){ b[i] += x[i] * o.y; for(j = 0; j < n; j++) A[i][j] += x[i] * x[j]; } });
+    for(i = 0; i < n; i++){ A[i][i] += lam[i]; b[i] += lam[i] * prior[i]; }
+    var th = solve(A, b);
+    /* burner pattern rarely changes between surveys, so shrink β toward the physics prior by the number of distinct firing patterns */
+    var pats = {}; surveys.forEach(function(sv){ var key = ""; ["A","B","C","D"].forEach(function(w){ for(var r = 1; r <= 6; r++) for(var bb = 1; bb <= 15; bb++) key += Math.round(sv.f[w][r][bb].v * 4); }); pats[key] = 1; });
+    var kPat = Object.keys(pats).length;
+    th[4] = (kPat * th[4] + 5 * PRIOR.beta) / (kPat + 5);
+    th[4] = Math.max(4, Math.min(60, th[4])); th[5] = Math.max(0.3, Math.min(1.5, th[5]));
+    var res = {};
+    obs.forEach(function(o){ var k = o.zi + "-" + o.ph, p = th[o.zi] + th[4] * o.h + th[5] * o.c; (res[k] = res[k] || []).push(o.y - p); });
+    var bias = {}; Object.keys(res).forEach(function(k){ var r = res[k]; bias[k] = mean(r) * r.length / (r.length + 3); });
+    return { a:th.slice(0, 4), beta:th[4], gamma:th[5], bias:bias, n:obs.length };
+  }
+  function predict(m, zi, ph, h, c){ return m.a[zi] + m.beta * h + m.gamma * c + (m.bias[zi + "-" + ph] || 0); }
+  function loso(surveys){
+    if(surveys.length < 3) return NaN;
+    var se = 0, cnt = 0;
+    surveys.forEach(function(s, i){ var m = fit(surveys.filter(function(_, j){ return j !== i; }));
+      s.obs.forEach(function(o){ var e = o.y - predict(m, o.zi, o.ph, o.h, o.c); se += e * e; cnt++; }); });
+    return cnt ? Math.sqrt(se / cnt) : NaN;
+  }
+
+  /* ---------- optimiser ---------- */
+  function evalT(Tarr){ var vals = Tarr.filter(isFinite); var tr = makeRupture();
+    var peak = Math.max.apply(null, vals), lo = Math.min.apply(null, vals), rate = vals.reduce(function(s, t){ return s + 1 / tr(t); }, 0) / vals.length;
+    return { peak:peak, lo:lo, sd:sd(vals), rate:rate, life:tr(peak) / (8760 * 0.96), cold:vals.reduce(function(s, t){ return s + Math.max(0, 905 - t); }, 0) }; }
+  function optimise(cur, model, dCot, w){
+    var f = JSON.parse(JSON.stringify(cur.f)), K = kern(), moves = [];
+    function temps(ff){ var H = heatField(ff), T = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++){ var t0 = cur.T[zi][ph]; if(!isFinite(t0)){ T.push(NaN); continue; }
+      T.push(t0 + model.beta * (H[zi][ph] - cur.H[zi][ph]) + model.gamma * dCot); } }); return T; }
+    function J(T){ var e = evalT(T); return w.p * e.peak + w.s * 2 * e.sd + w.c * 10 * Math.log(e.rate) / Math.LN2 + 0.5 * e.cold; }
+    var T = temps(f), best = J(T);
+    for(var it = 0; it < 4; it++){
+      var flat = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++) flat.push({ zi:zi, ph:ph, t:T[zi * 15 + ph - 1] }); });
+      flat = flat.filter(function(x){ return isFinite(x.t); }).sort(function(a, b){ return b.t - a.t; });
+      function near(list){ var seen = {}, out = []; list.forEach(function(x){ K[x.zi][x.ph].forEach(function(c){ if(c.k < 0.3) return; var key = c.w + c.r + "-" + c.b; if(seen[key]) return; seen[key] = 1; out.push(c); }); }); return out; }
+      var downs = near(flat.slice(0, 8)).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.open >= STEP; });
+      var ups = near(flat.slice(-8)).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.open <= 100 - STEP; });
+      var cand = null;
+      downs.forEach(function(d){ ups.forEach(function(u){
+        if((d.w === "A" || d.w === "B") !== (u.w === "A" || u.w === "B")) return; /* same chamber: keep side duty & COT */
+        if(d.w === u.w && d.r === u.r && d.b === u.b) return;
+        var fd = f[d.w][d.r][d.b], fu = f[u.w][u.r][u.b];
+        var od = fd.open, ou = fu.open;
+        fd.open -= STEP; fd.v = FUEL_W[fd.s] * fd.open / 100; fu.open += STEP; fu.v = FUEL_W[fu.s] * fu.open / 100;
+        var Tn = temps(f), j = J(Tn);
+        fd.open = od; fd.v = FUEL_W[fd.s] * od / 100; fu.open = ou; fu.v = FUEL_W[fu.s] * ou / 100;
+        if(j < best - 0.2 && (!cand || j < cand.j)) cand = { d:d, u:u, j:j, T:Tn };
+      }); });
+      if(!cand) break;
+      var a = f[cand.d.w][cand.d.r][cand.d.b], bb = f[cand.u.w][cand.u.r][cand.u.b];
+      moves.push({ w:cand.d.w, r:cand.d.r, b:cand.d.b, s:a.s, from:a.open, to:a.open - STEP });
+      moves.push({ w:cand.u.w, r:cand.u.r, b:cand.u.b, s:bb.s, from:bb.open, to:bb.open + STEP });
+      a.open -= STEP; a.v = FUEL_W[a.s] * a.open / 100; bb.open += STEP; bb.v = FUEL_W[bb.s] * bb.open / 100;
+      best = cand.j; T = cand.T;
+    }
+    /* merge repeated burners */
+    var merged = {}; moves.forEach(function(m){ var k = m.w + m.r + "-" + m.b; if(!merged[k]) merged[k] = { w:m.w, r:m.r, b:m.b, s:m.s, from:m.from, to:m.to }; else merged[k].to = m.to; });
+    return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), T:T, e:evalT(T) };
+  }
+
+  /* ---------- DCS: CH4 slip, COT, KPIs ---------- */
+  function fetchDcs(){
+    if(st.dcs && Date.now() - st.dcsAt < 15 * 60000) return Promise.resolve(st.dcs);
+    var url = (typeof getTdPlantSupabaseUrl === "function" ? getTdPlantSupabaseUrl() : "https://lawrglgxkrfibajixfkp.supabase.co").replace(/\/+$/, "");
+    var key = typeof getTdPlantSupabaseKey === "function" ? getTdPlantSupabaseKey() : "";
+    var tags = [].concat(TAGS.cotAB, TAGS.cotCD, [TAGS.ch4, TAGS.o2, TAGS.flue, TAGS.feed, TAGS.steam, TAGS.offgas]);
+    return fetch(url + "/rest/v1/rpc/tube_life_hourly", { method:"POST", headers:{ "apikey":key, "Authorization":"Bearer " + key, "Content-Type":"application/json" },
+      body:JSON.stringify({ p_tags:tags, p_from:new Date(Date.now() - 30 * 86400000).toISOString() }) })
+      .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function(rows){
+        var by = {}; function put(k, h, v){ (by[k] = by[k] || {})[h] = v; }
+        (rows || []).forEach(function(r){ var v = Number(r.v), h = Date.parse(r.h); if(!isFinite(v) || !isFinite(h)) return;
+          var k = TAGS.cotAB.indexOf(r.t) >= 0 ? "cotAB" : TAGS.cotCD.indexOf(r.t) >= 0 ? "cotCD" : Object.keys(TAGS).filter(function(x){ return TAGS[x] === r.t; })[0];
+          if(!k) return; var rg = RANGE[k.indexOf("cot") === 0 ? "cot" : k]; if(rg && (v < rg[0] || v > rg[1])) return;
+          if(k.indexOf("cot") === 0 && by[k] && by[k][h] != null && (r.t === TAGS.cotAB[1] || r.t === TAGS.cotCD[1])) return;
+          put(k, h, v); });
+        st.dcs = by; st.dcsAt = Date.now(); return by;
+      });
+  }
+  function series(by, k){ var o = by[k] || {}; return Object.keys(o).map(Number).sort(function(a, b){ return a - b; }).map(function(h){ return { h:h, v:o[h] }; }); }
+  function kpi(by, k){ var s = series(by, k); if(!s.length) return null; var now = s[s.length - 1].h;
+    var recent = median(s.filter(function(p){ return p.h > now - 6 * 3600000; }).map(function(p){ return p.v; }));
+    var all = s.map(function(p){ return p.v; }), med = median(all), mad = median(all.map(function(v){ return Math.abs(v - med); })) * 1.4826;
+    return { cur:recent, med:med, z:mad > 0 ? (recent - med) / mad : 0, n:s.length }; }
+  function slipTarget(med){ try{ var t = Number(localStorage.getItem("furnaceOptSlipTarget")); if(t > 0) return t; }catch(e){} return med; }
+  window.furnaceOptSetSlipTarget = function(v){ try{ if(Number(v) > 0) localStorage.setItem("furnaceOptSlipTarget", String(Number(v))); else localStorage.removeItem("furnaceOptSlipTarget"); }catch(e){} if(typeof runCuboidAiPrediction === "function") runCuboidAiPrediction(); };
+
+  /* ---------- render ---------- */
+  function planCard(name, sub, base, p, band){
+    var e = p.e, dPeak = e.peak - base.peak, dLife = e.life - base.life;
+    var mv = p.moves.length ? p.moves.map(function(m){ return '<li><b>Wall ' + m.w + ' R' + m.r + ' B' + m.b + '</b> <span>' + ({B:"Both",N:"NG",O:"Off-gas"}[m.s] || m.s) + '</span> ' + m.from + '% → <b>' + m.to + '%</b></li>'; }).join("")
+      : '<li>No burner change improves this goal. Current firing is already near best.</li>';
+    return '<div class="fo-plan"><div class="fo-plan-head"><b>' + name + '</b><span>' + sub + '</span></div>'
+      + '<div class="fo-plan-kpis">'
+      + '<div><span>Peak TST</span><b>' + f1(base.peak) + ' → ' + f1(e.peak) + '</b><i class="' + (dPeak <= 0 ? "up" : "dn") + '">' + (dPeak <= 0 ? "" : "+") + f1(dPeak) + ' °C ±' + f1(band) + '</i></div>'
+      + '<div><span>Spread (SD)</span><b>' + f1(base.sd, 1) + ' → ' + f1(e.sd, 1) + '</b><i class="' + (e.sd <= base.sd ? "up" : "dn") + '">°C</i></div>'
+      + '<div><span>Hottest-tube life</span><b>' + f1(Math.min(base.life, 99)) + ' → ' + f1(Math.min(e.life, 99)) + '</b><i class="' + (dLife >= 0 ? "up" : "dn") + '">' + (dLife >= 0 ? "+" : "") + f1(Math.min(dLife, 99), 1) + ' yrs</i></div>'
+      + '</div><ol class="fo-moves">' + mv + '</ol></div>';
+  }
+  function render(host, ctx){
+    var cur = ctx.cur, model = ctx.model, base = cur.e, plans = ctx.plans, band = ctx.band;
+    var best = plans.slice().sort(function(a, b){ return a.score - b.score; })[0];
+    var tone = base.peak >= tubeLimit().lim ? "crit" : (best.p.moves.length ? "watch" : "ok");
+    var head = best.p.moves.length
+      ? ("Recommended: " + best.name + ". Peak TST " + f1(base.peak) + " → " + f1(best.p.e.peak) + " °C, hottest-tube life +" + f1(Math.max(0, Math.min(best.p.e.life - base.life, 99)), 1) + " yrs")
+      : "Firing is already well balanced. No burner change needed.";
+    var line = best.p.moves.length ? (best.p.moves.length + " opening changes, duty kept constant on each side so COT and H₂ output hold. Prediction band ±" + f1(band) + " °C.") : "Peak " + f1(base.peak) + " °C, spread σ " + f1(base.sd, 1) + " °C.";
+    var c = ctx.cotBox, k = ctx.kpis;
+    var cotHtml = c ? ('<div class="fo-card"><div class="fo-card-t">COT &amp; methane slip</div>'
+      + '<div class="fo-row"><span>CH₄ slip now / target</span><b>' + f1(c.slip, 2) + ' / ' + f1(c.target, 2) + ' %vol</b></div>'
+      + '<div class="fo-row"><span>COT now (AB / CD)</span><b>' + f1(c.cotAB) + ' / ' + f1(c.cotCD) + ' °C</b></div>'
+      + '<div class="fo-row"><span>COT to hit slip target</span><b>' + f1(c.cotStar) + ' °C (' + (c.dCot >= 0 ? "+" : "") + f1(c.dCot, 1) + ')</b></div>'
+      + '<div class="fo-row"><span>Tube cost of that COT change</span><b>' + (c.dCot >= 0 ? "+" : "") + f1(c.dCot * model.gamma, 1) + ' °C TST · life ' + (c.lifeAfter >= c.lifeBefore ? "+" : "") + f1(Math.max(-99, Math.min(99, c.lifeAfter - c.lifeBefore)), 1) + ' yrs</b></div>'
+      + '<div class="fo-row"><span>Rule</span><b>+5 °C COT ≈ ' + f1((1 - Math.exp(CH4_LN_SLOPE * 5)) * 100) + '% less CH₄ slip</b></div>'
+      + '<div class="fo-set">Slip target <input type="number" step="0.05" value="' + f1(c.target, 2) + '" onchange="furnaceOptSetSlipTarget(this.value)"> %vol <small>(default = 30-day median)</small></div></div>')
+      : '<div class="fo-card"><div class="fo-card-t">COT &amp; methane slip</div><div class="fo-row"><span>Plant history not reachable right now. Plans are shown at current COT.</span></div></div>';
+    var kList = [["ch4","CH₄ slip","%vol",2],["cotAB","COT AB","°C",0],["cotCD","COT CD","°C",0],["o2","Flue O₂ (AI-2401)","%",2],["flue","Flue gas T (TI-2408)","°C",0],["feed","Feed naphtha (FIC-2405)","",0],["sc","FIC-2904 / feed ratio (S/C proxy)","",2],["offgas","PSA off-gas (FIC-3009)","",0]];
+    var kHtml = k ? kList.map(function(d){ var x = k[d[0]]; if(!x) return ""; var flag = Math.abs(x.z) > 2.5;
+      return '<tr' + (flag ? ' class="is-flag"' : '') + '><td>' + d[1] + '</td><td class="n">' + f1(x.cur, d[3]) + ' ' + d[2] + '</td><td class="n">' + f1(x.med, d[3]) + '</td><td class="n">' + (x.z >= 0 ? "+" : "") + f1(x.z, 1) + 'σ' + (flag ? ' ⚠' : '') + '</td></tr>'; }).join("") : "";
+    host.innerHTML = '<div class="lx-verdict is-' + tone + '"><div class="lx-verdict-icon">' + (tone === "ok" ? "✓" : "!") + '</div><div><div class="lx-verdict-head">' + esc(head) + '</div><div class="lx-verdict-line">' + esc(line) + '</div></div></div>'
+      + '<div class="fo-plans">' + plans.map(function(p){ return planCard(p.name, p.sub, base, p.p, band); }).join("") + '</div>'
+      + '<div class="fo-grid">' + cotHtml
+      + '<div class="fo-card"><div class="fo-card-t">Process KPIs vs 30-day baseline</div>' + (kHtml ? '<table class="fo-kpi"><tr><th>Tag</th><th class="n">Now (6 h)</th><th class="n">30-d median</th><th class="n">Deviation</th></tr>' + kHtml + '</table>' : '<div class="fo-row"><span>Plant history not reachable right now.</span></div>') + '</div></div>'
+      + '<div class="fo-foot">Heat model fitted on ' + ctx.nSurveys + ' saved TST survey(s) (' + model.n + ' peep-hole readings). Burner influence β = ' + f1(model.beta, 1) + ' °C per unit heat, COT coupling γ = ' + f1(model.gamma, 2) + '. '
+      + (isFinite(ctx.rmse) ? 'Leave-one-survey-out error ±' + f1(ctx.rmse, 1) + ' °C.' : 'Fewer than 3 surveys, so a ±' + f1(band) + ' °C prior band is used.') + ' CH₄–COT slope from steam-reforming equilibrium (' + f1(CH4_LN_SLOPE * 100, 1) + '%/°C); plant data range too narrow to fit it reliably.</div>';
+  }
+
+  window.furnaceOptRun = function(currentProfile, historyProfiles){
+    var host = document.getElementById("stack-opt-body"); if(!host) return;
+    try{
+      var cs = surveyFromProfile(currentProfile);
+      if(!cs){ host.innerHTML = '<div class="stack-ai-empty">The optimiser needs a saved TST survey with peep-hole readings.</div>'; return; }
+      var surveys = [cs].concat((historyProfiles || []).map(surveyFromProfile).filter(Boolean));
+      var model = fit(surveys), rmse = loso(surveys), band = Math.max(6, isFinite(rmse) ? rmse : 15);
+      var T = [], Tflat = [];
+      ZONES.forEach(function(z, zi){ T[zi] = []; var vals = (currentProfile.zones[z.key] && currentProfile.zones[z.key].values) || [];
+        var ok = vals.map(Number).filter(function(v){ return v > 700 && v < 1100; }), zm = median(ok);
+        for(var ph = 1; ph <= 15; ph++){ var y = Number(vals[ph - 1]); T[zi][ph] = (y > 700 && y < 1100 && !(isFinite(zm) && Math.abs(y - zm) > 80)) ? y : NaN; Tflat.push(T[zi][ph]); } });
+      var cur = { f:cs.f, H:cs.H, T:T, e:evalT(Tflat) };
+      host.innerHTML = '<div class="stack-ai-empty">Optimising burner firing…</div>';
+      var finish = function(by){
+        var cotBox = null, kpis = null, dCot = 0;
+        if(by){
+          kpis = {}; ["ch4","cotAB","cotCD","o2","flue","feed","offgas"].forEach(function(k){ kpis[k] = kpi(by, k); });
+          var sc = {}; Object.keys(by.steam || {}).forEach(function(h){ var fd = by.feed && by.feed[h]; if(fd > 0) sc[h] = by.steam[h] / fd; }); by.sc = sc; kpis.sc = kpi(by, "sc");
+          var slip = kpis.ch4 ? kpis.ch4.cur : num(currentProfile.process.methaneSlip), target = slipTarget(kpis.ch4 ? kpis.ch4.med : slip);
+          var cAB = kpis.cotAB ? kpis.cotAB.cur : num(currentProfile.process.abCot), cCD = kpis.cotCD ? kpis.cotCD.cur : num(currentProfile.process.cdCot);
+          if(slip > 0 && target > 0){
+            dCot = Math.max(-20, Math.min(20, Math.log(target / slip) / CH4_LN_SLOPE));
+            var tr = makeRupture(), after = cur.e.peak + model.gamma * dCot;
+            cotBox = { slip:slip, target:target, cotAB:cAB, cotCD:cCD, cotStar:mean([cAB, cCD]) + dCot, dCot:dCot, lifeBefore:cur.e.life, lifeAfter:tr(after) / (8760 * 0.96) };
+          }
+        }
+        var plans = [
+          { name:"Plan A · Lowest peak", sub:"Cut hottest peep holes first", w:{ p:1, s:0.3, c:0.3 } },
+          { name:"Plan B · Most uniform", sub:"Even heat across all 60 PH", w:{ p:0.3, s:1, c:0.2 } },
+          { name:"Plan C · Max tube life", sub:"Least creep damage at 970 °C limit", w:{ p:0.3, s:0.2, c:1 } }
+        ].map(function(pl){ pl.p = optimise(cur, model, 0, pl.w); /* burner moves at constant COT; COT change shown separately */ pl.score = pl.p.e.peak + 2 * pl.p.e.sd; return pl; });
+        render(host, { cur:{ e:cur.e }, model:model, plans:plans, band:band, rmse:rmse, nSurveys:surveys.length, cotBox:cotBox, kpis:kpis });
+      };
+      fetchDcs().then(finish).catch(function(e){ console.warn("[FurnaceOpt] DCS history unavailable", e); finish(null); });
+    }catch(err){ console.error("[FurnaceOpt]", err); host.innerHTML = '<div class="stack-ai-empty">Optimiser could not run on this data.</div>'; }
+  };
+})();
+
+        </script>
         <!-- ===== Reformer Tube Remaining Life (creep, API 530 Larson-Miller + Robinson life fraction) ===== -->
         <div id="tube-life-card">
           <style id="tube-life-style-20261120">
@@ -26601,6 +26882,31 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             .lx-verdict.is-ok{border-color:rgba(52,211,153,0.45);} .lx-verdict.is-watch{border-color:rgba(251,191,36,0.5);} .lx-verdict.is-crit{border-color:rgba(248,113,113,0.55);}
             .lx-verdict-head{font-size:17px;font-weight:750;line-height:1.3;color:var(--lx-ink);}
             .lx-verdict-line{margin-top:3px;font-size:12.5px;line-height:1.5;color:var(--lx-sub);}
+
+            .fo-section-t{margin-top:16px;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--lx-acc);}
+            .fo-section-t span{font-weight:600;letter-spacing:0;text-transform:none;color:var(--lx-mute);margin-left:8px;}
+            .fo-body{margin-top:8px;}
+            .fo-plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+            .fo-plan, .fo-card{border:1px solid var(--lx-line);border-radius:10px;background:var(--lx-cell);padding:12px;min-width:0;}
+            .fo-plan-head b{display:block;font-size:13.5px;color:var(--lx-ink);} .fo-plan-head span{font-size:11.5px;color:var(--lx-mute);}
+            .fo-plan-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0;}
+            .fo-plan-kpis div{display:flex;flex-direction:column;gap:2px;min-width:0;}
+            .fo-plan-kpis span{font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--lx-mute);}
+            .fo-plan-kpis b{font-size:13px;color:var(--lx-ink);font-variant-numeric:tabular-nums;}
+            .fo-plan-kpis i{font-style:normal;font-size:11px;font-weight:700;} .fo-plan-kpis i.up{color:#34d399;} .fo-plan-kpis i.dn{color:#f87171;}
+            .fo-moves{margin:0;padding-left:18px;font-size:12px;line-height:1.6;color:var(--lx-sub);}
+            .fo-moves span{color:var(--lx-mute);font-size:11px;}
+            .fo-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:10px;margin-top:10px;}
+            .fo-card-t{font-size:11px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:var(--lx-acc);margin-bottom:6px;}
+            .fo-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--lx-line);font-size:12.5px;color:var(--lx-sub);}
+            .fo-row b{color:var(--lx-ink);text-align:right;font-variant-numeric:tabular-nums;}
+            .fo-set{margin-top:8px;font-size:12px;color:var(--lx-sub);} .fo-set input{width:70px;padding:3px 6px;border-radius:6px;border:1px solid var(--lx-line);background:transparent;color:var(--lx-ink);}
+            .fo-set small{color:var(--lx-mute);}
+            table.fo-kpi{width:100%;border-collapse:collapse;font-size:12px;} .fo-kpi th, .fo-kpi td{padding:5px 4px;border-bottom:1px solid var(--lx-line);text-align:left;color:var(--lx-sub);background:transparent;}
+            .fo-kpi th{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--lx-mute);} .fo-kpi .n{text-align:right;font-variant-numeric:tabular-nums;}
+            .fo-kpi tr.is-flag td{color:#fbbf24;font-weight:700;}
+            .fo-foot{margin-top:10px;font-size:11.5px;line-height:1.5;color:var(--lx-mute);}
+            @media (max-width:1100px){ .fo-plans{grid-template-columns:minmax(0,1fr);} .fo-grid{grid-template-columns:minmax(0,1fr);} }
             /* light theme */
             body.light-theme #stack-ai-card .stack-ai-empty, body.light-theme #tube-life-card .tl-note{background:#f8fafc !important;color:#334155 !important;border-color:rgba(15,23,42,0.12) !important;}
             body.light-theme #tube-life-card .tl-note.is-warn{background:#fffbeb !important;color:#92400e !important;border-color:rgba(217,119,6,0.35) !important;}
