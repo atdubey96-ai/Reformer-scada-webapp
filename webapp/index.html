@@ -26967,7 +26967,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 <li><b>Time to rupture</b> at each hour: <code>t_r = 10^(LMP(σ)/T[K] − C)</code>.</li>
                 <li><b>Robinson's rule (linear life fraction)</b>: <code>D = Σ Δt / t_r(T,σ)</code>. Hours with COT below the offline limit add no creep. Hours with no history use the in-service availability and that tube's median TMT. Service before the record uses the prior-period TMT.</li>
                 <li><b>Remaining life</b> = <code>(1 − D) / (annual damage at current TMT)</code>. <b>Expected life at current TMT</b> = rupture life of a new tube held at today's TMT. <b>TMT limit to reach design life</b> = temperature at which the remaining fraction lasts exactly the remaining design hours.</li>
-                <li><b>Hourly TMT</b>: each peep-hole position takes its nearest saved TST reading (plus pyrometer correction) and shifts it by the change in that side's COT (AB: TI-2503B, CD: TI-2503C; TI-2501/2502 before 20 Nov 2026), limited to ±60 °C. With no TST saved, TMT = COT + the editable COT→TMT offset, per side.</li>
+                <li><b>Hourly TMT</b>: each peep-hole position takes its nearest saved TST reading (plus pyrometer correction) and shifts it by the change in that side's COT (AB: TI-2503B, CD: TI-2503C; TI-2501/2502 before 20 Nov 2026), limited to ±60 °C. COT hours more than 20 °C off their ±6 h median are treated as DCS spikes and skipped. "TMT now" is the median of TST shots in the last 72 h. With no TST saved, TMT = COT + the editable COT→TMT offset, per side.</li>
               </ol>
               <b>Technip Energies alignment</b>
               <ul>
@@ -27155,6 +27155,19 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                   if(isNew || !isFinite(map[hk][side])) map[hk][side] = v; /* new tag wins if both exist */
                   if(hk < minH) minH = hk; if(hk > maxH) maxH = hk;
                 });
+                /* DCS spike filter: drop an hour whose COT is >20 °C off the median of the surrounding ±6 h */
+                ["ab","cd"].forEach(function(sd){
+                  var bad = [];
+                  Object.keys(map).forEach(function(k){
+                    var h = Number(k), v = map[h][sd]; if(!isFinite(v)) return;
+                    var nb = [];
+                    for(var j = h - 6; j <= h + 6; j++){ if(j !== h && map[j] && isFinite(map[j][sd])) nb.push(map[j][sd]); }
+                    if(nb.length < 3) return;
+                    nb.sort(function(x, y){ return x - y; });
+                    if(Math.abs(v - nb[Math.floor(nb.length / 2)]) > 20) bad.push(h);
+                  });
+                  bad.forEach(function(h){ delete map[h][sd]; });
+                });
                 tlState.cot = { map:map, minH:minH, maxH:maxH, count:Object.keys(map).length };
                 tlState.cotAt = Date.now(); tlState.cotFrom = String(inp && inp.serviceStart || "");
                 return tlState.cot;
@@ -27246,7 +27259,11 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 if(p.recent.length){ var rs = p.recent.slice().sort(function(a, b){ return a - b; }); p.curT = rs[Math.floor(rs.length / 2)]; }
                 if(measured && p.readings.length){
                   var lr = p.readings[p.readings.length - 1];
-                  if(lr.h >= p.curH || !isFinite(p.curT)){ p.curT = lr.v; p.curH = lr.h; }
+                  if(lr.h >= p.curH || !isFinite(p.curT)){
+                    /* median of TST shots in the last 72 h, so one bad shot cannot swing "TMT now" */
+                    var rv = p.readings.filter(function(x){ return x.h > lr.h - 72; }).map(function(x){ return x.v; }).sort(function(a, b){ return a - b; });
+                    p.curT = rv[Math.floor(rv.length / 2)]; p.curH = lr.h;
+                  }
                 }
                 var gapD = isFinite(med) ? gap * avail / model.tr(med) : 0;
                 var priorT = num(inp.priorTmt, med);
@@ -27391,7 +27408,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               var rows = P.slice(0, 10).map(function(p){
                 return '<tr><td>' + esc(p.label) + '</td><td class="num">' + fmt(p.curT) + '</td><td class="num">' + fmt(p.maxT) + '</td><td class="num">' + fmt(p.Dtot * 100, 2) + '%</td><td class="num">' + fmt(p.ratePerYear * 100, 2) + '%</td><td class="num">' + fmtYears(p.remYears) + '</td><td class="num">' + fmt(p.tLimit) + '</td><td><span class="tl-chip is-' + p.status + '">' + statusLabel(p.status) + '</span></td></tr>';
               }).join("");
-              html += '<div class="tl-panel"><div class="tl-panel-title">Hottest / at-risk tubes<span>Ranked by remaining life</span></div><div class="tl-table-wrap"><table class="tl-table"><thead><tr><th>Position</th><th class="num">TMT now °C</th><th class="num">Peak °C</th><th class="num">Life used</th><th class="num">Use / yr</th><th class="num">Remaining yrs</th><th class="num">TMT limit °C</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+              html += '<div class="tl-panel"><div class="tl-panel-title">Hottest / at-risk tubes<span>Ranked by remaining life</span></div><div class="tl-table-wrap"><table class="tl-table"><thead><tr><th>Position</th><th class="num" title="Median of TST readings in the last 72 h, plus pyrometer correction">TMT now °C</th><th class="num" title="Highest hourly TMT since the in-service date (TST reading shifted by COT change, COT spikes removed)">Peak °C</th><th class="num">Life used</th><th class="num">Use / yr</th><th class="num">Remaining yrs</th><th class="num">TMT limit °C</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 
               html += '<div class="tl-note">Basis: ' + esc(TL_MATERIALS[inp.material] ? TL_MATERIALS[inp.material].label : "Custom") + ', ' + (inp.basis === "avg" ? "average" : "minimum") + ' rupture data, OD ' + fmt(num(inp.od, 125)) + ' mm × ' + fmt(num(inp.wall, 11) - num(inp.corr, 0), 1) + ' mm wall, ' + fmt(num(inp.pOper, 27), 1) + ' kg/cm²g. '
                 + 'History: ' + fmt(sim.online) + ' h online, ' + fmt(sim.offline) + ' h offline (' + sim.cycles + ' shutdowns), ' + fmt(sim.gap) + ' h without data'
