@@ -26572,6 +26572,9 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               { key:"cd-top", label:"CD Top", side:"cd" }
             ];
             var TL_COT_TAGS = { ab:"GJA.2041ti2503b.pv", cd:"GJA.2041ti2503c.pv" };
+            /* Tags used before the 20 Nov 2026 DCS change; merged in so history before that date still counts */
+            var TL_COT_OLD_TAGS = { ab:"GJA.2041ti2501.pv", cd:"GJA.2041ti2502.pv" };
+            var TL_COT_MAX_VALID = 950; /* hourly COT above this is a transmitter spike, not process */
             var TL_MATERIALS = {
               hpmicro:{ label:"HP-Nb microalloy (25Cr-35Ni-Nb-Ti)", s:[25, 16, 9.8, 5.8] },
               hpnb:{ label:"HP-Nb modified (25Cr-35Ni-Nb)", s:[21, 13.5, 8.3, 5.0] },
@@ -26581,7 +26584,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             var TL_DEFAULTS = {
               material:"hpmicro", s900:25, s950:16, s1000:9.8, s1050:5.8, basis:"min", lmpC:20,
               od:125, wall:11, corr:0, pDesign:32, pOper:27, designLife:100000,
-              serviceStart:"", priorTmt:"", availability:96,
+              serviceStart:"2026-09-05", priorTmt:"", availability:96,
               pyroCorr:0, cotOffset:60, offlineCot:600, alarmUsed:80
             };
             var TL_FIELDS = [
@@ -26623,7 +26626,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             function loadInputs(){
               var out = {}; var k;
               for(k in TL_DEFAULTS) out[k] = TL_DEFAULTS[k];
-              try{ var saved = JSON.parse(localStorage.getItem(TL_KEY) || "null"); if(saved && typeof saved === "object"){ for(k in TL_DEFAULTS){ if(saved[k] !== undefined) out[k] = saved[k]; } } }catch(e){}
+              try{ var saved = JSON.parse(localStorage.getItem(TL_KEY) || "null"); if(saved && typeof saved === "object"){ for(k in TL_DEFAULTS){ if(saved[k] !== undefined && !(k === "serviceStart" && !saved[k])) out[k] = saved[k]; } } }catch(e){}
               return out;
             }
             function saveInputs(obj){ try{ localStorage.setItem(TL_KEY, JSON.stringify(obj)); }catch(e){} }
@@ -26674,40 +26677,49 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             }
             function hourKey(ms){ return Math.floor(ms / 3600000); }
             function fetchCot(inp){
-              if(tlState.cot && (Date.now() - tlState.cotAt) < 15 * 60000) return Promise.resolve(tlState.cot);
+              if(tlState.cot && tlState.cotFrom === String(inp && inp.serviceStart || "") && (Date.now() - tlState.cotAt) < 15 * 60000) return Promise.resolve(tlState.cot);
               var url = (typeof getTdPlantSupabaseUrl === "function" ? getTdPlantSupabaseUrl() : "https://lawrglgxkrfibajixfkp.supabase.co").replace(/\/+$/, "");
               var key = typeof getTdPlantSupabaseKey === "function" ? getTdPlantSupabaseKey() : "";
-              var from = new Date(Date.now() - 400 * 86400000).toISOString();
+              var svcMs0 = Date.parse(String(inp && inp.serviceStart || ""));
+              var from = new Date(isFinite(svcMs0) ? svcMs0 : Date.now() - 400 * 86400000).toISOString();
               return fetch(url + "/rest/v1/rpc/tube_life_hourly", {
                 method:"POST",
                 headers:{ "apikey":key, "Authorization":"Bearer " + key, "Content-Type":"application/json" },
-                body:JSON.stringify({ p_tags:[TL_COT_TAGS.ab, TL_COT_TAGS.cd], p_from:from })
+                body:JSON.stringify({ p_tags:[TL_COT_TAGS.ab, TL_COT_TAGS.cd, TL_COT_OLD_TAGS.ab, TL_COT_OLD_TAGS.cd], p_from:from })
               }).then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then(function(rows){
                 var map = {}, minH = Infinity, maxH = -Infinity;
                 (Array.isArray(rows) ? rows : []).forEach(function(r){
                   var ms = Date.parse(r.h); var v = Number(r.v); if(!isFinite(ms) || !isFinite(v)) return;
-                  if(v < 0 || v > 1000) return; /* transmitter spikes */
-                  var hk = hourKey(ms); var side = r.t === TL_COT_TAGS.ab ? "ab" : (r.t === TL_COT_TAGS.cd ? "cd" : ""); if(!side) return;
-                  if(!map[hk]) map[hk] = {}; map[hk][side] = v;
+                  if(v < 0 || v > TL_COT_MAX_VALID) return; /* transmitter spikes */
+                  var isNew = r.t === TL_COT_TAGS.ab || r.t === TL_COT_TAGS.cd;
+                  var side = (r.t === TL_COT_TAGS.ab || r.t === TL_COT_OLD_TAGS.ab) ? "ab" : ((r.t === TL_COT_TAGS.cd || r.t === TL_COT_OLD_TAGS.cd) ? "cd" : ""); if(!side) return;
+                  var hk = hourKey(ms);
+                  if(!map[hk]) map[hk] = {};
+                  if(isNew || !isFinite(map[hk][side])) map[hk][side] = v; /* new tag wins if both exist */
                   if(hk < minH) minH = hk; if(hk > maxH) maxH = hk;
                 });
                 tlState.cot = { map:map, minH:minH, maxH:maxH, count:Object.keys(map).length };
-                tlState.cotAt = Date.now();
+                tlState.cotAt = Date.now(); tlState.cotFrom = String(inp && inp.serviceStart || "");
                 return tlState.cot;
               });
             }
             function collectReadings(inp, cot){
-              var corr = num(inp.pyroCorr, 0), byPos = {}, total = 0, entries = getEntries(), lastMs = -Infinity;
+              var corr = num(inp.pyroCorr, 0), byPos = {}, total = 0, entries = getEntries(), lastMs = -Infinity, dropped = 0;
+              var svcMs = Date.parse(String(inp.serviceStart || ""));
               entries.forEach(function(ent){
                 if(!ent || !ent.peepHoles) return;
                 var ms = Date.parse(String(ent.dt || ent.date || ent.createdAt || "")); if(!isFinite(ms)) return;
+                if(isFinite(svcMs) && ms < svcMs) return; /* reading belongs to the previous tube set */
                 var hk = hourKey(ms);
                 TL_ZONES.forEach(function(z){
                   var vals = ent.peepHoles[z.key]; if(!Array.isArray(vals)) return;
+                  var ok = vals.map(Number).filter(function(v){ return v > 700 && v < 1100; }).sort(function(a, b){ return a - b; });
+                  var zMed = ok.length ? ok[Math.floor(ok.length / 2)] : NaN;
                   var entCot = Number(z.side === "ab" ? ent.abCot : ent.cdCot);
                   if(!(entCot > 300 && entCot < 1000)){ var c = cot && cot.map[hk]; entCot = c ? Number(c[z.side]) : NaN; }
                   for(var i = 0; i < 15; i++){
-                    var v = Number(vals[i]); if(!(v > 500 && v < 1200)) continue;
+                    var v = Number(vals[i]); if(!(v > 700 && v < 1100)) continue;
+                    if(isFinite(zMed) && Math.abs(v - zMed) > 80){ dropped++; continue; } /* typo / bad shot */
                     var id = z.key + "-" + (i + 1);
                     if(!byPos[id]) byPos[id] = { id:id, zone:z.key, zoneLabel:z.label, side:z.side, idx:i + 1, label:z.label + " · PH" + (i + 1), readings:[] };
                     byPos[id].readings.push({ h:hk, ms:ms, v:v + corr, cot:entCot });
@@ -26716,7 +26728,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 });
               });
               var list = Object.keys(byPos).map(function(k){ var p = byPos[k]; p.readings.sort(function(a, b){ return a.h - b.h; }); return p; });
-              return { positions:list, total:total, entryCount:entries.length, lastMs:lastMs };
+              return { positions:list, total:total, entryCount:entries.length, lastMs:lastMs, dropped:dropped };
             }
 
             /* ---------- Simulation (Robinson's rule) ---------- */
@@ -26733,6 +26745,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               positions.forEach(function(p){ if(p.readings.length){ startH = Math.min(startH, p.readings[0].h); endH = Math.max(endH, p.readings[p.readings.length - 1].h); } });
               if(!isFinite(startH)) return null;
               var svcStartMs = Date.parse(String(inp.serviceStart || ""));
+              if(isFinite(svcStartMs) && hourKey(svcStartMs) > startH) startH = hourKey(svcStartMs); /* new tubes: ignore older history */
+              if(startH > endH) endH = startH;
               var priorHoursCal = (isFinite(svcStartMs) && hourKey(svcStartMs) < startH) ? (startH - hourKey(svcStartMs)) : 0;
               var online = 0, offline = 0, gap = 0, cycles = 0, wasOn = null;
               var daily = {};
@@ -26861,6 +26875,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
               if(!sim.measured) notes.push('No saved TST readings found in this browser, so TMT is estimated as COT + ' + fmt(num(inp.cotOffset, 60)) + ' °C per side. Save TST entries (TST Data tab) to rank individual peep-hole positions.');
               if(!inp.serviceStart) notes.push('Tube in-service date is not set, so life used counts only from ' + hDate(sim.startH) + '. Enter it under Design Inputs for full-life accounting.');
               if(!(cot && cot.count)) notes.push('Plant COT history could not be loaded; only the saved TST readings are used.');
+              if(rd && rd.dropped) notes.push(rd.dropped + ' TST value(s) were ignored as outliers (more than 80 °C from that zone\'s median). Check those entries for typos.');
+              if(inp.serviceStart) notes.push('Life is counted from tube in-service date ' + inp.serviceStart + '. Earlier COT and TST data belongs to the previous tubes and is ignored.');
               notes.forEach(function(n){ html += '<div class="tl-note is-warn">' + esc(n) + '</div>'; });
 
               var usedW = worst.Dtot * 100;
