@@ -35,8 +35,8 @@ ET.register_namespace("vt", NS_VT)
 
 DEMO_ROWS = [
     ("FIC2405", "GJA.2041fic2405.pv", "Nm3/h", "Feed Flow Mixing Point", "Demo source for HGU load", 19479.43),
-    ("TI2501", "GJA.2041ti2501.pv", "degC", "AB Side COT", "Demo current value", 838.42),
-    ("TI2502", "GJA.2041ti2502.pv", "degC", "CD Side COT", "Demo current value", 828.99),
+    ("TI2501", "GJA.2041ti2503b.pv", "degC", "AB Side COT", "Demo current value", 838.42),
+    ("TI2502", "GJA.2041ti2503c.pv", "degC", "CD Side COT", "Demo current value", 828.99),
     ("TI2408", "GJA.2041ti2408.pv", "degC", "Flue Gas Temp", "Demo current value", 911.80),
     ("TIC2411", "GJA.2041tic2411.pv", "degC", "Pre-reformer Inlet", "Demo current value", 447.32),
     ("TI2412", "GJA.2041ti2412.pv", "degC", "Pre-reformer Outlet", "Demo current value", 485.70),

@@ -7,8 +7,8 @@ const LIVE_HISTORY_BUCKET_MS = 15 * 60 * 1000;
 const LIVE_HISTORY_RETENTION_MS = (8 * 60 * 60 * 1000) + LIVE_HISTORY_BUCKET_MS;
 const LIVE_HISTORY_TAGS = [
   "GJA.2041fic2405.pv",
-  "GJA.2041ti2501.pv",
-  "GJA.2041ti2502.pv",
+  "GJA.2041ti2503b.pv",
+  "GJA.2041ti2503c.pv",
   "GJA.2041ti2408.pv",
   "GJA.2041ai2401.pv",
   "GJA.2041ai2601.pv",
