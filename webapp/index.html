@@ -43278,6 +43278,7 @@ body.light-theme .btab-alarm-count{
   var REFORMER_DASH_AIR_DENSITY = 1.293;    /* kg/Nm3 */
   var REFORMER_DASH_STOICH_AIR_KG = 16.25;  /* kg air / kg fuel */
   var REFORMER_DASH_FLUE_GAS_KG = 17.25;    /* kg flue gas / kg fuel */
+  var REFORMER_DASH_STACK_TEMP = 160;      /* degC, stack (no tag) */
   var REFORMER_DASH_FLUE_CP = 0.3059;       /* kcal/kg C, mean 25-2727 C */
   var REFORMER_DASH_NAPHTHA_DEFAULT_NCV = 10500;
   var REFORMER_DASH_HGU_DEFAULT_MODE = "naphtha";
@@ -44186,6 +44187,11 @@ body.light-theme .btab-alarm-count{
     var totalLossFactor = flueLossFactor;
     var absorbed = Math.max(totalHeat - flueLoss, 0);
     var otherLoss = 0;
+    var flueCpKgh = flueGasKgh * REFORMER_DASH_FLUE_CP;
+    var stackLoss = flueCpKgh * (REFORMER_DASH_STACK_TEMP - 25) / 1000000;
+    var convRecovered = flueT === null ? 0 : Math.max(flueCpKgh * (flueT - REFORMER_DASH_STACK_TEMP) / 1000000, 0);
+    var convEff = flueLoss > 0 ? (convRecovered / flueLoss) * 100 : 0;
+    var overallEff = totalHeat > 0 ? ((absorbed + convRecovered) / totalHeat) * 100 : 0;
     return {
       psa1NCV: psa1NCV,
       psa2NCV: psa2NCV,
@@ -44195,6 +44201,10 @@ body.light-theme .btab-alarm-count{
       ngFuelFlow: ngFuelFlow,
       ngIsLive: ngIsLive,
       airKgh: airKgh,
+      stackLoss: stackLoss,
+      convRecovered: convRecovered,
+      convEff: convEff,
+      overallEff: overallEff,
       excessAir: excessAir,
       o2Used: o2,
       fuelKgh: fuelKgh,
@@ -44381,8 +44391,12 @@ body.light-theme .btab-alarm-count{
         buildHeatDutyCalcCard("Heat Balance", "var(--refdash-blue)", [
           buildHeatDutyCalcRow("Total heat input", "PSA-1 + PSA-2 + naphtha + natural gas duties", formatValue(metrics.totalHeat, 3) + " Gcal/h", "var(--refdash-accent-2)"),
           buildHeatDutyCalcRow("Flue gas loss", "from flue gas card", formatValue(metrics.flueLoss, 3) + " Gcal/h", "var(--refdash-red)"),
-          buildHeatDutyCalcRow("Heat absorbed (radiant)", "totalHeat - flue gas loss", formatValue(metrics.absorbed, 3) + " Gcal/h", "var(--refdash-green)")
-        ], "Absorbed heat is fuel heat minus the heat carried out by flue gas at reformer exit."),
+          buildHeatDutyCalcRow("Heat absorbed (radiant)", "totalHeat - flue gas loss", formatValue(metrics.absorbed, 3) + " Gcal/h", "var(--refdash-green)"),
+          buildHeatDutyCalcRow("Convection heat recovered", "flue gas x 0.3059 x (TI-2408 - " + REFORMER_DASH_STACK_TEMP + " stack)", formatValue(metrics.convRecovered, 3) + " Gcal/h", "var(--refdash-cyan)"),
+          buildHeatDutyCalcRow("Convection efficiency", "recovered / radiant flue loss", formatValue(metrics.convEff, 1) + " %", "var(--refdash-cyan)"),
+          buildHeatDutyCalcRow("Stack loss", "flue gas x 0.3059 x (" + REFORMER_DASH_STACK_TEMP + " - 25)", formatValue(metrics.stackLoss, 3) + " Gcal/h", "var(--refdash-red)"),
+          buildHeatDutyCalcRow("Overall furnace efficiency", "(radiant absorbed + convection recovered) / totalHeat", formatValue(metrics.overallEff, 1) + " %", "var(--refdash-green)")
+        ], "Radiant absorbed = fuel heat - flue loss at reformer exit. Convection recovers flue heat down to the " + REFORMER_DASH_STACK_TEMP + " degC stack."),
         buildHeatDutyCalcCard("Efficiency Result", "var(--refdash-green)", [
           buildHeatDutyCalcRow("Average COT", "mean(AB COT, CD COT)", formatValue(metrics.avgCot, 1) + " degC", "var(--refdash-accent)"),
           buildHeatDutyCalcRow("COT delta", "abs(AB COT - CD COT)", formatValue(metrics.cotImbalance, 1) + " degC", "var(--refdash-accent-2)"),
