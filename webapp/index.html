@@ -11569,7 +11569,7 @@ function hmAverageTempInfo(valsA, valsB){
   if(avg < 910){
     return { text:"❄ PH Avg " + avg + "°C", chipClass:"cb-kpi-temp-cool", sceneClass:"cb-scene-cool" };
   }
-  if(avg > 970){
+  if(avg > 950){
     return { text:"🔥 PH Avg " + avg + "°C", chipClass:"cb-kpi-temp-hot", sceneClass:"cb-scene-hot" };
   }
   return { text:"✅ PH Avg " + avg + "°C", chipClass:"cb-kpi-temp-ok", sceneClass:"cb-scene-ok" };
@@ -11895,14 +11895,14 @@ function hmGetOpeningAdjustmentPlan(temp){
   if(n < 910){
     return { mode:"take", actionWord:"Take", targetOpening:50, stepOpening:50, bandLabel:"900°C-910°C" };
   }
-  if(n > 985){
-    return { mode:"cut", actionWord:"Cut", targetOpening:0, stepOpening:100, bandLabel:"> 985°C" };
+  if(n > 965){
+    return { mode:"cut", actionWord:"Cut", targetOpening:0, stepOpening:100, bandLabel:"> 965°C" };
   }
-  if(n >= 975){
-    return { mode:"cut", actionWord:"Cut", targetOpening:25, stepOpening:75, bandLabel:"975°C-985°C" };
+  if(n >= 955){
+    return { mode:"cut", actionWord:"Cut", targetOpening:25, stepOpening:75, bandLabel:"955°C-965°C" };
   }
-  if(n > 970){
-    return { mode:"cut", actionWord:"Cut", targetOpening:50, stepOpening:50, bandLabel:"970°C-975°C" };
+  if(n > 950){
+    return { mode:"cut", actionWord:"Cut", targetOpening:50, stepOpening:50, bandLabel:"950°C-955°C" };
   }
   return null;
 }
@@ -12013,7 +12013,7 @@ function hmBuildAdjustmentForZone(zoneLabel, vals, hmData, priorityRows, log, hi
       className:"hm-adjust-item hm-adjust-item-normal",
       zone:zoneLabel,
       meta:meta,
-      rule:"TST is within 910°C–970°C target band.",
+      rule:"TST is within 910°C–950°C target band.",
       suggestions:[]
     };
   }
@@ -12231,12 +12231,12 @@ function cuboidAiBuildZoneProfile(values){
     if(!isFinite(out.coldest.temp) || temp < out.coldest.temp){
       out.coldest = { ph:i + 1, temp:temp };
     }
-    if(temp > 970){
+    if(temp > 950){
       out.highCount++;
-      out.highSeverity += (temp - 970);
-      if(temp > 985){
+      out.highSeverity += (temp - 950);
+      if(temp > 965){
         out.criticalHighCount++;
-        out.highSeverity += (temp - 985) * 1.8;
+        out.highSeverity += (temp - 965) * 1.8;
       }
     }
     if(temp < 910){
@@ -12552,7 +12552,7 @@ function cuboidAiBuildFocusedActions(snapshot, focus, log, hist){
       fuel = "ng";
     }
     var severity = focus.type === "high"
-      ? (temp - 970 + (temp > 985 ? ((temp - 985) * 1.8) : 0))
+      ? (temp - 950 + (temp > 965 ? ((temp - 965) * 1.8) : 0))
       : (910 - temp + (temp < 890 ? ((890 - temp) * 1.8) : 0));
     if(chosen){
       var fuelLabel = fuel === "offgas" ? "Off-gas" : "NG";
@@ -12902,9 +12902,9 @@ function runCuboidAiPrediction(){
       ? ("Peak issue at " + focus.zoneLabel + " around PH" + focus.zone.hottest.ph + " @ " + cuboidAiFormatValue(focus.zone.hottest.temp, 1) + "°C.")
       : (focus.type === "low"
           ? ("Lowest issue at " + focus.zoneLabel + " around PH" + focus.zone.coldest.ph + " @ " + cuboidAiFormatValue(focus.zone.coldest.temp, 1) + "°C.")
-          : "All four zones are inside the preferred 910°C–970°C band.");
+          : "All four zones are inside the preferred 910°C–950°C band.");
     var bandLabel = currentProfile.overall.highCount > 0
-      ? (currentProfile.overall.highCount + " high PH readings above 970°C")
+      ? (currentProfile.overall.highCount + " high PH readings above 950°C")
       : (currentProfile.overall.lowCount > 0 ? (currentProfile.overall.lowCount + " low PH readings below 910°C") : "All PH readings inside target band");
     var result = {
       confidence: confidence,
@@ -23417,8 +23417,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             stamp = snapshot.selectedShift + " · " + stamp;
           }
 
-          hmUploadedSetInfo("hm-uploaded-ab-temp", abAvg !== null ? (abAvg + " °C") : "-- °C", abAvg === null ? "" : (abAvg > 970 ? "hot" : (abAvg < 910 ? "warn" : "ok")));
-          hmUploadedSetInfo("hm-uploaded-cd-temp", cdAvg !== null ? (cdAvg + " °C") : "-- °C", cdAvg === null ? "" : (cdAvg > 970 ? "hot" : (cdAvg < 910 ? "warn" : "ok")));
+          hmUploadedSetInfo("hm-uploaded-ab-temp", abAvg !== null ? (abAvg + " °C") : "-- °C", abAvg === null ? "" : (abAvg > 950 ? "hot" : (abAvg < 910 ? "warn" : "ok")));
+          hmUploadedSetInfo("hm-uploaded-cd-temp", cdAvg !== null ? (cdAvg + " °C") : "-- °C", cdAvg === null ? "" : (cdAvg > 950 ? "hot" : (cdAvg < 910 ? "warn" : "ok")));
           hmUploadedSetInfo("hm-uploaded-ab-flame", abActive > 0 ? (abActive + " active burners") : "No active burners", abActive > 0 ? "ok" : "warn");
           hmUploadedSetInfo("hm-uploaded-cd-flame", cdActive > 0 ? (cdActive + " active burners") : "No active burners", cdActive > 0 ? "ok" : "warn");
           hmUploadedSetInfo("hm-uploaded-ab-stamp", stamp, "ok");
@@ -26444,13 +26444,14 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   var FUEL_W = { B:1.0, N:0.6, O:0.5, C:0 };
   var SIG_C = 1.0, SIG_R = 1.0, STEP = 25;
   var PRIOR = { beta:18, gamma:1.0 };
+  var COT_DESIGN_LIMIT = 870, FLUE_DESIGN_LIMIT = 1110;
   var CH4_LN_SLOPE = -0.017; /* d ln(CH4 slip)/d COT, steam-reformer equilibrium prior */
   var TAGS = {
     cotAB:["GJA.2041ti2503b.pv","GJA.2041ti2501.pv"], cotCD:["GJA.2041ti2503c.pv","GJA.2041ti2502.pv"],
     ch4:"GJA.2041ai2601.pv", o2:"GJA.2041ai2401.pv", flue:"GJA.2041ti2408.pv", feed:"GJA.2041fic2405.pv",
     steam:"GJA.2041fic2904.pv", offgas:"GJA.2041fic3009.pv"
   };
-  var RANGE = { cot:[750,950], ch4:[0.3,10], o2:[0.3,15], flue:[800,1100], feed:[5000,30000], steam:[10000,90000], offgas:[0,6000] };
+  var RANGE = { cot:[750,950], ch4:[0.3,10], o2:[0.3,15], flue:[800,1200], feed:[5000,30000], steam:[10000,90000], offgas:[0,6000] };
   var st = { dcs:null, dcsAt:0 };
 
   function num(v){ var n = Number(v); return isFinite(n) ? n : NaN; }
@@ -26462,7 +26463,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
 
   function tubeLimit(){
     try{ var t = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}"); var n = Number(t && t.tmtLimit); if(n > 600) return { lim:n, life:Number(t.designLife) > 0 ? Number(t.designLife) : 100000 }; }catch(e){}
-    return { lim:970, life:100000 };
+    return { lim:950, life:100000 };
   }
   function makeRupture(){ var tl = tubeLimit(), C = 20, P = (tl.lim + 273.15) * (C + Math.log(tl.life) / Math.LN10);
     return function(T){ var e = P / (T + 273.15) - C; return Math.pow(10, Math.min(9, e)); }; }
@@ -26651,14 +26652,14 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     var cotHtml = c ? ('<div class="fo-card"><div class="fo-card-t">COT &amp; methane slip</div>'
       + '<div class="fo-row"><span>CH₄ slip now / target</span><b>' + f1(c.slip, 2) + ' / ' + f1(c.target, 2) + ' %vol</b></div>'
       + '<div class="fo-row"><span>COT now (AB / CD)</span><b>' + f1(c.cotAB) + ' / ' + f1(c.cotCD) + ' °C</b></div>'
-      + '<div class="fo-row"><span>COT to hit slip target</span><b>' + f1(c.cotStar) + ' °C (' + (c.dCot >= 0 ? "+" : "") + f1(c.dCot, 1) + ')</b></div>'
+      + '<div class="fo-row"><span>COT to hit slip target</span><b>' + f1(c.cotStar) + ' °C (' + (c.dCot >= 0 ? "+" : "") + f1(c.dCot, 1) + ')' + (c.capped ? ' · capped at ' + COT_DESIGN_LIMIT + ' °C design' : '') + '</b></div>'
       + '<div class="fo-row"><span>Tube cost of that COT change</span><b>' + (c.dCot >= 0 ? "+" : "") + f1(c.dCot * model.gamma, 1) + ' °C TST · life ' + (c.lifeAfter >= c.lifeBefore ? "+" : "") + f1(Math.max(-99, Math.min(99, c.lifeAfter - c.lifeBefore)), 1) + ' yrs</b></div>'
       + '<div class="fo-row"><span>Rule</span><b>+5 °C COT ≈ ' + f1((1 - Math.exp(CH4_LN_SLOPE * 5)) * 100) + '% less CH₄ slip</b></div>'
       + '<div class="fo-set">Slip target <input type="number" step="0.05" value="' + f1(c.target, 2) + '" onchange="furnaceOptSetSlipTarget(this.value)"> %vol <small>(default = 30-day median)</small></div></div>')
       : '<div class="fo-card"><div class="fo-card-t">COT &amp; methane slip</div><div class="fo-row"><span>Plant history not reachable right now. Plans are shown at current COT.</span></div></div>';
     var kList = [["ch4","CH₄ slip","%vol",2],["cotAB","COT AB","°C",0],["cotCD","COT CD","°C",0],["o2","Flue O₂ (AI-2401)","%",2],["flue","Flue gas T (TI-2408)","°C",0],["feed","Feed naphtha (FIC-2405)","",0],["sc","FIC-2904 / feed ratio (S/C proxy)","",2],["offgas","PSA off-gas (FIC-3009)","",0]];
-    var kHtml = k ? kList.map(function(d){ var x = k[d[0]]; if(!x) return ""; var flag = Math.abs(x.z) > 2.5;
-      return '<tr' + (flag ? ' class="is-flag"' : '') + '><td>' + d[1] + '</td><td class="n">' + f1(x.cur, d[3]) + ' ' + d[2] + '</td><td class="n">' + f1(x.med, d[3]) + '</td><td class="n">' + (x.z >= 0 ? "+" : "") + f1(x.z, 1) + 'σ' + (flag ? ' ⚠' : '') + '</td></tr>'; }).join("") : "";
+    var kHtml = k ? kList.map(function(d){ var x = k[d[0]]; if(!x) return ""; var lim = d[0].indexOf("cot") === 0 ? COT_DESIGN_LIMIT : (d[0] === "flue" ? FLUE_DESIGN_LIMIT : NaN); var over = isFinite(lim) && x.cur > lim; var flag = Math.abs(x.z) > 2.5 || over;
+      return '<tr' + (flag ? ' class="is-flag"' : '') + '><td>' + d[1] + '</td><td class="n">' + f1(x.cur, d[3]) + ' ' + d[2] + '</td><td class="n">' + f1(x.med, d[3]) + '</td><td class="n">' + (x.z >= 0 ? "+" : "") + f1(x.z, 1) + 'σ' + (flag ? ' ⚠' : '') + (over ? ' over ' + lim + ' °C design' : '') + '</td></tr>'; }).join("") : "";
     host.innerHTML = '<div class="lx-verdict is-' + tone + '"><div class="lx-verdict-icon">' + (tone === "ok" ? "✓" : "!") + '</div><div><div class="lx-verdict-head">' + esc(head) + '</div><div class="lx-verdict-line">' + esc(line) + '</div></div></div>'
       + '<div class="fo-plans">' + plans.map(function(p){ return planCard(p.name, p.sub, base, p.p, band); }).join("") + '</div>'
       + '<div class="fo-grid">' + cotHtml
@@ -26689,14 +26690,16 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           var cAB = kpis.cotAB ? kpis.cotAB.cur : num(currentProfile.process.abCot), cCD = kpis.cotCD ? kpis.cotCD.cur : num(currentProfile.process.cdCot);
           if(slip > 0 && target > 0){
             dCot = Math.max(-20, Math.min(20, Math.log(target / slip) / CH4_LN_SLOPE));
+            var cotHi = Math.max(isFinite(cAB) ? cAB : -Infinity, isFinite(cCD) ? cCD : -Infinity), capped = false;
+            if(isFinite(cotHi) && cotHi + dCot > COT_DESIGN_LIMIT){ dCot = COT_DESIGN_LIMIT - cotHi; capped = true; } /* never push COT past design */
             var tr = makeRupture(), after = cur.e.peak + model.gamma * dCot;
-            cotBox = { slip:slip, target:target, cotAB:cAB, cotCD:cCD, cotStar:mean([cAB, cCD]) + dCot, dCot:dCot, lifeBefore:cur.e.life, lifeAfter:tr(after) / (8760 * 0.96) };
+            cotBox = { slip:slip, target:target, cotAB:cAB, cotCD:cCD, cotStar:mean([cAB, cCD]) + dCot, dCot:dCot, capped:capped, lifeBefore:cur.e.life, lifeAfter:tr(after) / (8760 * 0.96) };
           }
         }
         var plans = [
           { name:"Plan A · Lowest peak", sub:"Cut hottest peep holes first", w:{ p:1, s:0.3, c:0.3 } },
           { name:"Plan B · Most uniform", sub:"Even heat across all 60 PH", w:{ p:0.3, s:1, c:0.2 } },
-          { name:"Plan C · Max tube life", sub:"Least creep damage at 970 °C limit", w:{ p:0.3, s:0.2, c:1 } }
+          { name:"Plan C · Max tube life", sub:"Least creep damage at " + tubeLimit().lim + " °C TST limit", w:{ p:0.3, s:0.2, c:1 } }
         ].map(function(pl){ pl.p = optimise(cur, model, 0, pl.w); /* burner moves at constant COT; COT change shown separately */ pl.score = pl.p.e.peak + 2 * pl.p.e.sd; return pl; });
         render(host, { cur:{ e:cur.e }, model:model, plans:plans, band:band, rmse:rmse, nSurveys:surveys.length, cotBox:cotBox, kpis:kpis });
       };
@@ -26938,7 +26941,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           <div class="lx-spec" aria-label="Model specification">
             <div class="lx-spec-cell"><span>Standard</span><b>API 530 · API 579-1 Part 10 screening</b></div>
             <div class="lx-spec-cell"><span>Model</span><b>Larson–Miller rupture + Robinson life fraction</b></div>
-            <div class="lx-spec-cell"><span>Design basis</span><b>TST limit <i id="tl-spec-limit">970</i> °C = <i id="tl-spec-life">100,000</i> h</b></div>
+            <div class="lx-spec-cell"><span>Design basis</span><b>TST limit <i id="tl-spec-limit">950</i> °C = <i id="tl-spec-life">100,000</i> h</b></div>
             <div class="lx-spec-cell"><span>Data</span><b>Hourly COT TI-2503B/C + peep-hole TST since <i id="tl-spec-start">05 Sep 2026</i></b></div>
           </div>
           <details class="lx-how">
@@ -27008,7 +27011,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             };
             var TL_DEFAULTS = {
               material:"hpmicro", s900:25, s950:16, s1000:9.8, s1050:5.8, basis:"min", lmpC:20,
-              od:125, wall:11, corr:0, pDesign:32, pOper:27, designLife:100000, tmtLimit:970,
+              od:125, wall:11, corr:0, pDesign:32, pOper:27, designLife:100000, tmtLimit:950,
               serviceStart:"2026-09-05", priorTmt:"", availability:96,
               pyroCorr:0, cotOffset:60, offlineCot:600, alarmUsed:80
             };
@@ -43287,9 +43290,9 @@ body.light-theme .btab-alarm-count{
   };
   var REFORMER_DASH_PROCESS_ROWS = [
     { label:"HGU Load", key:"hguLoad", unit:"%", min:65, max:110 },
-    { label:"AB Side COT", key:"abCot", unit:"degC", min:800, max:860 },
-    { label:"CD Side COT", key:"cdCot", unit:"degC", min:800, max:860 },
-    { label:"Flue Gas Temp", key:"flueGas", unit:"degC", min:850, max:950 },
+    { label:"AB Side COT", key:"abCot", unit:"degC", min:800, max:870 },
+    { label:"CD Side COT", key:"cdCot", unit:"degC", min:800, max:870 },
+    { label:"Flue Gas Temp", key:"flueGas", unit:"degC", min:850, max:1110 },
     { label:"Excess O2", key:"excessO2", unit:"%Vol", min:2, max:7 },
     { label:"Methane Slip", key:"methaneSlip", unit:"%Vol", min:1, max:5 },
     { label:"PSA-1 Off Gas", key:"psa1Flow", unit:"Nm3/h", min:15000, max:35000 },
