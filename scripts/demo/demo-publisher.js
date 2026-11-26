@@ -35,12 +35,12 @@ const TAGS = [
   { tagId: "GJA.2041ti2412.pv", label: "Pre-reformer Outlet", unit: "degC", sheetCell: "H9", fallbackValue: 485.7 },
   { tagId: "GJA.2041fic2904.pv", label: "PSA-1 Off Gas", unit: "Nm3/h", sheetCell: "H10", fallbackValue: 33014.14 },
   { tagId: "GJA.2041fic3009.pv", label: "PSA-2 Off Gas", unit: "Nm3/h", sheetCell: "H11", fallbackValue: 0 },
-  { tagId: "GJA.2041fic6303a.pv", label: "Naphtha Fuel", unit: "kg/h", sheetCell: "H12", fallbackValue: 1207.42 },
-  { tagId: "GJA.2041pi2507a.pv", label: "Naphtha Tip Pressure", unit: "kg/cm2", sheetCell: "H13", fallbackValue: 0.37 },
+  { tagId: "GJA.2041fi6301.pv", label: "Naphtha Fuel", unit: "kg/h", sheetCell: "H12", fallbackValue: 1707.42 },
+  { tagId: "GJA.2041fic6311.pv", label: "NG Fuel Flow", unit: "Nm3/h", sheetCell: "H13", fallbackValue: 1800 },
   { tagId: "GJA.2041pi2504a.pv", label: "Natural Gas Tip Pressure", unit: "kg/cm2", sheetCell: "H14", fallbackValue: 0.38 },
   { tagId: "GJA.2041pi2501a.pv", label: "PSA-1 Off Gas Tip Pressure", unit: "kg/cm2", sheetCell: "H15", fallbackValue: 0.06 },
   { tagId: "GJA.2041ai2401.pv", label: "Excess O2", unit: "%Vol", sheetCell: "H16", fallbackValue: 6.36 },
-  { tagId: "GJA.2041ai2601.pv", label: "Methane Slip", unit: "%Vol", sheetCell: "H17", fallbackValue: 3.36 }
+  { tagId: "GJA.2041ai2901.pv", label: "Methane Slip", unit: "%Vol", sheetCell: "H17", fallbackValue: 3.36 }
 ];
 
 function log(message) {

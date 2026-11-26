@@ -42,12 +42,12 @@ DEMO_ROWS = [
     ("TI2412", "GJA.2041ti2412.pv", "degC", "Pre-reformer Outlet", "Demo current value", 485.70),
     ("FIC2904", "GJA.2041fic2904.pv", "Nm3/h", "PSA-1 Off Gas", "Demo current value", 33014.14),
     ("FIC3009", "GJA.2041fic3009.pv", "Nm3/h", "PSA-2 Off Gas", "Demo current value", 0.00),
-    ("FIC6303A", "GJA.2041fic6303a.pv", "kg/h", "Naphtha Fuel", "Demo current value", 1207.42),
-    ("PI2507A", "GJA.2041pi2507a.pv", "kg/cm2", "Naphtha Tip Pressure", "Demo current value", 0.37),
+    ("FI6301", "GJA.2041fi6301.pv", "kg/h", "Naphtha Fuel", "Demo current value", 1707.42),
+    ("FIC6311", "GJA.2041fic6311.pv", "Nm3/h", "NG Fuel Flow", "Demo current value", 1800.0),
     ("PI2504A", "GJA.2041pi2504a.pv", "kg/cm2", "Natural Gas Tip Pressure", "Demo current value", 0.38),
     ("PI2501A", "GJA.2041pi2501a.pv", "kg/cm2", "PSA-1 Off Gas Tip Pressure", "Demo current value", 0.06),
     ("AI2401", "GJA.2041ai2401.pv", "%Vol", "Excess O2", "Demo current value", 6.36),
-    ("AI2601", "GJA.2041ai2601.pv", "%Vol", "Methane Slip", "Demo current value", 3.36),
+    ("AI2901", "GJA.2041ai2901.pv", "%Vol", "Methane Slip", "Demo current value", 3.36),
 ]
 
 

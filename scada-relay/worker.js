@@ -11,13 +11,13 @@ const LIVE_HISTORY_TAGS = [
   "GJA.2041ti2503c.pv",
   "GJA.2041ti2408.pv",
   "GJA.2041ai2401.pv",
-  "GJA.2041ai2601.pv",
+  "GJA.2041ai2901.pv",
   "GJA.2041fic2904.pv",
   "GJA.2041fic3009.pv",
-  "GJA.2041fic6303a.pv",
+  "GJA.2041fi6301.pv",
   "GJA.2041pi2501a.pv",
   "GJA.2041pi2504a.pv",
-  "GJA.2041pi2507a.pv",
+  "GJA.2041fic6311.pv",
   "GJA.2041tic2411.pv",
   "GJA.2041ti2412.pv"
 ];
