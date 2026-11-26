@@ -26701,6 +26701,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           { name:"Plan B · Most uniform", sub:"Even heat across all 60 PH", w:{ p:0.3, s:1, c:0.2 } },
           { name:"Plan C · Max tube life", sub:"Least creep damage at " + tubeLimit().lim + " °C TST limit", w:{ p:0.3, s:0.2, c:1 } }
         ].map(function(pl){ pl.p = optimise(cur, model, 0, pl.w); /* burner moves at constant COT; COT change shown separately */ pl.score = pl.p.e.peak + 2 * pl.p.e.sd; return pl; });
+        window.__furnaceOptLast = { at:Date.now(), cur:{ e:cur.e }, plans:plans, band:band, cotBox:cotBox, kpis:kpis, nSurveys:surveys.length };
         render(host, { cur:{ e:cur.e }, model:model, plans:plans, band:band, rmse:rmse, nSurveys:surveys.length, cotBox:cotBox, kpis:kpis });
       };
       fetchDcs().then(finish).catch(function(e){ console.warn("[FurnaceOpt] DCS history unavailable", e); finish(null); });
