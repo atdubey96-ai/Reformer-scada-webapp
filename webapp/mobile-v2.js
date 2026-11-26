@@ -2476,6 +2476,19 @@
   function set(id, html){ var el = document.getElementById(id); if(el) el.innerHTML = html; }
 
   window.triggerAuraOptimizer = function(){
+    /* one button: run the Furnace Optimiser first (same TST survey), then the AURA summary */
+    if(typeof window.runCuboidAiPrediction === "function" && !window.__auraOptPending){
+      window.__auraOptPending = true; window.__auraKicked = true; window.__furnaceOptLast = null;
+      var b0 = document.getElementById("btnRunAuraOptimization"); if(b0) b0.disabled = true;
+      set("auraPrescriptionSummary", "⚡ Running the burner optimiser on the latest TST survey…");
+      var done = false, go = function(){ if(done) return; done = true; window.removeEventListener("furnaceopt:done", go); window.__auraRunSummary(); window.__auraOptPending = false; };
+      window.addEventListener("furnaceopt:done", go); setTimeout(go, 8000);
+      try{ window.runCuboidAiPrediction(); }catch(e){ go(); }
+      return;
+    }
+    window.__auraRunSummary();
+  };
+  window.__auraRunSummary = function(){
     window.__auraRan = true;
     var btn = document.getElementById("btnRunAuraOptimization");
     if(btn) btn.disabled = true; set("auraPrescriptionSummary", "⚡ Reading live plant data…");

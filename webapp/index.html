@@ -26396,41 +26396,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       </div>
       </div>
       <div class="cuboid-followup-stack">
-        <div id="stack-ai-card">
-          <div class="stack-ai-head">
-            <div class="lx-head-text">
-              <div class="lx-eyebrow"><span class="lx-dot"></span>Advisory module · Case-based AI</div>
-              <div class="stack-ai-title lx-title">Local AI Prediction &amp; Suggestions</div>
-              <div class="stack-ai-sub lx-sub">Predicts every tube's skin temperature from the burner pattern, then finds the burner opening changes that lower the hottest tubes and even out heating, while holding COT and methane slip. Runs fully inside this website.</div>
-            </div>
-            <div class="stack-ai-head-actions">
-              <button type="button" id="stack-ai-run-btn" class="stack-ai-run-btn" onclick="runCuboidAiPrediction()">Start AI Prediction</button>
-              <div id="stack-ai-status" class="stack-ai-status is-ready">Ready to analyze the current cuboid condition.</div>
-            </div>
-          </div>
-          <div class="lx-spec" aria-label="Model specification">
-            <div class="lx-spec-cell"><span>Heat model</span><b>Burner-to-tube influence kernel + ridge regression on saved TST surveys</b></div>
-            <div class="lx-spec-cell"><span>Optimiser</span><b>Duty-neutral burner moves minimising peak TST, spread and creep damage</b></div>
-            <div class="lx-spec-cell"><span>Process</span><b>CH₄ slip ↔ COT trade-off · 30-day KPI drift (robust σ)</b></div>
-            <div class="lx-spec-cell"><span>Confidence</span><b>± band from leave-one-survey-out error · k-NN cases as evidence</b></div>
-          </div>
-          <details class="lx-how">
-            <summary>How it works</summary>
-            <ol class="lx-steps">
-              <li><b>Map the heat</b><span>Each lit burner heats the tubes near it, fading with distance. Fuel type and opening set its strength.</span><code>H(p) = Σ f_b·exp(−Δcol²/2σ² − Δrow²/2σ²), f = w_fuel·open%</code></li>
-              <li><b>Learn from surveys</b><span>Fits how strongly heat and COT move each peep hole's TST, using every saved survey. More surveys make it sharper.</span><code>TST = a_zone + β·H + γ·(COT−860) + bias_PH (ridge)</code></li>
-              <li><b>Optimise burners</b><span>Moves 25% opening from burners heating the hottest tubes to those heating the coldest, on the same side, so duty and COT hold.</span><code>min peak + 2σ + 10·log₂(creep rate)</code></li>
-              <li><b>COT &amp; CH₄ slip</b><span>Finds the COT that meets your methane slip target and shows what it costs in tube temperature and life.</span><code>ln(slip) slope −1.7%/°C · TST shift = γ·ΔCOT</code></li>
-            </ol>
-          </details>
-          <div class="fo-section-t">Furnace Optimiser <span>burner moves · COT &amp; CH₄ slip · tube life · process KPIs</span></div>
-          <div id="stack-opt-body" class="stack-ai-body fo-body"><div class="stack-ai-empty">Click Start AI Prediction to run the optimiser on the latest saved TST survey.</div></div>
-          <div class="fo-section-t" data-admin-only="true">Similar past cases <span>case-based evidence (k-NN)</span></div>
-          <div id="stack-ai-body" class="stack-ai-body" data-admin-only="true">
-            <div class="stack-ai-empty">Click Start AI Prediction to compare the current cuboid condition with saved historical TST cases and generate local suggestions.</div>
-          </div>
-        </div>
-
         <script>
 /* ===== Furnace Optimiser: physics-informed TST model + constrained burner optimiser + CH4/COT + KPIs ===== */
 (function(){
@@ -26703,6 +26668,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         ].map(function(pl){ pl.p = optimise(cur, model, 0, pl.w); /* burner moves at constant COT; COT change shown separately */ pl.score = pl.p.e.peak + 2 * pl.p.e.sd; return pl; });
         window.__furnaceOptLast = { at:Date.now(), cur:{ e:cur.e }, plans:plans, band:band, cotBox:cotBox, kpis:kpis, nSurveys:surveys.length };
         render(host, { cur:{ e:cur.e }, model:model, plans:plans, band:band, rmse:rmse, nSurveys:surveys.length, cotBox:cotBox, kpis:kpis });
+        try{ window.dispatchEvent(new Event("furnaceopt:done")); }catch(evErr){}
       };
       fetchDcs().then(finish).catch(function(e){ console.warn("[FurnaceOpt] DCS history unavailable", e); finish(null); });
     }catch(err){ console.error("[FurnaceOpt]", err); host.innerHTML = '<div class="stack-ai-empty">Optimiser could not run on this data.</div>'; }
@@ -26754,10 +26720,37 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     <div style="margin-top:8px;"><button type="button" onclick="window.auraSavePrices()" style="background:#1e293b;color:#fff;border:1px solid #334155;padding:6px 14px;border-radius:5px;cursor:pointer;">Save</button> <span style="color:#94a3b8;">Saved in this browser.</span></div>
   </details>
   <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;">
-    <div id="auraPrescriptionSummary" style="font-size:0.88rem;color:#cbd5e1;flex:1;min-width:240px;">⚡ Ready. Uses live DCS, the latest TST entry and the Tube Life result.</div>
+    <div id="auraPrescriptionSummary" style="font-size:0.88rem;color:#cbd5e1;flex:1;min-width:240px;">⚡ Ready. One run covers combustion, burner moves (Furnace Optimiser), COT/CH₄ slip, tube life and process KPIs from live DCS and the latest saved TST survey.</div>
     <button id="btnRunAuraOptimization" onclick="window.triggerAuraOptimizer()" style="background:linear-gradient(135deg,#f37022,#d9580d);color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:0.9rem;font-weight:700;cursor:pointer;white-space:nowrap;">⚡ Run AURA Optimizer</button>
   </div>
   <div id="auraBasisNote" style="margin-top:12px;font-size:0.74rem;color:#94a3b8;line-height:1.5;">Fuel saving = cut in stack heat loss when excess O₂ goes from the Heat Duty O₂ value to the target (flue gas 17.25 + 16.25 × excess air kg per kg fuel, Cp 0.3059, stack 160 °C), divided by overall efficiency. The saved heat is taken off NG and naphtha in proportion to their measured heat (FIC-6311, FI-6301), because PSA off-gas is fixed by the PSA. NG ₹/MT is converted to ₹/Nm³ with the NG density from the Composition tab. PSA off-gas has no price: it is always burned, so savings come only from NG and naphtha.</div>
+        <div id="stack-ai-card" style="margin-top:18px;">
+          <div class="stack-ai-head" style="display:none;"><button type="button" id="stack-ai-run-btn" class="stack-ai-run-btn" onclick="runCuboidAiPrediction()">Start AI Prediction</button><div id="stack-ai-status" class="stack-ai-status is-ready"></div></div>
+          <details class="lx-how" style="margin-bottom:10px;"><summary>Model details (heat model, optimiser, confidence)</summary>
+          <div class="lx-spec" aria-label="Model specification">
+            <div class="lx-spec-cell"><span>Heat model</span><b>Burner-to-tube influence kernel + ridge regression on saved TST surveys</b></div>
+            <div class="lx-spec-cell"><span>Optimiser</span><b>Duty-neutral burner moves minimising peak TST, spread and creep damage</b></div>
+            <div class="lx-spec-cell"><span>Process</span><b>CH₄ slip ↔ COT trade-off · 30-day KPI drift (robust σ)</b></div>
+            <div class="lx-spec-cell"><span>Confidence</span><b>± band from leave-one-survey-out error · k-NN cases as evidence</b></div>
+          </div>
+          <div class="lx-how">
+            <summary>How it works</summary>
+            <ol class="lx-steps">
+              <li><b>Map the heat</b><span>Each lit burner heats the tubes near it, fading with distance. Fuel type and opening set its strength.</span><code>H(p) = Σ f_b·exp(−Δcol²/2σ² − Δrow²/2σ²), f = w_fuel·open%</code></li>
+              <li><b>Learn from surveys</b><span>Fits how strongly heat and COT move each peep hole's TST, using every saved survey. More surveys make it sharper.</span><code>TST = a_zone + β·H + γ·(COT−860) + bias_PH (ridge)</code></li>
+              <li><b>Optimise burners</b><span>Moves 25% opening from burners heating the hottest tubes to those heating the coldest, on the same side, so duty and COT hold.</span><code>min peak + 2σ + 10·log₂(creep rate)</code></li>
+              <li><b>COT &amp; CH₄ slip</b><span>Finds the COT that meets your methane slip target and shows what it costs in tube temperature and life.</span><code>ln(slip) slope −1.7%/°C · TST shift = γ·ΔCOT</code></li>
+            </ol>
+          </div>
+          </details>
+          <div class="fo-section-t">Furnace Optimiser <span>burner moves · COT &amp; CH₄ slip · tube life · process KPIs</span></div>
+          <div id="stack-opt-body" class="stack-ai-body fo-body"><div class="stack-ai-empty">Press Run AURA Optimizer to run the burner optimiser on the latest saved TST survey.</div></div>
+          <div class="fo-section-t" data-admin-only="true">Similar past cases <span>case-based evidence (k-NN)</span></div>
+          <div id="stack-ai-body" class="stack-ai-body" data-admin-only="true">
+            <div class="stack-ai-empty">Press Run AURA Optimizer to compare the current cuboid condition with saved historical TST cases and generate local suggestions.</div>
+          </div>
+        </div>
+
 </div>
         <div id="tube-life-card">
           <style id="tube-life-style-20261120">
