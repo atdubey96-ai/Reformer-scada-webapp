@@ -26710,75 +26710,53 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
 
         </script>
         <!-- ===== Reformer Tube Remaining Life (creep, API 530 Larson-Miller + Robinson life fraction) ===== -->
-<!-- ========================================================================= -->
-<!-- IOCL AURA-Reformer™ AUTONOMOUS OPTIMIZATION & MULTI-CRORE ROI WIDGET      -->
-<!-- ========================================================================= -->
-<div id="auraReformerWidget" style="background: #0d1322; border: 1px solid #1f293d; border-radius: 12px; padding: 24px; margin: 24px 0; color: #f8fafc;">
-  
-  <!-- Header -->
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 14px; margin-bottom: 20px;">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <span style="font-size: 1.4rem; font-weight: 800; color: #fff;">IOCL AURA-Reformer™</span>
-      <span style="background: #f37022; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">AUTONOMOUS OPTIMIZER</span>
+<!-- IOCL AURA-Reformer widget: values come from live data and user-entered prices only -->
+<div id="auraReformerWidget" style="background:#0d1322;border:1px solid #1f293d;border-radius:12px;padding:24px;margin:24px 0;color:#f8fafc;">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:2px solid #1e293b;padding-bottom:14px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:1.4rem;font-weight:800;color:#fff;">IOCL AURA-Reformer™</span>
+      <span style="background:#f37022;color:#fff;font-size:0.72rem;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;">Combustion optimizer</span>
     </div>
-    <div style="font-size: 0.8rem; color: #94a3b8;">
-      Status: <span style="color: #10b981; font-weight: 700;">● Active Optimization</span> · Rate Limit: ±5%
+    <div style="font-size:0.8rem;color:#94a3b8;">TST limit: <b style="color:#f8fafc;">950 °C</b> · Rate limit: ±5% per move</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px;">
+    <div style="background:#151d30;border-left:4px solid #fbbf24;border-radius:6px;padding:14px;">
+      <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Fuel saving from O₂ trim</div>
+      <div id="auraTotalBenefitVal" style="font-size:1.6rem;font-weight:800;color:#fbbf24;margin:4px 0;">—</div>
+      <div id="auraTotalBenefitSub" style="font-size:0.75rem;color:#cbd5e1;">Press Run to calculate</div>
+    </div>
+    <div style="background:#151d30;border-left:4px solid #10b981;border-radius:6px;padding:14px;">
+      <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Fuel heat saved</div>
+      <div id="auraFuelCutVal" style="font-size:1.6rem;font-weight:800;color:#10b981;margin:4px 0;">—</div>
+      <div id="auraFuelCutSub" style="font-size:0.75rem;color:#cbd5e1;">From measured fuel flows</div>
+    </div>
+    <div style="background:#151d30;border-left:4px solid #06b6d4;border-radius:6px;padding:14px;">
+      <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Tube life left (hottest tube)</div>
+      <div id="auraTubeLifeVal" style="font-size:1.6rem;font-weight:800;color:#06b6d4;margin:4px 0;">—</div>
+      <div id="auraTubeLifeSub" style="font-size:0.75rem;color:#cbd5e1;">From the Tube Life panel below</div>
+    </div>
+    <div style="background:#151d30;border-left:4px solid #f37022;border-radius:6px;padding:14px;">
+      <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">CH₄ slip (AI-2901)</div>
+      <div id="auraH2YieldVal" style="font-size:1.6rem;font-weight:800;color:#ffaa75;margin:4px 0;">—</div>
+      <div id="auraH2YieldSub" style="font-size:0.75rem;color:#cbd5e1;">Live analyser, last 6 h</div>
     </div>
   </div>
-
-  <!-- Multi-Crore Financial Hero Bar -->
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
-    <div style="background: #151d30; border-left: 4px solid #fbbf24; border-radius: 6px; padding: 14px;">
-      <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Total Annual Benefit</div>
-      <div id="auraTotalBenefitVal" style="font-size: 1.6rem; font-weight: 800; color: #fbbf24; margin: 4px 0;">₹ 10.37 Cr <span style="font-size: 0.85rem; font-weight: 400;">/ yr</span></div>
-      <div style="font-size: 0.75rem; color: #cbd5e1;">₹ 103.7 Cr over 10 Years</div>
+  <details id="auraPriceBox" style="background:#0b101d;border:1px solid #1f293d;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.82rem;">
+    <summary style="cursor:pointer;font-weight:700;">Prices and targets <span id="auraPriceState" style="color:#fbbf24;font-weight:600;"></span></summary>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:10px;">
+      <label>NG price (₹/MT)<br><input id="auraPriceNg" type="number" step="1" placeholder="enter price" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
+      <label>Naphtha price (₹/MT)<br><input id="auraPriceNap" type="number" step="1" placeholder="enter price" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
+      <label>Retube cost (₹ Cr)<br><input id="auraPriceRetube" type="number" step="0.1" placeholder="enter price" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
+      <label>Target O₂ (%)<br><input id="auraTargetO2" type="number" step="0.1" placeholder="e.g. 3.5" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
+      <label>Operating hours / yr<br><input id="auraHours" type="number" step="1" placeholder="e.g. 8000" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
     </div>
-    <div style="background: #151d30; border-left: 4px solid #10b981; border-radius: 6px; padding: 14px;">
-      <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Fuel Gas OPEX Cut</div>
-      <div id="auraFuelCutVal" style="font-size: 1.6rem; font-weight: 800; color: #10b981; margin: 4px 0;">₹ 6.48 Cr <span style="font-size: 0.85rem; font-weight: 400;">/ yr</span></div>
-      <div style="font-size: 0.75rem; color: #cbd5e1;">-2.7% via Over-firing Cut</div>
-    </div>
-    <div style="background: #151d30; border-left: 4px solid #06b6d4; border-radius: 6px; padding: 14px;">
-      <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Tube Life Extension</div>
-      <div id="auraTubeLifeVal" style="font-size: 1.6rem; font-weight: 800; color: #06b6d4; margin: 4px 0;">+3.6 Years</div>
-      <div style="font-size: 0.75rem; color: #cbd5e1;">Defers ₹22 Cr Turnaround Capex</div>
-    </div>
-    <div style="background: #151d30; border-left: 4px solid #f37022; border-radius: 6px; padding: 14px;">
-      <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Extra Hydrogen Yield</div>
-      <div id="auraH2YieldVal" style="font-size: 1.6rem; font-weight: 800; color: #ffaa75; margin: 4px 0;">+1,218 Nm³/h</div>
-      <div style="font-size: 0.75rem; color: #cbd5e1;">Slip Cut: 3.68% → 3.08%</div>
-    </div>
+    <div style="margin-top:8px;"><button type="button" onclick="window.auraSavePrices()" style="background:#1e293b;color:#fff;border:1px solid #334155;padding:6px 14px;border-radius:5px;cursor:pointer;">Save</button> <span style="color:#94a3b8;">Saved in this browser.</span></div>
+  </details>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;">
+    <div id="auraPrescriptionSummary" style="font-size:0.88rem;color:#cbd5e1;flex:1;min-width:240px;">⚡ Ready. Uses live DCS, the latest TST entry and the Tube Life result.</div>
+    <button id="btnRunAuraOptimization" onclick="window.triggerAuraOptimizer()" style="background:linear-gradient(135deg,#f37022,#d9580d);color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:0.9rem;font-weight:700;cursor:pointer;white-space:nowrap;">⚡ Run AURA Optimizer</button>
   </div>
-
-  <!-- Elevation Chemistry & Symmetrical Firing Box -->
-  <div style="background: #0b101d; border: 1px solid #1f293d; border-radius: 8px; padding: 14px; margin-bottom: 18px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; font-weight: 700;">
-      <span>DOWNFLOW PROCESS SMR ELEVATION COUPLING</span>
-      <span style="color: #06b6d4;">KINETICS & COT BALANCING</span>
-    </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.82rem;">
-      <div style="background: rgba(6, 182, 212, 0.08); border-left: 3px solid #06b6d4; padding: 8px 10px; border-radius: 4px;">
-        <strong style="color: #06b6d4;">TOP HALF (Rows 4, 5, 6):</strong> Pre-heat & Initial Cracking Zone<br>
-        <span style="color: #94a3b8;">High heat absorption flux; feeds steam + hydrocarbon mixture.</span>
-      </div>
-      <div style="background: rgba(243, 112, 34, 0.12); border-left: 3px solid #f37022; padding: 8px 10px; border-radius: 4px;">
-        <strong style="color: #f37022;">BOTTOM HALF (Rows 1, 2, 3):</strong> Final Reaction Equilibrium & COT Zone<br>
-        <span style="color: #cbd5e1;">Controls Methane Slip exit equilibrium & protects pigtails from shear.</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Actionable Prescriptions & Trigger Button -->
-  <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px;">
-    <div id="auraPrescriptionSummary" style="font-size: 0.88rem; color: #cbd5e1;">
-      ⚡ AURA Engine Status: <strong>Ready to execute multi-objective combustion balancing.</strong>
-    </div>
-    <button id="btnRunAuraOptimization" onclick="window.triggerAuraOptimizer()" style="background: linear-gradient(135deg, #f37022, #d9580d); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-size: 0.9rem; font-weight: 700; cursor: pointer; white-space: nowrap;">
-      ⚡ Run AURA Autonomous Optimizer
-    </button>
-  </div>
-
-  <div id="auraBasisNote" style="margin-top:12px;font-size:0.74rem;color:#94a3b8;line-height:1.5;">Figures shown are indicative estimates. Press the button to recompute from live DCS (O₂ AI-2401, CH₄ slip AI-2901, flue TI-2408, COT TI-2503B/C) and the latest TST entry. Economics use assumed constants (fuel ₹2,850/Gcal, ₹22 Cr retube, H₂ ₹24.5/Nm³) and are not yet validated.</div>
+  <div id="auraBasisNote" style="margin-top:12px;font-size:0.74rem;color:#94a3b8;line-height:1.5;">Fuel saving = cut in stack heat loss when excess O₂ goes from the Heat Duty O₂ value to the target (flue gas 17.25 + 16.25 × excess air kg per kg fuel, Cp 0.3059, stack 160 °C), divided by overall efficiency. The saved heat is taken off NG and naphtha in proportion to their measured heat (FIC-6311, FI-6301), because PSA off-gas is fixed by the PSA. NG ₹/MT is converted to ₹/Nm³ with the NG density from the Composition tab. PSA off-gas has no price: it is always burned, so savings come only from NG and naphtha.</div>
 </div>
         <div id="tube-life-card">
           <style id="tube-life-style-20261120">
@@ -27575,6 +27553,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
                 io.observe(card);
               } else { setTimeout(start, 3000); }
             }
+            window.tubeLifeLastResult = function(){ return tlState.last; };
             window.tubeLifeEngine = { buildModel:buildModel, simulate:simulate, collectReadings:collectReadings, defaults:TL_DEFAULTS };
             if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
           })();
@@ -45459,6 +45438,7 @@ body.light-theme .btab-alarm-count{
 window.switchReformerDashTab = switchReformerDashTab;
 window.refreshReformerDashboard = refreshReformerDashboard;
 window.refreshReformerDashboardLite = refreshReformerDashboardLite;
+window.auraReformerSnapshot = async function(){ try{ await refreshReformerDashboardLite(false); }catch(e){} var m = calcReformerMetrics(); m.stackTemp = REFORMER_DASH_STACK_TEMP; var MW = { CH4:16.043, C2H6:30.07, C3H8:44.097, H2:2.016, CO:28.01, CO2:44.01, N2:28.014 }, ngc = reformerDashState.composition.ng || {}, mw = 0, tot = 0; for(var ck in ngc){ if(MW[ck] && isFinite(Number(ngc[ck]))){ mw += Number(ngc[ck]) / 100 * MW[ck]; tot += Number(ngc[ck]); } } m.ngDensity = tot > 50 ? mw / 22.414 : NaN; m.naphthaNCV = REFORMER_DASH_NAPHTHA_NCV; m.data = reformerDashState.data; m.fetchedAt = reformerDashState.lastFetchAt; m.error = reformerDashState.errorMessage; return m; };
 window.ensureReformerDashboardLoaded = ensureReformerDashboardLoaded;
 window.getActiveReformerHguLoadDivisor = getActiveReformerHguLoadDivisor;
 window.updateReformerDashComposition = updateReformerDashComposition;

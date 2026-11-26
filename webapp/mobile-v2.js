@@ -2436,37 +2436,22 @@
   }
 })();
 
-/* ---------- IOCL AURA-Reformer hook (live DCS + latest TST entry) ---------- */
+/* ---------- IOCL AURA-Reformer hook: live data + user-entered prices only ---------- */
 (function(){
-  if(typeof window.AuraReformerEngine !== "function") return;
-  window.auraEngine = new window.AuraReformerEngine();
-  var TAGS = { o2:"GJA.2041ai2401.pv", ch4:"GJA.2041ai2901.pv", flue:"GJA.2041ti2408.pv",
-    cotAB:["GJA.2041ti2503b.pv","GJA.2041ti2501.pv"], cotCD:["GJA.2041ti2503c.pv","GJA.2041ti2502.pv"] };
-  var RANGE = { o2:[0.3,15], ch4:[0.3,10], flue:[800,1200], cotAB:[750,950], cotCD:[750,950] };
-  var FALLBACK = { o2:9.23, ch4:3.68, flue:932.39, cotAB:845.2, cotCD:842.8 };
-  function med(a){ a = a.filter(isFinite).sort(function(x,y){ return x-y; }); if(!a.length) return NaN; var m = Math.floor(a.length/2); return a.length % 2 ? a[m] : (a[m-1]+a[m])/2; }
-  function fetchLive(){
-    var url = (typeof window.getTdPlantSupabaseUrl === "function" ? window.getTdPlantSupabaseUrl() : "https://lawrglgxkrfibajixfkp.supabase.co").replace(/\/+$/, "");
-    var key = typeof window.getTdPlantSupabaseKey === "function" ? window.getTdPlantSupabaseKey() : "";
-    var tags = [TAGS.o2, TAGS.ch4, TAGS.flue].concat(TAGS.cotAB, TAGS.cotCD);
-    return fetch(url + "/rest/v1/rpc/tube_life_hourly", { method:"POST",
-      headers:{ "apikey":key, "Authorization":"Bearer " + key, "Content-Type":"application/json" },
-      body:JSON.stringify({ p_tags:tags, p_from:new Date(Date.now() - 2 * 86400000).toISOString() }) })
-      .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-      .then(function(rows){
-        var by = {};
-        (rows || []).forEach(function(r){
-          var v = Number(r.v), h = Date.parse(r.h); if(!isFinite(v) || !isFinite(h)) return;
-          var k = TAGS.cotAB.indexOf(r.t) >= 0 ? "cotAB" : TAGS.cotCD.indexOf(r.t) >= 0 ? "cotCD" : (r.t === TAGS.o2 ? "o2" : r.t === TAGS.ch4 ? "ch4" : r.t === TAGS.flue ? "flue" : "");
-          if(!k || v < RANGE[k][0] || v > RANGE[k][1]) return;
-          (by[k] = by[k] || []).push({ h:h, v:v });
-        });
-        var out = {};
-        Object.keys(by).forEach(function(k){ var s = by[k], last = Math.max.apply(null, s.map(function(p){ return p.h; }));
-          out[k] = med(s.filter(function(p){ return p.h > last - 6 * 3600000; }).map(function(p){ return p.v; })); });
-        return out;
-      });
-  }
+  var PK = "auraPricesV1";
+  var FIELDS = { ng:"auraPriceNg", nap:"auraPriceNap", retube:"auraPriceRetube", o2t:"auraTargetO2", hours:"auraHours" };
+  var DEF = { ng:38927, nap:45562, o2t:3.5, hours:8000 }; /* NG 16-May-25, naphtha (EPP) current fortnight, ₹/MT */
+  function loadP(){ var p = {}; try{ p = JSON.parse(localStorage.getItem(PK) || "null"); }catch(e){ p = null; } if(!p){ p = {}; Object.keys(DEF).forEach(function(k){ p[k] = DEF[k]; }); } return p; }
+  function pos(v){ var n = Number(v); return v !== "" && v != null && isFinite(n) && n > 0 ? n : NaN; }
+  function fill(){ var p = loadP(); Object.keys(FIELDS).forEach(function(k){ var el = document.getElementById(FIELDS[k]); if(el && isFinite(pos(p[k]))) el.value = p[k]; }); state(); }
+  function state(){ var p = loadP(), miss = [];
+    if(!isFinite(pos(p.ng))) miss.push("NG"); if(!isFinite(pos(p.nap))) miss.push("naphtha"); if(!isFinite(pos(p.retube))) miss.push("retube");
+    if(!isFinite(pos(p.o2t))) miss.push("target O₂"); if(!isFinite(pos(p.hours))) miss.push("hours");
+    var el = document.getElementById("auraPriceState"); if(el) el.textContent = miss.length ? "· enter " + miss.join(", ") : "· set"; }
+  window.auraSavePrices = function(){ var p = {}; Object.keys(FIELDS).forEach(function(k){ var el = document.getElementById(FIELDS[k]); if(el && isFinite(pos(el.value))) p[k] = Number(el.value); });
+    try{ localStorage.setItem(PK, JSON.stringify(p)); }catch(e){} state(); if(window.__auraRan) window.triggerAuraOptimizer(); };
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", fill); else fill();
+
   function latestTst(){
     var list = []; try{ list = (Array.isArray(window.tempDataEntries) && window.tempDataEntries.length) ? window.tempDataEntries : (typeof window.getAllTempEntries === "function" ? window.getAllTempEntries() : []); }catch(e){ list = []; }
     if(!list.length) return [];
@@ -2476,26 +2461,66 @@
     return out;
   }
   function esc(v){ return String(v).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function f(v, d){ return isFinite(v) ? Number(v).toLocaleString("en-IN", { minimumFractionDigits:d || 0, maximumFractionDigits:d || 0 }) : "—"; }
+  function set(id, html){ var el = document.getElementById(id); if(el) el.innerHTML = html; }
+
   window.triggerAuraOptimizer = function(){
-    var btn = document.getElementById("btnRunAuraOptimization"), sum = document.getElementById("auraPrescriptionSummary");
-    if(btn) btn.disabled = true; if(sum) sum.innerHTML = "⚡ Reading live DCS data…";
-    fetchLive().catch(function(){ return {}; }).then(function(live){
-      var used = [], p = {};
-      Object.keys(FALLBACK).forEach(function(k){ if(isFinite(live[k])) p[k] = live[k]; else { p[k] = FALLBACK[k]; used.push(k); } });
-      var tst = latestTst(), tstLive = tst.length > 0;
-      if(!tstLive) for(var ph = 1; ph <= 15; ph++){ ["AB Bot","CD Bot","AB Top","CD Top"].forEach(function(q){ tst.push({ quadrant:q, phIndex:ph, temp:870 }); }); }
-      var res = window.auraEngine.evaluateAndOptimize({ burners:{}, cleaning:{}, tstReadings:tst,
-        process:{ excessO2:p.o2, methaneSlip:p.ch4, flueGasTemp:p.flue, cotAB:p.cotAB, cotCD:p.cotCD } });
-      var fs = res.financialSavings;
-      document.getElementById("auraTotalBenefitVal").innerHTML = "₹ " + fs.totalAnnualSavingsCrores + ' Cr <span style="font-size: 0.85rem; font-weight: 400;">/ yr</span>';
-      document.getElementById("auraFuelCutVal").innerHTML = "₹ " + fs.fuelGasSavingsCrores + ' Cr <span style="font-size: 0.85rem; font-weight: 400;">/ yr</span>';
-      document.getElementById("auraTubeLifeVal").innerText = "+" + res.creepAnalysis.tubeLifeExtensionYears + " Years";
-      document.getElementById("auraH2YieldVal").innerText = "+" + res.methaneSlipAnalysis.extraHydrogenProducedNm3H + " Nm³/h";
-      var src = "Live: O₂ " + p.o2.toFixed(2) + "%, CH₄ slip " + p.ch4.toFixed(2) + "%, flue " + p.flue.toFixed(0) + " °C, COT AB/CD " + p.cotAB.toFixed(0) + "/" + p.cotCD.toFixed(0) + " °C, TST peak " + res.thermalAnalysis.peakTemp + " °C"
-        + (used.length || !tstLive ? " · <b style=\"color:#fbbf24\">assumed (no live data): " + used.concat(tstLive ? [] : ["TST"]).join(", ") + "</b>" : "");
-      if(sum) sum.innerHTML = "⚡ <strong>Optimization computed.</strong> Slip " + res.methaneSlipAnalysis.currentMethaneSlipPct.toFixed(2) + "% → " + res.methaneSlipAnalysis.optimizedMethaneSlipPct + "%<br>"
-        + res.burnerDecisions.map(function(d){ return "• " + esc(d.recommendedAction); }).join("<br>")
-        + '<div style="margin-top:6px;font-size:0.74rem;color:#94a3b8;">' + src + "</div>";
+    window.__auraRan = true;
+    var btn = document.getElementById("btnRunAuraOptimization");
+    if(btn) btn.disabled = true; set("auraPrescriptionSummary", "⚡ Reading live plant data…");
+    var snap = typeof window.auraReformerSnapshot === "function" ? window.auraReformerSnapshot() : Promise.resolve(null);
+    Promise.resolve(snap).catch(function(){ return null; }).then(function(m){
+      var p = loadP(), notes = [], lines = [];
+      var d = (m && m.data) || {};
+      var live = m && m.totalHeat > 0;
+      /* 1. Fuel saving from O2 trim (measured fuel heat, site combustion model) */
+      var o2 = m ? m.o2Used : NaN, o2t = pos(p.o2t), hrs = pos(p.hours);
+      var savedGcalH = NaN, ngShare = NaN, napShare = NaN;
+      if(!live) notes.push("live fuel flows not available" + (m && m.error ? " (" + esc(m.error) + ")" : ""));
+      else if(!isFinite(o2t)) notes.push("enter target O₂");
+      else if(o2 <= o2t) { savedGcalH = 0; lines.push("O₂ " + f(o2, 2) + "% is already at or below the " + f(o2t, 2) + "% target."); }
+      else {
+        var eaC = o2 / (21 - o2), eaT = o2t / (21 - o2t);
+        var dLoss = m.fuelKgh * 16.25 * (eaC - eaT) * 0.3059 * (m.stackTemp - 25) / 1e6; /* Gcal/h less stack loss */
+        var eff = m.overallEff > 0 ? m.overallEff / 100 : NaN;
+        savedGcalH = isFinite(eff) ? dLoss / eff : NaN;
+        lines.push("Trim combustion air to bring O₂ from " + f(o2, 2) + "%" + (m.o2Manual ? " (manual lab)" : " (AI-2401)") + " to " + f(o2t, 2) + "%. Cuts stack loss by " + f(dLoss, 3) + " Gcal/h.");
+      }
+      var trim = live ? (m.ngHeat + m.napHeat) : 0;
+      if(trim > 0){ ngShare = m.ngHeat / trim; napShare = m.napHeat / trim; }
+      if(isFinite(savedGcalH)){
+        set("auraFuelCutVal", f(savedGcalH, 3) + ' <span style="font-size:0.85rem;font-weight:400;">Gcal/h</span>');
+        set("auraFuelCutSub", f(live ? savedGcalH / m.totalHeat * 100 : NaN, 2) + "% of " + f(m.totalHeat, 2) + " Gcal/h fired"
+          + (trim > 0 ? " · NG " + f(savedGcalH * ngShare * 1e6 / m.ngNCV, 0) + " Nm³/h, naphtha " + f(savedGcalH * napShare * 1e6 / m.naphthaNCV, 0) + " kg/h" : ""));
+      } else { set("auraFuelCutVal", "—"); set("auraFuelCutSub", "Needs live fuel flows and target O₂"); }
+      var pNg = pos(p.ng) / 1000 * (m && m.ngDensity), pNap = pos(p.nap) / 1000; /* ₹/Nm3, ₹/kg */
+      if(isFinite(savedGcalH) && trim > 0 && isFinite(pNg) && isFinite(pNap)){
+        var rsH = savedGcalH * ngShare * 1e6 / m.ngNCV * pNg + savedGcalH * napShare * 1e6 / m.naphthaNCV * pNap;
+        set("auraTotalBenefitVal", isFinite(hrs) ? "₹ " + f(rsH * hrs / 1e7, 2) + ' Cr <span style="font-size:0.85rem;font-weight:400;">/ yr</span>' : "₹ " + f(rsH, 0) + ' <span style="font-size:0.85rem;font-weight:400;">/ h</span>');
+        set("auraTotalBenefitSub", "₹ " + f(rsH * 24, 0) + " per day · NG ₹" + f(pNg, 2) + "/Nm³, naphtha ₹" + f(pNap, 2) + "/kg" + (isFinite(hrs) ? " · " + f(hrs, 0) + " h/yr" : " · enter hours/yr for annual"));
+      } else { set("auraTotalBenefitVal", "—"); set("auraTotalBenefitSub", isFinite(pNg) && isFinite(pNap) ? "Needs a fuel saving above" : (isFinite(pos(p.ng)) && isFinite(pos(p.nap)) ? "Needs NG composition for density" : "Enter NG and naphtha prices")); }
+      /* 2. Tube life (from Tube Life panel) */
+      var tl = typeof window.tubeLifeLastResult === "function" ? window.tubeLifeLastResult() : null;
+      var tst = latestTst(), peak = tst.length ? Math.max.apply(null, tst.map(function(r){ return r.temp; })) : NaN;
+      if(tl && isFinite(tl.remYears)){
+        set("auraTubeLifeVal", f(Math.min(tl.remYears, 99), 1) + " Years");
+        var rt = pos(p.retube);
+        set("auraTubeLifeSub", (tl.worst && tl.worst.label ? esc(tl.worst.label) + " · " : "") + f(tl.usedPct, 2) + "% used" + (isFinite(rt) && tl.remYears > 0 ? " · retube ₹" + f(rt, 1) + " Cr" : " · enter retube cost"));
+      } else { set("auraTubeLifeVal", "—"); set("auraTubeLifeSub", "Run the Tube Life panel below first"); }
+      /* 3. CH4 slip (live) */
+      if(d.methaneSlip > 0){ var ch4 = d.methaneSlip; set("auraH2YieldVal", f(ch4, 2) + "%"); }
+      /* 4. Hotspots vs 950 °C (engine, live TST only) */
+      if(tst.length && typeof window.AuraReformerEngine === "function"){
+        var eng = new window.AuraReformerEngine();
+        var th = eng._analyzeThermalField(tst);
+        var hs = eng._generateBurnerDecisions({}, {}, th, { projectedSlipReduction:0 }, { excessO2:o2 }).filter(function(x){ return x.type === "HOTSPOT_SHEDDING"; });
+        lines.push("Peak TST " + f(peak, 0) + " °C at " + esc(th.peakLocation) + ", " + f(950 - peak, 0) + " °C below the 950 °C limit.");
+        hs.forEach(function(x){ lines.push(esc(x.recommendedAction) + " (" + esc(x.peepHoleRef) + ", " + f(x.tempObserved, 0) + " °C)"); });
+      } else notes.push("no TST entry saved yet");
+      if(d.abCot > 0 && d.cdCot > 0) lines.push("COT AB/CD " + f(d.abCot, 0) + " / " + f(d.cdCot, 0) + " °C (Δ " + f(Math.abs(d.abCot - d.cdCot), 1) + " °C).");
+      set("auraPrescriptionSummary", "⚡ <strong>Optimization computed" + (m && m.fetchedAt ? " · data " + new Date(m.fetchedAt).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : "") + ".</strong><br>"
+        + lines.map(function(l){ return "• " + l; }).join("<br>")
+        + (notes.length ? '<div style="margin-top:6px;color:#fbbf24;font-size:0.78rem;">Missing: ' + notes.join("; ") + "</div>" : ""));
       if(btn) btn.disabled = false;
     });
   };

@@ -16,9 +16,9 @@ class AuraReformerEngine {
   constructor(customConfig = {}) {
     this.config = Object.assign({
       // Process Targets & Thresholds
-      TARGET_MAX_TST: 885.0,         // °C (Nominal ceiling for 10-12 yr tube life)
-      HOTSPOT_WARNING_TST: 910.0,    // °C (Triggers Heat Shedding Policy)
-      HOTSPOT_CRITICAL_TST: 940.0,   // °C (Emergency Throttle Cutback)
+      TARGET_MAX_TST: 950.0,         // °C (HGU-3 design TST limit)
+      HOTSPOT_WARNING_TST: 930.0,    // °C (Triggers Heat Shedding Policy)
+      HOTSPOT_CRITICAL_TST: 950.0,   // °C (Emergency Throttle Cutback)
       TARGET_CH4_SLIP: 3.10,         // % Vol (Methane Slip target)
       TARGET_EXCESS_O2: 3.50,        // % Vol (Optimal stoichiometric window)
       MAX_CROSS_WALL_DELTA_COT: 8.0, // °C (|COT_AB - COT_CD| limit)
