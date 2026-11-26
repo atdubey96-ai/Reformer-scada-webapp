@@ -2435,3 +2435,68 @@
     render();
   }
 })();
+
+/* ---------- IOCL AURA-Reformer hook (live DCS + latest TST entry) ---------- */
+(function(){
+  if(typeof window.AuraReformerEngine !== "function") return;
+  window.auraEngine = new window.AuraReformerEngine();
+  var TAGS = { o2:"GJA.2041ai2401.pv", ch4:"GJA.2041ai2901.pv", flue:"GJA.2041ti2408.pv",
+    cotAB:["GJA.2041ti2503b.pv","GJA.2041ti2501.pv"], cotCD:["GJA.2041ti2503c.pv","GJA.2041ti2502.pv"] };
+  var RANGE = { o2:[0.3,15], ch4:[0.3,10], flue:[800,1200], cotAB:[750,950], cotCD:[750,950] };
+  var FALLBACK = { o2:9.23, ch4:3.68, flue:932.39, cotAB:845.2, cotCD:842.8 };
+  function med(a){ a = a.filter(isFinite).sort(function(x,y){ return x-y; }); if(!a.length) return NaN; var m = Math.floor(a.length/2); return a.length % 2 ? a[m] : (a[m-1]+a[m])/2; }
+  function fetchLive(){
+    var url = (typeof window.getTdPlantSupabaseUrl === "function" ? window.getTdPlantSupabaseUrl() : "https://lawrglgxkrfibajixfkp.supabase.co").replace(/\/+$/, "");
+    var key = typeof window.getTdPlantSupabaseKey === "function" ? window.getTdPlantSupabaseKey() : "";
+    var tags = [TAGS.o2, TAGS.ch4, TAGS.flue].concat(TAGS.cotAB, TAGS.cotCD);
+    return fetch(url + "/rest/v1/rpc/tube_life_hourly", { method:"POST",
+      headers:{ "apikey":key, "Authorization":"Bearer " + key, "Content-Type":"application/json" },
+      body:JSON.stringify({ p_tags:tags, p_from:new Date(Date.now() - 2 * 86400000).toISOString() }) })
+      .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function(rows){
+        var by = {};
+        (rows || []).forEach(function(r){
+          var v = Number(r.v), h = Date.parse(r.h); if(!isFinite(v) || !isFinite(h)) return;
+          var k = TAGS.cotAB.indexOf(r.t) >= 0 ? "cotAB" : TAGS.cotCD.indexOf(r.t) >= 0 ? "cotCD" : (r.t === TAGS.o2 ? "o2" : r.t === TAGS.ch4 ? "ch4" : r.t === TAGS.flue ? "flue" : "");
+          if(!k || v < RANGE[k][0] || v > RANGE[k][1]) return;
+          (by[k] = by[k] || []).push({ h:h, v:v });
+        });
+        var out = {};
+        Object.keys(by).forEach(function(k){ var s = by[k], last = Math.max.apply(null, s.map(function(p){ return p.h; }));
+          out[k] = med(s.filter(function(p){ return p.h > last - 6 * 3600000; }).map(function(p){ return p.v; })); });
+        return out;
+      });
+  }
+  function latestTst(){
+    var list = []; try{ list = (Array.isArray(window.tempDataEntries) && window.tempDataEntries.length) ? window.tempDataEntries : (typeof window.getAllTempEntries === "function" ? window.getAllTempEntries() : []); }catch(e){ list = []; }
+    if(!list.length) return [];
+    var e = list.slice().sort(function(a,b){ return (Date.parse(b && (b.dt || b.date || b.createdAt)) || 0) - (Date.parse(a && (a.dt || a.date || a.createdAt)) || 0); })[0] || {};
+    var out = [], q = { "AB Bot":e.abBot || e.abBottom, "AB Top":e.abTop, "CD Bot":e.cdBot || e.cdBottom, "CD Top":e.cdTop };
+    Object.keys(q).forEach(function(name){ (Array.isArray(q[name]) ? q[name] : []).forEach(function(t, i){ var v = Number(t); if(t !== "" && t != null && isFinite(v) && v > 500 && v < 1100) out.push({ quadrant:name, phIndex:i+1, temp:v }); }); });
+    return out;
+  }
+  function esc(v){ return String(v).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  window.triggerAuraOptimizer = function(){
+    var btn = document.getElementById("btnRunAuraOptimization"), sum = document.getElementById("auraPrescriptionSummary");
+    if(btn) btn.disabled = true; if(sum) sum.innerHTML = "⚡ Reading live DCS data…";
+    fetchLive().catch(function(){ return {}; }).then(function(live){
+      var used = [], p = {};
+      Object.keys(FALLBACK).forEach(function(k){ if(isFinite(live[k])) p[k] = live[k]; else { p[k] = FALLBACK[k]; used.push(k); } });
+      var tst = latestTst(), tstLive = tst.length > 0;
+      if(!tstLive) for(var ph = 1; ph <= 15; ph++){ ["AB Bot","CD Bot","AB Top","CD Top"].forEach(function(q){ tst.push({ quadrant:q, phIndex:ph, temp:870 }); }); }
+      var res = window.auraEngine.evaluateAndOptimize({ burners:{}, cleaning:{}, tstReadings:tst,
+        process:{ excessO2:p.o2, methaneSlip:p.ch4, flueGasTemp:p.flue, cotAB:p.cotAB, cotCD:p.cotCD } });
+      var fs = res.financialSavings;
+      document.getElementById("auraTotalBenefitVal").innerHTML = "₹ " + fs.totalAnnualSavingsCrores + ' Cr <span style="font-size: 0.85rem; font-weight: 400;">/ yr</span>';
+      document.getElementById("auraFuelCutVal").innerHTML = "₹ " + fs.fuelGasSavingsCrores + ' Cr <span style="font-size: 0.85rem; font-weight: 400;">/ yr</span>';
+      document.getElementById("auraTubeLifeVal").innerText = "+" + res.creepAnalysis.tubeLifeExtensionYears + " Years";
+      document.getElementById("auraH2YieldVal").innerText = "+" + res.methaneSlipAnalysis.extraHydrogenProducedNm3H + " Nm³/h";
+      var src = "Live: O₂ " + p.o2.toFixed(2) + "%, CH₄ slip " + p.ch4.toFixed(2) + "%, flue " + p.flue.toFixed(0) + " °C, COT AB/CD " + p.cotAB.toFixed(0) + "/" + p.cotCD.toFixed(0) + " °C, TST peak " + res.thermalAnalysis.peakTemp + " °C"
+        + (used.length || !tstLive ? " · <b style=\"color:#fbbf24\">assumed (no live data): " + used.concat(tstLive ? [] : ["TST"]).join(", ") + "</b>" : "");
+      if(sum) sum.innerHTML = "⚡ <strong>Optimization computed.</strong> Slip " + res.methaneSlipAnalysis.currentMethaneSlipPct.toFixed(2) + "% → " + res.methaneSlipAnalysis.optimizedMethaneSlipPct + "%<br>"
+        + res.burnerDecisions.map(function(d){ return "• " + esc(d.recommendedAction); }).join("<br>")
+        + '<div style="margin-top:6px;font-size:0.74rem;color:#94a3b8;">' + src + "</div>";
+      if(btn) btn.disabled = false;
+    });
+  };
+})();
