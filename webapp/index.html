@@ -43274,6 +43274,11 @@ body.light-theme .btab-alarm-count{
   var REFORMER_DASH_NCV = Object.assign({}, REFORMER_DASH_DEFAULT_NCV);
   var REFORMER_DASH_SETTINGS_STORAGE_KEY = "scadaReformerDashSettingsV1";
   var REFORMER_DASH_NAPHTHA_DEFAULT_DENSITY_FACTOR = 0.7;
+  var REFORMER_DASH_COMB_AIR_NM3H = 133000; /* combustion air, Nm3/h (no live tag yet) */
+  var REFORMER_DASH_AIR_DENSITY = 1.293;    /* kg/Nm3 */
+  var REFORMER_DASH_STOICH_AIR_KG = 16.25;  /* kg air / kg fuel */
+  var REFORMER_DASH_FLUE_GAS_KG = 17.25;    /* kg flue gas / kg fuel */
+  var REFORMER_DASH_FLUE_CP = 0.3059;       /* kcal/kg C, mean 25-2727 C */
   var REFORMER_DASH_NAPHTHA_DEFAULT_NCV = 10500;
   var REFORMER_DASH_HGU_DEFAULT_MODE = "naphtha";
   var REFORMER_DASH_HGU_DEFAULT_DIVISOR = (typeof TD_HGU_LOAD_DIVISOR === "number" && isFinite(TD_HGU_LOAD_DIVISOR) && TD_HGU_LOAD_DIVISOR > 0) ? TD_HGU_LOAD_DIVISOR : 26636;
@@ -44165,13 +44170,22 @@ body.light-theme .btab-alarm-count{
     var avgCot = meanAvailable([pv.abCot, pv.cdCot]);
     var cotImbalance = isFiniteNumber(pv.abCot) && isFiniteNumber(pv.cdCot) ? Math.abs(pv.abCot - pv.cdCot) : 0;
     var preDeltaT = isFiniteNumber(pv.preInlet) && isFiniteNumber(pv.preOutlet) ? (pv.preOutlet - pv.preInlet) : 0;
-    var flueLossFactor = clamp(0.065 + Math.max(nz(pv.flueGas) - 860, 0) * 0.00012 + Math.max(nz(pv.excessO2) - 3.5, 0) * 0.009, 0.06, 0.19);
-    var slipLossFactor = clamp(nz(pv.methaneSlip) * 0.005, 0, 0.045);
-    var balanceLossFactor = clamp(0.02 + cotImbalance * 0.0008 + Math.max(Math.abs(preDeltaT - 20) - 6, 0) * 0.0007, 0.018, 0.07);
-    var totalLossFactor = clamp(flueLossFactor + slipLossFactor + balanceLossFactor, 0.09, 0.30);
-    var absorbed = totalHeat * (1 - totalLossFactor);
-    var flueLoss = totalHeat * flueLossFactor;
-    var otherLoss = Math.max(totalHeat - absorbed - flueLoss, 0);
+    /* Flue gas heat at reformer exit (design data): air 133 kNm3/h x 1.293 kg/Nm3;
+       stoich air 16.25 kg/kg fuel, flue gas 17.25 kg/kg fuel; Cp 0.3059 kcal/kg C; ref 25 C */
+    var airKgh = REFORMER_DASH_COMB_AIR_NM3H * REFORMER_DASH_AIR_DENSITY;
+    /* excess air from flue O2 (AI-2401, dry): EA = O2 / (21 - O2) */
+    var o2 = isFiniteNumber(pv.excessO2) && pv.excessO2 >= 0 && pv.excessO2 < 20 ? pv.excessO2 : 0;
+    var excessAir = o2 / (21 - o2);
+    var fuelKgh = airKgh / (REFORMER_DASH_STOICH_AIR_KG * (1 + excessAir));
+    var flueGasKgh = airKgh + fuelKgh;
+    var flueT = isFiniteNumber(pv.flueGas) && pv.flueGas > 25 ? pv.flueGas : null;
+    var flueLoss = flueT === null ? 0 : (flueGasKgh * REFORMER_DASH_FLUE_CP * (flueT - 25)) / 1000000;
+    if(totalHeat > 0) flueLoss = Math.min(flueLoss, totalHeat);
+    var flueLossFactor = totalHeat > 0 ? flueLoss / totalHeat : 0;
+    var slipLossFactor = 0, balanceLossFactor = 0;
+    var totalLossFactor = flueLossFactor;
+    var absorbed = Math.max(totalHeat - flueLoss, 0);
+    var otherLoss = 0;
     return {
       psa1NCV: psa1NCV,
       psa2NCV: psa2NCV,
@@ -44180,6 +44194,12 @@ body.light-theme .btab-alarm-count{
       naphthaMassKgh: naphthaMassKgh,
       ngFuelFlow: ngFuelFlow,
       ngIsLive: ngIsLive,
+      airKgh: airKgh,
+      excessAir: excessAir,
+      o2Used: o2,
+      fuelKgh: fuelKgh,
+      flueGasKgh: flueGasKgh,
+      flueT: flueT,
       psa1Heat: psa1Heat,
       psa2Heat: psa2Heat,
       napHeat: napHeat,
@@ -44350,24 +44370,25 @@ body.light-theme .btab-alarm-count{
         buildHeatDutyCalcCard("Fuel Heat Duty", "var(--refdash-accent-2)", fuels.map(function(item){
           return buildHeatDutyCalcRow(item.name, item.formula, formatValue(item.duty, 3) + " Gcal/h", item.color);
         }), "Gas duties use Nm3/h x kcal/Nm3. Naphtha duty uses (FI-6301 - 500) kg/h x kcal/kg."),
-        buildHeatDutyCalcCard("Loss Factors", "var(--refdash-red)", [
-          buildHeatDutyCalcRow("Flue loss factor", "clamp(0.065 + max(flueGas - 860, 0) x 0.00012 + max(excessO2 - 3.5, 0) x 0.009, 0.06, 0.19)", formatValue(metrics.flueLossFactor * 100, 2) + " %", "var(--refdash-red)"),
-          buildHeatDutyCalcRow("Slip loss factor", "clamp(methaneSlip x 0.005, 0, 0.045)", formatValue(metrics.slipLossFactor * 100, 2) + " %", "var(--refdash-purple)"),
-          buildHeatDutyCalcRow("Balance loss factor", "clamp(0.02 + cotDelta x 0.0008 + max(abs(preDeltaT - 20) - 6, 0) x 0.0007, 0.018, 0.07)", formatValue(metrics.balanceLossFactor * 100, 2) + " %", "var(--refdash-accent-2)"),
-          buildHeatDutyCalcRow("Total loss factor", "clamp(flue + slip + balance, 0.09, 0.30)", formatValue(metrics.totalLossFactor * 100, 2) + " %", "var(--refdash-red)")
-        ], "The dashboard uses a bounded operating-loss model driven by flue temperature, excess O2, methane slip, COT imbalance, and pre-reformer delta T."),
+        buildHeatDutyCalcCard("Flue Gas Loss (reformer exit)", "var(--refdash-red)", [
+          buildHeatDutyCalcRow("Combustion air", "design 133 kNm3/h x 1.293 kg/Nm3", formatValue(metrics.airKgh, 0) + " kg/h", "var(--refdash-cyan)"),
+          buildHeatDutyCalcRow("Excess air", "O2 / (21 - O2), O2 = " + formatValue(metrics.o2Used, 2) + " % (AI-2401)", formatValue(metrics.excessAir * 100, 1) + " %", "var(--refdash-cyan)"),
+          buildHeatDutyCalcRow("Fuel fired", "air / (16.25 x (1 + excess air))", formatValue(metrics.fuelKgh, 0) + " kg/h", "var(--refdash-accent-2)"),
+          buildHeatDutyCalcRow("Flue gas flow", "air + fuel (17.25 kg/kg at 0% excess air)", formatValue(metrics.flueGasKgh, 0) + " kg/h", "var(--refdash-red)"),
+          buildHeatDutyCalcRow("Flue gas temp", "TI-2408 reformer exit", formatValue(metrics.flueT, 1) + " degC", "var(--refdash-red)"),
+          buildHeatDutyCalcRow("Flue gas heat loss", "flue gas x 0.3059 kcal/kg C x (TI-2408 - 25) / 1,000,000", formatValue(metrics.flueLoss, 3) + " Gcal/h", "var(--refdash-red)")
+        ], "Heat leaving the radiant box with the flue gas at reformer exit (not stack), from design combustion data and Cp 0.3059 kcal/kg C."),
         buildHeatDutyCalcCard("Heat Balance", "var(--refdash-blue)", [
           buildHeatDutyCalcRow("Total heat input", "PSA-1 + PSA-2 + naphtha + natural gas duties", formatValue(metrics.totalHeat, 3) + " Gcal/h", "var(--refdash-accent-2)"),
-          buildHeatDutyCalcRow("Heat absorbed", "totalHeat x (1 - totalLossFactor)", formatValue(metrics.absorbed, 3) + " Gcal/h", "var(--refdash-green)"),
-          buildHeatDutyCalcRow("Flue gas loss", "totalHeat x flueLossFactor", formatValue(metrics.flueLoss, 3) + " Gcal/h", "var(--refdash-red)"),
-          buildHeatDutyCalcRow("Other losses", "totalHeat x (slipLossFactor + balanceLossFactor)", formatValue(metrics.otherLoss, 3) + " Gcal/h", "var(--refdash-purple)")
-        ], "Other losses aggregate the slip-based and balance-based model penalties after the flue gas loss is separated."),
+          buildHeatDutyCalcRow("Flue gas loss", "from flue gas card", formatValue(metrics.flueLoss, 3) + " Gcal/h", "var(--refdash-red)"),
+          buildHeatDutyCalcRow("Heat absorbed (radiant)", "totalHeat - flue gas loss", formatValue(metrics.absorbed, 3) + " Gcal/h", "var(--refdash-green)")
+        ], "Absorbed heat is fuel heat minus the heat carried out by flue gas at reformer exit."),
         buildHeatDutyCalcCard("Efficiency Result", "var(--refdash-green)", [
           buildHeatDutyCalcRow("Average COT", "mean(AB COT, CD COT)", formatValue(metrics.avgCot, 1) + " degC", "var(--refdash-accent)"),
           buildHeatDutyCalcRow("COT delta", "abs(AB COT - CD COT)", formatValue(metrics.cotImbalance, 1) + " degC", "var(--refdash-accent-2)"),
           buildHeatDutyCalcRow("Pre-reformer delta T", "preOutlet - preInlet", formatValue(metrics.preDeltaT, 1) + " degC", "var(--refdash-cyan)"),
-          buildHeatDutyCalcRow("Estimated efficiency", "(absorbed / totalHeat) x 100", formatValue(metrics.efficiency, 2) + " %", "var(--refdash-green)")
-        ], "This is a dashboard operating estimate built from the current heat-balance model, not a laboratory-certified efficiency number.")
+          buildHeatDutyCalcRow("Radiant efficiency", "(absorbed / totalHeat) x 100", formatValue(metrics.efficiency, 2) + " %", "var(--refdash-green)")
+        ], "Radiant-section efficiency at reformer exit. Convection-section heat recovery is not included.")
       ].join("")
       + '</div>';
   }
@@ -44498,13 +44519,13 @@ body.light-theme .btab-alarm-count{
   function renderOverviewPane(){
     var metrics = calcReformerMetrics();
     var avgCotStatus = getStatusClass(metrics.avgCot, 820, 850);
-    var effStatus = metrics.efficiency < 78 ? "alarm" : metrics.efficiency < 82 ? "warning" : "normal";
+    var effStatus = metrics.efficiency < 50 ? "alarm" : metrics.efficiency < 55 ? "warning" : "normal";
     var o2Status = getStatusClass(reformerDashState.data.excessO2, 3, 5);
     var slipStatus = getStatusClass(reformerDashState.data.methaneSlip, 0, 4);
     var overviewRoot = getReformerDashEl("refdash-kpi-overview");
     if(overviewRoot){
       overviewRoot.innerHTML = [
-        kpiCardHtml("Estimated Efficiency", metrics.efficiency, "%", "var(--refdash-green)", { status: effStatus, subtitle: "Live fuel mix and heat-balance estimate", decimals: 2 }),
+        kpiCardHtml("Radiant Efficiency", metrics.efficiency, "%", "var(--refdash-green)", { status: effStatus, subtitle: "Fuel heat minus flue gas loss at reformer exit", decimals: 2 }),
         kpiCardHtml("Average COT", metrics.avgCot, "degC", "var(--refdash-accent-2)", { status: avgCotStatus, subtitle: "AB/CD delta " + formatValue(metrics.cotImbalance, 1) + " degC", decimals: 1 }),
         kpiCardHtml("Excess O2", reformerDashState.data.excessO2, "%Vol", "var(--refdash-cyan)", { status: o2Status, subtitle: "Target band 3-5 %Vol", decimals: 2 }),
         kpiCardHtml("Methane Slip", reformerDashState.data.methaneSlip, "%Vol", "var(--refdash-purple)", { status: slipStatus, subtitle: "Lower slip improves firing efficiency", decimals: 2 }),
@@ -44515,7 +44536,7 @@ body.light-theme .btab-alarm-count{
     var gauges = getReformerDashEl("refdash-gauges");
     if(gauges){
       gauges.innerHTML = [
-        gaugeHtml(metrics.efficiency, 100, "Efficiency", "%", "var(--refdash-green)", 82, 88),
+        gaugeHtml(metrics.efficiency, 100, "Efficiency", "%", "var(--refdash-green)", 55, 65),
         gaugeHtml(reformerDashState.data.methaneSlip, 8, "CH4 Slip", "%Vol", "var(--refdash-purple)", 3.5, 5),
         gaugeHtml(reformerDashState.data.excessO2, 10, "Excess O2", "%Vol", "var(--refdash-cyan)", 5, 7),
         gaugeHtml(metrics.cotImbalance, 30, "COT Delta", "degC", "var(--refdash-accent-2)", 15, 25)
@@ -44598,7 +44619,7 @@ body.light-theme .btab-alarm-count{
         kpiCardHtml("Total Heat Input", metrics.totalHeat, "Gcal/h", "var(--refdash-accent-2)", { decimals: 3 }),
         kpiCardHtml("Heat Absorbed", metrics.absorbed, "Gcal/h", "var(--refdash-green)", { subtitle: formatValue(metrics.efficiency, 1) + "% of total input", decimals: 3 }),
         kpiCardHtml("Flue Gas Loss", metrics.flueLoss, "Gcal/h", "var(--refdash-red)", { subtitle: "Driven by flue gas temp and excess O2", decimals: 3 }),
-        kpiCardHtml("Other Losses", metrics.otherLoss, "Gcal/h", "var(--refdash-purple)", { subtitle: "Slip and balance-related estimated losses", decimals: 3 })
+        kpiCardHtml("Flue Gas Flow", metrics.flueGasKgh / 1000, "t/h", "var(--refdash-purple)", { subtitle: "Reformer exit, from 133 kNm3/h air", decimals: 1 })
       ].join("");
     }
     var fuels = buildReformerFuelModel(metrics);
