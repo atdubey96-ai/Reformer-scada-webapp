@@ -2502,26 +2502,26 @@
       var savedGcalH = NaN, ngShare = NaN, napShare = NaN;
       if(!live) notes.push("live fuel flows not available" + (m && m.error ? " (" + esc(m.error) + ")" : ""));
       else if(!isFinite(o2t)) notes.push("enter target O₂");
-      else if(o2 <= o2t) { savedGcalH = 0; lines.push("O₂ " + f(o2, 2) + "% is already at or below the " + f(o2t, 2) + "% target."); }
+      else if(o2 <= o2t) { savedGcalH = 0; lines.push("O₂ " + f(o2, 1) + "% already at target."); }
       else {
         var eaC = o2 / (21 - o2), eaT = o2t / (21 - o2t);
         var dLoss = m.fuelKgh * 16.25 * (eaC - eaT) * 0.3059 * (m.stackTemp - 25) / 1e6; /* Gcal/h less stack loss */
         var eff = m.overallEff > 0 ? m.overallEff / 100 : NaN;
         savedGcalH = isFinite(eff) ? dLoss / eff : NaN;
-        lines.push("Trim combustion air to bring O₂ from " + f(o2, 2) + "%" + (m.o2Manual ? " (manual lab)" : " (AI-2401)") + " to " + f(o2t, 2) + "%. Cuts stack loss by " + f(dLoss, 3) + " Gcal/h.");
+        lines.push("Trim air: O₂ " + f(o2, 1) + " → " + f(o2t, 1) + "% (stack loss −" + f(dLoss, 2) + " Gcal/h).");
       }
       var trim = live ? (m.ngHeat + m.napHeat) : 0;
       if(trim > 0){ ngShare = m.ngHeat / trim; napShare = m.napHeat / trim; }
       if(isFinite(savedGcalH)){
         set("auraFuelCutVal", f(savedGcalH, 3) + ' <span style="font-size:0.85rem;font-weight:400;">Gcal/h</span>');
-        set("auraFuelCutSub", f(live ? savedGcalH / m.totalHeat * 100 : NaN, 2) + "% of " + f(m.totalHeat, 2) + " Gcal/h fired"
-          + (trim > 0 ? " · NG " + f(savedGcalH * ngShare * 1e6 / m.ngNCV, 0) + " Nm³/h, naphtha " + f(savedGcalH * napShare * 1e6 / m.naphthaNCV, 0) + " kg/h" : ""));
+        var ngC = savedGcalH * ngShare * 1e6 / m.ngNCV, napC = savedGcalH * napShare * 1e6 / m.naphthaNCV;
+        set("auraFuelCutSub", [ngC >= 0.5 ? "NG −" + f(ngC, 0) + " Nm³/h" : "", napC >= 0.5 ? "naphtha −" + f(napC, 0) + " kg/h" : ""].filter(Boolean).join(" · "));
       } else { set("auraFuelCutVal", "—"); set("auraFuelCutSub", "Needs live fuel flows and target O₂"); }
       var pNg = pos(p.ng) / 1000 * (m && m.ngDensity), pNap = pos(p.nap) / 1000; /* ₹/Nm3, ₹/kg */
       if(isFinite(savedGcalH) && trim > 0 && isFinite(pNg) && isFinite(pNap)){
         var rsH = savedGcalH * ngShare * 1e6 / m.ngNCV * pNg + savedGcalH * napShare * 1e6 / m.naphthaNCV * pNap;
         set("auraTotalBenefitVal", isFinite(hrs) ? "₹ " + f(rsH * hrs / 1e7, 2) + ' Cr <span style="font-size:0.85rem;font-weight:400;">/ yr</span>' : "₹ " + f(rsH, 0) + ' <span style="font-size:0.85rem;font-weight:400;">/ h</span>');
-        set("auraTotalBenefitSub", "₹ " + f(rsH * 24, 0) + " per day · NG ₹" + f(pNg, 2) + "/Nm³, naphtha ₹" + f(pNap, 2) + "/kg" + (isFinite(hrs) ? " · " + f(hrs, 0) + " h/yr" : " · enter hours/yr for annual"));
+        set("auraTotalBenefitSub", "₹ " + f(rsH * 24, 0) + " / day");
       } else { set("auraTotalBenefitVal", "—"); set("auraTotalBenefitSub", isFinite(pNg) && isFinite(pNap) ? "Needs a fuel saving above" : (isFinite(pos(p.ng)) && isFinite(pos(p.nap)) ? "Needs NG composition for density" : "Enter NG and naphtha prices")); }
       /* 2. Tube life (from Tube Life panel) */
       var tl = typeof window.tubeLifeLastResult === "function" ? window.tubeLifeLastResult() : null;
@@ -2529,8 +2529,8 @@
       if(tl && isFinite(tl.remYears)){
         set("auraTubeLifeVal", f(Math.min(tl.remYears, 99), 1) + " Years");
         var rt = pos(p.retube);
-        set("auraTubeLifeSub", (tl.worst && tl.worst.label ? esc(tl.worst.label) + " · " : "") + f(tl.usedPct, 2) + "% used" + (isFinite(rt) && tl.remYears > 0 ? " · retube ₹" + f(rt, 1) + " Cr" : " · enter retube cost"));
-      } else { set("auraTubeLifeVal", "—"); set("auraTubeLifeSub", "Run the Tube Life panel below first"); }
+        set("auraTubeLifeSub", (tl.worst && tl.worst.label ? esc(tl.worst.label) : ""));
+      } else { set("auraTubeLifeVal", "—"); set("auraTubeLifeSub", "see Tube Life below"); }
       /* 3. CH4 slip (live) */
       if(d.methaneSlip > 0){ var ch4 = d.methaneSlip; set("auraH2YieldVal", f(ch4, 2) + "%"); }
       /* Ordered actions. 1 TST limit + burner moves (Furnace Optimiser = only source of burner moves). 2 suspect readings. 3 COT / CH4 slip. 4 O2 trim. 5 COT balance. 6 cleaning. */
@@ -2538,27 +2538,21 @@
       var LIM = 950;
       if(tst.length){
         var hot = tst.slice().sort(function(x, y){ return y.temp - x.temp; }), over = hot.filter(function(r){ return r.temp > LIM; });
-        var srv = tst.entryDt ? " (TST survey " + esc(String(tst.entryDt).slice(0, 16).replace("T", " ")) + ")" : "";
-        lines.push((over.length ? '<b style="color:#f87171">TST limit: ' + over.length + " tube" + (over.length > 1 ? "s" : "") + " above " + LIM + " °C</b>" : "TST limit OK") + srv + ". Hottest: " + hot.slice(0, 3).map(function(r){ return r.quadrant + " PH" + r.phIndex + " " + f(r.temp, 0) + " °C"; }).join(", ") + ".");
-        var fo = window.__furnaceOptLast, plan = fo && fo.plans && fo.plans[fo.bestIdx || 0];
-        if(plan && plan.p.moves.length){
-          var mv = plan.p.moves, cuts = mv.filter(function(m){ return m.to < m.from; }), takes = mv.filter(function(m){ return m.to > m.from; });
-          var fm = function(m){ return "W" + m.w + " R" + m.r + " B" + m.b + " " + m.from + "→" + m.to + "%"; };
-          lines.push("Burner moves (" + esc(plan.name) + ", peak " + f(fo.cur.e.peak, 0) + " → " + f(plan.p.e.peak, 0) + " °C): cut " + cuts.map(fm).join(", ") + "; take " + takes.map(fm).join(", ") + ". Step-by-step list in tab ③ Burner steps."
-            + (plan.p.e.peak > LIM ? ' <b style="color:#f87171">Still above ' + LIM + " °C after these moves: also lower COT / total firing.</b>" : ""));
-        } else if(fo && fo.plans) lines.push(over.length ? '<b style="color:#f87171">No 25% burner shift lowers the over-limit tube.</b> Verify the reading, then cut the facing burners by hand or lower COT / total firing.' : "Burner firing is already near best. No burner change needed.");
-        else notes.push("burner moves: the optimiser did not finish, press Run again");
-        if(fo && fo.suspects && fo.suspects.length) lines.push("Check these TST readings before acting (far above neighbours): " + fo.suspects.map(function(s){ return esc(s.label) + " " + f(s.t, 0) + " °C vs " + f(s.nm, 0) + " °C" + (s.dropped ? " (left out of the model)" : ""); }).join(", ") + ".");
+        var srv = tst.entryDt ? " (survey " + esc(String(tst.entryDt).slice(0, 10)) + ")" : "";
+        lines.push((over.length ? '<b style="color:#f87171">' + over.length + " tube" + (over.length > 1 ? "s" : "") + " above " + LIM + " °C</b>" : "<b>All tubes below " + LIM + " °C</b>") + ". Hottest " + hot[0].quadrant + " PH" + hot[0].phIndex + " " + f(hot[0].temp, 0) + " °C" + srv + ".");
+        var fo = window.__furnaceOptLast;
+        if(!fo || !fo.plans) notes.push("optimiser did not finish, press Run again");
+        if(fo && fo.suspects && fo.suspects.length) lines.push("Recheck reading: " + fo.suspects.map(function(s){ return esc(s.label) + " " + f(s.t, 0) + " °C (neighbours " + f(s.nm, 0) + ")"; }).join(", ") + ".");
         if(fo && fo.cotBox && isFinite(fo.cotBox.dCot) && Math.abs(fo.cotBox.dCot) >= 1){
           var up = fo.cotBox.dCot > 0;
-          lines.push("CH₄ slip " + f(fo.cotBox.slip, 2) + "% vs target " + f(fo.cotBox.target, 2) + "%: " + (up && over.length ? "hold COT (a tube is above " + LIM + " °C; fix that first)" : (up ? "raise" : "lower") + " mean COT by " + f(Math.abs(fo.cotBox.dCot), 0) + " °C" + (fo.cotBox.capped ? " (capped at 900 °C)" : "")) + ".");
+          lines.push("COT: " + (up && over.length ? "hold (fix the hot tube first)" : (up ? "raise" : "lower") + " " + f(Math.abs(fo.cotBox.dCot), 0) + " °C" + (fo.cotBox.capped ? " (900 °C cap)" : "")) + " for CH₄ slip " + f(fo.cotBox.slip, 2) + " → " + f(fo.cotBox.target, 2) + "%.");
         }
       } else notes.push("no TST survey with peep-hole readings found");
       lines = lines.concat(o2Lines);
-      if(d.abCot > 0 && d.cdCot > 0){ var dc = d.abCot - d.cdCot; if(Math.abs(dc) > 8) lines.push("COT AB/CD " + f(d.abCot, 0) + " / " + f(d.cdCot, 0) + " °C: trim total firing on the " + (dc > 0 ? "AB" : "CD") + " side to balance (Δ " + f(Math.abs(dc), 1) + " °C)."); }
+      if(d.abCot > 0 && d.cdCot > 0){ var dc = d.abCot - d.cdCot; if(Math.abs(dc) > 8) lines.push("Balance COT: AB " + f(d.abCot, 0) + " / CD " + f(d.cdCot, 0) + " °C, trim the " + (dc > 0 ? "AB" : "CD") + " side."); }
       Array.prototype.forEach.call(document.querySelectorAll(".ct-6m-nudge-banner"), function(nd){ lines.push(esc(nd.textContent.replace(/^\S+\s*/, ""))); });
-      set("auraPrescriptionSummary", (m && m.fetchedAt ? '<div style="font-size:11px;opacity:.7;">DCS data ' + new Date(m.fetchedAt).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + "</div>" : "")
-        + lines.map(function(l, i){ return (i + 1) + ". " + l; }).join("<br>")
+      set("auraPrescriptionSummary", (m && m.fetchedAt ? '<div style="font-size:11px;opacity:.6;">Data ' + new Date(m.fetchedAt).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + "</div>" : "")
+        + lines.map(function(l){ return "• " + l; }).join("<br>")
         + (notes.length ? '<div style="margin-top:6px;color:#fbbf24;font-size:0.78rem;">Missing: ' + notes.join("; ") + "</div>" : ""));
       if(btn) btn.disabled = false;
     });

@@ -12095,7 +12095,7 @@ function renderAdjustmentFromOptimiser(){
     if(!mv.length){
       html = box(hmEscapeHtml(head), over ? '#f87171' : '#34d399', '<div style="margin-top:6px;">' + (over ? 'A tube is above ' + lim + ' °C and no 25% burner shift lowers it. Verify the reading, then cut the facing burners by hand or lower COT / total firing.' : 'No burner change needed. Firing is already near best.') + '</div>');
     }else{
-      html = '<div style="font-size:12px;opacity:.8;margin-bottom:8px;">' + hmEscapeHtml(head) + '. Do the cuts first, then the takes. Same chamber, so side duty and COT hold.</div>'
+      html = '<div style="font-size:12px;opacity:.8;margin-bottom:8px;">' + hmEscapeHtml(head) + '. Cut first, then take.</div>'
         + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;">'
         + box('Cut (' + cuts.length + ')', '#f87171', cuts.map(item).join(""))
         + box('Take (' + takes.length + ')', '#34d399', takes.map(item).join("")) + '</div>';
@@ -26799,38 +26799,36 @@ body.light-theme #auraReformerWidget{--au-bg:#ffffff;--au-card:#f5f7fb;--au-line
 #auraReformerWidget .hm-adjust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;}
 #auraReformerWidget .hm-adjust-suggest-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;}
 #auraReformerWidget .hm-adjust-suggest-action-pill,#auraReformerWidget .hm-adjust-suggest-ph{white-space:nowrap;max-width:none;overflow:visible;text-overflow:clip;}
+#auraReformerWidget .au-step{margin-top:14px;padding-top:12px;border-top:1px solid var(--au-line);}
+#auraReformerWidget .au-step-t{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--au-sub);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+#auraReformerWidget .au-step-t i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--au-acc);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;}
+#auraReformerWidget .au-kpis{margin:0 0 8px;}
+#auraReformerWidget #stack-ai-card{padding:0!important;background:none!important;border:none!important;box-shadow:none!important;}
+#auraReformerWidget #stack-ai-card::before,#auraReformerWidget #stack-ai-card::after{display:none!important;}
+#auraReformerWidget #stack-ai-card{border-image:none!important;}
+#auraReformerWidget #stack-ai-card .lx-how,#auraReformerWidget #stack-ai-card .fo-section-t,#auraReformerWidget #stack-ai-card [data-admin-only]{display:none!important;}
+#auraReformerWidget #stack-adjust-card{padding:0!important;background:none!important;border:none!important;box-shadow:none!important;}
+#auraReformerWidget #stack-adjust-card .hm-adjust-sub{display:none;}
+#auraReformerWidget .au-set{margin-top:14px;font-size:12px;color:var(--au-sub);}
+#auraReformerWidget .au-set summary{cursor:pointer;font-weight:700;}
+#auraReformerWidget #auraPriceState{color:#f59e0b;}
 #auraReformerWidget .au-btn2{background:var(--au-card);color:var(--au-text);border:1px solid var(--au-line);padding:6px 14px;border-radius:6px;cursor:pointer;}
 </style>
 <div id="auraReformerWidget">
   <div class="au-head">
-    <div class="au-title">IOCL AURA-Reformer™<small>TST limit 950 °C comes first · live DCS + latest TST survey</small></div>
+    <div class="au-title">IOCL AURA-Reformer™<small>TST limit 950 °C first</small></div>
     <button id="btnRunAuraOptimization" class="au-run" onclick="window.triggerAuraOptimizer()">⚡ Run AURA</button>
   </div>
-  <div class="au-kpis">
-    <div class="au-kpi" style="--au-c:#fbbf24"><span>Fuel saving (O₂ trim)</span><b id="auraTotalBenefitVal">—</b><i id="auraTotalBenefitSub">Press Run</i></div>
-    <div class="au-kpi" style="--au-c:#10b981"><span>Fuel heat saved</span><b id="auraFuelCutVal">—</b><i id="auraFuelCutSub">From measured NG + naphtha</i></div>
-    <div class="au-kpi" style="--au-c:#06b6d4"><span>Tube life left</span><b id="auraTubeLifeVal">—</b><i id="auraTubeLifeSub">Hottest tube, from Tube Life</i></div>
-    <div class="au-kpi" style="--au-c:#f37022"><span>CH₄ slip</span><b id="auraH2YieldVal">—</b><i id="auraH2YieldSub">AI-2901, last 6 h</i></div>
-  </div>
-  <div class="au-actions"><div class="au-actions-t">Actions for this shift (in order)</div><div id="auraPrescriptionSummary">Press <b>Run AURA</b>. It checks the TST limit, runs the Furnace Optimiser on the latest survey, and lists what to do.</div></div>
-  <div class="au-tabs" role="tablist">
-    <button type="button" class="au-tab" data-au-tab="1" onclick="window.auraTab(1)">① Plant &amp; savings<em>O₂, fuel, prices</em></button>
-    <button type="button" class="au-tab" data-au-tab="2" onclick="window.auraTab(2)">② Furnace Optimiser<em>which burners, why</em></button>
-    <button type="button" class="au-tab is-on" data-au-tab="3" onclick="window.auraTab(3)">③ Burner steps<em>cut / take on the layout</em></button>
-  </div>
-  <div class="au-pane" data-au-pane="1">
-    <div class="au-note"><b>Prices and targets</b> <span id="auraPriceState" style="color:#f59e0b;font-weight:600;"></span></div>
-    <div class="au-form">
-      <label>NG price (₹/MT)<input id="auraPriceNg" type="number" step="1" placeholder="enter price"></label>
-      <label>Naphtha price (₹/MT)<input id="auraPriceNap" type="number" step="1" placeholder="enter price"></label>
-      <label>Retube cost (₹ Cr)<input id="auraPriceRetube" type="number" step="0.1" placeholder="enter value"></label>
-      <label>Target O₂ (%)<input id="auraTargetO2" type="number" step="0.1" placeholder="e.g. 3.5"></label>
-      <label>Operating hours / yr<input id="auraHours" type="number" step="1" placeholder="e.g. 8000"></label>
+  <div class="au-step"><div class="au-step-t"><i>1</i>AURA · plant check</div>
+    <div class="au-kpis">
+      <div class="au-kpi" style="--au-c:#fbbf24"><span>Fuel saving</span><b id="auraTotalBenefitVal">—</b><i id="auraTotalBenefitSub"></i></div>
+      <div class="au-kpi" style="--au-c:#10b981"><span>Fuel heat saved</span><b id="auraFuelCutVal">—</b><i id="auraFuelCutSub"></i></div>
+      <div class="au-kpi" style="--au-c:#06b6d4"><span>Tube life left</span><b id="auraTubeLifeVal">—</b><i id="auraTubeLifeSub"></i></div>
+      <div class="au-kpi" style="--au-c:#f37022"><span>CH₄ slip</span><b id="auraH2YieldVal">—</b><i id="auraH2YieldSub"></i></div>
     </div>
-    <button type="button" class="au-btn2" onclick="window.auraSavePrices()">Save</button> <span class="au-note">Saved in this browser.</span>
-    <div id="auraBasisNote" class="au-note" style="margin-top:10px;">Fuel saving = cut in stack heat loss when O₂ goes from the Heat Duty O₂ to the target (flue gas 17.25 + 16.25 × excess air kg/kg fuel, Cp 0.3059, stack 160 °C) ÷ overall efficiency. It comes off NG (FIC-6311) and naphtha (FI-6301) only; PSA off-gas is always burned. NG ₹/MT → ₹/Nm³ uses the Composition tab density.</div>
+    <div class="au-actions" id="auraPrescriptionSummary">Press Run AURA.</div>
   </div>
-  <div class="au-pane" data-au-pane="2">
+  <div class="au-step"><div class="au-step-t"><i>2</i>Furnace Optimiser · which burners</div>
         <div id="stack-ai-card" style="margin:0;">
           <div class="stack-ai-head" style="display:none;"><button type="button" id="stack-ai-run-btn" class="stack-ai-run-btn" onclick="runCuboidAiPrediction()">Start AI Prediction</button><div id="stack-ai-status" class="stack-ai-status is-ready"></div></div>
           <details class="lx-how" style="margin-bottom:10px;"><summary>Model details (heat model, optimiser, confidence)</summary>
@@ -26858,31 +26856,33 @@ body.light-theme #auraReformerWidget{--au-bg:#ffffff;--au-card:#f5f7fb;--au-line
           </div>
         </div>
 
-  </div>
-  <div class="au-pane is-on" data-au-pane="3">
+    </div>
+  <div class="au-step"><div class="au-step-t"><i>3</i>Burner steps · do this</div>
         <div id="stack-adjust-card" class="hm-adjust-card" data-cuboid-adjust-card style="margin:0;">
           <div class="hm-adjust-head">
             <div class="hm-adjust-title scada-panel-title">🎯 Burner steps (from the Furnace Optimiser)</div>
           </div>
           <div class="hm-adjust-body" id="stack-adjust-body">
-            <div class="hm-adjust-sub">
-              The Furnace Optimiser's moves as cut / take steps on the current burner layout. Recently cleaned burners are preferred for taking heat.
-            </div>
+            
             <div id="stack-adjustment-list" data-cuboid-adjust-list>
               <div class="hm-adjust-empty">No TST data available for the selected shift/date.</div>
             </div>
           </div>
         </div>
 
-  </div>
+    </div>
+  <details class="au-set"><summary>⚙ Prices &amp; targets <span id="auraPriceState"></span></summary>
+    <div class="au-form">
+      <label>NG ₹/MT<input id="auraPriceNg" type="number" step="1" placeholder="enter price"></label>
+      <label>Naphtha ₹/MT<input id="auraPriceNap" type="number" step="1" placeholder="enter price"></label>
+      <label>Retube ₹ Cr<input id="auraPriceRetube" type="number" step="0.1" placeholder="enter value"></label>
+      <label>Target O₂ %<input id="auraTargetO2" type="number" step="0.1"></label>
+      <label>Hours / yr<input id="auraHours" type="number" step="1"></label>
+    </div>
+    <button type="button" class="au-btn2" onclick="window.auraSavePrices()">Save</button>
+    <div id="auraBasisNote" class="au-note" style="margin-top:8px;">Fuel saving = stack-loss cut from O₂ trim, taken off NG and naphtha only (PSA off-gas always burned).</div>
+  </details>
 </div>
-<script>
-window.auraTab = function(n){ var r = document.getElementById("auraReformerWidget"); if(!r) return;
-  Array.prototype.forEach.call(r.querySelectorAll("[data-au-tab]"), function(b){ b.classList.toggle("is-on", b.getAttribute("data-au-tab") == n); });
-  Array.prototype.forEach.call(r.querySelectorAll("[data-au-pane]"), function(p){ p.classList.toggle("is-on", p.getAttribute("data-au-pane") == n); });
-  try{ localStorage.setItem("auraTabV1", String(n)); }catch(e){} };
-(function(){ var n = 3; try{ n = Number(localStorage.getItem("auraTabV1")) || 3; }catch(e){} if(n !== 3) window.auraTab(n); })();
-</script>
         <div id="tube-life-card">
           <style id="tube-life-style-20261120">
             #tube-life-card{
