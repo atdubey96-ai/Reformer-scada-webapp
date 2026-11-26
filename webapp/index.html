@@ -27762,7 +27762,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       <div id="refdash-admin-monitor" class="plantmon-shell" data-admin-only="true"></div>
 
       <div id="refdash-pane-overview" class="refdash-pane is-active">
-        <div id="refdash-kpi-overview" class="refdash-card-grid refdash-card-grid-6"></div>
+        <div id="refdash-kpi-overview" class="refdash-card-grid refdash-card-grid-4"></div>
         <div class="refdash-grid refdash-grid-3">
           <section class="refdash-panel">
             <div class="refdash-section-head">
@@ -44538,14 +44538,16 @@ body.light-theme .btab-alarm-count{
     var metrics = calcReformerMetrics();
     var avgCotStatus = getStatusClass(metrics.avgCot, 820, 850);
     var effStatus = metrics.efficiency < 50 ? "alarm" : metrics.efficiency < 55 ? "warning" : "normal";
-    var o2Status = getStatusClass(reformerDashState.data.excessO2, 3, 5);
+    var o2Status = getStatusClass(metrics.o2Manual ? metrics.o2Used : reformerDashState.data.excessO2, 3, 5);
     var slipStatus = getStatusClass(reformerDashState.data.methaneSlip, 0, 4);
     var overviewRoot = getReformerDashEl("refdash-kpi-overview");
     if(overviewRoot){
       overviewRoot.innerHTML = [
         kpiCardHtml("Radiant Efficiency", metrics.efficiency, "%", "var(--refdash-green)", { status: effStatus, subtitle: "Fuel heat minus flue gas loss at reformer exit", decimals: 2 }),
         kpiCardHtml("Average COT", metrics.avgCot, "degC", "var(--refdash-accent-2)", { status: avgCotStatus, subtitle: "AB/CD delta " + formatValue(metrics.cotImbalance, 1) + " degC", decimals: 1 }),
-        kpiCardHtml("Excess O2", reformerDashState.data.excessO2, "%Vol", "var(--refdash-cyan)", { status: o2Status, subtitle: "Target band 3-5 %Vol", decimals: 2 }),
+        kpiCardHtml("Overall Efficiency", metrics.overallEff, "%", "var(--refdash-green)", { subtitle: "Radiant + convection, stack " + REFORMER_DASH_STACK_TEMP + " degC", decimals: 2 }),
+        kpiCardHtml("Convection Heat", metrics.convRecovered, "Gcal/h", "var(--refdash-cyan)", { subtitle: formatValue(metrics.convEff, 1) + "% of flue heat recovered", decimals: 3 }),
+        kpiCardHtml("Excess O2", metrics.o2Manual ? metrics.o2Used : reformerDashState.data.excessO2, "%Vol", "var(--refdash-cyan)", { status: o2Status, subtitle: metrics.o2Manual ? ("Manual lab value (AI-2401 reads " + formatValue(reformerDashState.data.excessO2, 2) + ")") : "Target band 3-5 %Vol", decimals: 2 }),
         kpiCardHtml("Methane Slip", reformerDashState.data.methaneSlip, "%Vol", "var(--refdash-purple)", { status: slipStatus, subtitle: "Lower slip improves firing efficiency", decimals: 2 }),
         kpiCardHtml("Total Heat Input", metrics.totalHeat, "Gcal/h", "var(--refdash-blue)", { subtitle: "Combined off gas, naphtha, and NG", decimals: 3 }),
         kpiCardHtml("HGU Load", reformerDashState.data.hguLoad, "%", "var(--refdash-accent)", { subtitle: "Current live process load", decimals: 2 })
@@ -44556,7 +44558,7 @@ body.light-theme .btab-alarm-count{
       gauges.innerHTML = [
         gaugeHtml(metrics.efficiency, 100, "Efficiency", "%", "var(--refdash-green)", 55, 65),
         gaugeHtml(reformerDashState.data.methaneSlip, 8, "CH4 Slip", "%Vol", "var(--refdash-purple)", 3.5, 5),
-        gaugeHtml(reformerDashState.data.excessO2, 10, "Excess O2", "%Vol", "var(--refdash-cyan)", 5, 7),
+        gaugeHtml(metrics.o2Manual ? metrics.o2Used : reformerDashState.data.excessO2, 10, "Excess O2", "%Vol", "var(--refdash-cyan)", 5, 7),
         gaugeHtml(metrics.cotImbalance, 30, "COT Delta", "degC", "var(--refdash-accent-2)", 15, 25)
       ].join("");
     }
@@ -44636,8 +44638,11 @@ body.light-theme .btab-alarm-count{
       heatRoot.innerHTML = [
         kpiCardHtml("Total Heat Input", metrics.totalHeat, "Gcal/h", "var(--refdash-accent-2)", { decimals: 3 }),
         kpiCardHtml("Heat Absorbed", metrics.absorbed, "Gcal/h", "var(--refdash-green)", { subtitle: formatValue(metrics.efficiency, 1) + "% of total input", decimals: 3 }),
-        kpiCardHtml("Flue Gas Loss", metrics.flueLoss, "Gcal/h", "var(--refdash-red)", { subtitle: "Driven by flue gas temp and excess O2", decimals: 3 }),
-        kpiCardHtml("Flue Gas Flow", metrics.flueGasKgh / 1000, "t/h", "var(--refdash-purple)", { subtitle: "Reformer exit, from 133 kNm3/h air", decimals: 1 })
+        kpiCardHtml("Flue Gas Loss", metrics.flueLoss, "Gcal/h", "var(--refdash-red)", { subtitle: "Radiant flue loss at reformer exit", decimals: 3 }),
+        kpiCardHtml("Flue Gas Flow", metrics.flueGasKgh / 1000, "t/h", "var(--refdash-purple)", { subtitle: "Reformer exit, from 133 kNm3/h air", decimals: 1 }),
+        kpiCardHtml("Convection Heat", metrics.convRecovered, "Gcal/h", "var(--refdash-cyan)", { subtitle: formatValue(metrics.convEff, 1) + "% convection efficiency", decimals: 3 }),
+        kpiCardHtml("Stack Loss", metrics.stackLoss, "Gcal/h", "var(--refdash-red)", { subtitle: "Flue gas out at " + REFORMER_DASH_STACK_TEMP + " degC", decimals: 3 }),
+        kpiCardHtml("Overall Efficiency", metrics.overallEff, "%", "var(--refdash-green)", { subtitle: "(radiant + convection) / fuel heat", decimals: 2 })
       ].join("");
     }
     var fuels = buildReformerFuelModel(metrics);
@@ -44674,14 +44679,16 @@ body.light-theme .btab-alarm-count{
     if(effHero){
       effHero.innerHTML = ''
         + '<div class="refdash-eff-copy">'
-        + '<div class="refdash-eff-kicker">Estimated Thermal Efficiency</div>'
+        + '<div class="refdash-eff-kicker">Radiant Efficiency · Overall ' + formatValue(metrics.overallEff, 1) + '%</div>'
         + '<div class="refdash-mono refdash-eff-value">' + formatValue(metrics.efficiency, 2) + '<span class="refdash-eff-symbol">%</span></div>'
-        + '<div class="refdash-eff-note">Derived from live fuel contribution plus operating-condition loss factors. This is an estimate, not a direct lab-calculated efficiency.</div>'
+        + '<div class="refdash-eff-note">Radiant = fuel heat minus flue gas heat at reformer exit. Overall adds convection recovery down to the stack.</div>'
         + '</div>'
         + '<div class="refdash-eff-stats">'
         + buildRefdashStatCard("Fired Duty", formatValue(metrics.totalHeat, 2), "Gcal/h", "var(--refdash-accent-2)")
         + buildRefdashStatCard("Absorbed", formatValue(metrics.absorbed, 2), "Gcal/h", "var(--refdash-green)")
-        + buildRefdashStatCard("Estimated Loss", formatValue(metrics.flueLoss + metrics.otherLoss, 2), "Gcal/h", "var(--refdash-red)")
+        + buildRefdashStatCard("Radiant Flue Loss", formatValue(metrics.flueLoss, 2), "Gcal/h", "var(--refdash-red)")
+        + buildRefdashStatCard("Convection Heat", formatValue(metrics.convRecovered, 2), "Gcal/h", "var(--refdash-cyan)")
+        + buildRefdashStatCard("Stack Loss", formatValue(metrics.stackLoss, 2), "Gcal/h", "var(--refdash-red)")
         + '</div>';
     }
     renderHeatDutyAdminCalcSection(metrics, fuels);
