@@ -12098,7 +12098,7 @@ function renderAdjustmentFromOptimiser(){
       html = '<div style="font-size:12px;opacity:.8;margin-bottom:8px;">' + hmEscapeHtml(head) + '. Cut first, then take.</div>'
         + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;">'
         + box('Cut (' + cuts.length + ')', '#f87171', cuts.map(item).join(""))
-        + box('Take (' + takes.length + ')', '#34d399', takes.map(item).join("")) + '</div>';
+        + box('Take (' + takes.length + ')', '#34d399', takes.length ? takes.map(item).join("") : '<div style="margin-top:6px;font-size:12px;">' + (Object.keys(pl.p.makeup || {}).filter(function(s){ return pl.p.makeup[s] > 1.001; }).map(function(s){ return 'No burner on ' + s + ' can open further. Keep COT on auto: it adds about +' + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + '% fuel on the other ' + s + ' burners.'; }).join(' ') || 'None') + '</div>') + '</div>';
     }
   }
   targets.forEach(function(el){ if(el) el.innerHTML = html; });
@@ -26616,12 +26616,12 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     function J(T){ var e = evalT(T); return 60 * e.over + w.p * e.peak + w.s * 2 * e.sd + w.c * 10 * Math.log(e.rate) / Math.LN2 + 0.5 * e.cold; } /* TST limit first, always */
     var CLEAN = (function(){ var lg = {}, hs = {}; try{ if(typeof loadCleaningLog === "function") lg = loadCleaningLog() || {}; }catch(e){} try{ if(typeof loadCleaningHistory === "function") hs = loadCleaningHistory() || {}; }catch(e){}
       return function(c){ try{ var d = typeof hmLatestCleaningDate === "function" ? hmLatestCleaningDate(lg, hs, c.w, c.r, c.b) : ""; var ms = Date.parse(d); return isFinite(ms) && Date.now() - ms < 90 * 86400000; }catch(e){ return false; } }; })();
-    var T = temps(f), best = J(T);
-    for(var it = 0; it < (evalT(T).over > 0 ? 10 : 4); it++){
+    var T = temps(f), best = J(T), makeup = {};
+    for(var it = 0; it < (evalT(T).over > 0 ? 16 : 4); it++){
       var flat = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++) flat.push({ zi:zi, ph:ph, t:T[zi * 15 + ph - 1] }); });
       flat = flat.filter(function(x){ return isFinite(x.t); }).sort(function(a, b){ return b.t - a.t; });
       function near(list){ var seen = {}, out = []; list.forEach(function(x){ K[x.zi][x.ph].forEach(function(c){ if(c.k < 0.3) return; var key = c.w + c.r + "-" + c.b; if(seen[key]) return; seen[key] = 1; out.push(c); }); }); return out; }
-      var downs = near(flat.slice(0, 8)).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.open >= STEP; });
+      var downs = near(flat.slice(0, Math.max(8, flat.filter(function(x){ return x.t > tubeLimit().lim; }).length))).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.open >= STEP; });
       var ups = near(flat.slice(-8)).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.open <= 100 - STEP; });
       var cand = null;
       downs.forEach(function(d){ ups.forEach(function(u){
@@ -26634,6 +26634,27 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         fd.open = od; fd.v = FUEL_W[fd.s] * od / 100; fu.open = ou; fu.v = FUEL_W[fu.s] * ou / 100;
         if(j < best - 0.2 && (!cand || j < cand.j)) cand = { d:d, u:u, j:j, T:Tn };
       }); });
+      /* cut-only moves: when no burner on that side has room to take heat (all at 100%), the COT controller
+         makes up the duty by raising fuel on every other lit burner on the same side, so model that uniformly */
+      function sideList(d){ var ws = (d.w === "A" || d.w === "B") ? ["A","B"] : ["C","D"], out = []; ws.forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = f[w][r][b]; if(x.s !== "C" && x.v > 0) out.push(x); } }); return out; }
+      function applyCut(d){ var fd = f[d.w][d.r][d.b], list = sideList(d), tot = list.reduce(function(s, x){ return s + x.v; }, 0), dv = (FUEL_W[fd.s] || 0) * STEP / 100;
+        if(!(tot - dv > 0)) return null; var save = list.map(function(x){ return x.v; }), so = fd.open; fd.open -= STEP; fd.v = (FUEL_W[fd.s] || 0) * fd.open / 100;
+        var others = list.filter(function(x){ return x !== fd; }), rest = others.reduce(function(s, x){ return s + x.v; }, 0), k = rest > 0 ? (tot - fd.v) / rest : 1;
+        others.forEach(function(x){ x.v *= k; });
+        return { undo:function(){ list.forEach(function(x, i){ x.v = save[i]; }); fd.open = so; }, k:k, side:(d.w === "A" || d.w === "B") ? "AB" : "CD" }; }
+      if(!cand || evalT(T).over > 0){
+        /* best cut on each side separately (AB and CD chambers are independent), so every over-limit zone gets a move */
+        var bySide = {};
+        downs.forEach(function(d){ if(f[d.w][d.r][d.b].open - STEP < 25) return; /* keep flame-stability floor */
+          var c = applyCut(d); if(!c) return; var Tn = temps(f), j = J(Tn) + (CLEAN(d) ? 0.3 : 0); c.undo();
+          if(j < best - 0.2 && (!bySide[c.side] || j < bySide[c.side].j)) bySide[c.side] = { d:d, j:j }; });
+        var sides = Object.keys(bySide);
+        if(sides.length && (!cand || sides.some(function(s){ return bySide[s].j < cand.j; }))){
+          sides.forEach(function(s){ var d = bySide[s].d, fc = f[d.w][d.r][d.b], fromO = fc.open, c2 = applyCut(d);
+            moves.push({ w:d.w, r:d.r, b:d.b, s:fc.s, from:fromO, to:fc.open }); makeup[c2.side] = (makeup[c2.side] || 1) * c2.k; });
+          T = temps(f); best = J(T); continue;
+        }
+      }
       if(!cand) break;
       var a = f[cand.d.w][cand.d.r][cand.d.b], bb = f[cand.u.w][cand.u.r][cand.u.b];
       moves.push({ w:cand.d.w, r:cand.d.r, b:cand.d.b, s:a.s, from:a.open, to:a.open - STEP });
@@ -26643,7 +26664,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     }
     /* merge repeated burners */
     var merged = {}; moves.forEach(function(m){ var k = m.w + m.r + "-" + m.b; if(!merged[k]) merged[k] = { w:m.w, r:m.r, b:m.b, s:m.s, from:m.from, to:m.to }; else merged[k].to = m.to; });
-    return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), T:T, e:evalT(T) };
+    return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), T:T, e:evalT(T), makeup:makeup };
   }
 
   /* ---------- DCS: CH4 slip, COT, KPIs ---------- */
@@ -26676,7 +26697,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   /* ---------- render ---------- */
   function planCard(name, sub, base, p, band){
     var e = p.e, dPeak = e.peak - base.peak, dLife = e.life - base.life;
-    var mv = p.moves.length ? p.moves.map(function(m){ return '<li><b>Wall ' + m.w + ' R' + m.r + ' B' + m.b + '</b> <span>' + ({B:"Both",N:"NG",O:"Off-gas"}[m.s] || m.s) + '</span> ' + m.from + '% → <b>' + m.to + '%</b></li>'; }).join("")
+    var mkTxt = Object.keys(p.makeup || {}).filter(function(s){ return p.makeup[s] > 1.001; }).map(function(s){ return '<li>No room to take heat on ' + s + ' (burners at 100%): COT control adds about +' + f1((p.makeup[s] - 1) * 100, 1) + '% fuel on the other ' + s + ' burners.</li>'; }).join('');
+    var mv = p.moves.length ? p.moves.map(function(m){ return '<li><b>Wall ' + m.w + ' R' + m.r + ' B' + m.b + '</b> <span>' + ({B:"Both",N:"NG",O:"Off-gas"}[m.s] || m.s) + '</span> ' + m.from + '% → <b>' + m.to + '%</b></li>'; }).join("") + mkTxt
       : (base.peak > tubeLimit().lim ? '<li><b>Tube above ' + tubeLimit().lim + ' °C and no 25% burner shift lowers it.</b> Verify the reading, then cut the facing burners by hand or lower COT / total firing.</li>' : '<li>No burner change improves this goal. Current firing is already near best.</li>');
     return '<div class="fo-plan"><div class="fo-plan-head"><b>' + name + '</b><span>' + sub + '</span></div>'
       + '<div class="fo-plan-kpis">'
