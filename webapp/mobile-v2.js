@@ -2533,25 +2533,32 @@
       } else { set("auraTubeLifeVal", "—"); set("auraTubeLifeSub", "Run the Tube Life panel below first"); }
       /* 3. CH4 slip (live) */
       if(d.methaneSlip > 0){ var ch4 = d.methaneSlip; set("auraH2YieldVal", f(ch4, 2) + "%"); }
-      /* 4. Hottest tubes vs 950 °C and burner moves (Furnace Optimiser, Plan A) */
+      /* Ordered actions. 1 TST limit + burner moves (Furnace Optimiser = only source of burner moves). 2 suspect readings. 3 COT / CH4 slip. 4 O2 trim. 5 COT balance. 6 cleaning. */
+      var o2Lines = lines; lines = [];
+      var LIM = 950;
       if(tst.length){
-        var hot = tst.slice().sort(function(x, y){ return y.temp - x.temp; }).slice(0, 3);
+        var hot = tst.slice().sort(function(x, y){ return y.temp - x.temp; }), over = hot.filter(function(r){ return r.temp > LIM; });
         var srv = tst.entryDt ? " (TST survey " + esc(String(tst.entryDt).slice(0, 16).replace("T", " ")) + ")" : "";
-        lines.push("Hottest tubes" + srv + ": " + hot.map(function(r){ return r.quadrant + " PH" + r.phIndex + " " + f(r.temp, 0) + " °C"; }).join(", ") + ". Margin to 950 °C limit: " + f(950 - hot[0].temp, 0) + " °C.");
-        hot.filter(function(r){ return r.temp >= 930; }).forEach(function(r){ lines.push('<b style="color:#f87171">' + (r.temp >= 950 ? "Over limit" : "Near limit") + ":</b> " + r.quadrant + " PH" + r.phIndex + " at " + f(r.temp, 0) + " °C. Cut firing on the facing " + (r.quadrant.indexOf("AB") === 0 ? "Wall A/B" : "Wall C/D") + " " + (r.quadrant.indexOf("Bot") > 0 ? "rows 1–3" : "rows 4–6") + " burners first."); });
-        var fo = window.__furnaceOptLast, plan = fo && fo.plans && fo.plans[0] && fo.plans[0].p;
-        if(plan && plan.moves && plan.moves.length){
-          var mv = plan.moves.slice().sort(function(x, y){ return Math.abs(y.to - y.from) - Math.abs(x.to - x.from); });
-          lines.push("Burner moves (Furnace Optimiser, lowest peak: " + f(fo.cur.e.peak, 0) + " → " + f(plan.e.peak, 0) + " °C): " + mv.slice(0, 8).map(function(m){ return "Wall " + m.w + " R" + m.r + " B" + m.b + " " + ({B:"both",N:"NG",O:"off-gas"}[m.s] || m.s) + " " + m.from + "% → " + m.to + "%"; }).join("; ") + (mv.length > 8 ? "; +" + (mv.length - 8) + " more in the Furnace Optimiser" : "") + ".");
-        } else if(fo && fo.plans) lines.push("Furnace Optimiser: current firing is already near best for peak TST.");
-        else if(!window.__auraKicked && typeof window.runCuboidAiPrediction === "function"){ window.__auraKicked = true; try{ window.runCuboidAiPrediction(); }catch(e){} lines.push("Running the Furnace Optimiser for burner moves…"); setTimeout(window.triggerAuraOptimizer, 6000); }
-        else notes.push("burner moves: run the Furnace Optimiser on the Shift Dashboard");
-        if(fo && fo.cotBox && isFinite(fo.cotBox.dCot) && Math.abs(fo.cotBox.dCot) >= 1) lines.push("CH₄ slip " + f(fo.cotBox.slip, 2) + "% vs target " + f(fo.cotBox.target, 2) + "%: " + (fo.cotBox.dCot > 0 ? "raise" : "lower") + " mean COT by " + f(Math.abs(fo.cotBox.dCot), 0) + " °C" + (fo.cotBox.capped ? " (capped at 900 °C COT)" : "") + ".");
+        lines.push((over.length ? '<b style="color:#f87171">TST limit: ' + over.length + " tube" + (over.length > 1 ? "s" : "") + " above " + LIM + " °C</b>" : "TST limit OK") + srv + ". Hottest: " + hot.slice(0, 3).map(function(r){ return r.quadrant + " PH" + r.phIndex + " " + f(r.temp, 0) + " °C"; }).join(", ") + ".");
+        var fo = window.__furnaceOptLast, plan = fo && fo.plans && fo.plans[fo.bestIdx || 0];
+        if(plan && plan.p.moves.length){
+          var mv = plan.p.moves, cuts = mv.filter(function(m){ return m.to < m.from; }), takes = mv.filter(function(m){ return m.to > m.from; });
+          var fm = function(m){ return "W" + m.w + " R" + m.r + " B" + m.b + " " + m.from + "→" + m.to + "%"; };
+          lines.push("Burner moves (" + esc(plan.name) + ", peak " + f(fo.cur.e.peak, 0) + " → " + f(plan.p.e.peak, 0) + " °C): cut " + cuts.map(fm).join(", ") + "; take " + takes.map(fm).join(", ") + ". Step-by-step list in tab ③ Burner steps."
+            + (plan.p.e.peak > LIM ? ' <b style="color:#f87171">Still above ' + LIM + " °C after these moves: also lower COT / total firing.</b>" : ""));
+        } else if(fo && fo.plans) lines.push(over.length ? '<b style="color:#f87171">No 25% burner shift lowers the over-limit tube.</b> Verify the reading, then cut the facing burners by hand or lower COT / total firing.' : "Burner firing is already near best. No burner change needed.");
+        else notes.push("burner moves: the optimiser did not finish, press Run again");
+        if(fo && fo.suspects && fo.suspects.length) lines.push("Check these TST readings before acting (far above neighbours): " + fo.suspects.map(function(s){ return esc(s.label) + " " + f(s.t, 0) + " °C vs " + f(s.nm, 0) + " °C" + (s.dropped ? " (left out of the model)" : ""); }).join(", ") + ".");
+        if(fo && fo.cotBox && isFinite(fo.cotBox.dCot) && Math.abs(fo.cotBox.dCot) >= 1){
+          var up = fo.cotBox.dCot > 0;
+          lines.push("CH₄ slip " + f(fo.cotBox.slip, 2) + "% vs target " + f(fo.cotBox.target, 2) + "%: " + (up && over.length ? "hold COT (a tube is above " + LIM + " °C; fix that first)" : (up ? "raise" : "lower") + " mean COT by " + f(Math.abs(fo.cotBox.dCot), 0) + " °C" + (fo.cotBox.capped ? " (capped at 900 °C)" : "")) + ".");
+        }
       } else notes.push("no TST survey with peep-hole readings found");
-      if(d.abCot > 0 && d.cdCot > 0){ var dc = d.abCot - d.cdCot; lines.push("COT AB/CD " + f(d.abCot, 0) + " / " + f(d.cdCot, 0) + " °C (Δ " + f(Math.abs(dc), 1) + " °C)" + (Math.abs(dc) > 8 ? ": trim firing on the " + (dc > 0 ? "AB" : "CD") + " side to balance." : ", balanced.")); }
+      lines = lines.concat(o2Lines);
+      if(d.abCot > 0 && d.cdCot > 0){ var dc = d.abCot - d.cdCot; if(Math.abs(dc) > 8) lines.push("COT AB/CD " + f(d.abCot, 0) + " / " + f(d.cdCot, 0) + " °C: trim total firing on the " + (dc > 0 ? "AB" : "CD") + " side to balance (Δ " + f(Math.abs(dc), 1) + " °C)."); }
       Array.prototype.forEach.call(document.querySelectorAll(".ct-6m-nudge-banner"), function(nd){ lines.push(esc(nd.textContent.replace(/^\S+\s*/, ""))); });
-      set("auraPrescriptionSummary", "⚡ <strong>Actions for this shift" + (m && m.fetchedAt ? " · data " + new Date(m.fetchedAt).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : "") + ".</strong><br>"
-        + lines.map(function(l){ return "• " + l; }).join("<br>")
+      set("auraPrescriptionSummary", (m && m.fetchedAt ? '<div style="font-size:11px;opacity:.7;">DCS data ' + new Date(m.fetchedAt).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + "</div>" : "")
+        + lines.map(function(l, i){ return (i + 1) + ". " + l; }).join("<br>")
         + (notes.length ? '<div style="margin-top:6px;color:#fbbf24;font-size:0.78rem;">Missing: ' + notes.join("; ") + "</div>" : ""));
       if(btn) btn.disabled = false;
     });

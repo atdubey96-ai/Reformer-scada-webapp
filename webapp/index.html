@@ -12072,7 +12072,44 @@ function hmBuildAdjustmentForZone(zoneLabel, vals, hmData, priorityRows, log, hi
   };
 }
 
+function renderAdjustmentFromOptimiser(){
+  var targets = Array.prototype.slice.call(document.querySelectorAll("[data-cuboid-adjust-list]"));
+  if(!targets.length){ var fb = document.getElementById("hm-adjustment-list"); if(fb) targets = [fb]; }
+  if(!targets.length) return;
+  var fo = window.__furnaceOptLast, html = "";
+  if(!fo || !fo.plans){
+    html = '<div class="hm-adjust-empty">Press <b>Run AURA</b> above. This tab then shows the Furnace Optimiser burner moves as cut / take steps on the current layout.</div>';
+  }else{
+    var pl = fo.plans[fo.bestIdx || 0], mv = (pl && pl.p && pl.p.moves) || [];
+    var log = {}, hist = {}; try{ if(typeof loadCleaningLog === "function") log = loadCleaningLog() || {}; }catch(e){} try{ if(typeof loadCleaningHistory === "function") hist = loadCleaningHistory() || {}; }catch(e){}
+    var fuel = { B:"Both", N:"NG", O:"Off-gas" };
+    var cuts = mv.filter(function(m){ return m.to < m.from; }), takes = mv.filter(function(m){ return m.to > m.from; });
+    function item(m){ var cd = ""; try{ cd = hmLatestCleaningDate(log, hist, m.w, m.r, m.b) || ""; }catch(e){}
+      var cut = m.to < m.from;
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 10px;border-radius:7px;background:var(--au-card,rgba(255,255,255,0.04));margin-top:6px;">'
+        + '<span><b>Wall ' + hmEscapeHtml(m.w) + ' · Row ' + hmEscapeHtml(m.r) + ' · Burner ' + hmEscapeHtml(m.b) + '</b> <span style="opacity:.7">' + hmEscapeHtml(fuel[m.s] || m.s) + (cd ? ' · cleaned ' + hmEscapeHtml(String(cd).slice(0, 10)) : '') + '</span></span>'
+        + '<b style="white-space:nowrap;color:' + (cut ? '#f87171' : '#34d399') + '">' + (cut ? "Cut " : "Take ") + hmEscapeHtml(m.from) + '% → ' + hmEscapeHtml(m.to) + '%</b></div>'; }
+    var lim = fo.limit || 950, over = fo.cur && fo.cur.e && fo.cur.e.peak > lim;
+    var head = (pl ? pl.name : "Plan") + ' · Peak TST ' + Math.round(fo.cur.e.peak) + ' → ' + Math.round(pl.p.e.peak) + ' °C (limit ' + lim + ' °C)';
+    var box = function(title, color, body){ return '<div style="border:1px solid ' + color + ';border-radius:9px;padding:10px 12px;"><div style="font-weight:800;color:' + color + ';">' + title + '</div>' + body + '</div>'; };
+    if(!mv.length){
+      html = box(hmEscapeHtml(head), over ? '#f87171' : '#34d399', '<div style="margin-top:6px;">' + (over ? 'A tube is above ' + lim + ' °C and no 25% burner shift lowers it. Verify the reading, then cut the facing burners by hand or lower COT / total firing.' : 'No burner change needed. Firing is already near best.') + '</div>');
+    }else{
+      html = '<div style="font-size:12px;opacity:.8;margin-bottom:8px;">' + hmEscapeHtml(head) + '. Do the cuts first, then the takes. Same chamber, so side duty and COT hold.</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;">'
+        + box('Cut (' + cuts.length + ')', '#f87171', cuts.map(item).join(""))
+        + box('Take (' + takes.length + ')', '#34d399', takes.map(item).join("")) + '</div>';
+    }
+  }
+  targets.forEach(function(el){ if(el) el.innerHTML = html; });
+}
+window.addEventListener("furnaceopt:done", function(){ try{ renderAdjustmentFromOptimiser(); }catch(e){} });
+
 function updateHeatMapAdjustmentLogic(snapshot){
+  /* operator view only: shows the Furnace Optimiser moves, no independent rules */
+  return renderAdjustmentFromOptimiser();
+}
+function updateHeatMapAdjustmentLogicRules(snapshot){
   var targets = Array.prototype.slice.call(document.querySelectorAll("[data-cuboid-adjust-list]"));
   if(!targets.length){
     var fallback = document.getElementById("hm-adjustment-list");
@@ -26571,14 +26608,16 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   /* ---------- optimiser ---------- */
   function evalT(Tarr){ var vals = Tarr.filter(isFinite); var tr = makeRupture();
     var peak = Math.max.apply(null, vals), lo = Math.min.apply(null, vals), rate = vals.reduce(function(s, t){ return s + 1 / tr(t); }, 0) / vals.length;
-    return { peak:peak, lo:lo, sd:sd(vals), rate:rate, life:tr(peak) / (8760 * 0.96), cold:vals.reduce(function(s, t){ return s + Math.max(0, 905 - t); }, 0) }; }
+    var LIM = tubeLimit().lim; return { peak:peak, lo:lo, sd:sd(vals), rate:rate, life:tr(peak) / (8760 * 0.96), cold:vals.reduce(function(s, t){ return s + Math.max(0, 905 - t); }, 0), over:vals.reduce(function(s, t){ return s + Math.max(0, t - LIM); }, 0), nOver:vals.filter(function(t){ return t > LIM; }).length }; }
   function optimise(cur, model, dCot, w){
     var f = JSON.parse(JSON.stringify(cur.f)), K = kern(), moves = [];
     function temps(ff){ var H = heatField(ff), T = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++){ var t0 = cur.T[zi][ph]; if(!isFinite(t0)){ T.push(NaN); continue; }
       T.push(t0 + model.beta * (H[zi][ph] - cur.H[zi][ph]) + model.gamma * dCot); } }); return T; }
-    function J(T){ var e = evalT(T); return w.p * e.peak + w.s * 2 * e.sd + w.c * 10 * Math.log(e.rate) / Math.LN2 + 0.5 * e.cold; }
+    function J(T){ var e = evalT(T); return 60 * e.over + w.p * e.peak + w.s * 2 * e.sd + w.c * 10 * Math.log(e.rate) / Math.LN2 + 0.5 * e.cold; } /* TST limit first, always */
+    var CLEAN = (function(){ var lg = {}, hs = {}; try{ if(typeof loadCleaningLog === "function") lg = loadCleaningLog() || {}; }catch(e){} try{ if(typeof loadCleaningHistory === "function") hs = loadCleaningHistory() || {}; }catch(e){}
+      return function(c){ try{ var d = typeof hmLatestCleaningDate === "function" ? hmLatestCleaningDate(lg, hs, c.w, c.r, c.b) : ""; var ms = Date.parse(d); return isFinite(ms) && Date.now() - ms < 90 * 86400000; }catch(e){ return false; } }; })();
     var T = temps(f), best = J(T);
-    for(var it = 0; it < 4; it++){
+    for(var it = 0; it < (evalT(T).over > 0 ? 10 : 4); it++){
       var flat = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++) flat.push({ zi:zi, ph:ph, t:T[zi * 15 + ph - 1] }); });
       flat = flat.filter(function(x){ return isFinite(x.t); }).sort(function(a, b){ return b.t - a.t; });
       function near(list){ var seen = {}, out = []; list.forEach(function(x){ K[x.zi][x.ph].forEach(function(c){ if(c.k < 0.3) return; var key = c.w + c.r + "-" + c.b; if(seen[key]) return; seen[key] = 1; out.push(c); }); }); return out; }
@@ -26591,7 +26630,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         var fd = f[d.w][d.r][d.b], fu = f[u.w][u.r][u.b];
         var od = fd.open, ou = fu.open;
         fd.open -= STEP; fd.v = FUEL_W[fd.s] * fd.open / 100; fu.open += STEP; fu.v = FUEL_W[fu.s] * fu.open / 100;
-        var Tn = temps(f), j = J(Tn);
+        var Tn = temps(f), j = J(Tn) - (CLEAN(u) ? 0.3 : 0) + (CLEAN(d) ? 0.3 : 0); /* prefer firing up recently cleaned burners, cutting dirty ones */
         fd.open = od; fd.v = FUEL_W[fd.s] * od / 100; fu.open = ou; fu.v = FUEL_W[fu.s] * ou / 100;
         if(j < best - 0.2 && (!cand || j < cand.j)) cand = { d:d, u:u, j:j, T:Tn };
       }); });
@@ -26638,7 +26677,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   function planCard(name, sub, base, p, band){
     var e = p.e, dPeak = e.peak - base.peak, dLife = e.life - base.life;
     var mv = p.moves.length ? p.moves.map(function(m){ return '<li><b>Wall ' + m.w + ' R' + m.r + ' B' + m.b + '</b> <span>' + ({B:"Both",N:"NG",O:"Off-gas"}[m.s] || m.s) + '</span> ' + m.from + '% → <b>' + m.to + '%</b></li>'; }).join("")
-      : '<li>No burner change improves this goal. Current firing is already near best.</li>';
+      : (base.peak > tubeLimit().lim ? '<li><b>Tube above ' + tubeLimit().lim + ' °C and no 25% burner shift lowers it.</b> Verify the reading, then cut the facing burners by hand or lower COT / total firing.</li>' : '<li>No burner change improves this goal. Current firing is already near best.</li>');
     return '<div class="fo-plan"><div class="fo-plan-head"><b>' + name + '</b><span>' + sub + '</span></div>'
       + '<div class="fo-plan-kpis">'
       + '<div><span>Peak TST</span><b>' + f1(base.peak) + ' → ' + f1(e.peak) + '</b><i class="' + (dPeak <= 0 ? "up" : "dn") + '">' + (dPeak <= 0 ? "" : "+") + f1(dPeak) + ' °C ±' + f1(band) + '</i></div>'
@@ -26648,11 +26687,14 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   }
   function render(host, ctx){
     var cur = ctx.cur, model = ctx.model, base = cur.e, plans = ctx.plans, band = ctx.band;
-    var best = plans.slice().sort(function(a, b){ return a.score - b.score; })[0];
+    var LIMr = tubeLimit().lim, overNow = base.peak > LIMr;
+    var best = overNow ? plans.slice().sort(function(a, b){ return a.p.e.peak - b.p.e.peak; })[0] : plans.slice().sort(function(a, b){ return a.score - b.score; })[0];
     var tone = base.peak >= tubeLimit().lim ? "crit" : (best.p.moves.length ? "watch" : "ok");
     var head = best.p.moves.length
       ? ("Recommended: " + best.name + ". Peak TST " + f1(base.peak) + " → " + f1(best.p.e.peak) + " °C, hottest-tube life +" + f1(Math.max(0, Math.min(best.p.e.life - base.life, 99)), 1) + " yrs")
-      : "Firing is already well balanced. No burner change needed.";
+      : (overNow ? ("Peak TST " + f1(base.peak) + " °C is above the " + LIMr + " °C limit, and no 25% burner shift lowers it. Verify the reading, then cut the facing burners by hand or lower COT / total firing.") : "Firing is already well balanced. No burner change needed.");
+    if(overNow && best.p.moves.length) head = "TST limit first: " + best.name + ". Peak " + f1(base.peak) + " → " + f1(best.p.e.peak) + " °C (limit " + LIMr + " °C)" + (best.p.e.peak > LIMr ? ". Still above limit after these moves: also lower COT / total firing." : ".");
+    if(ctx.suspects && ctx.suspects.length) line += " Check readings: " + ctx.suspects.map(function(s){ return s.label + " " + f1(s.t) + " °C (" + (s.t - s.nm >= 0 ? "+" : "") + f1(s.t - s.nm) + " vs neighbours" + (s.dropped ? ", left out" : "") + ")"; }).join(", ") + ".";
     var line = best.p.moves.length ? (best.p.moves.length + " opening changes, duty kept constant on each side so COT and H₂ output hold. Prediction band ±" + f1(band) + " °C.") : "Peak " + f1(base.peak) + " °C, spread σ " + f1(base.sd, 1) + " °C.";
     var c = ctx.cotBox, k = ctx.kpis;
     var cotHtml = c ? ('<div class="fo-card"><div class="fo-card-t">COT &amp; methane slip</div>'
@@ -26686,6 +26728,10 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         var ok = vals.map(Number).filter(function(v){ return v > 700 && v < 1100; }), zm = median(ok);
         for(var ph = 1; ph <= 15; ph++){ var y = Number(vals[ph - 1]); T[zi][ph] = (y > 700 && y < 1100 && !(isFinite(zm) && Math.abs(y - zm) > 80)) ? y : NaN; Tflat.push(T[zi][ph]); } });
       var cur = { f:cs.f, H:cs.H, T:T, e:evalT(Tflat) };
+      var suspects = [];
+      ZONES.forEach(function(z){ var vals = ((currentProfile.zones[z.key] && currentProfile.zones[z.key].values) || []).map(Number), ok = vals.filter(function(v){ return v > 700 && v < 1100; }), zm = median(ok);
+        vals.forEach(function(v, i){ if(!(v > 700 && v < 1100)) return; var nb = []; for(var q = i - 2; q <= i + 2; q++){ if(q !== i && vals[q] > 700 && vals[q] < 1100) nb.push(vals[q]); } var nm = median(nb);
+          if(isFinite(nm) && v - nm > 40) suspects.push({ label:(z.label || z.key) + " PH" + (i + 1), t:v, nm:nm, dropped:isFinite(zm) && Math.abs(v - zm) > 80 }); }); });
       host.innerHTML = '<div class="stack-ai-empty">Optimising burner firing…</div>';
       var finish = function(by){
         var cotBox = null, kpis = null, dCot = 0;
@@ -26707,8 +26753,9 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           { name:"Plan B · Most uniform", sub:"Even heat across all 60 PH", w:{ p:0.3, s:1, c:0.2 } },
           { name:"Plan C · Max tube life", sub:"Least creep damage at " + tubeLimit().lim + " °C TST limit", w:{ p:0.3, s:0.2, c:1 } }
         ].map(function(pl){ pl.p = optimise(cur, model, 0, pl.w); /* burner moves at constant COT; COT change shown separately */ pl.score = pl.p.e.peak + 2 * pl.p.e.sd; return pl; });
-        window.__furnaceOptLast = { at:Date.now(), cur:{ e:cur.e }, plans:plans, band:band, cotBox:cotBox, kpis:kpis, nSurveys:surveys.length };
-        render(host, { cur:{ e:cur.e }, model:model, plans:plans, band:band, rmse:rmse, nSurveys:surveys.length, cotBox:cotBox, kpis:kpis });
+        var bestIdx = 0; (function(){ var over = cur.e.peak > tubeLimit().lim, bi = 0, bv = Infinity; plans.forEach(function(pl, i){ var v = over ? pl.p.e.peak : pl.score; if(v < bv){ bv = v; bi = i; } }); bestIdx = bi; })();
+        window.__furnaceOptLast = { at:Date.now(), cur:{ e:cur.e }, plans:plans, bestIdx:bestIdx, band:band, cotBox:cotBox, kpis:kpis, nSurveys:surveys.length, suspects:suspects, limit:tubeLimit().lim };
+        render(host, { cur:{ e:cur.e }, model:model, plans:plans, band:band, rmse:rmse, nSurveys:surveys.length, cotBox:cotBox, kpis:kpis, suspects:suspects });
         try{ window.dispatchEvent(new Event("furnaceopt:done")); }catch(evErr){}
       };
       fetchDcs().then(finish).catch(function(e){ console.warn("[FurnaceOpt] DCS history unavailable", e); finish(null); });
@@ -26718,54 +26765,73 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
 
         </script>
         <!-- ===== Reformer Tube Remaining Life (creep, API 530 Larson-Miller + Robinson life fraction) ===== -->
-<!-- IOCL AURA-Reformer widget: values come from live data and user-entered prices only -->
-<div id="auraReformerWidget" style="background:#0d1322;border:1px solid #1f293d;border-radius:12px;padding:24px;margin:24px 0;color:#f8fafc;">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:2px solid #1e293b;padding-bottom:14px;margin-bottom:20px;">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span style="font-size:1.4rem;font-weight:800;color:#fff;">IOCL AURA-Reformer™</span>
-      <span style="background:#f37022;color:#fff;font-size:0.72rem;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;">Combustion optimizer</span>
-    </div>
-    <div style="font-size:0.8rem;color:#94a3b8;">TST limit: <b style="color:#f8fafc;">950 °C</b> · Rate limit: ±5% per move</div>
+<!-- IOCL AURA-Reformer: one card, three steps (plant targets -> Furnace Optimiser -> burner steps) -->
+<style>
+#auraReformerWidget{--au-bg:#0d1322;--au-card:#151d30;--au-line:#1f293d;--au-text:#f1f5f9;--au-sub:#94a3b8;--au-acc:#f37022;
+  background:var(--au-bg);border:1px solid var(--au-line);border-radius:12px;padding:16px;margin:20px 0;color:var(--au-text);font-size:13px;}
+body.light-theme #auraReformerWidget{--au-bg:#ffffff;--au-card:#f5f7fb;--au-line:#dfe4ee;--au-text:#0f172a;--au-sub:#64748b;}
+#auraReformerWidget .au-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+#auraReformerWidget .au-title{font-size:18px;font-weight:800;}
+#auraReformerWidget .au-title small{font-size:11px;font-weight:600;color:var(--au-sub);margin-left:8px;}
+#auraReformerWidget .au-run{background:var(--au-acc);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;}
+#auraReformerWidget .au-run:disabled{opacity:.6;cursor:wait;}
+#auraReformerWidget .au-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0;}
+@media(max-width:760px){#auraReformerWidget .au-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}}
+#auraReformerWidget .au-kpi{background:var(--au-card);border-radius:8px;padding:9px 11px;border-top:3px solid var(--au-c,#64748b);}
+#auraReformerWidget .au-kpi span{display:block;font-size:10.5px;color:var(--au-sub);text-transform:uppercase;font-weight:700;letter-spacing:.3px;}
+#auraReformerWidget .au-kpi b{display:block;font-size:19px;margin:3px 0 1px;}
+#auraReformerWidget .au-kpi b span{display:inline;font-size:11px;font-weight:500;text-transform:none;color:inherit;}
+#auraReformerWidget .au-kpi i{display:block;font-style:normal;font-size:11px;color:var(--au-sub);line-height:1.35;}
+#auraReformerWidget .au-actions{background:var(--au-card);border-left:3px solid var(--au-acc);border-radius:8px;padding:10px 12px;line-height:1.65;}
+#auraReformerWidget .au-actions-t{font-size:11px;font-weight:800;color:var(--au-sub);text-transform:uppercase;margin-bottom:4px;}
+#auraReformerWidget .au-tabs{display:flex;gap:6px;margin:14px 0 10px;flex-wrap:wrap;}
+#auraReformerWidget .au-tab{flex:1;min-width:150px;background:transparent;border:1px solid var(--au-line);color:var(--au-sub);padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700;text-align:left;font-size:12px;}
+#auraReformerWidget .au-tab em{font-style:normal;display:block;font-weight:500;font-size:11px;}
+#auraReformerWidget .au-tab.is-on{border-color:var(--au-acc);color:var(--au-text);background:var(--au-card);}
+#auraReformerWidget .au-pane{display:none;}
+#auraReformerWidget .au-pane.is-on{display:block;}
+#auraReformerWidget .au-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0;}
+#auraReformerWidget .au-form label{font-size:11px;color:var(--au-sub);font-weight:600;}
+#auraReformerWidget .au-form input{width:100%;margin-top:3px;padding:6px 8px;border-radius:6px;border:1px solid var(--au-line);background:var(--au-card);color:var(--au-text);}
+#auraReformerWidget .au-note{font-size:11px;color:var(--au-sub);line-height:1.5;}
+#auraReformerWidget #stack-adjust-card .hm-adjust-head{display:none;}
+#auraReformerWidget #stack-adjust-card{padding:12px;}
+#auraReformerWidget .hm-adjust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;}
+#auraReformerWidget .hm-adjust-suggest-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;}
+#auraReformerWidget .hm-adjust-suggest-action-pill,#auraReformerWidget .hm-adjust-suggest-ph{white-space:nowrap;max-width:none;overflow:visible;text-overflow:clip;}
+#auraReformerWidget .au-btn2{background:var(--au-card);color:var(--au-text);border:1px solid var(--au-line);padding:6px 14px;border-radius:6px;cursor:pointer;}
+</style>
+<div id="auraReformerWidget">
+  <div class="au-head">
+    <div class="au-title">IOCL AURA-Reformer™<small>TST limit 950 °C comes first · live DCS + latest TST survey</small></div>
+    <button id="btnRunAuraOptimization" class="au-run" onclick="window.triggerAuraOptimizer()">⚡ Run AURA</button>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px;">
-    <div style="background:#151d30;border-left:4px solid #fbbf24;border-radius:6px;padding:14px;">
-      <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Fuel saving from O₂ trim</div>
-      <div id="auraTotalBenefitVal" style="font-size:1.6rem;font-weight:800;color:#fbbf24;margin:4px 0;">—</div>
-      <div id="auraTotalBenefitSub" style="font-size:0.75rem;color:#cbd5e1;">Press Run to calculate</div>
-    </div>
-    <div style="background:#151d30;border-left:4px solid #10b981;border-radius:6px;padding:14px;">
-      <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Fuel heat saved</div>
-      <div id="auraFuelCutVal" style="font-size:1.6rem;font-weight:800;color:#10b981;margin:4px 0;">—</div>
-      <div id="auraFuelCutSub" style="font-size:0.75rem;color:#cbd5e1;">From measured fuel flows</div>
-    </div>
-    <div style="background:#151d30;border-left:4px solid #06b6d4;border-radius:6px;padding:14px;">
-      <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">Tube life left (hottest tube)</div>
-      <div id="auraTubeLifeVal" style="font-size:1.6rem;font-weight:800;color:#06b6d4;margin:4px 0;">—</div>
-      <div id="auraTubeLifeSub" style="font-size:0.75rem;color:#cbd5e1;">From the Tube Life panel below</div>
-    </div>
-    <div style="background:#151d30;border-left:4px solid #f37022;border-radius:6px;padding:14px;">
-      <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;font-weight:600;">CH₄ slip (AI-2901)</div>
-      <div id="auraH2YieldVal" style="font-size:1.6rem;font-weight:800;color:#ffaa75;margin:4px 0;">—</div>
-      <div id="auraH2YieldSub" style="font-size:0.75rem;color:#cbd5e1;">Live analyser, last 6 h</div>
-    </div>
+  <div class="au-kpis">
+    <div class="au-kpi" style="--au-c:#fbbf24"><span>Fuel saving (O₂ trim)</span><b id="auraTotalBenefitVal">—</b><i id="auraTotalBenefitSub">Press Run</i></div>
+    <div class="au-kpi" style="--au-c:#10b981"><span>Fuel heat saved</span><b id="auraFuelCutVal">—</b><i id="auraFuelCutSub">From measured NG + naphtha</i></div>
+    <div class="au-kpi" style="--au-c:#06b6d4"><span>Tube life left</span><b id="auraTubeLifeVal">—</b><i id="auraTubeLifeSub">Hottest tube, from Tube Life</i></div>
+    <div class="au-kpi" style="--au-c:#f37022"><span>CH₄ slip</span><b id="auraH2YieldVal">—</b><i id="auraH2YieldSub">AI-2901, last 6 h</i></div>
   </div>
-  <details id="auraPriceBox" style="background:#0b101d;border:1px solid #1f293d;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.82rem;">
-    <summary style="cursor:pointer;font-weight:700;">Prices and targets <span id="auraPriceState" style="color:#fbbf24;font-weight:600;"></span></summary>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:10px;">
-      <label>NG price (₹/MT)<br><input id="auraPriceNg" type="number" step="1" placeholder="enter price" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
-      <label>Naphtha price (₹/MT)<br><input id="auraPriceNap" type="number" step="1" placeholder="enter price" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
-      <label>Retube cost (₹ Cr)<br><input id="auraPriceRetube" type="number" step="0.1" placeholder="enter price" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
-      <label>Target O₂ (%)<br><input id="auraTargetO2" type="number" step="0.1" placeholder="e.g. 3.5" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
-      <label>Operating hours / yr<br><input id="auraHours" type="number" step="1" placeholder="e.g. 8000" style="width:100%;padding:6px;border-radius:4px;border:1px solid #334155;background:#151d30;color:#fff;"></label>
-    </div>
-    <div style="margin-top:8px;"><button type="button" onclick="window.auraSavePrices()" style="background:#1e293b;color:#fff;border:1px solid #334155;padding:6px 14px;border-radius:5px;cursor:pointer;">Save</button> <span style="color:#94a3b8;">Saved in this browser.</span></div>
-  </details>
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;">
-    <div id="auraPrescriptionSummary" style="font-size:0.88rem;color:#cbd5e1;flex:1;min-width:240px;">⚡ Ready. One run covers combustion, burner moves (Furnace Optimiser), COT/CH₄ slip, tube life and process KPIs from live DCS and the latest saved TST survey.</div>
-    <button id="btnRunAuraOptimization" onclick="window.triggerAuraOptimizer()" style="background:linear-gradient(135deg,#f37022,#d9580d);color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:0.9rem;font-weight:700;cursor:pointer;white-space:nowrap;">⚡ Run AURA Optimizer</button>
+  <div class="au-actions"><div class="au-actions-t">Actions for this shift (in order)</div><div id="auraPrescriptionSummary">Press <b>Run AURA</b>. It checks the TST limit, runs the Furnace Optimiser on the latest survey, and lists what to do.</div></div>
+  <div class="au-tabs" role="tablist">
+    <button type="button" class="au-tab" data-au-tab="1" onclick="window.auraTab(1)">① Plant &amp; savings<em>O₂, fuel, prices</em></button>
+    <button type="button" class="au-tab" data-au-tab="2" onclick="window.auraTab(2)">② Furnace Optimiser<em>which burners, why</em></button>
+    <button type="button" class="au-tab is-on" data-au-tab="3" onclick="window.auraTab(3)">③ Burner steps<em>cut / take on the layout</em></button>
   </div>
-  <div id="auraBasisNote" style="margin-top:12px;font-size:0.74rem;color:#94a3b8;line-height:1.5;">Fuel saving = cut in stack heat loss when excess O₂ goes from the Heat Duty O₂ value to the target (flue gas 17.25 + 16.25 × excess air kg per kg fuel, Cp 0.3059, stack 160 °C), divided by overall efficiency. The saved heat is taken off NG and naphtha in proportion to their measured heat (FIC-6311, FI-6301), because PSA off-gas is fixed by the PSA. NG ₹/MT is converted to ₹/Nm³ with the NG density from the Composition tab. PSA off-gas has no price: it is always burned, so savings come only from NG and naphtha.</div>
-        <div id="stack-ai-card" style="margin-top:18px;">
+  <div class="au-pane" data-au-pane="1">
+    <div class="au-note"><b>Prices and targets</b> <span id="auraPriceState" style="color:#f59e0b;font-weight:600;"></span></div>
+    <div class="au-form">
+      <label>NG price (₹/MT)<input id="auraPriceNg" type="number" step="1" placeholder="enter price"></label>
+      <label>Naphtha price (₹/MT)<input id="auraPriceNap" type="number" step="1" placeholder="enter price"></label>
+      <label>Retube cost (₹ Cr)<input id="auraPriceRetube" type="number" step="0.1" placeholder="enter value"></label>
+      <label>Target O₂ (%)<input id="auraTargetO2" type="number" step="0.1" placeholder="e.g. 3.5"></label>
+      <label>Operating hours / yr<input id="auraHours" type="number" step="1" placeholder="e.g. 8000"></label>
+    </div>
+    <button type="button" class="au-btn2" onclick="window.auraSavePrices()">Save</button> <span class="au-note">Saved in this browser.</span>
+    <div id="auraBasisNote" class="au-note" style="margin-top:10px;">Fuel saving = cut in stack heat loss when O₂ goes from the Heat Duty O₂ to the target (flue gas 17.25 + 16.25 × excess air kg/kg fuel, Cp 0.3059, stack 160 °C) ÷ overall efficiency. It comes off NG (FIC-6311) and naphtha (FI-6301) only; PSA off-gas is always burned. NG ₹/MT → ₹/Nm³ uses the Composition tab density.</div>
+  </div>
+  <div class="au-pane" data-au-pane="2">
+        <div id="stack-ai-card" style="margin:0;">
           <div class="stack-ai-head" style="display:none;"><button type="button" id="stack-ai-run-btn" class="stack-ai-run-btn" onclick="runCuboidAiPrediction()">Start AI Prediction</button><div id="stack-ai-status" class="stack-ai-status is-ready"></div></div>
           <details class="lx-how" style="margin-bottom:10px;"><summary>Model details (heat model, optimiser, confidence)</summary>
           <div class="lx-spec" aria-label="Model specification">
@@ -26785,14 +26851,38 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           </div>
           </details>
           <div class="fo-section-t">Furnace Optimiser <span>burner moves · COT &amp; CH₄ slip · tube life · process KPIs</span></div>
-          <div id="stack-opt-body" class="stack-ai-body fo-body"><div class="stack-ai-empty">Press Run AURA Optimizer to run the burner optimiser on the latest saved TST survey.</div></div>
+          <div id="stack-opt-body" class="stack-ai-body fo-body"><div class="stack-ai-empty">Press Run AURA to run the burner optimiser on the latest saved TST survey.</div></div>
           <div class="fo-section-t" data-admin-only="true">Similar past cases <span>case-based evidence (k-NN)</span></div>
           <div id="stack-ai-body" class="stack-ai-body" data-admin-only="true">
-            <div class="stack-ai-empty">Press Run AURA Optimizer to compare the current cuboid condition with saved historical TST cases and generate local suggestions.</div>
+            <div class="stack-ai-empty">Press Run AURA to compare the current cuboid condition with saved historical TST cases and generate local suggestions.</div>
           </div>
         </div>
 
+  </div>
+  <div class="au-pane is-on" data-au-pane="3">
+        <div id="stack-adjust-card" class="hm-adjust-card" data-cuboid-adjust-card style="margin:0;">
+          <div class="hm-adjust-head">
+            <div class="hm-adjust-title scada-panel-title">🎯 Burner steps (from the Furnace Optimiser)</div>
+          </div>
+          <div class="hm-adjust-body" id="stack-adjust-body">
+            <div class="hm-adjust-sub">
+              The Furnace Optimiser's moves as cut / take steps on the current burner layout. Recently cleaned burners are preferred for taking heat.
+            </div>
+            <div id="stack-adjustment-list" data-cuboid-adjust-list>
+              <div class="hm-adjust-empty">No TST data available for the selected shift/date.</div>
+            </div>
+          </div>
+        </div>
+
+  </div>
 </div>
+<script>
+window.auraTab = function(n){ var r = document.getElementById("auraReformerWidget"); if(!r) return;
+  Array.prototype.forEach.call(r.querySelectorAll("[data-au-tab]"), function(b){ b.classList.toggle("is-on", b.getAttribute("data-au-tab") == n); });
+  Array.prototype.forEach.call(r.querySelectorAll("[data-au-pane]"), function(p){ p.classList.toggle("is-on", p.getAttribute("data-au-pane") == n); });
+  try{ localStorage.setItem("auraTabV1", String(n)); }catch(e){} };
+(function(){ var n = 3; try{ n = Number(localStorage.getItem("auraTabV1")) || 3; }catch(e){} if(n !== 3) window.auraTab(n); })();
+</script>
         <div id="tube-life-card">
           <style id="tube-life-style-20261120">
             #tube-life-card{
@@ -27593,20 +27683,6 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
           })();
           </script>
-        </div>
-
-        <div id="stack-adjust-card" class="hm-adjust-card" data-cuboid-adjust-card>
-          <div class="hm-adjust-head">
-            <div class="hm-adjust-title scada-panel-title">🎯 Burner Adjustment Logic (TST + Cleaning Priority)</div>
-          </div>
-          <div class="hm-adjust-body" id="stack-adjust-body">
-            <div class="hm-adjust-sub">
-              Uses live burner state, opening, cleaned status, and the selected or latest TST data. Low TST adds heat first, high TST cuts heat first, and recently cleaned eligible burners are preferred.
-            </div>
-            <div id="stack-adjustment-list" class="hm-adjust-grid" data-cuboid-adjust-list>
-              <div class="hm-adjust-empty">No TST data available for the selected shift/date.</div>
-            </div>
-          </div>
         </div>
 
         <div class="hm-bottom-series">
