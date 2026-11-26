@@ -1,4 +1,4 @@
-const CACHE_NAME = "scada-burner-v86";
+const CACHE_NAME = "scada-burner-v87";
 const CORE_ASSETS = [
   "./manifest.webmanifest",
   "./icon-192.svg",
@@ -49,6 +49,14 @@ function shouldPersistInCache(request) {
 
 async function networkFresh(request) {
   const cache = await caches.open(CACHE_NAME);
+  // Self-hosted libraries never change at a given path: serve from cache first so the page opens fast.
+  if (new URL(request.url).pathname.indexOf("/vendor/") >= 0) {
+    const hit = await cache.match(request, { ignoreSearch: true });
+    if (hit) return hit;
+    const res = await fetch(request);
+    if (res && res.ok) cache.put(request, res.clone());
+    return res;
+  }
   if (isHtmlRequest(request)) {
     try {
       return await fetch(request, { cache: "no-store" });

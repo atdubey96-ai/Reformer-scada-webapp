@@ -111,13 +111,54 @@ html[data-scada-auth-boot="1"] #loginScreen{
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<script>
+/* Supabase fetch guard: browser calls to *.supabase.co get a timeout and fall back to the same-site /api/sb relay
+   (office proxy blocks/hangs the Supabase host). Once the relay is needed, later calls go straight to it. */
+(function(){
+  if(!window.fetch || window.__sbFetchGuard) return; window.__sbFetchGuard = true;
+  var nativeFetch = window.fetch.bind(window);
+  var HOST = "lawrglgxkrfibajixfkp.supabase.co";
+  var RELAY_OK = /^\/rest\/v1\/(plant_data|plant_data_history|h2_material_balance[a-z_0-9]*|app_settings|scada_reports|dcs_configs|rpc\/[a-z_0-9]+)(\?|$)/;
+  var FLAG = "sbUseRelay";
+  function useRelay(){ try{ return sessionStorage.getItem(FLAG)==="1"; }catch(_){ return !!window.__sbRelay; } }
+  function setRelay(){ window.__sbRelay = true; try{ sessionStorage.setItem(FLAG,"1"); }catch(_){} }
+  function withTimeout(input, init, ms){
+    var ctl = (typeof AbortController!=="undefined") ? new AbortController() : null;
+    var opts = Object.assign({}, init||{});
+    if(ctl){
+      if(opts.signal){ try{ opts.signal.addEventListener("abort", function(){ ctl.abort(); }); }catch(_){} }
+      opts.signal = ctl.signal;
+    }
+    var t = setTimeout(function(){ if(ctl) ctl.abort(); }, ms);
+    return nativeFetch(input, opts).finally(function(){ clearTimeout(t); });
+  }
+  window.fetch = function(input, init){
+    var url = (typeof input === "string") ? input : (input && input.url) || String(input);
+    var u; try{ u = new URL(url, location.href); }catch(_){ return nativeFetch(input, init); }
+    if(u.hostname !== HOST) return nativeFetch(input, init);
+    var path = u.pathname + u.search;
+    var relayable = RELAY_OK.test(path) && (typeof input === "string" || input instanceof URL);
+    var relayUrl = "/api/sb" + path;
+    if(relayable && useRelay()) return withTimeout(relayUrl, init, 30000);
+    var isRead = !init || !init.method || /^(GET|HEAD)$/i.test(init.method);
+    return withTimeout(input, init, isRead ? 7000 : 20000).catch(function(err){
+      var timedOut = err && err.name === "AbortError";
+      if(!relayable || (timedOut && init && init.signal && init.signal.aborted)) throw err;
+      setRelay();
+      // A timed-out write may already have reached the server, so only retry reads (or writes that never connected).
+      if(!isRead && timedOut) throw err;
+      return withTimeout(relayUrl, init, 30000);
+    });
+  };
+})();
+</script>
+<script src="./vendor/xlsx.full.min.js"></script>
+<script src="./vendor/chart.umd.min.js"></script>
+<script src="./vendor/supabase.js"></script>
+<script src="./vendor/pdf.min.js"></script>
+<script src="./vendor/three.min.js"></script>
 
 <style>
 
@@ -40612,7 +40653,7 @@ function deselectAllTstPdfPages(){
 async function ensurePdfJsReady(){
   if(!window.pdfjsLib) return false;
   if(window.pdfjsLib.GlobalWorkerOptions){
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "./vendor/pdf.worker.min.js";
   }
   return true;
 }
