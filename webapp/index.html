@@ -44889,7 +44889,7 @@ body.light-theme .btab-alarm-count{
           },
           {
             label: "Design Ref",
-            data: [450, 490, 495, 845, 845, 845, 900],
+            data: [450, 490, 495, 870, 870, 870, 1110], /* design limits: COT 870 °C, flue gas outlet 1110 °C */
             backgroundColor: "rgba(148,163,184,0.24)",
             borderRadius: 6,
             barPercentage: 0.7
@@ -44899,7 +44899,7 @@ body.light-theme .btab-alarm-count{
       options: lineOptions(theme, {
         scales: {
           x: { ticks:{ color:theme.dim }, grid:{ display:false } },
-          y: { ticks:{ color:theme.dim }, grid:{ color:theme.border }, min: 400, max: 950 }
+          y: { ticks:{ color:theme.dim }, grid:{ color:theme.border }, min: 400, suggestedMax: 1150 }
         }
       })
     });
