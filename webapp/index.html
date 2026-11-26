@@ -43278,6 +43278,8 @@ body.light-theme .btab-alarm-count{
   var REFORMER_DASH_AIR_DENSITY = 1.293;    /* kg/Nm3 */
   var REFORMER_DASH_STOICH_AIR_KG = 16.25;  /* kg air / kg fuel */
   var REFORMER_DASH_FLUE_GAS_KG = 17.25;    /* kg flue gas / kg fuel */
+  /* manual O2 (lab) used instead of AI-2401 while analyser reads high; 0/blank = use tag */
+  var REFORMER_DASH_MANUAL_O2 = (function(){ try{ var v = localStorage.getItem("refdashManualO2"); if(v !== null) return Number(v) || 0; }catch(e){} return 6.1; })();
   var REFORMER_DASH_STACK_TEMP = 160;      /* degC, stack (no tag) */
   var REFORMER_DASH_FLUE_CP = 0.3059;       /* kcal/kg C, mean 25-2727 C */
   var REFORMER_DASH_NAPHTHA_DEFAULT_NCV = 10500;
@@ -44175,7 +44177,8 @@ body.light-theme .btab-alarm-count{
        stoich air 16.25 kg/kg fuel, flue gas 17.25 kg/kg fuel; Cp 0.3059 kcal/kg C; ref 25 C */
     var airKgh = REFORMER_DASH_COMB_AIR_NM3H * REFORMER_DASH_AIR_DENSITY;
     /* excess air from flue O2 (AI-2401, dry): EA = O2 / (21 - O2) */
-    var o2 = isFiniteNumber(pv.excessO2) && pv.excessO2 >= 0 && pv.excessO2 < 20 ? pv.excessO2 : 0;
+    var o2Manual = REFORMER_DASH_MANUAL_O2 > 0 && REFORMER_DASH_MANUAL_O2 < 20;
+    var o2 = o2Manual ? REFORMER_DASH_MANUAL_O2 : (isFiniteNumber(pv.excessO2) && pv.excessO2 >= 0 && pv.excessO2 < 20 ? pv.excessO2 : 0);
     var excessAir = o2 / (21 - o2);
     var fuelKgh = airKgh / (REFORMER_DASH_STOICH_AIR_KG * (1 + excessAir));
     var flueGasKgh = airKgh + fuelKgh;
@@ -44207,6 +44210,7 @@ body.light-theme .btab-alarm-count{
       overallEff: overallEff,
       excessAir: excessAir,
       o2Used: o2,
+      o2Manual: o2Manual,
       fuelKgh: fuelKgh,
       flueGasKgh: flueGasKgh,
       flueT: flueT,
@@ -44382,7 +44386,7 @@ body.light-theme .btab-alarm-count{
         }), "Gas duties use Nm3/h x kcal/Nm3. Naphtha duty uses (FI-6301 - 500) kg/h x kcal/kg."),
         buildHeatDutyCalcCard("Flue Gas Loss (reformer exit)", "var(--refdash-red)", [
           buildHeatDutyCalcRow("Combustion air", "design 133 kNm3/h x 1.293 kg/Nm3", formatValue(metrics.airKgh, 0) + " kg/h", "var(--refdash-cyan)"),
-          buildHeatDutyCalcRow("Excess air", "O2 / (21 - O2), O2 = " + formatValue(metrics.o2Used, 2) + " % (AI-2401)", formatValue(metrics.excessAir * 100, 1) + " %", "var(--refdash-cyan)"),
+          buildHeatDutyCalcRow("Excess air", "O2 / (21 - O2), O2 = " + formatValue(metrics.o2Used, 2) + (metrics.o2Manual ? " % (manual lab value)" : " % (AI-2401)"), formatValue(metrics.excessAir * 100, 1) + " %", "var(--refdash-cyan)"),
           buildHeatDutyCalcRow("Fuel fired", "air / (16.25 x (1 + excess air))", formatValue(metrics.fuelKgh, 0) + " kg/h", "var(--refdash-accent-2)"),
           buildHeatDutyCalcRow("Flue gas flow", "air + fuel (17.25 kg/kg at 0% excess air)", formatValue(metrics.flueGasKgh, 0) + " kg/h", "var(--refdash-red)"),
           buildHeatDutyCalcRow("Flue gas temp", "TI-2408 reformer exit", formatValue(metrics.flueT, 1) + " degC", "var(--refdash-red)"),
@@ -44752,6 +44756,7 @@ body.light-theme .btab-alarm-count{
         + buildStaticCompCell("Live Flow", isFiniteNumber(reformerDashState.data.naphthaFuel) ? (formatValue(reformerDashState.data.naphthaFuel, 1) + " kg/h") : "—", "FI-6301 - 500 offset")
         + buildStaticCompCell("Mass Flow", isFiniteNumber(metrics.naphthaMassTph) ? (formatValue(metrics.naphthaMassTph, 2) + " t/h") : "—", isFiniteNumber(metrics.naphthaMassKgh) ? (formatValue(metrics.naphthaMassKgh, 0) + " kg/h heat basis") : "")
         + buildEditableCompCell("NCV Basis", formatValue(REFORMER_DASH_NAPHTHA_NCV, 0, "10500"), "10", "updateReformerDashNaphthaBasis('ncv', this.value)", "kcal/kg")
+        + buildEditableCompCell("Manual O2 (lab, 0 = use AI-2401)", formatValue(REFORMER_DASH_MANUAL_O2, 1, "0"), "0.1", "updateReformerDashNaphthaBasis('manualO2', this.value)", "%")
         + '</div>'
         + '<div class="refdash-comp-summary refdash-mono">Heat duty = (FI-6301 - 500) kg/h x ' + formatValue(REFORMER_DASH_NAPHTHA_NCV, 0) + ' / 1,000,000</div>'
         + '</div>'
@@ -45325,6 +45330,12 @@ body.light-theme .btab-alarm-count{
 
   function updateReformerDashNaphthaBasis(key, value){
     var num = parseNumberOrNull(value);
+    if(key === "manualO2"){
+      REFORMER_DASH_MANUAL_O2 = isFiniteNumber(num) ? clamp(num, 0, 20) : 0;
+      try{ localStorage.setItem("refdashManualO2", String(REFORMER_DASH_MANUAL_O2)); }catch(e){}
+      renderReformerDashboardFromState();
+      return;
+    }
     if(!isFiniteNumber(num)) return;
     if(key === "densityFactor"){
       REFORMER_DASH_NAPHTHA_DENSITY_FACTOR = clamp(num, 0.01, 10);
