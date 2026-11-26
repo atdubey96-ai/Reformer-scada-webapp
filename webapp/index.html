@@ -26444,7 +26444,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   var FUEL_W = { B:1.0, N:0.6, O:0.5, C:0 };
   var SIG_C = 1.0, SIG_R = 1.0, STEP = 25;
   var PRIOR = { beta:18, gamma:1.0 };
-  var COT_DESIGN_LIMIT = 870, FLUE_DESIGN_LIMIT = 1110;
+  var COT_DESIGN_LIMIT = 900, FLUE_DESIGN_LIMIT = 1110;
   var CH4_LN_SLOPE = -0.017; /* d ln(CH4 slip)/d COT, steam-reformer equilibrium prior */
   var TAGS = {
     cotAB:["GJA.2041ti2503b.pv","GJA.2041ti2501.pv"], cotCD:["GJA.2041ti2503c.pv","GJA.2041ti2502.pv"],
@@ -43290,8 +43290,8 @@ body.light-theme .btab-alarm-count{
   };
   var REFORMER_DASH_PROCESS_ROWS = [
     { label:"HGU Load", key:"hguLoad", unit:"%", min:65, max:110 },
-    { label:"AB Side COT", key:"abCot", unit:"degC", min:800, max:870 },
-    { label:"CD Side COT", key:"cdCot", unit:"degC", min:800, max:870 },
+    { label:"AB Side COT", key:"abCot", unit:"degC", min:800, max:900 },
+    { label:"CD Side COT", key:"cdCot", unit:"degC", min:800, max:900 },
     { label:"Flue Gas Temp", key:"flueGas", unit:"degC", min:850, max:1110 },
     { label:"Excess O2", key:"excessO2", unit:"%Vol", min:2, max:7 },
     { label:"Methane Slip", key:"methaneSlip", unit:"%Vol", min:1, max:5 },
@@ -44889,7 +44889,7 @@ body.light-theme .btab-alarm-count{
           },
           {
             label: "Design Ref",
-            data: [450, 490, 495, 870, 870, 870, 1110], /* design limits: COT 870 °C, flue gas outlet 1110 °C */
+            data: [450, 490, 495, 900, 900, 900, 1110], /* design limits: COT 900 °C, flue gas outlet 1110 °C */
             backgroundColor: "rgba(148,163,184,0.24)",
             borderRadius: 6,
             barPercentage: 0.7
