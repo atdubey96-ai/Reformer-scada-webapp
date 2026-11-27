@@ -2453,7 +2453,7 @@
 
   function esc(v){ return String(v).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
   function f(v, d){ return isFinite(v) ? Number(v).toLocaleString("en-IN", { minimumFractionDigits:d || 0, maximumFractionDigits:d || 0 }) : "—"; }
-  function set(id, html){ var el = document.getElementById(id); if(el) el.innerHTML = html; }
+  function set(id, html){ if(window.__auraLedgerMode) return; var el = document.getElementById(id); if(el) el.innerHTML = html; }
   function mx(a){ a = (a || []).filter(isFinite); return a.length ? Math.max.apply(null, a) : NaN; }
   function sdv(a){ a = (a || []).filter(isFinite); if(a.length < 2) return NaN; var m = a.reduce(function(s, x){ return s + x; }, 0) / a.length; return Math.sqrt(a.reduce(function(s, x){ return s + (x - m) * (x - m); }, 0) / a.length); }
   function status(t){ set("auraStatus", esc(t)); }
@@ -2461,12 +2461,12 @@
   window.triggerAuraOptimizer = function(){
     if(window.__auraOptPending) return;
     if(typeof window.runCuboidAiPrediction !== "function"){ window.__auraRunSummary(); return; }
-    try{ window.auraFillSurveys(); }catch(e){}
+    if(!window.__auraLedgerMode) try{ window.auraFillSurveys(); }catch(e){}
     window.__auraOptPending = true; window.__furnaceOptLast = null;
     var b0 = document.getElementById("btnRunAuraOptimization"); if(b0) b0.disabled = true; status("Running…");
     var done = false, go = function(){ if(done) return; done = true; window.removeEventListener("furnaceopt:done", go); window.__auraOptPending = false; window.__auraRunSummary(); };
     window.addEventListener("furnaceopt:done", go); setTimeout(go, 18000);
-    var heat = typeof window.auraReformerSnapshot === "function" ? Promise.race([window.auraReformerSnapshot(), new Promise(function(r){ setTimeout(r, 6000); })]) : Promise.resolve(); /* heat duty first: burner weights use fuel x NCV */
+    var heat = typeof window.auraReformerSnapshot === "function" && !window.__auraLedgerMode ? Promise.race([window.auraReformerSnapshot(), new Promise(function(r){ setTimeout(r, 6000); })]) : Promise.resolve(); /* heat duty first: burner weights use fuel x NCV */
     Promise.resolve(heat).catch(function(){}).then(function(){ try{ window.runCuboidAiPrediction(); }catch(e){ go(); } });
   };
 
@@ -2478,7 +2478,7 @@
       var p = loadP(), LIM = 950, COTLIM = 900, BEDMIN = pos(p.bedMin) > 400 ? Number(p.bedMin) : 485, K = 0.017, O2_TST = 3; /* +3 °C TST per -1% O2 (flame hotter), prior */
       var d = (m && m.data) || {}, live = m && m.totalHeat > 0, fo = window.__furnaceOptLast, notes = [], miss = [];
       var pl = fo && fo.plans ? fo.plans[fo.bestIdx || 0] : null, kp = (fo && fo.kpis) || {};
-      if(!fo || !pl){ set("auraPrescriptionSummary", '<div class="au-notes">No saved TST survey could be read. Save a TST survey, then press Run.</div>'); if(btn) btn.disabled = false; status("No TST survey"); return; }
+      if(!fo || !pl){ set("auraPrescriptionSummary", '<div class="au-notes">No saved TST survey could be read. Save a TST survey, then press Run.</div>'); if(btn) btn.disabled = false; status("No TST survey"); if(window.__auraRunDone) window.__auraRunDone(null); return; }
       var g = fo.gamma > 0 ? fo.gamma : 1, lifeAt = window.__foLifeAt || function(){ return NaN; };
       var sus = {}; (fo.suspects || []).forEach(function(x){ if(isFinite(x.idx)) sus[x.idx] = 1; }); /* readings to recheck do not drive COT */
       var clean = function(a){ return (a || []).map(function(t, i){ return sus[i] ? NaN : t; }); };
@@ -2598,8 +2598,11 @@
       set("auraPrescriptionSummary", tbl + (notes.length || miss.length ? '<div class="au-notes">' + notes.map(function(n){ return "<div>• " + n + "</div>"; }).join("") + (miss.length ? '<div style="color:var(--au-warn)">Missing: ' + miss.join("; ") + '</div>' : '') + '</div>' : ""));
       /* hero tiles */
       var rsYr = (isFinite(rsFuel) ? rsFuel * hrs : 0) + rsCot * hrs + (isFinite(rsLife) && rsLife > 0 ? rsLife : 0);
+      var rsH = hrs > 0 ? rsYr / hrs : 0; /* ₹/h at today's conditions (life benefit spread over operating hours) */
+      var adv = {}; (pl.p.moves || []).forEach(function(m){ adv[m.w + m.r + "-" + m.b] = { w:m.w, r:m.r, b:m.b, s:m.sTo || m.s, open:m.to, s0:m.s, o0:m.from }; });
+      window.__auraLastRun = { dt:String(fo.surveyDt || ""), rsH:rsH, plan:adv };
       var tiles = [
-        ["is-money", "Saving", rsYr > 0 ? "₹ " + f(rsYr / 1e7, 2) + " Cr" : "₹ 0", rsYr > 0 ? "per year · ₹ " + f(rsYr / 365, 0) + " / day" : (rsYr < 0 ? "cost of keeping TST in range: ₹ " + f(-rsYr / 1e7, 2) + " Cr/yr" : (peakNow > LIM ? "TST first, savings after" : "no saving move now"))],
+        ["is-money", "Saving now", rsH > 0 ? "₹ " + f(rsH, 0) + " / h" : "₹ 0", rsH > 0 ? "₹ " + f(rsH * 8, 0) + " per 8 h shift, at today's conditions" : (rsH < 0 ? "cost of keeping TST in range: ₹ " + f(-rsH, 0) + " / h" : (peakNow > LIM ? "TST first, savings after" : "no saving move now"))],
         ["", "Efficiency", isFinite(effNow) ? f(effNow, 1) + (effAfter > effNow + 0.05 ? " → " + f(effAfter, 1) : "") + " %" : "—", "overall reformer"],
         ["", "Tubes above " + LIM + " °C", nOver0 + " → " + nOver1, "peak " + f(peakNow, 0) + " → " + f(peakF, 0) + " °C" + (nOver1 ? ' · <span style="color:var(--au-bad)">not all in range yet</span>' : "")],
         ["", "Tube life", isFinite(lifeNow) ? f(lifeNow, 1) + " → " + f(lifeAfter, 1) + " yrs" : (r0 > 0 ? "×" + f(r1 / r0, 2) : "—"), "hottest tube"]
@@ -2620,6 +2623,8 @@
       if(typeof window.renderAdjustmentFromOptimiser === "function") window.renderAdjustmentFromOptimiser();
       if(btn) btn.disabled = false;
       var nx = new Date(Date.now() + 15 * 60000);
+      if(window.__auraRunDone) window.__auraRunDone(window.__auraLastRun);
+      if(!window.__auraLedgerMode){ try{ var lc = ldLoad(); if(window.__auraLastRun.dt){ lc[window.__auraLastRun.dt] = { rsH:rsH, plan:adv }; ldSave(lc); } window.auraRenderLedger(); }catch(e){} }
       status((window.__auraSurveyDt ? "Survey " + String(window.__auraSurveyDt).replace("T", " ").slice(0, 16) + " · " : "") + "Updated " + new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + " · next " + nx.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }));
     });
   };
@@ -2630,15 +2635,56 @@
     if(cur && !l.some(function(x){ return String(x.dt) === cur; })){ cur = ""; window.__auraSurveyDt = null; }
     sel.innerHTML = '<option value="">Latest saved' + (l[0] ? " · " + esc(String(l[0].dt).replace("T", " ").slice(0, 16)) : "") + '</option>' + l.slice(1).map(function(x){ var v = String(x.dt); return '<option value="' + esc(v) + '">' + esc(v.replace("T", " ").slice(0, 16) + (x.shift ? " · " + x.shift : "")) + '</option>'; }).join("");
     sel.value = l[0] && cur === String(l[0].dt) ? "" : cur; };
-  window.auraPickSurvey = function(v){ window.__auraSurveyDt = v || null; window.triggerAuraOptimizer(); };
+  window.auraPickSurvey = function(v){ window.__auraLedgerAbort = true; window.__auraLedgerMode = false; window.__auraSurveyDt = v || null; window.__auraOptPending = false; window.triggerAuraOptimizer(); };
+  /* ---------- cumulative savings ledger: every saved survey -> advisor ₹/h x hours to the next survey; next survey's burners show if the plan was followed ---------- */
+  var LKEY = "auraLedgerV1", building = false;
+  function ldLoad(){ try{ return JSON.parse(localStorage.getItem(LKEY) || "{}") || {}; }catch(e){ return {}; } }
+  function ldSave(o){ try{ localStorage.setItem(LKEY, JSON.stringify(o)); }catch(e){} }
+  function tms(dt){ var t = Date.parse(String(dt).replace(" ", "T")); return isFinite(t) ? t : NaN; }
+  function followed(plan, entry){ var keys = Object.keys(plan || {}); if(!keys.length) return null; var pr = null;
+    try{ pr = typeof cuboidAiBuildProfileFromEntry === "function" ? cuboidAiBuildProfileFromEntry(entry) : null; }catch(e){}
+    if(!pr || !pr.hmData || !pr.openingData) return null; var sc = 0;
+    keys.forEach(function(k){ var a = plan[k], hs = ((pr.hmData[a.w] || [])[a.r - 1] || [])[a.b - 1], op = Number(((pr.openingData[a.w] || [])[a.r - 1] || [])[a.b - 1]);
+      var want0 = a.open <= 0, isOff = hs === "C" || op <= 0, fuelOk = a.s === a.s0 ? true : hs === a.s, openOk = want0 ? isOff : (isFinite(op) && Math.abs(op - a.open) <= 12.5 && !isOff);
+      var fuelMove = a.s !== a.s0, openMove = a.open !== a.o0;
+      sc += fuelMove && openMove ? ((fuelOk ? 0.5 : 0) + (openOk ? 0.5 : 0)) : fuelMove ? (fuelOk ? 1 : 0) : (openOk ? 1 : 0); });
+    return sc / keys.length; }
+  function dcsCost(t0, t1){ var by = typeof window.__foDcs === "function" ? window.__foDcs() : null; if(!by) return NaN; var p = loadP();
+    function avg(k, a, b){ var o = by[k] || {}, v = Object.keys(o).map(Number).filter(function(h){ return h >= a && h < b; }).map(function(h){ return o[h]; }); return v.length ? v.reduce(function(x, y){ return x + y; }, 0) / v.length : NaN; }
+    function cost(a, b){ var fd = avg("feed", a, b), fn = avg("fuelNap", a, b), fg = avg("fuelNg", a, b); if(!isFinite(fd)) return NaN;
+      return fd * pos(p.nap) / 1000 + (isFinite(fn) ? Math.max(0, fn - 500) * pos(p.nap) / 1000 : 0) + (isFinite(fg) ? fg * 0.75 * pos(p.ng) / 1000 : 0); } /* ₹/h: feed + naphtha fuel (FI-6301 − 500) + NG fuel (0.75 kg/Nm³) */
+    var before = cost(t0 - 6 * 3600000, t0), during = cost(t0 + 2 * 3600000, t1); return isFinite(before) && isFinite(during) ? before - during : NaN; } /* + = cheaper than at the survey */
+  function money(v){ var a = Math.abs(v); return (v < 0 ? "−" : "") + "₹ " + (a >= 1e7 ? f(a / 1e7, 2) + " Cr" : a >= 1e5 ? f(a / 1e5, 2) + " L" : f(a, 0)); }
+  window.auraRenderLedger = function(prog){ var host = document.getElementById("auraLedger"); if(!host) return;
+    var L = surveyList().slice().reverse(), c = ldLoad(), rows = [], cO = 0, cA = 0, cL = 0, fS = 0, fN = 0, pts = [];
+    L.forEach(function(e, i){ var x = c[e.dt]; if(!x) return; var nx = L[i + 1], t0 = tms(e.dt), t1 = nx ? tms(nx.dt) : Math.min(Date.now(), t0 + 8 * 3600000);
+      var h = Math.max(0, Math.min(24, (t1 - t0) / 3600000)) || 0, off = Math.max(0, x.rsH || 0) * h, fl = nx ? followed(x.plan, nx) : null;
+      var ach = fl == null ? (nx ? off : NaN) : off * fl, lost = fl == null ? (nx ? 0 : NaN) : off - ach, dc = dcsCost(t0, t1);
+      cO += off; if(isFinite(ach)) cA += ach; if(isFinite(lost)) cL += lost; if(fl != null){ fS += fl; fN++; } pts.push(cA);
+      rows.push('<tr><td>' + esc(String(e.dt).replace("T", " ").slice(0, 16)) + (e.shift ? " · " + esc(e.shift) : "") + '</td><td>' + (x.rsH > 0 ? f(x.rsH, 0) : "0") + '</td><td>' + f(h, 1) + '</td><td>' + (fl == null ? (nx ? "no moves" : "running") : f(fl * 100, 0) + " %") + '</td><td>' + (isFinite(ach) ? money(ach) : "—") + '</td><td style="color:' + (lost > 0 ? "var(--au-bad,#f87171)" : "inherit") + '">' + (isFinite(lost) ? money(lost) : "—") + '</td><td>' + (isFinite(dc) ? (dc >= 0 ? "+" : "−") + f(Math.abs(dc), 0) : "—") + '</td></tr>'); });
+    var mx = Math.max.apply(null, pts.concat([1])), W = 260, H = 34, sp = pts.length > 1 ? '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" style="max-width:100%"><polyline fill="none" stroke="#34d399" stroke-width="2" points="' + pts.map(function(v, i){ return f(i * W / (pts.length - 1), 1).replace(/,/g, "") + "," + f(H - 2 - v / mx * (H - 4), 1).replace(/,/g, ""); }).join(" ") + '"/></svg>' : "";
+    var first = L.filter(function(e){ return c[e.dt]; })[0];
+    host.innerHTML = '<div class="au-lg-h"><span>Cumulative savings' + (first ? ' <small>since ' + esc(String(first.dt).replace("T", " ").slice(0, 10)) + ' · ' + rows.length + ' surveys</small>' : '') + '</span>' + (prog ? '<small>Building history… ' + prog + '</small>' : sp) + '</div>'
+      + '<div class="au-lg-t"><div><span>Achieved</span><b style="color:#34d399">' + money(cA) + '</b><i>advice followed × hours</i></div><div><span>Lost opportunity</span><b style="color:#f87171">' + money(cL) + '</b><i>advice not followed</i></div><div><span>Offered</span><b>' + money(cO) + '</b><i>if every plan was done</i></div><div><span>Followed</span><b>' + (fN ? f(fS / fN * 100, 0) + " %" : "—") + '</b><i>next survey vs plan</i></div></div>'
+      + (rows.length ? '<details><summary>Per survey</summary><div class="au-scroll" style="max-height:260px"><table><tr><th>Survey</th><th>Offered ₹/h</th><th>Hours</th><th>Followed</th><th>Achieved</th><th>Lost</th><th>DCS check ₹/h</th></tr>' + rows.slice().reverse().join("") + '</table></div><div style="font-size:11px;opacity:.7;margin-top:4px">Followed = share of advised burner changes (fuel type and opening ±12.5%) seen in the next survey. DCS check = feed + fuel cost 6 h before the survey minus the cost from 2 h after it until the next survey (+ = cheaper); load changes also move it.</div></details>' : '');
+  };
+  function runOne(dt){ return new Promise(function(res){ var done = false, fin = function(x){ if(done) return; done = true; window.__auraRunDone = null; res(x); };
+    window.__auraRunDone = fin; window.__auraSurveyDt = dt; window.__auraOptPending = false; window.triggerAuraOptimizer(); setTimeout(function(){ fin(null); }, 40000); }); }
+  window.auraBuildLedger = function(){ if(building || window.__auraNoLedger) return; window.__auraLedgerAbort = false; var L = surveyList().slice().reverse(), c = ldLoad(), todo = L.filter(function(e){ return !c[e.dt]; });
+    if(!todo.length){ window.auraRenderLedger(); return; } building = true; var keep = window.__auraSurveyDt || null, i = 0;
+    window.__auraLedgerMode = true;
+    (function next(){ if(window.__auraLedgerAbort){ building = false; window.auraRenderLedger(); return; } if(i >= todo.length){ window.__auraLedgerMode = false; building = false; window.__auraSurveyDt = keep; window.__auraOptPending = false; window.triggerAuraOptimizer(); return; }
+      var e = todo[i++]; window.auraRenderLedger((i) + " / " + todo.length);
+      runOne(e.dt).then(function(x){ if(window.__auraLedgerAbort){ next(); return; } if(x && x.dt === String(e.dt)){ var cc = ldLoad(); cc[e.dt] = { rsH:x.rsH, plan:x.plan }; ldSave(cc); } setTimeout(next, 300); }); })(); };
+  setTimeout(function(){ try{ window.auraBuildLedger(); }catch(e){} }, 30000); /* after the first normal run */
   /* fully automatic: first run once the page has settled, then every 15 minutes while the page is open */
-  function auto(){ if(document.getElementById("auraReformerWidget") && !document.hidden) try{ window.triggerAuraOptimizer(); }catch(e){} }
+  function auto(){ if(document.getElementById("auraReformerWidget") && !document.hidden) try{ if(!building) window.triggerAuraOptimizer(); setTimeout(function(){ try{ window.auraBuildLedger(); }catch(e){} }, 20000); }catch(e){} }
   setTimeout(auto, 7000); setInterval(auto, 15 * 60000);
 })();
 
 /* ---------- Demo seed (27 Nov 2026): replace TST surveys with 60 demo surveys once per browser; real ones kept in tempDataEntriesBeforeDemo ---------- */
 (function(){
-  var KEY = "auraDemoSeed", VER = "demo-20261127c";
+  var KEY = "auraDemoSeed", VER = "demo-20261127d";
   function seed(){
     /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
