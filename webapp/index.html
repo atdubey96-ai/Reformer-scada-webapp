@@ -26751,7 +26751,9 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     /* merge repeated burners */
     var merged = {}; moves.forEach(function(m){ var k = m.w + m.r + "-" + m.b; if(!merged[k]) merged[k] = { w:m.w, r:m.r, b:m.b, s:m.s, sTo:m.sTo, from:m.from, to:m.to }; else { merged[k].to = m.to; if(m.sTo) merged[k].sTo = m.sTo; } });
     return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), swaps:swaps, stuck:stuck, T:T, e:evalT(T), makeup:makeup,
-      bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK, ogK:ogK(f), ogMax:OGMAX };
+      bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK, ogK:ogK(f), ogMax:OGMAX, fuelSplit:(function(){ /* how a common NG/naphtha fuel change splits between chambers: NG-gun heat share of each chamber's firing */
+        var q = { AB:{ n:0, t:0 }, CD:{ n:0, t:0 } }; ["A","B","C","D"].forEach(function(w){ var sd = (w === "A" || w === "B") ? "AB" : "CD"; for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = f[w][r][b]; if(x.s === "C" || !(x.v > 0)) continue; q[sd].t += x.v; if(x.s === "N") q[sd].n += x.v; else if(x.s === "B") q[sd].n += x.v * (FUEL_W.N / FUEL_W.B); } });
+        var all = (q.AB.n + q.CD.n) / Math.max(1e-9, q.AB.t + q.CD.t), o = {}; ["AB","CD"].forEach(function(sd){ o[sd] = all > 0 && q[sd].t > 0 ? (q[sd].n / q[sd].t) / all : 1; }); return o; })() };
   }
 
   /* ---------- DCS: CH4 slip, COT, KPIs ---------- */

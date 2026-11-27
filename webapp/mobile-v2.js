@@ -2487,7 +2487,12 @@
       var cot = { AB:kp.cotAB ? kp.cotAB.cur : d.abCot, CD:kp.cotCD ? kp.cotCD.cur : d.cdCot }, dc = { AB:0, CD:0 }, why = {};
       /* 0. TST hard limit: if burner moves alone cannot bring a chamber under 950, lower that chamber's COT */
       /* one common fuel flow controller feeds both chambers, so COT moves together on AB and CD */
-      var pkMax = Math.max(pk.AB, pk.CD); if(pkMax > LIM){ var cut0 = -Math.min(25, Math.ceil((pkMax - LIM) / g)); /* TST is the hard limit: up to 25 °C, still moved 2 °C at a time */ dc.AB = cut0; dc.CD = cut0; why.AB = why.CD = "TST"; }
+      /* a common fuel change moves each chamber's COT by its NG-firing share (burner pattern), R = 1 means average */
+      var R = pl.p.fuelSplit || { AB:1, CD:1 }; R.AB = R.AB > 0.2 ? R.AB : 0.2; R.CD = R.CD > 0.2 ? R.CD : 0.2;
+      var addF = function(x){ dc.AB += x * R.AB; dc.CD += x * R.CD; };
+      var roomF = function(){ return Math.min((cap - (pk.AB + g * dc.AB)) / (g * R.AB), (cap - (pk.CD + g * dc.CD)) / (g * R.CD), (COTLIM - (cot.AB + dc.AB)) / R.AB, (COTLIM - (cot.CD + dc.CD)) / R.CD); };
+      var need = Math.max((pk.AB - LIM) / (g * R.AB), (pk.CD - LIM) / (g * R.CD));
+      if(need > 0){ addF(-Math.min(25, Math.ceil(need))); /* TST is the hard limit: up to 25 °C, still moved 2 °C at a time */ why.AB = why.CD = "TST"; }
       /* 3a. CH4 slip: close the AB/CD COT gap at the same total fuel (colder chamber dominates the mixed slip) */
       var gap = cot.AB - cot.CD, shift = 0;
       if(!why.AB && !why.CD && isFinite(gap) && Math.abs(gap) >= 3){
@@ -2514,20 +2519,21 @@
       /* 3b. CH4 slip: raise COT inside tube-life room (also pays when feed saved > extra fuel); lower it only if that saves money */
       var cb = fo.cotBox, bedPlan = isFinite(pl.p.bed) ? pl.p.bed : (kp.bed ? kp.bed.cur : NaN), BEDF = 0.16 * 0.48;
       if(cb && isFinite(cb.dCot) && !why.AB && !why.CD && (cb.dCot >= 1 || cotPays)){
-        var room0 = Math.min((cap - (pk.AB + g * dc.AB)) / g, (cap - (pk.CD + g * dc.CD)) / g, COTLIM - Math.max(cot.AB + dc.AB, cot.CD + dc.CD));
+        var room0 = roomF();
         var up0 = Math.floor(Math.min(cotPays ? 15 : cb.dCot, room0));
-        if(up0 >= 1){ dc.AB += up0; dc.CD += up0; } else notes.push("COT rise held: it would shorten tube life (higher priority)" + (cotPays ? ", although each +1 °C would save ₹ " + f(per1.net, 0) + "/h net." : "."));
+        if(up0 >= 1){ addF(up0); } else notes.push("COT rise held: it would shorten tube life (higher priority)" + (cotPays ? ", although each +1 °C would save ₹ " + f(per1.net, 0) + "/h net." : "."));
       } else if(cb && isFinite(cb.dCot) && !why.AB && !why.CD){
         if(cb.dCot >= 1){
-          var room = Math.min((cap - (pk.AB + g * dc.AB)) / g, (cap - (pk.CD + g * dc.CD)) / g, COTLIM - Math.max(cot.AB + dc.AB, cot.CD + dc.CD));
+          var room = roomF();
           var up = Math.floor(Math.min(cb.dCot, room));
-          if(up >= 1){ dc.AB += up; dc.CD += up; } else notes.push("COT rise for CH₄ slip held: it would shorten tube life (higher priority).");
+          if(up >= 1){ addF(up); } else notes.push("COT rise for CH₄ slip held: it would shorten tube life (higher priority).");
         } else if(cb.dCot <= -1){
           var dn = Math.ceil(Math.max(cb.dCot, -8));
           if(isFinite(bedPlan) && bedPlan + BEDF * dn < BEDMIN) notes.push("COT kept: lowering it would cool the pre-reformer bed below " + BEDMIN + " °C.");
-          else { dc.AB += dn; dc.CD += dn; }
+          else { addF(dn); }
         }
       }
+      dc.AB = Math.round(dc.AB); dc.CD = Math.round(dc.CD);
       var pkF = { AB:pk.AB + g * dc.AB, CD:pk.CD + g * dc.CD }, peakF = Math.max(pkF.AB, pkF.CD);
       var bedF = bedPlan + BEDF * (dc.AB + dc.CD) / 2;
       /* 4. Fuel: O2 trim only inside the TST / tube-life room that is left */
