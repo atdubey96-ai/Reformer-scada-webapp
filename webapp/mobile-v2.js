@@ -2704,17 +2704,17 @@
   setTimeout(auto, 7000); setInterval(auto, 15 * 60000);
 })();
 
-/* ---------- Demo seed (27 Nov 2026): replace TST surveys with 60 demo surveys once per browser; real ones kept in tempDataEntriesBeforeDemo ---------- */
+/* ---------- Demo seed (27 Nov 2026): startup 19 Nov, 23 shift surveys 20 Nov Morning to 27 Nov Evening, loaded once per browser ---------- */
 (function(){
-  var KEY = "auraDemoSeed", VER = "demo-20261127e";
+  var KEY = "auraDemoSeed", VER = "demo-20261127f";
   function seed(){
     /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
       if(have.some(function(e){ return String(e && e.dt || "").slice(0, 16) >= "2026-11-28"; })) return; /* a newer real survey exists */
-      if(localStorage.getItem(KEY) === VER && have.some(function(e){ return String(e && e.dt || "").slice(0, 16) === "2026-11-27T22:00"; })) return; }catch(e){ return; }
+      if(localStorage.getItem(KEY) === VER && have.some(function(e){ return String(e && e.dt || "").slice(0, 16) === "2026-11-27T14:00"; })) return; }catch(e){ return; }
     fetch("./demo/demo-tst.json", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
       if(!j || !j.entries || !j.entries.length) return;
-      try{ var cur = localStorage.getItem("tempDataEntries"); if(cur && !localStorage.getItem("tempDataEntriesBeforeDemo")) localStorage.setItem("tempDataEntriesBeforeDemo", cur); }catch(e){}
+      try{ ["tempDataEntriesBeforeDemo","auraLedgerV1","auraPlanLogV1","auraTicksV1"].forEach(function(k){ localStorage.removeItem(k); }); var ti = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}") || {}; ti.serviceStart = "2026-11-19"; localStorage.setItem("tubeLifeInputsV1", JSON.stringify(ti)); }catch(e){} /* fresh demo week: startup 19 Nov, old ledger/plan log cleared */
       try{ window.tempDataEntries = j.entries; if(typeof tempDataEntries !== "undefined") tempDataEntries = j.entries; }catch(e){}
       try{ localStorage.setItem("tempDataEntries", JSON.stringify(j.entries)); localStorage.setItem(KEY, VER); }catch(e){}
       try{ if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches(); }catch(e){}
@@ -2727,10 +2727,10 @@
   setTimeout(seed, 5000);
 })();
 
-/* ---------- Tube life usage (27 Nov 2026): life used per peep hole (8 tubes each) since startup 9 Nov 2026, survey by survey.
+/* ---------- Tube life usage (27 Nov 2026): life used per peep hole (8 tubes each) since startup 19 Nov 2026, survey by survey.
    Each survey's TST (pyrometer) holds until the next survey. API 530 Larson-Miller: 950 °C = 100,000 h, C = 20. ---------- */
 (function(){
-  var START = Date.parse("2026-11-09T00:00:00+05:30"), LIM = 950, LIFE = 100000, C = 20, TUBE_RS = 1800000, PER_PH = 8;
+  var START = Date.parse("2026-11-19T00:00:00+05:30"), LIM = 950, LIFE = 100000, C = 20, TUBE_RS = 1800000, PER_PH = 8;
   var P = (LIM + 273.15) * (C + Math.log(LIFE) / Math.LN10);
   function tr(T){ return Math.pow(10, Math.min(12, P / (T + 273.15) - C)); } /* rupture hours at T */
   var Z = [["abBot","AB Bottom"],["abTop","AB Top"],["cdBot","CD Bottom"],["cdTop","CD Top"]];
@@ -2779,7 +2779,7 @@
         if(isT) H.forEach(function(p){ if(isFinite(p.T[k])){ pts.push(X(p.t0).toFixed(1) + "," + Y(p.T[k]).toFixed(1)); pts.push(X(p.t).toFixed(1) + "," + Y(p.T[k]).toFixed(1)); } });
         else { pts.push(X(t0).toFixed(1) + "," + Y(0).toFixed(1)); H.forEach(function(p){ pts.push(X(p.t).toFixed(1) + "," + Y(p.u[k] * 100).toFixed(1)); }); }
         out += '<polyline fill="none" stroke="' + c + '" stroke-width="' + w + '" points="' + pts.join(" ") + '"><title>' + esc(lbl(k)) + ' · used ' + f(u[k] * 100, 3) + ' % · TST now ' + f(R.Tl[k], 0) + ' °C</title></polyline>'; });
-      out += '<text x="44" y="' + (Hh - 5) + '" class="tlu-ax">9 Nov</text><text x="' + (W - 54) + '" y="' + (Hh - 5) + '" class="tlu-ax">' + new Date(t1).toLocaleDateString("en-GB", { day:"2-digit", month:"short" }) + '</text></svg>';
+      out += '<text x="44" y="' + (Hh - 5) + '" class="tlu-ax">19 Nov</text><text x="' + (W - 54) + '" y="' + (Hh - 5) + '" class="tlu-ax">' + new Date(t1).toLocaleDateString("en-GB", { day:"2-digit", month:"short" }) + '</text></svg>';
       return out; }
     var leg = hot.map(function(k, j){ return '<span><i style="background:' + cols[j] + '"></i>' + esc(lbl(k)) + ' ' + f(u[k] * 100, 2) + '%</span>'; }).join("") + (ks.length > 3 ? '<span><i style="background:rgba(148,163,184,.6)"></i>other ' + (ks.length - 3) + ' peep holes (hover a line)</span>' : '');
     box.innerHTML = '<div class="tlu-g"><div><div class="tlu-s">Cumulative life used (%)</div>' + svg(false) + '</div><div><div class="tlu-s">TST at each survey (°C)</div>' + svg(true) + '</div></div><div class="tlu-lg">' + leg + '</div>'; }
@@ -2793,8 +2793,8 @@
     var yrs = function(k){ return R.rate[k] > 0 ? (1 - u[k]) / R.rate[k] / 8760 : Infinity; };
     var rsDay = R.rate.reduce(function(a, b){ return a + b; }, 0) * 24 * PER_PH * TUBE_RS, lastRow = R.rows[R.rows.length - 1];
     var maxU = Math.max.apply(null, u.concat([1e-9]));
-    var tiles = '<div class="tlu-t"><div><span>Cumulative · worst peep hole</span><b>' + f(u[wk] * 100, 3) + ' % used</b><i>' + esc(lbl(wk)) + ' · since 9 Nov</i></div>'
-      + '<div><span>Cumulative · furnace average</span><b>' + f(avg * 100, 3) + ' % used</b><i>since 9 Nov</i></div>'
+    var tiles = '<div class="tlu-t"><div><span>Cumulative · worst peep hole</span><b>' + f(u[wk] * 100, 3) + ' % used</b><i>' + esc(lbl(wk)) + ' · since 19 Nov</i></div>'
+      + '<div><span>Cumulative · furnace average</span><b>' + f(avg * 100, 3) + ' % used</b><i>since 19 Nov</i></div>'
       + '<div><span>Now · years left, worst</span><b>' + (isFinite(yrs(wk)) ? f(Math.min(99, yrs(wk)), 1) + ' yrs' : '—') + '</b><i>' + esc(lbl(wk)) + ' if today\'s TST continues</i></div>'
       + '<div><span>Now · tube life cost per day</span><b style="color:#f87171">' + money(rsDay) + '</b><i>240 tubes × ₹18 L, at today\'s TST</i></div></div>';
     var hm = '<div class="tlu-hm">' + Z.map(function(z, zi){ var c = ""; for(var i = 0; i < 15; i++){ var k = zi * 15 + i; c += '<div class="tlu-c" style="background:' + col(u[k] / maxU) + '" title="' + esc(lbl(k)) + ': ' + f(u[k] * 100, 3) + ' % used since 9 Nov · TST now ' + f(R.Tl[k], 0) + ' °C"><b>' + (i + 1) + '</b><small>' + f(u[k] * 100, 2) + '%</small></div>'; } return '<div class="tlu-r"><span>' + z[1] + '</span>' + c + '</div>'; }).join("") + '<div class="tlu-n">Cumulative since 9 Nov: colour and number = % of life used (green least, red most). Hover for TST now.</div></div>';
@@ -2805,7 +2805,7 @@
     var cols = ["#f87171","#fb923c","#fbbf24","#a78bfa","#60a5fa"];
     var lines = top.map(function(k, j){ return '<polyline fill="none" stroke="' + cols[j] + '" stroke-width="2" points="' + [X(t0) + "," + Y(0)].concat(H.map(function(p){ return X(p.t).toFixed(1) + "," + Y(p.u[k]).toFixed(1); })).join(" ") + '"/>'; }).join("")
       + '<polyline fill="none" stroke="#94a3b8" stroke-dasharray="4 3" stroke-width="2" points="' + [X(t0) + "," + Y(0)].concat(H.map(function(p){ return X(p.t).toFixed(1) + "," + Y(p.u.reduce(function(a, b){ return a + b; }, 0) / 60).toFixed(1); })).join(" ") + '"/>';
-    var ax = '<text x="4" y="14" class="tlu-ax">' + f(ymax * 100, 3) + ' %</text><text x="4" y="' + (Hh - 20) + '" class="tlu-ax">0</text><text x="40" y="' + (Hh - 4) + '" class="tlu-ax">9 Nov</text><text x="' + (W - 60) + '" y="' + (Hh - 4) + '" class="tlu-ax">' + new Date(t1).toLocaleDateString("en-GB", { day:"2-digit", month:"short" }) + '</text>';
+    var ax = '<text x="4" y="14" class="tlu-ax">' + f(ymax * 100, 3) + ' %</text><text x="4" y="' + (Hh - 20) + '" class="tlu-ax">0</text><text x="40" y="' + (Hh - 4) + '" class="tlu-ax">19 Nov</text><text x="' + (W - 60) + '" y="' + (Hh - 4) + '" class="tlu-ax">' + new Date(t1).toLocaleDateString("en-GB", { day:"2-digit", month:"short" }) + '</text>';
     var leg = top.map(function(k, j){ return '<span><i style="background:' + cols[j] + '"></i>' + esc(lbl(k)) + '</span>'; }).join("") + '<span><i style="background:#94a3b8"></i>Furnace average</span>';
     var chart = '<div class="tlu-ch"><svg viewBox="0 0 ' + W + ' ' + Hh + '" preserveAspectRatio="none" style="width:100%;height:' + Hh + 'px">' + ax + lines + '</svg><div class="tlu-lg">' + leg + '</div></div>';
     /* focus: fastest life use now */
@@ -2814,7 +2814,7 @@
       return '<tr><td>' + esc(lbl(k)) + '</td><td>' + f(R.Tl[k], 0) + ' °C</td><td>' + f(u[k] * 100, 3) + ' %</td><td>' + (isFinite(yrs(k)) ? f(Math.min(99, yrs(k)), 1) : "—") + '</td><td>' + money(x[0] * 24 * PER_PH * TUBE_RS) + '</td><td>' + walls + ' · ' + rowsTxt + ' · B' + Math.max(1, ph - 1) + '–B' + Math.min(15, ph + 1) + '</td></tr>'; }).join("") + '</table><div class="tlu-n">Cut firing on these burners first: the Advanced Process Control Advisor\'s Cut list targets the same tubes.</div>';
     var tbl = '<details><summary>Per survey (life used in each interval)</summary><div class="tlu-sc"><table class="tlu-tb"><tr><th>Survey</th><th>Hours</th><th>Peak TST</th><th>Avg life used</th><th>Worst peep hole</th><th>₹ of tube life</th></tr>' + R.rows.slice().reverse().map(function(r){ return '<tr><td>' + esc(String(r.dt).replace("T", " ").slice(0, 16)) + (r.shift ? " · " + esc(r.shift) : "") + '</td><td>' + f(r.h, 1) + '</td><td>' + f(r.peak, 0) + ' °C</td><td>' + f(r.avg * 100, 4) + ' %</td><td>' + esc(lbl(r.worst)) + ' ' + f(r.worstD * 100, 4) + ' %</td><td>' + money(r.rs) + '</td></tr>'; }).join("") + '</table></div></details>';
     function sel(k, opts){ return '<select onchange="window.tluFilter(\'' + k + '\', this.value)">' + opts.map(function(o){ return '<option value="' + o[0] + '"' + (String(FIL[k]) === String(o[0]) ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") + '</select>'; }
-    host.innerHTML = '<div class="tlu"><div class="tlu-h">Tube life usage &amp; design basis <small>since startup 9 Nov 2026 · API 530 (950 °C = 100,000 h) · TST pyrometer held until the next survey</small></div>' + tiles + '<div class="tlu-s">Cumulative life used by peep hole</div>' + hm + '<div class="tlu-f"><b>Per peep hole over time</b>' + sel("ch", [["AB","AB chamber"],["CD","CD chamber"]]) + sel("lv", [["both","Bottom + Top"],["bot","Bottom"],["top","Top"]]) + sel("ph", [[0,"All peep holes"]].concat([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(function(n){ return [n, "PH " + n]; }))) + '</div><div id="tluPair"></div><div class="tlu-s">Now: where life is being used fastest (at the latest survey TST)</div>' + focus + tbl + '</div>'; drawPair(); }
+    host.innerHTML = '<div class="tlu"><div class="tlu-h">Tube life usage &amp; design basis <small>since startup 19 Nov 2026 · API 530 (950 °C = 100,000 h) · TST pyrometer held until the next survey</small></div>' + tiles + '<div class="tlu-s">Cumulative life used by peep hole</div>' + hm + '<div class="tlu-f"><b>Per peep hole over time</b>' + sel("ch", [["AB","AB chamber"],["CD","CD chamber"]]) + sel("lv", [["both","Bottom + Top"],["bot","Bottom"],["top","Top"]]) + sel("ph", [[0,"All peep holes"]].concat([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(function(n){ return [n, "PH " + n]; }))) + '</div><div id="tluPair"></div><div class="tlu-s">Now: where life is being used fastest (at the latest survey TST)</div>' + focus + tbl + '</div>'; drawPair(); }
   var css = '#tubeLifeUsage .tlu{margin:0 0 14px;padding:12px 14px;border-radius:14px;border:1px solid rgba(248,113,113,.3);background:rgba(15,23,42,.55);color:#e2e8f0;font-size:13px}'
     + 'body.light-theme #tubeLifeUsage .tlu{background:#fff;color:#0f172a;border-color:rgba(220,38,38,.25)}'
     + '#tubeLifeUsage .tlu-h{font-weight:800;font-size:15px;margin-bottom:8px}#tubeLifeUsage .tlu-h small{font-weight:500;opacity:.7;font-size:11px;margin-left:6px}'
