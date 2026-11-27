@@ -2527,7 +2527,7 @@
       var cb = fo.cotBox, bedPlan = isFinite(pl.p.bed) ? pl.p.bed : (kp.bed ? kp.bed.cur : NaN), BEDF = 0.16 * 0.48;
       if(cb && isFinite(cb.dCot) && !why.AB && !why.CD && (cb.dCot >= 1 || cotPays)){
         var room0 = roomF();
-        var up0 = Math.floor(Math.min(cotPays ? 15 : cb.dCot, room0));
+        var up0 = Math.floor(Math.min(cotPays ? 6 : cb.dCot, room0)); /* one step per shift: next survey confirms TST before the next step */
         if(up0 >= 1){ addF(up0); } else notes.push("COT rise held: it would shorten tube life (higher priority)" + (cotPays ? ", although each +1 °C would save ₹ " + f(per1.net, 0) + "/h net." : "."));
       } else if(cb && isFinite(cb.dCot) && !why.AB && !why.CD){
         if(cb.dCot >= 1){
@@ -2600,7 +2600,7 @@
       var G = [
         ["★", "Peep holes above " + LIM + " °C (of " + nTubes + ")", nOver0, "0", nOver1, "", 0, function(v){ return v === 0; }, null, null, "in tube life"],
         ["★", "TST peak" + (Object.keys(sus).length ? " (readings to recheck left out)" : ""), peakNow, "≤ " + LIM, peakF, "°C", 0, function(v){ return v <= LIM; }, null, null, "in tube life"],
-        ["1", "Tube life, hottest tube", lifeNow, "highest", lifeAfter, "yrs", 1, function(v){ return !(v < lifeNow - 0.05); }, null, null, RS(isFinite(rsLife) ? rsLife / hrs : 0)],
+        ["1", "Tube life, hottest tube", lifeNow, (lifeAfter < lifeNow - 0.05 && peakF <= LIM ? "highest · COT trade-off accepted" : "highest"), lifeAfter, "yrs", 1, function(v){ return !(v < lifeNow - 0.05) || (peakF <= LIM && v >= 8); }, null, null, RS(isFinite(rsLife) ? rsLife / hrs : 0)],
         ["2", "Pre-reformer bed (TI-2412)", kp.bed ? kp.bed.cur : NaN, "≥ " + BEDMIN, bedF, "°C", 0, function(v){ return v >= BEDMIN; }, null, null, "limit"],
         ["3", "CH₄ slip", slipNow, cb ? f(cb.target, 2) : "lowest", slipAfter, "%", 2, function(v){ return !cb || v <= cb.target + 0.05; }, null, null, "in feed"],
         ["", "COT AB / CD", cot.AB, "≤ " + COTLIM, null, "", 0, null, f(cot.AB, 0) + " / " + f(cot.CD, 0), f(cot.AB + burn.AB + dc.AB, 0) + " / " + f(cot.CD + burn.CD + dc.CD, 0), "in feed & fuel"],
@@ -2610,6 +2610,13 @@
         ["5", "Energy efficiency", effNow, "highest", effAfter, "%", 1, null, null, null, "in fuel"],
         ["6", "Uniform heating (TST σ)", sd0, "lowest", sd1, "°C", 1, null, null, null, "in tube life"]
       ];
+      (function(){ try{ var PK = "auraPredV1", P = JSON.parse(localStorage.getItem(PK) || "{}") || {}, dt = String(fo.surveyDt || ""); if(!dt) return;
+        var aft = { a:cot.AB + burn.AB + dc.AB, c:cot.CD + burn.CD + dc.CD, s:slipAfter, fd:feedNow - (ec.feedKg || 0), pk:peakF };
+        var L0 = []; try{ L0 = cuboidGetSortedTempEntries() || []; }catch(e){} var prev = L0.map(function(e){ return String(e && e.dt || ""); }).filter(function(d){ return d && d < dt; }).sort().pop();
+        var q = prev && P[prev];
+        if(q && isFinite(q.s) && isFinite(slipNow)){ var s0 = q.s0, gain = s0 - q.s, got = s0 - slipNow, pc = gain > 0.01 ? Math.max(0, Math.min(150, got / gain * 100)) : NaN;
+          notes.unshift("<b>Plan vs achieved</b> (previous survey " + esc(prev.replace("T", " ")) + "): COT " + f(q.a, 0) + "/" + f(q.c, 0) + " planned vs " + f(cot.AB, 0) + "/" + f(cot.CD, 0) + " now; CH₄ slip " + f(q.s, 2) + " vs " + f(slipNow, 2) + " %; feed " + f(q.fd, 0) + " vs " + f(feedNow, 0) + " kg/h; TST peak " + f(q.pk, 0) + " vs " + f(peakNow, 0) + " °C" + (isFinite(pc) ? " · " + f(pc, 0) + " % of the planned slip gain reached" : "") + ". The gap is what the plant did not follow or did not respond to; this plan starts from today's actual values."); }
+        P[dt] = { a:aft.a, c:aft.c, s:aft.s, s0:slipNow, fd:aft.fd, pk:aft.pk }; localStorage.setItem(PK, JSON.stringify(P)); }catch(e){} })();
       var tbl = '<table class="au-goals"><tr><th class="pr">#</th><th>Goal</th><th>Now</th><th>Limit / target</th><th>After plan</th><th class="rs">₹/h saved</th><th></th></tr>' + G.map(function(r){
         if(!isFinite(r[2])) return "";
         var okN = r[7] ? r[7](r[2]) : true, okA = r[7] && isFinite(r[4]) ? r[7](r[4]) : true;
@@ -2708,7 +2715,7 @@
 
 /* ---------- Demo seed (27 Nov 2026): startup 19 Nov, 23 shift surveys 20 Nov Morning to 27 Nov Evening, loaded once per browser ---------- */
 (function(){
-  var KEY = "auraDemoSeed", VER = "demo-20261127j";
+  var KEY = "auraDemoSeed", VER = "demo-20261127k";
   function seed(){
     /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
@@ -2716,7 +2723,7 @@
       if(localStorage.getItem(KEY) === VER && have.some(function(e){ return String(e && e.dt || "").slice(0, 16) === "2026-11-27T14:00"; })) return; }catch(e){ return; }
     fetch("./demo/demo-tst.json", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
       if(!j || !j.entries || !j.entries.length) return;
-      try{ ["tempDataEntriesBeforeDemo","auraLedgerV1","auraPlanLogV1","auraTicksV1"].forEach(function(k){ localStorage.removeItem(k); }); var ti = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}") || {}; ti.serviceStart = "2026-11-19"; localStorage.setItem("tubeLifeInputsV1", JSON.stringify(ti)); }catch(e){} /* fresh demo week: startup 19 Nov, old ledger/plan log cleared */
+      try{ ["tempDataEntriesBeforeDemo","auraLedgerV1","auraPlanLogV1","auraTicksV1","auraPredV1"].forEach(function(k){ localStorage.removeItem(k); }); var ti = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}") || {}; ti.serviceStart = "2026-11-19"; localStorage.setItem("tubeLifeInputsV1", JSON.stringify(ti)); }catch(e){} /* fresh demo week: startup 19 Nov, old ledger/plan log cleared */
       try{ window.tempDataEntries = j.entries; if(typeof tempDataEntries !== "undefined") tempDataEntries = j.entries; }catch(e){}
       try{ localStorage.setItem("tempDataEntries", JSON.stringify(j.entries)); localStorage.setItem(KEY, VER); }catch(e){}
       try{ if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches(); }catch(e){}
