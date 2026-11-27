@@ -2436,10 +2436,10 @@
   }
 })();
 
-/* ---------- AURA Reformer: one integrated model. Goals in strict order: TST <= 950 (hard) > tube life > pre-reformer bed > CH4 slip > fuel > efficiency > uniform heating ---------- */
+/* ---------- Advanced Process Control Advisor (was AURA Reformer): one integrated model. Goals in strict order: TST <= 950 (hard) > tube life > pre-reformer bed > CH4 slip > fuel > efficiency > uniform heating ---------- */
 (function(){
   var PK = "auraPricesV1";
-  var FIELDS = { ng:"auraPriceNg", nap:"auraPriceNap", retube:"auraPriceRetube", o2t:"auraTargetO2", hours:"auraHours", tipNg:"auraTipNg", tipNap:"auraTipNap", bedMin:"auraBedMin" };
+  var FIELDS = { ng:"auraPriceNg", nap:"auraPriceNap", retube:"auraPriceRetube", o2t:"auraTargetO2", hours:"auraHours", tipNg:"auraTipNg", tipNap:"auraTipNap", tipOg:"auraTipOg", bedMin:"auraBedMin" };
   var DEF = { ng:38927, nap:45562, o2t:3.5, hours:8000, bedMin:485, retube:43.2 }; /* retube: 240 tubes × ₹18 lakh */ /* NG 16-May-25, naphtha (EPP) current fortnight, ₹/MT */
   function loadP(){ var p = null; try{ p = JSON.parse(localStorage.getItem(PK) || "null"); }catch(e){ p = null; } p = p || {}; Object.keys(DEF).forEach(function(k){ if(p[k] == null) p[k] = DEF[k]; }); return p; }
   function pos(v){ var n = Number(v); return v !== "" && v != null && isFinite(n) && n > 0 ? n : NaN; }
@@ -2461,6 +2461,7 @@
   window.triggerAuraOptimizer = function(){
     if(window.__auraOptPending) return;
     if(typeof window.runCuboidAiPrediction !== "function"){ window.__auraRunSummary(); return; }
+    try{ window.auraFillSurveys(); }catch(e){}
     window.__auraOptPending = true; window.__furnaceOptLast = null;
     var b0 = document.getElementById("btnRunAuraOptimization"); if(b0) b0.disabled = true; status("Running…");
     var done = false, go = function(){ if(done) return; done = true; window.removeEventListener("furnaceopt:done", go); window.__auraOptPending = false; window.__auraRunSummary(); };
@@ -2484,7 +2485,7 @@
       var pk = { AB:mx(T1.slice(0, 30)), CD:mx(T1.slice(30, 60)) }, cap = Math.min(LIM, peakNow); /* tube life must not get worse than now */
       var cot = { AB:kp.cotAB ? kp.cotAB.cur : d.abCot, CD:kp.cotCD ? kp.cotCD.cur : d.cdCot }, dc = { AB:0, CD:0 }, why = {};
       /* 0. TST hard limit: if burner moves alone cannot bring a chamber under 950, lower that chamber's COT */
-      ["AB","CD"].forEach(function(s){ if(pk[s] > LIM){ dc[s] = -Math.min(10, Math.ceil((pk[s] - LIM) / g)); /* gradual: at most 10 °C per run */ why[s] = "TST"; } });
+      ["AB","CD"].forEach(function(s){ if(pk[s] > LIM){ dc[s] = -Math.min(25, Math.ceil((pk[s] - LIM) / g)); /* TST is the hard limit: up to 25 °C, still moved 2 °C at a time */ why[s] = "TST"; } });
       /* 3a. CH4 slip: close the AB/CD COT gap at the same total fuel (colder chamber dominates the mixed slip) */
       var gap = cot.AB - cot.CD, shift = 0;
       if(!why.AB && !why.CD && isFinite(gap) && Math.abs(gap) >= 3){
@@ -2545,7 +2546,8 @@
       /* life */
       var tl = typeof window.tubeLifeLastResult === "function" ? window.tubeLifeLastResult() : null, r0 = lifeAt(peakNow), r1 = lifeAt(peakF);
       var lifeNow = tl && tl.remYears > 0 ? tl.remYears : Math.min(30, r0), lifeAfter = r0 > 0 ? lifeNow * r1 / r0 : NaN; /* tube-life panel if available, else API 530 at the hottest TST */
-      var rsLife = isFinite(pos(p.retube)) && lifeNow > 0 && lifeAfter > 0 ? pos(p.retube) * 1e7 * (1 / lifeNow - 1 / lifeAfter) : NaN; /* ₹/yr of retube cost spread over life */
+      var nHotTubes = Math.min(240, 8 * T0.filter(function(t){ return t > LIM - 10; }).length); /* 8 tubes per peep-hole column, tubes within 10 °C of the limit */
+      var rsLife = isFinite(pos(p.retube)) && lifeNow > 0 && lifeAfter > 0 ? pos(p.retube) / 240 * nHotTubes * 1e7 * (1 / Math.max(1, lifeNow) - 1 / Math.max(1, lifeAfter)) : NaN; /* ₹18 lakh per tube, spread over its life */
       var slipNow = kp.ch4 ? kp.ch4.cur : d.methaneSlip, mix = function(a, b){ return (Math.exp(-K * a) + Math.exp(-K * b)) / 2; };
       var slipAfter = slipNow * mix(cot.AB + dc.AB, cot.CD + dc.CD) / mix(cot.AB, cot.CD);
       var TF = T1.map(function(t, i){ return t + g * (i < 30 ? dc.AB : dc.CD) + O2_TST * ((o2 - o2To) || 0); });
@@ -2559,8 +2561,15 @@
       }
       window.__auraExtras = { cotSteps:cotSteps, cotNote:"", o2From:o2, o2To:o2To < o2 ? o2To : NaN };
       /* tip pressure and bed checks */
-      var tipK = pl.p.tipK || 1, tips = [["NG", kp.tipNg, pos(p.tipNg)], ["Naphtha", kp.tipNap, pos(p.tipNap)], ["Off-gas", kp.tipOg, NaN]];
-      var tipTxt = tips.filter(function(t){ return t[1]; }).map(function(t){ var a = t[1].cur * (t[0] === "Off-gas" ? 1 : tipK * tipK); return t[0] + " " + f(t[1].cur, 2) + (Math.abs(a - t[1].cur) > 0.005 ? " → " + f(a, 2) : "") + (isFinite(t[2]) ? " (max " + f(t[2], 2) + ")" : ""); }).join(" · ");
+      var tipK = pl.p.tipK || 1, tips = [["NG", kp.tipNg, pos(p.tipNg)], ["Naphtha", kp.tipNap, pos(p.tipNap)], ["Off-gas", kp.tipOg, pos(p.tipOg) || 1.0]], ogK = pl.p.ogK || 1;
+      var tipTxt = tips.filter(function(t){ return t[1]; }).map(function(t){ var a = t[1].cur * (t[0] === "Off-gas" ? ogK : tipK * tipK); return t[0] + " " + f(t[1].cur, 2) + (Math.abs(a - t[1].cur) > 0.005 ? " → " + f(a, 2) : "") + (isFinite(t[2]) ? " (max " + f(t[2], 2) + ")" : ""); }).join(" · ");
+      if(nOver1 > 0){ var st = (pl.p.stuck || []).filter(function(x){ return !sus[x.idx] && x.t + g * (/^AB/.test(x.label) ? dc.AB : dc.CD) > LIM; }).slice().sort(function(a, b){ return b.t - a.t; }).slice(0, 8);
+        var why2 = [];
+        if(dc.AB <= -25 || dc.CD <= -25) why2.push("COT may drop at most 25 °C per run (" + ["AB","CD"].filter(function(s2){ return dc[s2] <= -25; }).join(", ") + " already at −25)");
+        if(st.some(function(x){ return x.cuttable === 0; })) why2.push("every burner facing these tubes is already fully off or limited by the no-row-below-50% rule");
+        if(st.some(function(x){ return x.cuttable > 0; })) why2.push("cutting more here pushes extra fuel to the neighbouring burners (COT make-up), which heats these same tubes");
+        notes.push('<b style="color:var(--au-bad)">Still above ' + LIM + ' °C after this plan:</b> ' + st.map(function(x){ return esc(x.label) + " " + f(x.t + g * (/^AB/.test(x.label) ? dc.AB : dc.CD), 0) + " °C"; }).join(", ") + ". Limits reached: " + why2.join("; ") + ". Do these steps, take a new survey and run again: the next round continues from there."); }
+      if(kp.tipOg){ var ogA = kp.tipOg.cur * ogK, ogL = pos(p.tipOg) || 1.0; notes.push(ogA > ogL ? '<b style="color:var(--au-bad)">Off-gas tip pressure ' + f(ogA, 2) + ' is above ' + f(ogL, 2) + ': PSA off-gas would go to flare.</b> Open more off-gas burners before cutting any.' : "No off-gas flaring: off-gas tip pressure " + f(ogA, 2) + " stays at or below " + f(ogL, 2) + ", so all PSA off-gas is burnt."); }
       if(tipTxt) notes.push("Tip pressure " + tipTxt + (isFinite(pos(p.tipNg)) ? "" : ". Enter the limits in ⚙ so the plan checks them."));
       if(fo.suspects && fo.suspects.length) notes.push("Recheck reading: " + fo.suspects.map(function(s){ return esc(s.label) + " " + f(s.t, 0) + " °C"; }).join(", ") + ".");
       Array.prototype.forEach.call(document.querySelectorAll(".ct-6m-nudge-banner"), function(nd){ notes.push(esc(nd.textContent.replace(/^\S+\s*/, ""))); });
@@ -2610,9 +2619,17 @@
       if(typeof window.renderAdjustmentFromOptimiser === "function") window.renderAdjustmentFromOptimiser();
       if(btn) btn.disabled = false;
       var nx = new Date(Date.now() + 15 * 60000);
-      status("Updated " + new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + " · next " + nx.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }));
+      status((window.__auraSurveyDt ? "Survey " + String(window.__auraSurveyDt).replace("T", " ").slice(0, 16) + " · " : "") + "Updated " + new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + " · next " + nx.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }));
     });
   };
+  /* survey selector: default = latest saved survey; picking one reruns the advisor on that survey and the DCS data at that time */
+  function surveyList(){ var l = []; try{ l = (typeof cuboidGetSortedTempEntries === "function" ? cuboidGetSortedTempEntries() : []) || []; }catch(e){}
+    return l.filter(function(x){ return x && x.dt; }).sort(function(a, b){ return (Date.parse(String(b.dt).replace(" ", "T")) || 0) - (Date.parse(String(a.dt).replace(" ", "T")) || 0); }); }
+  window.auraFillSurveys = function(){ var sel = document.getElementById("auraSurveySel"); if(!sel) return; var l = surveyList(), cur = window.__auraSurveyDt || "";
+    if(cur && !l.some(function(x){ return String(x.dt) === cur; })){ cur = ""; window.__auraSurveyDt = null; }
+    sel.innerHTML = '<option value="">Latest saved' + (l[0] ? " · " + esc(String(l[0].dt).replace("T", " ").slice(0, 16)) : "") + '</option>' + l.slice(1).map(function(x){ var v = String(x.dt); return '<option value="' + esc(v) + '">' + esc(v.replace("T", " ").slice(0, 16) + (x.shift ? " · " + x.shift : "")) + '</option>'; }).join("");
+    sel.value = cur; };
+  window.auraPickSurvey = function(v){ window.__auraSurveyDt = v || null; window.triggerAuraOptimizer(); };
   /* fully automatic: first run once the page has settled, then every 15 minutes while the page is open */
   function auto(){ if(document.getElementById("auraReformerWidget") && !document.hidden) try{ window.triggerAuraOptimizer(); }catch(e){} }
   setTimeout(auto, 7000); setInterval(auto, 15 * 60000);

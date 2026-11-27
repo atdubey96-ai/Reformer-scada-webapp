@@ -12078,7 +12078,7 @@ function renderAdjustmentFromOptimiser(){
   if(!targets.length) return;
   var fo = window.__furnaceOptLast, ex = window.__auraExtras || {}, html = "";
   if(!fo || !fo.plans){
-    html = '<div class="hm-adjust-empty">Press <b>Run AURA</b> above to get the work list.</div>';
+    html = '<div class="hm-adjust-empty">Press <b>Run</b> above to get the work list.</div>';
     targets.forEach(function(el){ if(el) el.innerHTML = html; }); return;
   }
   var pl = fo.plans[fo.bestIdx || 0], mv = (pl && pl.p && pl.p.moves) || [];
@@ -12933,6 +12933,10 @@ function runCuboidAiPrediction(){
     }
 
     var currentProfile = cuboidAiBuildCurrentProfile(snapshot, entry);
+    /* advisor survey selector: a chosen saved survey replaces the cuboid's entry (burners + TST from that survey) */
+    window.__foAt = null;
+    if(window.__auraSurveyDt){ var pick = cuboidGetSortedTempEntries().filter(function(x){ return x && String(x.dt || "") === String(window.__auraSurveyDt); })[0];
+      if(pick){ var pp = cuboidAiBuildProfileFromEntry(pick); if(pp){ entry = pick; currentProfile = pp; var at = Date.parse(String(pick.dt || "").replace(" ", "T")); window.__foAt = isFinite(at) ? at : null; } } }
     if(!currentProfile){
       cuboidAiSetRunBusy(false);
       cuboidAiSetStatus("Prediction could not build the current cuboid profile.", "warn");
@@ -26659,6 +26663,12 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     function patternOk(ff, c){ var x = ff[c.w][c.r][c.b]; if(x.s === "C") return true; if(x.open < 0 || x.open > 100) return false; /* a single burner may go fully off; a whole row may not */
       var sum = 0, n = 0; for(var b3 = 1; b3 <= 15; b3++){ var z = ff[c.w][c.r][b3]; if(z.s !== "C"){ sum += z.open; n++; } } return !n || sum / n >= 50; }
     var tipK = 1;
+    /* off-gas: all PSA off-gas must be burnt (no flaring). Total off-gas flow stays fixed, so its tip pressure rises as
+       (open off-gas area before / after)^2; above the off-gas tip limit (default 1.0) the PSA vents to flare. */
+    function ogArea(ff){ var a = 0; ["A","B","C","D"].forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = ff[w][r][b]; if(x.s === "O") a += Math.max(0, x.open) / 100; } }); return a; }
+    var OG_A0 = ogArea(f), OGMAX = Number(auraP().tipOg) > 0 ? Number(auraP().tipOg) : 1.0;
+    function ogK(ff){ var a = ogArea(ff); return a > 0 && OG_A0 > 0 ? Math.pow(OG_A0 / a, 2) : 1; }
+    function ogOk(ff, kBefore){ if(!isFinite(px.tipOg)) return ogK(ff) <= Math.max(1.3, kBefore); var t = px.tipOg * ogK(ff); return t <= Math.max(OGMAX, px.tipOg * kBefore) + 1e-9; }
     function tipOk(k){ var kk = Math.max(tipK, k); if(isFinite(tipMaxNg) && isFinite(px.tipNg) && px.tipNg * kk * kk > tipMaxNg) return false; if(isFinite(tipMaxNap) && isFinite(px.tipNap) && px.tipNap * kk * kk > tipMaxNap) return false; return true; }
     function temps(ff){ var H = heatField(ff), T = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++){ var t0 = cur.T[zi][ph]; if(!isFinite(t0)){ T.push(NaN); continue; }
       T.push(t0 + model.beta * (H[zi][ph] - cur.H[zi][ph]) + model.gamma * dCot); } }); return T; }
@@ -26667,17 +26677,18 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     var CLEAN = (function(){ var lg = {}, hs = {}; try{ if(typeof loadCleaningLog === "function") lg = loadCleaningLog() || {}; }catch(e){} try{ if(typeof loadCleaningHistory === "function") hs = loadCleaningHistory() || {}; }catch(e){}
       return function(c){ try{ var d = typeof hmLatestCleaningDate === "function" ? hmLatestCleaningDate(lg, hs, c.w, c.r, c.b) : ""; var ms = Date.parse(d); return isFinite(ms) && Date.now() - ms < 90 * 86400000; }catch(e){ return false; } }; })();
     var T = temps(f), best = J(T), makeup = {}, bedOf0 = bedOf(f), swaps = [];
-    for(var it = 0; it < (evalT(T).over > 0 ? 120 : 8); it++){
+    for(var it = 0; it < (evalT(T).over > 0 ? 250 : 8); it++){
       var flat = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++) flat.push({ zi:zi, ph:ph, t:T[zi * 15 + ph - 1] }); });
       flat = flat.filter(function(x){ return isFinite(x.t); }).sort(function(a, b){ return b.t - a.t; });
       function near(list){ var seen = {}, out = []; list.forEach(function(x){ K[x.zi][x.ph].forEach(function(c){ if(c.k < 0.3) return; var key = c.w + c.r + "-" + c.b; if(seen[key]) return; seen[key] = 1; out.push(c); }); }); return out; }
-      var downs = near(flat.slice(0, Math.max(8, flat.filter(function(x){ return x.t > tubeLimit().lim; }).length))).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.s !== "O" && x.open >= STEP; }); /* PSA off-gas burners stay at full flow */
+      var downs = near(flat.slice(0, Math.max(8, flat.filter(function(x){ return x.t > tubeLimit().lim; }).length))).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.open >= STEP; }); /* off-gas burners may be trimmed: their flow moves to the other off-gas burners, so total off-gas stays full */
       var ups = near(flat.slice(-8)).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.open <= 100 - STEP; });
       var cand = null;
       downs.forEach(function(d){ ups.forEach(function(u){
         if((d.w === "A" || d.w === "B") !== (u.w === "A" || u.w === "B")) return; /* same chamber: keep side duty & COT */
         if(d.w === u.w && d.r === u.r && d.b === u.b) return;
         var fd = f[d.w][d.r][d.b], fu = f[u.w][u.r][u.b];
+        if((fd.s === "O" || fu.s === "O") && fd.s !== fu.s) return; /* off-gas flow only moves between off-gas burners */
         var od = fd.open, ou = fu.open;
         fd.open -= STEP; fd.v = FUEL_W[fd.s] * fd.open / 100; fu.open += STEP; fu.v = FUEL_W[fu.s] * fu.open / 100;
         var okP = patternOk(f, d) && patternOk(f, u) && !(bedDef(f) > 0 && bedOf(f) < bedOf0);
@@ -26688,7 +26699,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       /* cut-only moves: when no burner on that side has room to take heat (all at 100%), the COT controller
          makes up the duty by raising fuel on every other lit burner on the same side, so model that uniformly */
       function sideList(d){ var ws = (d.w === "A" || d.w === "B") ? ["A","B"] : ["C","D"], out = []; ws.forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = f[w][r][b]; if(x.s !== "C" && x.v > 0) out.push(x); } }); return out; }
-      function applyCut(d){ var fd = f[d.w][d.r][d.b], list = sideList(d), tot = list.reduce(function(s, x){ return s + x.v; }, 0), dv = (FUEL_W[fd.s] || 0) * STEP / 100;
+      function applyCut(d){ var fd = f[d.w][d.r][d.b], list = fd.s === "O" ? sideList(d).filter(function(x){ return x.s === "O"; }) : sideList(d).filter(function(x){ return x.s !== "O"; }), tot = list.reduce(function(s, x){ return s + x.v; }, 0), dv = (FUEL_W[fd.s] || 0) * STEP / 100;
         if(!(tot - dv > 0)) return null; var save = list.map(function(x){ return x.v; }), so = fd.open; fd.open -= STEP; fd.v = (FUEL_W[fd.s] || 0) * fd.open / 100;
         var others = list.filter(function(x){ return x !== fd; }), rest = others.reduce(function(s, x){ return s + x.v; }, 0), k = rest > 0 ? (tot - fd.v) / rest : 1;
         others.forEach(function(x){ x.v *= k; });
@@ -26699,8 +26710,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       downs.forEach(function(d){ var fd = f[d.w][d.r][d.b]; if(!(fd.s === "B" || fd.s === "N")) return;
         coolNear.forEach(function(u){ if((d.w === "A" || d.w === "B") !== (u.w === "A" || u.w === "B")) return; var fu = f[u.w][u.r][u.b];
           if(fu === fd || fu.s === "C" || !(FUEL_W[fu.s] < FUEL_W[fd.s])) return;
-          var sd = fd.s, su = fu.s; fd.s = su; fu.s = sd; fd.v = FUEL_W[fd.s] * fd.open / 100; fu.v = FUEL_W[fu.s] * fu.open / 100;
-          var Tn = temps(f), j = J(Tn) + 0.5;
+          var k0s = ogK(f), sd = fd.s, su = fu.s; fd.s = su; fu.s = sd; fd.v = FUEL_W[fd.s] * fd.open / 100; fu.v = FUEL_W[fu.s] * fu.open / 100;
+          var Tn = temps(f), j = ogOk(f, k0s) ? J(Tn) + 0.5 : Infinity;
           fd.s = sd; fu.s = su; fd.v = FUEL_W[sd] * fd.open / 100; fu.v = FUEL_W[su] * fu.open / 100;
           if(j < best - 0.2 && (!swapC || j < swapC.j)) swapC = { d:d, u:u, j:j, T:Tn, kind:"swap" }; }); });
       if(swapC && (!cand || swapC.j < cand.j)) cand = swapC;
@@ -26708,7 +26719,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         /* best cut on each side separately (AB and CD chambers are independent), so every over-limit zone gets a move */
         var bySide = {};
         downs.forEach(function(d){ if(f[d.w][d.r][d.b].open - STEP < 0) return;
-          var c = applyCut(d); if(!c) return; var okC = patternOk(f, d) && tipOk(c.k) && !(bedDef(f) > 0 && bedOf(f) < bedOf0); var Tn = temps(f), j = okC ? J(Tn) + (CLEAN(d) ? 0.3 : 0) : Infinity; c.undo();
+          var k0 = ogK(f), c = applyCut(d); if(!c) return; var okC = patternOk(f, d) && tipOk(c.k) && ogOk(f, k0) && !(bedDef(f) > 0 && bedOf(f) < bedOf0); var Tn = temps(f), j = okC ? J(Tn) + (CLEAN(d) ? 0.3 : 0) : Infinity; c.undo();
           if(j < best - 0.2 && (!bySide[c.side] || j < bySide[c.side].j)) bySide[c.side] = { d:d, j:j }; });
         var sides = Object.keys(bySide);
         if(sides.length && (!cand || sides.some(function(s){ return bySide[s].j < cand.j; }))){
@@ -26728,10 +26739,16 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       a.open -= STEP; a.v = FUEL_W[a.s] * a.open / 100; bb.open += STEP; bb.v = FUEL_W[bb.s] * bb.open / 100;
       best = cand.j; T = cand.T;
     }
+    /* why tubes are still over the limit: count burners facing each one that could still be cut */
+    var LIMs = tubeLimit().lim, stuck = [];
+    ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++){ var t = T[zi * 15 + ph - 1]; if(!(t > LIMs)) continue;
+      var face = K[zi][ph].filter(function(c){ return c.k >= 0.3; }), lit = 0, og = 0, off = 0, rowLim = 0;
+      face.forEach(function(c){ var x = f[c.w][c.r][c.b]; if(x.s === "C" || x.open <= 0) off++; else { x.open -= STEP; if(patternOk(f, c)) lit++; else rowLim++; x.open += STEP; } });
+      stuck.push({ idx:zi * 15 + ph - 1, label:z.label + " PH" + ph, t:t, face:face.length, cuttable:lit, offgas:og, off:off, rowLim:rowLim }); } });
     /* merge repeated burners */
     var merged = {}; moves.forEach(function(m){ var k = m.w + m.r + "-" + m.b; if(!merged[k]) merged[k] = { w:m.w, r:m.r, b:m.b, s:m.s, sTo:m.sTo, from:m.from, to:m.to }; else { merged[k].to = m.to; if(m.sTo) merged[k].sTo = m.sTo; } });
-    return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), swaps:swaps, T:T, e:evalT(T), makeup:makeup,
-      bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK };
+    return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), swaps:swaps, stuck:stuck, T:T, e:evalT(T), makeup:makeup,
+      bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK, ogK:ogK(f), ogMax:OGMAX };
   }
 
   /* ---------- DCS: CH4 slip, COT, KPIs ---------- */
@@ -26754,7 +26771,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       });
   }
   function series(by, k){ var o = by[k] || {}; return Object.keys(o).map(Number).sort(function(a, b){ return a - b; }).map(function(h){ return { h:h, v:o[h] }; }); }
-  function kpi(by, k){ var s = series(by, k); if(!s.length) return null; var now = s[s.length - 1].h;
+  function kpi(by, k){ var s = series(by, k); if(window.__foAt){ var lim = window.__foAt + 3600000, s2 = s.filter(function(p){ return p.h <= lim; }); if(s2.length) s = s2; } if(!s.length) return null; /* DCS at the chosen survey time */ var now = s[s.length - 1].h;
     var recent = median(s.filter(function(p){ return p.h > now - 6 * 3600000; }).map(function(p){ return p.v; }));
     var all = s.map(function(p){ return p.v; }), med = median(all), mad = median(all.map(function(v){ return Math.abs(v - med); })) * 1.4826;
     return { cur:recent, med:med, z:mad > 0 ? (recent - med) / mad : 0, n:s.length }; }
@@ -26839,7 +26856,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             cotBox = { slip:slip, target:target, cotAB:cAB, cotCD:cCD, cotStar:mean([cAB, cCD]) + dCot, dCot:dCot, capped:capped, lifeBefore:cur.e.life, lifeAfter:tr(after) / (8760 * 0.96) };
           }
         }
-        var ap = auraP(), px = { bed:kpis && kpis.bed ? kpis.bed.cur : NaN, tipNg:kpis && kpis.tipNg ? kpis.tipNg.cur : NaN, tipNap:kpis && kpis.tipNap ? kpis.tipNap.cur : NaN,
+        var ap = auraP(), px = { bed:kpis && kpis.bed ? kpis.bed.cur : NaN, tipNg:kpis && kpis.tipNg ? kpis.tipNg.cur : NaN, tipNap:kpis && kpis.tipNap ? kpis.tipNap.cur : NaN, tipOg:kpis && kpis.tipOg ? kpis.tipOg.cur : NaN,
           tipMaxNg:Number(ap.tipNg) > 0 ? Number(ap.tipNg) : NaN, tipMaxNap:Number(ap.tipNap) > 0 ? Number(ap.tipNap) : NaN };
         var plans = [{ name:"Priority plan", sub:"TST → tube life → bed → uniformity", w:{} }]
           .map(function(pl){ pl.p = optimise(cur, model, 0, pl.w, px); /* burner moves at constant duty; COT, chamber balance and O2 are set after, in goal order */ pl.score = pl.p.e.peak + 2 * pl.p.e.sd; return pl; });
@@ -26901,14 +26918,16 @@ body.light-theme #auraReformerWidget{--au-bg:#ffffff;--au-card:#f4f6fa;--au-line
 #auraReformerWidget .au-form input{width:100%;margin-top:3px;padding:6px 8px;border-radius:6px;border:1px solid var(--au-line);background:var(--au-card);color:var(--au-text);}
 #auraReformerWidget .au-btn2{background:var(--au-card);color:var(--au-text);border:1px solid var(--au-line);padding:6px 14px;border-radius:6px;cursor:pointer;}
 #auraReformerWidget #auraPriceState{color:var(--au-warn);}
+#auraReformerWidget .au-sv{font-size:11px;opacity:.85;display:inline-flex;align-items:center;gap:4px;}
+#auraReformerWidget .au-sv select{font-size:12px;padding:3px 6px;border-radius:8px;background:rgba(148,163,184,.12);color:inherit;border:1px solid rgba(148,163,184,.35);max-width:190px;}
 #auraReformerWidget #stack-ai-card{padding:0!important;background:none!important;border:none!important;box-shadow:none!important;border-image:none!important;margin-top:10px!important;}
 #auraReformerWidget #stack-ai-card::before,#auraReformerWidget #stack-ai-card::after{display:none!important;}
 #auraReformerWidget #stack-ai-card .lx-how,#auraReformerWidget #stack-ai-card .fo-section-t,#auraReformerWidget #stack-ai-card [data-admin-only],#auraReformerWidget .fo-plan ol{display:none!important;}
 </style>
 <div id="auraReformerWidget">
   <div class="au-head">
-    <div class="au-title">AURA Reformer<small>Study → plan → burner steps · runs by itself every 15 min</small></div>
-    <div class="au-hr"><span id="auraStatus"></span><button id="btnRunAuraOptimization" class="au-run" onclick="window.triggerAuraOptimizer()">⚡ Run</button></div>
+    <div class="au-title">Advanced Process Control Advisor<small>Reformer firing optimisation · study → plan → burner steps · runs every 15 min</small></div>
+    <div class="au-hr"><label class="au-sv" title="TST survey the advisor works on">Survey <select id="auraSurveySel" onchange="window.auraPickSurvey(this.value)"><option value="">Latest saved</option></select></label><span id="auraStatus"></span><button id="btnRunAuraOptimization" class="au-run" onclick="window.triggerAuraOptimizer()">⚡ Run</button></div>
   </div>
   <div class="au-hero" id="auraHero">
     <div class="au-tile is-money"><span>Saving</span><b>—</b><i>₹ / year</i></div>
@@ -26937,6 +26956,7 @@ body.light-theme #auraReformerWidget{--au-bg:#ffffff;--au-card:#f4f6fa;--au-line
       <label>Hours / yr<input id="auraHours" type="number" step="1"></label>
       <label>NG tip P max<input id="auraTipNg" type="number" step="0.01" placeholder="enter"></label>
       <label>Naphtha tip P max<input id="auraTipNap" type="number" step="0.01" placeholder="enter"></label>
+      <label>Off-gas tip P max (flare above)<input id="auraTipOg" type="number" step="0.01" placeholder="1.00"></label>
       <label>Pre-reformer bed min °C<input id="auraBedMin" type="number" step="1"></label>
     </div>
     <button type="button" class="au-btn2" onclick="window.auraSavePrices()">Save</button>
