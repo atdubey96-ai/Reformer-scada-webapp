@@ -2484,22 +2484,17 @@
       var clean = function(a){ return (a || []).map(function(t, i){ return sus[i] ? NaN : t; }); };
       var T0 = clean(fo.cur.T), T1 = clean(pl.p.T), peakNow = mx(T0);
       var pk = { AB:mx(T1.slice(0, 30)), CD:mx(T1.slice(30, 60)) }, cap = Math.max(Math.min(LIM, peakNow), LIM - 5); /* tube life: hottest tube kept at least 5 °C under the limit (life well above the 100,000 h design); below that, spare TST room may be used for COT */
-      var cot = { AB:kp.cotAB ? kp.cotAB.cur : d.abCot, CD:kp.cotCD ? kp.cotCD.cur : d.cdCot }, dc = { AB:0, CD:0 }, why = {};
+      var cot = { AB:kp.cotAB ? kp.cotAB.cur : d.abCot, CD:kp.cotCD ? kp.cotCD.cur : d.cdCot }, dc = { AB:0, CD:0 }, why = {}, burn = { AB:0, CD:0 }; /* burn = COT shift from the burner moves themselves (fired heat moved between chambers) */
       /* 0. TST hard limit: if burner moves alone cannot bring a chamber under 950, lower that chamber's COT */
       /* one common fuel flow controller feeds both chambers, so COT moves together on AB and CD */
       /* a common fuel change moves each chamber's COT by its NG-firing share (burner pattern), R = 1 means average */
       var R = pl.p.fuelSplit || { AB:1, CD:1 }; R.AB = R.AB > 0.2 ? R.AB : 0.2; R.CD = R.CD > 0.2 ? R.CD : 0.2;
       var addF = function(x){ dc.AB += x * R.AB; dc.CD += x * R.CD; };
-      var roomF = function(){ return Math.min((cap - (pk.AB + g * dc.AB)) / (g * R.AB), (cap - (pk.CD + g * dc.CD)) / (g * R.CD), (COTLIM - (cot.AB + dc.AB)) / R.AB, (COTLIM - (cot.CD + dc.CD)) / R.CD); };
+      var roomF = function(){ return Math.min((cap - (pk.AB + g * dc.AB)) / (g * R.AB), (cap - (pk.CD + g * dc.CD)) / (g * R.CD), (COTLIM - (cot.AB + burn.AB + dc.AB)) / R.AB, (COTLIM - (cot.CD + burn.CD + dc.CD)) / R.CD); };
       var need = Math.max((pk.AB - LIM) / (g * R.AB), (pk.CD - LIM) / (g * R.CD));
       if(need > 0){ addF(-Math.min(25, Math.ceil(need))); /* TST is the hard limit: up to 25 °C, still moved 2 °C at a time */ why.AB = why.CD = "TST"; }
       /* 3a. CH4 slip: close the AB/CD COT gap at the same total fuel (colder chamber dominates the mixed slip) */
-      var gap = cot.AB - cot.CD, shift = 0;
-      if(!why.AB && !why.CD && isFinite(gap) && Math.abs(gap) >= 3){
-        var hot = gap > 0 ? "AB" : "CD", cool = gap > 0 ? "CD" : "AB", x = Math.abs(gap) / 2;
-        x = Math.min(x, Math.max(0, (cap - pk[cool]) / g)); x = Math.floor(x);
-        notes.push("COT gap AB/CD " + f(Math.abs(gap), 0) + " °C: with one common fuel controller it can only be closed by burner openings (more firing on " + cool + ", less on " + hot + ")" + (x >= 1 ? "; " + cool + " tubes have about " + f(x * g, 0) + " °C room for it." : "; the " + cool + " tubes have no room now."));
-      }
+      var shift = 0;
       /* COT economics: lower CH4 slip = more H2 per kg naphtha feed (CH4 -> CO2 + 4 H2 via reforming + shift), against more fired fuel.
          Design basis: 26,000 kg/h naphtha -> 100 kNm3/h H2 at 2.3% slip. H2+CO in dry reformer outlet taken as 84%. */
       var FEED_DES = 26000, H2_DES = 100000, SLIP_DES = 2.3, H2CO = 84, CP_PROC = 0.7, MASS_PER_FEED = 4, DH_REF = 49000, ETA_RAD = 0.59;
@@ -2515,7 +2510,17 @@
         var dT = (dA + dC) / 2, h2Nm3 = o.feedKg * H2_DES / FEED_DES, dCH4 = h2Nm3 / 4 / 22.414;
         o.fuelGcal = (feedNow * MASS_PER_FEED * CP_PROC * dT + dCH4 * DH_REF) / 1e6 / ETA_RAD; o.fuelRs = o.fuelGcal * rsPerGcal;
         o.net = o.feedRs - o.fuelRs; return o; }
-      var per1 = econ(1, 1), cotPays = per1.net > 0; window.__auraEcon = { per1:per1, rsPerGcal:rsPerGcal, feedNow:feedNow, slip0:slip0 };
+      var per1 = econ(1, 1), cotPays = per1.net > 0; /* COT shift from the burner plan: each chamber's change in fired heat (cuts, takes, fuel swaps, NG make-up and off-gas
+         redistribution over the common headers) at the furnace's fired heat, divided by the fuel needed per °C COT in one chamber */
+      (function(){ var q0 = pl.p.sideQ0, q1 = pl.p.sideQ1, perC = per1.fuelGcal > 0 ? per1.fuelGcal / 2 : NaN, QT = live && m.totalHeat > 0 ? m.totalHeat : NaN;
+        if(q0 && q1 && q0.AB + q0.CD > 0 && isFinite(perC) && isFinite(QT)) ["AB","CD"].forEach(function(sd){ var dq = (q1[sd] - q0[sd]) / (q0.AB + q0.CD) * QT; burn[sd] = Math.round(Math.max(-20, Math.min(20, dq / perC))); }); })();
+      var gap = (cot.AB + burn.AB) - (cot.CD + burn.CD); /* gap left after the burner moves */
+      if(!why.AB && !why.CD && isFinite(gap) && Math.abs(gap) >= 3){
+        var hot = gap > 0 ? "AB" : "CD", cool = gap > 0 ? "CD" : "AB", x = Math.abs(gap) / 2;
+        x = Math.min(x, Math.max(0, (cap - pk[cool]) / g)); x = Math.floor(x);
+        notes.push("COT gap AB/CD after the burner moves " + f(Math.abs(gap), 0) + " °C: with one common fuel controller it can only be closed by burner openings (more firing on " + cool + ", less on " + hot + ")" + (x >= 1 ? "; " + cool + " tubes have about " + f(x * g, 0) + " °C room for it." : "; the " + cool + " tubes have no room now."));
+      }
+      window.__auraEcon = { per1:per1, rsPerGcal:rsPerGcal, feedNow:feedNow, slip0:slip0 };
       /* 3b. CH4 slip: raise COT inside tube-life room (also pays when feed saved > extra fuel); lower it only if that saves money */
       var cb = fo.cotBox, bedPlan = isFinite(pl.p.bed) ? pl.p.bed : (kp.bed ? kp.bed.cur : NaN), BEDF = 0.16 * 0.48;
       if(cb && isFinite(cb.dCot) && !why.AB && !why.CD && (cb.dCot >= 1 || cotPays)){
@@ -2529,13 +2534,17 @@
           if(up >= 1){ addF(up); } else notes.push("COT rise for CH₄ slip held: it would shorten tube life (higher priority).");
         } else if(cb.dCot <= -1){
           var dn = Math.ceil(Math.max(cb.dCot, -8));
-          if(isFinite(bedPlan) && bedPlan + BEDF * dn < BEDMIN) notes.push("COT kept: lowering it would cool the pre-reformer bed below " + BEDMIN + " °C.");
+          if(isFinite(bedPlan) && bedPlan + BEDF * (dn + (burn.AB + burn.CD) / 2) < BEDMIN) notes.push("COT kept: lowering it would cool the pre-reformer bed below " + BEDMIN + " °C.");
           else { addF(dn); }
         }
       }
       dc.AB = Math.round(dc.AB); dc.CD = Math.round(dc.CD);
+      /* COT hard limit after the burner shift: if a chamber would pass COTLIM, take the common fuel down */
+      var overC = Math.max((cot.AB + burn.AB + dc.AB - COTLIM) / R.AB, (cot.CD + burn.CD + dc.CD - COTLIM) / R.CD);
+      if(overC > 0){ addF(-Math.ceil(overC)); dc.AB = Math.round(dc.AB); dc.CD = Math.round(dc.CD); notes.push("COT kept at or below " + COTLIM + " °C: the burner moves alone would push a chamber over it, so the fuel set point comes down."); }
+      ["AB","CD"].forEach(function(sd){ var tot = burn[sd] + dc[sd]; if(tot <= -26) notes.push(sd + " COT falls " + f(-tot, 0) + " °C in all: " + f(-dc[sd], 0) + " °C from the fuel set point and " + f(-burn[sd], 0) + " °C because the burner moves fire less in " + sd + ". Lower the set point in 2 °C steps and stop if TST is already under " + LIM + " °C."); });
       var pkF = { AB:pk.AB + g * dc.AB, CD:pk.CD + g * dc.CD }, peakF = Math.max(pkF.AB, pkF.CD);
-      var bedF = bedPlan + BEDF * (dc.AB + dc.CD) / 2;
+      var bedF = bedPlan + BEDF * (burn.AB + dc.AB + burn.CD + dc.CD) / 2;
       /* 4. Fuel: O2 trim only inside the TST / tube-life room that is left */
       var o2 = m ? m.o2Used : NaN, o2t = pos(p.o2t), o2To = o2, saved = 0;
       if(isFinite(o2) && isFinite(o2t) && o2 > o2t + 0.05){
@@ -2547,7 +2556,8 @@
         saved = isFinite(eff0) ? m.fuelKgh * 16.25 * (eaC - eaT) * 0.3059 * (m.stackTemp - 25) / 1e6 / eff0 : 0; }
       var trim = live ? (m.ngHeat + m.napHeat) : 0, pNg = pos(p.ng) / 1000 * (m && m.ngDensity), pNap = pos(p.nap) / 1000, hrs = pos(p.hours) || 8000, rsFuel = NaN;
       if(trim > 0 && isFinite(pNg) && isFinite(pNap)) rsFuel = saved * (m.ngHeat / trim) * 1e6 / m.ngNCV * pNg + saved * (m.napHeat / trim) * 1e6 / m.naphthaNCV * pNap; /* ₹/h, PSA off-gas always burned */
-      var ec = econ(dc.AB, dc.CD), rsCot = isFinite(ec.net) ? ec.net : 0;
+      var ecF = econ(dc.AB, dc.CD), ec = econ(burn.AB + dc.AB, burn.CD + dc.CD); ec.fuelGcal = ecF.fuelGcal; ec.fuelRs = ecF.fuelRs; ec.net = ec.feedRs - ec.fuelRs; /* feed follows the final COT; extra fuel only for the set point change (burner moves keep total fuel) */
+      var rsCot = isFinite(ec.net) ? ec.net : 0;
       if(isFinite(per1.net)) notes.push("COT economics, each +1 °C: CH₄ slip " + f(per1.dSlip, 3) + " pt, naphtha feed −" + f(per1.feedKg, 0) + " kg/h (₹ " + f(per1.feedRs, 0) + "/h), fuel +" + f(per1.fuelGcal, 2) + " Gcal/h (₹ " + f(per1.fuelRs, 0) + "/h), <b>net " + (per1.net >= 0 ? "saves" : "costs") + " ₹ " + f(Math.abs(per1.net), 0) + "/h</b>. Design: 26,000 kg/h naphtha → 100 kNm³/h H₂ at 2.3% slip.");
       if(Math.abs(rsCot) >= 1) notes.push("This plan's COT change: feed " + (ec.feedKg >= 0 ? "−" : "+") + f(Math.abs(ec.feedKg), 0) + " kg/h, fuel " + (ec.fuelGcal >= 0 ? "+" : "−") + f(Math.abs(ec.fuelGcal), 2) + " Gcal/h, net " + (rsCot >= 0 ? "saves" : "costs") + " ₹ " + f(Math.abs(rsCot), 0) + "/h.");
       var effNow = live ? m.overallEff : NaN, effAfter = live && saved > 0 ? effNow * m.totalHeat / (m.totalHeat - saved) : effNow;
@@ -2557,15 +2567,16 @@
       var nHotTubes = Math.min(240, 8 * T0.filter(function(t){ return t > LIM - 10; }).length); /* 8 tubes per peep-hole column, tubes within 10 °C of the limit */
       var rsLife = isFinite(pos(p.retube)) && lifeNow > 0 && lifeAfter > 0 ? pos(p.retube) / 240 * nHotTubes * 1e7 * (1 / Math.max(1, lifeNow) - 1 / Math.max(1, lifeAfter)) : NaN; /* ₹18 lakh per tube, spread over its life */
       var slipNow = kp.ch4 ? kp.ch4.cur : d.methaneSlip, mix = function(a, b){ return (Math.exp(-K * a) + Math.exp(-K * b)) / 2; };
-      var slipAfter = slipNow * mix(cot.AB + dc.AB, cot.CD + dc.CD) / mix(cot.AB, cot.CD);
+      var slipAfter = slipNow * mix(cot.AB + burn.AB + dc.AB, cot.CD + burn.CD + dc.CD) / mix(cot.AB, cot.CD);
       var TF = T1.map(function(t, i){ return t + g * (i < 30 ? dc.AB : dc.CD) + O2_TST * ((o2 - o2To) || 0); });
       var nOver0 = T0.filter(function(t){ return t > LIM; }).length, nOver1 = TF.filter(function(t){ return t > LIM; }).length, nTubes = T0.filter(isFinite).length;
       var sd0 = sdv(T0), sd1 = sdv(T1.map(function(t, i){ return t + g * (i < 30 ? dc.AB : dc.CD); }));
       /* work list extras */
-      var cotSteps = [];
+      var cotSteps = [], cB = { AB:cot.AB + burn.AB, CD:cot.CD + burn.CD };
+      if(Math.abs(burn.AB) >= 1 || Math.abs(burn.CD) >= 1) cotSteps.push({ key:"burn" + burn.AB + "_" + burn.CD, note:true, text:"The burner moves shift fired heat between chambers: expect AB COT about " + (burn.AB >= 0 ? "+" : "−") + Math.abs(burn.AB) + " °C and CD COT about " + (burn.CD >= 0 ? "+" : "−") + Math.abs(burn.CD) + " °C once they settle, before any fuel set point change." });
       if(Math.abs(dc.AB) >= 1 || Math.abs(dc.CD) >= 1){
         var reason = why.AB || why.CD ? "to bring TST under " + LIM + " °C" : shift ? "moves firing from the hotter chamber to the cooler one at the same total fuel, so mixed CH₄ slip falls" : (dc.AB > 0 ? "for CH₄ slip, inside tube-life room" : "slip is below target, so this saves fuel");
-        cotSteps.push({ key:"ab" + dc.AB + "cd" + dc.CD, text:"Bring COT AB " + f(cot.AB, 0) + " → " + f(cot.AB + dc.AB, 0) + " °C, CD " + f(cot.CD, 0) + " → " + f(cot.CD + dc.CD, 0) + " °C by " + (dc.AB + dc.CD >= 0 ? "raising" : "lowering") + " the fuel flow set point (fuel FIC in auto) slowly, about 2 °C at a time, after the burner moves settle; watch COT and TST after each step (" + reason + ")." });
+        cotSteps.push({ key:"ab" + dc.AB + "cd" + dc.CD, text:"Bring COT AB " + f(cB.AB, 0) + " → " + f(cB.AB + dc.AB, 0) + " °C, CD " + f(cB.CD, 0) + " → " + f(cB.CD + dc.CD, 0) + " °C by " + (dc.AB + dc.CD >= 0 ? "raising" : "lowering") + " the fuel flow set point (fuel FIC in auto) slowly, about 2 °C at a time, after the burner moves settle; watch COT and TST after each step (" + reason + ")." });
       }
       window.__auraExtras = { cotSteps:cotSteps, cotNote:"", o2From:o2, o2To:o2To < o2 ? o2To : NaN };
       /* tip pressure and bed checks */
@@ -2590,7 +2601,7 @@
         ["1", "Tube life, hottest tube", lifeNow, "highest", lifeAfter, "yrs", 1, function(v){ return !(v < lifeNow - 0.05); }, null, null, RS(isFinite(rsLife) ? rsLife / hrs : 0)],
         ["2", "Pre-reformer bed (TI-2412)", kp.bed ? kp.bed.cur : NaN, "≥ " + BEDMIN, bedF, "°C", 0, function(v){ return v >= BEDMIN; }, null, null, "limit"],
         ["3", "CH₄ slip", slipNow, cb ? f(cb.target, 2) : "lowest", slipAfter, "%", 2, function(v){ return !cb || v <= cb.target + 0.05; }, null, null, "in feed"],
-        ["", "COT AB / CD", cot.AB, "≤ " + COTLIM, null, "", 0, null, f(cot.AB, 0) + " / " + f(cot.CD, 0), f(cot.AB + dc.AB, 0) + " / " + f(cot.CD + dc.CD, 0), "in feed & fuel"],
+        ["", "COT AB / CD", cot.AB, "≤ " + COTLIM, null, "", 0, null, f(cot.AB, 0) + " / " + f(cot.CD, 0), f(cot.AB + burn.AB + dc.AB, 0) + " / " + f(cot.CD + burn.CD + dc.CD, 0), "in feed & fuel"],
         ["4", "Feed naphtha (same H₂)", feedNow, "lowest", feedNow - (ec.feedKg || 0), "kg/h", 0, null, null, null, RS(ec.feedRs || 0)],
         ["4", "Fuel fired", live ? m.totalHeat : NaN, "lowest", live ? m.totalHeat - saved + (ec.fuelGcal || 0) : NaN, "Gcal/h", 2, null, null, null, RS((isFinite(rsFuel) ? rsFuel : 0) - (ec.fuelRs || 0))],
         ["", "Flue O₂", o2, isFinite(o2t) ? f(o2t, 1) : "—", o2To, "%", 1, null, null, null, "in fuel"],

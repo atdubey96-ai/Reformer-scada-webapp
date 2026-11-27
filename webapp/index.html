@@ -12106,7 +12106,7 @@ function renderAdjustmentFromOptimiser(){
   }
   var after = [];
   Object.keys(pl.p.makeup || {}).forEach(function(s){ if(pl.p.makeup[s] > 1.001) after.push({ note:true, text:"Hold COT where it is: the cuts remove heat, so raise the common fuel flow set point (fuel FIC in auto) by about +" + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + "% in small steps, watching AB and CD COT until they settle." }); });
-  if(ex.cotSteps && ex.cotSteps.length) ex.cotSteps.forEach(function(c){ after.push({ key:"cot-" + c.key, text:c.text }); });
+  if(ex.cotSteps && ex.cotSteps.length) ex.cotSteps.forEach(function(c){ after.push({ key:"cot-" + c.key, text:c.text, note:!!c.note }); });
   if(ex.cotNote) after.push({ note:true, text:ex.cotNote });
   if(isFinite(ex.o2From) && isFinite(ex.o2To) && ex.o2From > ex.o2To + 0.05) after.push({ key:"air", text:"Trim combustion air: O₂ " + ex.o2From.toFixed(1) + " → " + ex.o2To.toFixed(1) + "%, in small steps, watching CO and flame." });
   var afterHtml = after.map(function(st){ if(st.note) return '<div style="padding:4px 6px;font-size:12px;opacity:.8;">' + hmEscapeHtml(st.text) + '</div>';
@@ -26658,7 +26658,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   function upperShare(ff){ var u = 0, t = 0; ["A","B","C","D"].forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var v = ff[w][r][b].v; t += v; if(r >= 4) u += v; } }); return t > 0 ? u / t : 0; }
   function optimise(cur, model, dCot, w, px){
     px = px || {};
-    var f = JSON.parse(JSON.stringify(cur.f)), K = kern(), moves = [], U0 = upperShare(f), bed0 = px.bed, tipMaxNg = px.tipMaxNg, tipMaxNap = px.tipMaxNap;
+    function sideQ(ff){ var q = { AB:0, CD:0 }; ["A","B","C","D"].forEach(function(w){ var sd = (w === "A" || w === "B") ? "AB" : "CD"; for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = ff[w][r][b]; if(x.s !== "C" && x.v > 0) q[sd] += x.v; } }); return q; } /* fired heat per chamber, burner units */
+    var f = JSON.parse(JSON.stringify(cur.f)), Q0 = sideQ(cur.f), K = kern(), moves = [], U0 = upperShare(f), bed0 = px.bed, tipMaxNg = px.tipMaxNg, tipMaxNap = px.tipMaxNap;
     function bedOf(ff){ return isFinite(bed0) ? bed0 + BED_PER_FLUE * FLUE_PER_UPPER * (upperShare(ff) - U0) : NaN; }
     var BMIN = Number(auraP().bedMin) > 400 ? Number(auraP().bedMin) : BED_MIN;
     function bedDef(ff){ var b = bedOf(ff); return isFinite(b) ? Math.max(0, BMIN - b) : 0; }
@@ -26742,6 +26743,10 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       a.open -= STEP; a.v = FUEL_W[a.s] * a.open / 100; bb.open += STEP; bb.v = FUEL_W[bb.s] * bb.open / 100;
       best = cand.j; T = cand.T;
     }
+    /* common fuel controller: the operator holds COT, so any net change in fired heat from the moves (e.g. opening shifted between
+       burners of different fuel) is made up by the common NG/naphtha fuel set point over all lit NG guns; off-gas total is fixed */
+    (function(){ var q1 = sideQ(f), d = (Q0.AB + Q0.CD) - (q1.AB + q1.CD), ng = []; ["A","B","C","D"].forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = f[w][r][b]; if(x.s !== "C" && x.s !== "O" && x.v > 0) ng.push(x); } });
+      var qn = ng.reduce(function(a, x){ return a + x.v; }, 0); if(Math.abs(d) > 1e-6 && qn > 0){ var k = Math.max(0.5, (qn + d) / qn); ng.forEach(function(x){ x.v *= k; }); makeup.furnace = (makeup.furnace || 1) * k; tipK = Math.max(tipK, makeup.furnace); T = temps(f); } })();
     /* why tubes are still over the limit: count burners facing each one that could still be cut */
     var LIMs = tubeLimit().lim, stuck = [];
     ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++){ var t = T[zi * 15 + ph - 1]; if(!(t > LIMs)) continue;
@@ -26751,7 +26756,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     /* merge repeated burners */
     var merged = {}; moves.forEach(function(m){ var k = m.w + m.r + "-" + m.b; if(!merged[k]) merged[k] = { w:m.w, r:m.r, b:m.b, s:m.s, sTo:m.sTo, from:m.from, to:m.to }; else { merged[k].to = m.to; if(m.sTo) merged[k].sTo = m.sTo; } });
     return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), swaps:swaps, stuck:stuck, T:T, e:evalT(T), makeup:makeup,
-      bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK, ogK:ogK(f), ogMax:OGMAX, fuelSplit:(function(){ /* how a common NG/naphtha fuel change splits between chambers: NG-gun heat share of each chamber's firing */
+      bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK, ogK:ogK(f), ogMax:OGMAX, sideQ0:Q0, sideQ1:sideQ(f), fuelSplit:(function(){ /* how a common NG/naphtha fuel change splits between chambers: NG-gun heat share of each chamber's firing */
         var q = { AB:{ n:0, t:0 }, CD:{ n:0, t:0 } }; ["A","B","C","D"].forEach(function(w){ var sd = (w === "A" || w === "B") ? "AB" : "CD"; for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = f[w][r][b]; if(x.s === "C" || !(x.v > 0)) continue; q[sd].t += x.v; if(x.s === "N") q[sd].n += x.v; else if(x.s === "B") q[sd].n += x.v * (FUEL_W.N / FUEL_W.B); } });
         var all = (q.AB.n + q.CD.n) / Math.max(1e-9, q.AB.t + q.CD.t), o = {}; ["AB","CD"].forEach(function(sd){ o[sd] = all > 0 && q[sd].t > 0 ? (q[sd].n / q[sd].t) / all : 1; }); return o; })() };
   }
