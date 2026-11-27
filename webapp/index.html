@@ -12084,38 +12084,36 @@ function renderAdjustmentFromOptimiser(){
   var pl = fo.plans[fo.bestIdx || 0], mv = (pl && pl.p && pl.p.moves) || [];
   var log = {}, hist = {}; try{ if(typeof loadCleaningLog === "function") log = loadCleaningLog() || {}; }catch(e){} try{ if(typeof loadCleaningHistory === "function") hist = loadCleaningHistory() || {}; }catch(e){}
   var fuel = { B:"Both", N:"NG", O:"Off-gas" }, lim = fo.limit || 950, ticks = auraLoadTicks(), sv = String(fo.surveyDt || "");
-  var steps = [];
-  mv = mv.slice().sort(function(x, y){ return (x.w + x.r + String(100 + x.b)).localeCompare(y.w + y.r + String(100 + y.b)); }); /* walk order: wall, row, burner */
-  ((pl.p && pl.p.swaps) || []).forEach(function(x, i){ var nm = function(q){ return q.w + q.r + "-" + q.b; };
-    steps.push({ key:"swap" + i + "-" + nm(x.hot) + "-" + nm(x.cool), kind:"swap", sw:x }); });
-  mv.filter(function(m){ return m.to < m.from; }).forEach(function(m){ steps.push({ key:"cut-" + m.w + m.r + "-" + m.b, kind:"cut", m:m }); });
-  mv.filter(function(m){ return m.to > m.from; }).forEach(function(m){ steps.push({ key:"take-" + m.w + m.r + "-" + m.b, kind:"take", m:m }); });
-  Object.keys(pl.p.makeup || {}).forEach(function(s){ if(pl.p.makeup[s] > 1.001) steps.push({ key:"makeup-" + s, kind:"note", text:"Keep " + s + " COT on auto. It adds about +" + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + "% fuel on the other " + s + " burners." }); });
-  if(ex.cotSteps && ex.cotSteps.length) ex.cotSteps.forEach(function(c, i){ steps.push({ key:"cot-" + c.key, kind:"cot", text:c.text }); });
-  else if(isFinite(ex.dCot) && Math.abs(ex.dCot) >= 1) steps.push({ key:"cot", kind:"cot", text:(ex.dCot > 0 ? "Raise" : "Lower") + " COT set point by " + Math.round(Math.abs(ex.dCot)) + " °C (AB and CD), after the burner moves settle." });
-  if(ex.cotNote) steps.push({ key:"cot-hold", kind:"note", text:ex.cotNote });
-  if(isFinite(ex.o2From) && isFinite(ex.o2To) && ex.o2From > ex.o2To + 0.05) steps.push({ key:"air", kind:"air", text:"Trim combustion air: O₂ " + ex.o2From.toFixed(1) + " → " + ex.o2To.toFixed(1) + "%, in small steps, watching CO and flame." });
-  var n = 0;
-  var rows = steps.map(function(st){
-    var main = "", color = "inherit";
-    if(st.sw){ var lb = function(q){ return 'Wall ' + hmEscapeHtml(q.w) + ' · Row ' + hmEscapeHtml(q.r) + ' · Burner ' + hmEscapeHtml(q.b) + ' <span style="opacity:.7">(' + hmEscapeHtml(fuel[q.s] || q.s) + ')</span>'; };
-      main = '<b style="color:#60a5fa;white-space:nowrap;">Swap fuel</b> <b>' + lb(st.sw.hot) + '</b> ⇄ <b>' + lb(st.sw.cool) + '</b> <span style="opacity:.7">· moves ' + hmEscapeHtml(fuel[st.sw.hot.s] || st.sw.hot.s) + ' to the cooler tube</span>';
-    } else if(st.m){ var cd = ""; try{ cd = hmLatestCleaningDate(log, hist, st.m.w, st.m.r, st.m.b) || ""; }catch(e){}
-      color = st.kind === "cut" ? "#f87171" : st.kind === "swap" ? "#60a5fa" : "#34d399";
-      main = '<b>Wall ' + hmEscapeHtml(st.m.w) + ' · Row ' + hmEscapeHtml(st.m.r) + ' · Burner ' + hmEscapeHtml(st.m.b) + '</b> <span style="opacity:.7">' + hmEscapeHtml(fuel[st.m.s] || st.m.s) + (st.m.r >= 4 ? ' · upper' : ' · lower') + (cd ? ' · cleaned ' + hmEscapeHtml(String(cd).slice(0, 10)) : '') + '</span>'
-        + ' <b style="white-space:nowrap;color:' + color + '">' + (st.kind === "swap" ? "Change fuel " + hmEscapeHtml(fuel[st.m.s] || st.m.s) + " → " + hmEscapeHtml(fuel[st.m.sTo] || st.m.sTo) : (st.kind === "cut" ? "Reduce " : "Increase ") + hmEscapeHtml(st.m.from) + '% → ' + hmEscapeHtml(st.m.to) + '%') + '</b>';
-    } else main = hmEscapeHtml(st.text);
-    if(st.kind === "note") return '<div style="padding:6px 10px 6px 38px;font-size:12px;opacity:.8;">' + main + '</div>';
-    n++; var tk = ticks[sv + "|" + st.key];
-    return '<label style="display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:7px;background:var(--au-card,rgba(255,255,255,0.04));margin-top:6px;cursor:pointer;' + (tk ? 'opacity:.55;' : '') + '">'
-      + '<input type="checkbox" ' + (tk ? 'checked ' : '') + 'onchange="auraTickStep(\'' + hmEscapeHtml(st.key) + '\', this.checked)" style="width:16px;height:16px;">'
-      + '<span style="min-width:18px;font-weight:800;">' + n + '.</span><span style="flex:1;">' + main + '</span>'
-      + (tk ? '<span style="font-size:11px;opacity:.8;">done ' + hmEscapeHtml(new Date(tk.at).toLocaleString([], { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })) + '</span>' : '') + '</label>';
-  });
-  var head = '';
-  if(!steps.length) html = '<div style="padding:8px 0;">' + (fo.cur.e.peak > lim ? 'A tube is above ' + lim + ' °C and no burner move lowers it. Recheck the reading, then cut the facing burners by hand or lower COT / total firing.' : 'No change needed. Firing is already near best.') + '</div>';
-  else { var nB = steps.filter(function(x){ return x.m || x.sw; }).length, bR = rows.slice(0, nB), oR = rows.slice(nB);
-    html = (bR.length > 10 ? bR.slice(0, 8).join("") + '<details><summary style="cursor:pointer;margin:8px 0 0 10px;font-size:12px;opacity:.8;">Show all ' + bR.length + ' burner steps</summary>' + bR.slice(8).join("") + '</details>' : bR.join("")) + oR.join("") + '<div style="font-size:11px;opacity:.6;margin-top:6px;">Do the steps in order, one 25% step at a time, and tick each one. The next TST survey checks the prediction.</div>'; }
+  /* one row per burner, split into two tables: where to cut fuel (hot tubes) and where to take it (cool tubes) */
+  var by = {}, ord = [];
+  function ent(q){ var k = q.w + q.r + "-" + q.b; if(!by[k]){ by[k] = { k:k, w:q.w, r:q.r, b:q.b, s:q.s, sTo:null, from:null, to:null, cat:null }; ord.push(k); } return by[k]; }
+  ((pl.p && pl.p.swaps) || []).forEach(function(x){ var h = ent(x.hot); h.sTo = x.cool.s; h.cat = h.cat || "cut"; var c = ent(x.cool); c.sTo = x.hot.s; c.cat = c.cat || "take"; });
+  mv.forEach(function(m){ var e = ent(m); if(e.from == null) e.from = m.from; e.to = m.to; e.cat = m.to < m.from ? "cut" : "take"; });
+  var list = ord.map(function(k){ return by[k]; }).filter(function(e){ return (e.sTo && e.sTo !== e.s) || (e.from != null && e.to !== e.from); })
+    .sort(function(x, y){ return (x.w + x.r + String(100 + x.b)).localeCompare(y.w + y.r + String(100 + y.b)); });
+  var tickBox = function(key){ var tk = ticks[sv + "|" + key]; return '<input type="checkbox" ' + (tk ? 'checked ' : '') + 'onchange="auraTickStep(\'' + hmEscapeHtml(key) + '\', this.checked)" style="width:15px;height:15px;cursor:pointer;">'; };
+  var th = 'style="text-align:left;padding:5px 6px;font-size:10.5px;opacity:.7;text-transform:uppercase;border-bottom:1px solid var(--au-line,#334155);"', td = 'style="padding:5px 6px;border-bottom:1px solid var(--au-line,#334155);"';
+  function table(cat, title, color){
+    var rs = list.filter(function(e){ return e.cat === cat; }); if(!rs.length) return "";
+    return '<div style="margin-top:8px;"><div style="font-weight:800;color:' + color + ';margin-bottom:2px;">' + title + ' <span style="opacity:.7;font-weight:600;">(' + rs.length + ')</span></div>'
+      + '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><tr><th ' + th + '></th><th ' + th + '>Wall</th><th ' + th + '>Row</th><th ' + th + '>Burner</th><th ' + th + '>Fuel</th><th ' + th + '>Opening</th></tr>'
+      + rs.map(function(e){ var key = cat + "-" + e.k, done = ticks[sv + "|" + key];
+        var fuelT = e.sTo && e.sTo !== e.s ? '<b style="color:' + color + '">' + hmEscapeHtml(fuel[e.s] || e.s) + ' → ' + hmEscapeHtml(fuel[e.sTo] || e.sTo) + '</b>' : hmEscapeHtml(fuel[e.s] || e.s);
+        var openT = e.from != null && e.to !== e.from ? '<b style="color:' + color + '">' + hmEscapeHtml(e.from) + '% → ' + hmEscapeHtml(e.to) + '%</b>' + (e.to === 0 ? ' <span style="opacity:.7">(off)</span>' : '') : 'no change';
+        return '<tr style="' + (done ? 'opacity:.5;' : '') + '"><td ' + td + '>' + tickBox(key) + '</td><td ' + td + '><b>' + hmEscapeHtml(e.w) + '</b></td><td ' + td + '>' + hmEscapeHtml(e.r) + (e.r >= 4 ? ' <span style="opacity:.6">upper</span>' : '') + '</td><td ' + td + '>' + hmEscapeHtml(e.b) + '</td><td ' + td + '>' + fuelT + '</td><td ' + td + '>' + openT + '</td></tr>'; }).join("")
+      + '</table></div></div>';
+  }
+  var after = [];
+  Object.keys(pl.p.makeup || {}).forEach(function(s){ if(pl.p.makeup[s] > 1.001) after.push({ note:true, text:"Keep " + s + " COT on auto. It adds about +" + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + "% fuel on the other " + s + " burners." }); });
+  if(ex.cotSteps && ex.cotSteps.length) ex.cotSteps.forEach(function(c){ after.push({ key:"cot-" + c.key, text:c.text }); });
+  if(ex.cotNote) after.push({ note:true, text:ex.cotNote });
+  if(isFinite(ex.o2From) && isFinite(ex.o2To) && ex.o2From > ex.o2To + 0.05) after.push({ key:"air", text:"Trim combustion air: O₂ " + ex.o2From.toFixed(1) + " → " + ex.o2To.toFixed(1) + "%, in small steps, watching CO and flame." });
+  var afterHtml = after.map(function(st){ if(st.note) return '<div style="padding:4px 6px;font-size:12px;opacity:.8;">' + hmEscapeHtml(st.text) + '</div>';
+    var tk = ticks[sv + "|" + st.key]; return '<label style="display:flex;gap:10px;align-items:center;padding:7px 8px;border-radius:7px;background:var(--au-card,rgba(255,255,255,0.04));margin-top:6px;cursor:pointer;' + (tk ? 'opacity:.55;' : '') + '">' + tickBox(st.key) + '<span style="flex:1;">' + hmEscapeHtml(st.text) + '</span></label>'; }).join("");
+  if(!list.length && !after.length) html = '<div style="padding:8px 0;">' + (fo.cur.e.peak > lim ? 'A tube is above ' + lim + ' °C and no burner move lowers it. Recheck the reading, then cut the facing burners by hand or lower COT / total firing.' : 'No change needed. Firing is already near best.') + '</div>';
+  else html = table("cut", "▼ Cut fuel here · burners at hot tubes", "#f87171") + table("take", "▲ Take fuel here · burners at cool tubes", "#34d399")
+    + (afterHtml ? '<div style="margin-top:10px;font-weight:800;">Then</div>' + afterHtml : '')
+    + '<div style="font-size:11px;opacity:.6;margin-top:6px;">Do the cuts and takes together, side by side, then the steps under Then. Tick each one. The next TST survey checks the prediction.</div>';
   targets.forEach(function(el){ if(el) el.innerHTML = html; });
 }
 function auraLoadTicks(){ try{ return JSON.parse(localStorage.getItem("auraTicksV1") || "{}") || {}; }catch(e){ return {}; } }
@@ -26657,10 +26655,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     function bedOf(ff){ return isFinite(bed0) ? bed0 + BED_PER_FLUE * FLUE_PER_UPPER * (upperShare(ff) - U0) : NaN; }
     var BMIN = Number(auraP().bedMin) > 400 ? Number(auraP().bedMin) : BED_MIN;
     function bedDef(ff){ var b = bedOf(ff); return isFinite(b) ? Math.max(0, BMIN - b) : 0; }
-    /* gradual, uniform patterns: no burner below 25%, neighbours within 25%, no row averaging under 50% */
-    function patternOk(ff, c){ var x = ff[c.w][c.r][c.b]; if(x.s === "C") return true; if(x.open < 25 || x.open > 100) return false;
-      var nb = [[c.r, c.b - 1], [c.r, c.b + 1], [c.r - 1, c.b], [c.r + 1, c.b]];
-      for(var i = 0; i < nb.length; i++){ var rr = nb[i][0], bb2 = nb[i][1]; if(rr < 1 || rr > 6 || bb2 < 1 || bb2 > 15) continue; var y = ff[c.w][rr][bb2]; if(y.s !== "C" && Math.abs(y.open - x.open) > 25) return false; }
+    /* patterns: a single burner may be cut down to 0% (off), but no row may average under 50% (no full row or wall cuts) */
+    function patternOk(ff, c){ var x = ff[c.w][c.r][c.b]; if(x.s === "C") return true; if(x.open < 0 || x.open > 100) return false; /* a single burner may go fully off; a whole row may not */
       var sum = 0, n = 0; for(var b3 = 1; b3 <= 15; b3++){ var z = ff[c.w][c.r][b3]; if(z.s !== "C"){ sum += z.open; n++; } } return !n || sum / n >= 50; }
     var tipK = 1;
     function tipOk(k){ var kk = Math.max(tipK, k); if(isFinite(tipMaxNg) && isFinite(px.tipNg) && px.tipNg * kk * kk > tipMaxNg) return false; if(isFinite(tipMaxNap) && isFinite(px.tipNap) && px.tipNap * kk * kk > tipMaxNap) return false; return true; }
@@ -26711,7 +26707,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       if(!cand || evalT(T).over > 0){
         /* best cut on each side separately (AB and CD chambers are independent), so every over-limit zone gets a move */
         var bySide = {};
-        downs.forEach(function(d){ if(f[d.w][d.r][d.b].open - STEP < 25) return; /* keep flame-stability floor */
+        downs.forEach(function(d){ if(f[d.w][d.r][d.b].open - STEP < 0) return;
           var c = applyCut(d); if(!c) return; var okC = patternOk(f, d) && tipOk(c.k) && !(bedDef(f) > 0 && bedOf(f) < bedOf0); var Tn = temps(f), j = okC ? J(Tn) + (CLEAN(d) ? 0.3 : 0) : Infinity; c.undo();
           if(j < best - 0.2 && (!bySide[c.side] || j < bySide[c.side].j)) bySide[c.side] = { d:d, j:j }; });
         var sides = Object.keys(bySide);
@@ -26897,6 +26893,8 @@ body.light-theme #auraReformerWidget{--au-bg:#ffffff;--au-card:#f4f6fa;--au-line
 #auraReformerWidget #stack-adjust-card{padding:0!important;background:none!important;border:none!important;box-shadow:none!important;margin:0!important;}
 #auraReformerWidget #stack-adjust-card .hm-adjust-head,#auraReformerWidget #stack-adjust-card .hm-adjust-sub{display:none!important;}
 #auraReformerWidget #stack-adjust-card label{background:var(--au-card)!important;}
+#auraReformerWidget #stack-adjustment-list table th,#auraReformerWidget #stack-adjustment-list table td{text-align:left!important;border:none!important;border-bottom:1px solid var(--au-line)!important;background:none!important;padding:5px 8px!important;}
+#auraReformerWidget #stack-adjustment-list table td:first-child,#auraReformerWidget #stack-adjustment-list table th:first-child{width:26px;}
 #auraReformerWidget .au-more{margin-top:14px;border-top:1px solid var(--au-line);padding-top:10px;font-size:12px;color:var(--au-sub);}
 #auraReformerWidget .au-more summary{cursor:pointer;font-weight:700;}
 #auraReformerWidget .au-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0 8px;}
