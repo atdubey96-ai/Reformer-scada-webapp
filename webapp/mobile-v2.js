@@ -2744,13 +2744,35 @@
       var du = x.T.map(function(T){ return isFinite(T) ? h / tr(T) : 0; }); du.forEach(function(d, k){ used[k] += d; });
       var wk = 0; du.forEach(function(d, k){ if(d > du[wk]) wk = k; }); var sum = du.reduce(function(a, b){ return a + b; }, 0);
       rows.push({ dt:x.lead ? "Startup" : x.e.dt, shift:x.lead ? "" : x.e.shift, h:h, avg:sum / 60, worst:wk, worstD:du[wk], rs:sum * PER_PH * TUBE_RS, peak:Math.max.apply(null, x.T.filter(isFinite)) });
-      hist.push({ t:t1, u:used.slice() }); });
+      hist.push({ t0:t0, t:t1, u:used.slice(), T:x.T.slice() }); });
     var Tl = seq[seq.length - 1].T, rate = Tl.map(function(T){ return isFinite(T) ? 1 / tr(T) : 0; }); /* fraction per hour now */
     return { used:used, rows:rows, hist:hist, rate:rate, Tl:Tl, last:seq[seq.length - 1] }; }
   function lbl(k){ return Z[Math.floor(k / 15)][1] + " PH" + (k % 15 + 1); }
   function col(p){ var x = Math.max(0, Math.min(1, p)); var r = Math.round(52 + x * (248 - 52)), g = Math.round(211 - x * (211 - 113)), b = Math.round(153 - x * (153 - 113)); return "rgb(" + r + "," + g + "," + b + ")"; }
+  var FIL = { ch:"AB", lv:"both", ph:0 }, LAST = null;
+  window.tluFilter = function(k, v){ FIL[k] = k === "ph" ? Number(v) : v; drawPair(); };
+  function drawPair(){ var box = document.getElementById("tluPair"); if(!box || !LAST) return; var R = LAST, H = R.hist, u = R.used;
+    var zis = (FIL.ch === "AB" ? [0, 1] : [2, 3]).filter(function(zi){ return FIL.lv === "both" || (FIL.lv === "bot" ? zi % 2 === 0 : zi % 2 === 1); });
+    var ks = []; zis.forEach(function(zi){ for(var i = 0; i < 15; i++) if(!FIL.ph || FIL.ph === i + 1) ks.push(zi * 15 + i); });
+    var hot = ks.slice().sort(function(a, b){ return u[b] - u[a]; }).slice(0, 3), cols = ["#f87171","#fb923c","#a78bfa"];
+    var W = 520, Hh = 220, t0 = START, t1 = H[H.length - 1].t, X = function(t){ return 44 + (t - t0) / Math.max(1, t1 - t0) * (W - 54); };
+    function svg(isT){ var vals = []; ks.forEach(function(k){ H.forEach(function(p){ vals.push(isT ? p.T[k] : p.u[k] * 100); }); }); vals = vals.filter(isFinite);
+      var lo = isT ? Math.min(Math.min.apply(null, vals), 940) - 5 : 0, hi = isT ? Math.max(Math.max.apply(null, vals), LIM) + 5 : Math.max(Math.max.apply(null, vals), 1e-6);
+      var Y = function(v){ return Hh - 22 - (v - lo) / Math.max(1e-9, hi - lo) * (Hh - 34); };
+      var out = '<svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:' + Hh + 'px">';
+      [0, 0.5, 1].forEach(function(q){ var v = lo + q * (hi - lo); out += '<line x1="44" x2="' + (W - 10) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="rgba(148,163,184,.18)"/><text x="2" y="' + (Y(v) + 4).toFixed(1) + '" class="tlu-ax">' + (isT ? f(v, 0) : f(v, 2) + "%") + '</text>'; });
+      if(isT) out += '<line x1="44" x2="' + (W - 10) + '" y1="' + Y(LIM).toFixed(1) + '" y2="' + Y(LIM).toFixed(1) + '" stroke="#ef4444" stroke-dasharray="5 4"/><text x="' + (W - 70) + '" y="' + (Y(LIM) - 4).toFixed(1) + '" class="tlu-ax" style="fill:#ef4444;opacity:1">limit ' + LIM + '</text>';
+      var order = ks.filter(function(k){ return hot.indexOf(k) < 0; }).concat(hot.slice().reverse());
+      order.forEach(function(k){ var hi3 = hot.indexOf(k), c = hi3 >= 0 ? cols[hi3] : "rgba(148,163,184,.45)", w = hi3 >= 0 || ks.length === 1 ? 2.2 : 1.1, pts = [];
+        if(isT) H.forEach(function(p){ if(isFinite(p.T[k])){ pts.push(X(p.t0).toFixed(1) + "," + Y(p.T[k]).toFixed(1)); pts.push(X(p.t).toFixed(1) + "," + Y(p.T[k]).toFixed(1)); } });
+        else { pts.push(X(t0).toFixed(1) + "," + Y(0).toFixed(1)); H.forEach(function(p){ pts.push(X(p.t).toFixed(1) + "," + Y(p.u[k] * 100).toFixed(1)); }); }
+        out += '<polyline fill="none" stroke="' + c + '" stroke-width="' + w + '" points="' + pts.join(" ") + '"><title>' + esc(lbl(k)) + ' · used ' + f(u[k] * 100, 3) + ' % · TST now ' + f(R.Tl[k], 0) + ' °C</title></polyline>'; });
+      out += '<text x="44" y="' + (Hh - 5) + '" class="tlu-ax">9 Nov</text><text x="' + (W - 54) + '" y="' + (Hh - 5) + '" class="tlu-ax">' + new Date(t1).toLocaleDateString("en-GB", { day:"2-digit", month:"short" }) + '</text></svg>';
+      return out; }
+    var leg = hot.map(function(k, j){ return '<span><i style="background:' + cols[j] + '"></i>' + esc(lbl(k)) + ' ' + f(u[k] * 100, 2) + '%</span>'; }).join("") + (ks.length > 3 ? '<span><i style="background:rgba(148,163,184,.6)"></i>other ' + (ks.length - 3) + ' peep holes (hover a line)</span>' : '');
+    box.innerHTML = '<div class="tlu-g"><div><div class="tlu-s">Cumulative life used (%)</div>' + svg(false) + '</div><div><div class="tlu-s">TST at each survey (°C)</div>' + svg(true) + '</div></div><div class="tlu-lg">' + leg + '</div>'; }
   function render(){ var host = document.getElementById("tubeLifeUsage"); if(!host){ var tc = document.getElementById("tube-life-card"); if(!tc) return; tc.insertAdjacentHTML("beforebegin", '<div id="tubeLifeUsage"></div>'); host = document.getElementById("tubeLifeUsage"); }
-    var R = compute(); if(!R){ host.innerHTML = '<div class="tlu"><div class="tlu-h">Tube life usage</div><div class="tlu-n">No TST survey since startup (9 Nov 2026) yet.</div></div>'; return; }
+    var R = compute(); LAST = R; if(!R){ host.innerHTML = '<div class="tlu"><div class="tlu-h">Tube life usage</div><div class="tlu-n">No TST survey since startup (9 Nov 2026) yet.</div></div>'; return; }
     var u = R.used, avg = u.reduce(function(a, b){ return a + b; }, 0) / 60, wk = 0; u.forEach(function(v, k){ if(v > u[wk]) wk = k; });
     var yrs = function(k){ return R.rate[k] > 0 ? (1 - u[k]) / R.rate[k] / 8760 : Infinity; };
     var rsDay = R.rate.reduce(function(a, b){ return a + b; }, 0) * 24 * PER_PH * TUBE_RS, lastRow = R.rows[R.rows.length - 1];
@@ -2775,7 +2797,8 @@
     var focus = '<table class="tlu-tb"><tr><th>Peep hole</th><th>TST now</th><th>Used so far</th><th>Years left at today\'s TST</th><th>₹ / day now</th><th>Burners facing</th></tr>' + fast.map(function(x){ var k = x[1], zi = Math.floor(k / 15), ph = k % 15 + 1, walls = zi < 2 ? "A / B" : "C / D", rowsTxt = zi % 2 ? "rows 4–6" : "rows 1–3";
       return '<tr><td>' + esc(lbl(k)) + '</td><td>' + f(R.Tl[k], 0) + ' °C</td><td>' + f(u[k] * 100, 3) + ' %</td><td>' + (isFinite(yrs(k)) ? f(Math.min(99, yrs(k)), 1) : "—") + '</td><td>' + money(x[0] * 24 * PER_PH * TUBE_RS) + '</td><td>' + walls + ' · ' + rowsTxt + ' · B' + Math.max(1, ph - 1) + '–B' + Math.min(15, ph + 1) + '</td></tr>'; }).join("") + '</table><div class="tlu-n">Cut firing on these burners first: the Advanced Process Control Advisor\'s Cut list targets the same tubes.</div>';
     var tbl = '<details><summary>Per survey (life used in each interval)</summary><div class="tlu-sc"><table class="tlu-tb"><tr><th>Survey</th><th>Hours</th><th>Peak TST</th><th>Avg life used</th><th>Worst peep hole</th><th>₹ of tube life</th></tr>' + R.rows.slice().reverse().map(function(r){ return '<tr><td>' + esc(String(r.dt).replace("T", " ").slice(0, 16)) + (r.shift ? " · " + esc(r.shift) : "") + '</td><td>' + f(r.h, 1) + '</td><td>' + f(r.peak, 0) + ' °C</td><td>' + f(r.avg * 100, 4) + ' %</td><td>' + esc(lbl(r.worst)) + ' ' + f(r.worstD * 100, 4) + ' %</td><td>' + money(r.rs) + '</td></tr>'; }).join("") + '</table></div></details>';
-    host.innerHTML = '<div class="tlu"><div class="tlu-h">Tube life usage <small>since startup 9 Nov 2026 · API 530 (950 °C = 100,000 h) · TST pyrometer held until the next survey</small></div>' + tiles + '<div class="tlu-g"><div><div class="tlu-s">Cumulative life used by peep hole</div>' + hm + '</div><div><div class="tlu-s">Cumulative life used over time · 5 worst + average</div>' + chart + '</div></div><div class="tlu-s">Now: where life is being used fastest (at the latest survey TST)</div>' + focus + tbl + '</div>'; }
+    function sel(k, opts){ return '<select onchange="window.tluFilter(\'' + k + '\', this.value)">' + opts.map(function(o){ return '<option value="' + o[0] + '"' + (String(FIL[k]) === String(o[0]) ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") + '</select>'; }
+    host.innerHTML = '<div class="tlu"><div class="tlu-h">Tube life usage <small>since startup 9 Nov 2026 · API 530 (950 °C = 100,000 h) · TST pyrometer held until the next survey</small></div>' + tiles + '<div class="tlu-s">Cumulative life used by peep hole</div>' + hm + '<div class="tlu-f"><b>Per peep hole over time</b>' + sel("ch", [["AB","AB chamber"],["CD","CD chamber"]]) + sel("lv", [["both","Bottom + Top"],["bot","Bottom"],["top","Top"]]) + sel("ph", [[0,"All peep holes"]].concat([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(function(n){ return [n, "PH " + n]; }))) + '</div><div id="tluPair"></div><div class="tlu-s">Now: where life is being used fastest (at the latest survey TST)</div>' + focus + tbl + '</div>'; drawPair(); }
   var css = '#tubeLifeUsage .tlu{margin:0 0 14px;padding:12px 14px;border-radius:14px;border:1px solid rgba(248,113,113,.3);background:rgba(15,23,42,.55);color:#e2e8f0;font-size:13px}'
     + 'body.light-theme #tubeLifeUsage .tlu{background:#fff;color:#0f172a;border-color:rgba(220,38,38,.25)}'
     + '#tubeLifeUsage .tlu-h{font-weight:800;font-size:15px;margin-bottom:8px}#tubeLifeUsage .tlu-h small{font-weight:500;opacity:.7;font-size:11px;margin-left:6px}'
@@ -2787,6 +2810,7 @@
     + '#tubeLifeUsage .tlu-n{font-size:11px;opacity:.7;margin-top:4px}#tubeLifeUsage .tlu-ax{font-size:10px;fill:currentColor;opacity:.6}'
     + '#tubeLifeUsage .tlu-lg{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;margin-top:4px}#tubeLifeUsage .tlu-lg i{display:inline-block;width:10px;height:3px;margin-right:4px;vertical-align:middle}'
     + '#tubeLifeUsage .tlu-tb{width:100%;border-collapse:collapse;font-size:12px}#tubeLifeUsage .tlu-tb th,#tubeLifeUsage .tlu-tb td{padding:4px 6px;border-bottom:1px solid rgba(148,163,184,.15);text-align:right;white-space:nowrap}#tubeLifeUsage .tlu-tb th:first-child,#tubeLifeUsage .tlu-tb td:first-child,#tubeLifeUsage .tlu-tb td:last-child,#tubeLifeUsage .tlu-tb th:last-child{text-align:left}'
+    + '#tubeLifeUsage .tlu-f{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 4px}#tubeLifeUsage .tlu-f b{font-size:12.5px;margin-right:4px}#tubeLifeUsage .tlu-f select{font-size:12px;padding:4px 8px;border-radius:8px;background:rgba(148,163,184,.12);color:inherit;border:1px solid rgba(148,163,184,.35)}'
     + '#tubeLifeUsage .tlu-sc{max-height:260px;overflow:auto}#tubeLifeUsage details summary{cursor:pointer;font-size:12px;margin-top:8px;opacity:.85}#tubeLifeUsage .tlu-ch{overflow:hidden}';
   function boot(){ if(!document.getElementById("tlu-css")){ var st = document.createElement("style"); st.id = "tlu-css"; st.textContent = css; document.head.appendChild(st); } try{ render(); }catch(e){ console.warn("[TubeLifeUsage]", e); } }
   window.tubeLifeUsageRender = boot;
