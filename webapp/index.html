@@ -27035,7 +27035,7 @@ body.light-theme #auraReformerWidget .au-scroll th{background:#f4f6fa;}
             #tube-life-card .tl-note{padding:10px 14px;border-radius:12px;border:1px dashed rgba(148,163,184,0.28);background:rgba(15,23,42,0.3);
               font-size:12.5px;line-height:1.6;color:var(--tl-sub);}
             #tube-life-card .tl-note.is-warn{border-color:rgba(251,191,36,0.4);color:#fde68a;}
-            #tube-life-card .tl-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;}
+            #tube-life-card .tl-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
             #tube-life-card .tl-kpi{padding:14px 14px 12px;border-radius:16px;border:1px solid var(--tl-line);background:var(--tl-panel);}
             #tube-life-card .tl-kpi-label{font-size:10.5px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#fdba74;}
             #tube-life-card .tl-kpi-value{margin-top:7px;font-size:25px;font-weight:800;color:var(--tl-text);line-height:1.1;}
@@ -27088,7 +27088,7 @@ body.light-theme #auraReformerWidget .au-scroll th{background:#f4f6fa;}
             #tube-life-card .tl-method code{font-size:12px;color:#fde68a;background:rgba(2,6,23,0.4);padding:1px 5px;border-radius:5px;}
             #tube-life-card .tl-method a{color:#7dd3fc;}
             #tube-life-card .tl-method ol, #tube-life-card .tl-method ul{margin:6px 0;padding-left:20px;}
-            @media (max-width:1280px){ #tube-life-card .tl-kpis{grid-template-columns:repeat(3,minmax(0,1fr));} }
+            @media (max-width:1280px){ #tube-life-card .tl-kpis{grid-template-columns:repeat(2,minmax(0,1fr));} }
             @media (max-width:1000px){ #tube-life-card .tl-grid2, #tube-life-card .tl-form{grid-template-columns:minmax(0,1fr);} }
             @media (max-width:640px){ #tube-life-card{padding:16px;} #tube-life-card .tl-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
               #tube-life-card .tl-title{font-size:21px;} #tube-life-card .tl-actions{align-items:stretch;min-width:0;width:100%;}
@@ -27217,8 +27217,8 @@ body.light-theme #auraReformerWidget .au-scroll th{background:#f4f6fa;}
           <div class="tl-head">
             <div>
               <div class="lx-eyebrow"><span class="lx-dot"></span>Integrity module · API 530 creep life</div>
-              <div class="tl-title lx-title">Reformer Tube Remaining Life (Creep)</div>
-              <div class="tl-sub lx-sub">How much of each tube's creep life has been used since installation, and how long it will last at today's tube skin temperature.</div>
+              <div class="tl-title lx-title">Tube design basis (creep)</div>
+              <div class="tl-sub lx-sub">Hoop stress and the TMT limit for design life, with the design inputs. Life used per tube is in the Tube life usage panel above.</div>
               <div class="tl-sub lx-sub-hidden">
                 API 530 / API 579 style creep-life model: Larson–Miller rupture curve for the tube alloy, hoop stress from pressure and wall, and Robinson's rule (sum of hourly life fractions) over the TMT history. TMT comes from saved peep-hole TST readings, carried hour by hour with the COT trend from plant history.
               </div>
@@ -27662,10 +27662,6 @@ body.light-theme #auraReformerWidget .au-scroll th{background:#f4f6fa;}
                 + "Life used so far " + fmt(usedW, usedW < 10 ? 2 : 1) + "% on the worst tube. Every +20 °C roughly halves tube life.";
               html += '<div class="lx-verdict is-' + vTone + '"><div class="lx-verdict-icon">' + (vTone === "ok" ? "✓" : "!") + '</div><div><div class="lx-verdict-head">' + vHead + '</div><div class="lx-verdict-line">' + vLine + '</div></div></div>' + notesHtml;
               html += '<div class="tl-kpis">'
-                + kpi("Life used · worst tube", fmt(usedW, usedW < 10 ? 2 : 1), "%", esc(worst.label) + "<br>Fleet average " + fmt(avgUsed, avgUsed < 10 ? 2 : 1) + "%", worst.status)
-                + kpi("Remaining life", fmtYears(worst.remYears), "yrs", "At current TMT (72 h online median) " + fmt(worst.curT) + " °C, " + fmt(sim.avail * 100) + "% availability", worst.status)
-                + kpi("Expected life at current TMT", fmtYears(worst.lifeAtCurYears), "yrs", "New tube held at " + fmt(worst.curT) + " °C (" + fmt(Math.min(worst.trNow, 9.99e6)) + " h rupture life)", "")
-                + kpi("Hottest tube now", fmt(hottest.curT), "°C", esc(hottest.label) + "<br>Peak in record " + fmt(hottest.maxT) + " °C", hottest.status)
                 + kpi("TMT limit for design life", fmt(worst.tLimit), "°C", isFinite(worst.tLimit) ? ("Worst tube is " + (worst.curT > worst.tLimit ? "+" : "") + fmt(worst.curT - worst.tLimit) + " °C vs limit. +10 °C cuts life " + fmt(worst.sens10 * 100) + "%") : "Design life reached", isFinite(worst.tLimit) && worst.curT > worst.tLimit ? "watch" : "")
                 + kpi("Hoop stress", fmt(model.sigOp, 1), "MPa", "Operating. Design " + fmt(model.sigDes, 1) + " MPa → design TMT " + fmt(model.designTmt) + " °C for " + fmt(num(inp.designLife, 100000)) + " h", "")
                 + '</div>';
@@ -27698,13 +27694,13 @@ body.light-theme #auraReformerWidget .au-scroll th{background:#f4f6fa;}
               }
               left += '</div>';
               var right = '<div class="tl-panel tl-chart"><div class="tl-panel-title">TMT history used in the creep sum<span>' + hDate(sim.startH) + ' – ' + hDate(sim.endH) + '</span></div>' + chartSvg(sim, model, worst) + '</div>';
-              html += '<div class="tl-grid2">' + left + right + '</div>';
+              /* zones + TMT history now in the Tube life usage panel */ void 0; // '<div class="tl-grid2">' + left + right + '</div>';
 
               /* at-risk table */
               var rows = P.slice(0, 10).map(function(p){
                 return '<tr><td>' + esc(p.label) + '</td><td class="num">' + fmt(p.curT) + '</td><td class="num">' + fmt(p.maxT) + '</td><td class="num">' + fmt(p.Dtot * 100, 2) + '%</td><td class="num">' + fmt(p.ratePerYear * 100, 2) + '%</td><td class="num">' + fmtYears(p.remYears) + '</td><td class="num">' + fmt(p.tLimit) + '</td><td><span class="tl-chip is-' + p.status + '">' + statusLabel(p.status) + '</span></td></tr>';
               }).join("");
-              html += '<div class="tl-panel"><div class="tl-panel-title">Hottest / at-risk tubes<span>Ranked by remaining life</span></div><div class="tl-table-wrap"><table class="tl-table"><thead><tr><th>Position</th><th class="num" title="Median of TST readings in the last 72 h, plus pyrometer correction">TMT now °C</th><th class="num" title="Highest hourly TMT since the in-service date (TST reading shifted by COT change, COT spikes removed)">Peak °C</th><th class="num">Life used</th><th class="num">Use / yr</th><th class="num">Remaining yrs</th><th class="num">TMT limit °C</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+              /* at-risk table now in the Tube life usage panel */ void  '<div class="tl-panel"><div class="tl-panel-title">Hottest / at-risk tubes<span>Ranked by remaining life</span></div><div class="tl-table-wrap"><table class="tl-table"><thead><tr><th>Position</th><th class="num" title="Median of TST readings in the last 72 h, plus pyrometer correction">TMT now °C</th><th class="num" title="Highest hourly TMT since the in-service date (TST reading shifted by COT change, COT spikes removed)">Peak °C</th><th class="num">Life used</th><th class="num">Use / yr</th><th class="num">Remaining yrs</th><th class="num">TMT limit °C</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 
               html += '<div class="tl-note">Basis: ' + esc(TL_MATERIALS[inp.material] ? TL_MATERIALS[inp.material].label : "Custom") + ', ' + (inp.basis === "avg" ? "average" : "minimum") + ' rupture data, OD ' + fmt(num(inp.od, 125)) + ' mm × ' + fmt(num(inp.wall, 11) - num(inp.corr, 0), 1) + ' mm wall, ' + fmt(num(inp.pOper, 27), 1) + ' kg/cm²g. '
                 + 'History: ' + fmt(sim.online) + ' h online, ' + fmt(sim.offline) + ' h offline (' + sim.cycles + ' shutdowns), ' + fmt(sim.gap) + ' h without data'
