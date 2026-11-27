@@ -26833,7 +26833,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         if(cs && hm && hm.ngHeat + hm.napHeat > 0 && hm.psa1Heat + hm.psa2Heat > 0){ var gN = 0, gO = 0;
           ["A","B","C","D"].forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = cs.f[w][r][b]; var o = Math.max(0, x.open) / 100; if(x.s === "N" || x.s === "B") gN += o; if(x.s === "O" || x.s === "B") gO += o; } });
           if(gN > 0 && gO > 0){ var qN = (hm.ngHeat + hm.napHeat) / gN, qO = (hm.psa1Heat + hm.psa2Heat) / gO, qB = qN + qO;
-            FUEL_W = { B:1.0, N:qN / qB, O:qO / qB, C:0 }; fw = { qN:qN, qO:qO, qB:qB, gN:gN, gO:gO }; cs = surveyFromProfile(currentProfile); } } }catch(e){}
+            FUEL_W = { B:1.0, N:qN / qB, O:qO / qB, C:0 }; fw = { qN:qN, qO:qO, qB:qB, gN:gN, gO:gO }; cs = surveyFromProfile(currentProfile); try{ localStorage.setItem("auraFuelW", JSON.stringify(fw)); }catch(e2){} } } }catch(e){}
+      if(!fw && cs){ try{ var lw = JSON.parse(localStorage.getItem("auraFuelW") || "null"); if(lw && lw.qB > 0){ fw = lw; fw.cached = true; FUEL_W = { B:1.0, N:lw.qN / lw.qB, O:lw.qO / lw.qB, C:0 }; cs = surveyFromProfile(currentProfile); } }catch(e){} } /* heat duty not loaded yet: last fuel x NCV weights */
       if(!cs){ host.innerHTML = '<div class="stack-ai-empty">The optimiser needs a saved TST survey with peep-hole readings.</div>'; return; }
       var histReal = (historyProfiles || []).slice(); /* every saved survey trains the model */
       var nMock = (historyProfiles || []).length - histReal.length;

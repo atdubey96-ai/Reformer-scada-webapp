@@ -2465,8 +2465,9 @@
     window.__auraOptPending = true; window.__furnaceOptLast = null;
     var b0 = document.getElementById("btnRunAuraOptimization"); if(b0) b0.disabled = true; status("Running…");
     var done = false, go = function(){ if(done) return; done = true; window.removeEventListener("furnaceopt:done", go); window.__auraOptPending = false; window.__auraRunSummary(); };
-    window.addEventListener("furnaceopt:done", go); setTimeout(go, 12000);
-    try{ window.runCuboidAiPrediction(); }catch(e){ go(); }
+    window.addEventListener("furnaceopt:done", go); setTimeout(go, 18000);
+    var heat = typeof window.auraReformerSnapshot === "function" ? Promise.race([window.auraReformerSnapshot(), new Promise(function(r){ setTimeout(r, 6000); })]) : Promise.resolve(); /* heat duty first: burner weights use fuel x NCV */
+    Promise.resolve(heat).catch(function(){}).then(function(){ try{ window.runCuboidAiPrediction(); }catch(e){ go(); } });
   };
 
   window.__auraRunSummary = function(){
