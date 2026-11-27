@@ -2628,7 +2628,7 @@
   window.auraFillSurveys = function(){ var sel = document.getElementById("auraSurveySel"); if(!sel) return; var l = surveyList(), cur = window.__auraSurveyDt || "";
     if(cur && !l.some(function(x){ return String(x.dt) === cur; })){ cur = ""; window.__auraSurveyDt = null; }
     sel.innerHTML = '<option value="">Latest saved' + (l[0] ? " · " + esc(String(l[0].dt).replace("T", " ").slice(0, 16)) : "") + '</option>' + l.slice(1).map(function(x){ var v = String(x.dt); return '<option value="' + esc(v) + '">' + esc(v.replace("T", " ").slice(0, 16) + (x.shift ? " · " + x.shift : "")) + '</option>'; }).join("");
-    sel.value = cur; };
+    sel.value = l[0] && cur === String(l[0].dt) ? "" : cur; };
   window.auraPickSurvey = function(v){ window.__auraSurveyDt = v || null; window.triggerAuraOptimizer(); };
   /* fully automatic: first run once the page has settled, then every 15 minutes while the page is open */
   function auto(){ if(document.getElementById("auraReformerWidget") && !document.hidden) try{ window.triggerAuraOptimizer(); }catch(e){} }
