@@ -38241,6 +38241,10 @@ function getCuboidReformerBindingState(key){
 
 function getCuboidReformerSummaryFieldState(key){
   if(key === "ngFuelFlow"){
+    var ngLive = getCuboidReformerBindingState("naphthaTipP"); /* FIC-6311 NG fuel flow, Nm3/h */
+    if(ngLive && ngLive.numericValue !== null && isFinite(ngLive.numericValue) && ngLive.numericValue >= 0){
+      return { display: Math.round(ngLive.numericValue).toLocaleString("en-US"), title: "NG fuel flow FIC-6311 (Nm³/h), live" };
+    }
     var psa1State = getCuboidReformerBindingState("psa1Og");
     var psa2State = getCuboidReformerBindingState("psa2Og");
     var naphthaState = getCuboidReformerBindingState("naphthaFuel");
