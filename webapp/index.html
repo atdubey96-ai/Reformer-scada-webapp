@@ -45426,7 +45426,7 @@ body.light-theme .btab-alarm-count{
       options: lineOptions(theme, {
         scales: {
           x: buildReformerTrendXAxis(theme),
-          y: { ticks:{ color:theme.dim }, grid:{ color:theme.border }, min: 72, max: 92 }
+          y: (function(){ var v = reformerDashState.historyPoints.map(function(p){ return Number(p.efficiency); }).filter(function(x){ return isFinite(x) && x > 0; }); var lo = v.length ? Math.min.apply(null, v) : 72, hi = v.length ? Math.max.apply(null, v) : 92; return { ticks:{ color:theme.dim }, grid:{ color:theme.border }, min: Math.floor(lo - 1), max: Math.min(100, Math.ceil(hi + 1)) }; })()
         }
       })
     });
