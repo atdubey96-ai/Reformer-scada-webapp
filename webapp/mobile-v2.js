@@ -2681,15 +2681,15 @@
     var L = surveyList().slice().reverse(), c = ldLoad(), rows = [], cO = 0, cA = 0, cL = 0, fS = 0, fN = 0, pts = [], rate = 0, lostPre = 0, since = null;
     L.forEach(function(e, i){ var x = c[e.dt]; if(!x) return; var nx = L[i + 1], t0 = tms(e.dt), t1 = nx ? tms(nx.dt) : Math.min(Date.now(), t0 + 8 * 3600000);
       var h = Math.max(0, Math.min(24, (t1 - t0) / 3600000)) || 0, off = Math.max(0, x.rsH || 0) * h, fl = nx ? followed(x.plan, nx) : null;
-      /* a followed plan keeps saving in every later interval: its ₹/h stacks into the running rate */
-      if(fl != null) rate = Math.max(0, rate + (x.rsH || 0) * fl); if(fl != null && fl >= 0.5 && !since) since = e.dt;
+      
+      rate = fl != null ? Math.max(0, (x.rsH || 0) * fl) : 0; /* saving realised in this interval = offered ₹/h × share of the plan followed */ if(fl != null && fl >= 0.5 && !since) since = e.dt;
       var ach = nx ? rate * h : NaN, lost = fl == null ? (nx ? 0 : NaN) : off * (1 - fl), dc = dcsCost(t0, t1); if(!since && isFinite(lost)) lostPre += lost;
       cO += off; if(isFinite(ach)) cA += ach; if(isFinite(lost)) cL += lost; if(fl != null){ fS += fl; fN++; } pts.push(cA);
       rows.push('<tr><td>' + esc(String(e.dt).replace("T", " ").slice(0, 16)) + (e.shift ? " · " + esc(e.shift) : "") + '</td><td>' + (x.rsH > 0 ? f(x.rsH, 0) : "0") + '</td><td>' + f(h, 1) + '</td><td>' + (fl == null ? (nx ? "no moves" : "running") : f(fl * 100, 0) + " %") + '</td><td>' + (isFinite(ach) ? money(ach) + ' <small style="opacity:.6">(' + f(rate, 0) + ')</small>' : "—") + '</td><td style="color:' + (lost > 0 ? "var(--au-bad,#f87171)" : "inherit") + '">' + (isFinite(lost) ? money(lost) : "—") + '</td><td>' + (isFinite(dc) ? (dc >= 0 ? "+" : "−") + f(Math.abs(dc), 0) : "—") + '</td></tr>'); });
     var mx = Math.max.apply(null, pts.concat([1])), W = 260, H = 34, sp = pts.length > 1 ? '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" style="max-width:100%"><polyline fill="none" stroke="#34d399" stroke-width="2" points="' + pts.map(function(v, i){ return f(i * W / (pts.length - 1), 1).replace(/,/g, "") + "," + f(H - 2 - v / mx * (H - 4), 1).replace(/,/g, ""); }).join(" ") + '"/></svg>' : "";
     var first = L.filter(function(e){ return c[e.dt]; })[0];
     host.innerHTML = '<div class="au-lg-h"><span>Cumulative savings' + (first ? ' <small>since ' + esc(String(first.dt).replace("T", " ").slice(0, 10)) + ' · ' + rows.length + ' surveys</small>' : '') + '</span>' + (prog ? '<small>Building history… ' + prog + '</small>' : sp) + '</div>'
-      + '<div class="au-lg-t"><div><span>Achieved</span><b style="color:#34d399">' + money(cA) + '</b><i>followed plans keep saving every hour</i></div><div><span>Lost opportunity</span><b style="color:#f87171">' + money(cL) + '</b><i>' + (since && lostPre > 0 ? money(lostPre) + ' of it before advisor use (' + esc(String(since).slice(5, 10)) + ')' : 'advice not followed') + '</i></div><div><span>Offered</span><b>' + money(cO) + '</b><i>if every plan was done</i></div><div><span>Followed</span><b>' + (fN ? f(fS / fN * 100, 0) + " %" : "—") + '</b><i>next survey vs plan</i></div></div>'
+      + '<div class="au-lg-t"><div><span>Achieved</span><b style="color:#34d399">' + money(cA) + '</b><i>from the plans that were followed</i></div><div><span>Lost opportunity</span><b style="color:#f87171">' + money(cL) + '</b><i>' + (since && lostPre > 0 ? money(lostPre) + ' of it before advisor use (' + esc(String(since).slice(5, 10)) + ')' : 'advice not followed') + '</i></div><div><span>Offered</span><b>' + money(cO) + '</b><i>if every plan was done</i></div><div><span>Followed</span><b>' + (fN ? f(fS / fN * 100, 0) + " %" : "—") + '</b><i>next survey vs plan</i></div></div>'
       + (rows.length ? '<details><summary>Per survey</summary><div class="au-scroll" style="max-height:260px"><table><tr><th>Survey</th><th>Offered ₹/h</th><th>Hours</th><th>Followed</th><th>Achieved (₹/h)</th><th>Lost</th><th>DCS check ₹/h</th></tr>' + rows.slice().reverse().join("") + '</table></div><div style="font-size:11px;opacity:.7;margin-top:4px">Followed = share of advised burner changes (fuel type and opening ±12.5%) seen in the next survey. DCS check = feed + fuel cost 6 h before the survey minus the cost from 2 h after it until the next survey (+ = cheaper); load changes also move it.</div></details>' : '');
   };
   function runOne(dt){ return new Promise(function(res){ var done = false, fin = function(x){ if(done) return; done = true; window.__auraRunDone = null; res(x); };
@@ -2708,7 +2708,7 @@
 
 /* ---------- Demo seed (27 Nov 2026): startup 19 Nov, 23 shift surveys 20 Nov Morning to 27 Nov Evening, loaded once per browser ---------- */
 (function(){
-  var KEY = "auraDemoSeed", VER = "demo-20261127h";
+  var KEY = "auraDemoSeed", VER = "demo-20261127i";
   function seed(){
     /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
