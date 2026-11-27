@@ -26810,8 +26810,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     try{
       var cs = surveyFromProfile(currentProfile);
       if(!cs){ host.innerHTML = '<div class="stack-ai-empty">The optimiser needs a saved TST survey with peep-hole readings.</div>'; return; }
-      var MOCK_FROM = "2026-11-10", MOCK_TO = "2026-11-19"; /* mock TST surveys entered for testing: not used for training */
-      var histReal = (historyProfiles || []).filter(function(hp){ var d = String(hp && hp.dt || "").slice(0, 10); return !(d >= MOCK_FROM && d <= MOCK_TO); });
+      var histReal = (historyProfiles || []).slice(); /* every saved survey trains the model */
       var nMock = (historyProfiles || []).length - histReal.length;
       var surveys = [cs].concat(histReal.map(surveyFromProfile).filter(Boolean));
       var model = fit(surveys), rmse = loso(surveys), band = Math.max(6, isFinite(rmse) ? rmse : 15);
@@ -26933,7 +26932,7 @@ body.light-theme #auraReformerWidget{--au-bg:#ffffff;--au-card:#f4f6fa;--au-line
     <div class="au-form">
       <label>NG ₹/MT<input id="auraPriceNg" type="number" step="1"></label>
       <label>Naphtha ₹/MT<input id="auraPriceNap" type="number" step="1"></label>
-      <label>Retube ₹ Cr<input id="auraPriceRetube" type="number" step="0.1" placeholder="enter"></label>
+      <label>Retube ₹ Cr (240 × ₹18 L)<input id="auraPriceRetube" type="number" step="0.1"></label>
       <label>Target O₂ %<input id="auraTargetO2" type="number" step="0.1"></label>
       <label>Hours / yr<input id="auraHours" type="number" step="1"></label>
       <label>NG tip P max<input id="auraTipNg" type="number" step="0.01" placeholder="enter"></label>

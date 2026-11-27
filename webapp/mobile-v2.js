@@ -2440,7 +2440,7 @@
 (function(){
   var PK = "auraPricesV1";
   var FIELDS = { ng:"auraPriceNg", nap:"auraPriceNap", retube:"auraPriceRetube", o2t:"auraTargetO2", hours:"auraHours", tipNg:"auraTipNg", tipNap:"auraTipNap", bedMin:"auraBedMin" };
-  var DEF = { ng:38927, nap:45562, o2t:3.5, hours:8000, bedMin:485 }; /* NG 16-May-25, naphtha (EPP) current fortnight, ₹/MT */
+  var DEF = { ng:38927, nap:45562, o2t:3.5, hours:8000, bedMin:485, retube:43.2 }; /* retube: 240 tubes × ₹18 lakh */ /* NG 16-May-25, naphtha (EPP) current fortnight, ₹/MT */
   function loadP(){ var p = null; try{ p = JSON.parse(localStorage.getItem(PK) || "null"); }catch(e){ p = null; } p = p || {}; Object.keys(DEF).forEach(function(k){ if(p[k] == null) p[k] = DEF[k]; }); return p; }
   function pos(v){ var n = Number(v); return v !== "" && v != null && isFinite(n) && n > 0 ? n : NaN; }
   function fill(){ var p = loadP(); Object.keys(FIELDS).forEach(function(k){ var el = document.getElementById(FIELDS[k]); if(el && isFinite(pos(p[k]))) el.value = p[k]; }); state(); }
@@ -2544,7 +2544,7 @@
       var effNow = live ? m.overallEff : NaN, effAfter = live && saved > 0 ? effNow * m.totalHeat / (m.totalHeat - saved) : effNow;
       /* life */
       var tl = typeof window.tubeLifeLastResult === "function" ? window.tubeLifeLastResult() : null, r0 = lifeAt(peakNow), r1 = lifeAt(peakF);
-      var lifeNow = tl && tl.remYears > 0 ? tl.remYears : NaN, lifeAfter = isFinite(lifeNow) && r0 > 0 ? lifeNow * r1 / r0 : NaN;
+      var lifeNow = tl && tl.remYears > 0 ? tl.remYears : Math.min(30, r0), lifeAfter = r0 > 0 ? lifeNow * r1 / r0 : NaN; /* tube-life panel if available, else API 530 at the hottest TST */
       var rsLife = isFinite(pos(p.retube)) && lifeNow > 0 && lifeAfter > 0 ? pos(p.retube) * 1e7 * (1 / lifeNow - 1 / lifeAfter) : NaN; /* ₹/yr of retube cost spread over life */
       var slipNow = kp.ch4 ? kp.ch4.cur : d.methaneSlip, mix = function(a, b){ return (Math.exp(-K * a) + Math.exp(-K * b)) / 2; };
       var slipAfter = slipNow * mix(cot.AB + dc.AB, cot.CD + dc.CD) / mix(cot.AB, cot.CD);
@@ -2616,4 +2616,26 @@
   /* fully automatic: first run once the page has settled, then every 15 minutes while the page is open */
   function auto(){ if(document.getElementById("auraReformerWidget") && !document.hidden) try{ window.triggerAuraOptimizer(); }catch(e){} }
   setTimeout(auto, 7000); setInterval(auto, 15 * 60000);
+})();
+
+/* ---------- Demo seed (27 Nov 2026): replace TST surveys with 60 demo surveys once per browser; real ones kept in tempDataEntriesBeforeDemo ---------- */
+(function(){
+  var KEY = "auraDemoSeed", VER = "demo-20261127";
+  function seed(){
+    /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
+    try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
+      if(have.some(function(e){ var d = String(e && e.dt || "").slice(0, 16); return d === "2026-11-26T22:00" || d >= "2026-11-27"; })) return; }catch(e){ return; }
+    fetch("./demo/demo-tst.json", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+      if(!j || !j.entries || !j.entries.length) return;
+      try{ var cur = localStorage.getItem("tempDataEntries"); if(cur && !localStorage.getItem("tempDataEntriesBeforeDemo")) localStorage.setItem("tempDataEntriesBeforeDemo", cur); }catch(e){}
+      try{ window.tempDataEntries = j.entries; if(typeof tempDataEntries !== "undefined") tempDataEntries = j.entries; }catch(e){}
+      try{ localStorage.setItem("tempDataEntries", JSON.stringify(j.entries)); localStorage.setItem(KEY, VER); }catch(e){}
+      try{ if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches(); }catch(e){}
+      try{ if(typeof renderTempDataTable === "function") renderTempDataTable(); }catch(e){}
+      try{ if(typeof scheduleCuboidPanelRefresh === "function") scheduleCuboidPanelRefresh(70, true); }catch(e){}
+      try{ if(typeof autoSaveToServerIfNeeded === "function") autoSaveToServerIfNeeded("demo-seed", true); }catch(e){}
+      setTimeout(function(){ try{ window.triggerAuraOptimizer(); }catch(e){} }, 3000);
+    }).catch(function(){});
+  }
+  setTimeout(seed, 5000);
 })();
