@@ -2513,9 +2513,11 @@
       var per1 = econ(1, 1), cotPays = per1.net > 0; /* COT shift from the burner plan: each chamber's change in fired heat (cuts, takes, fuel swaps, NG make-up and off-gas
          redistribution over the common headers) at the furnace's fired heat, divided by the fuel needed per °C COT in one chamber */
       (function(){ var q0 = pl.p.sideQ0, q1 = pl.p.sideQ1, perC = per1.fuelGcal > 0 ? per1.fuelGcal / 2 : NaN, QT = live && m.totalHeat > 0 ? m.totalHeat : NaN;
-        if(q0 && q1 && q0.AB + q0.CD > 0 && isFinite(perC) && isFinite(QT)) ["AB","CD"].forEach(function(sd){ var dq = (q1[sd] - q0[sd]) / (q0.AB + q0.CD) * QT; burn[sd] = Math.round(Math.max(-20, Math.min(20, dq / perC))); }); })();
+        if(q0 && q1 && q0.AB + q0.CD > 0 && isFinite(perC) && isFinite(QT)) ["AB","CD"].forEach(function(sd){ var dq = (q1[sd] - q0[sd]) / (q0.AB + q0.CD) * QT; burn[sd] = Math.max(-8, Math.min(8, 0.35 * dq / perC)); }); /* 0.35: only part of a chamber's shifted heat reaches its own outlet (shared flue, radiant cross-talk); cap ±8 °C per chamber */
+        var g0 = (cot.AB + burn.AB) - (cot.CD + burn.CD), gc = (cot.AB - cot.CD); if(Math.abs(g0) > 12 && Math.abs(g0 - gc) > 0){ var k = Math.max(0, (12 * Math.sign(g0) - gc) / (g0 - gc)); burn.AB *= k; burn.CD *= k; } /* AB/CD COT gap kept within 12 °C */
+        burn.AB = Math.round(burn.AB); burn.CD = Math.round(burn.CD); })();
       var gap = (cot.AB + burn.AB) - (cot.CD + burn.CD); /* gap left after the burner moves */
-      if(!why.AB && !why.CD && isFinite(gap) && Math.abs(gap) >= 3){
+      if(!why.AB && !why.CD && isFinite(gap) && Math.abs(gap) >= 6){
         var hot = gap > 0 ? "AB" : "CD", cool = gap > 0 ? "CD" : "AB", x = Math.abs(gap) / 2;
         x = Math.min(x, Math.max(0, (cap - pk[cool]) / g)); x = Math.floor(x);
         notes.push("COT gap AB/CD after the burner moves " + f(Math.abs(gap), 0) + " °C: with one common fuel controller it can only be closed by burner openings (more firing on " + cool + ", less on " + hot + ")" + (x >= 1 ? "; " + cool + " tubes have about " + f(x * g, 0) + " °C room for it." : "; the " + cool + " tubes have no room now."));
