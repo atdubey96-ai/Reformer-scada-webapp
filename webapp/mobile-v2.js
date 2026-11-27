@@ -2514,7 +2514,7 @@
          redistribution over the common headers) at the furnace's fired heat, divided by the fuel needed per °C COT in one chamber */
       (function(){ var q0 = pl.p.sideQ0, q1 = pl.p.sideQ1, perC = per1.fuelGcal > 0 ? per1.fuelGcal / 2 : NaN, QT = live && m.totalHeat > 0 ? m.totalHeat : NaN;
         if(q0 && q1 && q0.AB + q0.CD > 0 && isFinite(perC) && isFinite(QT)) ["AB","CD"].forEach(function(sd){ var dq = (q1[sd] - q0[sd]) / (q0.AB + q0.CD) * QT; burn[sd] = Math.max(-8, Math.min(8, 0.35 * dq / perC)); }); /* 0.35: only part of a chamber's shifted heat reaches its own outlet (shared flue, radiant cross-talk); cap ±8 °C per chamber */
-        var g0 = (cot.AB + burn.AB) - (cot.CD + burn.CD), gc = (cot.AB - cot.CD); if(Math.abs(g0) > 12 && Math.abs(g0 - gc) > 0){ var k = Math.max(0, (12 * Math.sign(g0) - gc) / (g0 - gc)); burn.AB *= k; burn.CD *= k; } /* AB/CD COT gap kept within 12 °C */
+        var g0 = (cot.AB + burn.AB) - (cot.CD + burn.CD), gc = (cot.AB - cot.CD); if(Math.abs(g0) > 12 && Math.abs(g0 - gc) > 0){ var k = Math.max(0, (11.4 * Math.sign(g0) - gc) / (g0 - gc)); burn.AB *= k; burn.CD *= k; } /* AB/CD COT gap kept within 12 °C */
         burn.AB = Math.round(burn.AB); burn.CD = Math.round(burn.CD); })();
       var gap = (cot.AB + burn.AB) - (cot.CD + burn.CD); /* gap left after the burner moves */
       if(!why.AB && !why.CD && isFinite(gap) && Math.abs(gap) >= 6){
