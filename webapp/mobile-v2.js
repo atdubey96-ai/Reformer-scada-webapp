@@ -2643,6 +2643,7 @@
       if(btn) btn.disabled = false;
       var nx = new Date(Date.now() + 15 * 60000);
       if(window.__auraRunDone) window.__auraRunDone(window.__auraLastRun);
+      if(!window.__auraLedgerMode){ /* Run / 15-min auto run also refreshes the tube life panel */ try{ if(window.tubeLifeRun) window.tubeLifeRun(true); }catch(e){} try{ if(window.tubeLifeUsageRender) window.tubeLifeUsageRender(); }catch(e){} }
       if(!window.__auraLedgerMode){ try{ var lc = ldLoad(); if(window.__auraLastRun.dt){ lc[window.__auraLastRun.dt] = { rsH:rsH, plan:adv }; ldSave(lc); } window.auraRenderLedger(); }catch(e){} }
       status((window.__auraSurveyDt ? "Survey " + String(window.__auraSurveyDt).replace("T", " ").slice(0, 16) + " · " : "") + "Updated " + new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + " · next " + nx.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }));
     });
