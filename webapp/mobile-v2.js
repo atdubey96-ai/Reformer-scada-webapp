@@ -2682,7 +2682,7 @@
     L.forEach(function(e, i){ var x = c[e.dt]; if(!x) return; var nx = L[i + 1], t0 = tms(e.dt), t1 = nx ? tms(nx.dt) : Math.min(Date.now(), t0 + 8 * 3600000);
       var h = Math.max(0, Math.min(24, (t1 - t0) / 3600000)) || 0, off = Math.max(0, x.rsH || 0) * h, fl = nx ? followed(x.plan, nx) : null;
       
-      rate = fl != null ? Math.max(0, (x.rsH || 0) * fl) : 0; /* saving realised in this interval = offered ₹/h × share of the plan followed */ if(fl != null && fl >= 0.5 && !since) since = e.dt;
+      rate = nx ? Math.max(0, (x.rsH || 0) * (fl != null ? fl : 1)) : 0; /* no burner moves: set-point changes only, counted as done */ /* saving realised in this interval = offered ₹/h × share of the plan followed */ if(fl != null && fl >= 0.5 && !since) since = e.dt;
       var ach = nx ? rate * h : NaN, lost = fl == null ? (nx ? 0 : NaN) : off * (1 - fl), dc = dcsCost(t0, t1); if(!since && isFinite(lost)) lostPre += lost;
       cO += off; if(isFinite(ach)) cA += ach; if(isFinite(lost)) cL += lost; if(fl != null){ fS += fl; fN++; } pts.push(cA);
       rows.push('<tr><td>' + esc(String(e.dt).replace("T", " ").slice(0, 16)) + (e.shift ? " · " + esc(e.shift) : "") + '</td><td>' + (x.rsH > 0 ? f(x.rsH, 0) : "0") + '</td><td>' + f(h, 1) + '</td><td>' + (fl == null ? (nx ? "no moves" : "running") : f(fl * 100, 0) + " %") + '</td><td>' + (isFinite(ach) ? money(ach) + ' <small style="opacity:.6">(' + f(rate, 0) + ')</small>' : "—") + '</td><td style="color:' + (lost > 0 ? "var(--au-bad,#f87171)" : "inherit") + '">' + (isFinite(lost) ? money(lost) : "—") + '</td><td>' + (isFinite(dc) ? (dc >= 0 ? "+" : "−") + f(Math.abs(dc), 0) : "—") + '</td></tr>'); });
@@ -2708,7 +2708,7 @@
 
 /* ---------- Demo seed (27 Nov 2026): startup 19 Nov, 23 shift surveys 20 Nov Morning to 27 Nov Evening, loaded once per browser ---------- */
 (function(){
-  var KEY = "auraDemoSeed", VER = "demo-20261127i";
+  var KEY = "auraDemoSeed", VER = "demo-20261127j";
   function seed(){
     /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
