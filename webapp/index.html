@@ -26826,6 +26826,14 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     var host = document.getElementById("stack-opt-body"); if(!host) return;
     try{
       var cs = surveyFromProfile(currentProfile);
+      /* burner heat weights from fuel x NCV: NG + naphtha fuel feed the NG guns (NG and Both burners), PSA1 + PSA2 off-gas feed
+         the off-gas guns (Off-gas and Both burners). Heat per gun = fuel heat / sum of gun openings; Both = NG gun + off-gas gun. */
+      FUEL_W = { B:1.0, N:0.6, O:0.5, C:0 }; var fw = null;
+      try{ var hm = typeof window.__reformerHeatNow === "function" ? window.__reformerHeatNow() : null;
+        if(cs && hm && hm.ngHeat + hm.napHeat > 0 && hm.psa1Heat + hm.psa2Heat > 0){ var gN = 0, gO = 0;
+          ["A","B","C","D"].forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = cs.f[w][r][b]; var o = Math.max(0, x.open) / 100; if(x.s === "N" || x.s === "B") gN += o; if(x.s === "O" || x.s === "B") gO += o; } });
+          if(gN > 0 && gO > 0){ var qN = (hm.ngHeat + hm.napHeat) / gN, qO = (hm.psa1Heat + hm.psa2Heat) / gO, qB = qN + qO;
+            FUEL_W = { B:1.0, N:qN / qB, O:qO / qB, C:0 }; fw = { qN:qN, qO:qO, qB:qB, gN:gN, gO:gO }; cs = surveyFromProfile(currentProfile); } } }catch(e){}
       if(!cs){ host.innerHTML = '<div class="stack-ai-empty">The optimiser needs a saved TST survey with peep-hole readings.</div>'; return; }
       var histReal = (historyProfiles || []).slice(); /* every saved survey trains the model */
       var nMock = (historyProfiles || []).length - histReal.length;
@@ -26862,7 +26870,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
           .map(function(pl){ pl.p = optimise(cur, model, 0, pl.w, px); /* burner moves at constant duty; COT, chamber balance and O2 are set after, in goal order */ pl.score = pl.p.e.peak + 2 * pl.p.e.sd; return pl; });
         var bestIdx = 0; (function(){ var over = cur.e.peak > tubeLimit().lim, bi = 0, bv = Infinity; plans.forEach(function(pl, i){ var v = over ? pl.p.e.peak : pl.score; if(v < bv){ bv = v; bi = i; } }); bestIdx = bi; })();
         window.__foLifeAt = function(t){ return makeRupture()(t) / (8760 * 0.96); };
-        window.__furnaceOptLast = { at:Date.now(), px:px, beta:model.beta, rmse:rmse, nObs:model.n, cur:{ e:cur.e, T:Tflat }, surveyDt:currentProfile.dt || "", gamma:model.gamma, nMock:nMock, plans:plans, bestIdx:bestIdx, band:band, cotBox:cotBox, kpis:kpis, nSurveys:surveys.length, suspects:suspects, limit:tubeLimit().lim };
+        window.__furnaceOptLast = { at:Date.now(), fuelW:JSON.parse(JSON.stringify(FUEL_W)), fw:fw, px:px, beta:model.beta, rmse:rmse, nObs:model.n, cur:{ e:cur.e, T:Tflat }, surveyDt:currentProfile.dt || "", gamma:model.gamma, nMock:nMock, plans:plans, bestIdx:bestIdx, band:band, cotBox:cotBox, kpis:kpis, nSurveys:surveys.length, suspects:suspects, limit:tubeLimit().lim };
         render(host, { cur:{ e:cur.e }, model:model, plans:plans, band:band, rmse:rmse, nSurveys:surveys.length, cotBox:cotBox, kpis:kpis, suspects:suspects, nMock:nMock });
         try{ window.dispatchEvent(new Event("furnaceopt:done")); }catch(evErr){}
       };
@@ -45634,6 +45642,7 @@ body.light-theme .btab-alarm-count{
 window.switchReformerDashTab = switchReformerDashTab;
 window.refreshReformerDashboard = refreshReformerDashboard;
 window.refreshReformerDashboardLite = refreshReformerDashboardLite;
+window.__reformerHeatNow = function(){ try{ return calcReformerMetrics(); }catch(e){ return null; } };
 window.auraReformerSnapshot = async function(){ try{ await refreshReformerDashboardLite(false); }catch(e){} var m = calcReformerMetrics(); m.stackTemp = REFORMER_DASH_STACK_TEMP; var MW = { CH4:16.043, C2H6:30.07, C3H8:44.097, H2:2.016, CO:28.01, CO2:44.01, N2:28.014 }, ngc = reformerDashState.composition.ng || {}, mw = 0, tot = 0; for(var ck in ngc){ if(MW[ck] && isFinite(Number(ngc[ck]))){ mw += Number(ngc[ck]) / 100 * MW[ck]; tot += Number(ngc[ck]); } } m.ngDensity = tot > 50 ? mw / 22.414 : NaN; m.naphthaNCV = REFORMER_DASH_NAPHTHA_NCV; m.data = reformerDashState.data; m.fetchedAt = reformerDashState.lastFetchAt; m.error = reformerDashState.errorMessage; return m; };
 window.ensureReformerDashboardLoaded = ensureReformerDashboardLoaded;
 window.getActiveReformerHguLoadDivisor = getActiveReformerHguLoadDivisor;

@@ -2613,7 +2613,7 @@
         if(pe.length){ var mp = pe.reduce(function(s, v){ return s + v; }, 0) / pe.length, ma = ae.reduce(function(s, v){ return s + v; }, 0) / ae.length;
           chk = " Last applied plans (" + pe.length + " tubes): predicted " + (mp >= 0 ? "+" : "") + f(mp, 1) + " °C, actual " + (ma >= 0 ? "+" : "") + f(ma, 1) + " °C."; }
       }catch(e){}
-      set("auraModelNote", "Heat model fitted on " + fo.nSurveys + " TST surveys (" + f(fo.nObs, 0) + " readings), β " + f(fo.beta, 1) + " °C/unit, COT→TST γ " + f(g, 2) + ", ± " + f(fo.band, 0) + " °C." + chk
+      set("auraModelNote", (fo.fw ? "Burner heat from fuel × NCV: NG gun " + f(fo.fw.qN, 2) + ", off-gas gun " + f(fo.fw.qO, 2) + ", Both " + f(fo.fw.qB, 2) + " Gcal/h at 100% (weights NG " + f(fo.fuelW.N, 2) + " · off-gas " + f(fo.fuelW.O, 2) + " · Both 1). " : "Burner heat weights: default (heat duty not loaded). ") + "Heat model fitted on " + fo.nSurveys + " TST surveys (" + f(fo.nObs, 0) + " readings), β " + f(fo.beta, 1) + " °C/unit, COT→TST γ " + f(g, 2) + ", ± " + f(fo.band, 0) + " °C." + chk
         + " Pre-reformer bed +0.16 °C per °C flue gas (60-day fit). Upper-row firing raises flue gas exit (prior). CH₄ slip −1.7 %/°C COT (equilibrium). Fuel saving from O₂ trim on NG and naphtha only; PSA off-gas always full."
         + (fo.surveyDt ? " TST survey " + esc(String(fo.surveyDt).slice(0, 16).replace("T", " ")) + "." : ""));
       if(typeof window.renderAdjustmentFromOptimiser === "function") window.renderAdjustmentFromOptimiser();
