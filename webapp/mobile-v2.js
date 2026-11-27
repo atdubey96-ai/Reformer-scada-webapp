@@ -2525,6 +2525,8 @@
       var rsLife = isFinite(pos(p.retube)) && lifeNow > 0 && lifeAfter > 0 ? pos(p.retube) * 1e7 * (1 / lifeNow - 1 / lifeAfter) : NaN; /* ₹/yr of retube cost spread over life */
       var slipNow = kp.ch4 ? kp.ch4.cur : d.methaneSlip, mix = function(a, b){ return (Math.exp(-K * a) + Math.exp(-K * b)) / 2; };
       var slipAfter = slipNow * mix(cot.AB + dc.AB, cot.CD + dc.CD) / mix(cot.AB, cot.CD);
+      var TF = T1.map(function(t, i){ return t + g * (i < 30 ? dc.AB : dc.CD) + O2_TST * ((o2 - o2To) || 0); });
+      var nOver0 = T0.filter(function(t){ return t > LIM; }).length, nOver1 = TF.filter(function(t){ return t > LIM; }).length, nTubes = T0.filter(isFinite).length;
       var sd0 = sdv(T0), sd1 = sdv(T1.map(function(t, i){ return t + g * (i < 30 ? dc.AB : dc.CD); }));
       /* work list extras */
       var cotSteps = [];
@@ -2542,6 +2544,7 @@
       if(!live) miss.push("live fuel flows" + (m && m.error ? " (" + esc(m.error) + ")" : ""));
       /* goal ladder */
       var G = [
+        ["★", "Peep holes above " + LIM + " °C (of " + nTubes + ")", nOver0, "0", nOver1, "", 0, function(v){ return v === 0; }],
         ["★", "TST peak" + (Object.keys(sus).length ? " (readings to recheck left out)" : ""), peakNow, "≤ " + LIM, peakF, "°C", 0, function(v){ return v <= LIM; }],
         ["1", "Tube life, hottest tube", lifeNow, "highest", lifeAfter, "yrs", 1, function(v){ return !(v < lifeNow - 0.05); }],
         ["2", "Pre-reformer bed (TI-2412)", kp.bed ? kp.bed.cur : NaN, "≥ " + BEDMIN, bedF, "°C", 0, function(v){ return v >= BEDMIN; }],
@@ -2564,7 +2567,7 @@
       var tiles = [
         ["is-money", "Saving", rsYr > 0 ? "₹ " + f(rsYr / 1e7, 2) + " Cr" : "₹ 0", rsYr > 0 ? "per year · ₹ " + f(rsYr / 365, 0) + " / day" : (peakNow > LIM ? "TST first, savings after" : "no saving move now")],
         ["", "Efficiency", isFinite(effNow) ? f(effNow, 1) + (effAfter > effNow + 0.05 ? " → " + f(effAfter, 1) : "") + " %" : "—", "overall reformer"],
-        ["", "Peak TST", f(peakNow, 0) + " → " + f(peakF, 0) + " °C", peakF > LIM ? '<span style="color:var(--au-bad)">still above ' + LIM + ' °C</span>' : "limit " + LIM + " °C"],
+        ["", "Tubes above " + LIM + " °C", nOver0 + " → " + nOver1, "peak " + f(peakNow, 0) + " → " + f(peakF, 0) + " °C" + (nOver1 ? ' · <span style="color:var(--au-bad)">not all in range yet</span>' : "")],
         ["", "Tube life", isFinite(lifeNow) ? f(lifeNow, 1) + " → " + f(lifeAfter, 1) + " yrs" : (r0 > 0 ? "×" + f(r1 / r0, 2) : "—"), "hottest tube"]
       ];
       set("auraHero", tiles.map(function(t){ return '<div class="au-tile ' + t[0] + '"><span>' + t[1] + '</span><b>' + t[2] + '</b><i>' + t[3] + '</i></div>'; }).join(""));

@@ -12086,6 +12086,8 @@ function renderAdjustmentFromOptimiser(){
   var fuel = { B:"Both", N:"NG", O:"Off-gas" }, lim = fo.limit || 950, ticks = auraLoadTicks(), sv = String(fo.surveyDt || "");
   var steps = [];
   mv = mv.slice().sort(function(x, y){ return (x.w + x.r + String(100 + x.b)).localeCompare(y.w + y.r + String(100 + y.b)); }); /* walk order: wall, row, burner */
+  ((pl.p && pl.p.swaps) || []).forEach(function(x, i){ var nm = function(q){ return q.w + q.r + "-" + q.b; };
+    steps.push({ key:"swap" + i + "-" + nm(x.hot) + "-" + nm(x.cool), kind:"swap", sw:x }); });
   mv.filter(function(m){ return m.to < m.from; }).forEach(function(m){ steps.push({ key:"cut-" + m.w + m.r + "-" + m.b, kind:"cut", m:m }); });
   mv.filter(function(m){ return m.to > m.from; }).forEach(function(m){ steps.push({ key:"take-" + m.w + m.r + "-" + m.b, kind:"take", m:m }); });
   Object.keys(pl.p.makeup || {}).forEach(function(s){ if(pl.p.makeup[s] > 1.001) steps.push({ key:"makeup-" + s, kind:"note", text:"Keep " + s + " COT on auto. It adds about +" + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + "% fuel on the other " + s + " burners." }); });
@@ -12096,10 +12098,12 @@ function renderAdjustmentFromOptimiser(){
   var n = 0;
   var rows = steps.map(function(st){
     var main = "", color = "inherit";
-    if(st.m){ var cd = ""; try{ cd = hmLatestCleaningDate(log, hist, st.m.w, st.m.r, st.m.b) || ""; }catch(e){}
-      color = st.kind === "cut" ? "#f87171" : "#34d399";
+    if(st.sw){ var lb = function(q){ return 'Wall ' + hmEscapeHtml(q.w) + ' · Row ' + hmEscapeHtml(q.r) + ' · Burner ' + hmEscapeHtml(q.b) + ' <span style="opacity:.7">(' + hmEscapeHtml(fuel[q.s] || q.s) + ')</span>'; };
+      main = '<b style="color:#60a5fa;white-space:nowrap;">Swap fuel</b> <b>' + lb(st.sw.hot) + '</b> ⇄ <b>' + lb(st.sw.cool) + '</b> <span style="opacity:.7">· moves ' + hmEscapeHtml(fuel[st.sw.hot.s] || st.sw.hot.s) + ' to the cooler tube</span>';
+    } else if(st.m){ var cd = ""; try{ cd = hmLatestCleaningDate(log, hist, st.m.w, st.m.r, st.m.b) || ""; }catch(e){}
+      color = st.kind === "cut" ? "#f87171" : st.kind === "swap" ? "#60a5fa" : "#34d399";
       main = '<b>Wall ' + hmEscapeHtml(st.m.w) + ' · Row ' + hmEscapeHtml(st.m.r) + ' · Burner ' + hmEscapeHtml(st.m.b) + '</b> <span style="opacity:.7">' + hmEscapeHtml(fuel[st.m.s] || st.m.s) + (st.m.r >= 4 ? ' · upper' : ' · lower') + (cd ? ' · cleaned ' + hmEscapeHtml(String(cd).slice(0, 10)) : '') + '</span>'
-        + ' <b style="white-space:nowrap;color:' + color + '">' + (st.kind === "cut" ? "Reduce " : "Increase ") + hmEscapeHtml(st.m.from) + '% → ' + hmEscapeHtml(st.m.to) + '%</b>';
+        + ' <b style="white-space:nowrap;color:' + color + '">' + (st.kind === "swap" ? "Change fuel " + hmEscapeHtml(fuel[st.m.s] || st.m.s) + " → " + hmEscapeHtml(fuel[st.m.sTo] || st.m.sTo) : (st.kind === "cut" ? "Reduce " : "Increase ") + hmEscapeHtml(st.m.from) + '% → ' + hmEscapeHtml(st.m.to) + '%') + '</b>';
     } else main = hmEscapeHtml(st.text);
     if(st.kind === "note") return '<div style="padding:6px 10px 6px 38px;font-size:12px;opacity:.8;">' + main + '</div>';
     n++; var tk = ticks[sv + "|" + st.key];
@@ -12110,7 +12114,7 @@ function renderAdjustmentFromOptimiser(){
   });
   var head = '';
   if(!steps.length) html = '<div style="padding:8px 0;">' + (fo.cur.e.peak > lim ? 'A tube is above ' + lim + ' °C and no burner move lowers it. Recheck the reading, then cut the facing burners by hand or lower COT / total firing.' : 'No change needed. Firing is already near best.') + '</div>';
-  else { var nB = steps.filter(function(x){ return x.m; }).length, bR = rows.slice(0, nB), oR = rows.slice(nB);
+  else { var nB = steps.filter(function(x){ return x.m || x.sw; }).length, bR = rows.slice(0, nB), oR = rows.slice(nB);
     html = (bR.length > 10 ? bR.slice(0, 8).join("") + '<details><summary style="cursor:pointer;margin:8px 0 0 10px;font-size:12px;opacity:.8;">Show all ' + bR.length + ' burner steps</summary>' + bR.slice(8).join("") + '</details>' : bR.join("")) + oR.join("") + '<div style="font-size:11px;opacity:.6;margin-top:6px;">Do the steps in order, one 25% step at a time, and tick each one. The next TST survey checks the prediction.</div>'; }
   targets.forEach(function(el){ if(el) el.innerHTML = html; });
 }
@@ -26666,8 +26670,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     function J(T){ var e = evalT(T); return 1000 * e.over + 30 * Math.log(e.rate) / Math.LN2 + 1.0 * e.peak + 40 * bedDef(f) + 0.3 * e.sd + 0.1 * e.cold; }
     var CLEAN = (function(){ var lg = {}, hs = {}; try{ if(typeof loadCleaningLog === "function") lg = loadCleaningLog() || {}; }catch(e){} try{ if(typeof loadCleaningHistory === "function") hs = loadCleaningHistory() || {}; }catch(e){}
       return function(c){ try{ var d = typeof hmLatestCleaningDate === "function" ? hmLatestCleaningDate(lg, hs, c.w, c.r, c.b) : ""; var ms = Date.parse(d); return isFinite(ms) && Date.now() - ms < 90 * 86400000; }catch(e){ return false; } }; })();
-    var T = temps(f), best = J(T), makeup = {}, bedOf0 = bedOf(f);
-    for(var it = 0; it < (evalT(T).over > 0 ? 16 : 4); it++){
+    var T = temps(f), best = J(T), makeup = {}, bedOf0 = bedOf(f), swaps = [];
+    for(var it = 0; it < (evalT(T).over > 0 ? 30 : 8); it++){
       var flat = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++) flat.push({ zi:zi, ph:ph, t:T[zi * 15 + ph - 1] }); });
       flat = flat.filter(function(x){ return isFinite(x.t); }).sort(function(a, b){ return b.t - a.t; });
       function near(list){ var seen = {}, out = []; list.forEach(function(x){ K[x.zi][x.ph].forEach(function(c){ if(c.k < 0.3) return; var key = c.w + c.r + "-" + c.b; if(seen[key]) return; seen[key] = 1; out.push(c); }); }); return out; }
@@ -26693,6 +26697,17 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         var others = list.filter(function(x){ return x !== fd; }), rest = others.reduce(function(s, x){ return s + x.v; }, 0), k = rest > 0 ? (tot - fd.v) / rest : 1;
         others.forEach(function(x){ x.v *= k; });
         return { undo:function(){ list.forEach(function(x, i){ x.v = save[i]; }); fd.open = so; }, k:k, side:(d.w === "A" || d.w === "B") ? "AB" : "CD" }; }
+      /* fuel relocation: swap fuel type between a burner at a hot tube and a lower-heat burner at a cool tube on the same side.
+         Same duty, same number of off-gas burners (off-gas stays at full flow), no opening change. */
+      var swapC = null, coolNear = near(flat.slice(-12));
+      downs.forEach(function(d){ var fd = f[d.w][d.r][d.b]; if(!(fd.s === "B" || fd.s === "N")) return;
+        coolNear.forEach(function(u){ if((d.w === "A" || d.w === "B") !== (u.w === "A" || u.w === "B")) return; var fu = f[u.w][u.r][u.b];
+          if(fu === fd || fu.s === "C" || !(FUEL_W[fu.s] < FUEL_W[fd.s])) return;
+          var sd = fd.s, su = fu.s; fd.s = su; fu.s = sd; fd.v = FUEL_W[fd.s] * fd.open / 100; fu.v = FUEL_W[fu.s] * fu.open / 100;
+          var Tn = temps(f), j = J(Tn) + 0.5;
+          fd.s = sd; fu.s = su; fd.v = FUEL_W[sd] * fd.open / 100; fu.v = FUEL_W[su] * fu.open / 100;
+          if(j < best - 0.2 && (!swapC || j < swapC.j)) swapC = { d:d, u:u, j:j, T:Tn, kind:"swap" }; }); });
+      if(swapC && (!cand || swapC.j < cand.j)) cand = swapC;
       if(!cand || evalT(T).over > 0){
         /* best cut on each side separately (AB and CD chambers are independent), so every over-limit zone gets a move */
         var bySide = {};
@@ -26708,14 +26723,18 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       }
       if(!cand) break;
       var a = f[cand.d.w][cand.d.r][cand.d.b], bb = f[cand.u.w][cand.u.r][cand.u.b];
+      if(cand.kind === "swap"){ var sa = a.s, sb = bb.s; swaps.push({ hot:{ w:cand.d.w, r:cand.d.r, b:cand.d.b, s:sa }, cool:{ w:cand.u.w, r:cand.u.r, b:cand.u.b, s:sb } });
+        moves.push({ w:cand.d.w, r:cand.d.r, b:cand.d.b, s:sa, sTo:sb, from:a.open, to:a.open });
+        moves.push({ w:cand.u.w, r:cand.u.r, b:cand.u.b, s:sb, sTo:sa, from:bb.open, to:bb.open });
+        a.s = sb; bb.s = sa; a.v = FUEL_W[a.s] * a.open / 100; bb.v = FUEL_W[bb.s] * bb.open / 100; best = cand.j; T = cand.T; continue; }
       moves.push({ w:cand.d.w, r:cand.d.r, b:cand.d.b, s:a.s, from:a.open, to:a.open - STEP });
       moves.push({ w:cand.u.w, r:cand.u.r, b:cand.u.b, s:bb.s, from:bb.open, to:bb.open + STEP });
       a.open -= STEP; a.v = FUEL_W[a.s] * a.open / 100; bb.open += STEP; bb.v = FUEL_W[bb.s] * bb.open / 100;
       best = cand.j; T = cand.T;
     }
     /* merge repeated burners */
-    var merged = {}; moves.forEach(function(m){ var k = m.w + m.r + "-" + m.b; if(!merged[k]) merged[k] = { w:m.w, r:m.r, b:m.b, s:m.s, from:m.from, to:m.to }; else merged[k].to = m.to; });
-    return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), T:T, e:evalT(T), makeup:makeup,
+    var merged = {}; moves.forEach(function(m){ var k = m.w + m.r + "-" + m.b; if(!merged[k]) merged[k] = { w:m.w, r:m.r, b:m.b, s:m.s, sTo:m.sTo, from:m.from, to:m.to }; else { merged[k].to = m.to; if(m.sTo) merged[k].sTo = m.sTo; } });
+    return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), swaps:swaps, T:T, e:evalT(T), makeup:makeup,
       bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK };
   }
 
