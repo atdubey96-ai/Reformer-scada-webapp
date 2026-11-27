@@ -2483,7 +2483,7 @@
       var sus = {}; (fo.suspects || []).forEach(function(x){ if(isFinite(x.idx)) sus[x.idx] = 1; }); /* readings to recheck do not drive COT */
       var clean = function(a){ return (a || []).map(function(t, i){ return sus[i] ? NaN : t; }); };
       var T0 = clean(fo.cur.T), T1 = clean(pl.p.T), peakNow = mx(T0);
-      var pk = { AB:mx(T1.slice(0, 30)), CD:mx(T1.slice(30, 60)) }, cap = Math.min(LIM, peakNow); /* tube life must not get worse than now */
+      var pk = { AB:mx(T1.slice(0, 30)), CD:mx(T1.slice(30, 60)) }, cap = Math.max(Math.min(LIM, peakNow), LIM - 5); /* tube life: hottest tube kept at least 5 °C under the limit (life well above the 100,000 h design); below that, spare TST room may be used for COT */
       var cot = { AB:kp.cotAB ? kp.cotAB.cur : d.abCot, CD:kp.cotCD ? kp.cotCD.cur : d.cdCot }, dc = { AB:0, CD:0 }, why = {};
       /* 0. TST hard limit: if burner moves alone cannot bring a chamber under 950, lower that chamber's COT */
       ["AB","CD"].forEach(function(s){ if(pk[s] > LIM){ dc[s] = -Math.min(25, Math.ceil((pk[s] - LIM) / g)); /* TST is the hard limit: up to 25 °C, still moved 2 °C at a time */ why[s] = "TST"; } });
@@ -2576,28 +2576,29 @@
       Array.prototype.forEach.call(document.querySelectorAll(".ct-6m-nudge-banner"), function(nd){ notes.push(esc(nd.textContent.replace(/^\S+\s*/, ""))); });
       if(!live) miss.push("live fuel flows" + (m && m.error ? " (" + esc(m.error) + ")" : ""));
       /* goal ladder */
+      var RS = function(v){ return Math.abs(v) < 0.5 ? "0" : (v > 0 ? "+" : "−") + "₹ " + f(Math.abs(v), 0); };
       var G = [
-        ["★", "Peep holes above " + LIM + " °C (of " + nTubes + ")", nOver0, "0", nOver1, "", 0, function(v){ return v === 0; }],
-        ["★", "TST peak" + (Object.keys(sus).length ? " (readings to recheck left out)" : ""), peakNow, "≤ " + LIM, peakF, "°C", 0, function(v){ return v <= LIM; }],
-        ["1", "Tube life, hottest tube", lifeNow, "highest", lifeAfter, "yrs", 1, function(v){ return !(v < lifeNow - 0.05); }],
-        ["2", "Pre-reformer bed (TI-2412)", kp.bed ? kp.bed.cur : NaN, "≥ " + BEDMIN, bedF, "°C", 0, function(v){ return v >= BEDMIN; }],
-        ["3", "CH₄ slip", slipNow, cb ? f(cb.target, 2) : "lowest", slipAfter, "%", 2, function(v){ return !cb || v <= cb.target + 0.05; }],
-        ["", "COT AB / CD", cot.AB, "≤ " + COTLIM, null, "", 0, null, f(cot.AB, 0) + " / " + f(cot.CD, 0), f(cot.AB + dc.AB, 0) + " / " + f(cot.CD + dc.CD, 0)],
-        ["4", "Feed naphtha (same H₂)", feedNow, "lowest", feedNow - (ec.feedKg || 0), "kg/h", 0, null],
-        ["4", "Fuel fired", live ? m.totalHeat : NaN, "lowest", live ? m.totalHeat - saved + (ec.fuelGcal || 0) : NaN, "Gcal/h", 2, null],
-        ["", "Flue O₂", o2, isFinite(o2t) ? f(o2t, 1) : "—", o2To, "%", 1, null],
-        ["5", "Energy efficiency", effNow, "highest", effAfter, "%", 1, null],
-        ["6", "Uniform heating (TST σ)", sd0, "lowest", sd1, "°C", 1, null]
+        ["★", "Peep holes above " + LIM + " °C (of " + nTubes + ")", nOver0, "0", nOver1, "", 0, function(v){ return v === 0; }, null, null, "in tube life"],
+        ["★", "TST peak" + (Object.keys(sus).length ? " (readings to recheck left out)" : ""), peakNow, "≤ " + LIM, peakF, "°C", 0, function(v){ return v <= LIM; }, null, null, "in tube life"],
+        ["1", "Tube life, hottest tube", lifeNow, "highest", lifeAfter, "yrs", 1, function(v){ return !(v < lifeNow - 0.05); }, null, null, RS(isFinite(rsLife) ? rsLife / hrs : 0)],
+        ["2", "Pre-reformer bed (TI-2412)", kp.bed ? kp.bed.cur : NaN, "≥ " + BEDMIN, bedF, "°C", 0, function(v){ return v >= BEDMIN; }, null, null, "limit"],
+        ["3", "CH₄ slip", slipNow, cb ? f(cb.target, 2) : "lowest", slipAfter, "%", 2, function(v){ return !cb || v <= cb.target + 0.05; }, null, null, "in feed"],
+        ["", "COT AB / CD", cot.AB, "≤ " + COTLIM, null, "", 0, null, f(cot.AB, 0) + " / " + f(cot.CD, 0), f(cot.AB + dc.AB, 0) + " / " + f(cot.CD + dc.CD, 0), "in feed & fuel"],
+        ["4", "Feed naphtha (same H₂)", feedNow, "lowest", feedNow - (ec.feedKg || 0), "kg/h", 0, null, null, null, RS(ec.feedRs || 0)],
+        ["4", "Fuel fired", live ? m.totalHeat : NaN, "lowest", live ? m.totalHeat - saved + (ec.fuelGcal || 0) : NaN, "Gcal/h", 2, null, null, null, RS((isFinite(rsFuel) ? rsFuel : 0) - (ec.fuelRs || 0))],
+        ["", "Flue O₂", o2, isFinite(o2t) ? f(o2t, 1) : "—", o2To, "%", 1, null, null, null, "in fuel"],
+        ["5", "Energy efficiency", effNow, "highest", effAfter, "%", 1, null, null, null, "in fuel"],
+        ["6", "Uniform heating (TST σ)", sd0, "lowest", sd1, "°C", 1, null, null, null, "in tube life"]
       ];
-      var tbl = '<table class="au-goals"><tr><th class="pr">#</th><th>Goal</th><th>Now</th><th>Limit / target</th><th>After plan</th><th></th></tr>' + G.map(function(r){
+      var tbl = '<table class="au-goals"><tr><th class="pr">#</th><th>Goal</th><th>Now</th><th>Limit / target</th><th>After plan</th><th class="rs">₹/h saved</th><th></th></tr>' + G.map(function(r){
         if(!isFinite(r[2])) return "";
         var okN = r[7] ? r[7](r[2]) : true, okA = r[7] && isFinite(r[4]) ? r[7](r[4]) : true;
         var nowT = r[8] || f(r[2], r[6]) + " " + r[5], aftT = r[9] || (isFinite(r[4]) ? f(r[4], r[6]) + " " + r[5] : "—");
-        return '<tr><td class="pr">' + r[0] + '</td><td>' + r[1] + '</td><td class="' + (okN ? "" : "bad") + '">' + nowT + '</td><td>' + r[3] + '</td><td class="' + (okA ? "" : "bad") + '"><b>' + aftT + '</b></td><td><span class="au-dot ' + (okA ? "" : "bad") + '"></span></td></tr>';
-      }).join("") + '</table>';
+        return '<tr><td class="pr">' + r[0] + '</td><td>' + r[1] + '</td><td class="' + (okN ? "" : "bad") + '">' + nowT + '</td><td>' + r[3] + '</td><td class="' + (okA ? "" : "bad") + '"><b>' + aftT + '</b></td><td class="rs' + (/^\+/.test(r[10] || "") ? " up" : /^−/.test(r[10] || "") ? " dn" : "") + '">' + (r[10] || "") + '</td><td><span class="au-dot ' + (okA ? "" : "bad") + '"></span></td></tr>';
+      }).join("") + (function(){ var tot = (isFinite(rsFuel) ? rsFuel : 0) + rsCot + (isFinite(rsLife) ? rsLife / hrs : 0); return '<tr class="au-tot"><td class="pr"></td><td><b>Total saving</b></td><td></td><td></td><td></td><td class="rs ' + (tot > 0 ? "up" : tot < 0 ? "dn" : "") + '"><b>' + RS(tot) + '</b></td><td></td></tr>'; })() + '</table>';
       set("auraPrescriptionSummary", tbl + (notes.length || miss.length ? '<div class="au-notes">' + notes.map(function(n){ return "<div>• " + n + "</div>"; }).join("") + (miss.length ? '<div style="color:var(--au-warn)">Missing: ' + miss.join("; ") + '</div>' : '') + '</div>' : ""));
       /* hero tiles */
-      var rsYr = (isFinite(rsFuel) ? rsFuel * hrs : 0) + rsCot * hrs + (isFinite(rsLife) && rsLife > 0 ? rsLife : 0);
+      var rsYr = (isFinite(rsFuel) ? rsFuel * hrs : 0) + rsCot * hrs + (isFinite(rsLife) ? rsLife : 0);
       var rsH = hrs > 0 ? rsYr / hrs : 0; /* ₹/h at today's conditions (life benefit spread over operating hours) */
       var adv = {}; (pl.p.moves || []).forEach(function(m){ adv[m.w + m.r + "-" + m.b] = { w:m.w, r:m.r, b:m.b, s:m.sTo || m.s, open:m.to, s0:m.s, o0:m.from }; });
       window.__auraLastRun = { dt:String(fo.surveyDt || ""), rsH:rsH, plan:adv };
@@ -2656,17 +2657,19 @@
     var before = cost(t0 - 6 * 3600000, t0), during = cost(t0 + 2 * 3600000, t1); return isFinite(before) && isFinite(during) ? before - during : NaN; } /* + = cheaper than at the survey */
   function money(v){ var a = Math.abs(v); return (v < 0 ? "−" : "") + "₹ " + (a >= 1e7 ? f(a / 1e7, 2) + " Cr" : a >= 1e5 ? f(a / 1e5, 2) + " L" : f(a, 0)); }
   window.auraRenderLedger = function(prog){ var host = document.getElementById("auraLedger"); if(!host) return;
-    var L = surveyList().slice().reverse(), c = ldLoad(), rows = [], cO = 0, cA = 0, cL = 0, fS = 0, fN = 0, pts = [];
+    var L = surveyList().slice().reverse(), c = ldLoad(), rows = [], cO = 0, cA = 0, cL = 0, fS = 0, fN = 0, pts = [], rate = 0, lostPre = 0, since = null;
     L.forEach(function(e, i){ var x = c[e.dt]; if(!x) return; var nx = L[i + 1], t0 = tms(e.dt), t1 = nx ? tms(nx.dt) : Math.min(Date.now(), t0 + 8 * 3600000);
       var h = Math.max(0, Math.min(24, (t1 - t0) / 3600000)) || 0, off = Math.max(0, x.rsH || 0) * h, fl = nx ? followed(x.plan, nx) : null;
-      var ach = fl == null ? (nx ? off : NaN) : off * fl, lost = fl == null ? (nx ? 0 : NaN) : off - ach, dc = dcsCost(t0, t1);
+      /* a followed plan keeps saving in every later interval: its ₹/h stacks into the running rate */
+      if(fl != null) rate = Math.max(0, rate + (x.rsH || 0) * fl); if(fl != null && fl >= 0.5 && !since) since = e.dt;
+      var ach = nx ? rate * h : NaN, lost = fl == null ? (nx ? 0 : NaN) : off * (1 - fl), dc = dcsCost(t0, t1); if(!since && isFinite(lost)) lostPre += lost;
       cO += off; if(isFinite(ach)) cA += ach; if(isFinite(lost)) cL += lost; if(fl != null){ fS += fl; fN++; } pts.push(cA);
-      rows.push('<tr><td>' + esc(String(e.dt).replace("T", " ").slice(0, 16)) + (e.shift ? " · " + esc(e.shift) : "") + '</td><td>' + (x.rsH > 0 ? f(x.rsH, 0) : "0") + '</td><td>' + f(h, 1) + '</td><td>' + (fl == null ? (nx ? "no moves" : "running") : f(fl * 100, 0) + " %") + '</td><td>' + (isFinite(ach) ? money(ach) : "—") + '</td><td style="color:' + (lost > 0 ? "var(--au-bad,#f87171)" : "inherit") + '">' + (isFinite(lost) ? money(lost) : "—") + '</td><td>' + (isFinite(dc) ? (dc >= 0 ? "+" : "−") + f(Math.abs(dc), 0) : "—") + '</td></tr>'); });
+      rows.push('<tr><td>' + esc(String(e.dt).replace("T", " ").slice(0, 16)) + (e.shift ? " · " + esc(e.shift) : "") + '</td><td>' + (x.rsH > 0 ? f(x.rsH, 0) : "0") + '</td><td>' + f(h, 1) + '</td><td>' + (fl == null ? (nx ? "no moves" : "running") : f(fl * 100, 0) + " %") + '</td><td>' + (isFinite(ach) ? money(ach) + ' <small style="opacity:.6">(' + f(rate, 0) + ')</small>' : "—") + '</td><td style="color:' + (lost > 0 ? "var(--au-bad,#f87171)" : "inherit") + '">' + (isFinite(lost) ? money(lost) : "—") + '</td><td>' + (isFinite(dc) ? (dc >= 0 ? "+" : "−") + f(Math.abs(dc), 0) : "—") + '</td></tr>'); });
     var mx = Math.max.apply(null, pts.concat([1])), W = 260, H = 34, sp = pts.length > 1 ? '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" style="max-width:100%"><polyline fill="none" stroke="#34d399" stroke-width="2" points="' + pts.map(function(v, i){ return f(i * W / (pts.length - 1), 1).replace(/,/g, "") + "," + f(H - 2 - v / mx * (H - 4), 1).replace(/,/g, ""); }).join(" ") + '"/></svg>' : "";
     var first = L.filter(function(e){ return c[e.dt]; })[0];
     host.innerHTML = '<div class="au-lg-h"><span>Cumulative savings' + (first ? ' <small>since ' + esc(String(first.dt).replace("T", " ").slice(0, 10)) + ' · ' + rows.length + ' surveys</small>' : '') + '</span>' + (prog ? '<small>Building history… ' + prog + '</small>' : sp) + '</div>'
-      + '<div class="au-lg-t"><div><span>Achieved</span><b style="color:#34d399">' + money(cA) + '</b><i>advice followed × hours</i></div><div><span>Lost opportunity</span><b style="color:#f87171">' + money(cL) + '</b><i>advice not followed</i></div><div><span>Offered</span><b>' + money(cO) + '</b><i>if every plan was done</i></div><div><span>Followed</span><b>' + (fN ? f(fS / fN * 100, 0) + " %" : "—") + '</b><i>next survey vs plan</i></div></div>'
-      + (rows.length ? '<details><summary>Per survey</summary><div class="au-scroll" style="max-height:260px"><table><tr><th>Survey</th><th>Offered ₹/h</th><th>Hours</th><th>Followed</th><th>Achieved</th><th>Lost</th><th>DCS check ₹/h</th></tr>' + rows.slice().reverse().join("") + '</table></div><div style="font-size:11px;opacity:.7;margin-top:4px">Followed = share of advised burner changes (fuel type and opening ±12.5%) seen in the next survey. DCS check = feed + fuel cost 6 h before the survey minus the cost from 2 h after it until the next survey (+ = cheaper); load changes also move it.</div></details>' : '');
+      + '<div class="au-lg-t"><div><span>Achieved</span><b style="color:#34d399">' + money(cA) + '</b><i>followed plans keep saving every hour</i></div><div><span>Lost opportunity</span><b style="color:#f87171">' + money(cL) + '</b><i>' + (since && lostPre > 0 ? money(lostPre) + ' of it before advisor use (' + esc(String(since).slice(5, 10)) + ')' : 'advice not followed') + '</i></div><div><span>Offered</span><b>' + money(cO) + '</b><i>if every plan was done</i></div><div><span>Followed</span><b>' + (fN ? f(fS / fN * 100, 0) + " %" : "—") + '</b><i>next survey vs plan</i></div></div>'
+      + (rows.length ? '<details><summary>Per survey</summary><div class="au-scroll" style="max-height:260px"><table><tr><th>Survey</th><th>Offered ₹/h</th><th>Hours</th><th>Followed</th><th>Achieved (₹/h)</th><th>Lost</th><th>DCS check ₹/h</th></tr>' + rows.slice().reverse().join("") + '</table></div><div style="font-size:11px;opacity:.7;margin-top:4px">Followed = share of advised burner changes (fuel type and opening ±12.5%) seen in the next survey. DCS check = feed + fuel cost 6 h before the survey minus the cost from 2 h after it until the next survey (+ = cheaper); load changes also move it.</div></details>' : '');
   };
   function runOne(dt){ return new Promise(function(res){ var done = false, fin = function(x){ if(done) return; done = true; window.__auraRunDone = null; res(x); };
     window.__auraRunDone = fin; window.__auraSurveyDt = dt; window.__auraOptPending = false; window.triggerAuraOptimizer(); setTimeout(function(){ fin(null); }, 40000); }); }
@@ -2684,7 +2687,7 @@
 
 /* ---------- Demo seed (27 Nov 2026): replace TST surveys with 60 demo surveys once per browser; real ones kept in tempDataEntriesBeforeDemo ---------- */
 (function(){
-  var KEY = "auraDemoSeed", VER = "demo-20261127d";
+  var KEY = "auraDemoSeed", VER = "demo-20261127e";
   function seed(){
     /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
