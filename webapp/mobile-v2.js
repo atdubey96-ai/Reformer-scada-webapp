@@ -2715,7 +2715,7 @@
 
 /* ---------- Demo seed (27 Nov 2026): startup 19 Nov, 23 shift surveys 20 Nov Morning to 27 Nov Evening, loaded once per browser ---------- */
 (function(){
-  var KEY = "auraDemoSeed", VER = "demo-20261127l";
+  var KEY = "auraDemoSeed", VER = "demo-20261127m";
   function seed(){
     /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
