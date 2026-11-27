@@ -2687,7 +2687,7 @@
   window.auraRenderLedger = function(prog){ var host = document.getElementById("auraLedger"); if(!host) return;
     var L = surveyList().slice().reverse(), c = ldLoad(), rows = [], cO = 0, cA = 0, cL = 0, fS = 0, fN = 0, pts = [], rate = 0, lostPre = 0, since = null;
     L.forEach(function(e, i){ var x = c[e.dt]; if(!x) return; var nx = L[i + 1], t0 = tms(e.dt), t1 = nx ? tms(nx.dt) : Math.min(Date.now(), t0 + 8 * 3600000);
-      var h = Math.max(0, Math.min(24, (t1 - t0) / 3600000)) || 0, off = Math.max(0, x.rsH || 0) * h, fl = nx ? followed(x.plan, nx) : null;
+      var h = Math.max(0, Math.min(24, (t1 - t0) / 3600000)) || 0, off = Math.max(0, x.rsH || 0) * h, fl = nx ? followed(e.issuedPlan || x.plan, nx) : null;
       
       rate = nx ? Math.max(0, (x.rsH || 0) * (fl != null ? fl : 1)) : 0; /* no burner moves: set-point changes only, counted as done */ /* saving realised in this interval = offered ₹/h × share of the plan followed */ if(fl != null && fl >= 0.5 && !since) since = e.dt;
       var ach = nx ? rate * h : NaN, lost = fl == null ? (nx ? 0 : NaN) : off * (1 - fl), dc = dcsCost(t0, t1); if(!since && isFinite(lost)) lostPre += lost;
@@ -2715,7 +2715,7 @@
 
 /* ---------- Demo seed (27 Nov 2026): startup 19 Nov, 23 shift surveys 20 Nov Morning to 27 Nov Evening, loaded once per browser ---------- */
 (function(){
-  var KEY = "auraDemoSeed", VER = "demo-20261127m";
+  var KEY = "auraDemoSeed", VER = "demo-20261127n";
   function seed(){
     /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
