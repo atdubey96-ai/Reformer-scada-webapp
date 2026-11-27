@@ -12105,7 +12105,7 @@ function renderAdjustmentFromOptimiser(){
       + '</table></div></div>';
   }
   var after = [];
-  Object.keys(pl.p.makeup || {}).forEach(function(s){ if(pl.p.makeup[s] > 1.001) after.push({ note:true, text:"Hold " + s + " COT where it is: the cuts remove heat, so raise " + s + " fuel by about +" + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + "% (spread over the other lit " + s + " burners), in small steps, watching COT until it settles." }); });
+  Object.keys(pl.p.makeup || {}).forEach(function(s){ if(pl.p.makeup[s] > 1.001) after.push({ note:true, text:"Hold " + s + " COT where it is: the cuts remove heat, so raise the " + s + " fuel flow set point (fuel FIC in auto) by about +" + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + "% (spread over the other lit " + s + " burners), in small steps, watching COT until it settles." }); });
   if(ex.cotSteps && ex.cotSteps.length) ex.cotSteps.forEach(function(c){ after.push({ key:"cot-" + c.key, text:c.text }); });
   if(ex.cotNote) after.push({ note:true, text:ex.cotNote });
   if(isFinite(ex.o2From) && isFinite(ex.o2To) && ex.o2From > ex.o2To + 0.05) after.push({ key:"air", text:"Trim combustion air: O₂ " + ex.o2From.toFixed(1) + " → " + ex.o2To.toFixed(1) + "%, in small steps, watching CO and flame." });
