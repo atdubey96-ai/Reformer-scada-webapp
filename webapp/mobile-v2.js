@@ -2558,7 +2558,7 @@
       var cotSteps = [];
       if(Math.abs(dc.AB) >= 1 || Math.abs(dc.CD) >= 1){
         var reason = why.AB || why.CD ? "to bring TST under " + LIM + " °C" : shift ? "moves firing from the hotter chamber to the cooler one at the same total fuel, so mixed CH₄ slip falls" : (dc.AB > 0 ? "for CH₄ slip, inside tube-life room" : "slip is below target, so this saves fuel");
-        cotSteps.push({ key:"ab" + dc.AB + "cd" + dc.CD, text:"COT set point AB " + f(cot.AB, 0) + " → " + f(cot.AB + dc.AB, 0) + " °C, CD " + f(cot.CD, 0) + " → " + f(cot.CD + dc.CD, 0) + " °C, 2 °C at a time after the burner moves settle (" + reason + ")." });
+        cotSteps.push({ key:"ab" + dc.AB + "cd" + dc.CD, text:"Bring COT AB " + f(cot.AB, 0) + " → " + f(cot.AB + dc.AB, 0) + " °C, CD " + f(cot.CD, 0) + " → " + f(cot.CD + dc.CD, 0) + " °C by " + (dc.AB + dc.CD >= 0 ? "increasing" : "reducing") + " fuel slowly, about 2 °C at a time, after the burner moves settle; watch COT and TST after each step (" + reason + ")." });
       }
       window.__auraExtras = { cotSteps:cotSteps, cotNote:"", o2From:o2, o2To:o2To < o2 ? o2To : NaN };
       /* tip pressure and bed checks */
