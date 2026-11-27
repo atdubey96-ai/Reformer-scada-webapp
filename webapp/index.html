@@ -42514,6 +42514,7 @@ function renderBurnerHistoryTable(){
     return !!getEntryBurnerSnapshot(ent);
   }).length;
   var display = getBurnerHistoryFilteredEntries();
+  display = display.slice().sort(function(a, b){ var k = function(r){ var d = r && r.ent ? r.ent.dt : ""; var t = Date.parse(d); if(!isFinite(t)) t = Date.parse(String(d || "").replace(" ", "T")); return isFinite(t) ? t : -Infinity; }; return k(b) - k(a) || b.originalIndex - a.originalIndex; }); /* latest on top */
   document.querySelectorAll("[data-burner-history-count]").forEach(function(countEl){
     countEl.textContent = totalCount
       ? (display.length + " / " + totalCount + " snapshots")
@@ -42609,6 +42610,9 @@ function renderTempDataTableInto(tbodyId, display, totalCount){
 
 function renderTempDataTable(){
   var display = getFilteredTempDataEntries();
+  /* latest survey on top in every saved-TST table (TST tab, dashboard, stack) */
+  var dtKey = function(r){ var d = r && r.ent ? r.ent.dt : ""; var t = Date.parse(d); if(!isFinite(t)) t = Date.parse(String(d || "").replace(" ", "T")); return isFinite(t) ? t : -Infinity; };
+  display = display.slice().sort(function(a, b){ return dtKey(b) - dtKey(a) || b.originalIndex - a.originalIndex; });
   syncSavedEntryFilterUi({displayCount: display.length, totalCount: tempDataEntries.length});
   renderTempDataTableInto("td-saved-tbody", display, tempDataEntries.length);
   renderTempDataTableInto("hm-td-saved-tbody", display, tempDataEntries.length);
