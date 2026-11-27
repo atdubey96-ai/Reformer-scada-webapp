@@ -27217,13 +27217,20 @@ body.light-theme #auraReformerWidget .au-scroll th{background:#f4f6fa;}
             body.light-theme #stack-ai-card{--lx-acc:#0284c7;} body.light-theme #tube-life-card{--lx-acc:#ea580c;}
             body.light-theme #stack-ai-card .stack-ai-run-btn, body.light-theme #tube-life-card .tl-btn{color:#ffffff !important;}
             body.light-theme #tube-life-card .tl-btn.tl-btn-soft{background:#ffffff !important;color:#0f172a !important;}
+            #tube-life-card .tl-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--lx-line);border-radius:12px;background:var(--lx-cell);margin-top:10px;}
+            #tube-life-card .tl-sc{padding:10px 14px;border-left:1px solid var(--lx-line);display:flex;flex-direction:column;gap:2px;min-width:0;}
+            #tube-life-card .tl-sc:first-child{border-left:0;}
+            #tube-life-card .tl-sc span{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--lx-acc);font-weight:700;}
+            #tube-life-card .tl-sc b{font-size:18px;color:var(--lx-ink);font-weight:700;}
+            #tube-life-card .tl-sc i{font-style:normal;font-size:12px;color:var(--lx-mute);}
+            @media (max-width:760px){#tube-life-card .tl-strip{grid-template-columns:1fr 1fr;}#tube-life-card .tl-sc:nth-child(3){border-left:0;}#tube-life-card .tl-sc:nth-child(n+3){border-top:1px solid var(--lx-line);}}
             body.light-theme .lx-steps li::before{color:#ffffff;}
           </style>
           <div class="tl-head">
             <div>
               <div class="lx-eyebrow"><span class="lx-dot"></span>Integrity module · API 530 creep life</div>
               <div class="tl-title lx-title">Tube design basis (creep)</div>
-              <div class="tl-sub lx-sub">Hoop stress and the TMT limit for design life, with the design inputs. Life used per tube is in the Tube life usage panel above.</div>
+              <div class="tl-sub lx-sub">Design limits only. Life used is in the Tube life usage panel above.</div>
               <div class="tl-sub lx-sub-hidden">
                 API 530 / API 579 style creep-life model: Larson–Miller rupture curve for the tube alloy, hoop stress from pressure and wall, and Robinson's rule (sum of hourly life fractions) over the TMT history. TMT comes from saved peep-hole TST readings, carried hour by hour with the COT trend from plant history.
               </div>
@@ -27236,13 +27243,13 @@ body.light-theme #auraReformerWidget .au-scroll th{background:#f4f6fa;}
               <div id="tube-life-status" class="tl-status">Loads automatically when this dashboard opens.</div>
             </div>
           </div>
-          <div class="lx-spec" aria-label="Model specification">
+          <div class="lx-spec" aria-label="Model specification" style="display:none">
             <div class="lx-spec-cell"><span>Standard</span><b>API 530 · API 579-1 Part 10 screening</b></div>
             <div class="lx-spec-cell"><span>Model</span><b>Larson–Miller rupture + Robinson life fraction</b></div>
             <div class="lx-spec-cell"><span>Design basis</span><b>TST limit <i id="tl-spec-limit">950</i> °C = <i id="tl-spec-life">100,000</i> h</b></div>
             <div class="lx-spec-cell"><span>Data</span><b>Hourly COT TI-2503B/C + peep-hole TST since <i id="tl-spec-start">05 Sep 2026</i></b></div>
           </div>
-          <details class="lx-how">
+          <details class="lx-how" style="display:none">
             <summary>How it works</summary>
             <ol class="lx-steps">
               <li><b>Tube stress</b><span>Pressure and wall thickness give the hoop stress in the tube wall.</span><code>σ = (P/2)·(Do/t − 1)</code></li>
@@ -27665,10 +27672,13 @@ body.light-theme #auraReformerWidget .au-scroll th{background:#f4f6fa;}
               else vHead = "Tubes healthy: about " + fmtYears(worst.remYears) + " years of life left";
               vLine = "Hottest tube now " + fmt(hottest.curT) + " °C vs limit " + fmt(limV) + " °C (" + (hottest.curT > limV ? fmt(hottest.curT - limV) + " °C over" : fmt(limV - hottest.curT) + " °C margin") + "). "
                 + "Life used so far " + fmt(usedW, usedW < 10 ? 2 : 1) + "% on the worst tube. Every +20 °C roughly halves tube life.";
-              html += '<div class="lx-verdict is-' + vTone + '"><div class="lx-verdict-icon">' + (vTone === "ok" ? "✓" : "!") + '</div><div><div class="lx-verdict-head">' + vHead + '</div><div class="lx-verdict-line">' + vLine + '</div></div></div>' + notesHtml;
-              html += '<div class="tl-kpis">'
-                + kpi("TMT limit for design life", fmt(worst.tLimit), "°C", isFinite(worst.tLimit) ? ("Worst tube is " + (worst.curT > worst.tLimit ? "+" : "") + fmt(worst.curT - worst.tLimit) + " °C vs limit. +10 °C cuts life " + fmt(worst.sens10 * 100) + "%") : "Design life reached", isFinite(worst.tLimit) && worst.curT > worst.tLimit ? "watch" : "")
-                + kpi("Hoop stress", fmt(model.sigOp, 1), "MPa", "Operating. Design " + fmt(model.sigDes, 1) + " MPa → design TMT " + fmt(model.designTmt) + " °C for " + fmt(num(inp.designLife, 100000)) + " h", "")
+              var mat = TL_MATERIALS[inp.material] ? TL_MATERIALS[inp.material].label : "Custom";
+              var cell = function(k, v, sub){ return '<div class="tl-sc"><span>' + k + '</span><b>' + v + '</b><i>' + sub + '</i></div>'; };
+              html += notesHtml + '<div class="tl-strip">'
+                + cell("TMT limit for design life", fmt(worst.tLimit) + " °C", isFinite(worst.tLimit) ? "hottest now " + fmt(hottest.curT) + " °C · " + (hottest.curT > limV ? fmt(hottest.curT - limV) + " °C over" : fmt(limV - hottest.curT) + " °C margin") : "design life reached")
+                + cell("Hoop stress", fmt(model.sigOp, 1) + " MPa", "operating · design " + fmt(model.sigDes, 1) + " MPa")
+                + cell("Design basis", fmt(model.designTmt) + " °C = " + fmt(num(inp.designLife, 100000)) + " h", "API 530 · +20 °C ≈ half life")
+                + cell("Tube OD × wall", fmt(num(inp.od, 125)) + " × " + fmt(num(inp.wall, 11) - num(inp.corr, 0), 1) + " mm", esc(mat.split(" (")[0]) + " · " + fmt(num(inp.pOper, 27), 1) + " kg/cm²g")
                 + '</div>';
 
               /* zones */
@@ -27707,10 +27717,6 @@ body.light-theme #auraReformerWidget .au-scroll th{background:#f4f6fa;}
               }).join("");
               /* at-risk table now in the Tube life usage panel */ void  '<div class="tl-panel"><div class="tl-panel-title">Hottest / at-risk tubes<span>Ranked by remaining life</span></div><div class="tl-table-wrap"><table class="tl-table"><thead><tr><th>Position</th><th class="num" title="Median of TST readings in the last 72 h, plus pyrometer correction">TMT now °C</th><th class="num" title="Highest hourly TMT since the in-service date (TST reading shifted by COT change, COT spikes removed)">Peak °C</th><th class="num">Life used</th><th class="num">Use / yr</th><th class="num">Remaining yrs</th><th class="num">TMT limit °C</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 
-              html += '<div class="tl-note">Basis: ' + esc(TL_MATERIALS[inp.material] ? TL_MATERIALS[inp.material].label : "Custom") + ', ' + (inp.basis === "avg" ? "average" : "minimum") + ' rupture data, OD ' + fmt(num(inp.od, 125)) + ' mm × ' + fmt(num(inp.wall, 11) - num(inp.corr, 0), 1) + ' mm wall, ' + fmt(num(inp.pOper, 27), 1) + ' kg/cm²g. '
-                + 'History: ' + fmt(sim.online) + ' h online, ' + fmt(sim.offline) + ' h offline (' + sim.cycles + ' shutdowns), ' + fmt(sim.gap) + ' h without data'
-                + (sim.priorHoursCal ? ', plus ' + fmt(sim.priorHoursCal) + ' calendar h before the record' : '') + '. '
-                + 'TST readings used: ' + fmt(rd.total) + ' from ' + fmt(rd.entryCount) + ' saved entries.</div>';
               body.innerHTML = html;
               tlState.last = { worst:worst, usedPct:usedW, remYears:worst.remYears };
             }
