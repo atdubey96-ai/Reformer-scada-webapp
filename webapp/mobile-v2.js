@@ -2843,3 +2843,23 @@
   window.tubeLifeUsageRender = boot;
   setTimeout(boot, 9000); setInterval(boot, 5 * 60000);
 })();
+
+/* ---------- Survey selector link (27 Nov 2026): dashboard Shift/Date filter <-> APC Advisor survey dropdown, both ways ---------- */
+(function(){
+  function list(){ try{ return (cuboidGetSortedTempEntries() || []).filter(function(e){ return e && e.dt; }).slice().sort(function(a, b){ return String(b.dt).localeCompare(String(a.dt)); }); }catch(e){ return []; } }
+  document.addEventListener("change", function(ev){ var t = ev.target; if(!t || !t.id) return;
+    if(t.id === "stack-cuboid-shift-select" || t.id === "stack-cuboid-date-input"){
+      var sh = (document.getElementById("stack-cuboid-shift-select") || {}).value || "All", d = (document.getElementById("stack-cuboid-date-input") || {}).value || "";
+      var L = list(), hit = (sh === "All" && !d) ? null : L.filter(function(e){ return (!d || String(e.dt).slice(0, 10) === d) && (sh === "All" || String(e.shift || "") === sh); })[0];
+      if(hit === undefined) return; /* nothing saved for that shift/date: leave the advisor as it is */
+      var sel = document.getElementById("auraSurveySel"), latest = L[0] && hit && String(hit.dt) === String(L[0].dt);
+      if(sel) sel.value = (!hit || latest) ? "" : String(hit.dt);
+      try{ window.auraPickSurvey(hit && !latest ? String(hit.dt) : null); }catch(e){}
+    } else if(t.id === "auraSurveySel"){
+      var v = t.value, L2 = list(), e = v ? L2.filter(function(x){ return String(x.dt) === v; })[0] : null;
+      var ss = document.getElementById("stack-cuboid-shift-select"), di = document.getElementById("stack-cuboid-date-input");
+      if(ss) ss.value = e ? (e.shift || "All") : "All"; if(di) di.value = e ? String(e.dt).slice(0, 10) : "";
+      try{ if(typeof requestTwinCuboidFilterApply === "function") requestTwinCuboidFilterApply(90, true); }catch(x){}
+    }
+  }, true);
+})();
