@@ -2436,129 +2436,157 @@
   }
 })();
 
-/* ---------- IOCL AURA-Reformer hook: live data + user-entered prices only ---------- */
+/* ---------- AURA Reformer: one integrated model. Goals in strict order: TST <= 950 (hard) > tube life > pre-reformer bed > CH4 slip > fuel > efficiency > uniform heating ---------- */
 (function(){
   var PK = "auraPricesV1";
-  var FIELDS = { ng:"auraPriceNg", nap:"auraPriceNap", retube:"auraPriceRetube", o2t:"auraTargetO2", hours:"auraHours" };
-  var DEF = { ng:38927, nap:45562, o2t:3.5, hours:8000 }; /* NG 16-May-25, naphtha (EPP) current fortnight, ₹/MT */
-  function loadP(){ var p = {}; try{ p = JSON.parse(localStorage.getItem(PK) || "null"); }catch(e){ p = null; } if(!p){ p = {}; Object.keys(DEF).forEach(function(k){ p[k] = DEF[k]; }); } return p; }
+  var FIELDS = { ng:"auraPriceNg", nap:"auraPriceNap", retube:"auraPriceRetube", o2t:"auraTargetO2", hours:"auraHours", tipNg:"auraTipNg", tipNap:"auraTipNap", bedMin:"auraBedMin" };
+  var DEF = { ng:38927, nap:45562, o2t:3.5, hours:8000, bedMin:485 }; /* NG 16-May-25, naphtha (EPP) current fortnight, ₹/MT */
+  function loadP(){ var p = null; try{ p = JSON.parse(localStorage.getItem(PK) || "null"); }catch(e){ p = null; } p = p || {}; Object.keys(DEF).forEach(function(k){ if(p[k] == null) p[k] = DEF[k]; }); return p; }
   function pos(v){ var n = Number(v); return v !== "" && v != null && isFinite(n) && n > 0 ? n : NaN; }
   function fill(){ var p = loadP(); Object.keys(FIELDS).forEach(function(k){ var el = document.getElementById(FIELDS[k]); if(el && isFinite(pos(p[k]))) el.value = p[k]; }); state(); }
   function state(){ var p = loadP(), miss = [];
-    if(!isFinite(pos(p.ng))) miss.push("NG"); if(!isFinite(pos(p.nap))) miss.push("naphtha"); if(!isFinite(pos(p.retube))) miss.push("retube");
-    if(!isFinite(pos(p.o2t))) miss.push("target O₂"); if(!isFinite(pos(p.hours))) miss.push("hours");
-    var el = document.getElementById("auraPriceState"); if(el) el.textContent = miss.length ? "· enter " + miss.join(", ") : "· set"; }
-  window.auraSavePrices = function(){ var p = {}; Object.keys(FIELDS).forEach(function(k){ var el = document.getElementById(FIELDS[k]); if(el && isFinite(pos(el.value))) p[k] = Number(el.value); });
-    try{ localStorage.setItem(PK, JSON.stringify(p)); }catch(e){} state(); if(window.__auraRan) window.triggerAuraOptimizer(); };
+    if(!isFinite(pos(p.retube))) miss.push("retube cost"); if(!isFinite(pos(p.tipNg)) || !isFinite(pos(p.tipNap))) miss.push("tip pressure limits");
+    var el = document.getElementById("auraPriceState"); if(el) el.textContent = miss.length ? "· enter " + miss.join(", ") : ""; }
+  window.auraSavePrices = function(){ var p = loadP(); Object.keys(FIELDS).forEach(function(k){ var el = document.getElementById(FIELDS[k]); if(el){ if(isFinite(pos(el.value))) p[k] = Number(el.value); else if(el.value === "") delete p[k]; } });
+    try{ localStorage.setItem(PK, JSON.stringify(p)); }catch(e){} state(); window.triggerAuraOptimizer(); };
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", fill); else fill();
 
-  var ZK = [["ab-bot","AB Bot"],["ab-top","AB Top"],["cd-bot","CD Bot"],["cd-top","CD Top"]];
-  function sortedEntries(){
-    var list = [];
-    try{ list = typeof window.cuboidGetSortedTempEntries === "function" ? window.cuboidGetSortedTempEntries() : []; }catch(e){ list = []; }
-    if(!list || !list.length){ try{ list = typeof window.getAllTempEntries === "function" ? window.getAllTempEntries() : (window.tempDataEntries || []); }catch(e){ list = []; } }
-    return (list || []).slice().sort(function(a,b){ return (Date.parse(b && (b.dt || b.date || b.createdAt)) || 0) - (Date.parse(a && (a.dt || a.date || a.createdAt)) || 0); });
-  }
-  function rowOf(e, k){ var ph = e && e.peepHoles; if(ph && Array.isArray(ph[k])) return ph[k];
-    var legacy = { "ab-bot":e && (e.abBot || e.abBottom), "ab-top":e && e.abTop, "cd-bot":e && (e.cdBot || e.cdBottom), "cd-top":e && e.cdTop }[k];
-    return Array.isArray(legacy) ? legacy : []; }
-  function latestTst(){
-    var list = sortedEntries();
-    for(var n = 0; n < list.length; n++){
-      var e = list[n], out = [];
-      ZK.forEach(function(z){ rowOf(e, z[0]).forEach(function(t, i){ var v = Number(t); if(t !== "" && t != null && v > 700 && v < 1100) out.push({ quadrant:z[1], phIndex:i+1, temp:v }); }); });
-      if(out.length){ out.entryDt = e.dt || e.date || e.createdAt || ""; return out; }
-    }
-    return [];
-  }
   function esc(v){ return String(v).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
   function f(v, d){ return isFinite(v) ? Number(v).toLocaleString("en-IN", { minimumFractionDigits:d || 0, maximumFractionDigits:d || 0 }) : "—"; }
   function set(id, html){ var el = document.getElementById(id); if(el) el.innerHTML = html; }
+  function mx(a){ a = (a || []).filter(isFinite); return a.length ? Math.max.apply(null, a) : NaN; }
+  function sdv(a){ a = (a || []).filter(isFinite); if(a.length < 2) return NaN; var m = a.reduce(function(s, x){ return s + x; }, 0) / a.length; return Math.sqrt(a.reduce(function(s, x){ return s + (x - m) * (x - m); }, 0) / a.length); }
+  function status(t){ set("auraStatus", esc(t)); }
 
   window.triggerAuraOptimizer = function(){
-    /* one button: run the Furnace Optimiser first (same TST survey), then the AURA summary */
-    if(typeof window.runCuboidAiPrediction === "function" && !window.__auraOptPending){
-      window.__auraOptPending = true; window.__auraKicked = true; window.__furnaceOptLast = null;
-      var b0 = document.getElementById("btnRunAuraOptimization"); if(b0) b0.disabled = true;
-      set("auraPrescriptionSummary", "⚡ Running the burner optimiser on the latest TST survey…");
-      var done = false, go = function(){ if(done) return; done = true; window.removeEventListener("furnaceopt:done", go); window.__auraRunSummary(); window.__auraOptPending = false; };
-      window.addEventListener("furnaceopt:done", go); setTimeout(go, 8000);
-      try{ window.runCuboidAiPrediction(); }catch(e){ go(); }
-      return;
-    }
-    window.__auraRunSummary();
+    if(window.__auraOptPending) return;
+    if(typeof window.runCuboidAiPrediction !== "function"){ window.__auraRunSummary(); return; }
+    window.__auraOptPending = true; window.__furnaceOptLast = null;
+    var b0 = document.getElementById("btnRunAuraOptimization"); if(b0) b0.disabled = true; status("Running…");
+    var done = false, go = function(){ if(done) return; done = true; window.removeEventListener("furnaceopt:done", go); window.__auraOptPending = false; window.__auraRunSummary(); };
+    window.addEventListener("furnaceopt:done", go); setTimeout(go, 12000);
+    try{ window.runCuboidAiPrediction(); }catch(e){ go(); }
   };
+
   window.__auraRunSummary = function(){
     window.__auraRan = true;
     var btn = document.getElementById("btnRunAuraOptimization");
-    if(btn) btn.disabled = true; set("auraPrescriptionSummary", "Reading live plant data…");
     var snap = typeof window.auraReformerSnapshot === "function" ? window.auraReformerSnapshot() : Promise.resolve(null);
     Promise.resolve(snap).catch(function(){ return null; }).then(function(m){
-      var p = loadP(), notes = [], lines = [], LIM = 950, COTLIM = 900, FLUELIM = 1110, SLOPE = -0.017;
-      var d = (m && m.data) || {}, live = m && m.totalHeat > 0;
-      var fo = window.__furnaceOptLast, pl = fo && fo.plans ? fo.plans[fo.bestIdx || 0] : null;
-      var tst = latestTst(), peakNow = tst.length ? Math.max.apply(null, tst.map(function(r){ return r.temp; })) : NaN;
-      var peakAfter = pl ? pl.p.e.peak : peakNow;
-      /* COT lever: only if the TST limit still holds after the burner moves */
-      var dCot = 0, cotNote = "", cb = fo && fo.cotBox, g = fo && fo.gamma > 0 ? fo.gamma : 1;
-      if(cb && isFinite(cb.dCot) && Math.abs(cb.dCot) >= 1){
-        if(cb.dCot > 0){
-          if(!(peakAfter < LIM)) cotNote = "Hold COT: CH₄ slip wants +" + f(cb.dCot, 0) + " °C, but TST must come under " + LIM + " °C first.";
-          else { dCot = Math.min(cb.dCot, (LIM - peakAfter) / g); if(dCot < cb.dCot - 0.5) cotNote = "COT rise limited to +" + f(dCot, 0) + " °C to keep TST under " + LIM + " °C."; }
-        } else dCot = cb.dCot;
+      var p = loadP(), LIM = 950, COTLIM = 900, BEDMIN = pos(p.bedMin) > 400 ? Number(p.bedMin) : 485, K = 0.017, O2_TST = 3; /* +3 °C TST per -1% O2 (flame hotter), prior */
+      var d = (m && m.data) || {}, live = m && m.totalHeat > 0, fo = window.__furnaceOptLast, notes = [], miss = [];
+      var pl = fo && fo.plans ? fo.plans[fo.bestIdx || 0] : null, kp = (fo && fo.kpis) || {};
+      if(!fo || !pl){ set("auraPrescriptionSummary", '<div class="au-notes">No saved TST survey could be read. Save a TST survey, then press Run.</div>'); if(btn) btn.disabled = false; status("No TST survey"); return; }
+      var g = fo.gamma > 0 ? fo.gamma : 1, lifeAt = window.__foLifeAt || function(){ return NaN; };
+      var sus = {}; (fo.suspects || []).forEach(function(x){ if(isFinite(x.idx)) sus[x.idx] = 1; }); /* readings to recheck do not drive COT */
+      var clean = function(a){ return (a || []).map(function(t, i){ return sus[i] ? NaN : t; }); };
+      var T0 = clean(fo.cur.T), T1 = clean(pl.p.T), peakNow = mx(T0);
+      var pk = { AB:mx(T1.slice(0, 30)), CD:mx(T1.slice(30, 60)) }, cap = Math.min(LIM, peakNow); /* tube life must not get worse than now */
+      var cot = { AB:kp.cotAB ? kp.cotAB.cur : d.abCot, CD:kp.cotCD ? kp.cotCD.cur : d.cdCot }, dc = { AB:0, CD:0 }, why = {};
+      /* 0. TST hard limit: if burner moves alone cannot bring a chamber under 950, lower that chamber's COT */
+      ["AB","CD"].forEach(function(s){ if(pk[s] > LIM){ dc[s] = -Math.min(10, Math.ceil((pk[s] - LIM) / g)); /* gradual: at most 10 °C per run */ why[s] = "TST"; } });
+      /* 3a. CH4 slip: close the AB/CD COT gap at the same total fuel (colder chamber dominates the mixed slip) */
+      var gap = cot.AB - cot.CD, shift = 0;
+      if(!why.AB && !why.CD && isFinite(gap) && Math.abs(gap) >= 3){
+        var hot = gap > 0 ? "AB" : "CD", cool = gap > 0 ? "CD" : "AB", x = Math.abs(gap) / 2;
+        x = Math.min(x, Math.max(0, (cap - pk[cool]) / g)); x = Math.floor(x);
+        if(x >= 1){ dc[hot] -= x; dc[cool] += x; shift = x; } else notes.push("COT gap " + f(Math.abs(gap), 0) + " °C kept: the " + cool + " tubes have no room to take heat.");
       }
-      if(Math.abs(dCot) < 1) dCot = 0;
-      /* O2 lever (measured fuel heat, site combustion model) */
-      var o2 = m ? m.o2Used : NaN, o2t = pos(p.o2t), hrs = pos(p.hours), savedGcalH = NaN, ngShare = NaN, napShare = NaN;
-      if(!live) notes.push("live fuel flows not available" + (m && m.error ? " (" + esc(m.error) + ")" : ""));
-      else if(!isFinite(o2t)) notes.push("enter target O₂ in ⚙");
-      else if(o2 <= o2t) savedGcalH = 0;
-      else { var eaC = o2 / (21 - o2), eaT = o2t / (21 - o2t), eff = m.overallEff > 0 ? m.overallEff / 100 : NaN;
-        savedGcalH = isFinite(eff) ? m.fuelKgh * 16.25 * (eaC - eaT) * 0.3059 * (m.stackTemp - 25) / 1e6 / eff : NaN; }
-      var trim = live ? (m.ngHeat + m.napHeat) : 0; if(trim > 0){ ngShare = m.ngHeat / trim; napShare = m.napHeat / trim; }
-      var pNg = pos(p.ng) / 1000 * (m && m.ngDensity), pNap = pos(p.nap) / 1000, rsH = NaN;
-      if(isFinite(savedGcalH) && trim > 0 && isFinite(pNg) && isFinite(pNap)) rsH = savedGcalH * ngShare * 1e6 / m.ngNCV * pNg + savedGcalH * napShare * 1e6 / m.naphthaNCV * pNap;
-      var airOk = !(peakAfter >= LIM); if(!airOk && isFinite(o2t) && o2 > o2t) cotNote = (cotNote ? cotNote + " " : "") + "Air trim waits until TST is under " + LIM + " °C (less air makes the flame hotter).";
-      window.__auraExtras = { dCot:dCot, cotNote:cotNote, o2From:o2, o2To:(airOk && isFinite(o2t) && o2 > o2t ? o2t : NaN) };
-      /* Goal table: now, target, after the plan */
-      var tl = typeof window.tubeLifeLastResult === "function" ? window.tubeLifeLastResult() : null;
-      var lifeAfter = tl && pl && fo.cur.e.life > 0 ? tl.remYears * pl.p.e.life / fo.cur.e.life : NaN;
-      var cotNow = (d.abCot > 0 && d.cdCot > 0) ? Math.max(d.abCot, d.cdCot) : NaN, slipNow = d.methaneSlip > 0 ? d.methaneSlip : (cb ? cb.slip : NaN);
+      /* 3b. CH4 slip vs target: raise COT only inside tube-life room; lower it (saves fuel) when slip is below target */
+      var cb = fo.cotBox, bedPlan = isFinite(pl.p.bed) ? pl.p.bed : (kp.bed ? kp.bed.cur : NaN), BEDF = 0.16 * 0.48;
+      if(cb && isFinite(cb.dCot) && !why.AB && !why.CD){
+        if(cb.dCot >= 1){
+          var room = Math.min((cap - (pk.AB + g * dc.AB)) / g, (cap - (pk.CD + g * dc.CD)) / g, COTLIM - Math.max(cot.AB + dc.AB, cot.CD + dc.CD));
+          var up = Math.floor(Math.min(cb.dCot, room));
+          if(up >= 1){ dc.AB += up; dc.CD += up; } else notes.push("COT rise for CH₄ slip held: it would shorten tube life (higher priority).");
+        } else if(cb.dCot <= -1){
+          var dn = Math.ceil(Math.max(cb.dCot, -8));
+          if(isFinite(bedPlan) && bedPlan + BEDF * dn < BEDMIN) notes.push("COT kept: lowering it would cool the pre-reformer bed below " + BEDMIN + " °C.");
+          else { dc.AB += dn; dc.CD += dn; }
+        }
+      }
+      var pkF = { AB:pk.AB + g * dc.AB, CD:pk.CD + g * dc.CD }, peakF = Math.max(pkF.AB, pkF.CD);
+      var bedF = bedPlan + BEDF * (dc.AB + dc.CD) / 2;
+      /* 4. Fuel: O2 trim only inside the TST / tube-life room that is left */
+      var o2 = m ? m.o2Used : NaN, o2t = pos(p.o2t), o2To = o2, saved = 0;
+      if(isFinite(o2) && isFinite(o2t) && o2 > o2t + 0.05){
+        var roomO2 = (cap - peakF) / O2_TST; o2To = Math.max(o2t, o2 - Math.max(0, Math.floor(roomO2 * 10) / 10));
+        if(o2To > o2 - 0.05){ o2To = o2; notes.push("Air trim held: less air makes the flame hotter, and the tubes have no room."); }
+        peakF += O2_TST * (o2 - o2To);
+      }
+      if(live && o2To < o2){ var eaC = o2 / (21 - o2), eaT = o2To / (21 - o2To), eff0 = m.overallEff > 0 ? m.overallEff / 100 : NaN;
+        saved = isFinite(eff0) ? m.fuelKgh * 16.25 * (eaC - eaT) * 0.3059 * (m.stackTemp - 25) / 1e6 / eff0 : 0; }
+      var trim = live ? (m.ngHeat + m.napHeat) : 0, pNg = pos(p.ng) / 1000 * (m && m.ngDensity), pNap = pos(p.nap) / 1000, hrs = pos(p.hours) || 8000, rsFuel = NaN;
+      if(trim > 0 && isFinite(pNg) && isFinite(pNap)) rsFuel = saved * (m.ngHeat / trim) * 1e6 / m.ngNCV * pNg + saved * (m.napHeat / trim) * 1e6 / m.naphthaNCV * pNap; /* ₹/h, PSA off-gas always burned */
+      var effNow = live ? m.overallEff : NaN, effAfter = live && saved > 0 ? effNow * m.totalHeat / (m.totalHeat - saved) : effNow;
+      /* life */
+      var tl = typeof window.tubeLifeLastResult === "function" ? window.tubeLifeLastResult() : null, r0 = lifeAt(peakNow), r1 = lifeAt(peakF);
+      var lifeNow = tl && tl.remYears > 0 ? tl.remYears : NaN, lifeAfter = isFinite(lifeNow) && r0 > 0 ? lifeNow * r1 / r0 : NaN;
+      var rsLife = isFinite(pos(p.retube)) && lifeNow > 0 && lifeAfter > 0 ? pos(p.retube) * 1e7 * (1 / lifeNow - 1 / lifeAfter) : NaN; /* ₹/yr of retube cost spread over life */
+      var slipNow = kp.ch4 ? kp.ch4.cur : d.methaneSlip, mix = function(a, b){ return (Math.exp(-K * a) + Math.exp(-K * b)) / 2; };
+      var slipAfter = slipNow * mix(cot.AB + dc.AB, cot.CD + dc.CD) / mix(cot.AB, cot.CD);
+      var sd0 = sdv(T0), sd1 = sdv(T1.map(function(t, i){ return t + g * (i < 30 ? dc.AB : dc.CD); }));
+      /* work list extras */
+      var cotSteps = [];
+      if(Math.abs(dc.AB) >= 1 || Math.abs(dc.CD) >= 1){
+        var reason = why.AB || why.CD ? "to bring TST under " + LIM + " °C" : shift ? "moves firing from the hotter chamber to the cooler one at the same total fuel, so mixed CH₄ slip falls" : (dc.AB > 0 ? "for CH₄ slip, inside tube-life room" : "slip is below target, so this saves fuel");
+        cotSteps.push({ key:"ab" + dc.AB + "cd" + dc.CD, text:"COT set point AB " + f(cot.AB, 0) + " → " + f(cot.AB + dc.AB, 0) + " °C, CD " + f(cot.CD, 0) + " → " + f(cot.CD + dc.CD, 0) + " °C, 2 °C at a time after the burner moves settle (" + reason + ")." });
+      }
+      window.__auraExtras = { cotSteps:cotSteps, cotNote:"", o2From:o2, o2To:o2To < o2 ? o2To : NaN };
+      /* tip pressure and bed checks */
+      var tipK = pl.p.tipK || 1, tips = [["NG", kp.tipNg, pos(p.tipNg)], ["Naphtha", kp.tipNap, pos(p.tipNap)], ["Off-gas", kp.tipOg, NaN]];
+      var tipTxt = tips.filter(function(t){ return t[1]; }).map(function(t){ var a = t[1].cur * (t[0] === "Off-gas" ? 1 : tipK * tipK); return t[0] + " " + f(t[1].cur, 2) + (Math.abs(a - t[1].cur) > 0.005 ? " → " + f(a, 2) : "") + (isFinite(t[2]) ? " (max " + f(t[2], 2) + ")" : ""); }).join(" · ");
+      if(tipTxt) notes.push("Tip pressure " + tipTxt + (isFinite(pos(p.tipNg)) ? "" : ". Enter the limits in ⚙ so the plan checks them."));
+      if(fo.suspects && fo.suspects.length) notes.push("Recheck reading: " + fo.suspects.map(function(s){ return esc(s.label) + " " + f(s.t, 0) + " °C"; }).join(", ") + ".");
+      Array.prototype.forEach.call(document.querySelectorAll(".ct-6m-nudge-banner"), function(nd){ notes.push(esc(nd.textContent.replace(/^\S+\s*/, ""))); });
+      if(!live) miss.push("live fuel flows" + (m && m.error ? " (" + esc(m.error) + ")" : ""));
+      /* goal ladder */
       var G = [
-        { n:"Peak TST", u:"°C", now:peakNow, tgt:"≤ " + LIM, after:peakAfter, ok:function(v){ return v <= LIM; }, d:0 },
-        { n:"COT (higher side)", u:"°C", now:cotNow, tgt:"≤ " + COTLIM, after:cotNow + dCot, ok:function(v){ return v <= COTLIM; }, d:0 },
-        { n:"CH₄ slip", u:"%", now:slipNow, tgt:cb ? f(cb.target, 2) : "—", after:slipNow * Math.exp(SLOPE * dCot), ok:function(v){ return !cb || v <= cb.target + 0.05; }, d:2 },
-        { n:"Flue O₂", u:"%", now:o2, tgt:isFinite(o2t) ? f(o2t, 1) : "—", after:isFinite(o2t) && o2 > o2t ? o2t : o2, ok:function(v){ return !isFinite(o2t) || v <= o2t + 0.05; }, d:1 },
-        { n:"Flue gas", u:"°C", now:d.flueGas, tgt:"≤ " + FLUELIM, after:d.flueGas, ok:function(v){ return v <= FLUELIM; }, d:0 },
-        { n:"Fuel fired", u:"Gcal/h", now:live ? m.totalHeat : NaN, tgt:"lowest", after:live && isFinite(savedGcalH) ? m.totalHeat - savedGcalH : NaN, ok:function(){ return true; }, d:2 },
-        { n:"Hottest-tube life", u:"yrs", now:tl ? tl.remYears : NaN, tgt:"highest", after:lifeAfter, ok:function(){ return true; }, d:1 }
+        ["★", "TST peak" + (Object.keys(sus).length ? " (readings to recheck left out)" : ""), peakNow, "≤ " + LIM, peakF, "°C", 0, function(v){ return v <= LIM; }],
+        ["1", "Tube life, hottest tube", lifeNow, "highest", lifeAfter, "yrs", 1, function(v){ return !(v < lifeNow - 0.05); }],
+        ["2", "Pre-reformer bed (TI-2412)", kp.bed ? kp.bed.cur : NaN, "≥ " + BEDMIN, bedF, "°C", 0, function(v){ return v >= BEDMIN; }],
+        ["3", "CH₄ slip", slipNow, cb ? f(cb.target, 2) : "lowest", slipAfter, "%", 2, function(v){ return !cb || v <= cb.target + 0.05; }],
+        ["", "COT AB / CD", cot.AB, "≤ " + COTLIM, null, "", 0, null, f(cot.AB, 0) + " / " + f(cot.CD, 0), f(cot.AB + dc.AB, 0) + " / " + f(cot.CD + dc.CD, 0)],
+        ["4", "Fuel fired", live ? m.totalHeat : NaN, "lowest", live ? m.totalHeat - saved : NaN, "Gcal/h", 2, null],
+        ["", "Flue O₂", o2, isFinite(o2t) ? f(o2t, 1) : "—", o2To, "%", 1, null],
+        ["5", "Energy efficiency", effNow, "highest", effAfter, "%", 1, null],
+        ["6", "Uniform heating (TST σ)", sd0, "lowest", sd1, "°C", 1, null]
       ];
-      var cell = 'style="padding:5px 8px;border-bottom:1px solid var(--au-line);"';
-      var tbl = '<table style="width:100%;border-collapse:collapse;font-size:12.5px;"><tr style="color:var(--au-sub);font-size:11px;text-transform:uppercase;"><th ' + cell + ' align="left">Goal</th><th ' + cell + ' align="right">Now</th><th ' + cell + ' align="right">Target</th><th ' + cell + ' align="right">After plan</th><th ' + cell + '></th></tr>'
-        + G.map(function(r){ if(!isFinite(r.now) || r.now <= 0) return ""; var okN = r.ok(r.now), okA = !isFinite(r.after) || r.ok(r.after);
-          return '<tr><td ' + cell + '>' + r.n + '</td><td ' + cell + ' align="right" style="padding:5px 8px;border-bottom:1px solid var(--au-line);color:' + (okN ? 'inherit' : '#f87171') + ';font-weight:' + (okN ? 400 : 700) + '">' + f(r.now, r.d) + ' ' + r.u + '</td><td ' + cell + ' align="right">' + r.tgt + '</td><td ' + cell + ' align="right"><b style="color:' + (okA ? 'inherit' : '#f87171') + '">' + (isFinite(r.after) ? f(r.after, r.d) + ' ' + r.u : '—') + '</b></td><td ' + cell + ' align="center">' + (okA ? '✓' : '<span style="color:#f87171">!</span>') + '</td></tr>'; }).join("") + '</table>';
-      var saving = isFinite(rsH) && rsH > 0 ? '<div style="margin-top:8px;"><b style="color:#fbbf24;">Saving ₹ ' + (isFinite(hrs) ? f(rsH * hrs / 1e7, 2) + ' Cr / yr' : f(rsH, 0) + ' / h') + '</b> <span style="opacity:.7;">(₹ ' + f(rsH * 24, 0) + ' / day, from the O₂ trim on NG and naphtha)</span></div>' : "";
-      /* Step 5: before/after check of earlier plans the operators ticked */
+      var tbl = '<table class="au-goals"><tr><th class="pr">#</th><th>Goal</th><th>Now</th><th>Limit / target</th><th>After plan</th><th></th></tr>' + G.map(function(r){
+        if(!isFinite(r[2])) return "";
+        var okN = r[7] ? r[7](r[2]) : true, okA = r[7] && isFinite(r[4]) ? r[7](r[4]) : true;
+        var nowT = r[8] || f(r[2], r[6]) + " " + r[5], aftT = r[9] || (isFinite(r[4]) ? f(r[4], r[6]) + " " + r[5] : "—");
+        return '<tr><td class="pr">' + r[0] + '</td><td>' + r[1] + '</td><td class="' + (okN ? "" : "bad") + '">' + nowT + '</td><td>' + r[3] + '</td><td class="' + (okA ? "" : "bad") + '"><b>' + aftT + '</b></td><td><span class="au-dot ' + (okA ? "" : "bad") + '"></span></td></tr>';
+      }).join("") + '</table>';
+      set("auraPrescriptionSummary", tbl + (notes.length || miss.length ? '<div class="au-notes">' + notes.map(function(n){ return "<div>• " + n + "</div>"; }).join("") + (miss.length ? '<div style="color:var(--au-warn)">Missing: ' + miss.join("; ") + '</div>' : '') + '</div>' : ""));
+      /* hero tiles */
+      var rsYr = (isFinite(rsFuel) ? rsFuel * hrs : 0) + (isFinite(rsLife) && rsLife > 0 ? rsLife : 0);
+      var tiles = [
+        ["is-money", "Saving", rsYr > 0 ? "₹ " + f(rsYr / 1e7, 2) + " Cr" : "₹ 0", rsYr > 0 ? "per year · ₹ " + f(rsYr / 365, 0) + " / day" : (peakNow > LIM ? "TST first, savings after" : "no saving move now")],
+        ["", "Efficiency", isFinite(effNow) ? f(effNow, 1) + (effAfter > effNow + 0.05 ? " → " + f(effAfter, 1) : "") + " %" : "—", "overall reformer"],
+        ["", "Peak TST", f(peakNow, 0) + " → " + f(peakF, 0) + " °C", peakF > LIM ? '<span style="color:var(--au-bad)">still above ' + LIM + ' °C</span>' : "limit " + LIM + " °C"],
+        ["", "Tube life", isFinite(lifeNow) ? f(lifeNow, 1) + " → " + f(lifeAfter, 1) + " yrs" : (r0 > 0 ? "×" + f(r1 / r0, 2) : "—"), "hottest tube"]
+      ];
+      set("auraHero", tiles.map(function(t){ return '<div class="au-tile ' + t[0] + '"><span>' + t[1] + '</span><b>' + t[2] + '</b><i>' + t[3] + '</i></div>'; }).join(""));
+      /* model note: predicted vs actual on earlier ticked plans */
+      var chk = "";
       try{
-        var plog = JSON.parse(localStorage.getItem("auraPlanLogV1") || "[]"), qk = ["AB Bot","AB Top","CD Bot","CD Top"], nowMap = {};
-        tst.forEach(function(r){ nowMap[qk.indexOf(r.quadrant) * 15 + r.phIndex - 1] = r.temp; });
-        var done = plog.filter(function(x){ return tst.entryDt && String(tst.entryDt) > x.surveyDt && (Date.parse(tst.entryDt) || 0) > x.at - 864e5; }).slice(-10);
-        var pe = [], ae = [];
-        done.forEach(function(x){ x.tubes.forEach(function(t){ var a = nowMap[t[0]]; if(isFinite(a)){ pe.push(t[2] - t[1]); ae.push(a - t[1]); } }); });
+        var plog = JSON.parse(localStorage.getItem("auraPlanLogV1") || "[]"), sv = String(fo.surveyDt || "");
+        var donel = plog.filter(function(x){ return sv > x.surveyDt; }).slice(-10), pe = [], ae = [];
+        donel.forEach(function(x){ x.tubes.forEach(function(t){ var a = T0[t[0]]; if(isFinite(a)){ pe.push(t[2] - t[1]); ae.push(a - t[1]); } }); });
         if(pe.length){ var mp = pe.reduce(function(s, v){ return s + v; }, 0) / pe.length, ma = ae.reduce(function(s, v){ return s + v; }, 0) / ae.length;
-          lines.push("Model check (last " + done.length + " applied plan" + (done.length > 1 ? "s" : "") + ", " + pe.length + " tubes): predicted " + (mp >= 0 ? "+" : "") + f(mp, 1) + " °C, actual " + (ma >= 0 ? "+" : "") + f(ma, 1) + " °C."); }
+          chk = " Last applied plans (" + pe.length + " tubes): predicted " + (mp >= 0 ? "+" : "") + f(mp, 1) + " °C, actual " + (ma >= 0 ? "+" : "") + f(ma, 1) + " °C."; }
       }catch(e){}
-      if(fo && fo.suspects && fo.suspects.length) lines.push("Recheck reading: " + fo.suspects.map(function(s){ return esc(s.label) + " " + f(s.t, 0) + " °C (neighbours " + f(s.nm, 0) + ")"; }).join(", ") + ".");
-      if(d.abCot > 0 && d.cdCot > 0 && Math.abs(d.abCot - d.cdCot) > 8) lines.push("COT AB " + f(d.abCot, 0) + " / CD " + f(d.cdCot, 0) + " °C: trim the " + (d.abCot > d.cdCot ? "AB" : "CD") + " side.");
-      Array.prototype.forEach.call(document.querySelectorAll(".ct-6m-nudge-banner"), function(nd){ lines.push(esc(nd.textContent.replace(/^\S+\s*/, ""))); });
-      if(!tst.length) notes.push("no TST survey found");
-      if(!pl) notes.push("optimiser did not finish, press Run again");
-      set("auraPrescriptionSummary", tbl + saving
-        + (lines.length ? '<div style="margin-top:8px;font-size:12px;">' + lines.map(function(l){ return "• " + l; }).join("<br>") + '</div>' : "")
-        + (notes.length ? '<div style="margin-top:6px;color:#fbbf24;font-size:12px;">Missing: ' + notes.join("; ") + "</div>" : "")
-        + (m && m.fetchedAt ? '<div style="font-size:11px;opacity:.6;margin-top:6px;">DCS ' + new Date(m.fetchedAt).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + (tst.entryDt ? " · TST survey " + esc(String(tst.entryDt).slice(0, 16).replace("T", " ")) : "") + "</div>" : ""));
+      set("auraModelNote", "Heat model fitted on " + fo.nSurveys + " TST surveys (" + f(fo.nObs, 0) + " readings), β " + f(fo.beta, 1) + " °C/unit, COT→TST γ " + f(g, 2) + ", ± " + f(fo.band, 0) + " °C." + chk
+        + " Pre-reformer bed +0.16 °C per °C flue gas (60-day fit). Upper-row firing raises flue gas exit (prior). CH₄ slip −1.7 %/°C COT (equilibrium). Fuel saving from O₂ trim on NG and naphtha only; PSA off-gas always full."
+        + (fo.surveyDt ? " TST survey " + esc(String(fo.surveyDt).slice(0, 16).replace("T", " ")) + "." : ""));
       if(typeof window.renderAdjustmentFromOptimiser === "function") window.renderAdjustmentFromOptimiser();
       if(btn) btn.disabled = false;
+      var nx = new Date(Date.now() + 15 * 60000);
+      status("Updated " + new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) + " · next " + nx.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }));
     });
   };
+  /* fully automatic: first run once the page has settled, then every 15 minutes while the page is open */
+  function auto(){ if(document.getElementById("auraReformerWidget") && !document.hidden) try{ window.triggerAuraOptimizer(); }catch(e){} }
+  setTimeout(auto, 7000); setInterval(auto, 15 * 60000);
 })();

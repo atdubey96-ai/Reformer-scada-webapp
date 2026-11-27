@@ -12085,10 +12085,12 @@ function renderAdjustmentFromOptimiser(){
   var log = {}, hist = {}; try{ if(typeof loadCleaningLog === "function") log = loadCleaningLog() || {}; }catch(e){} try{ if(typeof loadCleaningHistory === "function") hist = loadCleaningHistory() || {}; }catch(e){}
   var fuel = { B:"Both", N:"NG", O:"Off-gas" }, lim = fo.limit || 950, ticks = auraLoadTicks(), sv = String(fo.surveyDt || "");
   var steps = [];
+  mv = mv.slice().sort(function(x, y){ return (x.w + x.r + String(100 + x.b)).localeCompare(y.w + y.r + String(100 + y.b)); }); /* walk order: wall, row, burner */
   mv.filter(function(m){ return m.to < m.from; }).forEach(function(m){ steps.push({ key:"cut-" + m.w + m.r + "-" + m.b, kind:"cut", m:m }); });
   mv.filter(function(m){ return m.to > m.from; }).forEach(function(m){ steps.push({ key:"take-" + m.w + m.r + "-" + m.b, kind:"take", m:m }); });
   Object.keys(pl.p.makeup || {}).forEach(function(s){ if(pl.p.makeup[s] > 1.001) steps.push({ key:"makeup-" + s, kind:"note", text:"Keep " + s + " COT on auto. It adds about +" + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + "% fuel on the other " + s + " burners." }); });
-  if(isFinite(ex.dCot) && Math.abs(ex.dCot) >= 1) steps.push({ key:"cot", kind:"cot", text:(ex.dCot > 0 ? "Raise" : "Lower") + " COT set point by " + Math.round(Math.abs(ex.dCot)) + " °C (AB and CD), after the burner moves settle." });
+  if(ex.cotSteps && ex.cotSteps.length) ex.cotSteps.forEach(function(c, i){ steps.push({ key:"cot-" + c.key, kind:"cot", text:c.text }); });
+  else if(isFinite(ex.dCot) && Math.abs(ex.dCot) >= 1) steps.push({ key:"cot", kind:"cot", text:(ex.dCot > 0 ? "Raise" : "Lower") + " COT set point by " + Math.round(Math.abs(ex.dCot)) + " °C (AB and CD), after the burner moves settle." });
   if(ex.cotNote) steps.push({ key:"cot-hold", kind:"note", text:ex.cotNote });
   if(isFinite(ex.o2From) && isFinite(ex.o2To) && ex.o2From > ex.o2To + 0.05) steps.push({ key:"air", kind:"air", text:"Trim combustion air: O₂ " + ex.o2From.toFixed(1) + " → " + ex.o2To.toFixed(1) + "%, in small steps, watching CO and flame." });
   var n = 0;
@@ -12096,8 +12098,8 @@ function renderAdjustmentFromOptimiser(){
     var main = "", color = "inherit";
     if(st.m){ var cd = ""; try{ cd = hmLatestCleaningDate(log, hist, st.m.w, st.m.r, st.m.b) || ""; }catch(e){}
       color = st.kind === "cut" ? "#f87171" : "#34d399";
-      main = '<b>Wall ' + hmEscapeHtml(st.m.w) + ' · Row ' + hmEscapeHtml(st.m.r) + ' · Burner ' + hmEscapeHtml(st.m.b) + '</b> <span style="opacity:.7">' + hmEscapeHtml(fuel[st.m.s] || st.m.s) + (cd ? ' · cleaned ' + hmEscapeHtml(String(cd).slice(0, 10)) : '') + '</span>'
-        + ' <b style="white-space:nowrap;color:' + color + '">' + (st.kind === "cut" ? "Cut " : "Take ") + hmEscapeHtml(st.m.from) + '% → ' + hmEscapeHtml(st.m.to) + '%</b>';
+      main = '<b>Wall ' + hmEscapeHtml(st.m.w) + ' · Row ' + hmEscapeHtml(st.m.r) + ' · Burner ' + hmEscapeHtml(st.m.b) + '</b> <span style="opacity:.7">' + hmEscapeHtml(fuel[st.m.s] || st.m.s) + (st.m.r >= 4 ? ' · upper' : ' · lower') + (cd ? ' · cleaned ' + hmEscapeHtml(String(cd).slice(0, 10)) : '') + '</span>'
+        + ' <b style="white-space:nowrap;color:' + color + '">' + (st.kind === "cut" ? "Reduce " : "Increase ") + hmEscapeHtml(st.m.from) + '% → ' + hmEscapeHtml(st.m.to) + '%</b>';
     } else main = hmEscapeHtml(st.text);
     if(st.kind === "note") return '<div style="padding:6px 10px 6px 38px;font-size:12px;opacity:.8;">' + main + '</div>';
     n++; var tk = ticks[sv + "|" + st.key];
@@ -12106,9 +12108,10 @@ function renderAdjustmentFromOptimiser(){
       + '<span style="min-width:18px;font-weight:800;">' + n + '.</span><span style="flex:1;">' + main + '</span>'
       + (tk ? '<span style="font-size:11px;opacity:.8;">done ' + hmEscapeHtml(new Date(tk.at).toLocaleString([], { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })) + '</span>' : '') + '</label>';
   });
-  var head = 'Peak TST ' + Math.round(fo.cur.e.peak) + ' → ' + Math.round(pl.p.e.peak) + ' °C predicted (limit ' + lim + ' °C).';
+  var head = '';
   if(!steps.length) html = '<div style="padding:8px 0;">' + (fo.cur.e.peak > lim ? 'A tube is above ' + lim + ' °C and no burner move lowers it. Recheck the reading, then cut the facing burners by hand or lower COT / total firing.' : 'No change needed. Firing is already near best.') + '</div>';
-  else html = '<div style="font-size:12px;opacity:.8;margin-bottom:4px;">' + head + ' Do the steps in order and tick each one when done.</div>' + rows.join("");
+  else { var nB = steps.filter(function(x){ return x.m; }).length, bR = rows.slice(0, nB), oR = rows.slice(nB);
+    html = (bR.length > 10 ? bR.slice(0, 8).join("") + '<details><summary style="cursor:pointer;margin:8px 0 0 10px;font-size:12px;opacity:.8;">Show all ' + bR.length + ' burner steps</summary>' + bR.slice(8).join("") + '</details>' : bR.join("")) + oR.join("") + '<div style="font-size:11px;opacity:.6;margin-top:6px;">Do the steps in order, one 25% step at a time, and tick each one. The next TST survey checks the prediction.</div>'; }
   targets.forEach(function(el){ if(el) el.innerHTML = html; });
 }
 function auraLoadTicks(){ try{ return JSON.parse(localStorage.getItem("auraTicksV1") || "{}") || {}; }catch(e){ return {}; } }
@@ -26520,9 +26523,13 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   var TAGS = {
     cotAB:["GJA.2041ti2503b.pv","GJA.2041ti2501.pv"], cotCD:["GJA.2041ti2503c.pv","GJA.2041ti2502.pv"],
     ch4:"GJA.2041ai2901.pv", o2:"GJA.2041ai2401.pv", flue:"GJA.2041ti2408.pv", feed:"GJA.2041fic2405.pv",
-    steam:"GJA.2041fic2904.pv", offgas:"GJA.2041fic3009.pv"
+    steam:"GJA.2041fic2904.pv", offgas:"GJA.2041fic3009.pv",
+    bed:"GJA.2041ti2412.pv", tipOg:"GJA.2041pi2501a.pv", tipNg:"GJA.2041pi2504a.pv", tipNap:"GJA.2041pi2507a.pv"
   };
-  var RANGE = { cot:[750,950], ch4:[0.3,10], o2:[0.3,15], flue:[800,1200], feed:[5000,30000], steam:[10000,90000], offgas:[0,6000] };
+  var RANGE = { cot:[750,950], ch4:[0.3,10], o2:[0.3,15], flue:[800,1200], feed:[5000,30000], steam:[10000,90000], offgas:[0,6000], bed:[350,650], tipOg:[0,6], tipNg:[0,6], tipNap:[0,6] };
+  /* pre-reformer bed (naphtha mode): heated by reformer flue gas. Fitted on 60 days of hourly DCS: d(bed)/d(flue) = 0.16 (r 0.64) */
+  var BED_MIN = 485, BED_PER_FLUE = 0.16, FLUE_PER_UPPER = 60; /* flue exit +60 °C per unit share of firing moved to rows 4-6 (physics prior, low confidence) */
+  function auraP(){ try{ return JSON.parse(localStorage.getItem("auraPricesV1") || "{}") || {}; }catch(e){ return {}; } }
   var st = { dcs:null, dcsAt:0 };
 
   function num(v){ var n = Number(v); return isFinite(n) ? n : NaN; }
@@ -26639,19 +26646,32 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   function evalT(Tarr){ var vals = Tarr.filter(isFinite); var tr = makeRupture();
     var peak = Math.max.apply(null, vals), lo = Math.min.apply(null, vals), rate = vals.reduce(function(s, t){ return s + 1 / tr(t); }, 0) / vals.length;
     var LIM = tubeLimit().lim; return { peak:peak, lo:lo, sd:sd(vals), rate:rate, life:tr(peak) / (8760 * 0.96), cold:vals.reduce(function(s, t){ return s + Math.max(0, 905 - t); }, 0), over:vals.reduce(function(s, t){ return s + Math.max(0, t - LIM); }, 0), nOver:vals.filter(function(t){ return t > LIM; }).length }; }
-  function optimise(cur, model, dCot, w){
-    var f = JSON.parse(JSON.stringify(cur.f)), K = kern(), moves = [];
+  function upperShare(ff){ var u = 0, t = 0; ["A","B","C","D"].forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var v = ff[w][r][b].v; t += v; if(r >= 4) u += v; } }); return t > 0 ? u / t : 0; }
+  function optimise(cur, model, dCot, w, px){
+    px = px || {};
+    var f = JSON.parse(JSON.stringify(cur.f)), K = kern(), moves = [], U0 = upperShare(f), bed0 = px.bed, tipMaxNg = px.tipMaxNg, tipMaxNap = px.tipMaxNap;
+    function bedOf(ff){ return isFinite(bed0) ? bed0 + BED_PER_FLUE * FLUE_PER_UPPER * (upperShare(ff) - U0) : NaN; }
+    var BMIN = Number(auraP().bedMin) > 400 ? Number(auraP().bedMin) : BED_MIN;
+    function bedDef(ff){ var b = bedOf(ff); return isFinite(b) ? Math.max(0, BMIN - b) : 0; }
+    /* gradual, uniform patterns: no burner below 25%, neighbours within 25%, no row averaging under 50% */
+    function patternOk(ff, c){ var x = ff[c.w][c.r][c.b]; if(x.s === "C") return true; if(x.open < 25 || x.open > 100) return false;
+      var nb = [[c.r, c.b - 1], [c.r, c.b + 1], [c.r - 1, c.b], [c.r + 1, c.b]];
+      for(var i = 0; i < nb.length; i++){ var rr = nb[i][0], bb2 = nb[i][1]; if(rr < 1 || rr > 6 || bb2 < 1 || bb2 > 15) continue; var y = ff[c.w][rr][bb2]; if(y.s !== "C" && Math.abs(y.open - x.open) > 25) return false; }
+      var sum = 0, n = 0; for(var b3 = 1; b3 <= 15; b3++){ var z = ff[c.w][c.r][b3]; if(z.s !== "C"){ sum += z.open; n++; } } return !n || sum / n >= 50; }
+    var tipK = 1;
+    function tipOk(k){ var kk = Math.max(tipK, k); if(isFinite(tipMaxNg) && isFinite(px.tipNg) && px.tipNg * kk * kk > tipMaxNg) return false; if(isFinite(tipMaxNap) && isFinite(px.tipNap) && px.tipNap * kk * kk > tipMaxNap) return false; return true; }
     function temps(ff){ var H = heatField(ff), T = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++){ var t0 = cur.T[zi][ph]; if(!isFinite(t0)){ T.push(NaN); continue; }
       T.push(t0 + model.beta * (H[zi][ph] - cur.H[zi][ph]) + model.gamma * dCot); } }); return T; }
-    function J(T){ var e = evalT(T); return 60 * e.over + w.p * e.peak + w.s * 2 * e.sd + w.c * 10 * Math.log(e.rate) / Math.LN2 + 0.5 * e.cold; } /* TST limit first, always */
+    /* strict goal order: TST limit (hard) > tube life (peak + creep rate) > pre-reformer bed >= 485 > uniformity. Same total duty, so slip/fuel are handled after. */
+    function J(T){ var e = evalT(T); return 1000 * e.over + 30 * Math.log(e.rate) / Math.LN2 + 1.0 * e.peak + 40 * bedDef(f) + 0.3 * e.sd + 0.1 * e.cold; }
     var CLEAN = (function(){ var lg = {}, hs = {}; try{ if(typeof loadCleaningLog === "function") lg = loadCleaningLog() || {}; }catch(e){} try{ if(typeof loadCleaningHistory === "function") hs = loadCleaningHistory() || {}; }catch(e){}
       return function(c){ try{ var d = typeof hmLatestCleaningDate === "function" ? hmLatestCleaningDate(lg, hs, c.w, c.r, c.b) : ""; var ms = Date.parse(d); return isFinite(ms) && Date.now() - ms < 90 * 86400000; }catch(e){ return false; } }; })();
-    var T = temps(f), best = J(T), makeup = {};
+    var T = temps(f), best = J(T), makeup = {}, bedOf0 = bedOf(f);
     for(var it = 0; it < (evalT(T).over > 0 ? 16 : 4); it++){
       var flat = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++) flat.push({ zi:zi, ph:ph, t:T[zi * 15 + ph - 1] }); });
       flat = flat.filter(function(x){ return isFinite(x.t); }).sort(function(a, b){ return b.t - a.t; });
       function near(list){ var seen = {}, out = []; list.forEach(function(x){ K[x.zi][x.ph].forEach(function(c){ if(c.k < 0.3) return; var key = c.w + c.r + "-" + c.b; if(seen[key]) return; seen[key] = 1; out.push(c); }); }); return out; }
-      var downs = near(flat.slice(0, Math.max(8, flat.filter(function(x){ return x.t > tubeLimit().lim; }).length))).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.open >= STEP; });
+      var downs = near(flat.slice(0, Math.max(8, flat.filter(function(x){ return x.t > tubeLimit().lim; }).length))).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.s !== "O" && x.open >= STEP; }); /* PSA off-gas burners stay at full flow */
       var ups = near(flat.slice(-8)).filter(function(c){ var x = f[c.w][c.r][c.b]; return x.s !== "C" && x.open <= 100 - STEP; });
       var cand = null;
       downs.forEach(function(d){ ups.forEach(function(u){
@@ -26660,7 +26680,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         var fd = f[d.w][d.r][d.b], fu = f[u.w][u.r][u.b];
         var od = fd.open, ou = fu.open;
         fd.open -= STEP; fd.v = FUEL_W[fd.s] * fd.open / 100; fu.open += STEP; fu.v = FUEL_W[fu.s] * fu.open / 100;
-        var Tn = temps(f), j = J(Tn) - (CLEAN(u) ? 0.3 : 0) + (CLEAN(d) ? 0.3 : 0); /* prefer firing up recently cleaned burners, cutting dirty ones */
+        var okP = patternOk(f, d) && patternOk(f, u) && !(bedDef(f) > 0 && bedOf(f) < bedOf0);
+        var Tn = temps(f), j = okP ? J(Tn) - (CLEAN(u) ? 0.3 : 0) + (CLEAN(d) ? 0.3 : 0) : Infinity; /* prefer firing up recently cleaned burners, cutting dirty ones */
         fd.open = od; fd.v = FUEL_W[fd.s] * od / 100; fu.open = ou; fu.v = FUEL_W[fu.s] * ou / 100;
         if(j < best - 0.2 && (!cand || j < cand.j)) cand = { d:d, u:u, j:j, T:Tn };
       }); });
@@ -26676,12 +26697,12 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         /* best cut on each side separately (AB and CD chambers are independent), so every over-limit zone gets a move */
         var bySide = {};
         downs.forEach(function(d){ if(f[d.w][d.r][d.b].open - STEP < 25) return; /* keep flame-stability floor */
-          var c = applyCut(d); if(!c) return; var Tn = temps(f), j = J(Tn) + (CLEAN(d) ? 0.3 : 0); c.undo();
+          var c = applyCut(d); if(!c) return; var okC = patternOk(f, d) && tipOk(c.k) && !(bedDef(f) > 0 && bedOf(f) < bedOf0); var Tn = temps(f), j = okC ? J(Tn) + (CLEAN(d) ? 0.3 : 0) : Infinity; c.undo();
           if(j < best - 0.2 && (!bySide[c.side] || j < bySide[c.side].j)) bySide[c.side] = { d:d, j:j }; });
         var sides = Object.keys(bySide);
         if(sides.length && (!cand || sides.some(function(s){ return bySide[s].j < cand.j; }))){
           sides.forEach(function(s){ var d = bySide[s].d, fc = f[d.w][d.r][d.b], fromO = fc.open, c2 = applyCut(d);
-            moves.push({ w:d.w, r:d.r, b:d.b, s:fc.s, from:fromO, to:fc.open }); makeup[c2.side] = (makeup[c2.side] || 1) * c2.k; });
+            moves.push({ w:d.w, r:d.r, b:d.b, s:fc.s, from:fromO, to:fc.open }); makeup[c2.side] = (makeup[c2.side] || 1) * c2.k; tipK = Math.max(tipK, makeup[c2.side]); });
           T = temps(f); best = J(T); continue;
         }
       }
@@ -26694,7 +26715,8 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     }
     /* merge repeated burners */
     var merged = {}; moves.forEach(function(m){ var k = m.w + m.r + "-" + m.b; if(!merged[k]) merged[k] = { w:m.w, r:m.r, b:m.b, s:m.s, from:m.from, to:m.to }; else merged[k].to = m.to; });
-    return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), T:T, e:evalT(T), makeup:makeup };
+    return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), T:T, e:evalT(T), makeup:makeup,
+      bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK };
   }
 
   /* ---------- DCS: CH4 slip, COT, KPIs ---------- */
@@ -26702,7 +26724,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     if(st.dcs && Date.now() - st.dcsAt < 15 * 60000) return Promise.resolve(st.dcs);
     var url = (typeof getTdPlantSupabaseUrl === "function" ? getTdPlantSupabaseUrl() : "https://lawrglgxkrfibajixfkp.supabase.co").replace(/\/+$/, "");
     var key = typeof getTdPlantSupabaseKey === "function" ? getTdPlantSupabaseKey() : "";
-    var tags = [].concat(TAGS.cotAB, TAGS.cotCD, [TAGS.ch4, TAGS.o2, TAGS.flue, TAGS.feed, TAGS.steam, TAGS.offgas]);
+    var tags = [].concat(TAGS.cotAB, TAGS.cotCD, [TAGS.ch4, TAGS.o2, TAGS.flue, TAGS.feed, TAGS.steam, TAGS.offgas, TAGS.bed, TAGS.tipOg, TAGS.tipNg, TAGS.tipNap]);
     return fetch(url + "/rest/v1/rpc/tube_life_hourly", { method:"POST", headers:{ "apikey":key, "Authorization":"Bearer " + key, "Content-Type":"application/json" },
       body:JSON.stringify({ p_tags:tags, p_from:new Date(Date.now() - 30 * 86400000).toISOString() }) })
       .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
@@ -26784,14 +26806,14 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
         for(var ph = 1; ph <= 15; ph++){ var y = Number(vals[ph - 1]); T[zi][ph] = (y > 700 && y < 1100 && !(isFinite(zm) && Math.abs(y - zm) > 80)) ? y : NaN; Tflat.push(T[zi][ph]); } });
       var cur = { f:cs.f, H:cs.H, T:T, e:evalT(Tflat) };
       var suspects = [];
-      ZONES.forEach(function(z){ var vals = ((currentProfile.zones[z.key] && currentProfile.zones[z.key].values) || []).map(Number), ok = vals.filter(function(v){ return v > 700 && v < 1100; }), zm = median(ok);
+      ZONES.forEach(function(z, zi){ var vals = ((currentProfile.zones[z.key] && currentProfile.zones[z.key].values) || []).map(Number), ok = vals.filter(function(v){ return v > 700 && v < 1100; }), zm = median(ok);
         vals.forEach(function(v, i){ if(!(v > 700 && v < 1100)) return; var nb = []; for(var q = i - 2; q <= i + 2; q++){ if(q !== i && vals[q] > 700 && vals[q] < 1100) nb.push(vals[q]); } var nm = median(nb);
-          if(isFinite(nm) && v - nm > 40) suspects.push({ label:(z.label || z.key) + " PH" + (i + 1), t:v, nm:nm, dropped:isFinite(zm) && Math.abs(v - zm) > 80 }); }); });
+          if(isFinite(nm) && v - nm > 40) suspects.push({ idx:zi * 15 + i, label:(z.label || z.key) + " PH" + (i + 1), t:v, nm:nm, dropped:isFinite(zm) && Math.abs(v - zm) > 80 }); }); });
       host.innerHTML = '<div class="stack-ai-empty">Optimising burner firing…</div>';
       var finish = function(by){
         var cotBox = null, kpis = null, dCot = 0;
         if(by){
-          kpis = {}; ["ch4","cotAB","cotCD","o2","flue","feed","offgas"].forEach(function(k){ kpis[k] = kpi(by, k); });
+          kpis = {}; ["ch4","cotAB","cotCD","o2","flue","feed","offgas","bed","tipOg","tipNg","tipNap"].forEach(function(k){ kpis[k] = kpi(by, k); });
           var sc = {}; Object.keys(by.steam || {}).forEach(function(h){ var fd = by.feed && by.feed[h]; if(fd > 0) sc[h] = by.steam[h] / fd; }); by.sc = sc; kpis.sc = kpi(by, "sc");
           var slip = kpis.ch4 ? kpis.ch4.cur : num(currentProfile.process.methaneSlip), target = slipTarget(kpis.ch4 ? kpis.ch4.med : slip);
           var cAB = kpis.cotAB ? kpis.cotAB.cur : num(currentProfile.process.abCot), cCD = kpis.cotCD ? kpis.cotCD.cur : num(currentProfile.process.cdCot);
@@ -26803,13 +26825,13 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
             cotBox = { slip:slip, target:target, cotAB:cAB, cotCD:cCD, cotStar:mean([cAB, cCD]) + dCot, dCot:dCot, capped:capped, lifeBefore:cur.e.life, lifeAfter:tr(after) / (8760 * 0.96) };
           }
         }
-        var plans = [
-          { name:"Plan A · Lowest peak", sub:"Cut hottest peep holes first", w:{ p:1, s:0.3, c:0.3 } },
-          { name:"Plan B · Most uniform", sub:"Even heat across all 60 PH", w:{ p:0.3, s:1, c:0.2 } },
-          { name:"Plan C · Max tube life", sub:"Least creep damage at " + tubeLimit().lim + " °C TST limit", w:{ p:0.3, s:0.2, c:1 } }
-        ].map(function(pl){ pl.p = optimise(cur, model, 0, pl.w); /* burner moves at constant COT; COT change shown separately */ pl.score = pl.p.e.peak + 2 * pl.p.e.sd; return pl; });
+        var ap = auraP(), px = { bed:kpis && kpis.bed ? kpis.bed.cur : NaN, tipNg:kpis && kpis.tipNg ? kpis.tipNg.cur : NaN, tipNap:kpis && kpis.tipNap ? kpis.tipNap.cur : NaN,
+          tipMaxNg:Number(ap.tipNg) > 0 ? Number(ap.tipNg) : NaN, tipMaxNap:Number(ap.tipNap) > 0 ? Number(ap.tipNap) : NaN };
+        var plans = [{ name:"Priority plan", sub:"TST → tube life → bed → uniformity", w:{} }]
+          .map(function(pl){ pl.p = optimise(cur, model, 0, pl.w, px); /* burner moves at constant duty; COT, chamber balance and O2 are set after, in goal order */ pl.score = pl.p.e.peak + 2 * pl.p.e.sd; return pl; });
         var bestIdx = 0; (function(){ var over = cur.e.peak > tubeLimit().lim, bi = 0, bv = Infinity; plans.forEach(function(pl, i){ var v = over ? pl.p.e.peak : pl.score; if(v < bv){ bv = v; bi = i; } }); bestIdx = bi; })();
-        window.__furnaceOptLast = { at:Date.now(), cur:{ e:cur.e, T:Tflat }, surveyDt:currentProfile.dt || "", gamma:model.gamma, nMock:nMock, plans:plans, bestIdx:bestIdx, band:band, cotBox:cotBox, kpis:kpis, nSurveys:surveys.length, suspects:suspects, limit:tubeLimit().lim };
+        window.__foLifeAt = function(t){ return makeRupture()(t) / (8760 * 0.96); };
+        window.__furnaceOptLast = { at:Date.now(), px:px, beta:model.beta, rmse:rmse, nObs:model.n, cur:{ e:cur.e, T:Tflat }, surveyDt:currentProfile.dt || "", gamma:model.gamma, nMock:nMock, plans:plans, bestIdx:bestIdx, band:band, cotBox:cotBox, kpis:kpis, nSurveys:surveys.length, suspects:suspects, limit:tubeLimit().lim };
         render(host, { cur:{ e:cur.e }, model:model, plans:plans, band:band, rmse:rmse, nSurveys:surveys.length, cotBox:cotBox, kpis:kpis, suspects:suspects, nMock:nMock });
         try{ window.dispatchEvent(new Event("furnaceopt:done")); }catch(evErr){}
       };
@@ -26820,119 +26842,94 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
 
         </script>
         <!-- ===== Reformer Tube Remaining Life (creep, API 530 Larson-Miller + Robinson life fraction) ===== -->
-<!-- IOCL AURA-Reformer: one card, three steps (plant targets -> Furnace Optimiser -> burner steps) -->
+<!-- AURA Reformer: one integrated model (study -> plan -> burner management), goals in strict priority order -->
 <style>
-#auraReformerWidget{--au-bg:#0d1322;--au-card:#151d30;--au-line:#1f293d;--au-text:#f1f5f9;--au-sub:#94a3b8;--au-acc:#f37022;
-  background:var(--au-bg);border:1px solid var(--au-line);border-radius:12px;padding:16px;margin:20px 0;color:var(--au-text);font-size:13px;}
-body.light-theme #auraReformerWidget{--au-bg:#ffffff;--au-card:#f5f7fb;--au-line:#dfe4ee;--au-text:#0f172a;--au-sub:#64748b;}
+#auraReformerWidget{--au-bg:#0b1120;--au-card:#121a2c;--au-line:#1e293b;--au-text:#e2e8f0;--au-sub:#8a9ab3;--au-acc:#f37022;--au-ok:#22c55e;--au-bad:#ef4444;--au-warn:#f59e0b;
+  background:var(--au-bg);border:1px solid var(--au-line);border-radius:14px;padding:16px;margin:20px 0;color:var(--au-text);font-size:13px;line-height:1.45;}
+body.light-theme #auraReformerWidget{--au-bg:#ffffff;--au-card:#f4f6fa;--au-line:#e2e8f0;--au-text:#0f172a;--au-sub:#64748b;--au-ok:#16a34a;--au-bad:#dc2626;--au-warn:#d97706;}
 #auraReformerWidget .au-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
-#auraReformerWidget .au-title{font-size:18px;font-weight:800;}
-#auraReformerWidget .au-title small{font-size:11px;font-weight:600;color:var(--au-sub);margin-left:8px;}
-#auraReformerWidget .au-run{background:var(--au-acc);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;}
+#auraReformerWidget .au-title{font-size:17px;font-weight:800;letter-spacing:.2px;}
+#auraReformerWidget .au-title small{display:block;font-size:11px;font-weight:600;color:var(--au-sub);letter-spacing:0;}
+#auraReformerWidget .au-hr{display:flex;align-items:center;gap:8px;}
+#auraReformerWidget #auraStatus{font-size:11px;color:var(--au-sub);}
+#auraReformerWidget .au-run{background:var(--au-acc);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;}
 #auraReformerWidget .au-run:disabled{opacity:.6;cursor:wait;}
-#auraReformerWidget .au-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0;}
-@media(max-width:760px){#auraReformerWidget .au-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}}
-#auraReformerWidget .au-kpi{background:var(--au-card);border-radius:8px;padding:9px 11px;border-top:3px solid var(--au-c,#64748b);}
-#auraReformerWidget .au-kpi span{display:block;font-size:10.5px;color:var(--au-sub);text-transform:uppercase;font-weight:700;letter-spacing:.3px;}
-#auraReformerWidget .au-kpi b{display:block;font-size:19px;margin:3px 0 1px;}
-#auraReformerWidget .au-kpi b span{display:inline;font-size:11px;font-weight:500;text-transform:none;color:inherit;}
-#auraReformerWidget .au-kpi i{display:block;font-style:normal;font-size:11px;color:var(--au-sub);line-height:1.35;}
-#auraReformerWidget .au-actions{background:var(--au-card);border-left:3px solid var(--au-acc);border-radius:8px;padding:10px 12px;line-height:1.65;}
-#auraReformerWidget .au-actions-t{font-size:11px;font-weight:800;color:var(--au-sub);text-transform:uppercase;margin-bottom:4px;}
-#auraReformerWidget .au-tabs{display:flex;gap:6px;margin:14px 0 10px;flex-wrap:wrap;}
-#auraReformerWidget .au-tab{flex:1;min-width:150px;background:transparent;border:1px solid var(--au-line);color:var(--au-sub);padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700;text-align:left;font-size:12px;}
-#auraReformerWidget .au-tab em{font-style:normal;display:block;font-weight:500;font-size:11px;}
-#auraReformerWidget .au-tab.is-on{border-color:var(--au-acc);color:var(--au-text);background:var(--au-card);}
-#auraReformerWidget .au-pane{display:none;}
-#auraReformerWidget .au-pane.is-on{display:block;}
-#auraReformerWidget .au-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0;}
+#auraReformerWidget .au-hero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 4px;}
+@media(max-width:760px){#auraReformerWidget .au-hero{grid-template-columns:repeat(2,minmax(0,1fr));}}
+#auraReformerWidget .au-tile{background:var(--au-card);border-radius:10px;padding:10px 12px;}
+#auraReformerWidget .au-tile span{display:block;font-size:10.5px;color:var(--au-sub);font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+#auraReformerWidget .au-tile b{display:block;font-size:20px;font-weight:800;margin-top:2px;white-space:nowrap;}
+#auraReformerWidget .au-tile i{display:block;font-style:normal;font-size:11px;color:var(--au-sub);}
+#auraReformerWidget .au-tile.is-money b{color:var(--au-acc);}
+#auraReformerWidget .au-sec{margin-top:14px;}
+#auraReformerWidget .au-sec-t{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--au-sub);margin-bottom:6px;}
+#auraReformerWidget .au-goals{width:100%;border-collapse:collapse;font-size:12.5px;}
+#auraReformerWidget .au-goals td,#auraReformerWidget .au-goals th{padding:6px 8px!important;border:none!important;border-bottom:1px solid var(--au-line)!important;background:none!important;text-align:right!important;}
+#auraReformerWidget .au-goals th{font-size:10.5px;color:var(--au-sub);text-transform:uppercase;font-weight:700;}
+#auraReformerWidget .au-goals td:first-child,#auraReformerWidget .au-goals th:first-child,#auraReformerWidget .au-goals td:nth-child(2),#auraReformerWidget .au-goals th:nth-child(2){text-align:left!important;}
+#auraReformerWidget .au-goals .pr{width:22px;color:var(--au-sub);font-weight:800;}
+#auraReformerWidget .au-goals .bad{color:var(--au-bad);font-weight:700;}
+#auraReformerWidget .au-goals .ok{color:var(--au-ok);}
+#auraReformerWidget .au-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--au-ok);}
+#auraReformerWidget .au-dot.bad{background:var(--au-bad);}
+#auraReformerWidget .au-dot.warn{background:var(--au-warn);}
+#auraReformerWidget .au-notes{margin-top:8px;font-size:12px;color:var(--au-sub);}
+#auraReformerWidget .au-notes div{margin-top:2px;}
+#auraReformerWidget #stack-adjust-card{padding:0!important;background:none!important;border:none!important;box-shadow:none!important;margin:0!important;}
+#auraReformerWidget #stack-adjust-card .hm-adjust-head,#auraReformerWidget #stack-adjust-card .hm-adjust-sub{display:none!important;}
+#auraReformerWidget #stack-adjust-card label{background:var(--au-card)!important;}
+#auraReformerWidget .au-more{margin-top:14px;border-top:1px solid var(--au-line);padding-top:10px;font-size:12px;color:var(--au-sub);}
+#auraReformerWidget .au-more summary{cursor:pointer;font-weight:700;}
+#auraReformerWidget .au-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0 8px;}
 #auraReformerWidget .au-form label{font-size:11px;color:var(--au-sub);font-weight:600;}
 #auraReformerWidget .au-form input{width:100%;margin-top:3px;padding:6px 8px;border-radius:6px;border:1px solid var(--au-line);background:var(--au-card);color:var(--au-text);}
-#auraReformerWidget .au-note{font-size:11px;color:var(--au-sub);line-height:1.5;}
-#auraReformerWidget #stack-adjust-card .hm-adjust-head{display:none;}
-#auraReformerWidget #stack-adjust-card{padding:12px;}
-#auraReformerWidget .hm-adjust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;}
-#auraReformerWidget .hm-adjust-suggest-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;}
-#auraReformerWidget .hm-adjust-suggest-action-pill,#auraReformerWidget .hm-adjust-suggest-ph{white-space:nowrap;max-width:none;overflow:visible;text-overflow:clip;}
-#auraReformerWidget .au-step{margin-top:14px;padding-top:12px;border-top:1px solid var(--au-line);}
-#auraReformerWidget .au-step-t{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--au-sub);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
-#auraReformerWidget .au-step-t i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--au-acc);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;}
-#auraReformerWidget .au-kpis{margin:0 0 8px;}
-#auraReformerWidget #stack-ai-card{padding:0!important;background:none!important;border:none!important;box-shadow:none!important;}
-#auraReformerWidget #stack-ai-card::before,#auraReformerWidget #stack-ai-card::after{display:none!important;}
-#auraReformerWidget #stack-ai-card{border-image:none!important;}
-#auraReformerWidget #stack-ai-card .lx-how,#auraReformerWidget #stack-ai-card .fo-section-t,#auraReformerWidget #stack-ai-card [data-admin-only]{display:none!important;}
-#auraReformerWidget #stack-adjust-card{padding:0!important;background:none!important;border:none!important;box-shadow:none!important;}
-#auraReformerWidget #stack-adjust-card .hm-adjust-sub{display:none;}
-#auraReformerWidget .au-set{margin-top:14px;font-size:12px;color:var(--au-sub);}
-#auraReformerWidget .au-set summary{cursor:pointer;font-weight:700;}
-#auraReformerWidget #auraPriceState{color:#f59e0b;}
-#auraReformerWidget #auraPrescriptionSummary table th,#auraReformerWidget #auraPrescriptionSummary table td{border:none!important;border-bottom:1px solid var(--au-line)!important;background:none!important;text-align:right!important;padding:5px 8px!important;}
-#auraReformerWidget #auraPrescriptionSummary table th:first-child,#auraReformerWidget #auraPrescriptionSummary table td:first-child{text-align:left!important;}
-#auraReformerWidget .fo-plan ul,#auraReformerWidget .fo-plan ol{display:none!important;}
 #auraReformerWidget .au-btn2{background:var(--au-card);color:var(--au-text);border:1px solid var(--au-line);padding:6px 14px;border-radius:6px;cursor:pointer;}
+#auraReformerWidget #auraPriceState{color:var(--au-warn);}
+#auraReformerWidget #stack-ai-card{padding:0!important;background:none!important;border:none!important;box-shadow:none!important;border-image:none!important;margin-top:10px!important;}
+#auraReformerWidget #stack-ai-card::before,#auraReformerWidget #stack-ai-card::after{display:none!important;}
+#auraReformerWidget #stack-ai-card .lx-how,#auraReformerWidget #stack-ai-card .fo-section-t,#auraReformerWidget #stack-ai-card [data-admin-only],#auraReformerWidget .fo-plan ol{display:none!important;}
 </style>
 <div id="auraReformerWidget">
   <div class="au-head">
-    <div class="au-title">IOCL AURA-Reformer™<small>TST limit 950 °C first</small></div>
-    <button id="btnRunAuraOptimization" class="au-run" onclick="window.triggerAuraOptimizer()">⚡ Run AURA</button>
+    <div class="au-title">AURA Reformer<small>Study → plan → burner steps · runs by itself every 15 min</small></div>
+    <div class="au-hr"><span id="auraStatus"></span><button id="btnRunAuraOptimization" class="au-run" onclick="window.triggerAuraOptimizer()">⚡ Run</button></div>
   </div>
-  <div class="au-step"><div class="au-step-t"><i>1</i>AURA · goals</div>
-    <div class="au-actions" id="auraPrescriptionSummary">Press Run AURA.</div>
+  <div class="au-hero" id="auraHero">
+    <div class="au-tile is-money"><span>Saving</span><b>—</b><i>₹ / year</i></div>
+    <div class="au-tile"><span>Efficiency</span><b>—</b><i>now → after</i></div>
+    <div class="au-tile"><span>Peak TST</span><b>—</b><i>limit 950 °C</i></div>
+    <div class="au-tile"><span>Tube life</span><b>—</b><i>hottest tube</i></div>
   </div>
-  <div class="au-step"><div class="au-step-t"><i>2</i>Furnace Optimiser · how</div>
-        <div id="stack-ai-card" style="margin:0;">
-          <div class="stack-ai-head" style="display:none;"><button type="button" id="stack-ai-run-btn" class="stack-ai-run-btn" onclick="runCuboidAiPrediction()">Start AI Prediction</button><div id="stack-ai-status" class="stack-ai-status is-ready"></div></div>
-          <details class="lx-how" style="margin-bottom:10px;"><summary>Model details (heat model, optimiser, confidence)</summary>
-          <div class="lx-spec" aria-label="Model specification">
-            <div class="lx-spec-cell"><span>Heat model</span><b>Burner-to-tube influence kernel + ridge regression on saved TST surveys</b></div>
-            <div class="lx-spec-cell"><span>Optimiser</span><b>Duty-neutral burner moves minimising peak TST, spread and creep damage</b></div>
-            <div class="lx-spec-cell"><span>Process</span><b>CH₄ slip ↔ COT trade-off · 30-day KPI drift (robust σ)</b></div>
-            <div class="lx-spec-cell"><span>Confidence</span><b>± band from leave-one-survey-out error · k-NN cases as evidence</b></div>
-          </div>
-          <div class="lx-how">
-            <summary>How it works</summary>
-            <ol class="lx-steps">
-              <li><b>Map the heat</b><span>Each lit burner heats the tubes near it, fading with distance. Fuel type and opening set its strength.</span><code>H(p) = Σ f_b·exp(−Δcol²/2σ² − Δrow²/2σ²), f = w_fuel·open%</code></li>
-              <li><b>Learn from surveys</b><span>Fits how strongly heat and COT move each peep hole's TST, using every saved survey. More surveys make it sharper.</span><code>TST = a_zone + β·H + γ·(COT−860) + bias_PH (ridge)</code></li>
-              <li><b>Optimise burners</b><span>Moves 25% opening from burners heating the hottest tubes to those heating the coldest, on the same side, so duty and COT hold.</span><code>min peak + 2σ + 10·log₂(creep rate)</code></li>
-              <li><b>COT &amp; CH₄ slip</b><span>Finds the COT that meets your methane slip target and shows what it costs in tube temperature and life.</span><code>ln(slip) slope −1.7%/°C · TST shift = γ·ΔCOT</code></li>
-            </ol>
-          </div>
-          </details>
-          <div class="fo-section-t">Furnace Optimiser <span>burner moves · COT &amp; CH₄ slip · tube life · process KPIs</span></div>
-          <div id="stack-opt-body" class="stack-ai-body fo-body"><div class="stack-ai-empty">Press Run AURA to run the burner optimiser on the latest saved TST survey.</div></div>
-          <div class="fo-section-t" data-admin-only="true">Similar past cases <span>case-based evidence (k-NN)</span></div>
-          <div id="stack-ai-body" class="stack-ai-body" data-admin-only="true">
-            <div class="stack-ai-empty">Press Run AURA to compare the current cuboid condition with saved historical TST cases and generate local suggestions.</div>
-          </div>
-        </div>
-
-    </div>
-  <div class="au-step"><div class="au-step-t"><i>3</i>Work list · do this</div>
-        <div id="stack-adjust-card" class="hm-adjust-card" data-cuboid-adjust-card style="margin:0;">
-          <div class="hm-adjust-head">
-            <div class="hm-adjust-title scada-panel-title">🎯 Burner steps (from the Furnace Optimiser)</div>
-          </div>
+  <div class="au-sec"><div class="au-sec-t">Goals, most important first</div>
+    <div id="auraPrescriptionSummary">Reading the plant…</div>
+  </div>
+  <div class="au-sec"><div class="au-sec-t">Do this, in order</div>
+        <div id="stack-adjust-card" class="hm-adjust-card" data-cuboid-adjust-card>
           <div class="hm-adjust-body" id="stack-adjust-body">
-            
             <div id="stack-adjustment-list" data-cuboid-adjust-list>
-              <div class="hm-adjust-empty">No TST data available for the selected shift/date.</div>
+              <div class="hm-adjust-empty">Waiting for the first run.</div>
             </div>
           </div>
         </div>
-
-    </div>
-  <details class="au-set"><summary>⚙ Prices &amp; targets <span id="auraPriceState"></span></summary>
+  </div>
+  <details class="au-more"><summary>⚙ Prices, limits &amp; model <span id="auraPriceState"></span></summary>
     <div class="au-form">
-      <label>NG ₹/MT<input id="auraPriceNg" type="number" step="1" placeholder="enter price"></label>
-      <label>Naphtha ₹/MT<input id="auraPriceNap" type="number" step="1" placeholder="enter price"></label>
-      <label>Retube ₹ Cr<input id="auraPriceRetube" type="number" step="0.1" placeholder="enter value"></label>
+      <label>NG ₹/MT<input id="auraPriceNg" type="number" step="1"></label>
+      <label>Naphtha ₹/MT<input id="auraPriceNap" type="number" step="1"></label>
+      <label>Retube ₹ Cr<input id="auraPriceRetube" type="number" step="0.1" placeholder="enter"></label>
       <label>Target O₂ %<input id="auraTargetO2" type="number" step="0.1"></label>
       <label>Hours / yr<input id="auraHours" type="number" step="1"></label>
+      <label>NG tip P max<input id="auraTipNg" type="number" step="0.01" placeholder="enter"></label>
+      <label>Naphtha tip P max<input id="auraTipNap" type="number" step="0.01" placeholder="enter"></label>
+      <label>Pre-reformer bed min °C<input id="auraBedMin" type="number" step="1"></label>
     </div>
     <button type="button" class="au-btn2" onclick="window.auraSavePrices()">Save</button>
-    <div id="auraBasisNote" class="au-note" style="margin-top:8px;">Fuel saving = stack-loss cut from O₂ trim, taken off NG and naphtha only (PSA off-gas always burned).</div>
+    <div id="auraModelNote" style="margin-top:8px;line-height:1.5;"></div>
+        <div id="stack-ai-card">
+          <div class="stack-ai-head" style="display:none;"><button type="button" id="stack-ai-run-btn" class="stack-ai-run-btn" onclick="runCuboidAiPrediction()">Start AI Prediction</button><div id="stack-ai-status" class="stack-ai-status is-ready"></div></div>
+          <div id="stack-opt-body" class="stack-ai-body fo-body"></div>
+          <div id="stack-ai-body" class="stack-ai-body" data-admin-only="true"></div>
+        </div>
   </details>
 </div>
         <div id="tube-life-card">
