@@ -2492,9 +2492,29 @@
         x = Math.min(x, Math.max(0, (cap - pk[cool]) / g)); x = Math.floor(x);
         if(x >= 1){ dc[hot] -= x; dc[cool] += x; shift = x; } else notes.push("COT gap " + f(Math.abs(gap), 0) + " °C kept: the " + cool + " tubes have no room to take heat.");
       }
-      /* 3b. CH4 slip vs target: raise COT only inside tube-life room; lower it (saves fuel) when slip is below target */
+      /* COT economics: lower CH4 slip = more H2 per kg naphtha feed (CH4 -> CO2 + 4 H2 via reforming + shift), against more fired fuel.
+         Design basis: 26,000 kg/h naphtha -> 100 kNm3/h H2 at 2.3% slip. H2+CO in dry reformer outlet taken as 84%. */
+      var FEED_DES = 26000, H2_DES = 100000, SLIP_DES = 2.3, H2CO = 84, CP_PROC = 0.7, MASS_PER_FEED = 4, DH_REF = 49000, ETA_RAD = 0.59;
+      var feedNow = kp.feed && kp.feed.cur > 1000 ? kp.feed.cur : NaN, slip0 = kp.ch4 ? kp.ch4.cur : d.methaneSlip;
+      var shareNg = live && (m.ngHeat + m.napHeat) > 0 ? m.ngHeat / (m.ngHeat + m.napHeat) : 0.5;
+      var rsPerGcal = live ? ((shareNg * pos(p.ng) / 1000 * m.ngDensity / m.ngNCV) + ((1 - shareNg) * pos(p.nap) / 1000 / m.naphthaNCV)) * 1e6 : NaN; /* ₹ per Gcal fired */
+      var mixF = function(a, b){ return (Math.exp(-K * a) + Math.exp(-K * b)) / 2; };
+      function econ(dA, dC){ /* ₹/h effect of a COT change, at the same H2 make */
+        var o = { dSlip:NaN, feedKg:NaN, feedRs:NaN, fuelGcal:NaN, fuelRs:NaN, net:NaN };
+        if(!(slip0 > 0) || !isFinite(feedNow) || !isFinite(cot.AB) || !isFinite(cot.CD)) return o;
+        var s1 = slip0 * mixF(cot.AB + dA, cot.CD + dC) / mixF(cot.AB, cot.CD); o.dSlip = s1 - slip0;
+        var h2frac = 4 * (slip0 - s1) / H2CO; o.feedKg = feedNow * h2frac / (1 + h2frac); o.feedRs = o.feedKg * pos(p.nap) / 1000;
+        var dT = (dA + dC) / 2, h2Nm3 = o.feedKg * H2_DES / FEED_DES, dCH4 = h2Nm3 / 4 / 22.414;
+        o.fuelGcal = (feedNow * MASS_PER_FEED * CP_PROC * dT + dCH4 * DH_REF) / 1e6 / ETA_RAD; o.fuelRs = o.fuelGcal * rsPerGcal;
+        o.net = o.feedRs - o.fuelRs; return o; }
+      var per1 = econ(1, 1), cotPays = per1.net > 0; window.__auraEcon = { per1:per1, rsPerGcal:rsPerGcal, feedNow:feedNow, slip0:slip0 };
+      /* 3b. CH4 slip: raise COT inside tube-life room (also pays when feed saved > extra fuel); lower it only if that saves money */
       var cb = fo.cotBox, bedPlan = isFinite(pl.p.bed) ? pl.p.bed : (kp.bed ? kp.bed.cur : NaN), BEDF = 0.16 * 0.48;
-      if(cb && isFinite(cb.dCot) && !why.AB && !why.CD){
+      if(cb && isFinite(cb.dCot) && !why.AB && !why.CD && (cb.dCot >= 1 || cotPays)){
+        var room0 = Math.min((cap - (pk.AB + g * dc.AB)) / g, (cap - (pk.CD + g * dc.CD)) / g, COTLIM - Math.max(cot.AB + dc.AB, cot.CD + dc.CD));
+        var up0 = Math.floor(Math.min(cotPays ? 15 : cb.dCot, room0));
+        if(up0 >= 1){ dc.AB += up0; dc.CD += up0; } else notes.push("COT rise held: it would shorten tube life (higher priority)" + (cotPays ? ", although each +1 °C would save ₹ " + f(per1.net, 0) + "/h net." : "."));
+      } else if(cb && isFinite(cb.dCot) && !why.AB && !why.CD){
         if(cb.dCot >= 1){
           var room = Math.min((cap - (pk.AB + g * dc.AB)) / g, (cap - (pk.CD + g * dc.CD)) / g, COTLIM - Math.max(cot.AB + dc.AB, cot.CD + dc.CD));
           var up = Math.floor(Math.min(cb.dCot, room));
@@ -2518,6 +2538,9 @@
         saved = isFinite(eff0) ? m.fuelKgh * 16.25 * (eaC - eaT) * 0.3059 * (m.stackTemp - 25) / 1e6 / eff0 : 0; }
       var trim = live ? (m.ngHeat + m.napHeat) : 0, pNg = pos(p.ng) / 1000 * (m && m.ngDensity), pNap = pos(p.nap) / 1000, hrs = pos(p.hours) || 8000, rsFuel = NaN;
       if(trim > 0 && isFinite(pNg) && isFinite(pNap)) rsFuel = saved * (m.ngHeat / trim) * 1e6 / m.ngNCV * pNg + saved * (m.napHeat / trim) * 1e6 / m.naphthaNCV * pNap; /* ₹/h, PSA off-gas always burned */
+      var ec = econ(dc.AB, dc.CD), rsCot = isFinite(ec.net) ? ec.net : 0;
+      if(isFinite(per1.net)) notes.push("COT economics, each +1 °C: CH₄ slip " + f(per1.dSlip, 3) + " pt, naphtha feed −" + f(per1.feedKg, 0) + " kg/h (₹ " + f(per1.feedRs, 0) + "/h), fuel +" + f(per1.fuelGcal, 2) + " Gcal/h (₹ " + f(per1.fuelRs, 0) + "/h), <b>net " + (per1.net >= 0 ? "saves" : "costs") + " ₹ " + f(Math.abs(per1.net), 0) + "/h</b>. Design: 26,000 kg/h naphtha → 100 kNm³/h H₂ at 2.3% slip.");
+      if(Math.abs(rsCot) >= 1) notes.push("This plan's COT change: feed " + (ec.feedKg >= 0 ? "−" : "+") + f(Math.abs(ec.feedKg), 0) + " kg/h, fuel " + (ec.fuelGcal >= 0 ? "+" : "−") + f(Math.abs(ec.fuelGcal), 2) + " Gcal/h, net " + (rsCot >= 0 ? "saves" : "costs") + " ₹ " + f(Math.abs(rsCot) * (pos(p.hours) || 8000) / 1e7, 2) + " Cr/yr.");
       var effNow = live ? m.overallEff : NaN, effAfter = live && saved > 0 ? effNow * m.totalHeat / (m.totalHeat - saved) : effNow;
       /* life */
       var tl = typeof window.tubeLifeLastResult === "function" ? window.tubeLifeLastResult() : null, r0 = lifeAt(peakNow), r1 = lifeAt(peakF);
@@ -2550,7 +2573,8 @@
         ["2", "Pre-reformer bed (TI-2412)", kp.bed ? kp.bed.cur : NaN, "≥ " + BEDMIN, bedF, "°C", 0, function(v){ return v >= BEDMIN; }],
         ["3", "CH₄ slip", slipNow, cb ? f(cb.target, 2) : "lowest", slipAfter, "%", 2, function(v){ return !cb || v <= cb.target + 0.05; }],
         ["", "COT AB / CD", cot.AB, "≤ " + COTLIM, null, "", 0, null, f(cot.AB, 0) + " / " + f(cot.CD, 0), f(cot.AB + dc.AB, 0) + " / " + f(cot.CD + dc.CD, 0)],
-        ["4", "Fuel fired", live ? m.totalHeat : NaN, "lowest", live ? m.totalHeat - saved : NaN, "Gcal/h", 2, null],
+        ["4", "Feed naphtha (same H₂)", feedNow, "lowest", feedNow - (ec.feedKg || 0), "kg/h", 0, null],
+        ["4", "Fuel fired", live ? m.totalHeat : NaN, "lowest", live ? m.totalHeat - saved + (ec.fuelGcal || 0) : NaN, "Gcal/h", 2, null],
         ["", "Flue O₂", o2, isFinite(o2t) ? f(o2t, 1) : "—", o2To, "%", 1, null],
         ["5", "Energy efficiency", effNow, "highest", effAfter, "%", 1, null],
         ["6", "Uniform heating (TST σ)", sd0, "lowest", sd1, "°C", 1, null]
@@ -2563,9 +2587,9 @@
       }).join("") + '</table>';
       set("auraPrescriptionSummary", tbl + (notes.length || miss.length ? '<div class="au-notes">' + notes.map(function(n){ return "<div>• " + n + "</div>"; }).join("") + (miss.length ? '<div style="color:var(--au-warn)">Missing: ' + miss.join("; ") + '</div>' : '') + '</div>' : ""));
       /* hero tiles */
-      var rsYr = (isFinite(rsFuel) ? rsFuel * hrs : 0) + (isFinite(rsLife) && rsLife > 0 ? rsLife : 0);
+      var rsYr = (isFinite(rsFuel) ? rsFuel * hrs : 0) + rsCot * hrs + (isFinite(rsLife) && rsLife > 0 ? rsLife : 0);
       var tiles = [
-        ["is-money", "Saving", rsYr > 0 ? "₹ " + f(rsYr / 1e7, 2) + " Cr" : "₹ 0", rsYr > 0 ? "per year · ₹ " + f(rsYr / 365, 0) + " / day" : (peakNow > LIM ? "TST first, savings after" : "no saving move now")],
+        ["is-money", "Saving", rsYr > 0 ? "₹ " + f(rsYr / 1e7, 2) + " Cr" : "₹ 0", rsYr > 0 ? "per year · ₹ " + f(rsYr / 365, 0) + " / day" : (rsYr < 0 ? "cost of keeping TST in range: ₹ " + f(-rsYr / 1e7, 2) + " Cr/yr" : (peakNow > LIM ? "TST first, savings after" : "no saving move now"))],
         ["", "Efficiency", isFinite(effNow) ? f(effNow, 1) + (effAfter > effNow + 0.05 ? " → " + f(effAfter, 1) : "") + " %" : "—", "overall reformer"],
         ["", "Tubes above " + LIM + " °C", nOver0 + " → " + nOver1, "peak " + f(peakNow, 0) + " → " + f(peakF, 0) + " °C" + (nOver1 ? ' · <span style="color:var(--au-bad)">not all in range yet</span>' : "")],
         ["", "Tube life", isFinite(lifeNow) ? f(lifeNow, 1) + " → " + f(lifeAfter, 1) + " yrs" : (r0 > 0 ? "×" + f(r1 / r0, 2) : "—"), "hottest tube"]
