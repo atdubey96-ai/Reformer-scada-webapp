@@ -42613,6 +42613,7 @@ function renderTempDataTable(){
   /* latest survey on top in every saved-TST table (TST tab, dashboard, stack) */
   var dtKey = function(r){ var d = r && r.ent ? r.ent.dt : ""; var t = Date.parse(d); if(!isFinite(t)) t = Date.parse(String(d || "").replace(" ", "T")); return isFinite(t) ? t : -Infinity; };
   display = display.slice().sort(function(a, b){ return dtKey(b) - dtKey(a) || b.originalIndex - a.originalIndex; });
+  clearTimeout(window.__tluRT); window.__tluRT = setTimeout(function(){ try{ if(window.tubeLifeUsageRender) window.tubeLifeUsageRender(); }catch(e){} }, 1500); /* new/edited survey -> tube life usage refresh */
   syncSavedEntryFilterUi({displayCount: display.length, totalCount: tempDataEntries.length});
   renderTempDataTableInto("td-saved-tbody", display, tempDataEntries.length);
   renderTempDataTableInto("hm-td-saved-tbody", display, tempDataEntries.length);

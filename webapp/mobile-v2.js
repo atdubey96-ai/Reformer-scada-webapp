@@ -2745,7 +2745,7 @@
         if(!isFinite(t)) t = isFinite(nm) ? nm : zm; else if(isFinite(nm) && t - nm > 40) t = nm; /* pyrometer spike: use neighbours */ out.push(t); } });
     return out.some(isFinite) ? out : null; }
   function compute(){ var L = []; try{ L = cuboidGetSortedTempEntries() || []; }catch(e){}
-    L = L.filter(function(e){ return e && e.dt && isFinite(tms(e.dt)); }).sort(function(a, b){ return tms(a.dt) - tms(b.dt); });
+    var nowT = Date.now() + 10 * 60000; L = L.filter(function(e){ var t = e && e.dt ? tms(e.dt) : NaN; return isFinite(t) && t <= nowT; /* a survey stamped later than now has not happened yet */ }).sort(function(a, b){ return tms(a.dt) - tms(b.dt); });
     var S = L.map(function(e){ return { e:e, t:tms(e.dt), T:temps(e) }; }).filter(function(x){ return x.T; });
     var first = S.filter(function(x){ return x.t >= START; })[0]; if(!first) return null;
     var prev = S.filter(function(x){ return x.t < START; }).pop(); var seq = S.filter(function(x){ return x.t >= START; });
