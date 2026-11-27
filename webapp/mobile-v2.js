@@ -2548,7 +2548,8 @@
       var pkF = { AB:pk.AB + g * dc.AB, CD:pk.CD + g * dc.CD }, peakF = Math.max(pkF.AB, pkF.CD);
       var bedF = bedPlan + BEDF * (burn.AB + dc.AB + burn.CD + dc.CD) / 2;
       /* 4. Fuel: O2 trim only inside the TST / tube-life room that is left */
-      var o2 = m ? m.o2Used : NaN, o2t = pos(p.o2t), o2To = o2, saved = 0;
+      var o2Sv = (function(){ try{ var dt = String(fo && fo.surveyDt || ""), e = (cuboidGetSortedTempEntries() || []).filter(function(x){ return x && String(x.dt) === dt; })[0]; var v = e ? Number(e.excessO2) : NaN; return v > 0 && v < 21 ? v : NaN; }catch(x){ return NaN; } })();
+      var o2 = isFinite(o2Sv) ? o2Sv : (m ? m.o2Used : NaN), /* lab O2 recorded with the survey; manual 6.1 only as fallback */ o2t = pos(p.o2t), o2To = o2, saved = 0;
       if(isFinite(o2) && isFinite(o2t) && o2 > o2t + 0.05){
         var roomO2 = (cap - peakF) / O2_TST; o2To = Math.max(o2t, o2 - Math.max(0, Math.floor(roomO2 * 10) / 10));
         if(o2To > o2 - 0.05){ o2To = o2; notes.push("Air trim held: less air makes the flame hotter, and the tubes have no room."); }
