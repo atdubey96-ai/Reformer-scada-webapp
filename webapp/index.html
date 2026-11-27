@@ -26667,7 +26667,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     var CLEAN = (function(){ var lg = {}, hs = {}; try{ if(typeof loadCleaningLog === "function") lg = loadCleaningLog() || {}; }catch(e){} try{ if(typeof loadCleaningHistory === "function") hs = loadCleaningHistory() || {}; }catch(e){}
       return function(c){ try{ var d = typeof hmLatestCleaningDate === "function" ? hmLatestCleaningDate(lg, hs, c.w, c.r, c.b) : ""; var ms = Date.parse(d); return isFinite(ms) && Date.now() - ms < 90 * 86400000; }catch(e){ return false; } }; })();
     var T = temps(f), best = J(T), makeup = {}, bedOf0 = bedOf(f), swaps = [];
-    for(var it = 0; it < (evalT(T).over > 0 ? 30 : 8); it++){
+    for(var it = 0; it < (evalT(T).over > 0 ? 120 : 8); it++){
       var flat = []; ZONES.forEach(function(z, zi){ for(var ph = 1; ph <= 15; ph++) flat.push({ zi:zi, ph:ph, t:T[zi * 15 + ph - 1] }); });
       flat = flat.filter(function(x){ return isFinite(x.t); }).sort(function(a, b){ return b.t - a.t; });
       function near(list){ var seen = {}, out = []; list.forEach(function(x){ K[x.zi][x.ph].forEach(function(c){ if(c.k < 0.3) return; var key = c.w + c.r + "-" + c.b; if(seen[key]) return; seen[key] = 1; out.push(c); }); }); return out; }
