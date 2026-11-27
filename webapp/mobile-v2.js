@@ -2620,11 +2620,12 @@
 
 /* ---------- Demo seed (27 Nov 2026): replace TST surveys with 60 demo surveys once per browser; real ones kept in tempDataEntriesBeforeDemo ---------- */
 (function(){
-  var KEY = "auraDemoSeed", VER = "demo-20261127";
+  var KEY = "auraDemoSeed", VER = "demo-20261127b";
   function seed(){
     /* seed when the demo set is not present and no newer real survey exists (cloud pull may have brought the old set back) */
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
-      if(have.some(function(e){ var d = String(e && e.dt || "").slice(0, 16); return d === "2026-11-26T22:00" || d >= "2026-11-27"; })) return; }catch(e){ return; }
+      if(have.some(function(e){ return String(e && e.dt || "").slice(0, 16) >= "2026-11-27"; })) return; /* a newer real survey exists */
+      if(localStorage.getItem(KEY) === VER && have.some(function(e){ return String(e && e.dt || "").slice(0, 16) === "2026-11-26T22:00"; })) return; }catch(e){ return; }
     fetch("./demo/demo-tst.json", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
       if(!j || !j.entries || !j.entries.length) return;
       try{ var cur = localStorage.getItem("tempDataEntries"); if(cur && !localStorage.getItem("tempDataEntriesBeforeDemo")) localStorage.setItem("tempDataEntriesBeforeDemo", cur); }catch(e){}
