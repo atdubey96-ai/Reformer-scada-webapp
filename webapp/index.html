@@ -12105,7 +12105,7 @@ function renderAdjustmentFromOptimiser(){
       + '</table></div></div>';
   }
   var after = [];
-  Object.keys(pl.p.makeup || {}).forEach(function(s){ if(pl.p.makeup[s] > 1.001) after.push({ note:true, text:"Hold " + s + " COT where it is: the cuts remove heat, so raise the " + s + " fuel flow set point (fuel FIC in auto) by about +" + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + "% (spread over the other lit " + s + " burners), in small steps, watching COT until it settles." }); });
+  Object.keys(pl.p.makeup || {}).forEach(function(s){ if(pl.p.makeup[s] > 1.001) after.push({ note:true, text:"Hold COT where it is: the cuts remove heat, so raise the common fuel flow set point (fuel FIC in auto) by about +" + (Math.round((pl.p.makeup[s] - 1) * 1000) / 10) + "% in small steps, watching AB and CD COT until they settle." }); });
   if(ex.cotSteps && ex.cotSteps.length) ex.cotSteps.forEach(function(c){ after.push({ key:"cot-" + c.key, text:c.text }); });
   if(ex.cotNote) after.push({ note:true, text:ex.cotNote });
   if(isFinite(ex.o2From) && isFinite(ex.o2To) && ex.o2From > ex.o2To + 0.05) after.push({ key:"air", text:"Trim combustion air: O₂ " + ex.o2From.toFixed(1) + " → " + ex.o2To.toFixed(1) + "%, in small steps, watching CO and flame." });
@@ -26701,12 +26701,12 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
       }); });
       /* cut-only moves: when no burner on that side has room to take heat (all at 100%), the COT controller
          makes up the duty by raising fuel on every other lit burner on the same side, so model that uniformly */
-      function sideList(d){ var ws = (d.w === "A" || d.w === "B") ? ["A","B"] : ["C","D"], out = []; ws.forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = f[w][r][b]; if(x.s !== "C" && x.v > 0) out.push(x); } }); return out; }
+      function sideList(d){ var ws = ["A","B","C","D"], out = []; /* one common fuel flow controller (and one off-gas header) for both chambers */ ws.forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = f[w][r][b]; if(x.s !== "C" && x.v > 0) out.push(x); } }); return out; }
       function applyCut(d){ var fd = f[d.w][d.r][d.b], list = fd.s === "O" ? sideList(d).filter(function(x){ return x.s === "O"; }) : sideList(d).filter(function(x){ return x.s !== "O"; }), tot = list.reduce(function(s, x){ return s + x.v; }, 0), dv = (FUEL_W[fd.s] || 0) * STEP / 100;
         if(!(tot - dv > 0)) return null; var save = list.map(function(x){ return x.v; }), so = fd.open; fd.open -= STEP; fd.v = (FUEL_W[fd.s] || 0) * fd.open / 100;
         var others = list.filter(function(x){ return x !== fd; }), rest = others.reduce(function(s, x){ return s + x.v; }, 0), k = rest > 0 ? (tot - fd.v) / rest : 1;
         others.forEach(function(x){ x.v *= k; });
-        return { undo:function(){ list.forEach(function(x, i){ x.v = save[i]; }); fd.open = so; }, k:k, side:(d.w === "A" || d.w === "B") ? "AB" : "CD" }; }
+        return { undo:function(){ list.forEach(function(x, i){ x.v = save[i]; }); fd.open = so; }, k:k, side:"furnace" }; }
       /* fuel relocation: swap fuel type between a burner at a hot tube and a lower-heat burner at a cool tube on the same side.
          Same duty, same number of off-gas burners (off-gas stays at full flow), no opening change. */
       var swapC = null, coolNear = near(flat.slice(-12));

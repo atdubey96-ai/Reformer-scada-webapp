@@ -2486,13 +2486,14 @@
       var pk = { AB:mx(T1.slice(0, 30)), CD:mx(T1.slice(30, 60)) }, cap = Math.max(Math.min(LIM, peakNow), LIM - 5); /* tube life: hottest tube kept at least 5 °C under the limit (life well above the 100,000 h design); below that, spare TST room may be used for COT */
       var cot = { AB:kp.cotAB ? kp.cotAB.cur : d.abCot, CD:kp.cotCD ? kp.cotCD.cur : d.cdCot }, dc = { AB:0, CD:0 }, why = {};
       /* 0. TST hard limit: if burner moves alone cannot bring a chamber under 950, lower that chamber's COT */
-      ["AB","CD"].forEach(function(s){ if(pk[s] > LIM){ dc[s] = -Math.min(25, Math.ceil((pk[s] - LIM) / g)); /* TST is the hard limit: up to 25 °C, still moved 2 °C at a time */ why[s] = "TST"; } });
+      /* one common fuel flow controller feeds both chambers, so COT moves together on AB and CD */
+      var pkMax = Math.max(pk.AB, pk.CD); if(pkMax > LIM){ var cut0 = -Math.min(25, Math.ceil((pkMax - LIM) / g)); /* TST is the hard limit: up to 25 °C, still moved 2 °C at a time */ dc.AB = cut0; dc.CD = cut0; why.AB = why.CD = "TST"; }
       /* 3a. CH4 slip: close the AB/CD COT gap at the same total fuel (colder chamber dominates the mixed slip) */
       var gap = cot.AB - cot.CD, shift = 0;
       if(!why.AB && !why.CD && isFinite(gap) && Math.abs(gap) >= 3){
         var hot = gap > 0 ? "AB" : "CD", cool = gap > 0 ? "CD" : "AB", x = Math.abs(gap) / 2;
         x = Math.min(x, Math.max(0, (cap - pk[cool]) / g)); x = Math.floor(x);
-        if(x >= 1){ dc[hot] -= x; dc[cool] += x; shift = x; } else notes.push("COT gap " + f(Math.abs(gap), 0) + " °C kept: the " + cool + " tubes have no room to take heat.");
+        notes.push("COT gap AB/CD " + f(Math.abs(gap), 0) + " °C: with one common fuel controller it can only be closed by burner openings (more firing on " + cool + ", less on " + hot + ")" + (x >= 1 ? "; " + cool + " tubes have about " + f(x * g, 0) + " °C room for it." : "; the " + cool + " tubes have no room now."));
       }
       /* COT economics: lower CH4 slip = more H2 per kg naphtha feed (CH4 -> CO2 + 4 H2 via reforming + shift), against more fired fuel.
          Design basis: 26,000 kg/h naphtha -> 100 kNm3/h H2 at 2.3% slip. H2+CO in dry reformer outlet taken as 84%. */
@@ -2542,7 +2543,7 @@
       if(trim > 0 && isFinite(pNg) && isFinite(pNap)) rsFuel = saved * (m.ngHeat / trim) * 1e6 / m.ngNCV * pNg + saved * (m.napHeat / trim) * 1e6 / m.naphthaNCV * pNap; /* ₹/h, PSA off-gas always burned */
       var ec = econ(dc.AB, dc.CD), rsCot = isFinite(ec.net) ? ec.net : 0;
       if(isFinite(per1.net)) notes.push("COT economics, each +1 °C: CH₄ slip " + f(per1.dSlip, 3) + " pt, naphtha feed −" + f(per1.feedKg, 0) + " kg/h (₹ " + f(per1.feedRs, 0) + "/h), fuel +" + f(per1.fuelGcal, 2) + " Gcal/h (₹ " + f(per1.fuelRs, 0) + "/h), <b>net " + (per1.net >= 0 ? "saves" : "costs") + " ₹ " + f(Math.abs(per1.net), 0) + "/h</b>. Design: 26,000 kg/h naphtha → 100 kNm³/h H₂ at 2.3% slip.");
-      if(Math.abs(rsCot) >= 1) notes.push("This plan's COT change: feed " + (ec.feedKg >= 0 ? "−" : "+") + f(Math.abs(ec.feedKg), 0) + " kg/h, fuel " + (ec.fuelGcal >= 0 ? "+" : "−") + f(Math.abs(ec.fuelGcal), 2) + " Gcal/h, net " + (rsCot >= 0 ? "saves" : "costs") + " ₹ " + f(Math.abs(rsCot) * (pos(p.hours) || 8000) / 1e7, 2) + " Cr/yr.");
+      if(Math.abs(rsCot) >= 1) notes.push("This plan's COT change: feed " + (ec.feedKg >= 0 ? "−" : "+") + f(Math.abs(ec.feedKg), 0) + " kg/h, fuel " + (ec.fuelGcal >= 0 ? "+" : "−") + f(Math.abs(ec.fuelGcal), 2) + " Gcal/h, net " + (rsCot >= 0 ? "saves" : "costs") + " ₹ " + f(Math.abs(rsCot), 0) + "/h.");
       var effNow = live ? m.overallEff : NaN, effAfter = live && saved > 0 ? effNow * m.totalHeat / (m.totalHeat - saved) : effNow;
       /* life */
       var tl = typeof window.tubeLifeLastResult === "function" ? window.tubeLifeLastResult() : null, r0 = lifeAt(peakNow), r1 = lifeAt(peakF);
