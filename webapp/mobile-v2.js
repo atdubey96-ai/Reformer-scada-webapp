@@ -2513,7 +2513,7 @@
       var per1 = econ(1, 1), cotPays = per1.net > 0; /* COT shift from the burner plan: each chamber's change in fired heat (cuts, takes, fuel swaps, NG make-up and off-gas
          redistribution over the common headers) at the furnace's fired heat, divided by the fuel needed per °C COT in one chamber */
       (function(){ var q0 = pl.p.sideQ0, q1 = pl.p.sideQ1, perC = per1.fuelGcal > 0 ? per1.fuelGcal / 2 : NaN, QT = live && m.totalHeat > 0 ? m.totalHeat : NaN;
-        if(q0 && q1 && q0.AB + q0.CD > 0 && isFinite(perC) && isFinite(QT)) ["AB","CD"].forEach(function(sd){ var dq = (q1[sd] - q0[sd]) / (q0.AB + q0.CD) * QT; burn[sd] = Math.max(-8, Math.min(8, 0.35 * dq / perC)); }); /* 0.35: only part of a chamber's shifted heat reaches its own outlet (shared flue, radiant cross-talk); cap ±8 °C per chamber */
+        if(q0 && q1 && q0.AB + q0.CD > 0 && isFinite(perC) && isFinite(QT)) ["AB","CD"].forEach(function(sd){ var c0 = pl.p.sideQc0 || q0, c1 = pl.p.sideQc1 || q1, dq = (c1[sd] - c0[sd]) / (q0.AB + q0.CD) * QT; /* row-weighted: firing on the lower (outlet) rows moves COT most */ burn[sd] = Math.max(-8, Math.min(8, 0.35 * dq / perC)); }); /* 0.35: only part of a chamber's shifted heat reaches its own outlet (shared flue, radiant cross-talk); cap ±8 °C per chamber */
         var g0 = (cot.AB + burn.AB) - (cot.CD + burn.CD), gc = (cot.AB - cot.CD); if(Math.abs(g0) > 12 && Math.abs(g0 - gc) > 0){ var k = Math.max(0, (11.4 * Math.sign(g0) - gc) / (g0 - gc)); burn.AB *= k; burn.CD *= k; } /* AB/CD COT gap kept within 12 °C */
         burn.AB = Math.round(burn.AB); burn.CD = Math.round(burn.CD); })();
       var gap = (cot.AB + burn.AB) - (cot.CD + burn.CD); /* gap left after the burner moves */
@@ -2647,7 +2647,7 @@
           chk = " Last applied plans (" + pe.length + " tubes): predicted " + (mp >= 0 ? "+" : "") + f(mp, 1) + " °C, actual " + (ma >= 0 ? "+" : "") + f(ma, 1) + " °C."; }
       }catch(e){}
       set("auraModelNote", (fo.fw ? "Burner heat from fuel × NCV: NG gun " + f(fo.fw.qN, 2) + ", off-gas gun " + f(fo.fw.qO, 2) + ", Both " + f(fo.fw.qB, 2) + " Gcal/h at 100% (weights NG " + f(fo.fuelW.N, 2) + " · off-gas " + f(fo.fuelW.O, 2) + " · Both 1). " : "Burner heat weights: default (heat duty not loaded). ") + "Heat model fitted on " + fo.nSurveys + " TST surveys (" + f(fo.nObs, 0) + " readings), β " + f(fo.beta, 1) + " °C/unit, COT→TST γ " + f(g, 2) + ", ± " + f(fo.band, 0) + " °C." + chk
-        + " Pre-reformer bed +0.16 °C per °C flue gas (60-day fit). Upper-row firing raises flue gas exit (prior). CH₄ slip −1.7 %/°C COT (equilibrium). Fuel saving from O₂ trim on NG and naphtha only; PSA off-gas always full."
+        + " Pre-reformer bed +0.16 °C per °C flue gas (60-day fit). Row kernel (σ 2 rows): lower rows drive COT, upper rows drive flue gas exit and the bed (prior). CH₄ slip −1.7 %/°C COT (equilibrium). Fuel saving from O₂ trim on NG and naphtha only; PSA off-gas always full."
         + (fo.surveyDt ? " TST survey " + esc(String(fo.surveyDt).slice(0, 16).replace("T", " ")) + "." : ""));
       if(typeof window.renderAdjustmentFromOptimiser === "function") window.renderAdjustmentFromOptimiser();
       if(btn) btn.disabled = false;

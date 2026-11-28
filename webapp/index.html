@@ -26538,6 +26538,11 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   var RANGE = { cot:[750,950], ch4:[0.3,10], o2:[0.3,15], flue:[800,1200], feed:[5000,30000], steam:[10000,90000], offgas:[0,6000], bed:[350,650], tipOg:[0,6], tipNg:[0,6], tipNap:[0,6] };
   /* pre-reformer bed (naphtha mode): heated by reformer flue gas. Fitted on 60 days of hourly DCS: d(bed)/d(flue) = 0.16 (r 0.64) */
   var BED_MIN = 485, BED_PER_FLUE = 0.16, FLUE_PER_UPPER = 60; /* flue exit +60 °C per unit share of firing moved to rows 4-6 (physics prior, low confidence) */
+  /* Row kernel weights (rows 1 = bottom … 6 = top). Process gas flows top → bottom: the lower rows face the outlet and drive COT most;
+     the upper rows face the process inlet where the flue gas leaves, so they drive flue exit and the pre-reformer bed. Gaussian kernel on row distance. */
+  var ROW_SIG = 2.0, ROW_COT_W = [0], ROW_TOP_W = [0];
+  (function(){ var s = 0, r; for(r = 1; r <= 6; r++){ ROW_COT_W[r] = Math.exp(-(r - 1) * (r - 1) / (2 * ROW_SIG * ROW_SIG)); ROW_TOP_W[r] = Math.exp(-(r - 6) * (r - 6) / (2 * ROW_SIG * ROW_SIG)); s += ROW_COT_W[r]; }
+    for(r = 1; r <= 6; r++) ROW_COT_W[r] *= 6 / s; })(); /* COT weights average 1: an even change on all rows moves COT exactly as before */
   function auraP(){ try{ return JSON.parse(localStorage.getItem("auraPricesV1") || "{}") || {}; }catch(e){ return {}; } }
   var st = { dcs:null, dcsAt:0 };
 
@@ -26655,10 +26660,11 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
   function evalT(Tarr){ var vals = Tarr.filter(isFinite); var tr = makeRupture();
     var peak = Math.max.apply(null, vals), lo = Math.min.apply(null, vals), rate = vals.reduce(function(s, t){ return s + 1 / tr(t); }, 0) / vals.length;
     var LIM = tubeLimit().lim; return { peak:peak, lo:lo, sd:sd(vals), rate:rate, life:tr(peak) / (8760 * 0.96), cold:vals.reduce(function(s, t){ return s + Math.max(0, 905 - t); }, 0), over:vals.reduce(function(s, t){ return s + Math.max(0, t - LIM); }, 0), nOver:vals.filter(function(t){ return t > LIM; }).length }; }
-  function upperShare(ff){ var u = 0, t = 0; ["A","B","C","D"].forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var v = ff[w][r][b].v; t += v; if(r >= 4) u += v; } }); return t > 0 ? u / t : 0; }
+  function upperShare(ff){ var u = 0, t = 0; ["A","B","C","D"].forEach(function(w){ for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var v = ff[w][r][b].v; t += v; u += v * ROW_TOP_W[r]; } }); return t > 0 ? u / t : 0; }
   function optimise(cur, model, dCot, w, px){
     px = px || {};
     function sideQ(ff){ var q = { AB:0, CD:0 }; ["A","B","C","D"].forEach(function(w){ var sd = (w === "A" || w === "B") ? "AB" : "CD"; for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = ff[w][r][b]; if(x.s !== "C" && x.v > 0) q[sd] += x.v; } }); return q; } /* fired heat per chamber, burner units */
+    function sideQc(ff){ var q = { AB:0, CD:0 }; ["A","B","C","D"].forEach(function(w){ var sd = (w === "A" || w === "B") ? "AB" : "CD"; for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = ff[w][r][b]; if(x.s !== "C" && x.v > 0) q[sd] += x.v * ROW_COT_W[r]; } }); return q; } /* fired heat per chamber weighted by row for COT (outlet rows count most) */
     var f = JSON.parse(JSON.stringify(cur.f)), Q0 = sideQ(cur.f), K = kern(), moves = [], U0 = upperShare(f), bed0 = px.bed, tipMaxNg = px.tipMaxNg, tipMaxNap = px.tipMaxNap;
     function bedOf(ff){ return isFinite(bed0) ? bed0 + BED_PER_FLUE * FLUE_PER_UPPER * (upperShare(ff) - U0) : NaN; }
     var BMIN = Number(auraP().bedMin) > 400 ? Number(auraP().bedMin) : BED_MIN;
@@ -26756,7 +26762,7 @@ body.light-theme #tab-jobsreformer .jobsdash-edit-btn{
     /* merge repeated burners */
     var merged = {}; moves.forEach(function(m){ var k = m.w + m.r + "-" + m.b; if(!merged[k]) merged[k] = { w:m.w, r:m.r, b:m.b, s:m.s, sTo:m.sTo, from:m.from, to:m.to }; else { merged[k].to = m.to; if(m.sTo) merged[k].sTo = m.sTo; } });
     return { moves:Object.keys(merged).map(function(k){ return merged[k]; }).filter(function(m){ return m.to !== m.from; }), swaps:swaps, stuck:stuck, T:T, e:evalT(T), makeup:makeup,
-      bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK, ogK:ogK(f), ogMax:OGMAX, sideQ0:Q0, sideQ1:sideQ(f), fuelSplit:(function(){ /* how a common NG/naphtha fuel change splits between chambers: NG-gun heat share of each chamber's firing */
+      bed:bedOf(f), bed0:bed0, upper0:U0, upper:upperShare(f), flueShift:FLUE_PER_UPPER * (upperShare(f) - U0), tipK:tipK, ogK:ogK(f), ogMax:OGMAX, sideQ0:Q0, sideQ1:sideQ(f), sideQc0:sideQc(cur.f), sideQc1:sideQc(f), fuelSplit:(function(){ /* how a common NG/naphtha fuel change splits between chambers: NG-gun heat share of each chamber's firing */
         var q = { AB:{ n:0, t:0 }, CD:{ n:0, t:0 } }; ["A","B","C","D"].forEach(function(w){ var sd = (w === "A" || w === "B") ? "AB" : "CD"; for(var r = 1; r <= 6; r++) for(var b = 1; b <= 15; b++){ var x = f[w][r][b]; if(x.s === "C" || !(x.v > 0)) continue; q[sd].t += x.v; if(x.s === "N") q[sd].n += x.v; else if(x.s === "B") q[sd].n += x.v * (FUEL_W.N / FUEL_W.B); } });
         var all = (q.AB.n + q.CD.n) / Math.max(1e-9, q.AB.t + q.CD.t), o = {}; ["AB","CD"].forEach(function(sd){ o[sd] = all > 0 && q[sd].t > 0 ? (q[sd].n / q[sd].t) / all : 1; }); return o; })() };
   }
