@@ -2667,7 +2667,7 @@
     sel.value = l[0] && cur === String(l[0].dt) ? "" : cur; };
   window.auraPickSurvey = function(v){ window.__auraLedgerAbort = true; window.__auraLedgerMode = false; window.__auraSurveyDt = v || null; window.__auraOptPending = false; window.triggerAuraOptimizer(); };
   /* ---------- cumulative savings ledger: every saved survey -> advisor ₹/h x hours to the next survey; next survey's burners show if the plan was followed ---------- */
-  var LKEY = "auraLedgerV2", building = false;
+  var LKEY = "auraLedgerV1", building = false;
   function ldLoad(){ try{ return JSON.parse(localStorage.getItem(LKEY) || "{}") || {}; }catch(e){ return {}; } }
   function ldSave(o){ try{ localStorage.setItem(LKEY, JSON.stringify(o)); }catch(e){} }
   function tms(dt){ var t = Date.parse(String(dt).replace(" ", "T")); return isFinite(t) ? t : NaN; }
@@ -2729,7 +2729,7 @@
       if(localStorage.getItem(KEY) === VER && have.some(function(e){ return String(e && e.dt || "").slice(0, 16) === "2026-11-27T14:00"; })) return; }catch(e){ return; }
     fetch("./demo/demo-tst.json", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
       if(!j || !j.entries || !j.entries.length) return;
-      try{ ["tempDataEntriesBeforeDemo","auraLedgerV2","auraPlanLogV1","auraTicksV1","auraPredV1"].forEach(function(k){ localStorage.removeItem(k); }); var ti = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}") || {}; ti.serviceStart = "2026-11-19"; localStorage.setItem("tubeLifeInputsV1", JSON.stringify(ti)); }catch(e){} /* fresh demo week: startup 19 Nov, old ledger/plan log cleared */
+      try{ ["tempDataEntriesBeforeDemo","auraLedgerV1","auraPlanLogV1","auraTicksV1","auraPredV1"].forEach(function(k){ localStorage.removeItem(k); }); var ti = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}") || {}; ti.serviceStart = "2026-11-19"; localStorage.setItem("tubeLifeInputsV1", JSON.stringify(ti)); }catch(e){} /* fresh demo week: startup 19 Nov, old ledger/plan log cleared */
       try{ window.tempDataEntries = j.entries; if(typeof tempDataEntries !== "undefined") tempDataEntries = j.entries; }catch(e){}
       try{ localStorage.setItem("tempDataEntries", JSON.stringify(j.entries)); localStorage.setItem(KEY, VER); }catch(e){}
       try{ if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches(); }catch(e){}
