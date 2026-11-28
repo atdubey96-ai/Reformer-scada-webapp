@@ -154,6 +154,53 @@ html[data-scada-auth-boot="1"] #loginScreen{
   };
 })();
 </script>
+<script>
+/* Shared advisor store: savings ledger, plan predictions, plan log, ticked steps and prices live in Supabase app_settings
+   (rows "kv:<name>" or "kv:<name>:<sub>"), not in this browser, so every device shows the same numbers. */
+(function(){
+  if(window.__sharedKv || typeof Storage === "undefined") return; window.__sharedKv = true;
+  var OBJ = { auraLedgerV1:1, auraPredV1:1, auraTicksV1:1 }, WHOLE = { auraPlanLogV1:1, auraPricesV1:1 };
+  var URL0 = "/api/sb/rest/v1/app_settings", P = "kv:", DEL = { __del:1 };
+  var mem = {}, dirty = {}, loaded = false, timer = null, SP = Storage.prototype, g = SP.getItem, s = SP.setItem, r = SP.removeItem;
+  function ls(){ try{ return window.localStorage; }catch(e){ return null; } }
+  function synced(t, k){ return t === ls() && (OBJ[k] || WHOLE[k]); }
+  function J(v){ return JSON.stringify(v); }
+  try{ Object.keys(OBJ).concat(Object.keys(WHOLE)).forEach(function(k){ r.call(ls(), k); }); }catch(e){} /* drop old per-browser copies */
+  SP.getItem = function(k){ if(synced(this, k)) return mem[k] == null ? null : J(mem[k]); return g.apply(this, arguments); };
+  SP.setItem = function(k, v){ if(synced(this, k)){ var o; try{ o = JSON.parse(v); }catch(e){ return; } put(k, o); return; } return s.apply(this, arguments); };
+  SP.removeItem = function(k){ if(synced(this, k)) return; return r.apply(this, arguments); }; /* shared data is never wiped by one browser */
+  function put(k, o){
+    if(OBJ[k]){ var old = mem[k] || {}; o = o && typeof o === "object" ? o : {};
+      Object.keys(o).forEach(function(sk){ if(J(old[sk]) !== J(o[sk])) dirty[P + k + ":" + sk] = o[sk]; });
+      Object.keys(old).forEach(function(sk){ if(!(sk in o)) dirty[P + k + ":" + sk] = DEL; }); }
+    else if(J(mem[k]) !== J(o)) dirty[P + k] = o;
+    mem[k] = o; if(loaded) flushSoon(); }
+  function split(full){ var key = String(full).slice(P.length), i = key.indexOf(":"); return { k:i < 0 ? key : key.slice(0, i), sub:i < 0 ? null : key.slice(i + 1) }; }
+  function isDel(v){ return v && typeof v === "object" && v.__del === 1; }
+  function pull(first){
+    return fetch(URL0 + "?key=like." + encodeURIComponent(P + "*") + "&select=key,value", { headers:{ "Accept":"application/json" }, cache:"no-store" })
+      .then(function(res){ if(!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
+      .then(function(rows){ var m = {};
+        (rows || []).forEach(function(row){ var x = split(row.key);
+          if(OBJ[x.k] && x.sub != null){ if(first) delete dirty[row.key]; m[x.k] = m[x.k] || {}; if(!isDel(row.value)) m[x.k][x.sub] = row.value; }
+          else if(WHOLE[x.k] && x.sub == null){ if(first) delete dirty[row.key]; m[x.k] = row.value; } }); /* first load: what is already shared wins */
+        Object.keys(dirty).forEach(function(dk){ var x = split(dk);
+          if(OBJ[x.k] && x.sub != null){ m[x.k] = m[x.k] || {}; if(isDel(dirty[dk])) delete m[x.k][x.sub]; else m[x.k][x.sub] = dirty[dk]; } else if(WHOLE[x.k]) m[x.k] = dirty[dk]; });
+        var changed = J(m) !== J(mem); mem = m; loaded = true; window.__sharedKvReady = true; flushSoon();
+        if(changed || first){ try{ if(window.auraRenderLedger) window.auraRenderLedger(); }catch(e){} try{ if(first && window.renderAdjustmentFromOptimiser) window.renderAdjustmentFromOptimiser(); }catch(e){} } })
+      .catch(function(e){ console.warn("[shared store] load failed", e); if(!loaded) setTimeout(function(){ pull(true); }, 15000); }); }
+  function flushSoon(){ if(timer || !Object.keys(dirty).length) return; timer = setTimeout(flush, 800); }
+  function flush(){ timer = null; var d = dirty, now = new Date().toISOString(); dirty = {};
+    var rows = Object.keys(d).map(function(k){ return { key:k, value:d[k], updated_at:now }; }); if(!rows.length) return;
+    fetch(URL0 + "?on_conflict=key", { method:"POST", headers:{ "Content-Type":"application/json", "Prefer":"resolution=merge-duplicates,return=minimal" }, body:J(rows) })
+      .then(function(res){ if(!res.ok) throw new Error("HTTP " + res.status); })
+      .catch(function(e){ console.warn("[shared store] save failed", e); Object.keys(d).forEach(function(k){ if(!(k in dirty)) dirty[k] = d[k]; }); setTimeout(flushSoon, 10000); }); }
+  window.sharedKvPull = function(){ return pull(!loaded); };
+  pull(true);
+  setInterval(function(){ if(!document.hidden && loaded) pull(false); }, 60000);
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden && loaded) pull(false); });
+})();
+</script>
 <script src="./vendor/xlsx.full.min.js"></script>
 <script src="./vendor/chart.umd.min.js"></script>
 <script src="./vendor/supabase.js"></script>
