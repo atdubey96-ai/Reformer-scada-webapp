@@ -2707,7 +2707,7 @@
   };
   function runOne(dt){ return new Promise(function(res){ var done = false, fin = function(x){ if(done) return; done = true; window.__auraRunDone = null; res(x); };
     window.__auraRunDone = fin; window.__auraSurveyDt = dt; window.__auraOptPending = false; window.triggerAuraOptimizer(); setTimeout(function(){ fin(null); }, 40000); }); }
-  window.auraBuildLedger = function(){ if(building || window.__auraNoLedger) return; window.__auraLedgerAbort = false; var L = surveyList().slice().reverse(), c = ldLoad(), todo = L.filter(function(e){ return !c[e.dt]; });
+  window.auraBuildLedger = function(){ if(building || window.__auraNoLedger) return; if(window.__sharedKv && !window.__sharedKvReady){ setTimeout(function(){ try{ window.auraBuildLedger(); }catch(e){} }, 5000); return; } /* wait for the shared ledger first */ window.__auraLedgerAbort = false; var L = surveyList().slice().reverse(), c = ldLoad(), todo = L.filter(function(e){ return !c[e.dt]; });
     if(!todo.length){ window.auraRenderLedger(); return; } building = true; var keep = window.__auraSurveyDt || null, i = 0;
     window.__auraLedgerMode = true;
     (function next(){ if(window.__auraLedgerAbort){ building = false; window.auraRenderLedger(); return; } if(i >= todo.length){ window.__auraLedgerMode = false; building = false; window.__auraSurveyDt = keep; window.__auraOptPending = false; window.triggerAuraOptimizer(); return; }
