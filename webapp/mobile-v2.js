@@ -2727,8 +2727,10 @@
     try{ var have = JSON.parse(localStorage.getItem("tempDataEntries") || "[]") || [];
       if(have.some(function(e){ return String(e && e.dt || "").slice(0, 16) >= "2026-11-28"; })) return; /* a newer real survey exists */
       if(localStorage.getItem(KEY) === VER && have.some(function(e){ return String(e && e.dt || "").slice(0, 16) === "2026-11-27T14:00"; })) return; }catch(e){ return; }
-    fetch("./demo/demo-tst.json", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+    Promise.all([fetch("./demo/demo-tst.json", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }),
+      fetch("/api/sb/rest/v1/app_settings?key=eq.kv:auraDemoExport&select=value", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })]).then(function(res){ var j = res[0], ex = res[1] && res[1][0] && res[1][0].value;
       if(!j || !j.entries || !j.entries.length) return;
+      if(Array.isArray(ex)){ var bx = {}; ex.forEach(function(x){ bx[x.dt] = x; }); j.entries.forEach(function(e){ var x = bx[e.dt]; if(x){ e.burnerSnapshot = x.b; e.openingSnapshot = x.o; } delete e.issuedPlan; }); } /* shared demo week: burner settings that follow the advisor plans (28 Nov replay) */
       try{ ["tempDataEntriesBeforeDemo","auraLedgerV1","auraPlanLogV1","auraTicksV1","auraPredV1"].forEach(function(k){ localStorage.removeItem(k); }); var ti = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}") || {}; ti.serviceStart = "2026-11-19"; localStorage.setItem("tubeLifeInputsV1", JSON.stringify(ti)); }catch(e){} /* fresh demo week: startup 19 Nov, old ledger/plan log cleared */
       try{ window.tempDataEntries = j.entries; if(typeof tempDataEntries !== "undefined") tempDataEntries = j.entries; }catch(e){}
       try{ localStorage.setItem("tempDataEntries", JSON.stringify(j.entries)); localStorage.setItem(KEY, VER); }catch(e){}
