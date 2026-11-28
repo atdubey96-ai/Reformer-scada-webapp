@@ -2667,7 +2667,7 @@
     sel.value = l[0] && cur === String(l[0].dt) ? "" : cur; };
   window.auraPickSurvey = function(v){ window.__auraLedgerAbort = true; window.__auraLedgerMode = false; window.__auraSurveyDt = v || null; window.__auraOptPending = false; window.triggerAuraOptimizer(); };
   /* ---------- cumulative savings ledger: every saved survey -> advisor ₹/h x hours to the next survey; next survey's burners show if the plan was followed ---------- */
-  var LKEY = "auraLedgerV1", building = false;
+  var LKEY = "auraLedgerV2", building = false;
   function ldLoad(){ try{ return JSON.parse(localStorage.getItem(LKEY) || "{}") || {}; }catch(e){ return {}; } }
   function ldSave(o){ try{ localStorage.setItem(LKEY, JSON.stringify(o)); }catch(e){} }
   function tms(dt){ var t = Date.parse(String(dt).replace(" ", "T")); return isFinite(t) ? t : NaN; }
@@ -2688,18 +2688,21 @@
   function loadOf(e){ try{ var v = typeof cuboidAiReadEntryNumber === "function" ? cuboidAiReadEntryNumber(e, "hguLoad") : NaN; return v > 20 && v < 130 ? v : NaN; }catch(x){ return NaN; } }
   function money(v){ var a = Math.abs(v); return (v < 0 ? "−" : "") + "₹ " + (a >= 1e7 ? f(a / 1e7, 2) + " Cr" : a >= 1e5 ? f(a / 1e5, 2) + " L" : f(a, 0)); }
   window.auraRenderLedger = function(prog){ var host = document.getElementById("auraLedger"); if(!host) return;
-    var L = surveyList().slice().reverse(), c = ldLoad(), rows = [], cO = 0, cA = 0, cL = 0, cM = 0, nM = 0, fS = 0, fN = 0, pts = [], rate = 0, lostPre = 0, since = null;
+    var L = surveyList().slice().reverse(), c = ldLoad(), rows = [], cO = 0, cA = 0, cL = 0, cM = 0, nM = 0, cRun = 0, fS = 0, fN = 0, pts = [], rate = 0, lostPre = 0, since = null;
     L.forEach(function(e, i){ var x = c[e.dt]; if(!x) return; var nx = L[i + 1], t0 = tms(e.dt), t1 = nx ? tms(nx.dt) : Math.min(Date.now(), t0 + 8 * 3600000);
       var h = Math.max(0, Math.min(24, (t1 - t0) / 3600000)) || 0, off = Math.max(0, x.rsH || 0) * h, fl = nx ? followed(e.issuedPlan || x.plan, nx) : null;
       
       rate = nx ? Math.max(0, (x.rsH || 0) * (fl != null ? fl : 1)) : 0; /* no burner moves: set-point changes only, counted as done */ /* saving realised in this interval = offered ₹/h × share of the plan followed */ if(fl != null && fl >= 0.5 && !since) since = e.dt;
       var ach = nx ? rate * h : NaN, lost = fl == null ? (nx ? 0 : NaN) : off * (1 - fl), dc = nx ? dcsCost(t0, t1, loadOf(e), loadOf(nx)) : NaN, meas = isFinite(dc) ? dc * h : NaN; if(isFinite(meas)){ cM += meas; nM++; } if(!since && isFinite(lost)) lostPre += lost;
-      cO += off; if(isFinite(ach)) cA += ach; if(isFinite(lost)) cL += lost; if(fl != null){ fS += fl; fN++; } pts.push(cA);
+      if(nx) cO += off; else cRun = off; /* the running shift is offered only once its next survey arrives, so Offered and Achieved cover the same shifts */ if(isFinite(ach)) cA += ach; if(isFinite(lost)) cL += lost; if(fl != null){ fS += fl; fN++; } pts.push(cA);
       rows.push('<tr><td>' + esc(String(e.dt).replace("T", " ").slice(0, 16)) + (e.shift ? " · " + esc(e.shift) : "") + '</td><td>' + (x.rsH > 0 ? f(x.rsH, 0) : "0") + '</td><td>' + f(h, 1) + '</td><td>' + (fl == null ? (nx ? "no moves" : "running") : f(fl * 100, 0) + " %") + '</td><td>' + (isFinite(ach) ? money(ach) + ' <small style="opacity:.6">(' + f(rate, 0) + ')</small>' : "—") + '</td><td style="color:' + (lost > 0 ? "var(--au-bad,#f87171)" : "inherit") + '">' + (isFinite(lost) ? money(lost) : "—") + '</td><td>' + (off > 0 ? money(off) : "₹ 0") + '</td><td style="color:' + (meas < 0 ? "var(--au-bad,#f87171)" : "#34d399") + '">' + (isFinite(meas) ? money(meas) + ' <small style="opacity:.6">(' + (dc >= 0 ? "+" : "−") + f(Math.abs(dc), 0) + ')</small>' : "—") + '</td></tr>'); });
     var mx = Math.max.apply(null, pts.concat([1])), W = 260, H = 34, sp = pts.length > 1 ? '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" style="max-width:100%"><polyline fill="none" stroke="#34d399" stroke-width="2" points="' + pts.map(function(v, i){ return f(i * W / (pts.length - 1), 1).replace(/,/g, "") + "," + f(H - 2 - v / mx * (H - 4), 1).replace(/,/g, ""); }).join(" ") + '"/></svg>' : "";
     var first = L.filter(function(e){ return c[e.dt]; })[0];
     host.innerHTML = '<div class="au-lg-h"><span>Cumulative savings' + (first ? ' <small>since ' + esc(String(first.dt).replace("T", " ").slice(0, 10)) + ' · ' + rows.length + ' surveys</small>' : '') + '</span>' + (prog ? '<small>Building history… ' + prog + '</small>' : sp) + '</div>'
-      + '<div class="au-lg-t"><div><span>Achieved</span><b style="color:#34d399">' + money(cA) + '</b><i>from the plans that were followed</i></div><div><span>Lost opportunity</span><b style="color:#f87171">' + money(cL) + '</b><i>' + (since && lostPre > 0 ? money(lostPre) + ' of it before advisor use (' + esc(String(since).slice(5, 10)) + ')' : 'advice not followed') + '</i></div><div><span>Measured (DCS)</span><b style="color:' + (cM < 0 ? "#f87171" : "#34d399") + '">' + (nM ? money(cM) : "—") + '</b><i>feed + fuel cost, at the same HGU load</i></div><div><span>Offered</span><b>' + money(cO) + '</b><i>if every plan was done</i></div><div><span>Followed</span><b>' + (fN ? f(fS / fN * 100, 0) + " %" : "—") + '</b><i>next survey vs plan</i></div></div>'
+      + '<div class="au-lg-t">'
+        + '<div><span>1 · Offered</span><b>' + money(cO) + '</b><i>' + (cRun > 0 ? 'net, closed shifts · +' + money(cRun) + ' running now' : 'net saving if every plan was done') + '</i></div>'
+        + '<div><span>2 · Achieved</span><b style="color:#34d399">' + money(cA) + '</b><i>' + (fN ? f(fS / fN * 100, 0) + " % of advice followed" : "plans followed") + (cL > 0 ? " · " + money(cL) + " lost" : "") + '</i></div>'
+        + '<div><span>3 · Real (measured)</span><b style="color:' + (cM < 0 ? "#f87171" : "#34d399") + '">' + (nM ? money(cM) : "—") + '</b><i>DCS feed + fuel cost, same HGU load</i></div></div>'
       + (rows.length ? '<details><summary>Per survey</summary><div class="au-scroll" style="max-height:260px"><table><tr><th>Survey</th><th>Offered ₹/h</th><th>Hours</th><th>Followed</th><th>Achieved (₹/h)</th><th>Lost</th><th>Plan net ₹</th><th>Measured ₹ (₹/h)</th></tr>' + rows.slice().reverse().join("") + '</table></div><div style="font-size:11px;opacity:.7;margin-top:4px">Followed = share of advised burner changes (fuel type and opening ±12.5%) seen in the next survey. Plan net ₹ = the plan net saving (feed saved − extra fuel) × hours to the next survey. Measured ₹ = real feed + fuel cost 6 h before the survey minus the cost from 2 h after it until the next survey, scaled to the same HGU load (+ = cheaper), × hours. Other process changes also move it.</div></details>' : '');
   };
   function runOne(dt){ return new Promise(function(res){ var done = false, fin = function(x){ if(done) return; done = true; window.__auraRunDone = null; res(x); };
@@ -2726,7 +2729,7 @@
       if(localStorage.getItem(KEY) === VER && have.some(function(e){ return String(e && e.dt || "").slice(0, 16) === "2026-11-27T14:00"; })) return; }catch(e){ return; }
     fetch("./demo/demo-tst.json", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
       if(!j || !j.entries || !j.entries.length) return;
-      try{ ["tempDataEntriesBeforeDemo","auraLedgerV1","auraPlanLogV1","auraTicksV1","auraPredV1"].forEach(function(k){ localStorage.removeItem(k); }); var ti = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}") || {}; ti.serviceStart = "2026-11-19"; localStorage.setItem("tubeLifeInputsV1", JSON.stringify(ti)); }catch(e){} /* fresh demo week: startup 19 Nov, old ledger/plan log cleared */
+      try{ ["tempDataEntriesBeforeDemo","auraLedgerV2","auraPlanLogV1","auraTicksV1","auraPredV1"].forEach(function(k){ localStorage.removeItem(k); }); var ti = JSON.parse(localStorage.getItem("tubeLifeInputsV1") || "{}") || {}; ti.serviceStart = "2026-11-19"; localStorage.setItem("tubeLifeInputsV1", JSON.stringify(ti)); }catch(e){} /* fresh demo week: startup 19 Nov, old ledger/plan log cleared */
       try{ window.tempDataEntries = j.entries; if(typeof tempDataEntries !== "undefined") tempDataEntries = j.entries; }catch(e){}
       try{ localStorage.setItem("tempDataEntries", JSON.stringify(j.entries)); localStorage.setItem(KEY, VER); }catch(e){}
       try{ if(typeof invalidateCuboidRefreshCaches === "function") invalidateCuboidRefreshCaches(); }catch(e){}
